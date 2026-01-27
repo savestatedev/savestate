@@ -4,8 +4,9 @@
 
 import chalk from 'chalk';
 import ora from 'ora';
-import { isInitialized, initializeProject, localConfigDir } from '../config.js';
+import { isInitialized, initializeProject, localConfigDir, saveConfig } from '../config.js';
 import { detectAdapter } from '../adapters/registry.js';
+import { getPassphrase } from '../passphrase.js';
 
 export async function initCommand(): Promise<void> {
   console.log();
@@ -35,6 +36,30 @@ export async function initCommand(): Promise<void> {
     } else {
       detectSpinner.info('No platform auto-detected. Configure manually with `savestate config`.');
     }
+
+    // Prompt for passphrase
+    console.log();
+    console.log(chalk.dim('  Your snapshots will be encrypted with a passphrase.'));
+    console.log(chalk.dim('  You can also set SAVESTATE_PASSPHRASE env var.'));
+    console.log();
+
+    try {
+      const passphrase = await getPassphrase({ confirm: true });
+      // Store a hint that passphrase was set (but NOT the passphrase itself)
+      config.storage.options.passphraseConfigured = true;
+      void passphrase; // We don't store it — just validate it works
+    } catch (err) {
+      // If non-interactive (e.g., env var set), that's fine
+      // If truly no passphrase, warn but don't block init
+      if (process.env.SAVESTATE_PASSPHRASE) {
+        console.log(chalk.green('  ✓ Using SAVESTATE_PASSPHRASE from environment'));
+      } else {
+        console.log(chalk.yellow('  ⚠ No passphrase set. You\'ll be prompted when creating snapshots.'));
+      }
+    }
+
+    // Save updated config
+    await saveConfig(config);
 
     console.log();
     console.log(chalk.green('✓ SaveState initialized!'));

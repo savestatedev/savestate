@@ -6,6 +6,10 @@
  */
 
 import { createHash } from 'node:crypto';
+import { gzipSync, gunzipSync } from 'node:zlib';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { Header, Parser } from 'tar';
 import type { Snapshot } from './types.js';
 
 /** File extension for encrypted SaveState archives */
@@ -114,4 +118,80 @@ export function generateSnapshotId(): string {
  */
 export function snapshotFilename(id: string): string {
   return `${id}${SAF_EXTENSION}`;
+}
+
+/**
+ * Build a raw tar archive from in-memory files.
+ * Uses tar's Header class for proper POSIX-compliant headers.
+ */
+function buildTar(files: Map<string, Buffer>): Buffer {
+  const blocks: Buffer[] = [];
+
+  for (const [path, data] of files) {
+    const headerBuf = Buffer.alloc(512);
+    const h = new Header();
+    h.path = path;
+    h.size = data.length;
+    h.type = 'File';
+    h.mode = 0o644;
+    h.mtime = new Date();
+    h.uid = 0;
+    h.gid = 0;
+    h.uname = 'savestate';
+    h.gname = 'savestate';
+    h.encode(headerBuf, 0);
+
+    blocks.push(headerBuf);
+    blocks.push(data);
+
+    // Pad data to 512-byte boundary
+    const remainder = data.length % 512;
+    if (remainder > 0) {
+      blocks.push(Buffer.alloc(512 - remainder));
+    }
+  }
+
+  // End-of-archive marker: two 512-byte zero blocks
+  blocks.push(Buffer.alloc(1024));
+
+  return Buffer.concat(blocks);
+}
+
+/**
+ * Pack a file map into a tar.gz buffer.
+ *
+ * Creates an in-memory tar archive, gzips it, and returns the buffer.
+ * Each entry in the map is a relative path → content buffer.
+ */
+export function packToArchive(files: Map<string, Buffer>): Buffer {
+  const tar = buildTar(files);
+  return gzipSync(tar);
+}
+
+/**
+ * Unpack a tar.gz buffer into a file map.
+ *
+ * Decompresses and extracts all files from the archive,
+ * returning their paths and content buffers.
+ */
+export async function unpackFromArchive(archive: Buffer): Promise<Map<string, Buffer>> {
+  const files = new Map<string, Buffer>();
+  const tar = gunzipSync(archive);
+
+  const parser = new Parser({
+    onReadEntry: (entry) => {
+      const chunks: Buffer[] = [];
+      entry.on('data', (chunk: Buffer) => chunks.push(chunk));
+      entry.on('end', () => {
+        if (entry.type === 'File') {
+          files.set(entry.path, Buffer.concat(chunks));
+        }
+      });
+    },
+  });
+
+  const source = Readable.from(tar);
+  await pipeline(source, parser);
+
+  return files;
 }

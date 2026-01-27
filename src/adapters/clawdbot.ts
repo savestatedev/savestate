@@ -8,9 +8,9 @@
  * This is the dogfood adapter — SaveState eats its own cooking.
  */
 
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, writeFile, readdir, stat, rename, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import type { Adapter, PlatformMeta, Snapshot, MemoryEntry, ConversationMeta } from '../types.js';
 import { SAF_VERSION, generateSnapshotId, computeChecksum } from '../format.js';
 
@@ -22,6 +22,10 @@ const MEMORY_DIRS = ['memory'];
 
 /** Files containing memory data */
 const MEMORY_FILES = ['memory.md', 'MEMORY.md'];
+
+/** Separator used in concatenated personality */
+const FILE_SEPARATOR_PREFIX = '--- ';
+const FILE_SEPARATOR_SUFFIX = ' ---';
 
 export class ClawdbotAdapter implements Adapter {
   readonly id = 'clawdbot';
@@ -103,10 +107,13 @@ export class ClawdbotAdapter implements Adapter {
   }
 
   async restore(snapshot: Snapshot): Promise<void> {
-    // TODO: Write identity files back to workspace
-    // TODO: Write memory files back to workspace
-    // TODO: Handle merge conflicts
-    void snapshot;
+    // Restore identity files from concatenated personality
+    if (snapshot.identity.personality) {
+      await this.restoreIdentity(snapshot.identity.personality);
+    }
+
+    // Restore memory files
+    await this.restoreMemory(snapshot.memory.core);
   }
 
   async identify(): Promise<PlatformMeta> {
@@ -187,6 +194,84 @@ export class ClawdbotAdapter implements Adapter {
       return JSON.parse(content) as Record<string, unknown>;
     } catch {
       return undefined;
+    }
+  }
+
+  // ─── Restore helpers ──────────────────────────────────────
+
+  /**
+   * Parse concatenated personality back into individual files and write them.
+   * Files are joined with `--- FILENAME ---` markers.
+   */
+  private async restoreIdentity(personality: string): Promise<void> {
+    const files = this.parsePersonality(personality);
+
+    for (const [filename, content] of files) {
+      const targetPath = join(this.workspaceDir, filename);
+
+      // Backup existing file
+      await this.backupFile(targetPath);
+
+      // Write restored content
+      await mkdir(dirname(targetPath), { recursive: true });
+      await writeFile(targetPath, content, 'utf-8');
+    }
+  }
+
+  /**
+   * Parse the concatenated personality string into individual files.
+   * Format: `--- FILENAME ---\ncontent\n\n--- NEXTFILE ---\ncontent`
+   */
+  private parsePersonality(personality: string): Map<string, string> {
+    const files = new Map<string, string>();
+    const regex = /^--- (.+?) ---$/gm;
+    const matches = [...personality.matchAll(regex)];
+
+    for (let i = 0; i < matches.length; i++) {
+      const filename = matches[i][1];
+      const startIdx = matches[i].index! + matches[i][0].length + 1; // +1 for newline
+      const endIdx = i + 1 < matches.length ? matches[i + 1].index! : personality.length;
+
+      let content = personality.slice(startIdx, endIdx);
+      // Trim trailing newlines between sections (but keep content intact)
+      content = content.replace(/\n\n$/, '\n');
+      if (!content.endsWith('\n')) content += '\n';
+
+      files.set(filename, content);
+    }
+
+    return files;
+  }
+
+  /**
+   * Restore memory entries back to their source files.
+   */
+  private async restoreMemory(entries: MemoryEntry[]): Promise<void> {
+    for (const entry of entries) {
+      const targetPath = join(this.workspaceDir, entry.source);
+
+      // Backup existing file
+      await this.backupFile(targetPath);
+
+      // Ensure directory exists
+      await mkdir(dirname(targetPath), { recursive: true });
+
+      // Write restored content
+      await writeFile(targetPath, entry.content, 'utf-8');
+    }
+  }
+
+  /**
+   * Create a .bak backup of an existing file before overwriting.
+   */
+  private async backupFile(filePath: string): Promise<void> {
+    if (existsSync(filePath)) {
+      const backupPath = filePath + '.bak';
+      try {
+        await rename(filePath, backupPath);
+      } catch {
+        // If rename fails (e.g., permissions), continue without backup
+      }
     }
   }
 }

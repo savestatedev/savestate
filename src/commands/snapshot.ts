@@ -6,6 +6,9 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
 import { detectAdapter, getAdapter } from '../adapters/registry.js';
+import { createSnapshot } from '../snapshot.js';
+import { resolveStorage } from '../storage/resolve.js';
+import { getPassphrase } from '../passphrase.js';
 
 interface SnapshotOptions {
   label?: string;
@@ -31,7 +34,6 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   }
 
   const config = await loadConfig();
-  const spinner = ora('Preparing snapshot...').start();
 
   try {
     // Resolve adapter
@@ -39,8 +41,8 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     if (options.adapter) {
       adapter = getAdapter(options.adapter);
       if (!adapter) {
-        spinner.fail(`Unknown adapter: ${options.adapter}`);
-        return;
+        console.log(chalk.red(`✗ Unknown adapter: ${options.adapter}`));
+        process.exit(1);
       }
     } else if (config.defaultAdapter) {
       adapter = getAdapter(config.defaultAdapter);
@@ -49,45 +51,49 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     }
 
     if (!adapter) {
-      spinner.fail('No adapter found. Specify one with --adapter or configure a default.');
-      return;
+      console.log(chalk.red('✗ No adapter found. Specify one with --adapter or configure a default.'));
+      process.exit(1);
     }
 
-    spinner.text = `Extracting state via ${adapter.name} adapter...`;
+    // Get passphrase
+    const passphrase = await getPassphrase();
 
-    // TODO: Actually create the snapshot
-    // const snapshot = await createSnapshot(config, adapter, {
-    //   label: options.label,
-    //   tags: options.tags?.split(',').map(t => t.trim()),
-    // });
+    // Resolve storage backend
+    const storage = resolveStorage(config);
 
-    // Simulate for now
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const spinner = ora(`Extracting state via ${adapter.name} adapter...`).start();
 
-    spinner.text = 'Building SAF archive...';
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    spinner.text = 'Encrypting...';
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const fakeId = `ss-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}`;
+    const result = await createSnapshot(adapter, storage, passphrase, {
+      label: options.label,
+      tags: options.tags?.split(',').map((t) => t.trim()),
+    });
 
     spinner.succeed('Snapshot created!');
     console.log();
-    console.log(`  ${chalk.dim('ID:')}       ${chalk.cyan(fakeId)}`);
-    console.log(`  ${chalk.dim('Adapter:')}  ${adapter.name}`);
+    console.log(`  ${chalk.dim('ID:')}         ${chalk.cyan(result.snapshot.manifest.id)}`);
+    console.log(`  ${chalk.dim('Adapter:')}    ${adapter.name}`);
     if (options.label) {
-      console.log(`  ${chalk.dim('Label:')}    ${options.label}`);
+      console.log(`  ${chalk.dim('Label:')}      ${options.label}`);
     }
-    console.log(`  ${chalk.dim('Storage:')}  ${config.storage.type}`);
-    console.log(`  ${chalk.dim('Status:')}   ${chalk.green('Encrypted & stored')}`);
+    console.log(`  ${chalk.dim('Files:')}      ${result.fileCount} files in archive`);
+    console.log(`  ${chalk.dim('Archive:')}    ${formatBytes(result.archiveSize)}`);
+    console.log(`  ${chalk.dim('Encrypted:')}  ${formatBytes(result.encryptedSize)}`);
+    console.log(`  ${chalk.dim('Storage:')}    ${config.storage.type}`);
+    console.log(`  ${chalk.dim('Status:')}     ${chalk.green('✓ Encrypted & stored')}`);
     console.log();
-    console.log(chalk.dim('  Restore with: savestate restore ' + fakeId));
+    console.log(chalk.dim(`  Restore with: savestate restore ${result.snapshot.manifest.id}`));
     console.log();
 
   } catch (err) {
-    spinner.fail('Snapshot failed');
+    console.error();
+    console.error(chalk.red('✗ Snapshot failed'));
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
