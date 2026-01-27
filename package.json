@@ -27,8 +27,24 @@
     "claude",
     "time-machine"
   ],
-  "author": "SaveState Contributors",
+  "author": "DBH Ventures <hello@savestate.dev>",
   "license": "MIT",
+  "homepage": "https://savestate.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/savestatedev/savestate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/savestatedev/savestate/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20.0.0"
   },
