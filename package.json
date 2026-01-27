@@ -1,0 +1,45 @@
+{
+  "name": "savestate",
+  "version": "0.1.0",
+  "description": "Time Machine for AI. Backup, restore, and migrate your AI identity.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "savestate": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "backup",
+    "restore",
+    "encryption",
+    "agent",
+    "state",
+    "migration",
+    "chatgpt",
+    "claude",
+    "time-machine"
+  ],
+  "author": "SaveState Contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "ora": "^8.2.0",
+    "tar": "^7.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3"
+  }
+}
