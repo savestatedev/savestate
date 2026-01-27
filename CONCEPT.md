@@ -220,38 +220,45 @@ Nobody is doing this comprehensively. The closest analogy is 1Password for passw
   - "Never lose your AI again."
   - "Ctrl+S for your AI."
 
-## Phase 1 — MVP (4-6 weeks)
+## Phase 1 — MVP ✅ (completed Jan 27, 2026)
 
-- [ ] CLI scaffolding (init, snapshot, restore, search)
-- [ ] SAF format spec v0.1
-- [ ] AES-256-GCM encryption
-- [ ] Clawdbot adapter (dogfood)
-- [ ] Local storage backend
-- [ ] npm + brew distribution
-- [ ] Landing page at savestate.dev
+- [x] CLI scaffolding (init, snapshot, restore, list, diff, config, adapters)
+- [x] SAF format spec v0.1
+- [x] AES-256-GCM encryption with scrypt KDF
+- [x] Clawdbot/Moltbot adapter (full)
+- [x] Claude Code adapter (full)
+- [x] OpenAI Assistants adapter (stubbed)
+- [x] Local storage backend
+- [x] npm: @savestate/cli v0.1.1 + savestate-ai
+- [x] GitHub: savestatedev/savestate
+- [x] Landing page at savestate.dev
 
-## Phase 2 — Launch (weeks 6-10)
+## Phase 2 — Polish & Platforms
 
-- [ ] ChatGPT adapter (export API + browser extension)  
-- [ ] Claude adapter (memory export + Projects)
-- [ ] OpenAI Assistants API adapter
+- [ ] Finalize logo (transparent SVG)
+- [ ] OpenAI Assistants adapter: implement API calls
+- [ ] End-to-end test: full snapshot → restore cycle
+- [ ] Homebrew formula
+- [ ] ChatGPT adapter (data export + browser extension)
+- [ ] Claude consumer adapter (memory export + Projects)
 - [ ] S3/R2 storage backend
 - [ ] Incremental snapshots
-- [ ] Web dashboard (view/search snapshots)
-- [ ] Product Hunt launch
+- [ ] GitHub Actions CI/CD
+- [ ] Binary releases + install.sh
 
-## Phase 3 — Growth (months 3-6)
+## Phase 3 — Launch & Growth
 
+- [ ] Encrypted search index (client-side, encrypted separately)
+- [ ] Web dashboard (Next.js)
 - [ ] Scheduled auto-backups (cron/daemon)
-- [ ] Gemini adapter
-- [ ] Search across all snapshots (local index)
-- [ ] `savestate diff` — compare snapshots
 - [ ] Migration wizard (ChatGPT → Claude, etc.)
-- [ ] Pro tier billing
-- [ ] Team features
+- [ ] Gemini adapter
+- [ ] Pro tier billing ($9/mo)
+- [ ] Team features ($29/mo)
+- [ ] Product Hunt launch
 
 ---
 
 *Created: January 27, 2026*
-*Status: Concept exploration*
+*Status: Phase 1 complete, Phase 2 in progress*
 *Author: David Hurley / Steve (AI)*
