@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your AI Knows Everything About You. What's Your Backup Plan? — SaveState</title>
+<meta name="description" content="Introducing SaveState — Time Machine for your AI identity. Encrypted backup, restore, and migration for ChatGPT, Claude, Gemini, and more.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">January 28, 2026</div>
+      <h1>Your AI Knows Everything About You. What's Your Backup Plan?</h1>
+      <p class="subtitle">Introducing SaveState — Time Machine for your AI identity</p>
+    </header>
+
+    <div class="article-content">
+      <h2>The Relationship You Didn't Know You Had</h2>
+
+      <p>Think about your AI assistant for a moment.</p>
+
+      <p>It knows your writing style. Your preferences. The projects you're working on. The way you like things explained. Your pet peeves. Your recurring questions.</p>
+
+      <p>If you've been using ChatGPT, Claude, or Gemini for any length of time, your AI has built a detailed mental model of <em>you</em>. Custom instructions refined over months. Memories accumulated through hundreds of conversations. Tool configurations tuned to your workflow.</p>
+
+      <p>This isn't just data. It's a relationship.</p>
+
+      <p>And here's the uncomfortable truth: <strong>none of it is backed up</strong>.</p>
+
+      <h2>The Problem Nobody Talks About</h2>
+
+      <p>What happens when:</p>
+
+      <ul>
+        <li>OpenAI changes their memory system (again)?</li>
+        <li>You want to try Claude but don't want to start over?</li>
+        <li>A service outage wipes your conversation history?</li>
+        <li>You need to switch platforms for work?</li>
+        <li>The API you built on gets deprecated?</li>
+      </ul>
+
+      <p>Right now, the answer is: you lose everything and start over.</p>
+
+      <p>Your AI's understanding of you — accumulated over months of interaction — vanishes. You're back to explaining your preferences, rebuilding your custom instructions, re-establishing context.</p>
+
+      <p>It's like getting a new assistant every time something changes. And it happens more often than you think.</p>
+
+      <h2>Introducing SaveState</h2>
+
+      <p>We built SaveState because we think your AI identity should belong to you.</p>
+
+      <pre><code># Install
+npm install -g @savestate/cli
+
+# Initialize (sets up encryption)
+savestate init
+
+# Capture your AI's current state
+savestate snapshot
+
+# Restore anytime
+savestate restore latest
+
+# Or migrate to a different platform
+savestate migrate --from chatgpt --to claude</code></pre>
+
+      <p>SaveState is <strong>Time Machine for AI</strong>. It captures, encrypts, and preserves your AI's understanding of you — so you never have to start over.</p>
+
+      <h2>How It Works</h2>
+
+      <h3>1. Extract Everything That Matters</h3>
+
+      <p>SaveState pulls your AI identity from wherever it lives:</p>
+
+      <ul>
+        <li><strong>Custom instructions</strong> and system prompts</li>
+        <li><strong>Memories</strong> the AI has learned about you</li>
+        <li><strong>Conversation history</strong> (where supported)</li>
+        <li><strong>Tool configurations</strong> and API setups</li>
+        <li><strong>Projects</strong> and knowledge bases</li>
+      </ul>
+
+      <p>We support ChatGPT, Claude (web and API), Gemini, OpenAI Assistants, Moltbot, and any file-based agent system. More adapters are being added constantly.</p>
+
+      <h3>2. Encrypt Before It Leaves Your Machine</h3>
+
+      <p>Your AI knows sensitive things. SaveState treats that seriously.</p>
+
+      <ul>
+        <li><strong>AES-256-GCM</strong> encryption with scrypt key derivation</li>
+        <li>Your passphrase, your keys — we never see them</li>
+        <li>Encryption happens locally, before any data moves</li>
+        <li>Even if you use our cloud storage, we can't read your backups</li>
+      </ul>
+
+      <h3>3. Store Where You Want</h3>
+
+      <ul>
+        <li><strong>Local filesystem</strong> (free, default)</li>
+        <li><strong>Our cloud</strong> (Pro/Team — encrypted at rest)</li>
+        <li><strong>Your own S3/R2</strong> (coming soon)</li>
+      </ul>
+
+      <h3>4. Restore or Migrate</h3>
+
+      <p>Restore to the same platform when things go wrong. Or migrate to a different platform when you want to switch.</p>
+
+      <p>The SaveState Archive Format (SAF) is an open spec. Your backups aren't locked to us any more than they're locked to OpenAI or Anthropic.</p>
+
+      <h2>Features</h2>
+
+      <ul>
+        <li>🔐 <strong>End-to-end encryption</strong> — AES-256-GCM, your keys only</li>
+        <li>📦 <strong>Open archive format</strong> — No vendor lock-in, ever</li>
+        <li>⏰ <strong>Scheduled auto-backups</strong> — Set it and forget it (Pro)</li>
+        <li>🔄 <strong>Cross-platform migration</strong> — ChatGPT → Claude, etc.</li>
+        <li>📊 <strong>Incremental snapshots</strong> — Like git, only stores what changed</li>
+        <li>🖥️ <strong>Web dashboard</strong> — Manage backups from anywhere (Pro)</li>
+      </ul>
+
+      <h2>Pricing</h2>
+
+      <p><strong>Free</strong>: Local encrypted backups, all platform adapters, manual snapshots. Everything you need to protect your AI identity on your own machine.</p>
+
+      <p><strong>Pro ($9/month)</strong>: Cloud storage (10GB), scheduled auto-backups, web dashboard, migration wizard, priority support.</p>
+
+      <p><strong>Team ($29/month)</strong>: 100GB cloud storage, shared team backups, audit logs, compliance features.</p>
+
+      <h2>Why We Built This</h2>
+
+      <p>AI assistants are becoming extensions of ourselves. They're not just tools — they're collaborators that learn and adapt to how we work.</p>
+
+      <p>But the platforms treat your AI relationship as their property. Your memories live on their servers. Your custom instructions are in their database. Your conversation history is their training data.</p>
+
+      <p>We think that's backwards.</p>
+
+      <p><strong>Your AI identity should be yours.</strong> Portable. Backed up. Under your control.</p>
+
+      <p>SaveState makes that possible.</p>
+
+      <div class="cta-box">
+        <h3>Get Started in 30 Seconds</h3>
+        <p>Your first backup is free. Your AI's memory is priceless.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
+      </div>
+
+      <hr>
+
+      <p><em>SaveState is open source (MIT license) and built in public. <a href="https://github.com/savestatedev/savestate">Star the repo</a> if this resonates. We're just getting started.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>
