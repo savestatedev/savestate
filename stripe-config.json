@@ -7,6 +7,7 @@
       "amount_cents": 900,
       "interval": "month",
       "currency": "usd",
+      "payment_link": "https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00",
       "features": [
         "Scheduled auto-backups",
         "Cloud storage (10GB)",
@@ -23,6 +24,7 @@
       "amount_cents": 2900,
       "interval": "month",
       "currency": "usd",
+      "payment_link": "https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01",
       "features": [
         "Everything in Pro",
         "Shared team backups",
