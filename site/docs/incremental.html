@@ -1,222 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Incremental Snapshots — SaveState Docs</title>
-  <meta name="description" content="Delta-only captures, snapshot chains, and automatic reconstruction in SaveState.">
-  <link rel="stylesheet" href="docs.css">
-  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incremental Snapshots — SaveState Docs</title>
+<meta name="description" content="How SaveState incremental snapshots work: delta computation, chain depth, auto-detection, and reconstruction.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button class="mobile-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
-  <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-  <div class="layout">
-    <nav class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <a href="https://savestate.dev" class="sidebar-logo">
-          <img src="/logo.svg" alt="">
-          SaveState <span>docs</span>
-        </a>
-        <a href="https://savestate.dev" class="sidebar-back">← Back to savestate.dev</a>
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html" class="active">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Incremental Snapshots</h1>
+    <p class="subtitle">Like git — only captures what changed. Full version history, minimal storage.</p>
+
+    <h2 id="how-it-works">How It Works</h2>
+    <p>Instead of storing a full copy every time, incremental snapshots compute a <strong>delta</strong> against the previous snapshot and store only changed files.</p>
+
+    <pre><code><span class="code-comment">                       Full chain:</span>
+<span class="code-cmd">base (full)</span> → <span class="code-flag">delta-1</span> → <span class="code-flag">delta-2</span> → <span class="code-flag">delta-3</span> → <span class="code-cmd">base (full)</span> → <span class="code-flag">delta-4</span> → ...
+    <span class="code-output">↑</span>                                           <span class="code-output">↑</span>
+  <span class="code-output">chain depth 0</span>                              <span class="code-output">auto-forced at depth 10</span></code></pre>
+
+    <h3>The delta process</h3>
+    <ol>
+      <li><strong>Hash current state:</strong> SHA-256 hash every file in the new snapshot</li>
+      <li><strong>Load parent hashes:</strong> Read the content hashes from the previous snapshot's delta manifest (or compute them for full snapshots)</li>
+      <li><strong>Compare:</strong> Identify which files are added, modified, or removed</li>
+      <li><strong>Store delta:</strong> Only save the changed and added files, plus a delta manifest listing all changes</li>
+    </ol>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Incremental snapshot output</span>
       </div>
-      <div class="sidebar-nav">
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Getting Started</div>
-          <a href="/docs/">Quick Start</a>
-          <a href="/docs/cli.html">CLI Reference</a>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Core Concepts</div>
-          <a href="/docs/adapters.html">Platform Adapters</a>
-          <a href="/docs/storage.html">Storage Backends</a>
-          <a href="/docs/encryption.html">Encryption</a>
-          <a href="/docs/incremental.html" class="active">Incremental Snapshots</a>
-          <a href="/docs/format.html">Archive Format (SAF)</a>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Plans</div>
-          <a href="/docs/pricing.html">Pricing</a>
-        </div>
-      </div>
-    </nav>
+      <pre><code><span class="code-prompt">$</span> savestate snapshot
+<span class="code-success">✓</span> <span class="code-output">Platform detected: clawdbot</span>
+<span class="code-success">✓</span> <span class="code-output">Incremental snapshot created!</span>
+  <span class="code-output">Changes: <span class="code-success">+3</span> added, <span class="code-flag">~5</span> modified, 42 unchanged</span>
+  <span class="code-output">Saved:   <span class="code-flag">847 KB</span> vs full snapshot</span>
+<span class="code-success">✓</span> <span class="code-output">Encrypted &amp; stored (12.4 KB)</span></code></pre>
+    </div>
 
-    <main class="main">
-      <div class="content">
-        <h1>Incremental Snapshots</h1>
-        <p class="subtitle">Like git — only captures what changed. Full history, tiny storage.</p>
+    <h2 id="auto-detection">Auto-Detection</h2>
+    <p>Incremental snapshots are <strong>automatic</strong>. When you run <code>savestate snapshot</code>:</p>
+    <ol>
+      <li>SaveState checks if a previous snapshot exists</li>
+      <li>If yes, it loads the parent's content hashes and computes a delta</li>
+      <li>If no previous snapshot exists (first run), it creates a full snapshot</li>
+    </ol>
 
-        <h2 id="how">How It Works</h2>
-        <p>Instead of storing a full copy every time, incremental snapshots capture only what changed since the last snapshot. This dramatically reduces storage usage and speeds up backups.</p>
+    <p>You don't need to do anything special — incrementals are the default behavior.</p>
 
-        <ol>
-          <li><strong>Hash every file</strong> in the current snapshot (SHA-256)</li>
-          <li><strong>Load the parent</strong> snapshot's content hashes</li>
-          <li><strong>Compare</strong> — identify added, modified, and removed files</li>
-          <li><strong>Store only the delta</strong> (changed + added files)</li>
-          <li>On restore: <strong>reconstruct</strong> by applying deltas from base → current</li>
-        </ol>
+    <h2 id="force-full">Forcing a Full Snapshot</h2>
+    <p>Use the <code>--full</code> flag to bypass incremental detection and create a complete snapshot:</p>
+    <pre><code><span class="code-prompt">$</span> savestate snapshot --full</code></pre>
 
-        <h2 id="chain">Snapshot Chains</h2>
-        <p>Snapshots form a chain. The first snapshot is always a <strong>full snapshot</strong>. Subsequent snapshots are <strong>deltas</strong> that reference their parent:</p>
+    <p>Full snapshots are also <strong>automatically forced</strong> when:</p>
+    <ul>
+      <li><strong>Chain depth reaches 10:</strong> After 10 consecutive deltas, a full snapshot is created to keep the chain short and restore fast</li>
+      <li><strong>Change ratio exceeds 70%:</strong> If more than 70% of files changed, a full snapshot is more efficient than a delta</li>
+      <li><strong>No parent found:</strong> First snapshot or parent can't be loaded</li>
+    </ul>
 
-<pre><code><span class="c-accent">base (full)</span> → <span class="c-flag">delta-1</span> → <span class="c-flag">delta-2</span> → <span class="c-flag">delta-3</span> (current)
-  128 KB         8 KB        12 KB        5 KB</code></pre>
+    <h2 id="chain-depth">Chain Depth</h2>
 
-        <p>In this example, 4 snapshots use only 153 KB instead of 512 KB (4 × 128 KB). That's <strong>70% savings</strong>.</p>
+    <table>
+      <thead>
+        <tr><th>Constant</th><th>Value</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>MAX_CHAIN_DEPTH</code></td><td>10</td><td>Maximum deltas before forcing a full snapshot</td></tr>
+        <tr><td><code>FULL_SNAPSHOT_THRESHOLD</code></td><td>0.7 (70%)</td><td>If this fraction of files changed, force full</td></tr>
+      </tbody>
+    </table>
 
-        <h3>Automatic full snapshots</h3>
-        <p>SaveState automatically forces a full snapshot in two cases:</p>
+    <p>This ensures that restoring any snapshot never requires walking more than 10 chain links — keeping restore time fast even with hundreds of snapshots.</p>
 
-        <table>
-          <thead>
-            <tr><th>Condition</th><th>Threshold</th><th>Reason</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Chain depth</strong></td>
-              <td>10 deltas</td>
-              <td>Keeps restore fast (max 10 deltas to reconstruct)</td>
-            </tr>
-            <tr>
-              <td><strong>Change ratio</strong></td>
-              <td>≥ 70% files changed</td>
-              <td>Delta would be nearly as large as a full snapshot</td>
-            </tr>
-          </tbody>
-        </table>
+    <h2 id="delta-manifest">Delta Manifest</h2>
+    <p>Incremental archives contain a <code>meta/delta-manifest.json</code> with full change tracking:</p>
 
-        <p>You can also force a full snapshot manually:</p>
-<pre><code><span class="c-cmd">savestate</span> snapshot <span class="c-flag">--full</span></code></pre>
-
-        <h2 id="delta-manifest">Delta Manifest</h2>
-        <p>Each incremental archive includes a <code>meta/delta-manifest.json</code> that describes exactly what changed:</p>
-
-<pre><code>{
-  <span class="c-string">"parentId"</span>: <span class="c-string">"ss-2026-01-25T09-30-00-b7e1df"</span>,
-  <span class="c-string">"baseId"</span>: <span class="c-string">"ss-2026-01-20T12-00-00-c4a9e2"</span>,
-  <span class="c-string">"chainDepth"</span>: <span class="c-value">3</span>,
-  <span class="c-string">"resultHashes"</span>: {
-    <span class="c-string">"files"</span>: {
-      <span class="c-string">"manifest.json"</span>: <span class="c-string">"sha256:a1b2c3..."</span>,
-      <span class="c-string">"identity/personality.md"</span>: <span class="c-string">"sha256:d4e5f6..."</span>,
-      <span class="c-comment">// ... hashes for ALL files after applying this delta</span>
+    <pre><code>{
+  <span class="code-key">"parentId"</span>: <span class="code-value">"ss-2026-01-26T09-30-00-b7c1m4"</span>,
+  <span class="code-key">"baseId"</span>: <span class="code-value">"ss-2026-01-20T00-00-00-x1y2z3"</span>,
+  <span class="code-key">"chainDepth"</span>: <span class="code-value">3</span>,
+  <span class="code-key">"resultHashes"</span>: {
+    <span class="code-key">"files"</span>: {
+      <span class="code-key">"identity/personality.md"</span>: <span class="code-value">"sha256:a1b2c3..."</span>,
+      <span class="code-key">"memory/core.json"</span>: <span class="code-value">"sha256:d4e5f6..."</span>
     },
-    <span class="c-string">"count"</span>: <span class="c-value">42</span>,
-    <span class="c-string">"rootHash"</span>: <span class="c-string">"sha256:..."</span>
+    <span class="code-key">"count"</span>: <span class="code-value">47</span>,
+    <span class="code-key">"rootHash"</span>: <span class="code-value">"sha256:..."</span>
   },
-  <span class="c-string">"entries"</span>: [
-    { <span class="c-string">"path"</span>: <span class="c-string">"memory/2026-01-27.md"</span>, <span class="c-string">"type"</span>: <span class="c-string">"added"</span>, <span class="c-string">"hash"</span>: <span class="c-string">"sha256:..."</span>, <span class="c-string">"size"</span>: <span class="c-value">1024</span> },
-    { <span class="c-string">"path"</span>: <span class="c-string">"identity/personality.md"</span>, <span class="c-string">"type"</span>: <span class="c-string">"modified"</span>, <span class="c-string">"hash"</span>: <span class="c-string">"sha256:..."</span>, <span class="c-string">"size"</span>: <span class="c-value">4096</span> },
-    { <span class="c-string">"path"</span>: <span class="c-string">"conversations/old-thread.json"</span>, <span class="c-string">"type"</span>: <span class="c-string">"removed"</span> }
+  <span class="code-key">"entries"</span>: [
+    { <span class="code-key">"path"</span>: <span class="code-value">"memory/core.json"</span>, <span class="code-key">"type"</span>: <span class="code-value">"modified"</span>, <span class="code-key">"hash"</span>: <span class="code-value">"sha256:..."</span>, <span class="code-key">"size"</span>: <span class="code-value">4096</span> },
+    { <span class="code-key">"path"</span>: <span class="code-value">"identity/skills.json"</span>, <span class="code-key">"type"</span>: <span class="code-value">"added"</span>, <span class="code-key">"hash"</span>: <span class="code-value">"sha256:..."</span>, <span class="code-key">"size"</span>: <span class="code-value">1024</span> },
+    { <span class="code-key">"path"</span>: <span class="code-value">"identity/old-config.json"</span>, <span class="code-key">"type"</span>: <span class="code-value">"removed"</span> }
   ],
-  <span class="c-string">"stats"</span>: {
-    <span class="c-string">"added"</span>: <span class="c-value">1</span>,
-    <span class="c-string">"modified"</span>: <span class="c-value">1</span>,
-    <span class="c-string">"removed"</span>: <span class="c-value">1</span>,
-    <span class="c-string">"unchanged"</span>: <span class="c-value">39</span>,
-    <span class="c-string">"totalFiles"</span>: <span class="c-value">42</span>,
-    <span class="c-string">"bytesSaved"</span>: <span class="c-value">98304</span>
+  <span class="code-key">"stats"</span>: {
+    <span class="code-key">"added"</span>: <span class="code-value">1</span>,
+    <span class="code-key">"modified"</span>: <span class="code-value">1</span>,
+    <span class="code-key">"removed"</span>: <span class="code-value">1</span>,
+    <span class="code-key">"unchanged"</span>: <span class="code-value">44</span>,
+    <span class="code-key">"totalFiles"</span>: <span class="code-value">46</span>,
+    <span class="code-key">"bytesSaved"</span>: <span class="code-value">867328</span>
   }
 }</code></pre>
 
-        <h2 id="content-hashing">Content Hashing</h2>
-        <p>Every file in a snapshot is hashed with SHA-256. The <strong>root hash</strong> is computed by sorting all path:hash pairs alphabetically and hashing the result:</p>
+    <h3>Delta entry types</h3>
+    <table>
+      <thead>
+        <tr><th>Type</th><th>Meaning</th><th>File in archive?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>added</code></td><td>New file not in parent</td><td>Yes — full content included</td></tr>
+        <tr><td><code>modified</code></td><td>File exists but content changed (different SHA-256)</td><td>Yes — full new content included</td></tr>
+        <tr><td><code>removed</code></td><td>File was in parent but not in current</td><td>No — just the path in the manifest</td></tr>
+      </tbody>
+    </table>
 
-<pre><code><span class="c-comment">// Individual file hashes</span>
-identity/personality.md → sha256:a1b2c3...
-manifest.json → sha256:d4e5f6...
-memory/core.json → sha256:g7h8i9...
+    <h2 id="reconstruction">Reconstruction</h2>
+    <p>When restoring from an incremental snapshot, SaveState <strong>reconstructs</strong> the full state by walking the chain:</p>
 
-<span class="c-comment">// Root hash = SHA-256 of sorted "path:hash" pairs joined by newlines</span>
-rootHash = SHA-256(<span class="c-string">"identity/personality.md:a1b2c3...\nmanifest.json:d4e5f6...\nmemory/core.json:g7h8i9..."</span>)</code></pre>
+    <pre><code><span class="code-comment">Reconstruction process:</span>
 
-        <p>The root hash provides a quick way to check if two snapshots are identical without comparing every file.</p>
+<span class="code-output">1. Walk backwards from target snapshot to find the base (full) snapshot</span>
+<span class="code-output">2. Load the base snapshot → full file map</span>
+<span class="code-output">3. Apply each delta in order:</span>
+   <span class="code-success">   a. Add/overwrite files from the delta</span>
+   <span class="code-success">   b. Remove files marked as 'removed'</span>
+<span class="code-output">4. Result: complete reconstructed state</span>
 
-        <h2 id="reconstruction">Reconstruction</h2>
-        <p>When restoring from an incremental snapshot, SaveState automatically reconstructs the full state by walking the chain:</p>
+<span class="code-comment">Example chain walk:</span>
+<span class="code-cmd">base</span> → <span class="code-flag">delta-1</span> → <span class="code-flag">delta-2</span> → <span class="code-flag">target</span>
+  <span class="code-output">↓</span>         <span class="code-output">↓</span>           <span class="code-output">↓</span>          <span class="code-output">↓</span>
+<span class="code-output">47 files</span>  <span class="code-output">+2, ~3</span>     <span class="code-output">~1, -1</span>    <span class="code-output">+1</span>
+                                   <span class="code-output">= 49 files</span></code></pre>
 
-        <ol>
-          <li><strong>Walk backward</strong> from the target snapshot, following <code>parentId</code> links</li>
-          <li><strong>Find the base</strong> (full snapshot) — it has no <code>delta-manifest.json</code></li>
-          <li><strong>Start with the base</strong> as the initial file map</li>
-          <li><strong>Apply each delta in order:</strong>
-            <ul>
-              <li>Add/overwrite files from the delta archive</li>
-              <li>Remove files marked as <code>"removed"</code></li>
-            </ul>
-          </li>
-          <li><strong>Result:</strong> Complete file map as if it were a full snapshot</li>
-        </ol>
+    <p>This is transparent — you just run <code>savestate restore</code> and it handles the chain walking automatically.</p>
 
-<pre><code><span class="c-comment">// Reconstruction chain</span>
-base (full)     <span class="c-comment">// Start: all files</span>
-  ↓ apply delta-1   <span class="c-comment">// +2 added, ~1 modified, -0 removed</span>
-  ↓ apply delta-2   <span class="c-comment">// +0 added, ~3 modified, -1 removed</span>
-  ↓ apply delta-3   <span class="c-comment">// +1 added, ~1 modified, -1 removed</span>
-  = <span class="c-accent">reconstructed full snapshot</span></code></pre>
+    <h2 id="content-hashing">Content Hashing</h2>
+    <p>Every file is hashed with SHA-256 for change detection:</p>
+    <pre><code><span class="code-type">interface</span> <span class="code-cmd">ContentHashes</span> {
+  <span class="code-key">files</span>: Record&lt;<span class="code-type">string</span>, <span class="code-type">string</span>&gt;;   <span class="code-comment">// path → SHA-256</span>
+  <span class="code-key">count</span>: <span class="code-type">number</span>;                    <span class="code-comment">// total file count</span>
+  <span class="code-key">rootHash</span>: <span class="code-type">string</span>;                 <span class="code-comment">// hash of all hashes (quick comparison)</span>
+}</code></pre>
 
-        <p>This is transparent to the user — <code>savestate restore</code> handles reconstruction automatically.</p>
+    <p>The <code>rootHash</code> is computed by sorting all <code>path:hash</code> pairs and hashing the result — a quick way to check if anything changed at all before computing the full delta.</p>
 
-        <h2 id="delta-archive">Delta Archive Contents</h2>
-        <p>An incremental archive is smaller than a full archive because it only contains:</p>
+    <div class="callout callout-tip">
+      <span class="callout-label">💡</span> The <code>resultHashes</code> field in the delta manifest stores the hashes of the <em>full</em> state after applying the delta. This means the next incremental snapshot can compare directly without needing to reconstruct.
+    </div>
 
-        <ul>
-          <li><code>manifest.json</code> — Always present (updated metadata)</li>
-          <li><code>meta/delta-manifest.json</code> — The delta details</li>
-          <li><code>meta/platform.json</code> — Platform info</li>
-          <li><code>meta/snapshot-chain.json</code> — Chain links</li>
-          <li><code>meta/restore-hints.json</code> — Restore instructions</li>
-          <li><strong>Only changed/added files</strong> — Everything else is omitted</li>
-        </ul>
-
-        <div class="callout">
-          <strong>How to tell if a snapshot is incremental</strong>
-          If the archive contains <code>meta/delta-manifest.json</code>, it's incremental. If not, it's a full snapshot.
-        </div>
-
-        <h2 id="detection">Automatic Parent Detection</h2>
-        <p>When you run <code>savestate snapshot</code> (without <code>--full</code>), SaveState automatically:</p>
-        <ol>
-          <li>Checks if a previous snapshot exists in the index</li>
-          <li>Loads the latest snapshot's content hashes</li>
-          <li>If the latest was also incremental, follows the chain to determine <code>baseId</code> and <code>chainDepth</code></li>
-          <li>Computes the delta against the parent</li>
-          <li>If the chain is too deep (≥10) or too much changed (≥70%), forces a full snapshot instead</li>
-        </ol>
-
-        <p>If no previous snapshot exists, the first snapshot is always full.</p>
-
-        <h2 id="storage-savings">Storage Savings</h2>
-        <p>Real-world example from a Clawdbot workspace:</p>
-
-        <table>
-          <thead>
-            <tr><th>Snapshot</th><th>Type</th><th>Size</th><th>Changed</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>ss-01-20</td><td><span class="badge badge-blue">Full</span></td><td>128 KB</td><td>—</td></tr>
-            <tr><td>ss-01-21</td><td><span class="badge badge-green">Delta</span></td><td>8 KB</td><td>2 files</td></tr>
-            <tr><td>ss-01-22</td><td><span class="badge badge-green">Delta</span></td><td>12 KB</td><td>3 files</td></tr>
-            <tr><td>ss-01-23</td><td><span class="badge badge-green">Delta</span></td><td>5 KB</td><td>1 file</td></tr>
-            <tr><td>ss-01-24</td><td><span class="badge badge-green">Delta</span></td><td>15 KB</td><td>4 files</td></tr>
-            <tr><td>ss-01-25</td><td><span class="badge badge-green">Delta</span></td><td>6 KB</td><td>2 files</td></tr>
-          </tbody>
-        </table>
-
-        <p><strong>Without incremental:</strong> 6 × 128 KB = 768 KB<br>
-           <strong>With incremental:</strong> 128 + 8 + 12 + 5 + 15 + 6 = 174 KB<br>
-           <strong>Savings:</strong> 77%</p>
-      </div>
-    </main>
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <a href="/docs/format.html">
+        <span class="page-nav-label">← Previous</span>
+        <span class="page-nav-title">SAF Archive Format</span>
+      </a>
+      <a href="/docs/pricing.html" class="next">
+        <span class="page-nav-label">Next →</span>
+        <span class="page-nav-title">Pricing</span>
+      </a>
+    </div>
   </div>
 
-  <script>
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('overlay').classList.toggle('open');
-    }
-  </script>
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
 </body>
 </html>

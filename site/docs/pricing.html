@@ -1,165 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pricing — SaveState Docs</title>
-  <meta name="description" content="SaveState pricing: Free CLI forever, Pro for power users, Team for organizations.">
-  <link rel="stylesheet" href="docs.css">
-  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — SaveState Docs</title>
+<meta name="description" content="SaveState pricing: Free forever (open source CLI), Pro ($9/mo), and Team ($29/mo) plans with cloud features.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button class="mobile-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
-  <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-  <div class="layout">
-    <nav class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <a href="https://savestate.dev" class="sidebar-logo">
-          <img src="/logo.svg" alt="">
-          SaveState <span>docs</span>
-        </a>
-        <a href="https://savestate.dev" class="sidebar-back">← Back to savestate.dev</a>
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html" class="active">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Pricing</h1>
+    <p class="subtitle">The CLI is open source and always free. Pro and Team unlock cloud features, auto-backups, and full platform support.</p>
+
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="price-card">
+        <div class="tier">Free</div>
+        <div class="amount">$0</div>
+        <div class="period">forever</div>
+        <ul>
+          <li>✓ CLI tool (open source)</li>
+          <li>✓ Local storage</li>
+          <li>✓ Manual snapshots</li>
+          <li>✓ Full &amp; incremental backups</li>
+          <li>✓ AES-256-GCM encryption</li>
+          <li>✓ 1 platform adapter</li>
+          <li>✓ Search &amp; diff commands</li>
+        </ul>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-secondary btn-full" target="_blank" rel="noopener">Get Started Free</a>
       </div>
-      <div class="sidebar-nav">
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Getting Started</div>
-          <a href="/docs/">Quick Start</a>
-          <a href="/docs/cli.html">CLI Reference</a>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Core Concepts</div>
-          <a href="/docs/adapters.html">Platform Adapters</a>
-          <a href="/docs/storage.html">Storage Backends</a>
-          <a href="/docs/encryption.html">Encryption</a>
-          <a href="/docs/incremental.html">Incremental Snapshots</a>
-          <a href="/docs/format.html">Archive Format (SAF)</a>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Plans</div>
-          <a href="/docs/pricing.html" class="active">Pricing</a>
-        </div>
+
+      <!-- Pro -->
+      <div class="price-card featured">
+        <div class="popular-badge">Most Popular</div>
+        <div class="tier">Pro</div>
+        <div class="amount">$9<span>/mo</span></div>
+        <div class="period">billed monthly</div>
+        <ul>
+          <li>✓ <strong>Everything in Free</strong></li>
+          <li>✓ Scheduled auto-backups</li>
+          <li>✓ Cloud storage (10 GB included)</li>
+          <li>✓ <strong>All 6 platform adapters</strong></li>
+          <li>✓ Search across snapshots</li>
+          <li>✓ Web dashboard</li>
+          <li>✓ Email alerts on failures</li>
+        </ul>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn btn-primary btn-full">Subscribe to Pro</a>
       </div>
-    </nav>
 
-    <main class="main">
-      <div class="content">
-        <h1>Pricing</h1>
-        <p class="subtitle">The CLI is free forever. Paid plans add cloud storage, auto-backups, and team features.</p>
-
-        <div class="pricing-grid">
-
-          <!-- Free -->
-          <div class="price-card">
-            <h3>Free</h3>
-            <div class="price-amount">$0</div>
-            <p class="price-desc">Open source, forever free</p>
-            <ul class="price-features">
-              <li>CLI tool (full feature set)</li>
-              <li>Local storage</li>
-              <li>Manual snapshots</li>
-              <li>1 platform adapter</li>
-              <li>Incremental snapshots</li>
-              <li>AES-256-GCM encryption</li>
-              <li>Diff &amp; search</li>
-            </ul>
-            <a href="/docs/" class="btn btn-outline">Get Started</a>
-          </div>
-
-          <!-- Pro -->
-          <div class="price-card featured">
-            <h3>Pro</h3>
-            <div class="price-amount">$9 <span>/month</span></div>
-            <p class="price-desc">For power users and professionals</p>
-            <ul class="price-features">
-              <li>Everything in Free</li>
-              <li>Scheduled auto-backups</li>
-              <li>Cloud storage (10 GB included)</li>
-              <li>All 6 platform adapters</li>
-              <li>Search across all snapshots</li>
-              <li>Web dashboard</li>
-              <li>Email alerts on backup failures</li>
-              <li>Priority support</li>
-            </ul>
-            <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn btn-primary">Subscribe to Pro</a>
-          </div>
-
-          <!-- Team -->
-          <div class="price-card">
-            <h3>Team</h3>
-            <div class="price-amount">$29 <span>/month</span></div>
-            <p class="price-desc">For teams and organizations</p>
-            <ul class="price-features">
-              <li>Everything in Pro</li>
-              <li>Shared team backups</li>
-              <li>Compliance &amp; audit trails</li>
-              <li>SSO (Single Sign-On)</li>
-              <li>Custom adapters</li>
-              <li>Custom retention policies</li>
-              <li>Dedicated support</li>
-            </ul>
-            <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="btn btn-outline">Subscribe to Team</a>
-          </div>
-
-        </div>
-
-        <hr>
-
-        <h2 id="comparison">Feature Comparison</h2>
-        <table>
-          <thead>
-            <tr><th>Feature</th><th>Free</th><th>Pro</th><th>Team</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>CLI tool</td><td>✓</td><td>✓</td><td>✓</td></tr>
-            <tr><td>AES-256-GCM encryption</td><td>✓</td><td>✓</td><td>✓</td></tr>
-            <tr><td>Incremental snapshots</td><td>✓</td><td>✓</td><td>✓</td></tr>
-            <tr><td>Local storage</td><td>✓</td><td>✓</td><td>✓</td></tr>
-            <tr><td>S3 / R2 storage</td><td>✓ (BYO)</td><td>✓ (included)</td><td>✓ (included)</td></tr>
-            <tr><td>Platform adapters</td><td>1</td><td>All 6</td><td>All 6 + custom</td></tr>
-            <tr><td>Auto-backup schedule</td><td>—</td><td>✓</td><td>✓</td></tr>
-            <tr><td>Cloud storage</td><td>—</td><td>10 GB</td><td>50 GB</td></tr>
-            <tr><td>Web dashboard</td><td>—</td><td>✓</td><td>✓</td></tr>
-            <tr><td>Email alerts</td><td>—</td><td>✓</td><td>✓</td></tr>
-            <tr><td>Cross-snapshot search</td><td>—</td><td>✓</td><td>✓</td></tr>
-            <tr><td>Team shared backups</td><td>—</td><td>—</td><td>✓</td></tr>
-            <tr><td>Audit trails</td><td>—</td><td>—</td><td>✓</td></tr>
-            <tr><td>SSO</td><td>—</td><td>—</td><td>✓</td></tr>
-            <tr><td>Custom retention policies</td><td>—</td><td>—</td><td>✓</td></tr>
-            <tr><td>Support</td><td>Community</td><td>Priority</td><td>Dedicated</td></tr>
-          </tbody>
-        </table>
-
-        <hr>
-
-        <h2 id="enterprise">Enterprise</h2>
-        <p>Need self-hosted deployment, custom retention policies, API access for integration, or a dedicated support contract?</p>
-        <p><a href="mailto:hello@savestate.dev">Contact us</a> for Enterprise pricing.</p>
-
-        <hr>
-
-        <h2 id="faq">FAQ</h2>
-
-        <h3>Is the CLI really free forever?</h3>
-        <p>Yes. The CLI and the SAF format are open source. You can use local storage with manual snapshots and one adapter at no cost, forever. We believe the backup tool itself should be free — you're paying for convenience (auto-backups, cloud, multi-platform).</p>
-
-        <h3>Can I use S3/R2 storage on the Free tier?</h3>
-        <p>Yes! You can bring your own S3 or R2 bucket on any tier. The Free tier uses your own credentials. The Pro/Team tiers include managed cloud storage so you don't have to set anything up.</p>
-
-        <h3>What counts as "1 adapter" on the Free tier?</h3>
-        <p>You can use any one adapter. Most users only need one — whichever platform their AI runs on. If you work across multiple platforms, Pro unlocks all six.</p>
-
-        <h3>Can I cancel anytime?</h3>
-        <p>Yes. Monthly billing, cancel anytime. Your existing snapshots remain accessible — they're encrypted on your storage and only you have the key.</p>
+      <!-- Team -->
+      <div class="price-card">
+        <div class="tier">Team</div>
+        <div class="amount">$29<span>/mo</span></div>
+        <div class="period">billed monthly</div>
+        <ul>
+          <li>✓ <strong>Everything in Pro</strong></li>
+          <li>✓ Shared team backups</li>
+          <li>✓ Compliance &amp; audit trails</li>
+          <li>✓ SSO integration</li>
+          <li>✓ Priority support</li>
+          <li>✓ Custom adapters</li>
+        </ul>
+        <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="btn btn-secondary btn-full">Subscribe to Team</a>
       </div>
-    </main>
+    </div>
+
+    <h2 id="comparison">Feature Comparison</h2>
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>Free</th><th>Pro</th><th>Team</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CLI tool</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        <tr><td>AES-256-GCM encryption</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Full &amp; incremental snapshots</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Local storage</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        <tr><td>S3 / R2 / B2 storage</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Search &amp; diff</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Platform adapters</td><td>1</td><td><strong>All 6</strong></td><td><strong>All 6 + custom</strong></td></tr>
+        <tr><td>Scheduled auto-backups</td><td>—</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Cloud storage (included)</td><td>—</td><td>10 GB</td><td>10 GB</td></tr>
+        <tr><td>Web dashboard</td><td>—</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Email alerts</td><td>—</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Shared team backups</td><td>—</td><td>—</td><td>✅</td></tr>
+        <tr><td>Compliance &amp; audit trails</td><td>—</td><td>—</td><td>✅</td></tr>
+        <tr><td>SSO</td><td>—</td><td>—</td><td>✅</td></tr>
+        <tr><td>Priority support</td><td>—</td><td>—</td><td>✅</td></tr>
+        <tr><td>Custom adapters</td><td>—</td><td>—</td><td>✅</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="faq">FAQ</h2>
+
+    <h3>Is the CLI really free forever?</h3>
+    <p>Yes. The SaveState CLI is open source (MIT licensed). Local snapshots, encryption, incremental backups, search, and diff are all free. The code is on <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>.</p>
+
+    <h3>What does "1 platform adapter" mean?</h3>
+    <p>On the Free tier, you can use one adapter at a time (e.g., Claude Code only). Pro and Team unlock all 6 built-in adapters: Clawdbot, Claude Code, Claude Web, OpenAI Assistants, ChatGPT, and Gemini.</p>
+
+    <h3>Can I use S3 / R2 on the Free tier?</h3>
+    <p>Yes. Storage backends (local, S3, R2, B2) are available on all tiers. You bring your own bucket and credentials. The "Cloud storage (10 GB)" on Pro/Team refers to SaveState-managed storage so you don't have to set up your own.</p>
+
+    <h3>Can I cancel anytime?</h3>
+    <p>Yes. No contracts, no lock-in. Your encrypted snapshots are yours — they work with the free CLI regardless of your subscription status.</p>
+
+    <h3>Enterprise?</h3>
+    <p>For self-hosted deployments, custom retention policies, API access, and dedicated support — <a href="mailto:hello@savestate.dev">contact us</a>.</p>
+
+    <hr>
+
+    <div style="text-align: center; margin-top: 40px;">
+      <p style="font-size: 17px; color: var(--text); margin-bottom: 20px;"><strong>Ready to get started?</strong></p>
+      <pre><code><span class="code-prompt">$</span> npm install -g @savestate/cli &amp;&amp; savestate init</code></pre>
+    </div>
+
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <a href="/docs/incremental.html">
+        <span class="page-nav-label">← Previous</span>
+        <span class="page-nav-title">Incremental Snapshots</span>
+      </a>
+      <a href="/docs/" class="next">
+        <span class="page-nav-label">Back to →</span>
+        <span class="page-nav-title">Getting Started</span>
+      </a>
+    </div>
   </div>
 
-  <script>
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('overlay').classList.toggle('open');
-    }
-  </script>
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
 </body>
 </html>
