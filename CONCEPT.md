@@ -243,11 +243,12 @@ Nobody is doing this comprehensively. The closest analogy is 1Password for passw
 - [x] S3/R2 storage backend (AWS Sig V4, zero dependencies, Cloudflare R2 tested)
 - [x] Homebrew formula: `brew tap savestatedev/tap && brew install savestate`
 - [x] Stripe billing: Pro $9/mo + Team $29/mo (products live)
-- [ ] End-to-end test: full snapshot → restore cycle
+- [x] End-to-end test: full snapshot → restore cycle
+- [x] Homebrew formula updated to v0.2.0
+- [x] GitHub Actions CI/CD (ci.yml + release.yml with auto-publish)
+- [x] install.sh (platform-detect → binary → npm fallback → brew fallback)
 - [ ] Incremental snapshots (types defined, implementation pending)
-- [ ] Homebrew formula update to v0.2.0
-- [ ] GitHub Actions CI/CD
-- [ ] Binary releases + install.sh
+- [ ] Binary releases (automated via release.yml on tag push)
 
 ## Phase 3 — Launch Readiness
 
@@ -283,6 +284,6 @@ Stripe account: WithCandor (shared across DBH Ventures startups pending LLC appr
 
 *Created: January 27, 2026*
 *Last updated: January 27, 2026*
-*Status: Phase 2 nearly complete, Phase 3 in progress*
+*Status: Phase 2 complete (except incremental snapshots + binary releases), Phase 3 next*
 *Version: 0.2.0 (6 adapters, S3/R2 storage, Homebrew, Stripe billing)*
 *Author: David Hurley / Steve (AI)*
