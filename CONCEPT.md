@@ -241,14 +241,13 @@ Nobody is doing this comprehensively. The closest analogy is 1Password for passw
 - [x] Claude consumer adapter (claude.ai export + memory + Projects)
 - [x] Gemini adapter (Google Takeout + optional API capture)
 - [x] S3/R2 storage backend (AWS Sig V4, zero dependencies, Cloudflare R2 tested)
-- [x] Homebrew formula: `brew tap savestatedev/tap && brew install savestate`
-- [x] Stripe billing: Pro $9/mo + Team $29/mo (products live)
+- [x] Homebrew formula: `brew tap savestatedev/tap && brew install savestate` (v0.2.0)
+- [x] Stripe billing: Pro $9/mo + Team $29/mo (products live on WithCandor)
 - [x] End-to-end test: full snapshot → restore cycle
-- [x] Homebrew formula updated to v0.2.0
-- [x] GitHub Actions CI/CD (ci.yml + release.yml with auto-publish)
+- [x] GitHub Actions CI/CD (ci.yml: build/lint/smoke; release.yml: npm + binaries + Homebrew)
 - [x] install.sh (platform-detect → binary → npm fallback → brew fallback)
-- [ ] Incremental snapshots (types defined, implementation pending)
-- [ ] Binary releases (automated via release.yml on tag push)
+- [x] v0.2.1 release pipeline tested (npm ✅, GitHub Release ✅, 4/5 binaries built)
+- [ ] Incremental snapshots (types defined, implementation pending → moved to Phase 3)
 
 ## Phase 3 — Launch Readiness
 
@@ -284,6 +283,6 @@ Stripe account: WithCandor (shared across DBH Ventures startups pending LLC appr
 
 *Created: January 27, 2026*
 *Last updated: January 27, 2026*
-*Status: Phase 2 complete (except incremental snapshots + binary releases), Phase 3 next*
-*Version: 0.2.0 (6 adapters, S3/R2 storage, Homebrew, Stripe billing)*
+*Status: Phase 2 complete, Phase 3 in progress*
+*Version: 0.2.1 (6 adapters, S3/R2 storage, CI/CD, Homebrew, Stripe billing)*
 *Author: David Hurley / Steve (AI)*
