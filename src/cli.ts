@@ -25,6 +25,7 @@ import {
   configCommand,
   adaptersCommand,
 } from './commands/index.js';
+import { loginCommand, logoutCommand } from './commands/login.js';
 
 const program = new Command();
 
@@ -94,6 +95,33 @@ program
   .command('adapters')
   .description('List available platform adapters')
   .action(adaptersCommand);
+
+// ─── savestate search ────────────────────────────────────────
+
+import { searchCommand } from './commands/search.js';
+
+program
+  .command('search <query>')
+  .description('Search across all snapshots')
+  .option('--type <type>', 'Filter by type (memory, conversation, identity)')
+  .option('--limit <n>', 'Maximum results')
+  .option('--snapshot <id>', 'Search within a specific snapshot')
+  .action(searchCommand);
+
+// ─── savestate login ─────────────────────────────────────────
+
+program
+  .command('login')
+  .description('Authenticate with SaveState cloud')
+  .option('-k, --key <api-key>', 'API key (or enter interactively)')
+  .action(loginCommand);
+
+// ─── savestate logout ────────────────────────────────────────
+
+program
+  .command('logout')
+  .description('Remove saved API key')
+  .action(logoutCommand);
 
 // ─── Parse & run ─────────────────────────────────────────────
 

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting Started — SaveState Docs</title>
+<meta name="description" content="Install SaveState, create your first snapshot, and restore your AI identity in under a minute.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/" class="active">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Getting Started</h1>
+    <p class="subtitle">Install SaveState, take your first snapshot, and restore your AI identity — all in under a minute.</p>
+
+    <h2 id="install">Installation</h2>
+    <p>SaveState is available via npm, Homebrew, or a standalone binary.</p>
+
+    <h3>npm (recommended)</h3>
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-prompt">$</span> npm install -g @savestate/cli</code></pre>
+    </div>
+    <p>Or run directly with <code>npx</code>:</p>
+    <pre><code><span class="code-prompt">$</span> npx savestate init</code></pre>
+
+    <h3>Homebrew</h3>
+    <pre><code><span class="code-prompt">$</span> brew tap savestatedev/tap
+<span class="code-prompt">$</span> brew install savestate</code></pre>
+
+    <h3>Shell installer (macOS &amp; Linux)</h3>
+    <pre><code><span class="code-prompt">$</span> curl -fsSL https://savestate.dev/install.sh | sh</code></pre>
+    <p>This auto-detects your platform (macOS arm64/x64, Linux arm64/x64) and installs the appropriate binary. Falls back to npm if no binary is available.</p>
+
+    <h2 id="init">Initialize</h2>
+    <p>Run <code>savestate init</code> in your project or workspace directory. This creates a <code>.savestate/</code> directory with your encryption and storage configuration.</p>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-prompt">$</span> savestate init
+<span class="code-success">✓</span> <span class="code-output">Encryption configured (AES-256-GCM + scrypt KDF)</span>
+<span class="code-success">✓</span> <span class="code-output">Storage: ~/.savestate/ (local)</span>
+<span class="code-success">✓</span> <span class="code-output">Config saved to .savestate/config.json</span></code></pre>
+    </div>
+
+    <p>You'll be prompted to set a passphrase. This passphrase derives your encryption key — <strong>SaveState never stores your passphrase</strong>. Keep it safe.</p>
+
+    <div class="callout callout-warn">
+      <span class="callout-label">⚠ Important:</span> If you lose your passphrase, your snapshots are unrecoverable. There is no "forgot password" — that's the point. Your keys, your data.
+    </div>
+
+    <h2 id="first-snapshot">Your First Snapshot</h2>
+    <p>With SaveState initialized, take a snapshot of your current AI state:</p>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-prompt">$</span> savestate snapshot
+<span class="code-success">✓</span> <span class="code-output">Platform detected: claude-code</span>
+<span class="code-success">✓</span> <span class="code-output">Extracting identity, memory, conversations...</span>
+<span class="code-success">✓</span> <span class="code-output">Snapshot created: ss-2026-01-27T15-00-00-a3f2k9</span>
+<span class="code-success">✓</span> <span class="code-output">Encrypted &amp; stored (12.4 KB)</span></code></pre>
+    </div>
+
+    <p>SaveState auto-detects which AI platform you're using (see <a href="/docs/adapters.html">Adapters</a>) and extracts everything: identity files, memory, conversations, tools, and more.</p>
+
+    <h3>Snapshot options</h3>
+    <pre><code><span class="code-comment"># Add a label and tags</span>
+<span class="code-prompt">$</span> savestate snapshot --label <span class="code-string">"Before migration"</span> --tags <span class="code-string">"backup,pre-update"</span>
+
+<span class="code-comment"># Force a specific adapter</span>
+<span class="code-prompt">$</span> savestate snapshot --adapter clawdbot
+
+<span class="code-comment"># Force a full snapshot (skip incremental)</span>
+<span class="code-prompt">$</span> savestate snapshot --full</code></pre>
+
+    <h2 id="list">Listing Snapshots</h2>
+    <pre><code><span class="code-prompt">$</span> savestate list
+<span class="code-output">ID                             PLATFORM      SIZE     DATE</span>
+<span class="code-output">ss-2026-01-27T15-00-00-a3f2k9  claude-code   12.4 KB  2026-01-27</span>
+<span class="code-output">ss-2026-01-26T09-30-00-b7c1m4  clawdbot      48.2 KB  2026-01-26</span></code></pre>
+
+    <h2 id="first-restore">Restoring</h2>
+    <p>Restore from the latest snapshot — or any snapshot by ID:</p>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-comment"># Restore from latest snapshot</span>
+<span class="code-prompt">$</span> savestate restore latest
+
+<span class="code-comment"># Restore a specific snapshot</span>
+<span class="code-prompt">$</span> savestate restore ss-2026-01-26T09-30-00-b7c1m4
+
+<span class="code-comment"># Migrate to a different platform</span>
+<span class="code-prompt">$</span> savestate restore latest --to claude
+
+<span class="code-comment"># Dry run — see what would change</span>
+<span class="code-prompt">$</span> savestate restore latest --dry-run</code></pre>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-label">💡 Tip:</span> Existing files are automatically backed up with a <code>.bak</code> extension before being overwritten during restore.
+    </div>
+
+    <h2 id="next-steps">Next Steps</h2>
+    <div class="feature-grid">
+      <a href="/docs/cli.html" class="feature-card" style="text-decoration:none;">
+        <h4>⌨️ CLI Reference</h4>
+        <p>All commands, flags, and options</p>
+      </a>
+      <a href="/docs/adapters.html" class="feature-card" style="text-decoration:none;">
+        <h4>🔌 Adapters</h4>
+        <p>6 platforms, full or partial</p>
+      </a>
+      <a href="/docs/storage.html" class="feature-card" style="text-decoration:none;">
+        <h4>☁️ Storage</h4>
+        <p>Local, S3, Cloudflare R2</p>
+      </a>
+      <a href="/docs/encryption.html" class="feature-card" style="text-decoration:none;">
+        <h4>🔐 Encryption</h4>
+        <p>AES-256-GCM, your keys only</p>
+      </a>
+    </div>
+
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <div></div>
+      <a href="/docs/cli.html" class="next">
+        <span class="page-nav-label">Next →</span>
+        <span class="page-nav-title">CLI Reference</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>
