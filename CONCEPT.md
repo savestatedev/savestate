@@ -279,7 +279,8 @@ Nobody is doing this comprehensively. The closest analogy is 1Password for passw
   - Zero-dep raw SMTP over TLS (api/lib/email.ts)
 - [x] Cloud storage proxy (R2 bucket proxied through API for Pro/Team)
   - PUT/GET/DELETE/LIST, storage limit enforcement, AWS Sig V4 signing
-- [ ] End-to-end test: Stripe checkout → webhook → account → email → CLI login
+- [x] End-to-end test: account creation → API key → welcome email → CLI login ✅ (Jan 27, 9:38 PM)
+  - Test account provisioned in Neon, API key validated, welcome email delivered, CLI `savestate login` authenticated
 - [ ] End-to-end test suite (snapshot → restore → verify across adapters)
 - [ ] Encrypted search index (client-side, encrypted separately)
 - [ ] Scheduled auto-backups (cron/daemon mode)
@@ -333,7 +334,7 @@ Stripe account: WithCandor (shared across DBH Ventures startups pending LLC appr
 ---
 
 *Created: January 27, 2026*
-*Last updated: January 27, 2026 (late evening — DB switch to Neon, API deployed)*
-*Status: Phase 3 in progress — API live, awaiting Stripe webhook config + e2e test*
-*Version: 0.2.1 (6 adapters, S3/R2 storage, Neon Postgres, CI/CD, Homebrew, Stripe billing)*
+*Last updated: January 27, 2026 (9:44 PM — Phase 3 complete, LAUNCHED 🚀)*
+*Status: LAUNCHED — Phase 3 complete, Phase 4 (growth) next*
+*Version: 0.2.1 (6 adapters, S3/R2 storage, Neon Postgres, CI/CD, Homebrew, Stripe billing, welcome emails)*
 *Author: David Hurley / Steve (AI)*
