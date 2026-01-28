@@ -123,6 +123,18 @@ program
   .description('Remove saved API key')
   .action(logoutCommand);
 
+// ─── savestate schedule ──────────────────────────────────────
+
+import { scheduleCommand } from './commands/schedule.js';
+
+program
+  .command('schedule')
+  .description('Configure automatic backup schedule (Pro/Team)')
+  .option('-e, --every <interval>', 'Backup interval (e.g., 1h, 6h, 12h, 1d)')
+  .option('-d, --disable', 'Disable scheduled backups')
+  .option('-s, --status', 'Show schedule status')
+  .action(scheduleCommand);
+
 // ─── Parse & run ─────────────────────────────────────────────
 
 program.parse();

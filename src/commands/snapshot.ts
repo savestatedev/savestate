@@ -27,9 +27,11 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   }
 
   if (options.schedule) {
-    console.log(chalk.cyan(`⏰ Scheduled snapshots: every ${options.schedule}`));
-    console.log(chalk.dim('   [Coming soon] Will run as a background daemon.'));
-    console.log(chalk.dim('   For now, use cron: */6 * * * * savestate snapshot'));
+    console.log(chalk.cyan(`⏰ To set up scheduled backups, use:`));
+    console.log();
+    console.log(`   savestate schedule --every ${options.schedule}`);
+    console.log();
+    console.log(chalk.dim('   This creates a system job (launchd/systemd) for reliable auto-backups.'));
     console.log();
     return;
   }
