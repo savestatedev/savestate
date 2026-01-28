@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Backends — SaveState Docs</title>
+<meta name="description" content="Configure SaveState storage: local filesystem, Amazon S3, Cloudflare R2, or any S3-compatible service.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html" class="active">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Storage Backends</h1>
+    <p class="subtitle">Store snapshots locally, on S3, Cloudflare R2, or any S3-compatible service. All backends receive only encrypted data — zero-knowledge by design.</p>
+
+    <div class="callout callout-info">
+      <span class="callout-label">🔐 Zero-knowledge:</span> Data is encrypted <em>before</em> leaving your machine. Storage backends only ever see encrypted blobs. Even if someone gains access to your bucket, they can't read your data without your passphrase.
+    </div>
+
+    <h2 id="local">Local Storage (Default)</h2>
+    <p>By default, snapshots are stored at <code>~/.savestate/snapshots/</code>. No configuration needed.</p>
+
+    <h3>Config</h3>
+    <pre><code><span class="code-comment">// .savestate/config.json</span>
+{
+  <span class="code-key">"storage"</span>: {
+    <span class="code-key">"type"</span>: <span class="code-value">"local"</span>,
+    <span class="code-key">"options"</span>: {
+      <span class="code-key">"path"</span>: <span class="code-value">"~/.savestate"</span>
+    }
+  }
+}</code></pre>
+
+    <p>You can change the storage path to any directory:</p>
+    <pre><code><span class="code-comment">// Store in Dropbox for automatic sync</span>
+{
+  <span class="code-key">"storage"</span>: {
+    <span class="code-key">"type"</span>: <span class="code-value">"local"</span>,
+    <span class="code-key">"options"</span>: {
+      <span class="code-key">"path"</span>: <span class="code-value">"~/Dropbox/savestate-backups"</span>
+    }
+  }
+}</code></pre>
+
+    <div class="callout callout-tip">
+      <span class="callout-label">💡</span> Set the path to a Dropbox, iCloud Drive, or Google Drive folder for automatic cloud sync while keeping everything encrypted.
+    </div>
+
+    <h2 id="s3">Amazon S3</h2>
+    <p>Store snapshots in an S3 bucket. Uses AWS Signature V4 authentication with zero external dependencies — SaveState implements the signing from scratch using native <code>crypto</code>.</p>
+
+    <h3>Config</h3>
+    <pre><code><span class="code-comment">// .savestate/config.json</span>
+{
+  <span class="code-key">"storage"</span>: {
+    <span class="code-key">"type"</span>: <span class="code-value">"s3"</span>,
+    <span class="code-key">"options"</span>: {
+      <span class="code-key">"bucket"</span>: <span class="code-value">"my-savestate-backups"</span>,
+      <span class="code-key">"endpoint"</span>: <span class="code-value">"https://s3.us-east-1.amazonaws.com"</span>,
+      <span class="code-key">"region"</span>: <span class="code-value">"us-east-1"</span>,
+      <span class="code-key">"accessKeyId"</span>: <span class="code-value">"AKIA..."</span>,
+      <span class="code-key">"secretAccessKey"</span>: <span class="code-value">"wJa..."</span>,
+      <span class="code-key">"prefix"</span>: <span class="code-value">"snapshots/"</span>
+    }
+  }
+}</code></pre>
+
+    <h3>Options</h3>
+    <table>
+      <thead>
+        <tr><th>Option</th><th>Required</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>bucket</code></td><td>Yes</td><td>S3 bucket name</td></tr>
+        <tr><td><code>endpoint</code></td><td>Yes</td><td>S3 endpoint URL</td></tr>
+        <tr><td><code>region</code></td><td>No</td><td>AWS region (default: <code>us-east-1</code>)</td></tr>
+        <tr><td><code>accessKeyId</code></td><td>No*</td><td>AWS access key ID</td></tr>
+        <tr><td><code>secretAccessKey</code></td><td>No*</td><td>AWS secret access key</td></tr>
+        <tr><td><code>prefix</code></td><td>No</td><td>Key prefix for all objects (e.g., <code>snapshots/</code>)</td></tr>
+        <tr><td><code>timeoutMs</code></td><td>No</td><td>Request timeout in ms (default: 30000)</td></tr>
+        <tr><td><code>maxRetries</code></td><td>No</td><td>Max retries on 5xx errors (default: 3)</td></tr>
+      </tbody>
+    </table>
+    <p><em>* Credentials can also be provided via <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> environment variables.</em></p>
+
+    <h2 id="r2">Cloudflare R2</h2>
+    <p>Cloudflare R2 is S3-compatible with zero egress fees — a great fit for backups. SaveState has been tested with R2.</p>
+
+    <h3>Config</h3>
+    <pre><code><span class="code-comment">// .savestate/config.json</span>
+{
+  <span class="code-key">"storage"</span>: {
+    <span class="code-key">"type"</span>: <span class="code-value">"r2"</span>,
+    <span class="code-key">"options"</span>: {
+      <span class="code-key">"bucket"</span>: <span class="code-value">"savestate"</span>,
+      <span class="code-key">"endpoint"</span>: <span class="code-value">"https://&lt;account-id&gt;.r2.cloudflarestorage.com"</span>,
+      <span class="code-key">"region"</span>: <span class="code-value">"auto"</span>,
+      <span class="code-key">"accessKeyId"</span>: <span class="code-value">"&lt;R2 access key ID&gt;"</span>,
+      <span class="code-key">"secretAccessKey"</span>: <span class="code-value">"&lt;R2 secret access key&gt;"</span>,
+      <span class="code-key">"prefix"</span>: <span class="code-value">"backups/"</span>
+    }
+  }
+}</code></pre>
+
+    <h3>Setting up R2</h3>
+    <ol>
+      <li>Go to your <a href="https://dash.cloudflare.com" target="_blank" rel="noopener">Cloudflare dashboard</a> → R2 → Create bucket</li>
+      <li>Create an API token: R2 → Manage R2 API Tokens → Create API Token</li>
+      <li>Select "Object Read &amp; Write" permissions for your bucket</li>
+      <li>Copy the Access Key ID, Secret Access Key, and your Account ID</li>
+      <li>The endpoint is: <code>https://&lt;account-id&gt;.r2.cloudflarestorage.com</code></li>
+    </ol>
+
+    <div class="callout callout-tip">
+      <span class="callout-label">💡</span> R2 has no egress fees, making it ideal for backups you may need to download frequently. For SaveState, set region to <code>"auto"</code>.
+    </div>
+
+    <h2 id="b2">Backblaze B2</h2>
+    <p>Backblaze B2 is also S3-compatible. Use the <code>s3</code> or <code>b2</code> storage type with your B2 S3-compatible endpoint.</p>
+
+    <pre><code>{
+  <span class="code-key">"storage"</span>: {
+    <span class="code-key">"type"</span>: <span class="code-value">"b2"</span>,
+    <span class="code-key">"options"</span>: {
+      <span class="code-key">"bucket"</span>: <span class="code-value">"my-savestate"</span>,
+      <span class="code-key">"endpoint"</span>: <span class="code-value">"https://s3.us-west-004.backblazeb2.com"</span>,
+      <span class="code-key">"region"</span>: <span class="code-value">"us-west-004"</span>,
+      <span class="code-key">"accessKeyId"</span>: <span class="code-value">"&lt;B2 key ID&gt;"</span>,
+      <span class="code-key">"secretAccessKey"</span>: <span class="code-value">"&lt;B2 application key&gt;"</span>
+    }
+  }
+}</code></pre>
+
+    <h2 id="sync-folders">Sync Folder Storage</h2>
+    <p>For quick cloud backup without setting up S3, just point local storage at a synced folder:</p>
+
+    <pre><code><span class="code-comment">// Dropbox</span>
+{ <span class="code-key">"storage"</span>: { <span class="code-key">"type"</span>: <span class="code-value">"local"</span>, <span class="code-key">"options"</span>: { <span class="code-key">"path"</span>: <span class="code-value">"~/Dropbox/savestate"</span> } } }
+
+<span class="code-comment">// iCloud Drive</span>
+{ <span class="code-key">"storage"</span>: { <span class="code-key">"type"</span>: <span class="code-value">"local"</span>, <span class="code-key">"options"</span>: { <span class="code-key">"path"</span>: <span class="code-value">"~/Library/Mobile Documents/com~apple~CloudDocs/savestate"</span> } } }
+
+<span class="code-comment">// Google Drive</span>
+{ <span class="code-key">"storage"</span>: { <span class="code-key">"type"</span>: <span class="code-value">"local"</span>, <span class="code-key">"options"</span>: { <span class="code-key">"path"</span>: <span class="code-value">"~/Google Drive/savestate"</span> } } }</code></pre>
+
+    <h2 id="implementation">Implementation Details</h2>
+    <p>All storage backends implement the same interface:</p>
+    <pre><code><span class="code-type">interface</span> <span class="code-cmd">StorageBackend</span> {
+  <span class="code-key">readonly id</span>: <span class="code-type">string</span>;
+  <span class="code-key">put</span>(key: <span class="code-type">string</span>, data: <span class="code-type">Buffer</span>): <span class="code-type">Promise</span>&lt;<span class="code-type">void</span>&gt;;
+  <span class="code-key">get</span>(key: <span class="code-type">string</span>): <span class="code-type">Promise</span>&lt;<span class="code-type">Buffer</span>&gt;;
+  <span class="code-key">list</span>(prefix?: <span class="code-type">string</span>): <span class="code-type">Promise</span>&lt;<span class="code-type">string</span>[]&gt;;
+  <span class="code-key">delete</span>(key: <span class="code-type">string</span>): <span class="code-type">Promise</span>&lt;<span class="code-type">void</span>&gt;;
+  <span class="code-key">exists</span>(key: <span class="code-type">string</span>): <span class="code-type">Promise</span>&lt;<span class="code-type">boolean</span>&gt;;
+}</code></pre>
+    <p>The S3 backend uses path-style access and implements AWS Signature V4 from scratch with Node.js native <code>crypto</code> — zero external dependencies. It handles retries with exponential backoff on 5xx errors and 429 rate limits.</p>
+
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <a href="/docs/adapters.html">
+        <span class="page-nav-label">← Previous</span>
+        <span class="page-nav-title">Platform Adapters</span>
+      </a>
+      <a href="/docs/encryption.html" class="next">
+        <span class="page-nav-label">Next →</span>
+        <span class="page-nav-title">Encryption</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>

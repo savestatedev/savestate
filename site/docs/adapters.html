@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Adapters — SaveState Docs</title>
+<meta name="description" content="SaveState supports 6 AI platforms: Clawdbot, Claude Code, Claude Web, OpenAI Assistants, ChatGPT, and Gemini.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html" class="active">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Platform Adapters</h1>
+    <p class="subtitle">SaveState ships with 6 built-in adapters. Each knows how to extract and restore state for a specific AI platform.</p>
+
+    <h2 id="overview">Overview</h2>
+    <p>Adapters are checked in priority order during auto-detection. The first adapter whose <code>detect()</code> method returns true is used. You can override this with <code>--adapter &lt;id&gt;</code>.</p>
+
+    <table>
+      <thead>
+        <tr><th>Adapter</th><th>Platform</th><th>Extract</th><th>Restore</th><th>Method</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>clawdbot</code></td><td>Clawdbot / Moltbot</td><td>✅ Full</td><td>✅ Full</td><td>Direct file access</td></tr>
+        <tr><td><code>claude-code</code></td><td>Claude Code</td><td>✅ Full</td><td>✅ Full</td><td>Direct file access</td></tr>
+        <tr><td><code>openai-assistants</code></td><td>OpenAI Assistants API</td><td>✅ Full</td><td>✅ Full</td><td>API (v2)</td></tr>
+        <tr><td><code>claude-web</code></td><td>Claude (claude.ai)</td><td>✅ Full</td><td>⚠️ Partial</td><td>Data export</td></tr>
+        <tr><td><code>chatgpt</code></td><td>ChatGPT</td><td>✅ Full</td><td>⚠️ Partial</td><td>Data export</td></tr>
+        <tr><td><code>gemini</code></td><td>Google Gemini</td><td>✅ Full</td><td>⚠️ Partial</td><td>Takeout + API</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Full restore</strong> means SaveState can programmatically recreate your AI state. <strong>Partial restore</strong> means a restore guide is generated for manual re-entry (the platforms don't provide import APIs).</p>
+
+    <h2 id="detection">Detection Order</h2>
+    <p>When you run <code>savestate snapshot</code> without <code>--adapter</code>, adapters are tried in this order:</p>
+    <ol>
+      <li><strong>Clawdbot</strong> — looks for <code>SOUL.md</code>, <code>memory.md</code>, <code>AGENTS.md</code>, or <code>memory/</code> directory</li>
+      <li><strong>Claude Code</strong> — looks for <code>CLAUDE.md</code> or <code>.claude/</code> directory</li>
+      <li><strong>Claude Web</strong> — checks <code>SAVESTATE_CLAUDE_EXPORT</code> env var, or <code>claude-export/</code>, or <code>.savestate/imports/claude/</code></li>
+      <li><strong>OpenAI Assistants</strong> — checks for <code>OPENAI_API_KEY</code> env var or <code>.openai/</code> directory</li>
+      <li><strong>ChatGPT</strong> — checks <code>SAVESTATE_CHATGPT_EXPORT</code> env var, or <code>chatgpt-export/</code>, or <code>conversations.json</code></li>
+      <li><strong>Gemini</strong> — checks <code>SAVESTATE_GEMINI_EXPORT</code> env var, <code>Gemini Apps/</code> directory, or <code>GOOGLE_API_KEY</code></li>
+    </ol>
+
+    <hr>
+
+    <!-- Clawdbot -->
+    <div class="adapter-card">
+      <h3>🤖 Clawdbot <span class="adapter-badge badge-full">Full Support</span></h3>
+      <p>First-party adapter for Clawdbot / Moltbot workspaces. Captures the complete agent identity.</p>
+
+      <h4>What it captures</h4>
+      <ul>
+        <li><strong>Identity:</strong> <code>SOUL.md</code>, <code>USER.md</code>, <code>AGENTS.md</code>, <code>TOOLS.md</code></li>
+        <li><strong>Memory:</strong> <code>memory.md</code>, <code>MEMORY.md</code>, all files in <code>memory/</code> directory (.md, .json, .txt)</li>
+        <li><strong>Skills:</strong> All <code>skills/*/</code> directories — SKILL.md, config files, scripts</li>
+        <li><strong>Scripts:</strong> <code>personal-scripts/</code> including cron wrappers</li>
+        <li><strong>Extensions:</strong> Config files from <code>extensions/*/</code> (no node_modules)</li>
+        <li><strong>Conversations:</strong> Session logs from <code>~/.clawdbot/agents/*/sessions/*.jsonl</code></li>
+        <li><strong>Config:</strong> <code>.env</code>, <code>config.json</code>, <code>config.yaml</code></li>
+      </ul>
+
+      <h4>Detection</h4>
+      <p>Looks for any of: <code>SOUL.md</code>, <code>memory.md</code>, <code>AGENTS.md</code>, <code>memory/</code></p>
+
+      <h4>Restore capabilities</h4>
+      <p>Full restore: all identity files, memory, skills, scripts, extensions, and config are written back to the workspace. Existing files are backed up with <code>.bak</code>.</p>
+    </div>
+
+    <!-- Claude Code -->
+    <div class="adapter-card">
+      <h3>🖥️ Claude Code <span class="adapter-badge badge-full">Full Support</span></h3>
+      <p>Adapter for Anthropic's Claude Code coding agent. Captures project-level and global instructions.</p>
+
+      <h4>What it captures</h4>
+      <ul>
+        <li><strong>Identity:</strong> <code>CLAUDE.md</code> at project root + subdirectories (up to 3 levels), global <code>~/.claude/CLAUDE.md</code></li>
+        <li><strong>Memory:</strong> <code>.claude/todos.md</code>, <code>.claude/memory/</code> directory</li>
+        <li><strong>Settings:</strong> <code>.claude/settings.json</code>, <code>.claude/settings.local.json</code>, <code>~/.claude/settings.json</code> (global)</li>
+        <li><strong>Project metadata:</strong> <code>package.json</code>, <code>pyproject.toml</code>, <code>Cargo.toml</code>, <code>go.mod</code>, etc.</li>
+        <li><strong>File manifest:</strong> Project file tree (paths + sizes, not content) up to 6 levels deep</li>
+      </ul>
+
+      <h4>Detection</h4>
+      <p>Looks for <code>CLAUDE.md</code> or <code>.claude/</code> directory in the current project.</p>
+
+      <h4>Restore capabilities</h4>
+      <p>Full restore: CLAUDE.md files, .claude/ settings, and memory files are written back. Global <code>~/.claude/</code> settings are also restored.</p>
+    </div>
+
+    <!-- OpenAI Assistants -->
+    <div class="adapter-card">
+      <h3>⚡ OpenAI Assistants <span class="adapter-badge badge-full">Full Support</span></h3>
+      <p>Full API adapter for OpenAI Assistants API v2. Extracts and restores assistants, files, vector stores, and threads.</p>
+
+      <h4>Environment variables</h4>
+      <table>
+        <tbody>
+          <tr><td><code>OPENAI_API_KEY</code></td><td><strong>Required.</strong> Your OpenAI API key (<code>sk-...</code>)</td></tr>
+          <tr><td><code>SAVESTATE_OPENAI_ASSISTANT_ID</code></td><td>Optional. Target a specific assistant. Without it, SaveState lists all assistants and uses the first one.</td></tr>
+        </tbody>
+      </table>
+
+      <h4>What it captures</h4>
+      <ul>
+        <li><strong>Identity:</strong> Assistant instructions, name, description, model, temperature, top_p, response_format</li>
+        <li><strong>Tools:</strong> Code interpreter, file search, custom functions (with schemas)</li>
+        <li><strong>Files:</strong> All files in code_interpreter and file_search tool_resources (downloaded as binary)</li>
+        <li><strong>Vector stores:</strong> Store configurations, file lists, metadata, expiration settings</li>
+        <li><strong>Threads:</strong> Messages from cached thread IDs (stored in <code>.savestate/openai-threads.json</code>)</li>
+      </ul>
+
+      <h4>Detection</h4>
+      <p>Checks for <code>OPENAI_API_KEY</code> env var, or <code>.openai/</code> directory in home or project.</p>
+
+      <h4>Restore capabilities</h4>
+      <p>Full restore via API: creates a new assistant with the original configuration, uploads files, creates vector stores, and optionally recreates threads with messages. The new assistant ID is printed on completion.</p>
+
+      <div class="callout callout-info">
+        <span class="callout-label">ℹ️ Thread caching:</span> OpenAI has no "list all threads" API. To capture threads, maintain <code>.savestate/openai-threads.json</code> with your thread IDs. Format: <code>{"assistant_id": "asst_...", "thread_ids": ["thread_..."]}</code>
+      </div>
+    </div>
+
+    <!-- Claude Web -->
+    <div class="adapter-card">
+      <h3>🟣 Claude Web (claude.ai) <span class="adapter-badge badge-partial">Extract + Partial Restore</span></h3>
+      <p>Export-based adapter for the Claude consumer web interface. Different from Claude Code.</p>
+
+      <h4>Data sources (checked in order)</h4>
+      <ol>
+        <li><code>SAVESTATE_CLAUDE_EXPORT</code> env var → path to export directory</li>
+        <li><code>claude-export/</code> or <code>claude_export/</code> in current directory</li>
+        <li><code>.savestate/imports/claude/</code></li>
+        <li>Standalone <code>claude-memories.md</code> or <code>claude-memories.txt</code> file</li>
+      </ol>
+
+      <h4>What it captures</h4>
+      <ul>
+        <li><strong>Conversations:</strong> All conversations from the export (JSON format with messages, attachments)</li>
+        <li><strong>Memories:</strong> Claude memory entries (text/markdown or JSON format)</li>
+        <li><strong>Projects:</strong> Claude Project instructions and uploaded files</li>
+        <li><strong>Account info:</strong> User profile from <code>account_info.json</code></li>
+      </ul>
+
+      <h4>Restore capabilities</h4>
+      <p>Partial — Claude.ai has no import API. SaveState generates:</p>
+      <ul>
+        <li><code>claude-restore-guide.md</code> — step-by-step manual restore instructions</li>
+        <li><code>memories-to-import.md</code> — individual memories formatted for manual re-entry</li>
+        <li><code>projects/project-instructions.md</code> — project instructions for manual recreation</li>
+      </ul>
+    </div>
+
+    <!-- ChatGPT -->
+    <div class="adapter-card">
+      <h3>💬 ChatGPT <span class="adapter-badge badge-partial">Extract + Partial Restore</span></h3>
+      <p>Export-based adapter for ChatGPT. Uses the data export from Settings → Data Controls → Export Data.</p>
+
+      <h4>Data sources</h4>
+      <ol>
+        <li><code>SAVESTATE_CHATGPT_EXPORT</code> env var → path to extracted export directory</li>
+        <li><code>chatgpt-export/</code> in current directory</li>
+        <li><code>conversations.json</code> directly in current directory</li>
+        <li><code>.savestate/imports/chatgpt/</code></li>
+      </ol>
+
+      <h4>What it captures</h4>
+      <ul>
+        <li><strong>Conversations:</strong> Full tree-structured conversation history (walks the mapping/branching structure)</li>
+        <li><strong>Memories:</strong> ChatGPT memories from <code>memories.json</code></li>
+        <li><strong>Custom instructions:</strong> "About user" and "Response preferences" from <code>custom_instructions.json</code></li>
+        <li><strong>User profile:</strong> Account metadata from <code>user.json</code></li>
+      </ul>
+
+      <h4>Restore capabilities</h4>
+      <p>Partial — ChatGPT has no import API. Generates:</p>
+      <ul>
+        <li><code>chatgpt-restore-guide.md</code> — comprehensive restore instructions</li>
+        <li><code>chatgpt-memories.md</code> — memories formatted for manual re-entry</li>
+        <li><code>chatgpt-custom-instructions.md</code> — custom instructions for copy-paste</li>
+      </ul>
+    </div>
+
+    <!-- Gemini -->
+    <div class="adapter-card">
+      <h3>✨ Google Gemini <span class="adapter-badge badge-partial">Extract + Partial Restore</span></h3>
+      <p>Captures Gemini conversations from Google Takeout exports and API data (tuned models, cached content).</p>
+
+      <h4>Data sources</h4>
+      <table>
+        <tbody>
+          <tr><td><code>SAVESTATE_GEMINI_EXPORT</code></td><td>Path to Google Takeout "Gemini Apps" export directory</td></tr>
+          <tr><td><code>GOOGLE_API_KEY</code> or <code>GEMINI_API_KEY</code></td><td>For API-based capture (tuned models, cached content)</td></tr>
+        </tbody>
+      </table>
+      <p>Also checks: <code>Gemini Apps/</code>, <code>Takeout/Gemini Apps/</code>, <code>.savestate/imports/gemini/</code></p>
+
+      <h4>What it captures</h4>
+      <ul>
+        <li><strong>Conversations:</strong> All conversations from Takeout export (JSON files)</li>
+        <li><strong>Gems:</strong> Custom agent configurations (name, instructions, model) from <code>gems.json</code> or <code>Gems/</code> directory</li>
+        <li><strong>Tuned models:</strong> Model configs, hyperparameters, state (via API)</li>
+        <li><strong>Cached content:</strong> Cached content entries and metadata (via API)</li>
+      </ul>
+
+      <h4>Restore capabilities</h4>
+      <p>Partial — generates:</p>
+      <ul>
+        <li><code>gemini-restore-guide.md</code> — complete restore instructions</li>
+        <li>Individual Gem JSON files for manual recreation at <code>gemini.google.com/gems</code></li>
+        <li>Conversation index for archival reference</li>
+      </ul>
+    </div>
+
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <a href="/docs/cli.html">
+        <span class="page-nav-label">← Previous</span>
+        <span class="page-nav-title">CLI Reference</span>
+      </a>
+      <a href="/docs/storage.html" class="next">
+        <span class="page-nav-label">Next →</span>
+        <span class="page-nav-title">Storage Backends</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>

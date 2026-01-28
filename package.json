@@ -49,9 +49,12 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.0",
+    "@vercel/node": "^5.5.28",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
     "ora": "^8.2.0",
+    "stripe": "^20.2.0",
     "tar": "^7.4.3"
   },
   "devDependencies": {

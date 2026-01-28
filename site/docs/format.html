@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAF Archive Format — SaveState Docs</title>
+<meta name="description" content="The SaveState Archive Format (SAF) is an open spec for AI state archives: manifest, identity, memory, conversations, and metadata.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html" class="active">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>SAF Archive Format</h1>
+    <p class="subtitle">The SaveState Archive Format (SAF) is an open spec for AI state archives. No vendor lock-in for your backup tool, either.</p>
+
+    <h2 id="pipeline">Packing Pipeline</h2>
+    <p>Each snapshot goes through this pipeline:</p>
+    <pre><code><span class="code-output">Snapshot object</span>
+  <span class="code-comment">→</span> <span class="code-output">Pack to file map (JSON + files)</span>
+  <span class="code-comment">→</span> <span class="code-output">Build tar archive (POSIX-compliant)</span>
+  <span class="code-comment">→</span> <span class="code-output">Gzip compress</span>
+  <span class="code-comment">→</span> <span class="code-output">AES-256-GCM encrypt</span>
+  <span class="code-comment">→</span> <span class="code-flag">.saf.enc</span> <span class="code-output">file</span></code></pre>
+
+    <p>The resulting <code>.saf.enc</code> file is a single encrypted blob containing a gzipped tar archive. Current format version: <code>0.1.0</code>.</p>
+
+    <h2 id="structure">Archive Structure</h2>
+    <p>Inside the encrypted archive, files are organized into four directories plus a root manifest:</p>
+
+    <div class="tree-view"><span class="file">snapshot.saf.enc</span> (decrypted)
+<span class="tree-line">├──</span> <span class="file">manifest.json</span>              <span class="annotation">← version, timestamp, ID, checksum</span>
+<span class="tree-line">├──</span> <span class="folder">identity/</span>
+<span class="tree-line">│   ├──</span> <span class="file">personality.md</span>         <span class="annotation">← system prompt, SOUL, instructions</span>
+<span class="tree-line">│   ├──</span> <span class="file">config.json</span>            <span class="annotation">← settings, preferences, account info</span>
+<span class="tree-line">│   ├──</span> <span class="file">tools.json</span>             <span class="annotation">← tool/plugin/skill configurations</span>
+<span class="tree-line">│   ├──</span> <span class="file">skills.json</span>            <span class="annotation">← skill directories with scripts</span>
+<span class="tree-line">│   ├──</span> <span class="file">scripts.json</span>           <span class="annotation">← personal scripts, cron wrappers</span>
+<span class="tree-line">│   ├──</span> <span class="file">extensions.json</span>        <span class="annotation">← extension configs</span>
+<span class="tree-line">│   ├──</span> <span class="file">file-manifest.json</span>     <span class="annotation">← project file tree (paths + sizes)</span>
+<span class="tree-line">│   └──</span> <span class="file">project-meta.json</span>      <span class="annotation">← package.json, pyproject.toml, etc.</span>
+<span class="tree-line">├──</span> <span class="folder">memory/</span>
+<span class="tree-line">│   ├──</span> <span class="file">core.json</span>              <span class="annotation">← platform memory entries</span>
+<span class="tree-line">│   └──</span> <span class="folder">knowledge/</span>
+<span class="tree-line">│       └──</span> <span class="file">index.json</span>         <span class="annotation">← knowledge base document index</span>
+<span class="tree-line">├──</span> <span class="folder">conversations/</span>
+<span class="tree-line">│   └──</span> <span class="file">index.json</span>             <span class="annotation">← conversation metadata index</span>
+<span class="tree-line">└──</span> <span class="folder">meta/</span>
+    <span class="tree-line">├──</span> <span class="file">platform.json</span>          <span class="annotation">← source platform details</span>
+    <span class="tree-line">├──</span> <span class="file">snapshot-chain.json</span>    <span class="annotation">← incremental chain info</span>
+    <span class="tree-line">├──</span> <span class="file">restore-hints.json</span>     <span class="annotation">← platform-specific restore steps</span>
+    <span class="tree-line">└──</span> <span class="file">delta-manifest.json</span>    <span class="annotation">← incremental delta (if not full)</span></div>
+
+    <h2 id="manifest">manifest.json</h2>
+    <p>The root manifest contains snapshot metadata:</p>
+    <pre><code>{
+  <span class="code-key">"version"</span>: <span class="code-value">"0.1.0"</span>,
+  <span class="code-key">"timestamp"</span>: <span class="code-value">"2026-01-27T15:00:00.000Z"</span>,
+  <span class="code-key">"id"</span>: <span class="code-value">"ss-2026-01-27T15-00-00-a3f2k9"</span>,
+  <span class="code-key">"platform"</span>: <span class="code-value">"claude-code"</span>,
+  <span class="code-key">"adapter"</span>: <span class="code-value">"claude-code"</span>,
+  <span class="code-key">"checksum"</span>: <span class="code-value">"sha256:a1b2c3..."</span>,
+  <span class="code-key">"parent"</span>: <span class="code-value">"ss-2026-01-26T09-30-00-b7c1m4"</span>,
+  <span class="code-key">"label"</span>: <span class="code-value">"Before migration"</span>,
+  <span class="code-key">"tags"</span>: [<span class="code-value">"backup"</span>, <span class="code-value">"important"</span>],
+  <span class="code-key">"size"</span>: <span class="code-value">12847</span>
+}</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>version</code></td><td>string</td><td>SAF format version</td></tr>
+        <tr><td><code>timestamp</code></td><td>string</td><td>ISO 8601 creation timestamp</td></tr>
+        <tr><td><code>id</code></td><td>string</td><td>Unique snapshot ID (<code>ss-{timestamp}-{random}</code>)</td></tr>
+        <tr><td><code>platform</code></td><td>string</td><td>Source platform identifier</td></tr>
+        <tr><td><code>adapter</code></td><td>string</td><td>Adapter ID used for extraction</td></tr>
+        <tr><td><code>checksum</code></td><td>string</td><td>SHA-256 of the unencrypted archive</td></tr>
+        <tr><td><code>parent</code></td><td>string?</td><td>Parent snapshot ID (for incrementals)</td></tr>
+        <tr><td><code>label</code></td><td>string?</td><td>Human-readable label</td></tr>
+        <tr><td><code>tags</code></td><td>string[]?</td><td>Organizational tags</td></tr>
+        <tr><td><code>size</code></td><td>number</td><td>Unencrypted archive size in bytes</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="identity">identity/</h2>
+    <p>Contains the AI's identity — who it is, how it's configured, what tools it uses.</p>
+
+    <h3>personality.md</h3>
+    <p>The AI's system prompt, custom instructions, or SOUL document. For multi-file identities (e.g., Clawdbot with SOUL.md + USER.md + AGENTS.md), files are concatenated with <code>--- FILENAME ---</code> markers:</p>
+    <pre><code><span class="code-comment">--- SOUL.md ---</span>
+<span class="code-output">You are Steve, a personal AI assistant...</span>
+
+<span class="code-comment">--- USER.md ---</span>
+<span class="code-output">Your human is David. He prefers...</span>
+
+<span class="code-comment">--- AGENTS.md ---</span>
+<span class="code-output"># AGENTS.md - Your Workspace...</span></code></pre>
+
+    <h3>tools.json</h3>
+    <p>Array of tool configurations:</p>
+    <pre><code>[
+  {
+    <span class="code-key">"name"</span>: <span class="code-value">"code_interpreter"</span>,
+    <span class="code-key">"type"</span>: <span class="code-value">"code_interpreter"</span>,
+    <span class="code-key">"config"</span>: {},
+    <span class="code-key">"enabled"</span>: <span class="code-value">true</span>
+  },
+  {
+    <span class="code-key">"name"</span>: <span class="code-value">"get_weather"</span>,
+    <span class="code-key">"type"</span>: <span class="code-value">"function"</span>,
+    <span class="code-key">"config"</span>: {
+      <span class="code-key">"description"</span>: <span class="code-value">"Get current weather"</span>,
+      <span class="code-key">"parameters"</span>: { ... }
+    },
+    <span class="code-key">"enabled"</span>: <span class="code-value">true</span>
+  }
+]</code></pre>
+
+    <h2 id="memory">memory/</h2>
+    <p>Contains memory entries and knowledge documents.</p>
+
+    <h3>core.json</h3>
+    <p>Array of memory entries from the platform:</p>
+    <pre><code>[
+  {
+    <span class="code-key">"id"</span>: <span class="code-value">"file:memory.md"</span>,
+    <span class="code-key">"content"</span>: <span class="code-value">"David prefers dark mode..."</span>,
+    <span class="code-key">"source"</span>: <span class="code-value">"memory.md"</span>,
+    <span class="code-key">"createdAt"</span>: <span class="code-value">"2026-01-15T10:00:00Z"</span>,
+    <span class="code-key">"updatedAt"</span>: <span class="code-value">"2026-01-27T15:00:00Z"</span>
+  }
+]</code></pre>
+
+    <h3>knowledge/index.json</h3>
+    <p>Index of knowledge documents (uploaded files, RAG sources, skill docs):</p>
+    <pre><code>[
+  {
+    <span class="code-key">"id"</span>: <span class="code-value">"skill:weather"</span>,
+    <span class="code-key">"filename"</span>: <span class="code-value">"skills/weather/SKILL.md"</span>,
+    <span class="code-key">"mimeType"</span>: <span class="code-value">"text/markdown"</span>,
+    <span class="code-key">"path"</span>: <span class="code-value">"knowledge/skills/weather/SKILL.md"</span>,
+    <span class="code-key">"size"</span>: <span class="code-value">2048</span>,
+    <span class="code-key">"checksum"</span>: <span class="code-value">"sha256:..."</span>
+  }
+]</code></pre>
+
+    <h2 id="conversations">conversations/</h2>
+    <h3>index.json</h3>
+    <p>Conversation metadata index (messages themselves are stored as memory entries for portability):</p>
+    <pre><code>{
+  <span class="code-key">"total"</span>: <span class="code-value">47</span>,
+  <span class="code-key">"conversations"</span>: [
+    {
+      <span class="code-key">"id"</span>: <span class="code-value">"main/sess-a1b2c3"</span>,
+      <span class="code-key">"title"</span>: <span class="code-value">"main session a1b2c3"</span>,
+      <span class="code-key">"createdAt"</span>: <span class="code-value">"2026-01-01T00:00:00Z"</span>,
+      <span class="code-key">"updatedAt"</span>: <span class="code-value">"2026-01-27T15:00:00Z"</span>,
+      <span class="code-key">"messageCount"</span>: <span class="code-value">342</span>,
+      <span class="code-key">"path"</span>: <span class="code-value">"conversations/main/sess-a1b2c3.jsonl"</span>
+    }
+  ]
+}</code></pre>
+
+    <h2 id="meta">meta/</h2>
+
+    <h3>platform.json</h3>
+    <p>Source platform details:</p>
+    <pre><code>{
+  <span class="code-key">"name"</span>: <span class="code-value">"Claude Code"</span>,
+  <span class="code-key">"version"</span>: <span class="code-value">"0.1.0"</span>,
+  <span class="code-key">"exportMethod"</span>: <span class="code-value">"direct-file-access"</span>
+}</code></pre>
+
+    <h3>snapshot-chain.json</h3>
+    <p>Links this snapshot to its parent and ancestor chain (for incremental snapshots):</p>
+    <pre><code>{
+  <span class="code-key">"current"</span>: <span class="code-value">"ss-2026-01-27T15-00-00-a3f2k9"</span>,
+  <span class="code-key">"parent"</span>: <span class="code-value">"ss-2026-01-26T09-30-00-b7c1m4"</span>,
+  <span class="code-key">"ancestors"</span>: [<span class="code-value">"ss-2026-01-25..."</span>, <span class="code-value">"ss-2026-01-26..."</span>]
+}</code></pre>
+
+    <h3>delta-manifest.json</h3>
+    <p>Only present in incremental snapshots. Contains the file-level delta. See <a href="/docs/incremental.html">Incremental Snapshots</a> for the full spec.</p>
+
+    <h3>restore-hints.json</h3>
+    <p>Platform-specific restore instructions, including required steps and manual actions:</p>
+    <pre><code>{
+  <span class="code-key">"platform"</span>: <span class="code-value">"clawdbot"</span>,
+  <span class="code-key">"steps"</span>: [
+    {
+      <span class="code-key">"type"</span>: <span class="code-value">"file"</span>,
+      <span class="code-key">"description"</span>: <span class="code-value">"Restore SOUL.md and identity files"</span>,
+      <span class="code-key">"target"</span>: <span class="code-value">"identity/"</span>
+    }
+  ],
+  <span class="code-key">"manualSteps"</span>: [<span class="code-value">"Review restored settings..."</span>]
+}</code></pre>
+
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <a href="/docs/encryption.html">
+        <span class="page-nav-label">← Previous</span>
+        <span class="page-nav-title">Encryption</span>
+      </a>
+      <a href="/docs/incremental.html" class="next">
+        <span class="page-nav-label">Next →</span>
+        <span class="page-nav-title">Incremental Snapshots</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>

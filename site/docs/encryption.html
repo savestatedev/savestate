@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encryption — SaveState Docs</title>
+<meta name="description" content="SaveState uses AES-256-GCM with scrypt key derivation. Your data is encrypted before it leaves your machine.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html" class="active">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Encryption</h1>
+    <p class="subtitle">AES-256-GCM authenticated encryption with scrypt key derivation. Your data is encrypted before it leaves your machine. We never see your data.</p>
+
+    <h2 id="overview">How It Works</h2>
+    <p>Every snapshot is encrypted end-to-end using a key derived from your passphrase. The encryption pipeline looks like this:</p>
+
+    <pre><code><span class="code-comment">User passphrase</span>
+    <span class="code-output">→ scrypt (N=2^17, r=8, p=1)</span>      <span class="code-comment"># Memory-hard KDF, ~128MB</span>
+    <span class="code-output">→ 256-bit encryption key</span>         <span class="code-comment"># Derived fresh each time</span>
+    <span class="code-output">→ AES-256-GCM encryption</span>         <span class="code-comment"># Authenticated encryption</span>
+    <span class="code-output">→ .saf.enc file</span>                  <span class="code-comment"># Self-contained encrypted archive</span></code></pre>
+
+    <h2 id="key-derivation">Key Derivation (scrypt)</h2>
+    <p>Your passphrase is converted to a 256-bit encryption key using <strong>scrypt</strong>, a memory-hard key derivation function designed to resist brute-force attacks.</p>
+
+    <table>
+      <thead>
+        <tr><th>Parameter</th><th>Value</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>N</code></td><td>131072 (2<sup>17</sup>)</td><td>CPU/memory cost factor — requires ~128MB of memory</td></tr>
+        <tr><td><code>r</code></td><td>8</td><td>Block size — sequential memory read size</td></tr>
+        <tr><td><code>p</code></td><td>1</td><td>Parallelization factor</td></tr>
+        <tr><td>Key length</td><td>256 bits (32 bytes)</td><td>Output encryption key size</td></tr>
+        <tr><td>Salt</td><td>256 bits (32 bytes)</td><td>Random, unique per encryption</td></tr>
+      </tbody>
+    </table>
+
+    <p>These parameters are comparable to Argon2id defaults, making brute-force attacks extremely expensive. Each derivation uses a fresh random salt, so identical passphrases produce different keys.</p>
+
+    <div class="callout callout-info">
+      <span class="callout-label">ℹ️ Why scrypt?</span> SaveState uses Node.js native <code>crypto.scryptSync()</code> — no external dependencies. scrypt is memory-hard, audited, and widely deployed. It's used by cryptocurrency wallets, password managers, and enterprise security tools.
+    </div>
+
+    <h2 id="encryption">AES-256-GCM Encryption</h2>
+    <p>Data is encrypted using <strong>AES-256-GCM</strong> (Galois/Counter Mode), which provides both confidentiality and integrity in a single operation.</p>
+
+    <table>
+      <thead>
+        <tr><th>Component</th><th>Size</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Algorithm</td><td>—</td><td>AES-256-GCM (authenticated encryption)</td></tr>
+        <tr><td>IV (Initialization Vector)</td><td>128 bits (16 bytes)</td><td>Random nonce, unique per encryption</td></tr>
+        <tr><td>Auth Tag</td><td>128 bits (16 bytes)</td><td>GCM authentication tag — detects tampering</td></tr>
+        <tr><td>Key</td><td>256 bits (32 bytes)</td><td>Derived from passphrase via scrypt</td></tr>
+      </tbody>
+    </table>
+
+    <p>GCM mode means decryption will <strong>fail</strong> if even a single bit has been tampered with. You get confidentiality + integrity + authenticity in one pass.</p>
+
+    <h2 id="file-format">Encrypted File Format</h2>
+    <p>Each <code>.saf.enc</code> file is self-contained — everything needed to decrypt (except your passphrase) is embedded in the header:</p>
+
+    <pre><code><span class="code-comment">┌─────────────────────────────────────────────────┐</span>
+<span class="code-comment">│</span> <span class="code-key">Byte 0</span>       <span class="code-comment">│</span> <span class="code-output">Version (0x01)</span>              <span class="code-comment">│</span>
+<span class="code-comment">│</span> <span class="code-key">Bytes 1–32</span>   <span class="code-comment">│</span> <span class="code-output">Salt (32 bytes, random)</span>    <span class="code-comment">│</span>
+<span class="code-comment">│</span> <span class="code-key">Bytes 33–48</span>  <span class="code-comment">│</span> <span class="code-output">IV (16 bytes, random)</span>      <span class="code-comment">│</span>
+<span class="code-comment">│</span> <span class="code-key">Bytes 49–64</span>  <span class="code-comment">│</span> <span class="code-output">Auth Tag (16 bytes)</span>        <span class="code-comment">│</span>
+<span class="code-comment">│</span> <span class="code-key">Bytes 65+</span>    <span class="code-comment">│</span> <span class="code-output">Ciphertext (variable)</span>      <span class="code-comment">│</span>
+<span class="code-comment">└─────────────────────────────────────────────────┘</span>
+
+<span class="code-comment">Header overhead: 65 bytes</span></code></pre>
+
+    <h3>Decryption process</h3>
+    <ol>
+      <li>Read the version byte (currently <code>0x01</code>)</li>
+      <li>Extract the salt (32 bytes)</li>
+      <li>Derive the key from passphrase + salt using scrypt</li>
+      <li>Extract the IV (16 bytes)</li>
+      <li>Extract the auth tag (16 bytes)</li>
+      <li>Decrypt the ciphertext using AES-256-GCM with the derived key, IV, and auth tag</li>
+      <li>GCM automatically verifies integrity — if data was tampered with, decryption fails</li>
+    </ol>
+
+    <h2 id="passphrase">Passphrase Management</h2>
+
+    <h3>Key principles</h3>
+    <ul>
+      <li><strong>Never stored:</strong> Your passphrase is never written to disk. It's used to derive the key in memory, then discarded.</li>
+      <li><strong>Per-encryption salt:</strong> Each encryption generates a fresh random salt, so the same passphrase produces different ciphertext.</li>
+      <li><strong>No recovery:</strong> There is no "forgot password" mechanism. If you lose your passphrase, your data is gone. This is by design.</li>
+    </ul>
+
+    <h3>Best practices</h3>
+    <ul>
+      <li>Use a strong passphrase — a random string or multiple random words</li>
+      <li>Store your passphrase in a password manager (1Password, Bitwarden, etc.)</li>
+      <li>Don't use the same passphrase as your email or other critical accounts</li>
+      <li>Consider writing it down and storing it in a safe (for true disaster recovery)</li>
+    </ul>
+
+    <div class="callout callout-warn">
+      <span class="callout-label">⚠ Warning:</span> SaveState provides no key escrow, no master key, no admin backdoor. If you lose your passphrase, your snapshots are permanently unrecoverable. Treat it like a cryptocurrency seed phrase.
+    </div>
+
+    <h2 id="verification">Verification</h2>
+    <p>You can verify that a snapshot is decryptable without actually extracting it:</p>
+    <pre><code><span class="code-comment">// The verify function attempts decryption and returns true/false</span>
+<span class="code-type">async function</span> <span class="code-cmd">verify</span>(data: <span class="code-type">Buffer</span>, passphrase: <span class="code-type">string</span>): <span class="code-type">Promise</span>&lt;<span class="code-type">boolean</span>&gt;</code></pre>
+    <p>This is used internally to validate passphrases during restore.</p>
+
+    <h2 id="security-model">Security Model</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4>🔐 Client-side only</h4>
+        <p>All encryption/decryption happens on your machine. Data is encrypted before it touches any storage backend.</p>
+      </div>
+      <div class="feature-card">
+        <h4>🎲 Random salt + IV</h4>
+        <p>Fresh 32-byte salt and 16-byte IV per encryption. Same data + same passphrase = different ciphertext.</p>
+      </div>
+      <div class="feature-card">
+        <h4>✅ Authenticated</h4>
+        <p>GCM mode provides integrity verification. Tampered data is detected and rejected during decryption.</p>
+      </div>
+      <div class="feature-card">
+        <h4>🧱 Memory-hard KDF</h4>
+        <p>scrypt requires ~128MB to derive one key. GPU/ASIC brute-force attacks are extremely expensive.</p>
+      </div>
+    </div>
+
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <a href="/docs/storage.html">
+        <span class="page-nav-label">← Previous</span>
+        <span class="page-nav-title">Storage Backends</span>
+      </a>
+      <a href="/docs/format.html" class="next">
+        <span class="page-nav-label">Next →</span>
+        <span class="page-nav-title">SAF Archive Format</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>

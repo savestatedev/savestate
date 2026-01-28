@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLI Reference — SaveState Docs</title>
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, diff, search, config, and adapters.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html" class="active">CLI Reference</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>CLI Reference</h1>
+    <p class="subtitle">Eight commands. Full control over your AI backups.</p>
+
+    <pre><code><span class="code-prompt">$</span> savestate --help
+
+<span class="code-output">Time Machine for AI. Backup, restore, and migrate your AI identity.</span>
+
+<span class="code-output">Commands:</span>
+  <span class="code-cmd">init</span>                    <span class="code-output">Initialize encryption &amp; storage config</span>
+  <span class="code-cmd">snapshot</span>                <span class="code-output">Capture current AI state to encrypted archive</span>
+  <span class="code-cmd">restore</span> <span class="code-flag">[snapshot-id]</span>   <span class="code-output">Restore from snapshot (default: latest)</span>
+  <span class="code-cmd">list</span>                    <span class="code-output">List all snapshots with metadata</span>
+  <span class="code-cmd">diff</span> <span class="code-flag">&lt;a&gt; &lt;b&gt;</span>            <span class="code-output">Compare two snapshots side-by-side</span>
+  <span class="code-cmd">search</span> <span class="code-flag">&lt;query&gt;</span>          <span class="code-output">Search across all snapshots</span>
+  <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
+  <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
+
+    <!-- init -->
+    <h2 id="init"><code>savestate init</code></h2>
+    <p>Initialize SaveState in the current directory. Creates a <code>.savestate/</code> directory containing your encryption configuration and storage settings.</p>
+    <pre><code><span class="code-prompt">$</span> savestate init</code></pre>
+    <p>This command:</p>
+    <ul>
+      <li>Prompts for a passphrase (used to derive your encryption key via scrypt)</li>
+      <li>Creates <code>.savestate/config.json</code> with default local storage</li>
+      <li>Sets up the snapshot index file</li>
+    </ul>
+    <div class="callout callout-tip">
+      <span class="callout-label">💡</span> You can also use global config at <code>~/.savestate/config.json</code> — local project config takes priority.
+    </div>
+
+    <!-- snapshot -->
+    <h2 id="snapshot"><code>savestate snapshot</code></h2>
+    <p>Capture the current AI state and save it as an encrypted archive.</p>
+    <pre><code><span class="code-prompt">$</span> savestate snapshot [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-l, --label &lt;label&gt;</code></td><td>Human-readable label for this snapshot (e.g., <code>"Before migration"</code>)</td></tr>
+        <tr><td><code>-t, --tags &lt;tags&gt;</code></td><td>Comma-separated tags for organization (e.g., <code>"backup,weekly"</code>)</td></tr>
+        <tr><td><code>-a, --adapter &lt;adapter&gt;</code></td><td>Force a specific adapter instead of auto-detection (e.g., <code>clawdbot</code>, <code>claude-code</code>)</td></tr>
+        <tr><td><code>-s, --schedule &lt;interval&gt;</code></td><td>Set up auto-snapshot schedule (e.g., <code>6h</code>, <code>1d</code>) <em>(Pro)</em></td></tr>
+        <tr><td><code>--full</code></td><td>Force a full snapshot, skipping incremental delta detection</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Examples</h3>
+    <pre><code><span class="code-comment"># Basic snapshot with auto-detection</span>
+<span class="code-prompt">$</span> savestate snapshot
+
+<span class="code-comment"># Labeled + tagged</span>
+<span class="code-prompt">$</span> savestate snapshot --label <span class="code-string">"Pre-update backup"</span> --tags <span class="code-string">"important,v2"</span>
+
+<span class="code-comment"># Force the Claude Code adapter</span>
+<span class="code-prompt">$</span> savestate snapshot --adapter claude-code
+
+<span class="code-comment"># Force full snapshot (ignore incrementals)</span>
+<span class="code-prompt">$</span> savestate snapshot --full
+
+<span class="code-comment"># Schedule auto-backups every 6 hours (Pro)</span>
+<span class="code-prompt">$</span> savestate snapshot --schedule 6h</code></pre>
+
+    <p>By default, snapshots are <strong>incremental</strong> — only changes since the last snapshot are stored. Use <code>--full</code> to force a complete capture. See <a href="/docs/incremental.html">Incremental Snapshots</a> for details.</p>
+
+    <!-- restore -->
+    <h2 id="restore"><code>savestate restore</code></h2>
+    <p>Restore your AI state from a snapshot. Defaults to the latest if no ID is specified.</p>
+    <pre><code><span class="code-prompt">$</span> savestate restore [snapshot-id] [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--to &lt;platform&gt;</code></td><td>Restore to a different platform (cross-platform migration)</td></tr>
+        <tr><td><code>--dry-run</code></td><td>Show what would be restored without making any changes</td></tr>
+        <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Examples</h3>
+    <pre><code><span class="code-comment"># Restore latest snapshot</span>
+<span class="code-prompt">$</span> savestate restore latest
+
+<span class="code-comment"># Restore a specific snapshot</span>
+<span class="code-prompt">$</span> savestate restore ss-2026-01-26T09-30-00-b7c1m4
+
+<span class="code-comment"># Migrate to Claude</span>
+<span class="code-prompt">$</span> savestate restore latest --to claude
+
+<span class="code-comment"># Restore only memory files</span>
+<span class="code-prompt">$</span> savestate restore latest --include memory
+
+<span class="code-comment"># Preview without changing anything</span>
+<span class="code-prompt">$</span> savestate restore latest --dry-run</code></pre>
+
+    <div class="callout callout-info">
+      <span class="callout-label">ℹ️</span> Existing files are backed up with a <code>.bak</code> extension before being overwritten.
+    </div>
+
+    <!-- list -->
+    <h2 id="list"><code>savestate list</code></h2>
+    <p>List all snapshots with metadata. Alias: <code>savestate ls</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate list [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of snapshots to show</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-prompt">$</span> savestate list --limit 5
+<span class="code-prompt">$</span> savestate ls --json | jq '.[0]'</code></pre>
+
+    <!-- diff -->
+    <h2 id="diff"><code>savestate diff</code></h2>
+    <p>Compare two snapshots and see what changed.</p>
+    <pre><code><span class="code-prompt">$</span> savestate diff &lt;snapshot-a&gt; &lt;snapshot-b&gt;</code></pre>
+    <p>Outputs a summary of added, removed, and modified content across identity, memory, conversations, and tools.</p>
+
+    <pre><code><span class="code-prompt">$</span> savestate diff ss-2026-01-25 ss-2026-01-27
+<span class="code-output">Changes between ss-2026-01-25 and ss-2026-01-27:</span>
+  <span class="code-success">+ 3 files added</span>
+  <span class="code-flag">~ 5 files modified</span>
+  <span class="code-output">- 1 file removed</span></code></pre>
+
+    <!-- search -->
+    <h2 id="search"><code>savestate search</code></h2>
+    <p>Search across all snapshots without restoring them. Find that conversation from months ago.</p>
+    <pre><code><span class="code-prompt">$</span> savestate search &lt;query&gt;</code></pre>
+    <p>Searches across memory entries, conversations, identity files, and knowledge documents. Returns results ranked by relevance with context snippets.</p>
+    <pre><code><span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span></code></pre>
+
+    <!-- config -->
+    <h2 id="config"><code>savestate config</code></h2>
+    <p>View or edit your SaveState configuration.</p>
+    <pre><code><span class="code-prompt">$</span> savestate config [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--set &lt;key=value&gt;</code></td><td>Set a configuration value (e.g., <code>storage.type=s3</code>)</td></tr>
+        <tr><td><code>--json</code></td><td>Output current config as JSON</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># View current config</span>
+<span class="code-prompt">$</span> savestate config
+
+<span class="code-comment"># Set storage to S3</span>
+<span class="code-prompt">$</span> savestate config --set <span class="code-string">"storage.type=s3"</span>
+
+<span class="code-comment"># Export config as JSON</span>
+<span class="code-prompt">$</span> savestate config --json</code></pre>
+
+    <!-- adapters -->
+    <h2 id="adapters"><code>savestate adapters</code></h2>
+    <p>List all available platform adapters and their detection status.</p>
+    <pre><code><span class="code-prompt">$</span> savestate adapters
+<span class="code-output">ID                  NAME                  PLATFORM          DETECTED</span>
+<span class="code-output">clawdbot            Clawdbot              clawdbot          ✓</span>
+<span class="code-output">claude-code         Claude Code           claude-code       ✗</span>
+<span class="code-output">claude-web          Claude Web (claude.ai) claude-web        ✗</span>
+<span class="code-output">openai-assistants   OpenAI Assistants     openai-assistants  ✗</span>
+<span class="code-output">chatgpt             ChatGPT               chatgpt           ✗</span>
+<span class="code-output">gemini              Google Gemini         gemini            ✗</span></code></pre>
+
+    <p>Detection is automatic based on the current directory and environment. See <a href="/docs/adapters.html">Platform Adapters</a> for details on what each adapter captures.</p>
+
+    <!-- Page Nav -->
+    <div class="page-nav">
+      <a href="/docs/">
+        <span class="page-nav-label">← Previous</span>
+        <span class="page-nav-title">Getting Started</span>
+      </a>
+      <a href="/docs/adapters.html" class="next">
+        <span class="page-nav-label">Next →</span>
+        <span class="page-nav-title">Platform Adapters</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span>v0.2.1</span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>
