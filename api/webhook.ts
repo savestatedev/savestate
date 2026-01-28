@@ -14,6 +14,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { initDb, createAccount, updateSubscriptionStatus, getAccountByStripeCustomer } from './lib/db.js';
+import { sendEmail, welcomeEmailHtml } from './lib/email.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -121,8 +122,23 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   console.log(`Account created/upgraded: ${email} → ${tier} (API key: ${account.api_key.slice(0, 12)}...)`);
 
-  // TODO: Send welcome email with API key
-  // For now, the API key is in the database and can be retrieved via /api/account
+  // Send welcome email with API key
+  try {
+    await sendEmail({
+      to: email,
+      subject: `Welcome to SaveState ${tier === 'team' ? 'Team' : 'Pro'} — Your API Key`,
+      html: welcomeEmailHtml({
+        name: session.customer_details?.name || undefined,
+        email,
+        apiKey: account.api_key,
+        tier,
+      }),
+    });
+    console.log(`Welcome email sent to ${email}`);
+  } catch (emailErr) {
+    // Don't fail the webhook if email fails — account is still created
+    console.error(`Failed to send welcome email to ${email}:`, emailErr);
+  }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {

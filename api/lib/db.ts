@@ -204,7 +204,7 @@ export async function updateSubscriptionStatus(
 }
 
 /**
- * Update storage usage for an account.
+ * Update storage usage for an account (by API key).
  */
 export async function updateStorageUsage(apiKey: string, bytesUsed: number): Promise<void> {
   const sql = getDb();
@@ -213,5 +213,18 @@ export async function updateStorageUsage(apiKey: string, bytesUsed: number): Pro
       storage_used_bytes = ${bytesUsed}, 
       updated_at = NOW() 
     WHERE api_key = ${apiKey}
+  `;
+}
+
+/**
+ * Update storage usage for an account (by account ID).
+ */
+export async function updateStorageUsageById(accountId: string, bytesUsed: number): Promise<void> {
+  const sql = getDb();
+  await sql`
+    UPDATE accounts SET 
+      storage_used_bytes = ${bytesUsed}, 
+      updated_at = NOW() 
+    WHERE id = ${accountId}::uuid
   `;
 }
