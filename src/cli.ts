@@ -135,6 +135,20 @@ program
   .option('-s, --status', 'Show schedule status')
   .action(scheduleCommand);
 
+// ─── savestate migrate ───────────────────────────────────────
+
+import { migrateCommand } from './commands/migrate.js';
+
+program
+  .command('migrate')
+  .description('Migrate AI identity between platforms (ChatGPT → Claude, etc.)')
+  .option('-f, --from <platform>', 'Source platform to migrate from')
+  .option('-t, --to <platform>', 'Target platform to migrate to')
+  .option('-s, --snapshot <id>', 'Use existing snapshot instead of creating new one')
+  .option('--dry-run', 'Show migration plan without making changes')
+  .option('-l, --list', 'List available platforms and their capabilities')
+  .action(migrateCommand);
+
 // ─── Parse & run ─────────────────────────────────────────────
 
 program.parse();
