@@ -247,12 +247,12 @@ Nobody is doing this comprehensively. The closest analogy is 1Password for passw
 - [x] GitHub Actions CI/CD (ci.yml: build/lint/smoke; release.yml: npm + binaries + Homebrew)
 - [x] install.sh (platform-detect → binary → npm fallback → brew fallback)
 - [x] v0.2.1 release pipeline tested (npm ✅, GitHub Release ✅, 4/5 binaries built)
-- [ ] Incremental snapshots (types defined, implementation pending → moved to Phase 3)
+- [x] Incremental snapshots (delta-only captures, auto-detect parent, chain reconstruction)
 
 ## Phase 3 — Launch Readiness
 
 - [ ] End-to-end test suite (snapshot → restore → verify across adapters)
-- [ ] Incremental snapshots (delta-only captures, snapshot chaining)
+- [x] Incremental snapshots (delta-only captures, snapshot chaining) — done in Phase 2
 - [ ] GitHub Actions CI/CD (build, test, publish npm + Homebrew on release)
 - [ ] Binary releases + install.sh (macOS arm64/x64, Linux arm64/x64, Windows x64)
 - [ ] Encrypted search index (client-side, encrypted separately)
