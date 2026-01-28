@@ -2,7 +2,7 @@
  * savestate schedule — Configure automatic backup schedules
  *
  * Uses launchd (macOS) or systemd timers (Linux) for reliable scheduling.
- * Requires Pro or Team tier for cloud-backed schedules.
+ * Requires Pro or Team subscription.
  */
 
 import chalk from 'chalk';
@@ -13,6 +13,8 @@ import { homedir, platform } from 'node:os';
 import { execSync } from 'node:child_process';
 import { isInitialized, loadConfig } from '../config.js';
 
+const API_BASE = 'https://savestate.dev/api';
+
 interface ScheduleOptions {
   every?: string;
   disable?: boolean;
@@ -20,6 +22,40 @@ interface ScheduleOptions {
 }
 
 const LABEL = 'dev.savestate.autobackup';
+
+/**
+ * Verify subscription is Pro or Team
+ */
+async function verifySubscription(): Promise<{ valid: boolean; tier?: string; error?: string }> {
+  const config = await loadConfig();
+  const extConfig = config as unknown as Record<string, unknown>;
+  const apiKey = extConfig.apiKey as string | undefined;
+
+  if (!apiKey) {
+    return { valid: false, error: 'Not logged in. Run `savestate login` first.' };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/account`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+
+    if (!res.ok) {
+      return { valid: false, error: 'Invalid or expired API key. Run `savestate login` to re-authenticate.' };
+    }
+
+    const account = await res.json() as { tier: string };
+    const tier = account.tier.toLowerCase();
+
+    if (tier === 'pro' || tier === 'team') {
+      return { valid: true, tier };
+    }
+
+    return { valid: false, tier, error: 'Scheduled backups require a Pro or Team subscription.' };
+  } catch {
+    return { valid: false, error: 'Could not verify subscription. Check your internet connection.' };
+  }
+}
 
 export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
   console.log();
@@ -29,20 +65,37 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
     process.exit(1);
   }
 
-  // Status check
+  // Status check - allowed for everyone
   if (options.status || (!options.every && !options.disable)) {
     await showStatus();
     return;
   }
 
-  // Disable
+  // Disable - allowed for everyone (in case subscription lapses)
   if (options.disable) {
     await disableSchedule();
     return;
   }
 
-  // Enable with interval
+  // Enable with interval - requires Pro/Team
   if (options.every) {
+    // Verify subscription first
+    const spinner = ora('Verifying subscription...').start();
+    const { valid, tier, error } = await verifySubscription();
+
+    if (!valid) {
+      spinner.fail('Subscription required');
+      console.log();
+      console.log(chalk.red(`  ${error}`));
+      if (tier === 'free') {
+        console.log();
+        console.log(chalk.dim('  Upgrade at: https://savestate.dev/#pricing'));
+      }
+      console.log();
+      process.exit(1);
+    }
+
+    spinner.succeed(`Subscription verified (${tier!.toUpperCase()})`);
     await enableSchedule(options.every);
     return;
   }
