@@ -15,6 +15,7 @@ interface SnapshotOptions {
   tags?: string;
   adapter?: string;
   schedule?: string;
+  full?: boolean;
 }
 
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
@@ -66,14 +67,22 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     const result = await createSnapshot(adapter, storage, passphrase, {
       label: options.label,
       tags: options.tags?.split(',').map((t) => t.trim()),
+      full: options.full,
     });
 
-    spinner.succeed('Snapshot created!');
+    const typeLabel = result.incremental ? 'Incremental snapshot' : 'Full snapshot';
+    spinner.succeed(`${typeLabel} created!`);
     console.log();
     console.log(`  ${chalk.dim('ID:')}         ${chalk.cyan(result.snapshot.manifest.id)}`);
     console.log(`  ${chalk.dim('Adapter:')}    ${adapter.name}`);
+    console.log(`  ${chalk.dim('Type:')}       ${result.incremental ? chalk.yellow('incremental (delta)') : chalk.blue('full')}`);
     if (options.label) {
       console.log(`  ${chalk.dim('Label:')}      ${options.label}`);
+    }
+    if (result.incremental && result.delta) {
+      console.log(`  ${chalk.dim('Changes:')}    ${chalk.green(`+${result.delta.added}`)} added, ${chalk.yellow(`~${result.delta.modified}`)} modified, ${chalk.red(`-${result.delta.removed}`)} removed, ${chalk.dim(`${result.delta.unchanged} unchanged`)}`);
+      console.log(`  ${chalk.dim('Chain:')}      depth ${result.delta.chainDepth} (parent: ${result.snapshot.manifest.parent})`);
+      console.log(`  ${chalk.dim('Saved:')}      ${formatBytes(result.delta.bytesSaved)} vs full snapshot`);
     }
     console.log(`  ${chalk.dim('Files:')}      ${result.fileCount} files in archive`);
     console.log(`  ${chalk.dim('Archive:')}    ${formatBytes(result.archiveSize)}`);

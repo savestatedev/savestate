@@ -49,6 +49,7 @@ program
   .option('-t, --tags <tags>', 'Comma-separated tags')
   .option('-a, --adapter <adapter>', 'Adapter to use (default: auto-detect)')
   .option('-s, --schedule <interval>', 'Set up auto-snapshot schedule (e.g., 6h, 1d)')
+  .option('--full', 'Force a full snapshot (skip incremental)')
   .action(snapshotCommand);
 
 // ─── savestate restore ───────────────────────────────────────

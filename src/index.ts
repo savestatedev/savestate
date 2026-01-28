@@ -65,6 +65,25 @@ export {
 // Snapshot
 export { createSnapshot, getLatestSnapshotId } from './snapshot.js';
 
+// Incremental
+export {
+  computeContentHashes,
+  computeDelta,
+  packDelta,
+  reconstructFromChain,
+  getParentHashes,
+  isIncremental,
+  getDeltaManifest,
+  MAX_CHAIN_DEPTH,
+  FULL_SNAPSHOT_THRESHOLD,
+} from './incremental.js';
+export type {
+  ContentHashes,
+  DeltaEntry,
+  DeltaManifest,
+  DeltaResult,
+} from './incremental.js';
+
 // Restore
 export { restoreSnapshot, validateSnapshot } from './restore.js';
 

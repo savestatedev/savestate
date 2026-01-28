@@ -16,6 +16,7 @@ import type { Adapter, Snapshot, StorageBackend } from './types.js';
 import { unpackFromArchive, unpackSnapshot, computeChecksum, snapshotFilename } from './format.js';
 import { decrypt } from './encryption.js';
 import { findEntry, getLatestEntry } from './index-file.js';
+import { isIncremental, reconstructFromChain } from './incremental.js';
 
 export interface RestoreResult {
   snapshotId: string;
@@ -92,10 +93,16 @@ export async function restoreSnapshot(
   }
 
   // Step 4: Unpack SAF
-  const fileMap = await unpackFromArchive(archive);
+  let fileMap = await unpackFromArchive(archive);
+
+  // Step 4b: If incremental, reconstruct full state from chain
+  if (isIncremental(fileMap)) {
+    fileMap = await reconstructFromChain(resolvedId, storage, passphrase);
+  }
+
   const snapshot = unpackSnapshot(fileMap);
 
-  // Verify integrity
+  // Verify integrity (for full snapshots)
   const expectedChecksum = snapshot.manifest.checksum;
   if (expectedChecksum) {
     const actualChecksum = computeChecksum(archive);
