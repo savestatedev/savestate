@@ -28,8 +28,8 @@
   --text-muted: #94a3b8;
   --text-dim: #64748b;
   --border: #1e293b;
-  --glow: rgba(14, 165, 233, 0.15);
-  --glow-strong: rgba(14, 165, 233, 0.3);
+  --glow: rgba(3, 193, 223, 0.15);
+  --glow-strong: rgba(3, 193, 223, 0.3);
   --radius: 12px;
   --radius-sm: 8px;
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -55,7 +55,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(14, 165, 233, 0.04) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
   background-size: 32px 32px;
   pointer-events: none;
   z-index: 0;
@@ -198,12 +198,12 @@ nav .container {
 .btn-primary {
   background: linear-gradient(135deg, var(--blue), #0284c7);
   color: #fff;
-  box-shadow: 0 0 20px rgba(14, 165, 233, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 20px rgba(3, 193, 223, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--blue-light), var(--blue));
-  box-shadow: 0 0 30px rgba(14, 165, 233, 0.4), 0 6px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 30px rgba(3, 193, 223, 0.4), 0 6px 16px rgba(0, 0, 0, 0.3);
   transform: translateY(-2px);
 }
 
@@ -216,7 +216,7 @@ nav .container {
 
 .btn-secondary:hover {
   border-color: var(--blue);
-  background: rgba(14, 165, 233, 0.05);
+  background: rgba(3, 193, 223, 0.05);
   transform: translateY(-2px);
 }
 
@@ -270,92 +270,80 @@ nav .container {
    HERO
    ============================================================ */
 .hero {
-  padding: 160px 0 120px;
-  text-align: center;
+  padding: 140px 0 100px;
   position: relative;
 }
 
-/* Hero glow orbs */
-.hero::before {
-  content: '';
-  position: absolute;
-  top: -100px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.08), transparent 70%);
-  pointer-events: none;
-}
-
-.hero::after {
-  content: '';
-  position: absolute;
-  top: 60px;
-  right: 10%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.05), transparent 70%);
-  pointer-events: none;
-}
-
-.hero-badge {
-  display: inline-flex;
+.hero-layout {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 16px 6px 8px;
-  background: rgba(14, 165, 233, 0.08);
-  border: 1px solid rgba(14, 165, 233, 0.2);
-  border-radius: 100px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--blue-light);
-  margin-bottom: 32px;
-  animation: fadeInDown 0.6s ease-out;
+  gap: 64px;
 }
 
-.hero-badge-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--blue);
-  border-radius: 50%;
-  animation: pulse-dot 2s infinite;
+.hero-content {
+  flex: 1;
+  min-width: 0;
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(14,165,233,0.5); }
-  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(14,165,233,0); }
+.hero-visual {
+  flex-shrink: 0;
+  width: 200px;
+  height: 200px;
+  opacity: 0.9;
+}
+
+.hero-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .hero h1 {
-  font-size: clamp(40px, 6.5vw, 76px);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1.05;
-  margin-bottom: 24px;
-  animation: fadeInUp 0.7s ease-out;
+  font-size: clamp(36px, 5.5vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  color: #fff;
+  animation: fadeInUp 0.5s ease-out;
 }
 
-.hero h1 .gradient-text {
-  background: linear-gradient(135deg, var(--blue-light) 0%, var(--blue) 50%, #6366f1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.hero h1 em {
+  font-style: normal;
+  color: var(--blue);
 }
 
 .hero-subtitle {
-  font-size: clamp(16px, 2vw, 20px);
+  font-size: clamp(16px, 1.8vw, 19px);
   color: var(--text-muted);
-  max-width: 540px;
-  margin: 0 auto 40px;
-  line-height: 1.6;
-  animation: fadeInUp 0.8s ease-out;
+  max-width: 480px;
+  margin: 0 0 36px;
+  line-height: 1.7;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .hero .btn-group {
-  justify-content: center;
-  animation: fadeInUp 0.9s ease-out;
-  margin-bottom: 64px;
+  animation: fadeInUp 0.7s ease-out;
+  margin-bottom: 56px;
+}
+
+.hero-install {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  animation: fadeInUp 0.65s ease-out;
+}
+
+.hero-install code {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--blue);
+  background: rgba(3, 193, 223, 0.08);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(3, 193, 223, 0.15);
+  user-select: all;
 }
 
 /* Terminal */
@@ -368,7 +356,7 @@ nav .container {
   overflow: hidden;
   text-align: left;
   box-shadow:
-    0 0 40px rgba(14, 165, 233, 0.06),
+    0 0 40px rgba(3, 193, 223, 0.06),
     0 20px 60px rgba(0, 0, 0, 0.5);
   animation: fadeInUp 1s ease-out;
 }
@@ -561,7 +549,7 @@ nav .container {
   color: #fff;
   position: relative;
   z-index: 2;
-  box-shadow: 0 0 20px rgba(14, 165, 233, 0.25);
+  box-shadow: 0 0 20px rgba(3, 193, 223, 0.25);
 }
 
 .step h3 {
@@ -636,7 +624,7 @@ nav .container {
 }
 
 .feature-card:hover {
-  border-color: rgba(14, 165, 233, 0.3);
+  border-color: rgba(3, 193, 223, 0.3);
   background: var(--bg-card-hover);
   transform: translateY(-3px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
@@ -693,7 +681,7 @@ nav .container {
 }
 
 .platform-card:hover {
-  border-color: rgba(14, 165, 233, 0.3);
+  border-color: rgba(3, 193, 223, 0.3);
   background: var(--bg-card-hover);
 }
 
@@ -705,7 +693,7 @@ nav .container {
   align-items: center;
   justify-content: center;
   font-size: 28px;
-  background: rgba(14, 165, 233, 0.06);
+  background: rgba(3, 193, 223, 0.06);
   border-radius: 12px;
 }
 
@@ -762,7 +750,7 @@ nav .container {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: 0 0 40px rgba(14, 165, 233, 0.04), 0 16px 48px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 40px rgba(3, 193, 223, 0.04), 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 .cli-block-header {
@@ -817,7 +805,7 @@ nav .container {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.03), transparent 50%, rgba(99, 102, 241, 0.03));
+  background: linear-gradient(135deg, rgba(3, 193, 223, 0.03), transparent 50%, rgba(3, 193, 223, 0.03));
   pointer-events: none;
 }
 
@@ -895,8 +883,8 @@ nav .container {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(14, 165, 233, 0.1);
-  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: rgba(3, 193, 223, 0.1);
+  border: 1px solid rgba(3, 193, 223, 0.2);
   border-radius: 8px;
   padding: 12px 16px;
   color: var(--blue-light);
@@ -909,7 +897,7 @@ nav .container {
 }
 
 .copy-btn:hover {
-  background: rgba(14, 165, 233, 0.15);
+  background: rgba(3, 193, 223, 0.15);
   border-color: var(--blue);
 }
 
@@ -1016,7 +1004,11 @@ nav .container {
   .nav-links { display: none; }
   .nav-mobile-toggle { display: block; }
 
-  .hero h1 { font-size: 36px; }
+  .hero-layout { flex-direction: column; text-align: center; gap: 32px; }
+  .hero-visual { width: 120px; height: 120px; order: -1; }
+  .hero-subtitle { margin-left: auto; margin-right: auto; }
+  .hero-install { justify-content: center; }
+  .hero h1 { font-size: 32px; }
   .hero-subtitle { font-size: 16px; }
 
   .btn { padding: 12px 22px; font-size: 14px; }
@@ -1059,7 +1051,7 @@ nav .container {
    SELECTION
    ============================================================ */
 ::selection {
-  background: rgba(14, 165, 233, 0.3);
+  background: rgba(3, 193, 223, 0.3);
   color: #fff;
 }
 
@@ -1095,26 +1087,28 @@ nav .container {
 <!-- ==================== HERO ==================== -->
 <section class="hero" id="hero">
   <div class="container">
-    <div class="hero-badge">
-      <span class="hero-badge-dot"></span>
-      Now available on npm
-    </div>
-    <h1>
-      <span class="gradient-text">Time Machine</span><br>for AI
-    </h1>
-    <p class="hero-subtitle">
-      Encrypted backup, restore, and migration for your AI identity.<br>
-      Never lose your AI again.
-    </p>
-    <div class="btn-group">
-      <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-primary" target="_blank" rel="noopener">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-        Get Started
-      </a>
-      <a href="https://github.com/savestatedev/savestate" class="btn btn-secondary" target="_blank" rel="noopener">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-        View on GitHub
-      </a>
+    <div class="hero-layout">
+      <div class="hero-content">
+        <h1>Your AI knows you.<br>Back it up.</h1>
+        <p class="hero-subtitle">
+          SaveState encrypts and preserves your AI's memory, personality, and conversations. Restore anywhere. Switch platforms. Never start over.
+        </p>
+        <div class="hero-install">
+          <code>npm i -g @savestate/cli</code>
+        </div>
+        <div class="btn-group">
+          <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-primary" target="_blank" rel="noopener">
+            Get Started
+          </a>
+          <a href="https://github.com/savestatedev/savestate" class="btn btn-secondary" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <img src="logo.png" alt="SaveState logo">
+      </div>
     </div>
 
     <!-- Animated Terminal -->
