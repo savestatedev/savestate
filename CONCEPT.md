@@ -287,11 +287,22 @@ Nobody is doing this comprehensively. The closest analogy is 1Password for passw
 - [ ] Search command: full implementation (currently scaffolded)
 - [ ] Documentation site (savestate.dev/docs — scaffolded, needs more pages)
 
-## Phase 4 — Growth & Scale
+## Phase 4 — Growth & Scale (Jan 28, 2026)
 
-- [ ] Web dashboard (Next.js) — subscriber management, snapshot browser
-- [ ] Migration wizard (ChatGPT → Claude, etc.)
-- [ ] Pro tier features (cloud storage, auto-backups, all adapters)
+- [x] Scheduled auto-backups (`savestate schedule --every 6h`)
+  - macOS launchd integration (LaunchAgents)
+  - Linux systemd timer + service units
+  - Status, enable, disable workflow
+- [x] Web dashboard (site/dashboard.html) — Pro/Team subscribers
+  - Login with API key
+  - View cloud snapshots + storage usage
+  - Download/delete snapshots
+  - Responsive dark theme
+- [x] Migration wizard (`savestate migrate`)
+  - Interactive guided migration: ChatGPT → Claude, etc.
+  - --list shows platform capabilities
+  - --dry-run for preview
+  - Clear notes about platform limitations
 - [ ] Team features (shared backups, compliance, SSO)
 - [ ] Product Hunt launch
 - [ ] Blog post: "Your AI knows everything about you. What's your backup plan?"

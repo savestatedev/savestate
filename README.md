@@ -147,6 +147,15 @@ savestate config                      View/edit configuration
   --set <key=value>                  Set a config value
   --json                             Output as JSON
 savestate adapters                    List available adapters
+savestate schedule                    Configure auto-backups (Pro/Team)
+  --every <interval>                 Backup interval (1h, 6h, 12h, 1d)
+  --disable                          Disable scheduled backups
+  --status                           Show schedule status
+savestate migrate                     Migration wizard between platforms
+  --from <platform>                  Source platform
+  --to <platform>                    Target platform
+  --list                             Show platform capabilities
+  --dry-run                          Preview migration plan
 ```
 
 ## Storage Backends
