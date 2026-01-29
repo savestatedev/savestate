@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.2] - 2026-01-29
+
+### Bug Fixes
+
+- **FIXED**: Cloud push "file not found" — was looking in wrong directory (`.savestate/` instead of `~/.savestate/`)
+- **FIXED**: CLI `--version` now correctly shows current version (was stuck on 0.1.0)
+- **Added**: robots.txt and sitemap.xml for SEO
+- **Added**: Open Graph and Twitter Card meta tags
+- **Added**: install.sh accessible from website
+
+---
+
 ## [0.4.1] - 2026-01-29
 
 ### Cloud Storage Improvements

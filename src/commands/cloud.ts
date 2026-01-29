@@ -9,12 +9,13 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { existsSync, readFileSync, writeFileSync, createWriteStream, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { isInitialized, loadConfig, localConfigDir } from '../config.js';
+import { homedir } from 'node:os';
+import { isInitialized, loadConfig } from '../config.js';
 import { loadIndex } from '../index-file.js';
 
-/** Get the snapshots directory */
+/** Get the snapshots directory (global ~/.savestate/snapshots/) */
 function getSnapshotsDir(): string {
-  return join(localConfigDir(), 'snapshots');
+  return join(homedir(), '.savestate', 'snapshots');
 }
 
 const API_BASE = process.env.SAVESTATE_API_URL || 'https://savestate.dev/api';

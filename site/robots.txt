@@ -1,0 +1,6 @@
+# SaveState robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://savestate.dev/sitemap.xml

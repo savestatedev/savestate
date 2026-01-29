@@ -16,6 +16,7 @@
  */
 
 import { Command } from 'commander';
+import { createRequire } from 'node:module';
 import {
   initCommand,
   snapshotCommand,
@@ -27,12 +28,16 @@ import {
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 
+// Get version from package.json
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
+
 const program = new Command();
 
 program
   .name('savestate')
   .description('Time Machine for AI. Backup, restore, and migrate your AI identity.')
-  .version('0.1.0');
+  .version(version);
 
 // ─── savestate init ──────────────────────────────────────────
 
