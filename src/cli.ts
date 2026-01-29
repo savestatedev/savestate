@@ -149,6 +149,18 @@ program
   .option('-l, --list', 'List available platforms and their capabilities')
   .action(migrateCommand);
 
+// ─── savestate cloud ─────────────────────────────────────────
+
+import { cloudCommand } from './commands/cloud.js';
+
+program
+  .command('cloud <subcommand>')
+  .description('Cloud storage commands (Pro/Team)')
+  .option('--id <id>', 'Specific snapshot ID')
+  .option('--all', 'Process all snapshots')
+  .option('-f, --force', 'Overwrite existing files')
+  .action(cloudCommand);
+
 // ─── Parse & run ─────────────────────────────────────────────
 
 program.parse();

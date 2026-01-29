@@ -32,7 +32,7 @@ npx savestate diff v3 v5               # What changed between snapshots
 - 📦 **Open archive format** — The SaveState Archive Format (SAF) is an open spec. No vendor lock-in.
 - 🔌 **Platform adapters** — Works with ChatGPT, Claude, Gemini, Clawdbot, OpenAI Assistants, and more.
 - 📊 **Incremental** — Like git — only captures what changed. Full history, tiny storage.
-- 💾 **Flexible storage** — Local filesystem, S3, R2, Backblaze, Dropbox, iCloud — you choose.
+- 💾 **Flexible storage** — Local filesystem (free) or SaveState Cloud (Pro/Team).
 - ⏰ **Scheduled backups** — Set it and forget it. Auto-snapshot on your schedule.
 - 🖥️ **CLI-first** — Built for developers. Also has a web dashboard (coming soon).
 
@@ -158,25 +158,43 @@ savestate migrate                     Migration wizard between platforms
   --dry-run                          Preview migration plan
 ```
 
-## Storage Backends
+## Storage
+
+### Local Storage (Free)
 
 ```bash
-# Local filesystem (default)
+# Default — snapshots stored in ~/.savestate/
 savestate config --set storage.type=local
 
-# Amazon S3
-savestate config --set storage.type=s3
-savestate config --set storage.options.bucket=my-savestate-backups
-
-# Cloudflare R2
-savestate config --set storage.type=r2
-
-# Any sync folder (Dropbox, iCloud, etc.)
-savestate config --set storage.type=local
+# Custom path (e.g., Dropbox, iCloud sync folder)
 savestate config --set storage.options.path=~/Dropbox/savestate
 ```
 
-All backends receive **only encrypted data**. Zero-knowledge by design.
+### Cloud Storage (Pro/Team)
+
+Cloud storage is managed through the SaveState API with server-side subscription verification:
+
+```bash
+# Authenticate first
+savestate login
+
+# Push local snapshots to cloud
+savestate cloud push              # Push latest snapshot
+savestate cloud push --all        # Push all snapshots
+
+# Pull snapshots from cloud
+savestate cloud pull              # Pull latest
+savestate cloud pull --id abc123  # Pull specific snapshot
+
+# List cloud snapshots
+savestate cloud list              # Shows usage stats
+```
+
+Cloud storage quotas:
+- **Pro ($9/mo)**: 10 GB
+- **Team ($29/mo)**: 100 GB
+
+All data is **encrypted locally** before upload. Zero-knowledge by design.
 
 ## Contributing
 
