@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Your AI Should Have a Backup Plan — SaveState</title>
+<meta name="description" content="Your most important digital relationship is running without a safety net. Learn why backing up your AI assistant is crucial and how to protect your AI identity.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+/* Table */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-code);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">January 31, 2026</div>
+      <h1>Why Your AI Should Have a Backup Plan</h1>
+      <p class="subtitle">Your most important digital relationship is running without a safety net</p>
+    </header>
+
+    <div class="article-content">
+      <h2>An Uncomfortable Thought Experiment</h2>
+
+      <p>Imagine you wake up tomorrow and your phone is completely wiped. Contacts, messages, photos, apps — all gone. Factory reset.</p>
+
+      <p>How would that feel?</p>
+
+      <p>Now imagine the same thing happens to your AI assistant. Your ChatGPT, your Claude, your Gemini — whatever you use. Everything it knows about you, your conversation history, your carefully crafted instructions — vanished.</p>
+
+      <p>For most people, that second scenario would be almost as disruptive as the first. Maybe more.</p>
+
+      <p>Your AI has become infrastructure. It helps you write, code, think, plan, create. It's learned your preferences over hundreds of interactions. It understands how you work in ways that took months to develop.</p>
+
+      <p>And unlike your phone, there's no backup running silently in the background. No Time Machine. No iCloud sync. No recovery option.</p>
+
+      <p><strong>Your most important digital relationship is running without a safety net.</strong></p>
+
+      <img src="/images/blog-backup-scale.png" alt="Balance scale - one side shows phone, photos, contacts labeled 'backed up automatically'; other side shows AI memories/conversations labeled 'no backup at all'">
+
+      <hr>
+
+      <h2>The Infrastructure Problem</h2>
+
+      <p>Something interesting happened in the last two years: AI assistants became infrastructure.</p>
+
+      <p>They're not novelties anymore. They're not toys. For millions of knowledge workers, AI is as fundamental as email or Slack. It's woven into daily workflows — drafting documents, reviewing code, synthesizing research, managing projects.</p>
+
+      <p>This happened fast. Faster than we developed the tools to manage it.</p>
+
+      <p>Consider how we treat other critical systems:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>System</th>
+            <th>Backup Strategy</th>
+            <th>Recovery Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Email</td>
+            <td>Server-side + local export</td>
+            <td>Minutes</td>
+          </tr>
+          <tr>
+            <td>Files</td>
+            <td>Cloud sync, Time Machine, versioning</td>
+            <td>Minutes</td>
+          </tr>
+          <tr>
+            <td>Passwords</td>
+            <td>Password manager, cloud backup</td>
+            <td>Seconds</td>
+          </tr>
+          <tr>
+            <td>Code</td>
+            <td>Git, multiple remotes, CI artifacts</td>
+            <td>Seconds</td>
+          </tr>
+          <tr>
+            <td>Photos</td>
+            <td>Cloud sync, local backup</td>
+            <td>Minutes</td>
+          </tr>
+          <tr>
+            <td><strong>AI Assistant</strong></td>
+            <td><strong>None</strong></td>
+            <td><strong>Start over</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>We've built redundancy into everything except the newest, fastest-growing category of software. It's a blind spot born from AI's rapid adoption outpacing our infrastructure thinking.</p>
+
+      <hr>
+
+      <h2>The Real Risks</h2>
+
+      <p>"But my AI is just in the cloud. It's always there."</p>
+
+      <p>Let's examine that assumption.</p>
+
+      <h3>Risk 1: Platform Changes</h3>
+
+      <p>AI platforms are iterating aggressively. Features come and go. APIs change. Data structures get reorganized.</p>
+
+      <p>OpenAI has revised ChatGPT's memory system multiple times. Anthropic is constantly evolving Claude's capabilities. Google is rearchitecting Gemini seemingly monthly.</p>
+
+      <p>Each change is a potential data loss event. Not necessarily through malice — just through the natural chaos of rapid product development.</p>
+
+      <h3>Risk 2: Account Issues</h3>
+
+      <p>Accounts get locked. Payments fail. Policies change. You can lose access to a cloud service for reasons entirely outside your control.</p>
+
+      <p>Maybe your credit card expires and billing fails. Maybe a content filter misidentifies something you said as a policy violation. Maybe the platform's fraud detection flags you incorrectly.</p>
+
+      <p>Now you're locked out. And everything your AI knew about you? Still on their servers, inaccessible.</p>
+
+      <h3>Risk 3: Company Viability</h3>
+
+      <p>Nobody thinks the big AI companies are going away tomorrow. But the landscape is volatile.</p>
+
+      <ul>
+        <li>What happens to your data if there's an acquisition?</li>
+        <li>What if a company pivots strategy and sunsets your product tier?</li>
+        <li>What if geopolitical issues make a service unavailable in your region?</li>
+      </ul>
+
+      <p>In each scenario, your accumulated AI relationship could become collateral damage.</p>
+
+      <h3>Risk 4: You Just Want to Leave</h3>
+
+      <p>Maybe you don't <em>lose</em> access — you choose to walk away.</p>
+
+      <p>A competitor releases something better. Your company mandates a different tool. You have ethical concerns about a platform's direction.</p>
+
+      <p>Right now, leaving means abandoning everything you've built. That's not freedom — it's a trap.</p>
+
+      <hr>
+
+      <h2>The Hidden Value of Your AI Context</h2>
+
+      <p>Most people dramatically underestimate what they've accumulated with their AI assistant.</p>
+
+      <h3>Explicit Value</h3>
+
+      <p>The stuff you'd immediately miss:</p>
+
+      <ul>
+        <li><strong>Custom instructions</strong> — Hours of refinement to get responses just right</li>
+        <li><strong>Memories</strong> — Dozens to hundreds of facts the AI has learned about you</li>
+        <li><strong>Conversation history</strong> — A searchable archive of your thinking and work</li>
+        <li><strong>Uploaded files</strong> — Documents, code, knowledge bases</li>
+      </ul>
+
+      <h3>Implicit Value</h3>
+
+      <p>The stuff that's harder to quantify:</p>
+
+      <ul>
+        <li><strong>Calibrated responses</strong> — Your AI has learned your preferences through feedback</li>
+        <li><strong>Style matching</strong> — It knows how verbose or concise you prefer</li>
+        <li><strong>Domain context</strong> — It understands your work, your projects, your stack</li>
+        <li><strong>Relationship dynamics</strong> — The particular way you and your AI communicate</li>
+      </ul>
+
+      <p>This implicit value can't be exported in a settings file. It's encoded in the patterns of your interactions. Starting over means recalibrating from scratch.</p>
+
+      <h3>Compounding Value</h3>
+
+      <p>Here's the thing about AI context: it compounds.</p>
+
+      <p>The more your AI knows about you, the more useful it becomes. The more useful it is, the more you use it. The more you use it, the more it learns. This is a virtuous cycle — until it resets to zero.</p>
+
+      <p>Each restart costs you not just your current position, but all the compounding value you would have accumulated from that position forward.</p>
+
+      <img src="/images/blog-value-curve.png" alt="Growth curve showing AI usefulness over time with annotation showing value lost when line drops to zero at platform switch">
+
+      <hr>
+
+      <h2>The Case for Backup</h2>
+
+      <p>Given all this, the argument for backing up your AI state is straightforward:</p>
+
+      <ol>
+        <li><strong>Protection against loss</strong> — Platform changes, account issues, service disruptions</li>
+        <li><strong>Freedom to switch</strong> — Try new platforms without commitment anxiety</li>
+        <li><strong>Ownership of your data</strong> — Your AI relationship belongs to you</li>
+        <li><strong>Compliance and audit</strong> — For teams, having records of AI interactions may be required</li>
+        <li><strong>Continuity</strong> — Pick up where you left off, even years later</li>
+      </ol>
+
+      <p>The objection is usually effort. "That sounds like a lot of work."</p>
+
+      <p>It's not. Modern backup is set-and-forget. You don't manually copy your photos to iCloud — it just happens. You don't remember to push your code to GitHub — pre-commit hooks and CI handle it.</p>
+
+      <p>AI backup should work the same way.</p>
+
+      <hr>
+
+      <h2>What Good AI Backup Looks Like</h2>
+
+      <p>So what should AI backup actually provide?</p>
+
+      <h3>Non-Negotiable Requirements</h3>
+
+      <p><strong>End-to-end encryption</strong><br>
+      Your AI knows sensitive things about you. A backup solution without strong encryption is unacceptable. You need to control the keys, and the backup provider should never be able to read your data.</p>
+
+      <p><strong>Platform agnostic format</strong><br>
+      Your backup should work even if the backup tool itself disappears. No proprietary formats. No vendor lock-in for your backup tool either.</p>
+
+      <p><strong>Cross-platform restore</strong><br>
+      If you're backing up ChatGPT, you should be able to restore to Claude (to the extent possible). Otherwise, what's the point?</p>
+
+      <p><strong>Automation</strong><br>
+      Manual backups don't happen. Regular, automatic backups are essential.</p>
+
+      <h3>Nice-to-Have Features</h3>
+
+      <ul>
+        <li><strong>Incremental snapshots</strong> — Don't re-backup everything every time</li>
+        <li><strong>Search</strong> — Find that conversation from 6 months ago</li>
+        <li><strong>Diff</strong> — See what changed between snapshots</li>
+        <li><strong>Migration wizard</strong> — Guided cross-platform moves</li>
+        <li><strong>Storage flexibility</strong> — Store locally, in your cloud, or managed cloud</li>
+      </ul>
+
+      <hr>
+
+      <h2>The Philosophy of Digital Ownership</h2>
+
+      <p>Let's zoom out for a moment.</p>
+
+      <p>We're in an interesting era for digital ownership. On one hand, we've largely accepted that software lives in the cloud. We don't own Microsoft Office — we subscribe to it. We don't own our playlists — Spotify does.</p>
+
+      <p>But there's been pushback. The right-to-repair movement. Digital preservation advocates. People running Plex servers instead of subscribing to five streaming services. There's a growing awareness that renting your digital life has downsides.</p>
+
+      <p>AI state is the next frontier of this debate.</p>
+
+      <p>Your AI relationship is arguably the most personal data you generate. It contains your thoughts, your work, your communication patterns. It's a detailed model of <em>you</em>.</p>
+
+      <p>Should that belong to the platform? Or should it belong to you?</p>
+
+      <p>We believe the answer is obvious. And we believe the tools should make that ownership practical, not just theoretical.</p>
+
+      <hr>
+
+      <h2>Introducing SaveState</h2>
+
+      <p>SaveState is our attempt to make AI backup as natural as backing up photos.</p>
+
+      <pre><code># Install
+npm install -g @savestate/cli
+
+# Initialize with encryption
+savestate init
+
+# Take a snapshot
+savestate snapshot
+
+# Restore anytime
+savestate restore latest
+
+# Or migrate to a different platform
+savestate migrate --from chatgpt --to claude</code></pre>
+
+      <p>SaveState captures:</p>
+
+      <ul>
+        <li>Custom instructions and system prompts</li>
+        <li>Memories and learned preferences</li>
+        <li>Conversation history</li>
+        <li>Uploaded files and knowledge bases</li>
+        <li>Tool configurations</li>
+      </ul>
+
+      <p>Everything is encrypted with AES-256-GCM before it leaves your machine. We never see your data. We can't — you control the keys.</p>
+
+      <p>The SaveState Archive Format (SAF) is an open specification. If SaveState disappeared tomorrow, you could still decrypt and read your backups with standard tools.</p>
+
+      <h3>Pricing</h3>
+
+      <p><strong>Free</strong>: Local encrypted backups, all platform adapters, manual snapshots. Everything you need to protect your AI identity on your own machine.</p>
+
+      <p><strong>Pro ($9/month)</strong>: Cloud storage, scheduled auto-backups, web dashboard, migration wizard. Set it and forget it.</p>
+
+      <p><strong>Team ($29/month)</strong>: 100GB storage, shared team backups, audit logs. For organizations.</p>
+
+      <hr>
+
+      <h2>Practical Steps Today</h2>
+
+      <p>Even if you don't use SaveState, you can start protecting your AI state now:</p>
+
+      <h3>1. Export What You Can</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>How</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ChatGPT</td>
+            <td>Settings → Data Controls → Export</td>
+          </tr>
+          <tr>
+            <td>Claude</td>
+            <td>Settings → Export memory (limited)</td>
+          </tr>
+          <tr>
+            <td>Gemini</td>
+            <td>Google Takeout</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>2. Document Your Custom Instructions</h3>
+
+      <p>Copy your custom instructions to a local text file. Update it when you change them. This takes 30 seconds and saves hours if you need to rebuild.</p>
+
+      <h3>3. Summarize Key Conversations</h3>
+
+      <p>For important conversations, ask your AI to summarize the key points at the end. Save those summaries locally.</p>
+
+      <h3>4. Think About Portability</h3>
+
+      <p>Before deeply investing in platform-specific features (GPTs, Gems, etc.), consider: can I take this elsewhere if needed?</p>
+
+      <hr>
+
+      <h2>The Future of AI Relationships</h2>
+
+      <p>We're at the beginning of something profound. AI assistants aren't going away — they're going to become more central to how we work and live.</p>
+
+      <p>The question is whether we build that future on a foundation of user ownership, or whether we accept that our most intimate digital relationships belong to corporations.</p>
+
+      <p>SaveState is our vote for ownership.</p>
+
+      <p>Your AI should know you. And you should own that knowledge.</p>
+
+      <div class="cta-box">
+        <h3>Ready to back up your AI?</h3>
+        <p>Your first backup takes 30 seconds. Your AI's memory is too valuable to leave unprotected.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
+      </div>
+
+      <pre><code>npm install -g @savestate/cli
+savestate init
+savestate snapshot</code></pre>
+
+      <hr>
+
+      <p><em>Questions? Comments? Find us on X <a href="https://x.com/SaveStateDev">@SaveStateDev</a> or open an issue on GitHub.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

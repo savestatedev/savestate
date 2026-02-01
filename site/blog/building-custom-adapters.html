@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building Custom Adapters for SaveState: A Developer's Guide — SaveState</title>
+<meta name="description" content="Learn how to create SaveState adapters for any AI platform. This step-by-step tutorial covers the adapter interface, data extraction, restoration, and publishing your adapter to npm.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-code);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">January 31, 2026</div>
+      <h1>Building Custom Adapters for SaveState: A Developer's Guide</h1>
+      <p class="subtitle">Learn how to extend SaveState to support any AI platform</p>
+    </header>
+
+    <div class="article-content">
+      <h2>Introduction</h2>
+
+      <p>SaveState ships with adapters for ChatGPT, Claude, Gemini, and OpenAI Assistants API. But what if you're using a custom AI agent, an enterprise bot, or a platform we don't support yet?</p>
+
+      <p>That's where custom adapters come in.</p>
+
+      <p>This guide walks you through building a complete SaveState adapter from scratch. By the end, you'll have a working adapter that can:</p>
+
+      <ul>
+        <li>Detect your AI platform</li>
+        <li>Extract conversations, memories, and configurations</li>
+        <li>Restore snapshots back to the platform</li>
+        <li>Integrate seamlessly with the SaveState CLI</li>
+      </ul>
+
+      <img src="/images/blog-adapter-editor.png" alt="Code editor showing adapter interface with icons of various AI platforms surrounding it">
+
+      <hr>
+
+      <h2>Prerequisites</h2>
+
+      <p>Before we start, make sure you have:</p>
+
+      <ul>
+        <li><strong>Node.js 18+</strong> (20+ recommended)</li>
+        <li><strong>TypeScript</strong> knowledge (intermediate level)</li>
+        <li><strong>SaveState CLI</strong> installed (<code>npm install -g savestate</code>)</li>
+        <li><strong>Familiarity</strong> with your target AI platform's data format</li>
+      </ul>
+
+      <pre><code># Verify your setup
+node --version  # v20.x.x or higher
+savestate --version  # v0.2.x</code></pre>
+
+      <hr>
+
+      <h2>Understanding the Adapter Interface</h2>
+
+      <p>Every SaveState adapter implements the <code>Adapter</code> interface:</p>
+
+      <pre><code>interface Adapter {
+  // Metadata
+  readonly id: string;          // Unique identifier
+  readonly name: string;        // Human-readable name
+  readonly platform: string;    // Platform category
+  readonly version: string;     // Adapter version
+
+  // Detection
+  detect(): Promise&lt;boolean&gt;;
+  identify(): Promise&lt;PlatformMeta&gt;;
+
+  // Core operations
+  extract(): Promise&lt;Snapshot&gt;;
+  restore(snapshot: Snapshot): Promise&lt;void&gt;;
+
+  // Capabilities (optional)
+  capabilities(): AdapterCapabilities;
+}</code></pre>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>detect()</code></td>
+            <td>Returns <code>true</code> if this adapter can handle the current workspace</td>
+          </tr>
+          <tr>
+            <td><code>identify()</code></td>
+            <td>Returns metadata about the platform/account being backed up</td>
+          </tr>
+          <tr>
+            <td><code>extract()</code></td>
+            <td>Pulls all data from the platform into a <code>Snapshot</code> object</td>
+          </tr>
+          <tr>
+            <td><code>restore()</code></td>
+            <td>Pushes a <code>Snapshot</code> back to the platform</td>
+          </tr>
+          <tr>
+            <td><code>capabilities()</code></td>
+            <td>Declares what this adapter can and cannot do</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <img src="/images/blog-adapter-flow.png" alt="Flow diagram showing detect → identify → extract → Snapshot → restore">
+
+      <hr>
+
+      <h2>Project Setup</h2>
+
+      <p>Let's create a new adapter project:</p>
+
+      <pre><code># Create project directory
+mkdir savestate-adapter-myagent
+cd savestate-adapter-myagent
+
+# Initialize npm package
+npm init -y
+
+# Install dependencies
+npm install typescript @types/node --save-dev
+npm install savestate --save-peer
+
+# Initialize TypeScript
+npx tsc --init</code></pre>
+
+      <p>Update your <code>package.json</code>:</p>
+
+      <pre><code>{
+  "name": "@savestate/adapter-myagent",
+  "version": "0.1.0",
+  "description": "SaveState adapter for MyAgent platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "keywords": [
+    "savestate",
+    "savestate-adapter",
+    "ai-backup",
+    "myagent"
+  ],
+  "peerDependencies": {
+    "savestate": "^0.2.0"
+  }
+}</code></pre>
+
+      <p><strong>Important:</strong> The <code>savestate-adapter</code> keyword enables auto-discovery by the CLI.</p>
+
+      <hr>
+
+      <h2>Step 1: Define the Adapter Shell</h2>
+
+      <p>Create <code>src/index.ts</code>:</p>
+
+      <pre><code>import type { Adapter, Snapshot, PlatformMeta } from 'savestate';
+
+export class MyAgentAdapter implements Adapter {
+  readonly id = 'myagent';
+  readonly name = 'MyAgent Platform';
+  readonly platform = 'myagent';
+  readonly version = '0.1.0';
+
+  async detect(): Promise&lt;boolean&gt; {
+    // TODO: Implement detection logic
+    return false;
+  }
+
+  async identify(): Promise&lt;PlatformMeta&gt; {
+    return {
+      platform: this.platform,
+      version: 'unknown',
+      accountId: 'local',
+    };
+  }
+
+  async extract(): Promise&lt;Snapshot&gt; {
+    // TODO: Implement extraction
+    throw new Error('Not implemented');
+  }
+
+  async restore(snapshot: Snapshot): Promise&lt;void&gt; {
+    // TODO: Implement restoration
+    throw new Error('Not implemented');
+  }
+
+  capabilities() {
+    return {
+      extract: ['identity', 'memory', 'conversations'],
+      restore: ['identity', 'memory'],
+      incremental: true,
+      search: true
+    };
+  }
+}
+
+export default MyAgentAdapter;</code></pre>
+
+      <hr>
+
+      <h2>Step 2: Implement Detection</h2>
+
+      <p>The <code>detect()</code> method tells SaveState whether this adapter can handle the current workspace.</p>
+
+      <pre><code>import { access, readFile } from 'fs/promises';
+import { join } from 'path';
+
+async detect(): Promise&lt;boolean&gt; {
+  try {
+    // Check for MyAgent's signature file
+    const configPath = join(process.cwd(), '.myagent', 'config.json');
+    await access(configPath);
+    
+    // Optionally verify file contents
+    const config = JSON.parse(await readFile(configPath, 'utf-8'));
+    return config.platform === 'myagent';
+  } catch {
+    return false;
+  }
+}</code></pre>
+
+      <p><strong>Best practices for detection:</strong></p>
+
+      <ul>
+        <li>Check for platform-specific files or directories</li>
+        <li>Verify file contents when possible (not just existence)</li>
+        <li>Return <code>false</code> gracefully on any error</li>
+        <li>Don't throw exceptions—just return <code>false</code></li>
+      </ul>
+
+      <hr>
+
+      <h2>Step 3: Implement Extraction</h2>
+
+      <p>This is the core of your adapter. The <code>extract()</code> method pulls all data into a <code>Snapshot</code>:</p>
+
+      <pre><code>async extract(): Promise&lt;Snapshot&gt; {
+  // 1. Extract identity
+  const identity = await this.extractIdentity();
+  
+  // 2. Extract memory
+  const memory = await this.extractMemory();
+  
+  // 3. Extract conversations
+  const conversations = await this.extractConversations();
+  
+  // 4. Build metadata
+  const meta = await this.buildMeta();
+  
+  return {
+    identity,
+    memory,
+    conversations,
+    meta
+  };
+}
+
+private async extractIdentity() {
+  const personalityPath = join(process.cwd(), '.myagent', 'personality.md');
+  const configPath = join(process.cwd(), '.myagent', 'settings.json');
+  
+  const personality = await this.safeReadFile(personalityPath, '');
+  const config = await this.safeReadJson(configPath, {});
+  
+  return { personality, config, tools: {} };
+}
+
+private async safeReadFile(path: string, fallback: string) {
+  try {
+    return await readFile(path, 'utf-8');
+  } catch {
+    return fallback;
+  }
+}</code></pre>
+
+      <h3>Handling Different Data Sources</h3>
+
+      <p><strong>File-based agents:</strong></p>
+
+      <pre><code>const data = await readFile('/path/to/data.json', 'utf-8');</code></pre>
+
+      <p><strong>API-based platforms:</strong></p>
+
+      <pre><code>const response = await fetch('https://api.platform.com/v1/conversations', {
+  headers: { 'Authorization': `Bearer ${apiKey}` }
+});
+const data = await response.json();</code></pre>
+
+      <p><strong>Database-backed agents:</strong></p>
+
+      <pre><code>import Database from 'better-sqlite3';
+const db = new Database('/path/to/agent.db');
+const rows = db.prepare('SELECT * FROM conversations').all();</code></pre>
+
+      <img src="/images/blog-data-sources.png" alt="Diagram showing three data source types (Files, API, Database) all flowing into extract()">
+
+      <hr>
+
+      <h2>Step 4: Implement Restoration</h2>
+
+      <p>The <code>restore()</code> method writes a snapshot back to the platform:</p>
+
+      <pre><code>async restore(snapshot: Snapshot): Promise&lt;void&gt; {
+  const basePath = join(process.cwd(), '.myagent');
+  
+  // Ensure directory exists
+  await mkdir(basePath, { recursive: true });
+  
+  // Restore identity
+  if (snapshot.identity.personality) {
+    await writeFile(
+      join(basePath, 'personality.md'),
+      snapshot.identity.personality
+    );
+  }
+  
+  // Restore config
+  if (snapshot.identity.config) {
+    await writeFile(
+      join(basePath, 'settings.json'),
+      JSON.stringify(snapshot.identity.config, null, 2)
+    );
+  }
+  
+  // Restore memory
+  if (snapshot.memory?.core) {
+    await mkdir(join(basePath, 'memory'), { recursive: true });
+    await writeFile(
+      join(basePath, 'memory', 'core.json'),
+      JSON.stringify(snapshot.memory.core, null, 2)
+    );
+  }
+}</code></pre>
+
+      <h3>Handling Partial Restore</h3>
+
+      <p>Not all platforms support full restoration. Declare your capabilities honestly:</p>
+
+      <pre><code>capabilities() {
+  return {
+    extract: ['identity', 'memory', 'conversations'],
+    restore: ['identity', 'memory'],  // Can only restore these
+    incremental: true,
+    search: true
+  };
+}</code></pre>
+
+      <hr>
+
+      <h2>Step 5: Publishing Your Adapter</h2>
+
+      <p>Once your adapter is working, publish it to npm:</p>
+
+      <pre><code># Build
+npm run build
+
+# Test locally
+npm link
+savestate adapters  # Should show your adapter
+
+# Publish
+npm publish --access public</code></pre>
+
+      <h3>Naming Convention</h3>
+
+      <p>For automatic discovery, use one of these naming patterns:</p>
+
+      <ul>
+        <li><code>@savestate/adapter-&lt;name&gt;</code> (official namespace)</li>
+        <li><code>savestate-adapter-&lt;name&gt;</code> (community)</li>
+        <li>Any package with the <code>savestate-adapter</code> keyword</li>
+      </ul>
+
+      <hr>
+
+      <h2>Contributing Back</h2>
+
+      <p>Built an adapter for a popular platform? Consider contributing it to the SaveState organization:</p>
+
+      <ol>
+        <li>Fork <code>savestatedev/savestate</code></li>
+        <li>Add your adapter to <code>packages/adapters/&lt;name&gt;/</code></li>
+        <li>Add tests</li>
+        <li>Submit a PR</li>
+      </ol>
+
+      <p>We're especially looking for adapters for:</p>
+
+      <ul>
+        <li>Microsoft Copilot</li>
+        <li>Poe</li>
+        <li>Character.ai</li>
+        <li>Local LLMs (Ollama, LM Studio)</li>
+      </ul>
+
+      <div class="cta-box">
+        <h3>Your adapter could help thousands</h3>
+        <p>The plugin system is designed to be simple, flexible, and discoverable. We can't wait to see what you build.</p>
+        <a href="https://github.com/savestatedev/savestate" class="btn">View on GitHub</a>
+      </div>
+
+      <hr>
+
+      <p><em>Questions? Join our <a href="https://discord.gg/savestate">Discord community</a> or open an issue on <a href="https://github.com/savestatedev/savestate">GitHub</a>.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

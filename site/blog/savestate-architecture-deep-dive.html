@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaveState Architecture Deep Dive: How We Built Time Machine for AI — SaveState</title>
+<meta name="description" content="Inside the SaveState Archive Format, encryption system, and adapter architecture. A technical deep dive into how SaveState protects your AI identity.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+/* Table */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-code);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">January 31, 2026</div>
+      <h1>SaveState Architecture Deep Dive: How We Built Time Machine for AI</h1>
+      <p class="subtitle">Inside the SaveState Archive Format, encryption system, and adapter architecture</p>
+    </header>
+
+    <div class="article-content">
+      <h2>Introduction</h2>
+
+      <p>When we set out to build SaveState, we had one guiding principle: <strong>your data should be yours, forever.</strong></p>
+
+      <p>That sounds simple, but it has profound implications for architecture. It means:</p>
+
+      <ul>
+        <li>Encryption with keys we never see</li>
+        <li>An open archive format with no vendor lock-in</li>
+        <li>Storage backends you control</li>
+        <li>Platform adapters that work without our permission</li>
+      </ul>
+
+      <p>This post dives deep into how SaveState works under the hood. Whether you're evaluating it for security, planning to contribute an adapter, or just curious about the engineering, this is your guide.</p>
+
+      <img src="/images/blog-architecture-overview.png" alt="System architecture diagram showing CLI to Adapters to Encryption to Storage flow">
+
+      <hr>
+
+      <h2>Architecture Overview</h2>
+
+      <p>SaveState has four major layers:</p>
+
+      <pre><code>┌─────────────────────────────────────────────────┐
+│                  SaveState CLI                  │
+│    init · snapshot · restore · list · diff      │
+├─────────────────────────────────────────────────┤
+│              Adapter Layer                      │
+│   chatgpt · claude · gemini · openai · custom   │
+├─────────────────────────────────────────────────┤
+│              Encryption Layer                   │
+│   AES-256-GCM · scrypt KDF · integrity check    │
+├─────────────────────────────────────────────────┤
+│              Storage Backends                   │
+│   local · s3 · r2 · cloud API                   │
+└─────────────────────────────────────────────────┘</code></pre>
+
+      <p>Each layer has a single responsibility:</p>
+
+      <ol>
+        <li><strong>CLI Layer</strong>: User interface, command parsing, orchestration</li>
+        <li><strong>Adapter Layer</strong>: Platform-specific data extraction and restoration</li>
+        <li><strong>Encryption Layer</strong>: Cryptographic operations, key derivation</li>
+        <li><strong>Storage Layer</strong>: Persisting encrypted snapshots</li>
+      </ol>
+
+      <p>Let's examine each in detail.</p>
+
+      <hr>
+
+      <h2>The SaveState Archive Format (SAF)</h2>
+
+      <p>At the heart of SaveState is the SAF — an open specification for AI state archives.</p>
+
+      <h3>Design Goals</h3>
+
+      <p>When designing SAF, we optimized for:</p>
+
+      <ol>
+        <li><strong>Portability</strong> — Must work across any AI platform</li>
+        <li><strong>Simplicity</strong> — Standard tools should be able to unpack it (after decryption)</li>
+        <li><strong>Extensibility</strong> — New platforms shouldn't require format changes</li>
+        <li><strong>Efficiency</strong> — Incremental snapshots should be cheap</li>
+      </ol>
+
+      <h3>File Structure</h3>
+
+      <p>Each snapshot produces a <code>.saf.enc</code> file:</p>
+
+      <pre><code>snapshot-2026-01-27T15-00-00Z.saf.enc</code></pre>
+
+      <p>The <code>.enc</code> suffix indicates encryption. After decryption, you get a gzipped tarball:</p>
+
+      <pre><code>snapshot.saf.enc (encrypted envelope)
+  └── snapshot.tar.gz (gzipped tarball)
+       ├── manifest.json
+       ├── identity/
+       │   ├── personality.md
+       │   ├── config.json
+       │   └── tools.json
+       ├── memory/
+       │   ├── core.json
+       │   └── knowledge/
+       ├── conversations/
+       │   ├── index.json
+       │   └── threads/
+       └── meta/
+           ├── platform.json
+           ├── snapshot-chain.json
+           └── restore-hints.json</code></pre>
+
+      <h3>manifest.json</h3>
+
+      <p>Every SAF archive starts with a manifest:</p>
+
+      <pre><code>{
+  "version": "1.0",
+  "id": "ss-2026-01-27T15-00-00Z-a1b2c3",
+  "timestamp": "2026-01-27T15:00:00.000Z",
+  "platform": "chatgpt",
+  "adapter": "chatgpt@0.2.1",
+  "checksum": "sha256:abc123...",
+  "incremental": false,
+  "parent": null
+}</code></pre>
+
+      <p>The manifest provides metadata for the snapshot and enables integrity verification. The <code>checksum</code> covers the entire unpacked archive, allowing tamper detection even if the encryption layer is somehow bypassed.</p>
+
+      <h3>identity/</h3>
+
+      <p>The <code>identity</code> directory captures who your AI is:</p>
+
+      <p><strong>personality.md</strong> — System prompts, custom instructions, SOUL files</p>
+
+      <pre><code># Custom Instructions
+
+## What would you like ChatGPT to know about you?
+I'm a software developer working primarily in TypeScript...
+
+## How would you like ChatGPT to respond?
+Be concise and technical. Skip the preamble...</code></pre>
+
+      <p><strong>config.json</strong> — Settings and preferences</p>
+
+      <pre><code>{
+  "model": "gpt-4o",
+  "temperature": 0.7,
+  "plugins": ["code-interpreter", "browsing"],
+  "memory_enabled": true
+}</code></pre>
+
+      <h3>memory/</h3>
+
+      <p>The <code>memory</code> directory captures what your AI knows:</p>
+
+      <p><strong>core.json</strong> — Platform memory entries</p>
+
+      <pre><code>{
+  "entries": [
+    {
+      "id": "mem_001",
+      "content": "User prefers TypeScript over JavaScript",
+      "created": "2026-01-15T10:30:00Z",
+      "source": "conversation:abc123"
+    },
+    {
+      "id": "mem_002", 
+      "content": "User is building a backup tool for AI agents",
+      "created": "2026-01-20T14:15:00Z",
+      "source": "explicit"
+    }
+  ]
+}</code></pre>
+
+      <p><strong>knowledge/</strong> — Uploaded documents, RAG sources. Larger files (PDFs, datasets, knowledge bases) are stored in the <code>knowledge/</code> subdirectory with their metadata preserved.</p>
+
+      <img src="/images/blog-saf-structure.png" alt="Expanded view of SAF file structure with annotations explaining each section">
+
+      <hr>
+
+      <h2>Encryption: Zero-Knowledge by Design</h2>
+
+      <p>SaveState's encryption ensures that your data is protected even if our servers (or any storage backend) are compromised.</p>
+
+      <h3>Key Derivation</h3>
+
+      <p>We use scrypt for key derivation — a memory-hard function that resists GPU-based brute forcing:</p>
+
+      <pre><code>User passphrase
+    → scrypt (N=2^17, r=8, p=1, dkLen=32)
+    → 256-bit AES key</code></pre>
+
+      <p>Parameters explained:</p>
+
+      <ul>
+        <li><strong>N=131072 (2^17)</strong> — CPU/memory cost parameter (high = harder to brute force)</li>
+        <li><strong>r=8</strong> — Block size parameter</li>
+        <li><strong>p=1</strong> — Parallelization parameter</li>
+        <li><strong>dkLen=32</strong> — Output key length (256 bits)</li>
+      </ul>
+
+      <p>These parameters are intentionally aggressive. Key derivation takes ~100ms on modern hardware, which is imperceptible to legitimate users but devastating to attackers trying billions of guesses.</p>
+
+      <h3>Encryption</h3>
+
+      <p>Once we have the key, we use AES-256-GCM:</p>
+
+      <pre><code>Plaintext (tarball)
+    → AES-256-GCM encrypt with:
+        - 256-bit key (from scrypt)
+        - 96-bit random IV (nonce)
+    → Ciphertext + 128-bit auth tag</code></pre>
+
+      <p>GCM (Galois/Counter Mode) provides both confidentiality and integrity:</p>
+
+      <ul>
+        <li><strong>Confidentiality</strong>: Data is unreadable without the key</li>
+        <li><strong>Integrity</strong>: Any tampering is detected (auth tag verification fails)</li>
+      </ul>
+
+      <h3>File Format</h3>
+
+      <p>The encrypted file structure:</p>
+
+      <pre><code>┌──────────────────────────────────────────────────┐
+│  Salt (32 bytes)                                 │
+├──────────────────────────────────────────────────┤
+│  IV/Nonce (12 bytes)                            │
+├──────────────────────────────────────────────────┤
+│  Ciphertext (variable length)                   │
+├──────────────────────────────────────────────────┤
+│  Auth Tag (16 bytes)                            │
+└──────────────────────────────────────────────────┘</code></pre>
+
+      <p>The salt is regenerated for each encryption, ensuring the same passphrase produces different keys for different files.</p>
+
+      <h3>Implementation</h3>
+
+      <p>Here's a simplified version of our encryption code:</p>
+
+      <pre><code>import { scryptSync, randomBytes, createCipheriv, createDecipheriv } from 'crypto';
+
+const SCRYPT_N = 2 ** 17;
+const SCRYPT_R = 8;
+const SCRYPT_P = 1;
+const KEY_LENGTH = 32;
+const IV_LENGTH = 12;
+const SALT_LENGTH = 32;
+
+export function encrypt(plaintext: Buffer, passphrase: string): Buffer {
+  const salt = randomBytes(SALT_LENGTH);
+  const key = scryptSync(passphrase, salt, KEY_LENGTH, {
+    N: SCRYPT_N,
+    r: SCRYPT_R,
+    p: SCRYPT_P,
+  });
+  
+  const iv = randomBytes(IV_LENGTH);
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  
+  const ciphertext = Buffer.concat([
+    cipher.update(plaintext),
+    cipher.final(),
+  ]);
+  
+  const authTag = cipher.getAuthTag();
+  
+  return Buffer.concat([salt, iv, ciphertext, authTag]);
+}</code></pre>
+
+      <h3>What This Means for You</h3>
+
+      <ul>
+        <li><strong>We never see your passphrase</strong> — It's never transmitted anywhere</li>
+        <li><strong>We can't read your backups</strong> — Even if you use our cloud storage</li>
+        <li><strong>Lost passphrase = lost data</strong> — There's no recovery mechanism (this is a feature, not a bug)</li>
+        <li><strong>Each file is independently encrypted</strong> — Compromising one doesn't help with others</li>
+      </ul>
+
+      <img src="/images/blog-encryption-flow.png" alt="Encryption flow diagram showing passphrase to scrypt to AES-256-GCM to encrypted file">
+
+      <hr>
+
+      <h2>The Adapter System</h2>
+
+      <p>Adapters are SaveState's bridge to the AI platform ecosystem. Each adapter knows how to extract and restore state for a specific platform.</p>
+
+      <h3>The Interface</h3>
+
+      <p>Every adapter implements this TypeScript interface:</p>
+
+      <pre><code>interface Adapter {
+  // Identification
+  readonly id: string;        // e.g., 'chatgpt'
+  readonly name: string;      // e.g., 'ChatGPT'
+  readonly platform: string;  // Platform family
+  readonly version: string;   // Adapter version
+
+  // Core operations
+  detect(): Promise&lt;boolean&gt;;
+  extract(): Promise&lt;Snapshot&gt;;
+  restore(snapshot: Snapshot, options?: RestoreOptions): Promise&lt;void&gt;;
+  identify(): Promise&lt;PlatformMeta&gt;;
+
+  // Capabilities (optional)
+  capabilities?: {
+    extract: boolean;
+    restore: boolean;
+    partialRestore: boolean;
+    incrementalExtract: boolean;
+  };
+}</code></pre>
+
+      <h3>Currently Supported</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Strategy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Clawdbot</td>
+            <td>Read SOUL.md, memory/ directory, conversations directly from filesystem</td>
+          </tr>
+          <tr>
+            <td>OpenAI Assistants</td>
+            <td>API calls to list assistants, threads, files, vector stores</td>
+          </tr>
+          <tr>
+            <td>ChatGPT</td>
+            <td>Parse data export JSON (conversations.json, memories, user_system_instructions)</td>
+          </tr>
+          <tr>
+            <td>Claude Web</td>
+            <td>Parse exported data + scrape Projects via authenticated session</td>
+          </tr>
+          <tr>
+            <td>Gemini</td>
+            <td>Google Takeout data + Gems API where available</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Building Your Own Adapter</h3>
+
+      <p>Creating an adapter for a new platform is straightforward. Publish as <code>@savestate/adapter-*</code> on npm and SaveState will auto-discover it.</p>
+
+      <img src="/images/blog-adapter-registry.png" alt="Adapter registry diagram showing multiple adapters plugging into the same core">
+
+      <hr>
+
+      <h2>Storage Backends</h2>
+
+      <p>SaveState separates "what to store" from "where to store it" through pluggable storage backends.</p>
+
+      <h3>Available Backends</h3>
+
+      <ul>
+        <li><strong>Local Filesystem</strong> (default) — Snapshots in <code>.savestate/snapshots/</code></li>
+        <li><strong>S3-Compatible</strong> (R2, B2, Minio, etc.) — AWS Signature V4 with zero external dependencies</li>
+        <li><strong>SaveState Cloud API</strong> (Pro/Team) — Managed R2 bucket through authenticated API</li>
+      </ul>
+
+      <hr>
+
+      <h2>Incremental Snapshots</h2>
+
+      <p>Like git, SaveState only stores what changed between snapshots.</p>
+
+      <h3>How It Works</h3>
+
+      <ol>
+        <li><strong>Hash everything</strong> — Each file in the snapshot gets a SHA-256 hash</li>
+        <li><strong>Compare to parent</strong> — Check which hashes differ from the previous snapshot</li>
+        <li><strong>Store deltas only</strong> — Unchanged files reference the parent snapshot</li>
+      </ol>
+
+      <h3>Space Savings</h3>
+
+      <p>Real-world savings are significant:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Snapshot</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Full Equivalent</th>
+            <th>Savings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Day 1</td>
+            <td>Full</td>
+            <td>2.1 MB</td>
+            <td>2.1 MB</td>
+            <td>0%</td>
+          </tr>
+          <tr>
+            <td>Day 2</td>
+            <td>Incremental</td>
+            <td>47 KB</td>
+            <td>2.2 MB</td>
+            <td>98%</td>
+          </tr>
+          <tr>
+            <td>Day 3</td>
+            <td>Incremental</td>
+            <td>12 KB</td>
+            <td>2.2 MB</td>
+            <td>99%</td>
+          </tr>
+          <tr>
+            <td>Day 7</td>
+            <td>Incremental</td>
+            <td>89 KB</td>
+            <td>2.4 MB</td>
+            <td>96%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Most changes are new conversations or memory updates. Identity, tools, and knowledge rarely change.</p>
+
+      <img src="/images/blog-snapshot-chain.png" alt="Visual showing snapshot chain with delta sizes shrinking over time">
+
+      <hr>
+
+      <h2>What's Next</h2>
+
+      <p>SaveState's architecture is designed for extensibility. Here's what we're working on:</p>
+
+      <ul>
+        <li><strong>Encrypted search index</strong> — Search across snapshots without decrypting everything</li>
+        <li><strong>Hardware key support</strong> — YubiKey, Touch ID via Secure Enclave</li>
+        <li><strong>Shamir's Secret Sharing</strong> — Split your passphrase across trusted parties</li>
+        <li><strong>Streaming encryption</strong> — Handle arbitrarily large snapshots</li>
+        <li><strong>Adapter SDK</strong> — Simplified adapter development with testing utilities</li>
+      </ul>
+
+      <hr>
+
+      <h2>Conclusion</h2>
+
+      <p>SaveState's architecture reflects our core belief: your data should be yours.</p>
+
+      <ul>
+        <li><strong>Open format</strong> — SAF is documented, standard tools work with it</li>
+        <li><strong>Strong encryption</strong> — AES-256-GCM with scrypt, keys you control</li>
+        <li><strong>Pluggable adapters</strong> — Any platform can be supported</li>
+        <li><strong>Flexible storage</strong> — Store anywhere, we never see your data</li>
+      </ul>
+
+      <p>We've tried to make the right choices for security and portability, even when they made implementation harder. Because when it comes to your AI identity, there's no room for shortcuts.</p>
+
+      <div class="cta-box">
+        <h3>Ready to protect your AI identity?</h3>
+        <p>Get started with SaveState today.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
+      </div>
+
+      <pre><code>npm install -g @savestate/cli
+savestate init
+savestate snapshot</code></pre>
+
+      <hr>
+
+      <p><em>Questions? Comments? Find us on <a href="https://github.com/savestatedev/savestate">GitHub</a> or <a href="https://x.com/SaveStateDev">Twitter</a>.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

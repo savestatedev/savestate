@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migrating from ChatGPT to Claude (Without Losing Everything) — SaveState</title>
+<meta name="description" content="A practical guide to moving your AI relationship between platforms. Keep your memories, custom instructions, and conversation history when switching from ChatGPT to Claude.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+/* Table */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-code);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">January 31, 2026</div>
+      <h1>Migrating from ChatGPT to Claude (Without Losing Everything)</h1>
+      <p class="subtitle">A practical guide to moving your AI relationship between platforms</p>
+    </header>
+
+    <div class="article-content">
+      <h2>The Dilemma</h2>
+
+      <p>You've been a ChatGPT user for a year. You've accumulated:</p>
+
+      <ul>
+        <li>500+ conversations covering everything from work projects to late-night coding sessions</li>
+        <li>Custom instructions refined through dozens of iterations until they're <em>just right</em></li>
+        <li>87 memories capturing your preferences, your job, your communication style</li>
+        <li>Plugins and GPTs configured for your specific workflows</li>
+      </ul>
+
+      <p>Then you try Claude.</p>
+
+      <p>The reasoning is... better. The coding is cleaner. The personality feels more natural. You want to switch.</p>
+
+      <p>But there's a problem: all that context you've built up? It lives in ChatGPT. Starting fresh with Claude means re-explaining everything. Who you are. How you work. What you like. Months of refinement — gone.</p>
+
+      <p>This is the migration tax, and until now, everyone just paid it.</p>
+
+      <p>Not anymore.</p>
+
+      <img src="/images/blog-migration-hero.png" alt="Two illustrated assistants - one ChatGPT-green, one Claude-orange - with an arrow between them showing data transfer">
+
+      <hr>
+
+      <h2>What's Actually Possible?</h2>
+
+      <p>Before we dive into the how, let's be realistic about what's feasible. Cross-platform AI migration has hard limits.</p>
+
+      <h3>What Can Be Migrated</h3>
+
+      <p>✅ <strong>Custom Instructions / System Prompts</strong><br>
+      Your instructions in ChatGPT can become Claude's system prompt. This is the highest-value migration — it's the core of your AI's personality.</p>
+
+      <p>✅ <strong>Memories → Claude's Memory</strong><br>
+      ChatGPT memories can be imported into Claude's memory system. Some reformatting is needed (Claude's memory is less structured), but the information transfers.</p>
+
+      <p>✅ <strong>Conversation History (Read-Only Archive)</strong><br>
+      Your ChatGPT conversations can be preserved and made searchable, even if Claude can't "remember" them natively. Think of it as giving Claude access to your historical transcripts.</p>
+
+      <p>✅ <strong>File Uploads / Knowledge Base</strong><br>
+      Documents you've uploaded to ChatGPT can be re-uploaded to a Claude project's knowledge base.</p>
+
+      <h3>What Can't Be Migrated (Yet)</h3>
+
+      <p>❌ <strong>GPTs → Claude Projects</strong><br>
+      Custom GPTs don't have a direct equivalent in Claude. You can migrate the instructions but not the custom actions.</p>
+
+      <p>❌ <strong>Plugin Configurations</strong><br>
+      ChatGPT plugins and Claude's MCP tools aren't compatible. You'll need to reconfigure integrations.</p>
+
+      <p>❌ <strong>Implicit Learning</strong><br>
+      Both models learn subtle things from your interactions that aren't captured in explicit memories. This "vibe calibration" doesn't transfer.</p>
+
+      <hr>
+
+      <h2>The Migration: Step by Step</h2>
+
+      <p>Let's walk through a complete ChatGPT → Claude migration using SaveState.</p>
+
+      <h3>Prerequisites</h3>
+
+      <pre><code># Install SaveState
+npm install -g @savestate/cli
+
+# Verify installation
+savestate --version</code></pre>
+
+      <p>You'll also need:</p>
+
+      <ul>
+        <li>Your ChatGPT data export (Settings → Data Controls → Export Data)</li>
+        <li>A Claude account (free tier works, Pro recommended)</li>
+      </ul>
+
+      <h3>Step 1: Export Your ChatGPT Data</h3>
+
+      <p>First, request your data from OpenAI:</p>
+
+      <ol>
+        <li>Go to <a href="https://chat.openai.com">ChatGPT Settings</a></li>
+        <li>Click <strong>Data Controls</strong> in the left sidebar</li>
+        <li>Click <strong>Export data</strong></li>
+        <li>Wait for the email (usually 1-24 hours)</li>
+        <li>Download and unzip the archive</li>
+      </ol>
+
+      <p>You'll get a folder with:</p>
+
+      <pre><code>chatgpt-export/
+├── chat.html           # Rendered conversations
+├── conversations.json  # Raw conversation data
+├── memories.json       # Your ChatGPT memories (if enabled)
+├── model_comparisons.json
+├── shared_conversations.json
+└── user.json           # Account info</code></pre>
+
+      <h3>Step 2: Initialize SaveState</h3>
+
+      <pre><code># Navigate to your export folder
+cd ~/Downloads/chatgpt-export
+
+# Initialize SaveState with encryption
+savestate init</code></pre>
+
+      <p>You'll be prompted to create a passphrase. <strong>This is important</strong> — use something strong and memorable. SaveState uses this to encrypt your data. There's no recovery if you forget it.</p>
+
+      <pre><code>🔐 Create your encryption passphrase:
+(min 12 characters, will not be displayed)
+
+Passphrase: ••••••••••••••••••••
+Confirm: ••••••••••••••••••••
+
+✅ Encryption configured. Your data is protected.</code></pre>
+
+      <h3>Step 3: Snapshot Your ChatGPT State</h3>
+
+      <pre><code>savestate snapshot --adapter chatgpt</code></pre>
+
+      <p>SaveState will scan your export and create an encrypted snapshot:</p>
+
+      <pre><code>📂 Detected ChatGPT data export
+├── conversations.json (847 conversations)
+├── memories.json (87 memories)
+└── user.json (custom instructions found)
+
+🔄 Extracting...
+├── Identity: custom instructions, preferences
+├── Memory: 87 entries
+├── Conversations: 847 threads (234.7 MB)
+└── Knowledge: 12 uploaded files
+
+🔒 Encrypting with AES-256-GCM...
+
+✅ Snapshot created: ss-2026-01-30T10-15-23Z-abc123
+   Size: 48.2 MB (encrypted)
+   Location: .savestate/snapshots/ss-2026-01-30T10-15-23Z-abc123.saf.enc</code></pre>
+
+      <h3>Step 4: Preview the Migration</h3>
+
+      <p>Before committing, see exactly what will transfer:</p>
+
+      <pre><code>savestate migrate --from chatgpt --to claude --dry-run</code></pre>
+
+      <h3>Step 5: Execute the Migration</h3>
+
+      <p>If the preview looks good:</p>
+
+      <pre><code>savestate migrate --from chatgpt --to claude</code></pre>
+
+      <p>SaveState will guide you through the process:</p>
+
+      <pre><code>🚀 Starting migration: ChatGPT → Claude
+
+Step 1/4: Preparing Claude environment
+  → Creating Claude project "ChatGPT Migration"
+  → Project created: proj_abc123
+  
+Step 2/4: Migrating identity
+  → Setting system prompt... ✅
+  → Configuring preferences... ✅
+
+Step 3/4: Migrating memories
+  → Converting 87 memories to Claude format...
+  → Importing to Claude memory... 
+    [████████████████████████████████] 82/82 ✅
+    (5 reformatted, 0 skipped)
+
+Step 4/4: Transferring knowledge base
+  → Uploading 12 files to project...
+    [████████████████████████████████] 12/12 ✅
+
+✅ Migration complete!</code></pre>
+
+      <img src="/images/blog-migration-terminal.png" alt="Terminal screenshot showing the migration flow with checkmarks and progress bars">
+
+      <hr>
+
+      <h2>What Happens to Your Conversations?</h2>
+
+      <p>Here's an important nuance: Claude can't "remember" your ChatGPT conversations the way ChatGPT did. They existed in a different model's context.</p>
+
+      <p>But they're not lost. SaveState preserves them in your encrypted archive, and you can search across them anytime:</p>
+
+      <pre><code># Find that conversation from 6 months ago
+savestate search "cocktail recipe for the party"</code></pre>
+
+      <p>Output:</p>
+
+      <pre><code>📂 Searching across 1 snapshot (847 conversations)...
+
+Found 3 matches:
+
+1. "Party planning ideas" (2025-07-15)
+   "...classic margarita with a twist. For the party, 
+   I'd suggest these cocktail recipes: 1) Spicy Paloma..."
+   [View full: savestate view conv_abc123]
+
+2. "Bartending basics" (2025-06-02)
+   "...most important cocktail recipes to know are the
+   classics: Old Fashioned, Martini, Margarita..."
+   [View full: savestate view conv_def456]</code></pre>
+
+      <hr>
+
+      <h2>Optimizing Your Claude Experience</h2>
+
+      <p>After migration, there are a few things you can do to get the most out of Claude:</p>
+
+      <h3>Refine Your System Prompt</h3>
+
+      <p>Your ChatGPT custom instructions probably work in Claude, but they might not be optimal. Claude has different strengths and quirks.</p>
+
+      <p>ChatGPT-style:</p>
+
+      <pre><code>You are a helpful assistant. Be concise. When writing code, 
+use TypeScript and include comments.</code></pre>
+
+      <p>Claude-optimized:</p>
+
+      <pre><code>Be direct and substantive. Skip preambles like "Great question!" 
+or "I'd be happy to help."
+
+For code:
+- TypeScript strongly preferred
+- Include brief comments for non-obvious logic
+- Show complete, runnable examples
+- Mention edge cases proactively
+
+Communication style: Match my energy. If I'm brief, be brief. 
+If I write paragraphs, you can too.</code></pre>
+
+      <h3>Use Projects Effectively</h3>
+
+      <p>Claude's Projects feature is powerful — you can give Claude persistent access to documents that inform all conversations in that project.</p>
+
+      <p>Consider creating projects for:</p>
+
+      <ul>
+        <li><strong>Work context</strong> — Upload your company docs, codebase overviews, style guides</li>
+        <li><strong>Personal preferences</strong> — A markdown file with your preferences and common requests</li>
+        <li><strong>Migrated knowledge</strong> — The files from your ChatGPT uploads</li>
+      </ul>
+
+      <h3>Memory: Quality Over Quantity</h3>
+
+      <p>Claude's memory is more curated than ChatGPT's. Instead of accumulating hundreds of granular facts, focus on high-impact memories:</p>
+
+      <p>Good memories:</p>
+
+      <ul>
+        <li>"Prefers detailed technical explanations, not simplified analogies"</li>
+        <li>"Works on SaveState, an encrypted backup CLI for AI agents"</li>
+        <li>"Uses TypeScript, Vercel, Cloudflare R2"</li>
+      </ul>
+
+      <p>Less useful:</p>
+
+      <ul>
+        <li>"Asked about weather in NYC on January 15"</li>
+        <li>"User's favorite color is blue"</li>
+      </ul>
+
+      <hr>
+
+      <h2>Going Back (Or Elsewhere)</h2>
+
+      <p>The beauty of SaveState is that migration isn't one-way. Your snapshot is platform-agnostic.</p>
+
+      <pre><code># Later, if you want to try Gemini
+savestate migrate --to gemini
+
+# Or restore to ChatGPT if you return
+savestate restore ss-2026-01-30T10-15-23Z-abc123 --to chatgpt
+
+# Or keep multiple AIs in sync (power user)
+savestate snapshot --adapter claude
+# Now you have snapshots from both platforms</code></pre>
+
+      <p>Your AI identity is no longer trapped. Switch freely.</p>
+
+      <hr>
+
+      <h2>The Bigger Picture</h2>
+
+      <p>This guide walked through ChatGPT → Claude, but SaveState supports many migration paths:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Support Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ChatGPT</td>
+            <td>Claude</td>
+            <td>✅ Full</td>
+          </tr>
+          <tr>
+            <td>ChatGPT</td>
+            <td>Gemini</td>
+            <td>⚠️ Partial</td>
+          </tr>
+          <tr>
+            <td>Claude</td>
+            <td>ChatGPT</td>
+            <td>⚠️ Partial (memories only)</td>
+          </tr>
+          <tr>
+            <td>Any platform</td>
+            <td>Clawdbot/Moltbot</td>
+            <td>✅ Full</td>
+          </tr>
+          <tr>
+            <td>Any platform</td>
+            <td>OpenAI Assistants API</td>
+            <td>✅ Full</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>The universal format (SAF) means any supported platform can import from any other. As adapters improve, so does migration fidelity.</p>
+
+      <hr>
+
+      <h2>Checklist: Before You Migrate</h2>
+
+      <ul>
+        <li>☐ Export your ChatGPT data (Settings → Data Controls → Export)</li>
+        <li>☐ Install SaveState: <code>npm install -g @savestate/cli</code></li>
+        <li>☐ Create your encryption passphrase (write it down somewhere safe!)</li>
+        <li>☐ Run <code>savestate snapshot</code> to capture your current state</li>
+        <li>☐ Run <code>savestate migrate --dry-run</code> to preview what transfers</li>
+        <li>☐ Review your custom instructions — they may need Claude-specific tweaks</li>
+        <li>☐ Run <code>savestate migrate</code> when ready</li>
+        <li>☐ Test Claude with a few typical conversations</li>
+        <li>☐ Refine system prompt and memories as needed</li>
+      </ul>
+
+      <hr>
+
+      <h2>Conclusion</h2>
+
+      <p>Platform lock-in is artificial. Your AI identity — your preferences, your memories, your conversation style — belongs to you.</p>
+
+      <p>SaveState makes that ownership practical. Migrate between platforms without starting over. Keep your history searchable forever. Own your data with end-to-end encryption.</p>
+
+      <p>The days of paying the migration tax are over.</p>
+
+      <div class="cta-box">
+        <h3>Ready to migrate?</h3>
+        <p>Get started with SaveState today.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
+      </div>
+
+      <pre><code>npm install -g @savestate/cli
+savestate init
+savestate migrate --help</code></pre>
+
+      <hr>
+
+      <p><em>Questions? Comments? Find us on X <a href="https://x.com/SaveStateDev">@SaveStateDev</a> or open an issue on GitHub.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -10,7 +10,12 @@
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/blog", "destination": "/blog/index.html" },
     { "source": "/blog/your-ai-knows-everything", "destination": "/blog/your-ai-knows-everything.html" },
-    { "source": "/blog/how-savestate-works", "destination": "/blog/how-savestate-works.html" }
+    { "source": "/blog/how-savestate-works", "destination": "/blog/how-savestate-works.html" },
+    { "source": "/blog/the-great-ai-memory-crisis", "destination": "/blog/the-great-ai-memory-crisis.html" },
+    { "source": "/blog/savestate-architecture-deep-dive", "destination": "/blog/savestate-architecture-deep-dive.html" },
+    { "source": "/blog/migrate-chatgpt-to-claude", "destination": "/blog/migrate-chatgpt-to-claude.html" },
+    { "source": "/blog/why-ai-needs-backup", "destination": "/blog/why-ai-needs-backup.html" },
+    { "source": "/blog/building-custom-adapters", "destination": "/blog/building-custom-adapters.html" }
   ],
   "trailingSlash": false,
   "cleanUrls": true
