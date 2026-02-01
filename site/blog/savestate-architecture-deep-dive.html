@@ -370,7 +370,7 @@ footer a { color: var(--text-muted); }
 
       <p>This post dives deep into how SaveState works under the hood. Whether you're evaluating it for security, planning to contribute an adapter, or just curious about the engineering, this is your guide.</p>
 
-      <img src="/images/blog-architecture-overview.png" alt="System architecture diagram showing CLI to Adapters to Encryption to Storage flow">
+      <img src="/images/blog-hero-architecture.png" alt="System architecture diagram showing CLI to Adapters to Encryption to Storage flow">
 
       <hr>
 
@@ -511,7 +511,7 @@ Be concise and technical. Skip the preamble...</code></pre>
 
       <p><strong>knowledge/</strong> — Uploaded documents, RAG sources. Larger files (PDFs, datasets, knowledge bases) are stored in the <code>knowledge/</code> subdirectory with their metadata preserved.</p>
 
-      <img src="/images/blog-saf-structure.png" alt="Expanded view of SAF file structure with annotations explaining each section">
+      <img src="/images/diagram-saf-format.png" alt="Expanded view of SAF file structure with annotations explaining each section">
 
       <hr>
 
@@ -614,7 +614,7 @@ export function encrypt(plaintext: Buffer, passphrase: string): Buffer {
         <li><strong>Each file is independently encrypted</strong> — Compromising one doesn't help with others</li>
       </ul>
 
-      <img src="/images/blog-encryption-flow.png" alt="Encryption flow diagram showing passphrase to scrypt to AES-256-GCM to encrypted file">
+      <img src="/images/diagram-encryption-flow.png" alt="Encryption flow diagram showing passphrase to scrypt to AES-256-GCM to encrypted file">
 
       <hr>
 
