@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hidden Crisis in Agentic Coding: Who's Watching the State? — SaveState</title>
+<meta name="description" content="As AI agents proliferate with OpenAI's Codex app, who's preserving their accumulated knowledge? The missing infrastructure layer for agentic development.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.nav-wordmark {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.btn-nav {
+  background: var(--blue);
+  color: var(--bg) !important;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.btn-nav:hover {
+  background: var(--blue-light);
+}
+
+/* Article */
+article {
+  padding: 140px 0 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.article-header h1 {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.article-header .summary {
+  font-size: 18px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.article-content {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 36px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong { color: var(--text); }
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.article-content a:hover {
+  border-bottom-color: var(--blue);
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--blue-light);
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+}
+
+.article-content blockquote {
+  border-left: 3px solid var(--blue);
+  padding-left: 20px;
+  margin: 24px 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* Back link */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 32px;
+  transition: color 0.2s;
+}
+
+.back-link:hover { color: var(--text); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+    
+    <header class="article-header">
+      <div class="date">February 3, 2026</div>
+      <h1>The Hidden Crisis in Agentic Coding: Who's Watching the State?</h1>
+      <p class="summary">As AI agents proliferate with OpenAI's new Codex app, who's preserving their accumulated knowledge? The missing infrastructure layer for agentic development.</p>
+    </header>
+
+    <div class="article-content">
+      <p>OpenAI just dropped Codex for macOS, and the developer world is buzzing. Multiple agents working in parallel. Background automations on a schedule. Results queued for review. Sam Altman's proclamation that "as fast as I can type in new ideas, that is the limit of what can get built."</p>
+
+      <p>It's a compelling vision. But beneath the excitement lies a question nobody seems to be asking: as we spin up more agents across more projects, what happens to everything they know?</p>
+
+      <h2>The Parallel Agent Problem</h2>
+      
+      <p>The new Codex app represents a significant shift in how we think about AI-assisted development. Rather than a single assistant responding to prompts, we're entering an era of orchestrated agent swarms — each with its own personality settings (pragmatic to empathetic, apparently), each working on different parts of your codebase, each making decisions while you sleep.</p>
+
+      <p>This is genuinely exciting. The productivity gains are real. But it also introduces a category of problems that traditional software development never had to consider.</p>
+
+      <p>When a human developer steps away from a project for two weeks, they come back with memories intact. They remember why they chose that architecture. They recall the edge case that led to that weird conditional. They know which approach they tried and abandoned.</p>
+
+      <p>Agents don't have this luxury. Each session starts fresh. Each context window eventually fills and rolls over. Each automation that runs in the background generates insights, makes decisions, hits dead ends — and then that knowledge evaporates.</p>
+
+      <p>The Codex "queue for review" feature acknowledges part of this problem. Work gets done asynchronously, and you review it later. But what about the reasoning that led to that work? What about the three approaches the agent tried before settling on the fourth? What about the context that made one solution preferable to another?</p>
+
+      <h2>Context Is the New Source Code</h2>
+      
+      <p>We've spent decades building sophisticated systems to manage source code. Version control, branching strategies, code review workflows, continuous integration. We treat code as a precious artifact because it is — it represents accumulated human knowledge and decision-making.</p>
+
+      <p><strong>Agent state deserves the same treatment.</strong></p>
+
+      <p>When you have five agents working across three projects, each with different personality configurations and domain contexts, you're not just generating code. You're generating <em>institutional knowledge</em>. The agent that's been working on your payment system for six weeks has developed an understanding of your business logic that exists nowhere else. The agent handling your infrastructure knows why certain configurations exist. The one reviewing PRs has learned your team's conventions.</p>
+
+      <p>This context is valuable. It's also fragile.</p>
+
+      <p>A crashed session, a context overflow, a migration to a new tool — any of these can wipe out weeks of accumulated understanding. And unlike code, there's no <code>git log</code> for agent cognition. No way to restore a checkpoint of what an agent knew yesterday versus today.</p>
+
+      <h2>The Coming State Management Layer</h2>
+      
+      <p>As agentic coding matures, we'll see the emergence of a new infrastructure layer — one dedicated to preserving, restoring, and protecting agent state.</p>
+
+      <p>Think about what this requires:</p>
+
+      <p><strong>Persistence across sessions.</strong> An agent that resumes work on Monday should have access to everything it learned on Friday. Not just the files it modified, but the reasoning chains, the abandoned approaches, the accumulated preferences.</p>
+
+      <p><strong>State portability.</strong> When you switch from Codex to Claude Code to whatever comes next, your agent's accumulated knowledge shouldn't be locked in a proprietary black box. Context should be an asset you own.</p>
+
+      <p><strong>State security.</strong> As agents accumulate more knowledge about your systems, codebases, and business logic, that state becomes a target. It needs protection commensurate with its value.</p>
+
+      <p><strong>State observability.</strong> You should be able to understand what your agents know, how that knowledge evolved, and whether it's drifting in problematic directions.</p>
+
+      <p>None of this exists today in any mature form. We're building increasingly powerful agent systems on a foundation that treats their accumulated knowledge as disposable.</p>
+
+      <h2>Building for the Long Game</h2>
+      
+      <p>The Codex launch is a milestone, but it's also a reminder that we're still in the early innings of agentic development. The tools are getting more powerful. The parallelism is increasing. The automation is deepening.</p>
+
+      <p>But sustainable agent-powered development requires more than powerful agents. It requires infrastructure that treats agent state as the valuable, persistent resource it actually is.</p>
+
+      <p>The teams that figure this out early — that build systems where agent knowledge compounds rather than evaporates — will have a significant advantage. Not because their agents are smarter, but because their agents remember.</p>
+
+      <p>As we race to spin up more agents, run more automations, and parallelize more work, it's worth pausing to ask: are we building systems that preserve what these agents learn? Or are we just generating ephemeral intelligence, brilliant in the moment, gone by morning?</p>
+
+      <p>The answer will determine whether agentic coding delivers on its promise, or becomes an expensive treadmill where we keep re-teaching machines what they already knew.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>
