@@ -1444,6 +1444,172 @@ nav .container {
 /* ============================================================
    SELECTION
    ============================================================ */
+/* ============================================================
+   EARLY ACCESS / LEAD FORM
+   ============================================================ */
+.early-access {
+  border-top: 1px solid var(--border);
+}
+
+.early-access-card {
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 48px 40px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.early-access-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--blue-light), var(--blue));
+}
+
+.early-access-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.lead-form {
+  text-align: left;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.form-group .optional {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input::placeholder {
+  color: var(--text-dim);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(3, 193, 223, 0.1);
+}
+
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.form-group select option {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+.btn-form {
+  width: 100%;
+  justify-content: center;
+  padding: 14px 24px;
+  margin-top: 8px;
+}
+
+.btn-form:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.form-note {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 12px;
+}
+
+.form-success {
+  text-align: center;
+  padding: 32px 0;
+}
+
+.success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 50%;
+  font-size: 24px;
+  color: #22c55e;
+  margin-bottom: 16px;
+}
+
+.form-success h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.form-success p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .early-access-card {
+    padding: 32px 20px;
+    margin: 0 -8px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .early-access-sub {
+    font-size: 14px;
+  }
+}
+
 ::selection {
   background: rgba(3, 193, 223, 0.3);
   color: #fff;
@@ -1819,6 +1985,58 @@ nav .container {
   </div>
 </section>
 
+<!-- ==================== EARLY ACCESS / LEAD FORM ==================== -->
+<section class="early-access reveal" id="early-access">
+  <div class="container">
+    <div class="early-access-card">
+      <span class="section-label">Stay Updated</span>
+      <h2 class="section-title">Get early access to new features.</h2>
+      <p class="early-access-sub">Join the waitlist for Pro features, new platform adapters, and migration guides.</p>
+      
+      <form id="lead-form" class="lead-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="lead-email">Email</label>
+            <input type="email" id="lead-email" name="email" placeholder="you@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="lead-name">Name <span class="optional">(optional)</span></label>
+            <input type="text" id="lead-name" name="name" placeholder="Your name">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="lead-usecase">What do you want to back up?</label>
+          <select id="lead-usecase" name="useCase">
+            <option value="">Select your use case...</option>
+            <option value="personal-ai">Personal AI assistant (ChatGPT, Claude, etc.)</option>
+            <option value="coding-agent">Coding agent (Claude Code, Cursor, etc.)</option>
+            <option value="business-agent">Business/enterprise agents</option>
+            <option value="custom-platform">Custom AI platform</option>
+            <option value="migration">Migrating between platforms</option>
+            <option value="other">Other / Just exploring</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-form">
+          <span class="btn-text">Join Waitlist</span>
+          <span class="btn-loading" style="display: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32"><animate attributeName="stroke-dashoffset" values="32;0" dur="1s" repeatCount="indefinite"/></circle></svg>
+          </span>
+        </button>
+        
+        <p class="form-note">No spam. Unsubscribe anytime.</p>
+      </form>
+      
+      <div id="form-success" class="form-success" style="display: none;">
+        <span class="success-icon">✓</span>
+        <h3>You're on the list!</h3>
+        <p>We'll reach out when new features are ready.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ==================== FOOTER CTA ==================== -->
 <section class="footer-cta" id="get-started">
   <div class="container">
@@ -1881,6 +2099,52 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Lead form submission
+document.getElementById('lead-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const btnText = btn.querySelector('.btn-text');
+  const btnLoading = btn.querySelector('.btn-loading');
+  
+  // Get form data
+  const email = form.querySelector('#lead-email').value;
+  const name = form.querySelector('#lead-name').value;
+  const useCase = form.querySelector('#lead-usecase').value;
+  
+  // Show loading state
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  btnLoading.style.display = 'inline-flex';
+  
+  try {
+    const response = await fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name, useCase })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      // Show success state
+      form.style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    } else {
+      throw new Error(result.error || 'Something went wrong');
+    }
+  } catch (error) {
+    console.error('Form error:', error);
+    alert(error.message || 'Failed to submit. Please try again.');
+    
+    // Reset button
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    btnLoading.style.display = 'none';
+  }
+});
 </script>
 
 </body>
