@@ -1610,6 +1610,12 @@ nav .container {
   }
 }
 
+/* Responsive headline break */
+.mobile-break { display: inline; }
+@media (max-width: 640px) {
+  .mobile-break { display: block; }
+}
+
 ::selection {
   background: rgba(3, 193, 223, 0.3);
   color: #fff;
@@ -1654,7 +1660,7 @@ nav .container {
       <span class="hero-badge-dot"></span>
       v0.2 — 6 platform adapters, incremental snapshots, S3/R2 storage
     </div>
-    <h1>Time Machine<br>for AI</h1>
+    <h1>Time Machine<span class="mobile-break"></span> for AI</h1>
     <p class="hero-subtitle">
       Encrypted backup, restore, and migration for your AI identity.<br>
       Never lose your AI again.
