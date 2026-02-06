@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>87% Compromised in 4 Hours: Why Your AI Agent Needs a Rollback Plan — SaveState</title>
+<meta name="description" content="New research shows memory poisoning can corrupt 87% of an AI agent's decision-making in just four hours. Here's why secure backups are now a security requirement.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.nav-wordmark {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.btn-nav {
+  background: var(--blue);
+  color: var(--bg) !important;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600 !important;
+}
+
+/* Article */
+article {
+  padding: 140px 0 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--blue);
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.article-header h1 {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+.article-header .summary {
+  font-size: 18px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.article-content {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 36px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong { color: var(--text); }
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.article-content a:hover {
+  border-bottom-color: var(--blue);
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--blue-light);
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+}
+
+.article-content blockquote {
+  border-left: 3px solid var(--blue);
+  padding-left: 20px;
+  margin: 24px 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.stat-callout {
+  background: linear-gradient(135deg, rgba(3, 193, 223, 0.1) 0%, rgba(3, 193, 223, 0.05) 100%);
+  border: 1px solid var(--blue-dim);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 32px 0;
+  text-align: center;
+}
+
+.stat-callout .number {
+  font-size: 64px;
+  font-weight: 800;
+  color: var(--blue);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-callout .label {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+/* Back link */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 32px;
+  transition: color 0.2s;
+}
+
+.back-link:hover { color: var(--text); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+  .stat-callout .number { font-size: 48px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+    
+    <header class="article-header">
+      <div class="date">February 6, 2026</div>
+      <h1>87% Compromised in 4 Hours: Why Your AI Agent Needs a Rollback Plan</h1>
+      <p class="summary">New research shows memory poisoning can corrupt 87% of an AI agent's decision-making in just four hours. Here's why secure backups are now a security requirement, not just a convenience.</p>
+    </header>
+
+    <div class="article-content">
+      <p>A research finding dropped this week that should make every AI developer pause.</p>
+
+      <div class="stat-callout">
+        <div class="number">87%</div>
+        <div class="label">of AI agent decisions compromised within 4 hours</div>
+      </div>
+
+      <p>The finding, reported by <a href="https://www.obsidiansecurity.com/">Obsidian Security</a> and analyzed by Vectra AI, represents the first quantified measure of how quickly <strong>memory poisoning</strong> can cascade through an AI agent's reasoning.</p>
+
+      <p>This isn't theoretical. It's measured. And it changes everything about how we think about AI agent security.</p>
+
+      <h2>What Is Memory Poisoning?</h2>
+
+      <p>Most AI security discussions focus on prompt injection—tricking an AI into executing malicious instructions in real-time. That's dangerous, but it's also visible. You can log prompts, detect anomalies, and respond.</p>
+
+      <p>Memory poisoning is different. It's the slow corruption of an AI agent's persistent context—the knowledge it carries between sessions that shapes every future decision.</p>
+
+      <p>Think of it like this:</p>
+
+      <ul>
+        <li><strong>Prompt injection</strong> = someone shouting instructions at an employee</li>
+        <li><strong>Memory poisoning</strong> = someone quietly editing the employee handbook</li>
+      </ul>
+
+      <p>The handbook edit is far more dangerous because it persists indefinitely, affects every future decision, is trusted by default, and is nearly invisible to detect.</p>
+
+      <h2>How the 87% Happens</h2>
+
+      <p>The Obsidian Security research simulated a common scenario: an AI agent with persistent memory receiving inputs from multiple sources—emails, documents, API responses.</p>
+
+      <p>Here's the attack chain:</p>
+
+      <ul>
+        <li><strong>Hour 0:</strong> Attacker sends a crafted "meeting notes" document via email containing subtle instruction injections disguised as legitimate content.</li>
+        <li><strong>Hour 1:</strong> The agent processes the email, extracting "key points" into its memory. The poison is now part of its persistent context.</li>
+        <li><strong>Hour 2:</strong> The agent makes decisions about unrelated tasks, but its reasoning now incorporates the poisoned context—subtly biasing outputs toward attacker goals.</li>
+        <li><strong>Hour 4:</strong> 87% of the agent's decisions show measurable deviation from expected behavior. The cascade is complete.</li>
+      </ul>
+
+      <p>The terrifying part? <strong>The agent's outputs still look reasonable.</strong> There's no obvious "I've been hacked" moment. Just a gradual drift toward compromised decision-making.</p>
+
+      <h2>Why Traditional Security Fails</h2>
+
+      <p>Your existing security stack wasn't designed for this:</p>
+
+      <ul>
+        <li><strong>Firewalls</strong> protect network boundaries—but the poison arrives through legitimate channels</li>
+        <li><strong>Antivirus</strong> scans for malware signatures—but these attacks use plain text</li>
+        <li><strong>SIEM/logging</strong> captures events—but how do you alert on "memory now contains subtly biased information"?</li>
+        <li><strong>Access controls</strong> limit who can reach systems—but the attacker isn't accessing your systems directly. They're manipulating what your AI <em>believes</em>.</li>
+      </ul>
+
+      <h2>The Missing Layer: Rollback</h2>
+
+      <p>Palo Alto Networks recently released the <a href="https://genai.owasp.org/resource/owasp-top-10-for-llm-and-generative-ai-apps/">OWASP Top 10 for Agentic Applications</a>. Memory poisoning sits near the top. Their recommended defense? <strong>Version control so you can roll back to known-good states.</strong></p>
+
+      <p>This is why we built SaveState.</p>
+
+      <p>When your AI agent's memory can be silently corrupted, you need the ability to:</p>
+
+      <ol>
+        <li>Detect anomalous behavior (easier when you have historical baselines)</li>
+        <li>Identify when the corruption was introduced</li>
+        <li>Roll back to a clean snapshot before the poison took hold</li>
+      </ol>
+
+      <pre><code># Create regular snapshots as security checkpoints
+savestate snapshot --adapter claude-code --name "pre-integration"
+
+# Something seems off? Diff against the last known-good state
+savestate diff pre-integration latest
+
+# Confirmed poisoning? Roll back instantly
+savestate restore pre-integration</code></pre>
+
+      <p>Without backups, you're rebuilding from scratch. With SaveState, you're restoring in seconds.</p>
+
+      <h2>Why This Is Different From Regular Backups</h2>
+
+      <p>You might think, "I already back up my data." But AI agent context isn't regular data:</p>
+
+      <ul>
+        <li><strong>It's distributed</strong> — across vector DBs, conversation history, custom instructions, MEMORY.md files</li>
+        <li><strong>It's opaque</strong> — you can't just eyeball poisoned embeddings</li>
+        <li><strong>It's semantic</strong> — corruption affects meaning, not just bytes</li>
+      </ul>
+
+      <p>SaveState's adapter architecture understands AI memory structures. It knows where Claude stores context differently than ChatGPT. It captures the full semantic state, not just files.</p>
+
+      <h2>The New Security Baseline</h2>
+
+      <p>The 87% stat changes the calculus. Memory backups aren't just about convenience anymore—they're a security control. Here's what that means:</p>
+
+      <ul>
+        <li><strong>Regular snapshots</strong> — Treat memory checkpoints like database backups</li>
+        <li><strong>Pre/post snapshots</strong> — Snapshot before processing untrusted inputs</li>
+        <li><strong>Behavioral baselines</strong> — Use historical snapshots to detect drift</li>
+        <li><strong>Incident response</strong> — Include memory rollback in your playbooks</li>
+      </ul>
+
+      <h2>What Happens Next</h2>
+
+      <p>The AI agent ecosystem is where web security was in 2005—everyone knows there are problems, but the tooling is primitive. We're building planes while flying them.</p>
+
+      <p>SaveState is part of the answer: encrypted, versioned backups that let you restore to known-good states when (not if) something goes wrong.</p>
+
+      <p>Your AI agent's memory is now an attack surface. Time to protect it.</p>
+
+      <pre><code># Get started in 30 seconds
+npm install -g @savestate/cli
+savestate init
+savestate snapshot</code></pre>
+
+      <p><em>Get started at <a href="https://savestate.dev">savestate.dev</a> — free tier available, no credit card required.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>
