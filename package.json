@@ -49,13 +49,15 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@neondatabase/serverless": "^1.0.2",
     "@vercel/node": "^5.5.28",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
     "ora": "^8.2.0",
     "stripe": "^20.2.0",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

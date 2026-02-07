@@ -166,6 +166,16 @@ program
   .option('-f, --force', 'Overwrite existing files')
   .action(cloudCommand);
 
+// ─── savestate mcp ───────────────────────────────────────────
+
+program
+  .command('mcp')
+  .description('Start MCP server for Claude Code integration')
+  .action(async () => {
+    // Dynamic import to avoid loading MCP deps for regular CLI usage
+    await import('./mcp/server.js');
+  });
+
 // ─── Parse & run ─────────────────────────────────────────────
 
 program.parse();
