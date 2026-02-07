@@ -1,0 +1,69 @@
+name: 'SaveState Backup'
+description: 'Backup your AI agent state with SaveState - encrypted, versioned, restorable'
+author: 'SaveState <hello@savestate.dev>'
+branding:
+  icon: 'save'
+  color: 'blue'
+
+inputs:
+  api-key:
+    description: 'Your SaveState API key (from savestate.dev/dashboard)'
+    required: true
+  snapshot-name:
+    description: 'Name for the snapshot (defaults to git SHA)'
+    required: false
+    default: ''
+  agent-dir:
+    description: 'Path to agent config directory (defaults to current directory)'
+    required: false
+    default: '.'
+  adapter:
+    description: 'Agent platform adapter (openclaw, claude, openai, cursor, windsurf, auto)'
+    required: false
+    default: 'auto'
+
+outputs:
+  snapshot-name:
+    description: 'The name/label of the created snapshot'
+    value: ${{ steps.backup.outputs.snapshot-name }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install SaveState CLI
+      shell: bash
+      run: npm install -g @savestate/cli
+
+    - name: Run Backup
+      id: backup
+      shell: bash
+      env:
+        SAVESTATE_API_KEY: ${{ inputs.api-key }}
+      run: |
+        SNAPSHOT_LABEL="${{ inputs.snapshot-name }}"
+        if [ -z "$SNAPSHOT_LABEL" ]; then
+          SNAPSHOT_LABEL="ci-${{ github.sha }}"
+        fi
+        
+        cd "${{ inputs.agent-dir }}"
+        
+        # Build command
+        CMD="savestate snapshot --label \"$SNAPSHOT_LABEL\""
+        if [ "${{ inputs.adapter }}" != "auto" ]; then
+          CMD="$CMD --adapter ${{ inputs.adapter }}"
+        fi
+        
+        # Run backup
+        echo "Running: $CMD"
+        eval $CMD || {
+          echo "::error::SaveState backup failed"
+          exit 1
+        }
+        
+        echo "snapshot-name=$SNAPSHOT_LABEL" >> $GITHUB_OUTPUT
+        echo "✅ Backup complete: $SNAPSHOT_LABEL"

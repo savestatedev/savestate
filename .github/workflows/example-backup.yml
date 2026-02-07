@@ -1,0 +1,37 @@
+# Example: SaveState Backup Workflow
+# Copy this to your own repo and customize!
+#
+# This workflow backs up your AI agent state:
+# - On every push to main (pre-deploy backup)
+# - Nightly at 2 AM (scheduled backup)
+
+name: SaveState Backup Example
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC daily
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Backup Agent State
+        id: backup
+        uses: savestatedev/savestate/.github/actions/backup@main
+        with:
+          api-key: ${{ secrets.SAVESTATE_API_KEY }}
+          snapshot-name: '${{ github.event_name }}-${{ github.sha }}'
+          # agent-dir: './my-agent'  # Uncomment if agent config is in subdirectory
+          # adapter: 'openclaw'      # Uncomment to specify adapter
+
+      - name: Backup Summary
+        run: |
+          echo "### ✅ SaveState Backup Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Snapshot:** ${{ steps.backup.outputs.snapshot-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY

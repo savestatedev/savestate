@@ -1,0 +1,71 @@
+name: 'SaveState Restore'
+description: 'Restore AI agent state from a SaveState snapshot'
+author: 'SaveState <hello@savestate.dev>'
+branding:
+  icon: 'rotate-ccw'
+  color: 'green'
+
+inputs:
+  api-key:
+    description: 'Your SaveState API key (from savestate.dev/dashboard)'
+    required: true
+  snapshot-id:
+    description: 'Snapshot ID to restore (use "latest" for most recent)'
+    required: false
+    default: 'latest'
+  snapshot-name:
+    description: 'Snapshot name to restore (alternative to snapshot-id)'
+    required: false
+    default: ''
+  agent-dir:
+    description: 'Path to restore agent config to (defaults to current directory)'
+    required: false
+    default: '.'
+  adapter:
+    description: 'Agent platform adapter (openclaw, claude, openai, cursor, windsurf, auto)'
+    required: false
+    default: 'auto'
+
+outputs:
+  restored-from:
+    description: 'The snapshot ID or "latest" that was restored'
+    value: ${{ steps.restore.outputs.snapshot-id }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install SaveState CLI
+      shell: bash
+      run: npm install -g @savestate/cli
+
+    - name: Run Restore
+      id: restore
+      shell: bash
+      env:
+        SAVESTATE_API_KEY: ${{ inputs.api-key }}
+      run: |
+        cd "${{ inputs.agent-dir }}"
+        
+        # Determine restore target (snapshot-id or "latest")
+        TARGET="${{ inputs.snapshot-id }}"
+        
+        # Build command
+        CMD="savestate restore $TARGET"
+        if [ "${{ inputs.adapter }}" != "auto" ]; then
+          CMD="$CMD --to ${{ inputs.adapter }}"
+        fi
+        
+        # Run restore
+        echo "Running: $CMD"
+        eval $CMD || {
+          echo "::error::SaveState restore failed"
+          exit 1
+        }
+        
+        echo "snapshot-id=$TARGET" >> $GITHUB_OUTPUT
+        echo "✅ Restore complete from snapshot: $TARGET"
