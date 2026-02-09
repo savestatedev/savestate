@@ -48,5 +48,33 @@ export { ChatGPTExtractor, type ChatGPTExtractorConfig } from './extractors/chat
 // Loaders (for direct instantiation with custom config)
 export { ClaudeLoader, type ClaudeLoaderConfig } from './loaders/claude.js';
 
+// Transformers (for direct instantiation)
+export { ChatGPTToClaudeTransformer } from './transformers/chatgpt-to-claude.js';
+export { ClaudeToChatGPTTransformer } from './transformers/claude-to-chatgpt.js';
+
+// Transformation rules and utilities
+export {
+  // Types
+  type ContentType,
+  type OverflowStrategy,
+  type AdaptationMethod,
+  type TransformationRule,
+  type RuleCondition,
+  type TransformationResult,
+  type CharacterLimit,
+  type PlatformMapping,
+  // Functions
+  getTargetLimits,
+  intelligentTruncate,
+  splitContent,
+  convertChatGPTInstructionsToClaude,
+  convertClaudeInstructionsToChatGPT,
+  convertMemoriesToDocument,
+  convertDocumentToMemories,
+  extractContextFromConversations,
+  mapGPTToProject,
+  validateBundleForTarget,
+} from './transformers/rules.js';
+
 // Platform capabilities (for compatibility checking)
 export { getPlatformCapabilities, PLATFORM_CAPABILITIES } from './capabilities.js';

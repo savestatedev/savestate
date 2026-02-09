@@ -54,8 +54,11 @@ export function hasTransformer(source: Platform, target: Platform): boolean {
 
 // ─── Register Built-in Transformers ──────────────────────────
 
-// ChatGPT → Claude will be registered in #26
-// registerTransformer('chatgpt', 'claude', () => new ChatGPTToClaudeTransformer());
+import { ChatGPTToClaudeTransformer } from './chatgpt-to-claude.js';
+import { ClaudeToChatGPTTransformer } from './claude-to-chatgpt.js';
 
-// Claude → ChatGPT will be registered in #26
-// registerTransformer('claude', 'chatgpt', () => new ClaudeToChatGPTTransformer());
+// ChatGPT → Claude transformer
+registerTransformer('chatgpt', 'claude', () => new ChatGPTToClaudeTransformer());
+
+// Claude → ChatGPT transformer
+registerTransformer('claude', 'chatgpt', () => new ClaudeToChatGPTTransformer());
