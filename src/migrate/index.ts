@@ -42,6 +42,9 @@ export { getExtractor, registerExtractor, listExtractors, hasExtractor } from '.
 export { getTransformer, registerTransformer, listTransformers, hasTransformer } from './transformers/registry.js';
 export { getLoader, registerLoader, listLoaders, hasLoader } from './loaders/registry.js';
 
+// Extractors (for direct instantiation with custom config)
+export { ChatGPTExtractor, type ChatGPTExtractorConfig } from './extractors/chatgpt.js';
+
 // Loaders (for direct instantiation with custom config)
 export { ClaudeLoader, type ClaudeLoaderConfig } from './loaders/claude.js';
 
