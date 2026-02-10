@@ -299,7 +299,7 @@ footer a { color: var(--text-muted); }
     <header class="article-header">
       <div class="date">February 10, 2026</div>
       <h1>Context Rot Is Killing Your AI Agent (Here's the Fix)</h1>
-      <p class="summary">Your agent starts sharp. Two hours later, it's suggesting code you rejected three times. That's context rot — and it's costing you more than you think.</p>
+      <p class="summary">Your agent starts sharp. Two hours later, it's suggesting code you rejected three times. That's context rot, and it's costing you more than you think.</p>
     </header>
 
     <div class="article-content">
@@ -307,13 +307,13 @@ footer a { color: var(--text-muted); }
 
       <p>Then something shifts. Responses get slower. The agent starts re-suggesting approaches you already rejected. It forgets constraints you mentioned twenty minutes ago. By hour three, you're fighting your own tool.</p>
 
-      <p>This isn't a bug. It's <strong>context rot</strong> — and it's becoming the silent killer of developer productivity in the age of AI agents.</p>
+      <p>This isn't a bug. It's <strong>context rot</strong>. And it's becoming the silent killer of developer productivity in the age of AI agents.</p>
 
       <h2>What Is Context Rot?</h2>
 
       <p>Context rot happens when an agent's context window fills with irrelevant, outdated, or contradictory information, degrading the quality of its outputs over time.</p>
 
-      <p>Every AI agent operates within a context window — a fixed-size buffer of information the model can "see" at any given moment. As a session progresses, this window accumulates:</p>
+      <p>Every AI agent operates within a context window: a fixed-size buffer of information the model can "see" at any given moment. As a session progresses, this window accumulates:</p>
 
       <ul>
         <li>Abandoned code paths and rejected approaches</li>
@@ -333,19 +333,19 @@ footer a { color: var(--text-muted); }
 
       <h2>The /clear Ritual</h2>
 
-      <p>Developers have already discovered the crude workaround. On Hacker News, you'll find thread after thread of Claude Code users admitting they run <code>/clear</code> constantly — sometimes every 30 minutes — just to keep their agent functional.</p>
+      <p>Developers have already discovered the crude workaround. On Hacker News, you'll find thread after thread of Claude Code users admitting they run <code>/clear</code> constantly, sometimes every 30 minutes, just to keep their agent functional.</p>
 
       <p>One commenter described it perfectly: "I've trained myself to /clear before I get frustrated. If Claude starts repeating itself or missing obvious things, the context is rotted. Nuke it."</p>
 
       <p>This works. Kind of.</p>
 
-      <p>The problem is that <code>/clear</code> is a nuclear option. Yes, you eliminate the noise — but you also eliminate everything valuable your agent learned during the session. That careful understanding of your codebase architecture? Gone. The context about why you're building this feature? Gone. The preferences and patterns the agent picked up? Gone.</p>
+      <p>The problem is that <code>/clear</code> is a nuclear option. Yes, you eliminate the noise, but you also eliminate everything valuable your agent learned during the session. That careful understanding of your codebase architecture? Gone. The context about why you're building this feature? Gone. The preferences and patterns the agent picked up? Gone.</p>
 
       <p>You're back to square one, re-explaining basics to a fresh agent with no memory of the last two hours of work.</p>
 
       <h2>The Hidden Cost</h2>
 
-      <p>Context rot doesn't just hurt productivity — it hits your wallet.</p>
+      <p>Context rot doesn't just hurt productivity. It hits your wallet.</p>
 
       <p>A recent Redis blog post on semantic caching put hard numbers on the problem:</p>
 
@@ -353,19 +353,19 @@ footer a { color: var(--text-muted); }
 
       <p>Think about what happens when context rots: your agent re-processes the same files, re-reads the same documentation, re-discovers the same constraints. Every token of redundant processing is money you're paying again for knowledge the agent already had.</p>
 
-      <p>Microsoft's DevBlogs team flagged another angle: context rot from loading too many skills at once. Agents with bloated tool sets suffer from "skill pollution" where irrelevant capabilities crowd out relevant context. Your code agent doesn't need a web scraper, a data visualization suite, and an email composer loaded simultaneously — but that cruft is eating your context window.</p>
+      <p>Microsoft's DevBlogs team flagged another angle: context rot from loading too many skills at once. Agents with bloated tool sets suffer from "skill pollution" where irrelevant capabilities crowd out relevant context. Your code agent doesn't need a web scraper, a data visualization suite, and an email composer loaded simultaneously, but that cruft is eating your context window.</p>
 
       <p>The irony is brutal: we're paying for 200K context windows and then polluting them so badly that we're effectively working with 20K.</p>
 
       <h2>The Real Problem: Memory Is Ephemeral</h2>
 
-      <p>The <code>/clear</code> trap reveals a deeper issue. Agent context isn't just a performance concern — it's a <strong>state management problem</strong>.</p>
+      <p>The <code>/clear</code> trap reveals a deeper issue. Agent context isn't just a performance concern. It's a <strong>state management problem</strong>.</p>
 
       <p>Right now, there are exactly two options:</p>
 
       <ol>
-        <li><strong>Keep the rotted context</strong> — suffer degraded performance</li>
-        <li><strong>Clear the context</strong> — lose all accumulated knowledge</li>
+        <li><strong>Keep the rotted context</strong>: suffer degraded performance</li>
+        <li><strong>Clear the context</strong>: lose all accumulated knowledge</li>
       </ol>
 
       <p>Neither is acceptable. What developers actually need is a third option:</p>
@@ -390,7 +390,7 @@ savestate restore "clean-context-v2"
 
       <p>The key insight: <strong>snapshot before degradation, not after</strong>.</p>
 
-      <p>When your agent finally "gets" your codebase — understands the architecture, knows your conventions, has the right context loaded — that's the moment to capture. Not when things are already rotting.</p>
+      <p>When your agent finally "gets" your codebase (understands the architecture, knows your conventions, has the right context loaded), that's the moment to capture. Not when things are already rotting.</p>
 
       <pre><code># Perfect workflow for long coding sessions:
 
@@ -432,7 +432,7 @@ savestate restore latest</code></pre>
 
       <h3>2. Task-Based Snapshots</h3>
 
-      <p>Don't just snapshot on time — snapshot on task boundaries. Finished implementing the auth flow? Snapshot. Moving from backend to frontend? Snapshot. About to try an experimental approach? Snapshot first.</p>
+      <p>Don't just snapshot on time. Snapshot on task boundaries. Finished implementing the auth flow? Snapshot. Moving from backend to frontend? Snapshot. About to try an experimental approach? Snapshot first.</p>
 
       <pre><code>savestate snapshot --label "auth-complete"
 savestate snapshot --label "pre-experimental"
@@ -440,7 +440,7 @@ savestate snapshot --label "backend-done"</code></pre>
 
       <h3>3. The Clean Baseline</h3>
 
-      <p>Maintain a "golden" snapshot for each project — your agent at peak orientation before any session-specific context. This becomes your restart point when things go sideways.</p>
+      <p>Maintain a "golden" snapshot for each project: your agent at peak orientation before any session-specific context. This becomes your restart point when things go sideways.</p>
 
       <pre><code># Create once, use forever
 savestate snapshot --label "myproject-baseline"
@@ -468,7 +468,7 @@ savestate diff "clean-context" current
 
       <p><strong>Onboarding gets instant.</strong> That two-hour process of getting your agent to understand a new codebase? Do it once, snapshot, and skip it forever.</p>
 
-      <p><strong>Costs drop.</strong> Less re-processing means fewer tokens means lower bills. The Redis research suggests 50-80% reduction — we've seen similar numbers.</p>
+      <p><strong>Costs drop.</strong> Less re-processing means fewer tokens means lower bills. The Redis research suggests 50-80% reduction. We've seen similar numbers.</p>
 
       <p><strong>Consistency improves.</strong> Your agent always starts from a known-good state instead of whatever cruft accumulated during your last marathon session.</p>
 
