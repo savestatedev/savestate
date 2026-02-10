@@ -5,6 +5,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude Code MCP Integration: Backup Your AI with Natural Language — SaveState</title>
 <meta name="description" content="SaveState now integrates directly with Claude Code via MCP. Backup and restore your agent state using natural language commands.">
+
+<!-- Structured Data for GEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Set Up SaveState CLI MCP Integration with Claude Code",
+  "description": "Configure SaveState CLI to integrate with Claude Code via MCP, enabling natural language backup and restore commands for your AI agent state.",
+  "totalTime": "PT2M",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": "0"
+  },
+  "supply": [
+    {
+      "@type": "HowToSupply",
+      "name": "SaveState CLI installed"
+    },
+    {
+      "@type": "HowToSupply",
+      "name": "Claude Code"
+    }
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Install SaveState CLI",
+      "text": "Install SaveState globally using npm: npm install -g @savestate/cli"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Initialize SaveState in your project",
+      "text": "Navigate to your project directory and run: savestate init"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Configure MCP in Claude Code",
+      "text": "Add SaveState to your ~/.claude/settings.json mcpServers configuration with command 'savestate' and args ['mcp']"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Restart Claude Code",
+      "text": "Restart Claude Code to load the new MCP configuration. You can now ask Claude to backup or restore your agent state using natural language."
+    }
+  ],
+  "author": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Claude Code MCP Integration: Backup Your AI with Natural Language",
+  "description": "SaveState CLI now integrates directly with Claude Code via MCP. Backup and restore your agent state using natural language commands.",
+  "author": {
+    "@type": "Organization",
+    "name": "SaveState"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://savestate.dev/logo.png"
+    }
+  },
+  "datePublished": "2026-02-07",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://savestate.dev/blog/claude-code-mcp-integration.html"
+  },
+  "keywords": "Claude Code backup, MCP integration, AI agent backup, SaveState CLI, Claude conversation backup"
+}
+</script>
+
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
