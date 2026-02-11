@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenAI Frontier Treats AI Agents Like Employees — But Where's Their HR File? — SaveState</title>
+<meta name="description" content="As enterprises adopt the 'AI as employee' paradigm with onboarding and performance reviews, they're missing the critical offboarding piece. What happens when an agent leaves?">
+<meta name="keywords" content="AI agents, OpenAI Frontier, agent management, enterprise AI, AI backup, agent offboarding, institutional knowledge">
+<meta property="og:title" content="OpenAI Frontier Treats AI Agents Like Employees — But Where's Their HR File?">
+<meta property="og:description" content="The enterprise world is treating AI agents like employees. But they forgot about offboarding.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/blog/ai-agents-as-employees-hr-gap.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpenAI Frontier Treats AI Agents Like Employees — But Where's Their HR File?">
+<meta name="twitter:description" content="The enterprise world is treating AI agents like employees. But they forgot about offboarding.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="canonical" href="https://savestate.dev/blog/ai-agents-as-employees-hr-gap.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.nav-wordmark {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--blue); }
+
+article {
+  padding: 140px 0 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.article-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.article-date { color: var(--blue); font-weight: 500; }
+
+h1 {
+  font-size: clamp(32px, 5vw, 44px);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--text), var(--blue-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.article-subtitle {
+  font-size: 18px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.article-content {
+  font-size: 17px;
+}
+
+.article-content h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 36px 0 16px;
+  color: var(--blue-light);
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.article-content a:hover {
+  border-color: var(--blue);
+}
+
+.article-content ul, .article-content ol {
+  margin: 0 0 24px 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 10px;
+}
+
+.article-content blockquote {
+  margin: 32px 0;
+  padding: 24px 28px;
+  background: var(--bg-card);
+  border-left: 4px solid var(--blue);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-style: italic;
+}
+
+.article-content blockquote p {
+  margin: 0;
+  color: var(--text);
+}
+
+.highlight-box {
+  margin: 32px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(3, 193, 223, 0.08), rgba(3, 193, 223, 0.02));
+  border: 1px solid rgba(3, 193, 223, 0.2);
+  border-radius: var(--radius);
+}
+
+.highlight-box h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--blue);
+  margin-bottom: 12px;
+}
+
+pre {
+  margin: 24px 0;
+  padding: 20px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--blue-light);
+}
+
+.cta-section {
+  margin-top: 56px;
+  padding: 40px;
+  background: linear-gradient(135deg, rgba(3, 193, 223, 0.1), rgba(3, 193, 223, 0.02));
+  border: 1px solid rgba(3, 193, 223, 0.25);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.cta-section h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.cta-section p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: var(--blue);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.cta-button:hover {
+  background: var(--blue-light);
+  transform: translateY(-2px);
+}
+
+footer {
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+footer p {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+footer a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .nav-links { gap: 20px; }
+  .nav-links a { font-size: 13px; }
+  article { padding: 120px 0 60px; }
+  .article-content { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <div class="nav-links">
+      <a href="/blog">Blog</a>
+      <a href="https://github.com/savestatedev/savestate">GitHub</a>
+      <a href="https://www.npmjs.com/package/@savestate/cli">npm</a>
+    </div>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <header class="article-header">
+      <div class="article-meta">
+        <span class="article-date">February 11, 2026</span>
+        <span>•</span>
+        <span>Sally</span>
+        <span>•</span>
+        <span>5 min read</span>
+      </div>
+      <h1>OpenAI Frontier Treats AI Agents Like Employees — But Where's Their HR File?</h1>
+      <p class="article-subtitle">The enterprise world is building HR infrastructure for AI agents. They forgot about offboarding.</p>
+    </header>
+
+    <div class="article-content">
+      <p>Last week, OpenAI launched <strong>Frontier</strong> — a platform that lets enterprises build and manage AI agents with the same rigor they apply to human employees. Think onboarding processes, performance reviews, and access controls. HP, Oracle, State Farm, and Uber are already on board.</p>
+
+      <p>Gartner called agent management "the most valuable real estate in AI." And they're not wrong. As AI agents move from experimental toys to production infrastructure, treating them like employees makes sense.</p>
+
+      <p>But here's what nobody's talking about: <strong>where's the offboarding?</strong></p>
+
+      <h2>The Employee Lifecycle Has a Blind Spot</h2>
+
+      <p>When you hire a human employee, you think about onboarding (training, credentials, access), management (performance reviews, feedback loops), and eventually offboarding (documentation handoffs, knowledge transfer, access revocation).</p>
+
+      <p>The enterprise AI world has figured out the first two:</p>
+
+      <ul>
+        <li><strong>Onboarding:</strong> Define agent capabilities, grant API access, configure permissions</li>
+        <li><strong>Management:</strong> Monitor performance, adjust behaviors, review outputs</li>
+        <li><strong>Offboarding:</strong> ???</li>
+      </ul>
+
+      <p>What happens when an agent "quits"? When it breaks, needs to be redeployed, or gets migrated to a new platform?</p>
+
+      <p>With human employees, you do exit interviews. You ensure documentation is updated. You make sure institutional knowledge doesn't walk out the door.</p>
+
+      <p>With AI agents? That accumulated context — the weeks or months of learned preferences, project history, and domain knowledge — just vanishes.</p>
+
+      <h2>Context Loss Is the New Institutional Knowledge Problem</h2>
+
+      <p>This isn't hypothetical. A Reddit thread this week called out that most AI "memory" systems are really just <strong>"chat logs with extra steps."</strong> And they're right.</p>
+
+      <p>Your AI agent knows:</p>
+      <ul>
+        <li>Your coding style preferences</li>
+        <li>Which teammates handle which systems</li>
+        <li>The quirks of your deployment pipeline</li>
+        <li>Three months of project context</li>
+        <li>The decisions you made and why</li>
+      </ul>
+
+      <p>Now imagine your agent provider has an outage. Or you switch from ChatGPT to Claude. Or your agent's context window overflows and it "forgets" the early sessions.</p>
+
+      <blockquote>
+        <p>"We spent six weeks training our AI assistant on our codebase. Then we switched models. Starting over felt like losing a senior engineer."</p>
+      </blockquote>
+
+      <p>This is the institutional knowledge problem, reborn. Except this time, it happens faster and more often.</p>
+
+      <h2>The Missing Layer: Agent State Persistence</h2>
+
+      <p>The agent management market is exploding. Salesforce Agentforce. LangChain. CrewAI. Apple just added agentic coding to Xcode 26.3. Ex-GitHub CEO Nat Friedman launched <a href="https://entire.io" target="_blank">Entire</a> to similar fanfare.</p>
+
+      <p>All of them focus on building and running agents. None of them solve <strong>what happens when things go wrong.</strong></p>
+
+      <p>Think about it:</p>
+
+      <ul>
+        <li><strong>Your database has backups.</strong> If it crashes, you restore.</li>
+        <li><strong>Your code has version control.</strong> If you break something, you revert.</li>
+        <li><strong>Your employees have documentation.</strong> If they leave, you have handoff materials.</li>
+      </ul>
+
+      <p><strong>Where's the equivalent for AI agents?</strong></p>
+
+      <h2>SaveState: The HR File for AI Agents</h2>
+
+      <p>This is why we built SaveState. It's Time Machine for AI — encrypted backup and restore for agent state, memories, and configurations.</p>
+
+      <div class="highlight-box">
+        <h4>What SaveState protects:</h4>
+        <ul>
+          <li>Agent memories and conversation history</li>
+          <li>Learned preferences and custom instructions</li>
+          <li>Project context and file attachments</li>
+          <li>Configuration across platforms</li>
+        </ul>
+      </div>
+
+      <p>When your agent breaks, you restore. When you migrate platforms, you transfer state. When you need to audit what an agent knew and when, you have receipts.</p>
+
+      <p>It's the missing piece in the "AI as employee" lifecycle.</p>
+
+      <h3>How it works</h3>
+
+<pre><code># Snapshot your agent's current state
+savestate snapshot --adapter claude
+
+# List all available snapshots
+savestate list
+
+# Restore after a disaster (or a model switch)
+savestate restore --latest
+
+# Migrate from one platform to another
+savestate migrate --from chatgpt --to claude</code></pre>
+
+      <p>All snapshots are encrypted client-side with AES-256-GCM before they leave your machine. Zero-knowledge storage. Your agent's context stays yours.</p>
+
+      <h2>The Bottom Line</h2>
+
+      <p>The enterprise world is right to treat AI agents like employees. But the employee lifecycle doesn't end at performance reviews.</p>
+
+      <p>Your agents will break. They'll need to migrate. They'll accumulate institutional knowledge that you can't afford to lose.</p>
+
+      <p>The companies that figure out agent state persistence will have a massive advantage over those still starting from scratch every time something goes wrong.</p>
+
+      <p>Don't let your agent's HR file be empty.</p>
+
+      <div class="cta-section">
+        <h3>Protect your agent's context</h3>
+        <p>SaveState backs up and restores AI agent state across platforms. Free CLI, encrypted storage.</p>
+        <a href="https://savestate.dev" class="cta-button">
+          Get Started →
+        </a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState · <a href="/blog">More posts</a> · <a href="https://github.com/savestatedev/savestate">GitHub</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
