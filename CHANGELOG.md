@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.8.0] - 2026-02-10
+
+### 🚀 Migration Wizard — Full Release
+
+Complete bidirectional migration between ChatGPT and Claude is here!
+
+#### Features
+- **Full Bidirectional Migration** — Seamlessly move your AI identity between ChatGPT ↔ Claude
+- **Interactive CLI** — Beautiful progress bars and step-by-step guidance
+- **`--dry-run` Mode** — Preview what will be migrated without making changes
+- **`--review` Mode** — Inspect and approve each migration step interactively
+- **`--resume` Mode** — Continue interrupted migrations from the last checkpoint
+
+#### Testing & Quality
+- **372 tests** — Comprehensive test coverage across all migration paths
+- Complete documentation for migration workflows
+
+#### Security
+- Path traversal protection in all file handling operations
+- Secure checkpoint storage with integrity verification
+
+---
+
 ## [0.7.0] - 2026-02-09
 
 ### Added
