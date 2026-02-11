@@ -41,9 +41,10 @@ export function hasLoader(platform: Platform): boolean {
 // ─── Register Built-in Loaders ───────────────────────────────
 
 import { ClaudeLoader } from './claude.js';
+import { ChatGPTLoader } from './chatgpt.js';
 
 // Claude loader (#25)
 registerLoader('claude', () => new ClaudeLoader());
 
-// ChatGPT loader will be registered in #30
-// registerLoader('chatgpt', () => new ChatGPTLoader());
+// ChatGPT loader (#30)
+registerLoader('chatgpt', () => new ChatGPTLoader());
