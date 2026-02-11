@@ -108,7 +108,8 @@ class OpenAIApiClient {
   private readonly organizationId?: string;
 
   constructor(config: ChatGPTLoaderConfig) {
-    this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || '';
+    // Use nullish coalescing to allow explicit empty string to disable API key
+    this.apiKey = config.apiKey ?? process.env.OPENAI_API_KEY ?? '';
     this.baseUrl = config.baseUrl || 'https://api.openai.com/v1';
     this.maxRetries = config.maxRetries ?? 3;
     this.retryDelayMs = config.retryDelayMs ?? 1000;
