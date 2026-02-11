@@ -261,6 +261,12 @@ describe('ChatGPTLoader', () => {
       await writeFile(testFilePath, 'Hello, this is test content');
 
       const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir, // Required for path validation
+        },
         contents: {
           instructions: { content: 'Test', length: 4 },
           files: {
@@ -270,7 +276,7 @@ describe('ChatGPTLoader', () => {
                 filename: 'test-document.txt',
                 mimeType: 'text/plain',
                 size: 27,
-                path: testFilePath,
+                path: 'test-document.txt', // Relative path within bundle
               },
             ],
             count: 1,
@@ -326,10 +332,16 @@ describe('ChatGPTLoader', () => {
       expect(result.warnings).toContainEqual(expect.stringContaining('exceeds size limit'));
     });
 
-    it('should warn about missing files', async () => {
+    it('should warn about missing files within bundle directory', async () => {
       mockApiSuccess();
 
       const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir,
+        },
         contents: {
           instructions: { content: 'Test', length: 4 },
           files: {
@@ -339,7 +351,7 @@ describe('ChatGPTLoader', () => {
                 filename: 'missing-file.txt',
                 mimeType: 'text/plain',
                 size: 100,
-                path: '/nonexistent/missing-file.txt',
+                path: 'missing-file.txt', // File doesn't exist but path is valid
               },
             ],
             count: 1,
@@ -355,6 +367,41 @@ describe('ChatGPTLoader', () => {
       expect(result.warnings).toContainEqual(expect.stringContaining('not found'));
     });
 
+    it('should reject files with absolute paths outside bundle (path traversal)', async () => {
+      mockApiSuccess();
+
+      const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir,
+        },
+        contents: {
+          instructions: { content: 'Test', length: 4 },
+          files: {
+            files: [
+              {
+                id: 'f1',
+                filename: 'passwd',
+                mimeType: 'text/plain',
+                size: 100,
+                path: '/etc/passwd', // Absolute path outside bundle
+              },
+            ],
+            count: 1,
+            totalSize: 100,
+          },
+        },
+      });
+
+      const result = await loader.load(bundle, {});
+
+      expect(result.success).toBe(true);
+      expect(result.loaded.files).toBe(0);
+      expect(result.warnings).toContainEqual(expect.stringContaining('Invalid file path'));
+    });
+
     it('should generate file manifest when no API key provided', async () => {
       const loaderNoKey = new ChatGPTLoader({
         apiKey: '',
@@ -365,6 +412,12 @@ describe('ChatGPTLoader', () => {
       await writeFile(testFilePath, 'Hello world');
 
       const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir, // Required for path validation
+        },
         contents: {
           instructions: { content: 'Test', length: 4 },
           files: {
@@ -374,7 +427,7 @@ describe('ChatGPTLoader', () => {
                 filename: 'test-file.txt',
                 mimeType: 'text/plain',
                 size: 11,
-                path: testFilePath,
+                path: 'test-file.txt', // Relative path within bundle
               },
             ],
             count: 1,
@@ -460,6 +513,12 @@ describe('ChatGPTLoader', () => {
       await writeFile(testFilePath, 'Hello');
 
       const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir, // Required for path validation
+        },
         contents: {
           instructions: { content: 'Test', length: 4 },
           files: {
@@ -469,7 +528,7 @@ describe('ChatGPTLoader', () => {
                 filename: 'test.txt',
                 mimeType: 'text/plain',
                 size: 5,
-                path: testFilePath,
+                path: 'test.txt', // Relative path within bundle
               },
             ],
             count: 1,
@@ -517,6 +576,12 @@ describe('ChatGPTLoader', () => {
       await writeFile(testFilePath, 'Hello');
 
       const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir, // Required for path validation
+        },
         contents: {
           instructions: { content: 'Test', length: 4 },
           files: {
@@ -526,7 +591,7 @@ describe('ChatGPTLoader', () => {
                 filename: 'test.txt',
                 mimeType: 'text/plain',
                 size: 5,
-                path: testFilePath,
+                path: 'test.txt', // Relative path within bundle
               },
             ],
             count: 1,
@@ -652,6 +717,199 @@ describe('ChatGPTLoader', () => {
 
       // After load
       expect(loader.getProgress()).toBe(100);
+    });
+  });
+
+  describe('security - path traversal prevention', () => {
+    it('should reject file paths with path traversal attempts', async () => {
+      mockApiSuccess();
+
+      const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir,
+        },
+        contents: {
+          instructions: { content: 'Test', length: 4 },
+          files: {
+            files: [
+              {
+                id: 'f1',
+                filename: 'secret.txt',
+                mimeType: 'text/plain',
+                size: 100,
+                path: '../../../etc/passwd', // Path traversal attempt
+              },
+            ],
+            count: 1,
+            totalSize: 100,
+          },
+        },
+      });
+
+      const result = await loader.load(bundle, {});
+
+      expect(result.success).toBe(true);
+      expect(result.loaded.files).toBe(0);
+      expect(result.warnings).toContainEqual(expect.stringContaining('Invalid file path'));
+    });
+
+    it('should reject absolute paths outside bundle directory', async () => {
+      mockApiSuccess();
+
+      const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir,
+        },
+        contents: {
+          instructions: { content: 'Test', length: 4 },
+          files: {
+            files: [
+              {
+                id: 'f1',
+                filename: 'secret.txt',
+                mimeType: 'text/plain',
+                size: 100,
+                path: '/etc/passwd', // Absolute path outside bundle
+              },
+            ],
+            count: 1,
+            totalSize: 100,
+          },
+        },
+      });
+
+      const result = await loader.load(bundle, {});
+
+      expect(result.success).toBe(true);
+      expect(result.loaded.files).toBe(0);
+      expect(result.warnings).toContainEqual(expect.stringContaining('Invalid file path'));
+    });
+
+    it('should accept valid file paths within bundle directory', async () => {
+      mockApiSuccess();
+
+      // Create a test file inside the work directory
+      const testFilePath = join(testWorkDir, 'valid-file.txt');
+      await writeFile(testFilePath, 'Valid file content');
+
+      const bundle = createTestBundle({
+        source: {
+          platform: 'claude',
+          extractedAt: '2026-02-10T10:00:00Z',
+          extractorVersion: '1.0.0',
+          bundlePath: testWorkDir,
+        },
+        contents: {
+          instructions: { content: 'Test', length: 4 },
+          files: {
+            files: [
+              {
+                id: 'f1',
+                filename: 'valid-file.txt',
+                mimeType: 'text/plain',
+                size: 18,
+                path: 'valid-file.txt', // Relative path within bundle
+              },
+            ],
+            count: 1,
+            totalSize: 18,
+          },
+        },
+      });
+
+      const result = await loader.load(bundle, {});
+
+      expect(result.success).toBe(true);
+      expect(result.loaded.files).toBe(1);
+    });
+  });
+
+  describe('security - output directory sanitization', () => {
+    it('should sanitize output directory with path traversal in projectName', async () => {
+      mockApiSuccess();
+
+      // No outputDir in config - tests projectName sanitization
+      const loaderCustom = new ChatGPTLoader({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://api.openai.com/v1',
+      });
+
+      const bundle = createTestBundle();
+
+      const result = await loaderCustom.load(bundle, {
+        projectName: '../../../tmp/evil-directory', // Path traversal attempt
+      });
+
+      expect(result.success).toBe(true);
+      // The output directory should be sanitized to just the basename
+      expect(result.created?.projectId).toBe('evil-directory');
+      expect(result.created?.projectId).not.toContain('..');
+    });
+
+    it('should sanitize output directory with absolute path in projectName', async () => {
+      mockApiSuccess();
+
+      // No outputDir in config - tests projectName sanitization
+      const loaderCustom = new ChatGPTLoader({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://api.openai.com/v1',
+      });
+
+      const bundle = createTestBundle();
+
+      const result = await loaderCustom.load(bundle, {
+        projectName: '/tmp/absolute-path-attempt', // Absolute path attempt
+      });
+
+      expect(result.success).toBe(true);
+      // The output directory should be sanitized to just the basename
+      expect(result.created?.projectId).toBe('absolute-path-attempt');
+      expect(result.created?.projectId).not.toContain('/tmp');
+    });
+
+    it('should fallback to default name when projectName is empty after sanitization', async () => {
+      mockApiSuccess();
+
+      // No outputDir in config - tests projectName sanitization
+      const loaderCustom = new ChatGPTLoader({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://api.openai.com/v1',
+      });
+
+      const bundle = createTestBundle();
+
+      const result = await loaderCustom.load(bundle, {
+        projectName: '/', // Edge case: just a slash
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.created?.projectId).toBe('chatgpt-migration');
+    });
+
+    it('should respect config.outputDir when set (trusted developer input)', async () => {
+      mockApiSuccess();
+
+      // When outputDir is configured, it should be used as-is (trusted)
+      const loaderWithConfig = new ChatGPTLoader({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://api.openai.com/v1',
+        outputDir: testWorkDir, // Developer-configured path
+      });
+
+      const bundle = createTestBundle();
+
+      const result = await loaderWithConfig.load(bundle, {
+        projectName: '../../../should-be-ignored', // Should be ignored
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.created?.projectId).toBe(testWorkDir);
     });
   });
 

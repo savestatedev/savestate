@@ -19,7 +19,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, join, resolve, relative } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import type {
   Platform,
@@ -338,8 +338,16 @@ export class ChatGPTLoader implements Loader {
     }
 
     // Setup output directory for guidance files
-    const outputDir = this.config.outputDir || options.projectName || 
-      `chatgpt-migration-${new Date().toISOString().split('T')[0]}`;
+    // config.outputDir is trusted (set by developer), but projectName may be user-controlled
+    // Sanitize projectName with basename to prevent path injection
+    let outputDir: string;
+    if (this.config.outputDir) {
+      outputDir = this.config.outputDir;
+    } else if (options.projectName) {
+      outputDir = basename(options.projectName) || 'chatgpt-migration';
+    } else {
+      outputDir = `chatgpt-migration-${new Date().toISOString().split('T')[0]}`;
+    }
     this.state.outputDir = outputDir;
 
     try {
@@ -623,16 +631,27 @@ export class ChatGPTLoader implements Loader {
       };
     }
 
-    // Read file content
-    const filePath = file.path;
-    if (!existsSync(filePath)) {
+    // Validate file path is within bundle directory to prevent path traversal
+    const bundleDir = bundle.source.bundlePath || process.cwd();
+    const resolvedPath = resolve(bundleDir, file.path);
+    const rel = relative(bundleDir, resolvedPath);
+
+    if (rel.startsWith('..') || resolve(rel) === rel) {
       return {
         success: false,
-        warning: `File not found: ${filePath}`,
+        warning: `Invalid file path: ${file.path}`,
       };
     }
 
-    const content = await readFile(filePath);
+    // Read file content using the validated path
+    if (!existsSync(resolvedPath)) {
+      return {
+        success: false,
+        warning: `File not found: ${resolvedPath}`,
+      };
+    }
+
+    const content = await readFile(resolvedPath);
     const result = await this.client.uploadFile(
       basename(file.filename),
       content,
