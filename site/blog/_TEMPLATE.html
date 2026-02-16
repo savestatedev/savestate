@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SaveState Now Available on ClawHub — SaveState</title>
-<meta name="description" content="Install SaveState as an OpenClaw skill in seconds. Time Machine for AI with AES-256-GCM encryption, 6 platform adapters, and cross-platform migration.">
+<title>{{TITLE}} — SaveState</title>
+<meta name="description" content="{{DESCRIPTION}}">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -177,10 +177,10 @@ article {
 
 .article-header .date {
   font-size: 14px;
-  color: var(--blue);
+  color: var(--text-dim);
+  margin-bottom: 16px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 16px;
 }
 
 .article-header h1 {
@@ -191,17 +191,13 @@ article {
   margin-bottom: 24px;
 }
 
-.article-header .summary {
+.article-header .subtitle {
   font-size: 20px;
   color: var(--text-muted);
-  line-height: 1.6;
+  font-style: italic;
 }
 
-.article-content {
-  font-size: 17px;
-  line-height: 1.8;
-}
-
+/* Content */
 .article-content h2 {
   font-size: 28px;
   font-weight: 700;
@@ -212,9 +208,9 @@ article {
 }
 
 .article-content h3 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
-  margin-top: 36px;
+  margin-top: 32px;
   margin-bottom: 16px;
 }
 
@@ -223,17 +219,9 @@ article {
   color: var(--text-muted);
 }
 
-.article-content strong { color: var(--text); }
-
-.article-content a {
-  color: var(--blue);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
-}
-
-.article-content a:hover {
-  border-bottom-color: var(--blue);
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .article-content ul, .article-content ol {
@@ -246,6 +234,15 @@ article {
   margin-bottom: 8px;
 }
 
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
 .article-content pre {
   background: var(--bg-code);
   border: 1px solid var(--border);
@@ -253,70 +250,99 @@ article {
   padding: 20px;
   overflow-x: auto;
   margin-bottom: 24px;
-  font-family: var(--mono);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.article-content code {
-  font-family: var(--mono);
-  font-size: 0.9em;
-  background: var(--bg-code);
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: var(--blue-light);
 }
 
 .article-content pre code {
   background: none;
   padding: 0;
   color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+/* Table */
 .article-content table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 24px;
-  font-size: 15px;
+  font-size: 14px;
 }
 
-.article-content th, .article-content td {
+.article-content th,
+.article-content td {
   padding: 12px 16px;
   text-align: left;
-  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .article-content th {
-  background: var(--bg-code);
   font-weight: 600;
   color: var(--text);
+  background: var(--bg-code);
 }
 
 .article-content td {
   color: var(--text-muted);
 }
 
-.article-content blockquote {
-  border-left: 3px solid var(--blue);
-  padding-left: 20px;
-  margin: 24px 0;
-  font-style: italic;
-  color: var(--text-muted);
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
 }
 
-/* Back link */
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
   color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
   text-decoration: none;
-  font-size: 14px;
-  margin-bottom: 32px;
-  transition: color 0.2s;
+  transition: transform 0.2s;
 }
 
-.back-link:hover { color: var(--text); }
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
 
 /* Footer */
 footer {
@@ -329,8 +355,17 @@ footer {
 
 footer a { color: var(--text-muted); }
 
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
 @media (max-width: 600px) {
-  .nav-links { display: none; }
   .article-header h1 { font-size: 28px; }
   .article-content h2 { font-size: 22px; }
 }
@@ -364,144 +399,51 @@ footer a { color: var(--text-muted); }
 <article>
   <div class="container">
     <a href="/blog" class="back-link">← Back to Blog</a>
-    
+
     <header class="article-header">
-      <div class="date">February 2, 2026</div>
-      <h1>SaveState Now Available on ClawHub</h1>
-      <p class="summary">Install SaveState as an OpenClaw skill in seconds. Time Machine for AI with AES-256-GCM encryption, 6 platform adapters, and cross-platform migration.</p>
+      <div class="date">{{DATE}}</div>
+      <h1>{{TITLE}}</h1>
+      <p class="subtitle">{{SUBTITLE}}</p>
     </header>
 
     <div class="article-content">
-      <p>We're excited to announce that SaveState is now available as a skill on <a href="https://clawhub.ai">ClawHub</a> — the skill marketplace for OpenClaw agents.</p>
+      <!-- 
+        BLOG POST CONTENT GOES HERE
+        
+        Available elements:
+        - <h2>Section heading</h2>
+        - <h3>Subsection heading</h3>
+        - <p>Paragraph text with <strong>bold</strong> and <code>code</code></p>
+        - <ul><li>Bullet points</li></ul>
+        - <ol><li>Numbered list</li></ol>
+        - <pre><code>Code block</code></pre>
+        - <img src="/images/filename.png" alt="Description">
+        - <hr> (horizontal rule / section break)
+        - <table>...</table>
+        - <a href="url">Link text</a>
+      -->
 
-      <h2>What This Means for OpenClaw Users</h2>
-      
-      <p>If you're running OpenClaw, you can now install SaveState in seconds:</p>
+      <h2>Introduction</h2>
+      <p>Your opening paragraph goes here...</p>
 
-      <pre><code>clawhub install savestate</code></pre>
+      <hr>
 
-      <p>That's it. Your agent now has the ability to snapshot, restore, and migrate its own state. Time Machine for AI, built right in.</p>
+      <h2>Main Content</h2>
+      <p>Body content goes here...</p>
 
-      <h2>Why SaveState Matters</h2>
-      
-      <p>Your AI assistant accumulates knowledge over time — your preferences, your workflows, your conversation history. This isn't just data; it's a relationship. What happens when:</p>
+      <div class="cta-box">
+        <h3>Ready to back up your AI?</h3>
+        <p>Your first backup takes 30 seconds. Your AI's memory is too valuable to leave unprotected.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
+      </div>
 
-      <ul>
-        <li>You need to migrate to a different platform?</li>
-        <li>A service update wipes your agent's memory?</li>
-        <li>You want to restore your agent after a catastrophic failure?</li>
-      </ul>
-
-      <p>Without SaveState, you lose everything. With it, you're one command away from recovery.</p>
-
-      <h2>Security First: AES-256-GCM Encryption</h2>
-      
-      <p>Unlike live-sync solutions that transmit your data in plaintext, SaveState encrypts everything locally before it leaves your machine:</p>
-
-      <pre><code>User passphrase
-    → scrypt key derivation (N=2^17, r=8, p=1)
-    → 256-bit AES key
-    → AES-256-GCM authenticated encryption</code></pre>
-
-      <p>Your encryption keys never leave your device. We literally cannot read your backups — and that's by design.</p>
-
-      <p><strong>Comparing to alternatives:</strong> Some tools offer free "live sync" features, but they're transmitting your AI's memories — including sensitive conversations — without encryption. We believe your AI identity deserves the same protection as your passwords.</p>
-
-      <h2>6 Platform Adapters</h2>
-      
-      <p>SaveState works across the AI ecosystem:</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Platform</th>
-            <th>Extract</th>
-            <th>Restore</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>OpenClaw/Clawdbot</td>
-            <td>✅ Full</td>
-            <td>✅ Full</td>
-          </tr>
-          <tr>
-            <td>Claude Code</td>
-            <td>✅ Full</td>
-            <td>✅ Full</td>
-          </tr>
-          <tr>
-            <td>OpenAI Assistants</td>
-            <td>✅ Full</td>
-            <td>✅ Full</td>
-          </tr>
-          <tr>
-            <td>ChatGPT</td>
-            <td>✅ Full</td>
-            <td>⚠️ Memory</td>
-          </tr>
-          <tr>
-            <td>Claude (claude.ai)</td>
-            <td>✅ Full</td>
-            <td>⚠️ Memory</td>
-          </tr>
-          <tr>
-            <td>Gemini</td>
-            <td>✅ Full</td>
-            <td>⚠️ Limited</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p>This means you can snapshot your ChatGPT conversations and migrate them to Claude Code — or vice versa. Cross-platform AI identity is finally possible.</p>
-
-      <h2>Quick Start</h2>
-      
-      <p>Already have OpenClaw? Get started in 30 seconds:</p>
-
-      <pre><code># Install the skill
-clawhub install savestate
-
-# Initialize encryption
+      <pre><code>npm install -g @savestate/cli
 savestate init
+savestate snapshot</code></pre>
 
-# Take your first snapshot
-savestate snapshot
+      <hr>
 
-# List your backups
-savestate list
-
-# Restore anytime
-savestate restore latest</code></pre>
-
-      <p>For scheduled backups (Pro/Team):</p>
-
-      <pre><code>savestate schedule --every 6h</code></pre>
-
-      <h2>What's Captured</h2>
-      
-      <p>SaveState archives your complete AI identity:</p>
-
-      <ul>
-        <li><strong>Identity:</strong> System prompts, personality files, custom instructions</li>
-        <li><strong>Memory:</strong> Platform memories, learned preferences, context</li>
-        <li><strong>Conversations:</strong> Full thread history with metadata</li>
-        <li><strong>Configuration:</strong> Tools, integrations, settings</li>
-      </ul>
-
-      <p>Everything is stored in our open SaveState Archive Format (SAF) — no vendor lock-in for your backup tool either.</p>
-
-      <h2>Get Started</h2>
-      
-      <ul>
-        <li><strong>Install:</strong> <code>clawhub install savestate</code> or <code>npm install -g savestate</code></li>
-        <li><strong>Docs:</strong> <a href="https://savestate.dev/docs">savestate.dev/docs</a></li>
-        <li><strong>GitHub:</strong> <a href="https://github.com/savestatedev/savestate">savestatedev/savestate</a></li>
-      </ul>
-
-      <p>Your AI knows everything about you. Isn't it time you had a backup plan?</p>
-
-      <p><em>SaveState is available now on npm, Homebrew, and ClawHub.</em></p>
+      <p><em>Questions? Comments? Find us on X <a href="https://x.com/SaveStateDev">@SaveStateDev</a> or open an issue on GitHub.</em></p>
     </div>
   </div>
 </article>
