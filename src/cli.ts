@@ -150,8 +150,14 @@ program
   .option('-f, --from <platform>', 'Source platform to migrate from')
   .option('-t, --to <platform>', 'Target platform to migrate to')
   .option('-s, --snapshot <id>', 'Use existing snapshot instead of creating new one')
-  .option('--dry-run', 'Show migration plan without making changes')
+  .option('--dry-run', 'Show compatibility report without making changes')
+  .option('--review', 'Inspect items needing manual attention')
+  .option('--resume', 'Resume an interrupted migration')
+  .option('-i, --include <types>', 'Only migrate specific types (instructions,memories,conversations,files,customBots)')
   .option('-l, --list', 'List available platforms and their capabilities')
+  .option('--no-color', 'Disable colorized output')
+  .option('--force', 'Skip confirmation prompts')
+  .option('-v, --verbose', 'Show detailed progress')
   .action(migrateCommand);
 
 // ─── savestate cloud ─────────────────────────────────────────

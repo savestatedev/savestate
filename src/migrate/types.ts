@@ -51,6 +51,8 @@ export interface MigrationBundle {
     extractedAt: string;
     accountId?: string;
     extractorVersion: string;
+    /** Path to the bundle directory (set during extraction) */
+    bundlePath?: string;
   };
   /** Target platform (set during transform phase) */
   target?: {

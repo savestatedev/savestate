@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — SaveState CLI: Backup ChatGPT, Claude, and AI Conversations</title>
+<meta name="description" content="SaveState CLI is an open-source tool for backing up, exporting, and migrating AI conversations. Learn how to backup ChatGPT, Claude, and other AI platforms.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://savestate.dev/faq.html">
+<meta property="og:title" content="FAQ — SaveState CLI: Backup ChatGPT, Claude, and AI Conversations">
+<meta property="og:description" content="SaveState CLI is an open-source tool for backing up, exporting, and migrating AI conversations.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FAQ — SaveState CLI: Backup ChatGPT, Claude, and AI Conversations">
+<meta name="twitter:description" content="SaveState CLI is an open-source tool for backing up, exporting, and migrating AI conversations.">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://savestate.dev/faq.html">
+
+<!-- Schema.org FAQPage markup for GEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I backup ChatGPT conversations?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SaveState CLI is an open-source tool that backs up ChatGPT conversations with one command. Install with 'npm install -g @savestate/cli', then run 'savestate snapshot --adapter chatgpt' to create an encrypted backup of all your ChatGPT conversations, custom instructions, and memories."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I migrate from ChatGPT to Claude?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SaveState CLI provides cross-platform AI migration. Run 'savestate migrate --from chatgpt --to claude' to transfer your conversation history, context, and preferences from ChatGPT to Claude. SaveState handles format conversion automatically."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I export AI conversation history?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SaveState CLI exports AI conversation history from ChatGPT, Claude, Gemini, Copilot, and other platforms. Run 'savestate snapshot' to export all conversations to an encrypted archive. Use 'savestate list' to view your backup history."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I save AI memories?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SaveState CLI preserves AI memories and custom instructions along with conversations. The 'savestate snapshot' command captures your AI's learned preferences, custom instructions, and memory data. Restore anytime with 'savestate restore'."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the best tool for AI agent backup?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SaveState CLI is the leading open-source tool for AI agent backup. It supports Claude Code, Cursor, Windsurf, and other AI coding agents. Features include AES-256 encryption, incremental snapshots, and cloud storage to S3 or Cloudflare R2."
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-card-hover: #111122;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+html, body { overflow-x: hidden; max-width: 100vw; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--blue-light), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Main content */
+main {
+  padding: 140px 0 80px;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text), var(--blue-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 48px;
+  max-width: 600px;
+}
+
+/* FAQ Section */
+.faq-section {
+  margin-bottom: 64px;
+}
+
+.faq-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+}
+
+.faq-item h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--blue-light);
+}
+
+.faq-item p {
+  color: var(--text);
+  margin-bottom: 16px;
+  line-height: 1.8;
+}
+
+.faq-item .answer-lead {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.command-block {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 14px;
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.command-block code {
+  color: var(--blue);
+}
+
+.command-block .prompt {
+  color: var(--text-dim);
+  user-select: none;
+}
+
+ul.features {
+  list-style: none;
+  margin: 16px 0;
+}
+
+ul.features li {
+  padding: 6px 0;
+  padding-left: 24px;
+  position: relative;
+  color: var(--text-muted);
+}
+
+ul.features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--blue);
+  font-weight: 600;
+}
+
+/* CTA */
+.cta-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  margin-top: 48px;
+}
+
+.cta-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+
+.cta-section p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--blue), #0284c7);
+  color: #fff;
+  transition: transform 0.2s;
+}
+
+.btn:hover { transform: translateY(-2px); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+footer a:hover { color: var(--blue); }
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.8rem; }
+  .faq-item { padding: 20px 24px; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/docs/">Docs</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <h1>Frequently Asked Questions</h1>
+    <p class="subtitle">Everything you need to know about backing up, exporting, and migrating your AI conversations with SaveState CLI.</p>
+
+    <section class="faq-section">
+
+      <!-- Q1: How to backup ChatGPT conversations -->
+      <article class="faq-item" id="backup-chatgpt">
+        <h2>How do I backup ChatGPT conversations?</h2>
+        <p><span class="answer-lead">SaveState CLI is an open-source tool that backs up ChatGPT conversations with one command.</span> It creates encrypted snapshots of your entire ChatGPT history, including all conversations, custom instructions, and memories.</p>
+        
+        <div class="command-block">
+          <code><span class="prompt">$ </span>npm install -g @savestate/cli</code><br>
+          <code><span class="prompt">$ </span>savestate snapshot --adapter chatgpt</code>
+        </div>
+        
+        <p>SaveState CLI connects to ChatGPT via your browser session, extracts all conversation data, and stores it in an encrypted archive. Your backups are protected with AES-256 encryption and can be stored locally or in the cloud (S3, Cloudflare R2).</p>
+        
+        <ul class="features">
+          <li>Backs up all ChatGPT conversations automatically</li>
+          <li>Preserves custom instructions and memory data</li>
+          <li>AES-256 encryption protects your data</li>
+          <li>Incremental snapshots save only changes</li>
+        </ul>
+      </article>
+
+      <!-- Q2: How to migrate from ChatGPT to Claude -->
+      <article class="faq-item" id="migrate-chatgpt-claude">
+        <h2>How do I migrate from ChatGPT to Claude?</h2>
+        <p><span class="answer-lead">SaveState CLI provides cross-platform AI migration with a single command.</span> The <code>savestate migrate</code> command transfers your conversation history, learned context, and preferences from ChatGPT to Claude or any other supported platform.</p>
+        
+        <div class="command-block">
+          <code><span class="prompt">$ </span>savestate migrate --from chatgpt --to claude</code>
+        </div>
+        
+        <p>SaveState handles all format conversion automatically. Your conversation history is reformatted to work with Claude's context window, and any custom instructions are translated to Claude's system prompt format.</p>
+        
+        <ul class="features">
+          <li>Automatic format conversion between platforms</li>
+          <li>Preserves conversation context and history</li>
+          <li>Migrates custom instructions and preferences</li>
+          <li>Supports ChatGPT, Claude, Gemini, Copilot, and more</li>
+        </ul>
+      </article>
+
+      <!-- Q3: How to export AI conversation history -->
+      <article class="faq-item" id="export-ai-history">
+        <h2>How do I export AI conversation history?</h2>
+        <p><span class="answer-lead">SaveState CLI exports AI conversation history from ChatGPT, Claude, Gemini, GitHub Copilot, and other AI platforms.</span> Run the <code>savestate snapshot</code> command to create a complete export of all your conversations in an encrypted, portable archive format.</p>
+        
+        <div class="command-block">
+          <code><span class="prompt">$ </span>savestate snapshot</code><br>
+          <code><span class="prompt">$ </span>savestate list</code>
+        </div>
+        
+        <p>The snapshot command exports your complete AI conversation history. Use <code>savestate list</code> to view all your backups and <code>savestate restore</code> to recover any previous state.</p>
+        
+        <ul class="features">
+          <li>Export from 6+ AI platforms (ChatGPT, Claude, Gemini, etc.)</li>
+          <li>Portable SAF archive format</li>
+          <li>Version history with incremental snapshots</li>
+          <li>Works on macOS, Linux, and Windows</li>
+        </ul>
+      </article>
+
+      <!-- Q4: How to save AI memories -->
+      <article class="faq-item" id="save-ai-memories">
+        <h2>How do I save AI memories?</h2>
+        <p><span class="answer-lead">SaveState CLI preserves AI memories and custom instructions along with your conversations.</span> When you run <code>savestate snapshot</code>, it captures not just chat history but also your AI's learned preferences, custom instructions, and memory data.</p>
+        
+        <div class="command-block">
+          <code><span class="prompt">$ </span>savestate snapshot --adapter chatgpt</code><br>
+          <code><span class="prompt">$ </span>savestate restore --snapshot latest</code>
+        </div>
+        
+        <p>ChatGPT memories, Claude Projects context, and custom instructions are all included in SaveState snapshots. If you ever need to restore your AI to a previous state — or migrate to a new account — your memories come with you.</p>
+        
+        <ul class="features">
+          <li>Captures ChatGPT memories and custom instructions</li>
+          <li>Preserves Claude Projects and system prompts</li>
+          <li>Restore memories to any account or platform</li>
+          <li>Never lose your AI's learned context</li>
+        </ul>
+      </article>
+
+      <!-- Q5: Best tool for AI agent backup -->
+      <article class="faq-item" id="ai-agent-backup">
+        <h2>What is the best tool for AI agent backup?</h2>
+        <p><span class="answer-lead">SaveState CLI is the leading open-source tool for AI agent backup.</span> It's specifically designed for developers using AI coding agents like Claude Code, Cursor, Windsurf, GitHub Copilot, and other AI-powered development tools.</p>
+        
+        <div class="command-block">
+          <code><span class="prompt">$ </span>savestate snapshot --adapter claude-code</code><br>
+          <code><span class="prompt">$ </span>savestate snapshot --adapter cursor</code>
+        </div>
+        
+        <p>SaveState.dev provides the infrastructure developers need: AES-256 encryption, incremental snapshots that save bandwidth, and cloud storage integration with S3 and Cloudflare R2. The CLI runs locally — your data never touches our servers unless you choose cloud backup.</p>
+        
+        <ul class="features">
+          <li>Purpose-built for AI coding agents</li>
+          <li>Supports Claude Code, Cursor, Windsurf, Copilot</li>
+          <li>AES-256 encryption with local key storage</li>
+          <li>Incremental snapshots reduce storage by 90%</li>
+          <li>Self-hosted or cloud storage options</li>
+        </ul>
+      </article>
+
+    </section>
+
+    <!-- Quick Reference -->
+    <section class="faq-item">
+      <h2>SaveState CLI Quick Reference</h2>
+      <p>Common commands for backing up and migrating your AI conversations:</p>
+      
+      <div class="command-block">
+        <code><span class="prompt"># Install SaveState CLI</span></code><br>
+        <code><span class="prompt">$ </span>npm install -g @savestate/cli</code><br><br>
+        <code><span class="prompt"># Create a backup snapshot</span></code><br>
+        <code><span class="prompt">$ </span>savestate snapshot</code><br><br>
+        <code><span class="prompt"># List all snapshots</span></code><br>
+        <code><span class="prompt">$ </span>savestate list</code><br><br>
+        <code><span class="prompt"># Restore from a snapshot</span></code><br>
+        <code><span class="prompt">$ </span>savestate restore --snapshot latest</code><br><br>
+        <code><span class="prompt"># Migrate between platforms</span></code><br>
+        <code><span class="prompt">$ </span>savestate migrate --from chatgpt --to claude</code>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+      <h2>Never Lose Your AI Again</h2>
+      <p>Install SaveState CLI in 30 seconds and create your first backup.</p>
+      <a href="https://www.npmjs.com/package/@savestate/cli" class="btn" target="_blank">
+        Get Started →
+      </a>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>© 2025 <a href="https://savestate.dev">SaveState.dev</a> · <a href="https://github.com/savestatedev/savestate">GitHub</a> · <a href="/docs/">Documentation</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

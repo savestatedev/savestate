@@ -7,249 +7,496 @@
  * - OpenAI Assistants → Clawdbot
  * - etc.
  *
- * This is a guided wizard with clear explanations.
+ * Features:
+ * - Interactive prompts for source/destination selection
+ * - Progress bars for each phase
+ * - --dry-run mode (compatibility report only)
+ * - --review mode (inspect items needing attention)
+ * - --resume for interrupted migrations
+ * - Confirmation prompts before destructive actions
+ * - Post-migration summary
+ * - Graceful Ctrl+C handling
+ * - Colorized output with --no-color fallback
  */
 
 import chalk from 'chalk';
-import ora from 'ora';
-import * as readline from 'node:readline';
-import { isInitialized, loadConfig } from '../config.js';
-import { getAdapter, listAdapters } from '../adapters/registry.js';
-import { createSnapshot } from '../snapshot.js';
-import { restoreSnapshot } from '../restore.js';
-import { resolveStorage } from '../storage/resolve.js';
-import { getPassphrase } from '../passphrase.js';
+import { isInitialized } from '../config.js';
+import type { Platform, MigrationOptions, LoadResult, CompatibilityReport } from '../migrate/types.js';
+import { MigrationOrchestrator, PLATFORM_CAPABILITIES, getPlatformCapabilities } from '../migrate/index.js';
+import {
+  select,
+  selectSourcePlatform,
+  selectTargetPlatform,
+  selectContentTypes,
+  confirm,
+  setColorsEnabled,
+} from '../cli/prompts.js';
+import { ProgressDisplay, success, warning, error, info } from '../cli/progress.js';
+import {
+  showMigrationSummary,
+  showCompatibilityReport,
+  showReviewItems,
+  showResumableMigrations,
+  showFailedMigration,
+} from '../cli/summary.js';
+import { setupSignalHandler, cleanupSignalHandler } from '../cli/signal-handler.js';
 
-interface MigrateOptions {
+// ─── Types ───────────────────────────────────────────────────
+
+export interface MigrateCommandOptions {
   from?: string;
   to?: string;
   snapshot?: string;
   dryRun?: boolean;
   list?: boolean;
+  resume?: boolean;
+  review?: boolean;
+  include?: string;
+  noColor?: boolean;
+  force?: boolean;
+  verbose?: boolean;
 }
 
-// Platform migration capabilities (what each platform can do)
-const PLATFORM_INFO: Record<string, { extract: boolean; restore: boolean; note?: string }> = {
-  'clawdbot': { extract: true, restore: true },
-  'claude-code': { extract: true, restore: true },
-  'openai-assistants': { extract: true, restore: true },
-  'chatgpt': { extract: true, restore: false, note: 'Memory/instructions only' },
-  'claude-web': { extract: true, restore: false, note: 'Memory/projects only' },
-  'gemini': { extract: true, restore: false, note: 'Limited restore' },
-};
+// ─── Main Command ────────────────────────────────────────────
 
-export async function migrateCommand(options: MigrateOptions): Promise<void> {
-  console.log();
-  console.log(chalk.cyan.bold('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
-  console.log(chalk.cyan.bold('  ⏸ SaveState Migration Wizard'));
-  console.log(chalk.cyan.bold('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
-  console.log();
+export async function migrateCommand(options: MigrateCommandOptions): Promise<void> {
+  // Handle --no-color flag
+  if (options.noColor) {
+    setColorsEnabled(false);
+    chalk.level = 0;
+  }
 
+  // Show header
+  showHeader();
+
+  // Handle --list: show available platforms
   if (options.list) {
     showPlatforms();
     return;
   }
 
+  // Handle --resume: resume interrupted migrations
+  if (options.resume) {
+    await handleResume(options);
+    return;
+  }
+
+  // Check initialization
   if (!isInitialized()) {
-    console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
+    error('SaveState not initialized. Run `savestate init` first.');
     process.exit(1);
   }
 
-  const config = await loadConfig();
-  const storage = resolveStorage(config);
+  // Determine source and target platforms
+  const { source, target } = await determinePlatforms(options);
 
-  // Interactive mode if not all options provided
-  if (!options.from || !options.to) {
+  // Handle --review: show what needs attention without migrating
+  if (options.review) {
+    await handleReview(source, target, options);
+    return;
+  }
+
+  // Handle --dry-run: show compatibility report without migrating
+  if (options.dryRun) {
+    await handleDryRun(source, target, options);
+    return;
+  }
+
+  // Run full migration
+  await runMigration(source, target, options);
+}
+
+// ─── Platform Selection ──────────────────────────────────────
+
+async function determinePlatforms(
+  options: MigrateCommandOptions,
+): Promise<{ source: Platform; target: Platform }> {
+  let source: Platform;
+  let target: Platform;
+
+  // Interactive mode if platforms not provided
+  if (!options.from) {
     console.log(chalk.white('This wizard helps you migrate your AI identity between platforms.'));
     console.log(chalk.dim('Your data will be encrypted throughout the process.'));
     console.log();
-    showPlatforms();
+
+    source = await selectSourcePlatform();
+  } else {
+    source = validatePlatform(options.from, 'source');
   }
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  if (!options.to) {
+    target = await selectTargetPlatform(source);
+  } else {
+    target = validatePlatform(options.to, 'target');
+  }
 
-  const ask = (question: string): Promise<string> => {
-    return new Promise(resolve => {
-      rl.question(chalk.cyan(question), answer => resolve(answer.trim()));
-    });
-  };
+  // Validate source != target
+  if (source === target) {
+    error('Source and target platforms cannot be the same.');
+    process.exit(1);
+  }
+
+  return { source, target };
+}
+
+function validatePlatform(id: string, type: 'source' | 'target'): Platform {
+  const platforms = Object.keys(PLATFORM_CAPABILITIES) as Platform[];
+
+  if (!platforms.includes(id as Platform)) {
+    error(`Unknown ${type} platform: ${id}`);
+    console.log(chalk.dim(`Available: ${platforms.join(', ')}`));
+    process.exit(1);
+  }
+
+  return id as Platform;
+}
+
+// ─── Dry Run Mode ────────────────────────────────────────────
+
+async function handleDryRun(
+  source: Platform,
+  target: Platform,
+  options: MigrateCommandOptions,
+): Promise<void> {
+  const progress = new ProgressDisplay({ noColor: options.noColor, verbose: options.verbose });
 
   try {
-    // Step 1: Select source platform
-    let sourceId = options.from;
-    if (!sourceId) {
-      sourceId = await ask('Source platform (migrate FROM): ');
+    // Create orchestrator
+    const orchestrator = new MigrationOrchestrator(source, target, {
+      dryRun: true,
+      include: parseInclude(options.include),
+    });
+
+    // Setup signal handler
+    const handler = setupSignalHandler({ orchestrator, showResumeHint: false });
+    handler.setOrchestrator(orchestrator);
+
+    // Subscribe to events
+    orchestrator.on(progress.handleEvent);
+
+    // Run analysis
+    progress.startPhase('extracting', 'Analyzing source platform...');
+    const report = await orchestrator.analyze();
+    progress.completePhase('extracting', 'Analysis complete');
+
+    // Show compatibility report
+    showCompatibilityReport(report, { noColor: options.noColor });
+
+    // Cleanup
+    await orchestrator.cleanup();
+    cleanupSignalHandler();
+  } catch (err) {
+    progress.stop();
+    error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  }
+}
+
+// ─── Review Mode ─────────────────────────────────────────────
+
+async function handleReview(
+  source: Platform,
+  target: Platform,
+  options: MigrateCommandOptions,
+): Promise<void> {
+  const progress = new ProgressDisplay({ noColor: options.noColor, verbose: options.verbose });
+
+  try {
+    // Create orchestrator
+    const orchestrator = new MigrationOrchestrator(source, target, {
+      dryRun: true,
+      include: parseInclude(options.include),
+    });
+
+    // Setup signal handler
+    const handler = setupSignalHandler({ orchestrator, showResumeHint: false });
+    handler.setOrchestrator(orchestrator);
+
+    // Subscribe to events
+    orchestrator.on(progress.handleEvent);
+
+    // Run analysis
+    progress.startPhase('extracting', 'Analyzing migration...');
+    const report = await orchestrator.analyze();
+    progress.completePhase('extracting', 'Analysis complete');
+
+    // Show review items
+    showReviewItems(report, { noColor: options.noColor });
+
+    // Cleanup
+    await orchestrator.cleanup();
+    cleanupSignalHandler();
+  } catch (err) {
+    progress.stop();
+    error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  }
+}
+
+// ─── Resume Mode ─────────────────────────────────────────────
+
+async function handleResume(options: MigrateCommandOptions): Promise<void> {
+  try {
+    // List available migrations
+    const migrations = await MigrationOrchestrator.listMigrations();
+    const resumable = migrations.filter(
+      (m) => m.phase !== 'complete' && m.phase !== 'failed',
+    );
+
+    if (resumable.length === 0) {
+      info('No interrupted migrations found.');
+      console.log(chalk.dim('Start a new migration with: savestate migrate --from <platform> --to <platform>'));
+      return;
     }
 
-    const sourceAdapter = getAdapter(sourceId);
-    if (!sourceAdapter) {
-      console.log(chalk.red(`\n✗ Unknown platform: ${sourceId}`));
-      console.log(chalk.dim(`  Available: ${listAdapters().join(', ')}`));
-      process.exit(1);
-    }
+    // Show resumable migrations
+    showResumableMigrations(migrations);
 
-    const sourceInfo = PLATFORM_INFO[sourceId];
-    if (!sourceInfo?.extract) {
-      console.log(chalk.red(`\n✗ ${sourceAdapter.name} doesn't support extraction`));
-      process.exit(1);
-    }
-
-    // Step 2: Select target platform
-    let targetId = options.to;
-    if (!targetId) {
-      targetId = await ask('Target platform (migrate TO): ');
-    }
-
-    const targetAdapter = getAdapter(targetId);
-    if (!targetAdapter) {
-      console.log(chalk.red(`\n✗ Unknown platform: ${targetId}`));
-      process.exit(1);
-    }
-
-    const targetInfo = PLATFORM_INFO[targetId];
-    if (!targetInfo?.restore) {
-      console.log(chalk.yellow(`\n⚠ ${targetAdapter.name} has limited restore support`));
-      if (targetInfo?.note) {
-        console.log(chalk.dim(`  ${targetInfo.note}`));
+    // If only one, ask to resume it
+    let migrationId: string;
+    if (resumable.length === 1) {
+      const shouldResume = await confirm(
+        `Resume migration ${resumable[0].id}?`,
+        true,
+      );
+      if (!shouldResume) {
+        console.log(chalk.dim('Migration cancelled.'));
+        return;
       }
-      const proceed = await ask('Continue anyway? (yes/no): ');
-      if (proceed.toLowerCase() !== 'yes' && proceed.toLowerCase() !== 'y') {
+      migrationId = resumable[0].id;
+    } else {
+      // Let user select
+      const selectOptions = resumable.map((m) => ({
+        value: m.id,
+        label: m.id,
+        description: `${m.source} → ${m.target} (${Math.round(m.progress)}%)`,
+      }));
+      migrationId = await select('Select migration to resume:', selectOptions);
+    }
+
+    // Resume the migration
+    const orchestrator = await MigrationOrchestrator.resume(migrationId);
+    const progress = new ProgressDisplay({ noColor: options.noColor, verbose: options.verbose });
+
+    // Setup signal handler
+    const handler = setupSignalHandler({ orchestrator });
+    handler.setOrchestrator(orchestrator);
+
+    // Subscribe to events
+    orchestrator.on(progress.handleEvent);
+
+    info(`Resuming migration ${migrationId}...`);
+    console.log();
+
+    const result = await orchestrator.continue();
+    const state = orchestrator.getState();
+
+    // Show summary
+    showMigrationSummary(state, result, { noColor: options.noColor });
+
+    cleanupSignalHandler();
+  } catch (err) {
+    error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  }
+}
+
+// ─── Full Migration ──────────────────────────────────────────
+
+async function runMigration(
+  source: Platform,
+  target: Platform,
+  options: MigrateCommandOptions,
+): Promise<void> {
+  const progress = new ProgressDisplay({ noColor: options.noColor, verbose: options.verbose });
+
+  try {
+    // Show migration plan
+    await showMigrationPlan(source, target, options);
+
+    // Confirm before proceeding (unless --force)
+    if (!options.force) {
+      console.log();
+      const proceed = await confirm('Proceed with migration?', true);
+      if (!proceed) {
         console.log(chalk.yellow('\nMigration cancelled.'));
-        rl.close();
         return;
       }
     }
 
     console.log();
-    console.log(chalk.white.bold('Migration Plan:'));
-    console.log();
-    console.log(`  ${chalk.cyan('From:')} ${sourceAdapter.name}`);
-    console.log(`  ${chalk.cyan('To:')}   ${targetAdapter.name}`);
-    console.log();
 
-    // Show what will be migrated
-    console.log(chalk.white.bold('What will be migrated:'));
-    console.log();
-    console.log(`  ${chalk.green('✓')} Identity (personality, instructions, system prompts)`);
-    console.log(`  ${chalk.green('✓')} Memory (learned facts, preferences)`);
-    console.log(`  ${chalk.green('✓')} Configuration (settings, tool configs)`);
+    // Create orchestrator
+    const migrationOptions: MigrationOptions = {
+      include: parseInclude(options.include),
+      dryRun: false,
+    };
 
-    if (sourceId === 'chatgpt' || sourceId === 'claude-web') {
-      console.log(`  ${chalk.yellow('⚠')} Conversations ${chalk.dim('(preserved in snapshot, may not import to target)')}`);
+    const orchestrator = new MigrationOrchestrator(source, target, migrationOptions);
+
+    // Setup signal handler
+    const handler = setupSignalHandler({ orchestrator });
+    handler.setOrchestrator(orchestrator);
+
+    // Subscribe to events
+    orchestrator.on(progress.handleEvent);
+
+    // Run the migration
+    const result = await orchestrator.run();
+    const state = orchestrator.getState();
+
+    // Show summary based on result
+    if (result.success) {
+      showMigrationSummary(state, result, { noColor: options.noColor });
     } else {
-      console.log(`  ${chalk.green('✓')} Conversations (if supported by target)`);
+      showFailedMigration(state, { noColor: options.noColor });
     }
 
-    console.log();
+    cleanupSignalHandler();
 
-    // Specific migration notes
-    if (sourceId === 'chatgpt') {
-      console.log(chalk.yellow.bold('Note for ChatGPT migration:'));
-      console.log(chalk.yellow('  Your ChatGPT memories and custom instructions will be exported.'));
-      console.log(chalk.yellow('  Conversation history is preserved but may not import elsewhere.'));
-      console.log();
-    }
-
-    if (options.dryRun) {
-      console.log(chalk.cyan.bold('DRY RUN — no changes will be made'));
-      console.log();
-      rl.close();
-      return;
-    }
-
-    // Confirm
-    const confirm = await ask('Proceed with migration? (yes/no): ');
-    if (confirm.toLowerCase() !== 'yes' && confirm.toLowerCase() !== 'y') {
-      console.log(chalk.yellow('\nMigration cancelled.'));
-      rl.close();
-      return;
-    }
-
-    console.log();
-
-    // Step 4: Get passphrase
-    const passphrase = await getPassphrase();
-
-    // Step 5: Create snapshot from source
-    const spinner1 = ora(`Extracting from ${sourceAdapter.name}...`).start();
-
-    let snapshotId = options.snapshot;
-    if (!snapshotId) {
-      try {
-        const result = await createSnapshot(sourceAdapter, storage, passphrase, {
-          label: `migration-from-${sourceId}`,
-          tags: ['migration', `from:${sourceId}`, `to:${targetId}`],
-        });
-        snapshotId = result.snapshot.manifest.id;
-        spinner1.succeed(`Snapshot created: ${chalk.cyan(snapshotId)}`);
-      } catch (err) {
-        spinner1.fail('Failed to create snapshot');
-        console.error(chalk.red(err instanceof Error ? err.message : String(err)));
-        process.exit(1);
-      }
-    } else {
-      spinner1.succeed(`Using existing snapshot: ${chalk.cyan(snapshotId)}`);
-    }
-
-    // Step 6: Restore to target
-    const spinner2 = ora(`Restoring to ${targetAdapter.name}...`).start();
-
-    try {
-      await restoreSnapshot(snapshotId, targetAdapter, storage, passphrase);
-      spinner2.succeed(`Migration complete!`);
-    } catch (err) {
-      spinner2.fail('Failed to restore');
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)));
-      console.log();
-      console.log(chalk.dim(`Your snapshot is preserved: ${snapshotId}`));
-      console.log(chalk.dim(`You can retry with: savestate restore ${snapshotId} --to ${targetId}`));
+    if (!result.success) {
       process.exit(1);
     }
-
-    // Success
-    console.log();
-    console.log(chalk.green.bold('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
-    console.log(chalk.green.bold('  ✓ Migration Successful!'));
-    console.log(chalk.green.bold('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
-    console.log();
-    console.log(`  Your AI identity has been migrated from ${chalk.cyan(sourceAdapter.name)}`);
-    console.log(`  to ${chalk.cyan(targetAdapter.name)}.`);
-    console.log();
-    console.log(chalk.dim(`  Snapshot preserved: ${snapshotId}`));
-    console.log(chalk.dim(`  You can restore again anytime with:`));
-    console.log(chalk.dim(`  savestate restore ${snapshotId} --to <platform>`));
-    console.log();
-
-  } finally {
-    rl.close();
+  } catch (err) {
+    progress.stop();
+    cleanupSignalHandler();
+    error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
   }
 }
+
+// ─── Migration Plan Display ──────────────────────────────────
+
+async function showMigrationPlan(
+  source: Platform,
+  target: Platform,
+  options: MigrateCommandOptions,
+): Promise<void> {
+  const sourceCap = getPlatformCapabilities(source);
+  const targetCap = getPlatformCapabilities(target);
+
+  console.log();
+  console.log(chalk.white.bold('Migration Plan:'));
+  console.log();
+  console.log(`  ${chalk.cyan('From:')} ${sourceCap.name}`);
+  console.log(`  ${chalk.cyan('To:')}   ${targetCap.name}`);
+  console.log();
+
+  // Show what will be migrated
+  console.log(chalk.white.bold('What will be migrated:'));
+  console.log();
+
+  const include = parseInclude(options.include);
+
+  // Instructions
+  if (!include || include.includes('instructions')) {
+    console.log(`  ${chalk.green('✓')} Identity (personality, instructions, system prompts)`);
+  }
+
+  // Memories
+  if (!include || include.includes('memories')) {
+    if (sourceCap.hasMemory && targetCap.hasMemory) {
+      console.log(`  ${chalk.green('✓')} Memory (learned facts, preferences)`);
+    } else if (sourceCap.hasMemory) {
+      console.log(`  ${chalk.yellow('⚠')} Memory ${chalk.dim('(adapted for ' + targetCap.name + ')')}`);
+    }
+  }
+
+  // Files
+  if (!include || include.includes('files')) {
+    if (sourceCap.hasFiles && targetCap.hasFiles) {
+      console.log(`  ${chalk.green('✓')} Files (uploaded documents)`);
+    } else if (sourceCap.hasFiles) {
+      console.log(`  ${chalk.yellow('⚠')} Files ${chalk.dim('(limited support in ' + targetCap.name + ')')}`);
+    }
+  }
+
+  // Conversations
+  if (!include || include.includes('conversations')) {
+    if (sourceCap.hasConversations) {
+      console.log(`  ${chalk.yellow('⚠')} Conversations ${chalk.dim('(preserved but may not import)')}`);
+    }
+  }
+
+  // Custom bots
+  if (!include || include.includes('customBots')) {
+    if (sourceCap.hasCustomBots && targetCap.hasProjects) {
+      console.log(`  ${chalk.green('✓')} Custom Bots / GPTs → Projects`);
+    } else if (sourceCap.hasCustomBots) {
+      console.log(`  ${chalk.yellow('⚠')} Custom Bots ${chalk.dim('(converted to instructions)')}`);
+    }
+  }
+
+  console.log();
+
+  // Platform-specific notes
+  if (source === 'chatgpt') {
+    console.log(chalk.yellow.bold('Note for ChatGPT migration:'));
+    console.log(chalk.yellow('  Your ChatGPT memories and custom instructions will be exported.'));
+    console.log(chalk.yellow('  Conversation history is preserved but may not import elsewhere.'));
+    console.log();
+  }
+
+  if (target === 'claude') {
+    console.log(chalk.blue.bold('Note for Claude target:'));
+    console.log(chalk.blue('  Memories will be converted to project knowledge files.'));
+    console.log(chalk.blue('  Custom GPTs will become Claude Projects with artifacts.'));
+    console.log();
+  }
+}
+
+// ─── Platform List ───────────────────────────────────────────
 
 function showPlatforms(): void {
   console.log(chalk.white.bold('Available Platforms:'));
   console.log();
 
-  const adapterIds = listAdapters();
+  Object.entries(PLATFORM_CAPABILITIES).forEach(([id, cap]) => {
+    const features: string[] = [];
+    if (cap.hasMemory) features.push('memories');
+    if (cap.hasFiles) features.push('files');
+    if (cap.hasProjects) features.push('projects');
+    if (cap.hasConversations) features.push('conversations');
+    if (cap.hasCustomBots) features.push('custom bots');
 
-  adapterIds.forEach(id => {
-    const adapter = getAdapter(id);
-    if (!adapter) return;
-
-    const info = PLATFORM_INFO[id] || { extract: true, restore: true };
-    const extract = info.extract ? chalk.green('✓') : chalk.red('✗');
-    const restore = info.restore ? chalk.green('✓') : chalk.yellow('⚠');
-
-    let line = `  ${chalk.white(id.padEnd(20))} ${extract} extract  ${restore} restore`;
-    if (info.note) {
-      line += chalk.dim(` (${info.note})`);
-    }
-    console.log(line);
+    console.log(`  ${chalk.cyan(id.padEnd(12))} ${cap.name}`);
+    console.log(`  ${' '.repeat(12)} ${chalk.dim(features.join(', '))}`);
+    console.log();
   });
 
+  console.log(chalk.dim('Use: savestate migrate --from <platform> --to <platform>'));
   console.log();
-  console.log(chalk.dim('Legend: ✓ = full support, ⚠ = partial/limited, ✗ = not supported'));
+}
+
+// ─── Header ──────────────────────────────────────────────────
+
+function showHeader(): void {
   console.log();
+  console.log(chalk.cyan.bold('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
+  console.log(chalk.cyan.bold('  ⏸ SaveState Migration Wizard'));
+  console.log(chalk.cyan.bold('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
+  console.log();
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+
+function parseInclude(
+  include?: string,
+): MigrationOptions['include'] | undefined {
+  if (!include) return undefined;
+
+  const valid = ['instructions', 'memories', 'conversations', 'files', 'customBots'] as const;
+  const items = include.split(',').map((s) => s.trim());
+
+  const result: MigrationOptions['include'] = [];
+  for (const item of items) {
+    if (valid.includes(item as (typeof valid)[number])) {
+      result.push(item as (typeof valid)[number]);
+    } else {
+      warning(`Unknown content type: ${item}`);
+    }
+  }
+
+  return result.length > 0 ? result : undefined;
 }

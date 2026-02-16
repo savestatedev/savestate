@@ -58,7 +58,11 @@ body::before {
   z-index: 1;
 }
 
-/* Nav */
+
+
+/* ============================================================
+   NAV
+   ============================================================ */
 nav {
   position: fixed;
   top: 0;
@@ -68,6 +72,7 @@ nav {
   padding: 16px 0;
   background: rgba(6, 6, 12, 0.8);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(30, 41, 59, 0.5);
 }
 
@@ -86,12 +91,16 @@ nav .container {
   color: var(--text);
 }
 
+.nav-logo img { flex-shrink: 0; }
+
 .nav-wordmark {
   font-size: 18px;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--blue-light), var(--blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
 .nav-links {
@@ -113,10 +122,16 @@ nav .container {
 
 .nav-links .btn-nav {
   background: var(--blue);
-  color: var(--bg);
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
   font-weight: 600;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.nav-links .btn-nav:hover {
+  background: var(--blue-light);
+  transform: translateY(-1px);
 }
 
 .nav-mobile-toggle {
@@ -134,11 +149,11 @@ nav .container {
     align-items: center;
     justify-content: center;
   }
-  
+
   .nav-links {
     display: none;
   }
-  
+
   .nav-links.show {
     display: flex;
     flex-direction: column;
@@ -153,12 +168,12 @@ nav .container {
     padding: 20px 24px;
     gap: 16px;
   }
-  
+
   .nav-links.show a {
     padding: 12px 0;
     font-size: 16px;
   }
-  
+
   .nav-links.show .btn-nav {
     margin-top: 8px;
     text-align: center;
@@ -273,6 +288,7 @@ footer a { color: var(--text-muted); }
       <li><a href="/#cli">CLI</a></li>
       <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
       <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
       <li><a href="/dashboard">Dashboard</a></li>
       <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
     </ul>
@@ -290,6 +306,62 @@ footer a { color: var(--text-muted); }
     </div>
 
     <div class="blog-grid">
+      <a href="/blog/ai-agent-memory-backup-strategy" class="blog-card">
+        <div class="date">February 16, 2026</div>
+        <h2>Your AI Agent Has a Memory Now. Do You Have a Backup?</h2>
+        <p>2026 is the year AI agents got real memory. Enterprise agents maintain context for weeks. But the more valuable that memory becomes, the more catastrophic losing it is.</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
+      <a href="/blog/ai-amnesia-agent-memory" class="blog-card">
+        <div class="date">February 15, 2026</div>
+        <h2>AI Amnesia: Why Your Agent's Memory Is More Fragile Than You Think</h2>
+        <p>Most AI agents forget everything between sessions. Here's why that costs you, and why full snapshots are the only reliable memory.</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
+      <a href="/blog/why-ai-agents-need-memory-backups-now" class="blog-card">
+        <div class="date">February 13, 2026</div>
+        <h2>Why AI Agents Need Memory Backups Now</h2>
+        <p>As AI agents become persistent companions, the data they accumulate becomes invaluable. Here's why you need backup strategies for your AI agent memory.</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
+      <a href="/blog/observational-memory-ai-agents" class="blog-card">
+        <div class="date">February 12, 2026</div>
+        <h2>Observational Memory Is Reshaping AI Agents</h2>
+        <p>New research shows observational memory cutting AI agent costs 10x. But there's still one critical piece missing: backup and restore.</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
+      <a href="/blog/savestate-v0.8.0-migration-wizard-here" class="blog-card">
+        <div class="date">February 11, 2026</div>
+        <h2>SaveState v0.8.0: The Migration Wizard is Here</h2>
+        <p>Bidirectional Claude ↔ ChatGPT migration is now live. Your AI conversations and memories belong to you — not the platform.</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
+      <a href="/blog/ai-agents-as-employees-hr-gap" class="blog-card">
+        <div class="date">February 11, 2026</div>
+        <h2>OpenAI Frontier Treats AI Agents Like Employees — But Where's Their HR File?</h2>
+        <p>The enterprise world is building HR infrastructure for AI agents. They forgot about offboarding. What happens when an agent "quits"?</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
+      <a href="/blog/savestate-v0.7.0-migration-wizard" class="blog-card">
+        <div class="date">February 10, 2026</div>
+        <h2>SaveState v0.7.0: The Migration Wizard Is Here</h2>
+        <p>Move your AI conversations between platforms with a single command. ChatGPT to Claude, Claude to Gemini — your context, your choice.</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
+      <a href="/blog/context-rot-killing-your-ai-agent" class="blog-card">
+        <div class="date">February 10, 2026</div>
+        <h2>Context Rot Is Killing Your AI Agent (Here's the Fix)</h2>
+        <p>Your agent starts sharp. Two hours later, it's suggesting code you rejected three times. That's context rot — and it's costing you more than you think.</p>
+        <span class="read-more">Read more →</span>
+      </a>
+
       <a href="/blog/v0-7-0-migration-wizard" class="blog-card">
         <div class="date">February 9, 2026</div>
         <h2>SaveState v0.7.0: Your AI Context Is Finally Portable</h2>
