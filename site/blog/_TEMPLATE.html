@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your AI Knows Everything About You. What's Your Backup Plan? — SaveState</title>
-<meta name="description" content="Introducing SaveState — Time Machine for your AI identity. Encrypted backup, restore, and migration for ChatGPT, Claude, Gemini, and more.">
+<title>{{TITLE}} — SaveState</title>
+<meta name="description" content="{{DESCRIPTION}}">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -275,6 +275,38 @@ article {
   margin: 48px 0;
 }
 
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+/* Table */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-code);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
 /* CTA Box */
 .cta-box {
   background: var(--bg-card);
@@ -334,7 +366,6 @@ footer a { color: var(--text-muted); }
 .back-link:hover { color: var(--blue); }
 
 @media (max-width: 600px) {
-  .nav-links { display: none; }
   .article-header h1 { font-size: 28px; }
   .article-content h2 { font-size: 22px; }
 }
@@ -369,144 +400,49 @@ footer a { color: var(--text-muted); }
     <a href="/blog" class="back-link">← Back to Blog</a>
 
     <header class="article-header">
-      <div class="date">January 28, 2026</div>
-      <h1>Your AI Knows Everything About You. What's Your Backup Plan?</h1>
-      <p class="subtitle">Introducing SaveState — Time Machine for your AI identity</p>
+      <div class="date">{{DATE}}</div>
+      <h1>{{TITLE}}</h1>
+      <p class="subtitle">{{SUBTITLE}}</p>
     </header>
 
     <div class="article-content">
-      <h2>The Relationship You Didn't Know You Had</h2>
+      <!-- 
+        BLOG POST CONTENT GOES HERE
+        
+        Available elements:
+        - <h2>Section heading</h2>
+        - <h3>Subsection heading</h3>
+        - <p>Paragraph text with <strong>bold</strong> and <code>code</code></p>
+        - <ul><li>Bullet points</li></ul>
+        - <ol><li>Numbered list</li></ol>
+        - <pre><code>Code block</code></pre>
+        - <img src="/images/filename.png" alt="Description">
+        - <hr> (horizontal rule / section break)
+        - <table>...</table>
+        - <a href="url">Link text</a>
+      -->
 
-      <p>Think about your AI assistant for a moment.</p>
-
-      <p>It knows your writing style. Your preferences. The projects you're working on. The way you like things explained. Your pet peeves. Your recurring questions.</p>
-
-      <p>If you've been using ChatGPT, Claude, or Gemini for any length of time, your AI has built a detailed mental model of <em>you</em>. Custom instructions refined over months. Memories accumulated through hundreds of conversations. Tool configurations tuned to your workflow.</p>
-
-      <p>This isn't just data. It's a relationship.</p>
-
-      <p>And here's the uncomfortable truth: <strong>none of it is backed up</strong>.</p>
-
-      <h2>The Problem Nobody Talks About</h2>
-
-      <p>What happens when:</p>
-
-      <ul>
-        <li>OpenAI changes their memory system (again)?</li>
-        <li>You want to try Claude but don't want to start over?</li>
-        <li>A service outage wipes your conversation history?</li>
-        <li>You need to switch platforms for work?</li>
-        <li>The API you built on gets deprecated?</li>
-      </ul>
-
-      <p>Right now, the answer is: you lose everything and start over.</p>
-
-      <p>Your AI's understanding of you — accumulated over months of interaction — vanishes. You're back to explaining your preferences, rebuilding your custom instructions, re-establishing context.</p>
-
-      <p>It's like getting a new assistant every time something changes. And it happens more often than you think.</p>
-
-      <h2>Introducing SaveState</h2>
-
-      <p>We built SaveState because we think your AI identity should belong to you.</p>
-
-      <pre><code># Install
-npm install -g @savestate/cli
-
-# Initialize (sets up encryption)
-savestate init
-
-# Capture your AI's current state
-savestate snapshot
-
-# Restore anytime
-savestate restore latest
-
-# Or migrate to a different platform
-savestate migrate --from chatgpt --to claude</code></pre>
-
-      <p>SaveState is <strong>Time Machine for AI</strong>. It captures, encrypts, and preserves your AI's understanding of you — so you never have to start over.</p>
-
-      <h2>How It Works</h2>
-
-      <h3>1. Extract Everything That Matters</h3>
-
-      <p>SaveState pulls your AI identity from wherever it lives:</p>
-
-      <ul>
-        <li><strong>Custom instructions</strong> and system prompts</li>
-        <li><strong>Memories</strong> the AI has learned about you</li>
-        <li><strong>Conversation history</strong> (where supported)</li>
-        <li><strong>Tool configurations</strong> and API setups</li>
-        <li><strong>Projects</strong> and knowledge bases</li>
-      </ul>
-
-      <p>We support ChatGPT, Claude (web and API), Gemini, OpenAI Assistants, Moltbot, and any file-based agent system. More adapters are being added constantly.</p>
-
-      <h3>2. Encrypt Before It Leaves Your Machine</h3>
-
-      <p>Your AI knows sensitive things. SaveState treats that seriously.</p>
-
-      <ul>
-        <li><strong>AES-256-GCM</strong> encryption with scrypt key derivation</li>
-        <li>Your passphrase, your keys — we never see them</li>
-        <li>Encryption happens locally, before any data moves</li>
-        <li>Even if you use our cloud storage, we can't read your backups</li>
-      </ul>
-
-      <h3>3. Store Where You Want</h3>
-
-      <ul>
-        <li><strong>Local filesystem</strong> (free, default)</li>
-        <li><strong>Our cloud</strong> (Pro/Team — encrypted at rest)</li>
-        <li><strong>Your own S3/R2</strong> (coming soon)</li>
-      </ul>
-
-      <h3>4. Restore or Migrate</h3>
-
-      <p>Restore to the same platform when things go wrong. Or migrate to a different platform when you want to switch.</p>
-
-      <p>The SaveState Archive Format (SAF) is an open spec. Your backups aren't locked to us any more than they're locked to OpenAI or Anthropic.</p>
-
-      <h2>Features</h2>
-
-      <ul>
-        <li>🔐 <strong>End-to-end encryption</strong> — AES-256-GCM, your keys only</li>
-        <li>📦 <strong>Open archive format</strong> — No vendor lock-in, ever</li>
-        <li>⏰ <strong>Scheduled auto-backups</strong> — Set it and forget it (Pro)</li>
-        <li>🔄 <strong>Cross-platform migration</strong> — ChatGPT → Claude, etc.</li>
-        <li>📊 <strong>Incremental snapshots</strong> — Like git, only stores what changed</li>
-        <li>🖥️ <strong>Web dashboard</strong> — Manage backups from anywhere (Pro)</li>
-      </ul>
-
-      <h2>Pricing</h2>
-
-      <p><strong>Free</strong>: Local encrypted backups, all platform adapters, manual snapshots. Everything you need to protect your AI identity on your own machine.</p>
-
-      <p><strong>Pro ($9/month)</strong>: Cloud storage (10GB), scheduled auto-backups, web dashboard, migration wizard, priority support.</p>
-
-      <p><strong>Team ($29/month)</strong>: 100GB cloud storage, shared team backups, audit logs, compliance features.</p>
-
-      <h2>Why We Built This</h2>
-
-      <p>AI assistants are becoming extensions of ourselves. They're not just tools — they're collaborators that learn and adapt to how we work.</p>
-
-      <p>But the platforms treat your AI relationship as their property. Your memories live on their servers. Your custom instructions are in their database. Your conversation history is their training data.</p>
-
-      <p>We think that's backwards.</p>
-
-      <p><strong>Your AI identity should be yours.</strong> Portable. Backed up. Under your control.</p>
-
-      <p>SaveState makes that possible.</p>
-
-      <div class="cta-box">
-        <h3>Get Started in 30 Seconds</h3>
-        <p>Your first backup is free. Your AI's memory is priceless.</p>
-        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
-      </div>
+      <h2>Introduction</h2>
+      <p>Your opening paragraph goes here...</p>
 
       <hr>
 
-      <p><em>SaveState is open source (MIT license) and built in public. <a href="https://github.com/savestatedev/savestate">Star the repo</a> if this resonates. We're just getting started.</em></p>
+      <h2>Main Content</h2>
+      <p>Body content goes here...</p>
+
+      <div class="cta-box">
+        <h3>Ready to back up your AI?</h3>
+        <p>Your first backup takes 30 seconds. Your AI's memory is too valuable to leave unprotected.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
+      </div>
+
+      <pre><code>npm install -g @savestate/cli
+savestate init
+savestate snapshot</code></pre>
+
+      <hr>
+
+      <p><em>Questions? Comments? Find us on X <a href="https://x.com/SaveStateDev">@SaveStateDev</a> or open an issue on GitHub.</em></p>
     </div>
   </div>
 </article>
