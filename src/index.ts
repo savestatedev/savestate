@@ -103,3 +103,32 @@ export {
   detectAdapter,
   getAdapterInfo,
 } from './adapters/index.js';
+
+// Failure Antibody System (MVP)
+export {
+  AntibodyStore,
+  AntibodyCompiler,
+  deriveRuleId,
+  AntibodyEngine,
+} from './antibodies/index.js';
+export type {
+  Intervention,
+  RiskLevel,
+  SafeActionType,
+  SafeAction,
+  FailureEvent,
+  FailureEventBase,
+  UserCorrectionEvent,
+  ToolFailureEvent,
+  AntibodyTrigger,
+  AntibodyScope,
+  AntibodyRule,
+  AntibodyStoreFile,
+  AntibodyStats,
+  PreflightContext,
+  PreflightWarning,
+  PreflightResult,
+  AntibodyEngineOptions,
+  PreflightOptions,
+  ListRulesOptions,
+} from './antibodies/index.js';
