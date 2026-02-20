@@ -1,0 +1,81 @@
+name: Ralph Loop
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+        if: hashFiles('src/**/*.test.ts') != ''
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: CLI smoke test
+        run: |
+          node dist/cli.js --help
+          node dist/cli.js --version
+
+  code-review:
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, build, test]
+    if: always()
+    steps:
+      - name: Ralph Loop Summary
+        run: |
+          echo "## Ralph Loop Results" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ TypeScript: ${{ needs.typecheck.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Tests: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Smoke: ${{ needs.smoke-test.result }}" >> $GITHUB_STEP_SUMMARY
