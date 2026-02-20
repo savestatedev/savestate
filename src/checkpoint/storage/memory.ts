@@ -18,7 +18,7 @@ import {
   namespaceKey,
   ProvenanceEntry,
 } from '../types.js';
-import { calculateMemoryScore, calculateRecencyScore } from '../memory.js';
+import { calculateMemoryScore } from '../memory.js';
 
 /**
  * Simple cosine similarity for vector comparison.
@@ -42,17 +42,48 @@ function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 /**
- * Simple text similarity (Jaccard index on words).
- * Used as fallback when embeddings are not available.
+ * Lightweight relevance scoring (0..1) for query→text.
+ *
+ * Goal: be more accurate than Jaccard for short queries without needing embeddings.
+ * Uses a BM25-ish term presence score + partial matches + phrase boost.
  */
-function textSimilarity(a: string, b: string): number {
-  const wordsA = new Set(a.toLowerCase().split(/\s+/));
-  const wordsB = new Set(b.toLowerCase().split(/\s+/));
-  
-  const intersection = new Set([...wordsA].filter(w => wordsB.has(w)));
-  const union = new Set([...wordsA, ...wordsB]);
-  
-  return union.size === 0 ? 0 : intersection.size / union.size;
+function relevanceScore(query: string, text: string): number {
+  const q = query.toLowerCase().trim();
+  const t = text.toLowerCase();
+  if (!q) return 0;
+
+  // Phrase boost when the full query appears
+  const phrase = t.includes(q) ? 0.25 : 0;
+
+  const queryTerms = q.split(/\s+/).filter(Boolean);
+  const textTerms = t.split(/\s+/).filter(Boolean);
+  const textSet = new Set(textTerms);
+
+  let score = 0;
+  for (const term of queryTerms) {
+    if (textSet.has(term)) {
+      score += 1 / Math.log(2 + textTerms.length);
+      continue;
+    }
+
+    // Partial match (prefix/contains) for things like ids, filenames, etc.
+    for (const textTerm of textSet) {
+      if (textTerm.includes(term) || term.includes(textTerm)) {
+        score += 0.5 / Math.log(2 + textTerms.length);
+        break;
+      }
+    }
+  }
+
+  // Normalize and add phrase boost.
+  const normalized = Math.min(1, score);
+  return Math.min(1, normalized + phrase);
+}
+
+function daysBetween(aIso: string, bIso: string): number {
+  const a = new Date(aIso).getTime();
+  const b = new Date(bIso).getTime();
+  return Math.max(0, (b - a) / (24 * 60 * 60 * 1000));
 }
 
 export class InMemoryCheckpointStorage implements CheckpointStorage {
@@ -169,28 +200,43 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
     
     // Calculate scores
     const results: MemoryResult[] = candidates.map(mem => {
-      // Calculate semantic similarity
+      // Calculate relevance / semantic similarity
       let semanticSimilarity = 0;
       if (query.query) {
-        if (mem.embedding && query.query) {
-          // If we had query embedding, we'd use cosine similarity
-          // For now, fall back to text similarity
-          semanticSimilarity = textSimilarity(query.query, mem.content);
+        const searchable = [
+          mem.content,
+          ...(mem.tags ?? []),
+          mem.source?.type ?? '',
+          mem.source?.identifier ?? '',
+        ].join(' ');
+
+        if (mem.embedding) {
+          // If we had a query embedding, we'd use cosine similarity.
+          // For now we use text relevance.
+          semanticSimilarity = relevanceScore(query.query, searchable);
         } else {
-          semanticSimilarity = textSimilarity(query.query, mem.content);
+          semanticSimilarity = relevanceScore(query.query, searchable);
         }
       }
-      
+
       const { score, components } = calculateMemoryScore(
         mem,
         semanticSimilarity,
         query.ranking_weights
       );
-      
+
+      // Staleness detection is based on memory age (created_at), not access.
+      const nowIso = new Date().toISOString();
+      const ageDays = daysBetween(mem.created_at, nowIso);
+      const isStale = ageDays >= 90;
+
       return {
         memory_id: mem.memory_id,
         score,
         score_components: components,
+        is_stale: isStale,
+        age_days: ageDays,
+        stale_reason: isStale ? `Memory is ${Math.floor(ageDays)} days old` : undefined,
         content: query.include_content !== false ? mem.content : undefined,
         tags: mem.tags,
         source: mem.source,

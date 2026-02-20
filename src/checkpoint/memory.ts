@@ -24,16 +24,39 @@ import {
  */
 export function calculateRecencyScore(created_at: string, last_accessed_at?: string): number {
   const now = Date.now();
-  const lastTime = last_accessed_at 
-    ? new Date(last_accessed_at).getTime()
-    : new Date(created_at).getTime();
-  
-  const ageMs = now - lastTime;
-  const halfLifeMs = 7 * 24 * 60 * 60 * 1000; // 7 days
-  
-  // Exponential decay: score = 0.5^(age/halfLife)
-  // This ensures score = 0.5 at exactly one half-life
-  return Math.pow(0.5, ageMs / halfLifeMs);
+
+  // Primary signal: how old the memory itself is.
+  // (Using last_accessed_at as the only recency signal causes "immortal" stale memories
+  // that stay fresh just because they were retrieved recently.)
+  const createdTime = new Date(created_at).getTime();
+  if (!Number.isFinite(createdTime)) return 0;
+
+  const ageCreatedMs = now - createdTime;
+
+  // If timestamps are in the future (clock skew), treat as maximally recent.
+  if (ageCreatedMs <= 0) return 1;
+
+  const createdHalfLifeMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+  const createdScore = Math.pow(0.5, ageCreatedMs / createdHalfLifeMs);
+
+  // Secondary signal: recent access can provide a small boost, but is capped.
+  // This preserves staleness detection while still preferring recently-used items.
+  if (!last_accessed_at) return Math.max(0, Math.min(1, createdScore));
+
+  const accessedTime = new Date(last_accessed_at).getTime();
+  if (!Number.isFinite(accessedTime)) return Math.max(0, Math.min(1, createdScore));
+
+  const ageAccessMs = now - accessedTime;
+
+  // If access timestamp is in the future, ignore it (it should not artificially inflate recency).
+  if (ageAccessMs < 0) return Math.max(0, Math.min(1, createdScore));
+
+  const accessHalfLifeMs = 3.5 * 24 * 60 * 60 * 1000; // 3.5 days (faster decay)
+  const accessScore = Math.pow(0.5, ageAccessMs / accessHalfLifeMs);
+
+  // Cap the access boost so an old memory cannot become "brand new".
+  const boosted = createdScore + 0.2 * accessScore;
+  return Math.max(0, Math.min(1, boosted));
 }
 
 /**

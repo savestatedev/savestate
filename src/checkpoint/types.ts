@@ -226,25 +226,42 @@ export interface CreateMemoryInput {
  */
 export interface MemoryQuery {
   namespace: Namespace;
-  
+
   /** Semantic query text */
   query?: string;
-  
+
   /** Filter by tags (AND logic) */
   tags?: string[];
-  
+
   /** Filter by source type */
   source_types?: MemorySource['type'][];
-  
+
   /** Minimum importance threshold */
   min_importance?: number;
-  
+
+  /**
+   * Minimum semantic similarity required to include a result when `query` is provided.
+   *
+   * Helps prevent irrelevant high-importance / high-criticality memories from surfacing
+   * when they do not match the current context.
+   */
+  min_semantic_similarity?: number;
+
+  /**
+   * Maximum allowed age (in seconds) based on the most recent of:
+   * - last_accessed_at (if present)
+   * - created_at
+   *
+   * Used for staleness filtering to avoid injecting outdated context.
+   */
+  max_age_seconds?: number;
+
   /** Maximum results to return */
   limit?: number;
-  
+
   /** Include memory content in results */
   include_content?: boolean;
-  
+
   /** Custom ranking weights (overrides defaults) */
   ranking_weights?: RankingWeights;
 }
@@ -279,6 +296,15 @@ export interface MemoryResult {
     importance: number;
     recency: number;
   };
+
+  /**
+   * Staleness hints (best-effort).
+   * These fields are optional to preserve backwards compatibility.
+   */
+  is_stale?: boolean;
+  age_days?: number;
+  stale_reason?: string;
+
   content?: string;
   tags: string[];
   source: MemorySource;
