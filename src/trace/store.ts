@@ -19,7 +19,7 @@ const TRACE_DIR_NAME = 'traces';
 const TRACE_RUNS_DIR_NAME = 'runs';
 const TRACE_INDEX_FILENAME = 'index.json';
 const REDACTED_VALUE = '[REDACTED]';
-const DEFAULT_REDACTION_KEYS = ['token', 'api_key', 'passphrase', 'secret', 'authorization'];
+const DEFAULT_REDACTION_KEYS = ['token', 'api_key', 'passphrase', 'secret', 'authorization', 'password'];
 
 export type TraceExportFormat = 'jsonl';
 export type TraceExportTarget = 'all' | string;

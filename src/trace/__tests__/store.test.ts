@@ -86,6 +86,7 @@ describe('TraceStore', () => {
         nested: {
           authorization: 'Bearer 123',
           passphrase: 'hunter2',
+          password: 'super-secret',
           secret: 'shh',
           keep: 'value',
         },
@@ -102,6 +103,7 @@ describe('TraceStore', () => {
       nested: {
         authorization: '[REDACTED]',
         passphrase: '[REDACTED]',
+        password: '[REDACTED]',
         secret: '[REDACTED]',
         keep: 'value',
       },
@@ -127,4 +129,3 @@ describe('TraceStore', () => {
     expect(events[0].payload).toEqual({ token: 'raw-token' });
   });
 });
-
