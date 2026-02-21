@@ -18,7 +18,7 @@ import {
   namespaceKey,
   ProvenanceEntry,
 } from '../types.js';
-import { calculateMemoryScore, calculateRecencyScore } from '../memory.js';
+import { calculateMemoryScore } from '../memory.js';
 
 /**
  * Simple cosine similarity for vector comparison.
@@ -42,17 +42,74 @@ function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 /**
- * Simple text similarity (Jaccard index on words).
- * Used as fallback when embeddings are not available.
+ * Lightweight relevance scoring (0..1) for query→text.
+ *
+ * Goal: be more accurate than Jaccard for short queries without needing embeddings.
+ * Uses a BM25-ish term presence score + partial matches + phrase boost.
  */
-function textSimilarity(a: string, b: string): number {
-  const wordsA = new Set(a.toLowerCase().split(/\s+/));
-  const wordsB = new Set(b.toLowerCase().split(/\s+/));
-  
-  const intersection = new Set([...wordsA].filter(w => wordsB.has(w)));
-  const union = new Set([...wordsA, ...wordsB]);
-  
-  return union.size === 0 ? 0 : intersection.size / union.size;
+function relevanceScore(query: string, text: string): number {
+  const qRaw = query.toLowerCase().trim();
+  const tRaw = text.toLowerCase();
+  if (!qRaw) return 0;
+
+  const STOPWORDS = new Set([
+    'a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by',
+    'for', 'from', 'has', 'have', 'he', 'her', 'hers', 'him', 'his',
+    'i', 'if', 'in', 'into', 'is', 'it', 'its', 'me', 'my',
+    'of', 'on', 'or', 'our', 'ours', 'she', 'so', 'than', 'that',
+    'the', 'their', 'theirs', 'them', 'then', 'there', 'these', 'they',
+    'this', 'to', 'too', 'us', 'was', 'we', 'were', 'what', 'when',
+    'where', 'which', 'who', 'why', 'will', 'with', 'you', 'your', 'yours',
+  ]);
+
+  const tokenize = (s: string): string[] =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .split(/\s+/)
+      .map(t => t.trim())
+      .filter(t => t.length >= 2 && !STOPWORDS.has(t));
+
+  // Phrase boost when the full (raw) query appears.
+  // Use raw text so punctuation-sensitive phrases still match.
+  const phrase = tRaw.includes(qRaw) ? 0.25 : 0;
+
+  const queryTerms = tokenize(qRaw);
+  const textTerms = tokenize(tRaw);
+  if (queryTerms.length === 0 || textTerms.length === 0) return phrase;
+
+  const textSet = new Set(textTerms);
+
+  let score = 0;
+  const denom = Math.log(2 + textTerms.length);
+
+  for (const term of queryTerms) {
+    if (textSet.has(term)) {
+      score += 1 / denom;
+      continue;
+    }
+
+    // Partial match (prefix/contains) for things like ids, filenames, etc.
+    // Only attempt partial match for longer terms to avoid noise.
+    if (term.length < 4) continue;
+
+    for (const textTerm of textSet) {
+      if (textTerm.includes(term) || term.includes(textTerm)) {
+        score += 0.5 / denom;
+        break;
+      }
+    }
+  }
+
+  // Normalize by query length so long queries don't dominate.
+  const normalized = Math.min(1, score / Math.max(1, queryTerms.length));
+  return Math.min(1, normalized + phrase);
+}
+
+function daysBetween(aIso: string, bIso: string): number {
+  const a = new Date(aIso).getTime();
+  const b = new Date(bIso).getTime();
+  return Math.max(0, (b - a) / (24 * 60 * 60 * 1000));
 }
 
 export class InMemoryCheckpointStorage implements CheckpointStorage {
@@ -166,37 +223,76 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
       const createdAt = new Date(mem.created_at).getTime();
       return now < createdAt + mem.ttl_seconds * 1000;
     });
-    
+
+    // Optional staleness filtering (hard filter)
+    if (query.max_age_seconds !== undefined) {
+      const maxAgeMs = query.max_age_seconds * 1000;
+      candidates = candidates.filter(mem => {
+        const createdAt = new Date(mem.created_at).getTime();
+        const accessedAt = mem.last_accessed_at ? new Date(mem.last_accessed_at).getTime() : NaN;
+
+        // Use the most recent known timestamp to determine age.
+        const effective = Number.isFinite(accessedAt) ? Math.max(createdAt, accessedAt) : createdAt;
+        if (!Number.isFinite(effective)) return false;
+
+        return now - effective <= maxAgeMs;
+      });
+    }
+
+    const minSemantic = query.query
+      ? (query.min_semantic_similarity ?? 0.03)
+      : 0;
+
     // Calculate scores
-    const results: MemoryResult[] = candidates.map(mem => {
-      // Calculate semantic similarity
-      let semanticSimilarity = 0;
-      if (query.query) {
-        if (mem.embedding && query.query) {
-          // If we had query embedding, we'd use cosine similarity
-          // For now, fall back to text similarity
-          semanticSimilarity = textSimilarity(query.query, mem.content);
-        } else {
-          semanticSimilarity = textSimilarity(query.query, mem.content);
+    const results: MemoryResult[] = candidates
+      .map(mem => {
+        // Calculate relevance / semantic similarity
+        let semanticSimilarity = 0;
+        if (query.query) {
+          const searchable = [
+            mem.content,
+            ...(mem.tags ?? []),
+            mem.source?.type ?? '',
+            mem.source?.identifier ?? '',
+          ].join(' ');
+
+          if (mem.embedding) {
+            // If we had a query embedding, we'd use cosine similarity.
+            // For now we use text relevance.
+            semanticSimilarity = relevanceScore(query.query, searchable);
+          } else {
+            semanticSimilarity = relevanceScore(query.query, searchable);
+          }
         }
-      }
-      
-      const { score, components } = calculateMemoryScore(
-        mem,
-        semanticSimilarity,
-        query.ranking_weights
-      );
-      
-      return {
-        memory_id: mem.memory_id,
-        score,
-        score_components: components,
-        content: query.include_content !== false ? mem.content : undefined,
-        tags: mem.tags,
-        source: mem.source,
-        provenance: mem.provenance,
-      };
-    });
+
+        // If we have a query, guard against irrelevant results.
+        if (query.query && semanticSimilarity < minSemantic) return null;
+
+        const { score, components } = calculateMemoryScore(
+          mem,
+          semanticSimilarity,
+          query.ranking_weights
+        );
+
+        // Staleness detection is based on memory age (created_at), not access.
+        const nowIso = new Date().toISOString();
+        const ageDays = daysBetween(mem.created_at, nowIso);
+        const isStale = ageDays >= 90;
+
+        return {
+          memory_id: mem.memory_id,
+          score,
+          score_components: components,
+          is_stale: isStale,
+          age_days: ageDays,
+          stale_reason: isStale ? `Memory is ${Math.floor(ageDays)} days old` : undefined,
+          content: query.include_content !== false ? mem.content : undefined,
+          tags: mem.tags,
+          source: mem.source,
+          provenance: mem.provenance,
+        };
+      })
+      .filter((r): r is MemoryResult => r !== null);
     
     // Sort by score
     results.sort((a, b) => b.score - a.score);

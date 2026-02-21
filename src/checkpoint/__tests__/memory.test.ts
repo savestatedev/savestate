@@ -180,6 +180,73 @@ describe('KnowledgeLane', () => {
       expect(results[0].score_components).toBeDefined();
       expect(results[0].score_components.task_criticality).toBeGreaterThan(0);
     });
+
+    it('should flag very old memories as stale', async () => {
+      const mem = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content: 'Old but relevant: deploy to prod',
+        source: { type: 'user_input', identifier: 'user-1' },
+        tags: ['deployment'],
+        importance: 0.9,
+        task_criticality: 0.9,
+      });
+
+      // Make it old
+      const stored = await storage.getMemory(mem.memory_id);
+      expect(stored).toBeTruthy();
+      await storage.saveMemory({
+        ...(stored as MemoryObject),
+        created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'deploy prod',
+      });
+
+      const result = results.find(r => r.memory_id === mem.memory_id);
+      expect(result).toBeTruthy();
+      expect(result?.is_stale).toBe(true);
+      expect((result?.age_days ?? 0)).toBeGreaterThanOrEqual(90);
+    });
+
+    it('should filter out irrelevant results when a query is provided (min_semantic_similarity)', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'dark mode',
+        // leave min_semantic_similarity undefined to exercise the default guard
+      });
+
+      // The deployment memory should not be returned for a UI preference query.
+      expect(results.some(r => r.content?.includes('production server'))).toBe(false);
+    });
+
+    it('should filter out stale results when max_age_seconds is set', async () => {
+      const mem = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content: 'Very old preference: use light mode',
+        source: { type: 'user_input', identifier: 'user-1' },
+        tags: ['preference', 'ui'],
+        importance: 0.9,
+        task_criticality: 0.3,
+      });
+
+      // Make it old
+      const stored = await storage.getMemory(mem.memory_id);
+      expect(stored).toBeTruthy();
+      await storage.saveMemory({
+        ...(stored as MemoryObject),
+        created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'preference ui mode',
+        max_age_seconds: 24 * 60 * 60, // 1 day
+      });
+
+      expect(results.some(r => r.memory_id === mem.memory_id)).toBe(false);
+    });
   });
 
   describe('recordAccess', () => {
@@ -235,12 +302,27 @@ describe('Scoring Functions', () => {
       expect(score).toBeCloseTo(0.5, 1);
     });
 
-    it('should use last_accessed_at if provided', () => {
+    it('should treat last_accessed_at as a small boost (not full freshness)', () => {
       const oldCreated = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const recentAccess = new Date().toISOString();
-      
-      const score = calculateRecencyScore(oldCreated, recentAccess);
-      expect(score).toBeCloseTo(1.0, 1);
+
+      const scoreWithoutAccess = calculateRecencyScore(oldCreated);
+      const scoreWithAccess = calculateRecencyScore(oldCreated, recentAccess);
+
+      expect(scoreWithAccess).toBeGreaterThan(scoreWithoutAccess);
+      // Access should not fully override true age.
+      expect(scoreWithAccess).toBeLessThan(0.6);
+    });
+
+    it('should be robust to invalid timestamps', () => {
+      const score = calculateRecencyScore('not-a-date');
+      expect(score).toBe(0);
+    });
+
+    it('should clamp future timestamps to 1.0 (clock skew)', () => {
+      const future = new Date(Date.now() + 60_000).toISOString();
+      const score = calculateRecencyScore(future);
+      expect(score).toBe(1);
     });
   });
 
