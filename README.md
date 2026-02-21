@@ -136,6 +136,9 @@ snapshot.saf.enc (encrypted)
        ├── conversations/
        │   ├── index.json          # Conversation list with metadata
        │   └── threads/            # Individual conversation exports
+       ├── trace/                  # Askable Echoes trace ledger (optional)
+       │   ├── index.json          # Run index + trace schema version
+       │   └── runs/               # One JSONL file per run
        └── meta/
            ├── platform.json       # Source platform details
            ├── snapshot-chain.json # Incremental snapshot chain
@@ -184,6 +187,14 @@ savestate migrate                     Migration wizard between platforms
   --to <platform>                    Target platform
   --list                             Show platform capabilities
   --dry-run                          Preview migration plan
+
+savestate trace list                  List Askable Echoes trace runs
+  --json                             Output as JSON
+savestate trace show <run_id>         Show events for a trace run
+  --json                             Output as JSON
+savestate trace export                Export trace as JSONL (stdout)
+  --run <id>                         Export only a specific run
+  --format jsonl                     Export format
 ```
 
 ## Storage
