@@ -84,6 +84,21 @@ export type {
   DeltaResult,
 } from './incremental.js';
 
+// Trace ledger
+export {
+  TraceStore,
+  TRACE_SCHEMA_VERSION,
+  type TraceStoreOptions,
+  type TraceExportFormat,
+  type TraceExportTarget,
+  type JsonValue,
+  type TraceEvent,
+  type TraceEventType,
+  type TraceRunIndexEntry,
+  type TraceIndexFile,
+  type SnapshotTrace,
+} from './trace/index.js';
+
 // Restore
 export { restoreSnapshot, validateSnapshot } from './restore.js';
 

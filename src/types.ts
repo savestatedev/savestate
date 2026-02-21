@@ -5,6 +5,8 @@
  * Structure: tar.gz → AES-256-GCM encrypted → .saf.enc
  */
 
+import type { SnapshotTrace } from './trace/types.js';
+
 // ─── Manifest ────────────────────────────────────────────────
 
 export interface Manifest {
@@ -205,6 +207,7 @@ export interface Snapshot {
   platform: PlatformMeta;
   chain: SnapshotChain;
   restoreHints: RestoreHints;
+  trace?: SnapshotTrace;
 }
 
 // ─── Adapter Interface ───────────────────────────────────────

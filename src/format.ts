@@ -11,6 +11,7 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { Header, Parser } from 'tar';
 import type { Snapshot } from './types.js';
+import { TRACE_SCHEMA_VERSION, type SnapshotTrace, type TraceRunIndexEntry } from './trace/types.js';
 
 /** File extension for encrypted SaveState archives */
 export const SAF_EXTENSION = '.saf.enc';
@@ -68,6 +69,34 @@ export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
   files.set('meta/snapshot-chain.json', Buffer.from(JSON.stringify(snapshot.chain, null, 2)));
   files.set('meta/restore-hints.json', Buffer.from(JSON.stringify(snapshot.restoreHints, null, 2)));
 
+  // trace/
+  if (snapshot.trace) {
+    const trace = snapshot.trace;
+    const traceIndex = {
+      schema_version: trace.schema_version ?? TRACE_SCHEMA_VERSION,
+      runs: trace.index,
+    };
+    files.set('trace/index.json', Buffer.from(JSON.stringify(traceIndex, null, 2)));
+
+    const indexedRunIds = new Set<string>();
+    for (const run of trace.index) {
+      indexedRunIds.add(run.run_id);
+      const runJsonl = trace.runs[run.run_id];
+      if (runJsonl === undefined) {
+        continue;
+      }
+      files.set(`trace/runs/${run.file}`, Buffer.from(normalizeJsonl(runJsonl)));
+    }
+
+    for (const [runId, runJsonl] of Object.entries(trace.runs)) {
+      if (indexedRunIds.has(runId)) {
+        continue;
+      }
+      const fallbackFile = makeTraceRunFilename(runId);
+      files.set(`trace/runs/${fallbackFile}`, Buffer.from(normalizeJsonl(runJsonl)));
+    }
+  }
+
   return files;
 }
 
@@ -123,8 +152,46 @@ export function unpackSnapshot(files: Map<string, Buffer>): Snapshot {
   const platform = getJson<Snapshot['platform']>('meta/platform.json');
   const chain = getJson<Snapshot['chain']>('meta/snapshot-chain.json');
   const restoreHints = getJson<Snapshot['restoreHints']>('meta/restore-hints.json');
+  const trace = unpackTrace(files);
 
-  return { manifest, identity, memory, conversations, platform, chain, restoreHints };
+  return { manifest, identity, memory, conversations, platform, chain, restoreHints, trace };
+}
+
+function unpackTrace(files: Map<string, Buffer>): SnapshotTrace | undefined {
+  if (!files.has('trace/index.json')) {
+    return undefined;
+  }
+
+  const rawIndex = JSON.parse(files.get('trace/index.json')!.toString('utf-8')) as {
+    schema_version?: number;
+    runs?: TraceRunIndexEntry[];
+  };
+  const index = rawIndex.runs ?? [];
+  const runs: Record<string, string> = {};
+
+  for (const run of index) {
+    const runPath = `trace/runs/${run.file}`;
+    const buf = files.get(runPath);
+    if (!buf) {
+      continue;
+    }
+    runs[run.run_id] = buf.toString('utf-8');
+  }
+
+  return {
+    schema_version: rawIndex.schema_version ?? TRACE_SCHEMA_VERSION,
+    index,
+    runs,
+  };
+}
+
+function makeTraceRunFilename(runId: string): string {
+  return `run-${encodeURIComponent(runId)}.jsonl`;
+}
+
+function normalizeJsonl(content: string): string {
+  const trimmed = content.trimEnd();
+  return trimmed.length > 0 ? `${trimmed}\n` : '';
 }
 
 /**
