@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hidden Cost of AI Context Loss — SaveState</title>
+<meta name="description" content="Context loss during AI coding sessions is costing developers hours per week. Here is what actually works to prevent it.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+nav .logo img { height: 28px; }
+
+nav .nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+
+nav .nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+nav .nav-links a:hover { color: var(--blue); }
+
+main { padding: 120px 0 80px; }
+
+article { margin-bottom: 48px; }
+
+article h1 {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+article .meta {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+
+article h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+
+article h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 32px 0 12px;
+  color: var(--text);
+}
+
+article p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+  font-size: 17px;
+}
+
+article a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+article a:hover { text-decoration: underline; }
+
+article ul, article ol {
+  margin: 0 0 20px 24px;
+  color: var(--text-muted);
+}
+
+article li {
+  margin-bottom: 10px;
+}
+
+article pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  overflow-x: auto;
+  margin: 24px 0;
+}
+
+article code {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--blue-light);
+}
+
+article pre code {
+  color: var(--text-muted);
+}
+
+blockquote {
+  border-left: 3px solid var(--blue);
+  padding-left: 20px;
+  margin: 32px 0;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.cta {
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta h3 {
+  margin: 0 0 12px;
+  font-size: 24px;
+}
+
+.cta p {
+  margin-bottom: 20px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--blue);
+  color: var(--navy);
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: var(--blue-light);
+  transform: translateY(-2px);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  article h1 { font-size: 32px; }
+  nav .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="/" class="logo">
+      <img src="/logo.png" alt="SaveState">SaveState
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="https://savestate.dev/docs">Docs</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <article>
+      <h1>The Hidden Cost of AI Context Loss</h1>
+      <div class="meta">February 21, 2026 &middot; 5 min read</div>
+
+      <p>Every developer using Claude Code, Cursor, or Windsurf has hit this wall. You are two hours into a session. The AI knows your codebase, understands your architecture, remembers the three bugs you are juggling and why you chose that specific approach. Then the context window fills. Compaction kicks in. And your perfectly-calibrated coding partner becomes a stranger who needs to be re-introduced to your entire project.</p>
+
+      <p>Context loss during AI coding sessions is costing developers hours per week. Here is an honest look at what is happening and what actually works.</p>
+
+      <h2>What Actually Happens During Compaction</h2>
+
+      <p>When Claude Code hits roughly 80-95% context usage, it runs an automatic compaction. The raw session files stored in your project folder get summarized. The AI writes a digest of what it remembers.</p>
+
+      <p>The issue is not that compaction is buggy. It is that summarization is lossy by nature. Here is what typically survives compaction:</p>
+
+      <ul>
+        <li>High-level task goals</li>
+        <li>Recent code changes</li>
+        <li>Obvious file names and function names</li>
+      </ul>
+
+      <p>Here is what often does not survive:</p>
+
+      <ul>
+        <li>The reasoning behind architectural decisions</li>
+        <li>Bugs you have already ruled out and why</li>
+        <li>Custom patterns you established early in the session</li>
+        <li>The specific constraints you explained in detail</li>
+        <li>The context of "we are doing X because Y made Z impossible"</li>
+      </ul>
+
+      <p>GitHub issue <a href="https://github.com/anthropics/claude-code/issues/7530" target="_blank">anthropics/claude-code#7530</a> has over 200 comments from developers hitting exactly this. The pattern is consistent across every AI coding tool.</p>
+
+      <h2>The Workarounds Developers Are Actually Using</h2>
+
+      <p>I asked in developer communities what people do about this. Here are the honest answers:</p>
+
+      <blockquote>"I just restart and re-explain." The most common response. Brutal but it works. Usually takes 15-30 minutes to restore context to a usable state.</blockquote>
+
+      <blockquote>"I keep a CONTEXT.md in my project." Better. Developers write down architectural decisions, current state, and constraints. Has to be manually updated, but at least the AI can read it at session start.</blockquote>
+
+      <blockquote>"I use git commits as checkpoints." Smart, but only captures code state. Does not capture the reasoning, the rejected approaches, or the current debugging hypothesis.</blockquote>
+
+      <blockquote>"I record a voice memo explaining where I am." This one stuck with me. A developer who works in long sessions described recording 30-second audio summaries whenever approaching context limits. Scrappy but shows how seriously people take the problem.</blockquote>
+
+      <h2>Why This Matters More Than It Seems</h2>
+
+      <p>The productivity cost is obvious. But there is a subtler issue: compaction erodes trust in AI coding tools.</p>
+
+      <p>When an AI forgets your context, you start treating it differently. You repeat yourself more. You provide more defensive explanations. You hold back from establishing deep context because you know it will be lost. You start working around the AI is limitations instead of with the AI is capabilities.</p>
+
+      <p>This is why context management is actually one of the highest-leverage unsolved problems in AI-assisted development. It is not a feature request. It is a fundamental shift in how developers can trust and rely on AI coding partners.</p>
+
+      <h2>The Current State of Solutions</h2>
+
+      <p>Native solutions from the tool makers:</p>
+
+      <ul>
+        <li>Claude Code has a --resume flag that continues existing sessions but does not prevent compaction loss</li>
+        <li>Cursor has a "memories" feature but it is opt-in and rule-based, not automatic</li>
+        <li>Windsurf has no native session recovery</li>
+      </ul>
+
+      <p>Third-party solutions are emerging. The key is finding one that automatically snapshots your session before compaction happens, so you can restore to any previous state with one click.</p>
+
+      <div class="cta">
+        <h3>Stop Losing Context</h3>
+        <p>SaveState automatically backs up your AI agent sessions before context loss happens. Restore hours of work in seconds.</p>
+        <a href="https://savestate.dev" class="btn">Get Started Free</a>
+      </div>
+
+      <h2>What You Can Do Today</h2>
+
+      <p>If you are tired of re-explaining your codebase every session, here are three steps you can take right now:</p>
+
+      <ol>
+        <li><strong>Acknowledge the problem.</strong> Context loss is not your fault. It is a fundamental limitation of current AI tools.</li>
+        <li><strong>Use a backup solution.</strong> Tools like SaveState automatically snapshot your sessions so you never lose context.</li>
+        <li><strong>Start a CONTEXT.md file.</strong> Even a simple file with your current goals and constraints helps dramatically.</li>
+      </ol>
+
+      <p>The future of AI-assisted development depends on trust. When you know your context is safe, you can focus on solving problems instead of repeating yourself.</p>
+
+    </article>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 SaveState. The backup system for AI agents.</p>
+  </div>
+</footer>
+
+</body>
+</html>
