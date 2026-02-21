@@ -27,6 +27,7 @@ import {
   adaptersCommand,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
+import { registerTraceCommands } from './commands/trace.js';
 
 // Get version from package.json
 const require = createRequire(import.meta.url);
@@ -171,6 +172,10 @@ program
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')
   .action(cloudCommand);
+
+// ─── savestate trace ─────────────────────────────────────────
+
+registerTraceCommands(program);
 
 // ─── savestate mcp ───────────────────────────────────────────
 

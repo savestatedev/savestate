@@ -10,9 +10,10 @@
 set -euo pipefail
 
 # Defaults
-CLI="${1:-codex}"
-MODE="${2:-BUILDING}"
-MAX_ITERS="${3:-10}"
+ISSUE_NUM="${1:?Error: Missing issue number}"
+CLI="${2:-codex}"
+MODE="${3:-BUILDING}"
+MAX_ITERS="${4:-10}"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Ensure we're in a git repo
@@ -21,6 +22,15 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "❌ Error: Must run inside a git repository"
     exit 1
 fi
+
+# Get issue info for the prompt
+echo "Fetching info for issue #$ISSUE_NUM..."
+ISSUE_INFO=$(gh issue view "$ISSUE_NUM" --json title,body --jq '"#" + (.number | tostring) + ": " + .title + "\n\n" + .body' 2>/dev/null)
+if [ -z "$ISSUE_INFO" ]; then
+    echo "❌ Error: Failed to fetch issue #$ISSUE_NUM. Is 'gh' installed and authed?"
+    exit 1
+fi
+
 
 # Setup files
 RALPH_DIR=".ralph"
@@ -93,7 +103,8 @@ generate_prompt() {
     
     if [ "$mode" = "PLANNING" ]; then
         cat > "$PROMPT_FILE" << EOF
-You are running a Ralph PLANNING loop for: $issue_info
+You are running a Ralph PLANNING loop for the following issue:
+$issue_info
 
 Read specs/* and the current codebase. Do a gap analysis and update IMPLEMENTATION_PLAN.md only.
 Rules:
@@ -107,7 +118,8 @@ If the plan is complete, add line: STATUS: COMPLETE
 EOF
     else
         cat > "$PROMPT_FILE" << EOF
-You are running a Ralph BUILDING loop for: $issue_info
+You are running a Ralph BUILDING loop for the following issue:
+$issue_info
 
 Context:
 - specs/*
@@ -131,6 +143,8 @@ EOF
 
 # Main loop
 COMPLETED=false
+generate_prompt "$MODE" "$ISSUE_INFO"
+
 for i in $(seq 1 "$MAX_ITERS"); do
     echo -e "\n=== Ralph iteration $i/$MAX_ITERS ===" | tee -a "$LOG_FILE"
     date | tee -a "$LOG_FILE"
