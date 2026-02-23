@@ -160,6 +160,9 @@ export interface MemoryObject {
   
   /** Where this memory came from */
   source: MemorySource;
+
+  /** Ingestion metadata for provenance and trust decisions */
+  ingestion: MemoryIngestionMetadata;
   
   /** Provenance chain for auditability */
   provenance: ProvenanceEntry[];
@@ -190,10 +193,21 @@ export interface MemoryObject {
 }
 
 export interface MemorySource {
-  type: 'user_input' | 'tool_output' | 'agent_inference' | 'external' | 'system';
+  type: 'user_input' | 'tool_output' | 'web_scrape' | 'agent_inference' | 'external' | 'system';
   identifier: string;
   timestamp: string;
   metadata?: Record<string, unknown>;
+}
+
+export interface MemoryIngestionMetadata {
+  source_type: 'user_input' | 'tool_output' | 'web_scrape' | 'system';
+  source_id: string;
+  ingestion_timestamp: string;
+  confidence_score: number;
+  detected_format: 'text' | 'json' | 'html' | 'markdown';
+  anomaly_flags: string[];
+  quarantined: boolean;
+  validation_notes: string[];
 }
 
 export interface ProvenanceEntry {
@@ -375,7 +389,7 @@ export interface RestoreOptions {
 export interface AuditEntry {
   id: string;
   namespace: Namespace;
-  action: 'create' | 'read' | 'restore' | 'search' | 'delete';
+  action: 'create' | 'read' | 'restore' | 'search' | 'delete' | 'update';
   resource_type: 'checkpoint' | 'memory';
   resource_id: string;
   actor_id: string;
@@ -398,7 +412,11 @@ export interface CheckpointStorage {
   
   // Memory operations
   saveMemory(memory: MemoryObject): Promise<void>;
+  saveQuarantinedMemory(memory: MemoryObject): Promise<void>;
   getMemory(memory_id: string): Promise<MemoryObject | null>;
+  getQuarantinedMemory(memory_id: string): Promise<MemoryObject | null>;
+  listQuarantinedMemories(namespace: Namespace, options?: ListOptions): Promise<MemoryObject[]>;
+  deleteQuarantinedMemory(memory_id: string): Promise<void>;
   searchMemories(query: MemoryQuery): Promise<MemoryResult[]>;
   updateMemoryAccess(memory_id: string, checkpoint_id?: string): Promise<void>;
   

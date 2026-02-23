@@ -115,6 +115,7 @@ function daysBetween(aIso: string, bIso: string): number {
 export class InMemoryCheckpointStorage implements CheckpointStorage {
   private checkpoints: Map<string, Checkpoint> = new Map();
   private memories: Map<string, MemoryObject> = new Map();
+  private quarantinedMemories: Map<string, MemoryObject> = new Map();
   private auditLog: AuditEntry[] = [];
 
   // ─── Checkpoint Operations ─────────────────────────────────
@@ -185,9 +186,46 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
     this.memories.set(memory.memory_id, { ...memory });
   }
 
+  async saveQuarantinedMemory(memory: MemoryObject): Promise<void> {
+    this.quarantinedMemories.set(memory.memory_id, { ...memory });
+  }
+
   async getMemory(memory_id: string): Promise<MemoryObject | null> {
     const memory = this.memories.get(memory_id);
     return memory ? { ...memory } : null;
+  }
+
+  async getQuarantinedMemory(memory_id: string): Promise<MemoryObject | null> {
+    const memory = this.quarantinedMemories.get(memory_id);
+    return memory ? { ...memory } : null;
+  }
+
+  async listQuarantinedMemories(
+    namespace: Namespace,
+    options?: ListOptions
+  ): Promise<MemoryObject[]> {
+    const nsKey = namespaceKey(namespace);
+
+    let memories = Array.from(this.quarantinedMemories.values()).filter(
+      mem => namespaceKey(mem.namespace) === nsKey
+    );
+
+    const order = options?.order ?? 'desc';
+    memories.sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return order === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+
+    const offset = options?.offset ?? 0;
+    const limit = options?.limit ?? 100;
+    memories = memories.slice(offset, offset + limit);
+
+    return memories.map(memory => ({ ...memory }));
+  }
+
+  async deleteQuarantinedMemory(memory_id: string): Promise<void> {
+    this.quarantinedMemories.delete(memory_id);
   }
 
   async searchMemories(query: MemoryQuery): Promise<MemoryResult[]> {
@@ -244,7 +282,7 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
       : 0;
 
     // Calculate scores
-    const results: MemoryResult[] = candidates
+    const scoredResults = candidates
       .map(mem => {
         // Calculate relevance / semantic similarity
         let semanticSimilarity = 0;
@@ -279,7 +317,7 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
         const ageDays = daysBetween(mem.created_at, nowIso);
         const isStale = ageDays >= 90;
 
-        return {
+        const result: MemoryResult = {
           memory_id: mem.memory_id,
           score,
           score_components: components,
@@ -291,8 +329,10 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
           source: mem.source,
           provenance: mem.provenance,
         };
+        return result;
       })
       .filter((r): r is MemoryResult => r !== null);
+    const results = scoredResults;
     
     // Sort by score
     results.sort((a, b) => b.score - a.score);
@@ -362,16 +402,23 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
   clear(): void {
     this.checkpoints.clear();
     this.memories.clear();
+    this.quarantinedMemories.clear();
     this.auditLog = [];
   }
 
   /**
    * Get statistics (for testing/debugging)
    */
-  getStats(): { checkpoints: number; memories: number; auditEntries: number } {
+  getStats(): {
+    checkpoints: number;
+    memories: number;
+    quarantinedMemories: number;
+    auditEntries: number;
+  } {
     return {
       checkpoints: this.checkpoints.size,
       memories: this.memories.size,
+      quarantinedMemories: this.quarantinedMemories.size,
       auditEntries: this.auditLog.length,
     };
   }

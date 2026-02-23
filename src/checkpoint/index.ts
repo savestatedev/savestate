@@ -28,6 +28,7 @@ export {
   // Memory
   MemoryObject,
   MemorySource,
+  MemoryIngestionMetadata,
   ProvenanceEntry,
   CreateMemoryInput,
   
