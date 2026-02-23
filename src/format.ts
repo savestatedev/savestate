@@ -6,6 +6,7 @@
  */
 
 import { createHash } from 'node:crypto';
+import { basename } from 'node:path';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -85,7 +86,8 @@ export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
       if (runJsonl === undefined) {
         continue;
       }
-      files.set(`trace/runs/${run.file}`, Buffer.from(normalizeJsonl(runJsonl)));
+      const sanitizedFile = sanitizeTraceFilename(run.file);
+      files.set(`trace/runs/${sanitizedFile}`, Buffer.from(normalizeJsonl(runJsonl)));
     }
 
     for (const [runId, runJsonl] of Object.entries(trace.runs)) {
@@ -170,7 +172,8 @@ function unpackTrace(files: Map<string, Buffer>): SnapshotTrace | undefined {
   const runs: Record<string, string> = {};
 
   for (const run of index) {
-    const runPath = `trace/runs/${run.file}`;
+    const sanitizedFile = sanitizeTraceFilename(run.file);
+    const runPath = `trace/runs/${sanitizedFile}`;
     const buf = files.get(runPath);
     if (!buf) {
       continue;
@@ -187,6 +190,14 @@ function unpackTrace(files: Map<string, Buffer>): SnapshotTrace | undefined {
 
 function makeTraceRunFilename(runId: string): string {
   return `run-${encodeURIComponent(runId)}.jsonl`;
+}
+
+function sanitizeTraceFilename(file: string): string {
+  const sanitized = basename(file);
+  if (sanitized !== file || file.includes('..')) {
+    throw new Error(`Invalid trace filename: ${file}`);
+  }
+  return sanitized;
 }
 
 function normalizeJsonl(content: string): string {

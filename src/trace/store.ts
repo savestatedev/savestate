@@ -4,7 +4,7 @@
 
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { localConfigDir } from '../config.js';
 import {
   TRACE_SCHEMA_VERSION,
@@ -196,7 +196,15 @@ export class TraceStore {
   }
 
   private getRunPath(runFile: string): string {
-    return join(this.runsDir(), runFile);
+    return join(this.runsDir(), this.sanitizeFilename(runFile));
+  }
+
+  private sanitizeFilename(file: string): string {
+    const sanitized = basename(file);
+    if (sanitized !== file || file.includes('..')) {
+      throw new Error(`Invalid trace filename: ${file}`);
+    }
+    return sanitized;
   }
 
   private async ensureTraceDirs(): Promise<void> {
