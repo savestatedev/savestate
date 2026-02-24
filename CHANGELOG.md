@@ -1,5 +1,31 @@
 # Changelog
 
+## [Unreleased]
+
+### 🧾 Askable Echoes — Auditable Trace Ledger
+
+A new audit trail for agent runs! Captures tool calls, results, checkpoints, and errors for debugging, compliance, and learning.
+
+#### Features
+- **Trace Ledger Store** — Append-only JSONL event stream per agent run
+- **SAF Integration** — Traces encrypted alongside snapshots (backwards compatible)
+- **CLI Commands** — `savestate trace list|show|export` for inspection
+- **Secret Redaction** — API keys, tokens, passwords auto-redacted by default
+- **Full Adapter Support** — Clawdbot adapter captures + restores traces end-to-end
+
+#### Schema
+- Trace schema versioned independently (`schema_version: 1`)
+- Event types: `tool_call`, `tool_result`, `message`, `checkpoint`, `error`
+- See `docs/trace-ledger.md` for full spec
+
+#### Security
+- Path traversal protection in trace filenames
+- Configurable redaction keys + custom hooks
+
+Closes #94.
+
+---
+
 ## [0.8.0] - 2026-02-10
 
 ### 🚀 Migration Wizard — Full Release
