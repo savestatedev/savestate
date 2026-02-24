@@ -9,3 +9,4 @@ export { listCommand } from './list.js';
 export { diffCommand } from './diff.js';
 export { configCommand } from './config.js';
 export { adaptersCommand } from './adapters.js';
+export { antibodiesCommand } from './antibodies.js';

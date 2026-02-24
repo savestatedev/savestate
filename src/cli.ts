@@ -13,6 +13,7 @@
  *   savestate diff <a> <b>            Compare two snapshots
  *   savestate config                  View/edit configuration
  *   savestate adapters                List available adapters
+ *   savestate antibodies              Manage failure antibodies
  */
 
 import { Command } from 'commander';
@@ -25,6 +26,7 @@ import {
   diffCommand,
   configCommand,
   adaptersCommand,
+  antibodiesCommand,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 import { registerTraceCommands } from './commands/trace.js';
@@ -101,6 +103,25 @@ program
   .command('adapters')
   .description('List available platform adapters')
   .action(adaptersCommand);
+
+// ─── savestate antibodies ───────────────────────────────────
+
+program
+  .command('antibodies <subcommand>')
+  .description('Failure antibody system (list, add, preflight, stats)')
+  .option('--id <id>', 'Rule ID (for manual add)')
+  .option('--all', 'Include retired rules in list')
+  .option('--json', 'Output as JSON')
+  .option('--tool <tool>', 'Tool name in trigger/context')
+  .option('--error-code <code>', 'Error code in trigger/context')
+  .option('--path <path>', 'Path in preflight context')
+  .option('--path-prefix <prefix>', 'Path prefix in rule trigger')
+  .option('--tags <tags>', 'Comma-separated tags')
+  .option('--risk <risk>', 'Risk level (low, medium, high, critical)')
+  .option('--safe-action <type>', 'Safe action type for manual rule')
+  .option('--confidence <0..1>', 'Rule confidence (0-1)')
+  .option('--semantic', 'Enable semantic matcher stub')
+  .action(antibodiesCommand);
 
 // ─── savestate search ────────────────────────────────────────
 
