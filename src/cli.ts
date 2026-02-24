@@ -198,6 +198,12 @@ program
 
 registerTraceCommands(program);
 
+// ─── savestate memory ────────────────────────────────────────
+
+import { registerMemoryCommands } from './commands/memory-cli.js';
+
+registerMemoryCommands(program);
+
 // ─── savestate mcp ───────────────────────────────────────────
 
 program

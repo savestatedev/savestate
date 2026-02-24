@@ -61,6 +61,9 @@ export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
   if (snapshot.memory.knowledge.length > 0) {
     files.set('memory/knowledge/index.json', Buffer.from(JSON.stringify(snapshot.memory.knowledge, null, 2)));
   }
+  if (snapshot.memory.tierConfig) {
+    files.set('memory/tier-config.json', Buffer.from(JSON.stringify(snapshot.memory.tierConfig, null, 2)));
+  }
 
   // conversations/
   files.set('conversations/index.json', Buffer.from(JSON.stringify(snapshot.conversations, null, 2)));
@@ -148,6 +151,9 @@ export function unpackSnapshot(files: Map<string, Buffer>): Snapshot {
     knowledge: files.has('memory/knowledge/index.json')
       ? getJson<Snapshot['memory']['knowledge']>('memory/knowledge/index.json')
       : [],
+    tierConfig: files.has('memory/tier-config.json')
+      ? getJson<Snapshot['memory']['tierConfig']>('memory/tier-config.json')
+      : undefined,
   };
 
   const conversations = getJson<Snapshot['conversations']>('conversations/index.json');

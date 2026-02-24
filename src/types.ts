@@ -96,6 +96,14 @@ export interface FileManifestEntry {
 
 // ─── Memory ──────────────────────────────────────────────────
 
+/**
+ * Memory tier levels for the multi-tier architecture:
+ * - L1: Short-term buffer (current session/window, fastest access)
+ * - L2: Working set (recent + pinned items, fast retrieval)
+ * - L3: Long-term archive (full history, slower retrieval, searchable)
+ */
+export type MemoryTier = 'L1' | 'L2' | 'L3';
+
 export interface Memory {
   /** Platform memory entries (ChatGPT memories, Claude memory, etc.) */
   core: MemoryEntry[];
@@ -103,6 +111,48 @@ export interface Memory {
   knowledge: KnowledgeDocument[];
   /** Optional vector embeddings for search */
   embeddings?: EmbeddingData;
+  /** Memory tier configuration and metadata */
+  tierConfig?: MemoryTierConfig;
+}
+
+/**
+ * Configuration for the multi-tier memory system.
+ */
+export interface MemoryTierConfig {
+  /** Schema version for tier config */
+  version: string;
+  /** Default tier for new memories */
+  defaultTier: MemoryTier;
+  /** Automatic tier policies */
+  policies?: MemoryTierPolicy[];
+  /** Tier-specific settings */
+  tiers: {
+    L1: TierSettings;
+    L2: TierSettings;
+    L3: TierSettings;
+  };
+}
+
+export interface TierSettings {
+  /** Maximum number of items in this tier (null = unlimited) */
+  maxItems?: number | null;
+  /** Maximum age before auto-demotion (e.g., '24h', '7d', '30d') */
+  maxAge?: string | null;
+  /** Whether items in this tier are included in default context */
+  includeInContext: boolean;
+}
+
+export interface MemoryTierPolicy {
+  /** Policy name */
+  name: string;
+  /** Condition for triggering the policy */
+  trigger: 'age' | 'access' | 'overflow' | 'manual';
+  /** Source tier */
+  from: MemoryTier;
+  /** Destination tier */
+  to: MemoryTier;
+  /** Condition threshold (e.g., '7d' for age, count for overflow) */
+  threshold?: string | number;
 }
 
 export interface MemoryEntry {
@@ -112,6 +162,20 @@ export interface MemoryEntry {
   createdAt: string;
   updatedAt?: string;
   metadata?: Record<string, unknown>;
+  /** Memory tier (L1/L2/L3). Defaults to L3 for backward compatibility. */
+  tier?: MemoryTier;
+  /** Whether this memory is pinned (prevents automatic demotion) */
+  pinned?: boolean;
+  /** ISO 8601 timestamp when the memory was pinned */
+  pinnedAt?: string;
+  /** ISO 8601 timestamp of last access (for LRU-style policies) */
+  lastAccessedAt?: string;
+  /** ISO 8601 timestamp when promoted to current tier */
+  promotedAt?: string;
+  /** ISO 8601 timestamp when demoted to current tier */
+  demotedAt?: string;
+  /** Previous tier before last promotion/demotion */
+  previousTier?: MemoryTier;
 }
 
 export interface KnowledgeDocument {

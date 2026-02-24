@@ -90,3 +90,23 @@ export async function findEntry(id: string, cwd?: string): Promise<SnapshotIndex
   const index = await loadIndex(cwd);
   return index.snapshots.find((s) => s.id === id) ?? null;
 }
+
+/**
+ * Update a snapshot entry in the index.
+ */
+export async function updateEntry(
+  id: string,
+  updates: Partial<SnapshotIndexEntry>,
+  cwd?: string,
+): Promise<boolean> {
+  const index = await loadIndex(cwd);
+  const entryIndex = index.snapshots.findIndex((s) => s.id === id);
+  if (entryIndex === -1) return false;
+
+  index.snapshots[entryIndex] = {
+    ...index.snapshots[entryIndex],
+    ...updates,
+  };
+  await saveIndex(index, cwd);
+  return true;
+}
