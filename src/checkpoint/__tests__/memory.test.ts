@@ -47,6 +47,11 @@ describe('KnowledgeLane', () => {
       expect(memory.importance).toBe(0.8);
       expect(memory.provenance).toHaveLength(1);
       expect(memory.provenance[0].action).toBe('created');
+      expect(memory.ingestion.source_type).toBe('user_input');
+      expect(memory.ingestion.source_id).toBe('user-1');
+      expect(memory.ingestion.ingestion_timestamp).toBeDefined();
+      expect(memory.ingestion.confidence_score).toBeGreaterThan(0);
+      expect(memory.ingestion.quarantined).toBe(false);
     });
 
     it('should use default values for optional fields', async () => {
@@ -63,6 +68,111 @@ describe('KnowledgeLane', () => {
       expect(memory.importance).toBe(0.5);
       expect(memory.task_criticality).toBe(0.5);
       expect(memory.tags).toEqual([]);
+      expect(memory.ingestion.source_type).toBe('system');
+    });
+
+    it('should reject entries with encoding artifacts', async () => {
+      await expect(
+        knowledge.storeMemory({
+          namespace: testNamespace,
+          content: 'bad\u0000content',
+          source: {
+            type: 'tool_output',
+            identifier: 'terminal',
+          },
+        })
+      ).rejects.toThrow('encoding artifacts');
+    });
+
+    it('should reject invalid structured JSON from tool output', async () => {
+      await expect(
+        knowledge.storeMemory({
+          namespace: testNamespace,
+          content: '{"status":',
+          source: {
+            type: 'tool_output',
+            identifier: 'tool-run-42',
+          },
+          content_type: 'json',
+        })
+      ).rejects.toThrow('Invalid JSON payload');
+    });
+
+    it('should sanitize web scrape HTML to text and tag provenance', async () => {
+      const memory = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content: '<html><body><script>alert(1)</script><p>Article body</p></body></html>',
+        source: {
+          type: 'web_scrape',
+          identifier: 'https://example.com/article',
+        },
+      });
+
+      expect(memory.content).toBe('Article body');
+      expect(memory.content_type).toBe('text');
+      expect(memory.ingestion.source_type).toBe('web_scrape');
+      expect(memory.ingestion.source_id).toBe('https://example.com/article');
+      expect(memory.ingestion.detected_format).toBe('html');
+    });
+
+    it('should truncate oversized text entries', async () => {
+      const content = 'a'.repeat(16_050);
+      const memory = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content,
+        source: {
+          type: 'tool_output',
+          identifier: 'terminal',
+        },
+      });
+
+      expect(memory.content.length).toBe(16_000);
+      expect(memory.ingestion.validation_notes.some(note => note.includes('truncated'))).toBe(true);
+    });
+
+    it('should quarantine low-confidence entries and exclude them from search', async () => {
+      const suspicious = 'A'.repeat(220) + ' spam '.repeat(200);
+      const memory = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content: suspicious,
+        source: {
+          type: 'web_scrape',
+          identifier: 'https://spam.example',
+        },
+      });
+
+      expect(memory.ingestion.quarantined).toBe(true);
+
+      const primary = await knowledge.getMemory(memory.memory_id);
+      expect(primary).toBeNull();
+
+      const quarantined = await knowledge.listQuarantinedMemories(testNamespace);
+      expect(quarantined.some(item => item.memory_id === memory.memory_id)).toBe(true);
+
+      const searchResults = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'spam',
+      });
+      expect(searchResults.some(item => item.memory_id === memory.memory_id)).toBe(false);
+    });
+
+    it('should allow quarantined memory promotion', async () => {
+      const suspicious = 'A'.repeat(220) + ' spam '.repeat(200);
+      const memory = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content: suspicious,
+        source: {
+          type: 'web_scrape',
+          identifier: 'https://spam.example/post',
+        },
+      });
+
+      const promoted = await knowledge.promoteQuarantinedMemory(memory.memory_id, 'reviewer-1');
+      expect(promoted.ingestion.quarantined).toBe(false);
+
+      const primary = await knowledge.getMemory(memory.memory_id);
+      expect(primary).toBeTruthy();
+      expect(primary?.provenance.some(p => p.reason?.includes('Promoted from quarantine'))).toBe(true);
     });
   });
 
@@ -334,6 +444,16 @@ describe('Scoring Functions', () => {
         content: 'Test',
         content_type: 'text',
         source: { type: 'user_input', identifier: 'user', timestamp: new Date().toISOString() },
+        ingestion: {
+          source_type: 'user_input',
+          source_id: 'user',
+          ingestion_timestamp: new Date().toISOString(),
+          confidence_score: 1,
+          detected_format: 'text',
+          anomaly_flags: [],
+          quarantined: false,
+          validation_notes: [],
+        },
         provenance: [],
         tags: [],
         importance: 1.0,
@@ -359,6 +479,16 @@ describe('Scoring Functions', () => {
         content: 'Test',
         content_type: 'text',
         source: { type: 'user_input', identifier: 'user', timestamp: new Date().toISOString() },
+        ingestion: {
+          source_type: 'user_input',
+          source_id: 'user',
+          ingestion_timestamp: new Date().toISOString(),
+          confidence_score: 1,
+          detected_format: 'text',
+          anomaly_flags: [],
+          quarantined: false,
+          validation_notes: [],
+        },
         provenance: [],
         tags: [],
         importance: 1.0,

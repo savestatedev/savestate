@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import {
   CheckpointStorage,
   CreateMemoryInput,
+  ListOptions,
   MemoryObject,
   MemoryQuery,
   MemoryResult,
@@ -16,6 +17,7 @@ import {
   DEFAULT_RANKING_WEIGHTS,
   RankingWeights,
 } from './types.js';
+import { validateMemoryEntry } from '../validation/index.js';
 
 /**
  * Calculate recency decay score (0-1).
@@ -97,24 +99,49 @@ export class KnowledgeLane {
    * Store a new memory with provenance.
    */
   async storeMemory(input: CreateMemoryInput): Promise<MemoryObject> {
+    const validation = validateMemoryEntry({
+      content: input.content,
+      sourceType: input.source.type,
+      sourceId: input.source.identifier,
+      declaredContentType: input.content_type,
+    });
+
+    if (!validation.accepted) {
+      throw new Error(validation.rejectionReason ?? 'Memory entry rejected by validation layer');
+    }
+
     const memory_id = randomUUID();
     const created_at = new Date().toISOString();
+    const confidencePercent = Math.round(validation.confidenceScore * 100);
+    const lifecycleReason = validation.quarantined
+      ? `Created from ${input.source.type} and quarantined (${confidencePercent}% confidence)`
+      : `Created from ${input.source.type}`;
     
     const initialProvenance: ProvenanceEntry = {
       action: 'created',
       actor_id: input.source.identifier,
       timestamp: created_at,
-      reason: `Created from ${input.source.type}`,
+      reason: lifecycleReason,
     };
     
     const memory: MemoryObject = {
       memory_id,
       namespace: input.namespace,
-      content: input.content,
-      content_type: input.content_type ?? 'text',
+      content: validation.normalizedContent,
+      content_type: validation.normalizedContentType,
       source: {
         ...input.source,
         timestamp: created_at,
+      },
+      ingestion: {
+        source_type: validation.sourceType,
+        source_id: validation.sourceId,
+        ingestion_timestamp: created_at,
+        confidence_score: validation.confidenceScore,
+        detected_format: validation.detectedFormat,
+        anomaly_flags: validation.anomalyFlags,
+        quarantined: validation.quarantined,
+        validation_notes: validation.validationNotes,
       },
       provenance: [initialProvenance],
       tags: input.tags ?? [],
@@ -125,8 +152,12 @@ export class KnowledgeLane {
       ttl_seconds: input.ttl_seconds,
       checkpoint_refs: [],
     };
-    
-    await this.storage.saveMemory(memory);
+
+    if (validation.quarantined) {
+      await this.storage.saveQuarantinedMemory(memory);
+    } else {
+      await this.storage.saveMemory(memory);
+    }
     
     await this.storage.logAudit({
       namespace: input.namespace,
@@ -134,6 +165,11 @@ export class KnowledgeLane {
       resource_type: 'memory',
       resource_id: memory_id,
       actor_id: input.source.identifier,
+      metadata: {
+        quarantined: validation.quarantined,
+        confidence_score: validation.confidenceScore,
+        anomaly_flags: validation.anomalyFlags,
+      },
     });
     
     return memory;
@@ -144,6 +180,52 @@ export class KnowledgeLane {
    */
   async getMemory(memory_id: string): Promise<MemoryObject | null> {
     return this.storage.getMemory(memory_id);
+  }
+
+  /**
+   * List quarantined memories (excluded from normal retrieval/search).
+   */
+  async listQuarantinedMemories(
+    namespace: Namespace,
+    options?: ListOptions
+  ): Promise<MemoryObject[]> {
+    return this.storage.listQuarantinedMemories(namespace, options);
+  }
+
+  /**
+   * Promote a quarantined memory into primary retrieval storage.
+   */
+  async promoteQuarantinedMemory(memory_id: string, actor_id: string): Promise<MemoryObject> {
+    const memory = await this.storage.getQuarantinedMemory(memory_id);
+    if (!memory) {
+      throw new Error(`Quarantined memory ${memory_id} not found`);
+    }
+
+    const promotedAt = new Date().toISOString();
+    memory.ingestion.quarantined = false;
+    memory.provenance.push({
+      action: 'modified',
+      actor_id,
+      timestamp: promotedAt,
+      reason: 'Promoted from quarantine',
+    });
+
+    await this.storage.saveMemory(memory);
+    await this.storage.deleteQuarantinedMemory(memory_id);
+
+    await this.storage.logAudit({
+      namespace: memory.namespace,
+      action: 'update',
+      resource_type: 'memory',
+      resource_id: memory_id,
+      actor_id,
+      metadata: {
+        promoted_from_quarantine: true,
+        confidence_score: memory.ingestion.confidence_score,
+      },
+    });
+
+    return memory;
   }
 
   /**
