@@ -147,3 +147,61 @@ export type {
   PreflightOptions,
   ListRulesOptions,
 } from './antibodies/index.js';
+
+// Privacy Controls
+export {
+  // PII Detection & Redaction
+  detectPII,
+  redactPII,
+  containsPII,
+  summarizePII,
+  // Deny-List Policy Engine
+  evaluateDenyList,
+  applyDenyList,
+  createPolicy,
+  addRule,
+  removeRule,
+  getBuiltinRuleSets,
+  getBuiltinRules,
+  // Field-Level Encryption
+  encryptField,
+  decryptField,
+  isEncryptedField,
+  encryptFields,
+  decryptFields,
+  rotateFieldKeys,
+  defaultFieldEncryptionConfig,
+  // Deletion Attestations
+  createPIIAttestation,
+  createDenyListAttestation,
+  createRetentionAttestation,
+  createManualDeletionAttestation,
+  createAttestationLog,
+  addAttestation,
+  finalizeAttestationLog,
+  verifyAttestationLog,
+  summarizeAttestations,
+  // Pipeline
+  applyPrivacyPipeline,
+  processMemoryPrivacy,
+  validatePrivacy,
+  defaultPrivacyConfig,
+} from './privacy/index.js';
+export type {
+  PIIType,
+  PIIMatch,
+  PIIDetectionResult,
+  PIIRedactionResult,
+  RedactionMethod,
+  DenyListRule,
+  DenyListPolicy,
+  DenyListEvaluation,
+  DenyListAction,
+  BuiltInRuleSet,
+  EncryptedField,
+  FieldEncryptionConfig,
+  DeletionAttestation,
+  DeletionAttestationLog,
+  PrivacyConfig,
+  PrivacyPipelineResult,
+} from './privacy/index.js';
