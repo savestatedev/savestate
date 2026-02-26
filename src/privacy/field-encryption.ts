@@ -23,9 +23,9 @@ const IV_LENGTH = 12; // 96 bits for GCM
 const SALT_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
-// Argon2id parameters (using scrypt as fallback since Node.js doesn't have native Argon2)
-// In production, use argon2 package
-const SCRYPT_N = 16384; // Lower than main encryption for faster field ops
+// scrypt parameters (OWASP minimum: N=32768, r=8, p=1)
+// For Argon2id in production, use argon2 package
+const SCRYPT_N = 32768; // OWASP minimum for interactive logins
 const SCRYPT_R = 8;
 const SCRYPT_P = 1;
 
@@ -33,7 +33,8 @@ const SCRYPT_P = 1;
 
 /**
  * Derive a field encryption key from passphrase and salt.
- * Note: In production, use argon2id. Using scrypt here for Node.js compatibility.
+ * Uses scrypt with OWASP-compliant parameters.
+ * Note: For higher security requirements, consider argon2id via the argon2 package.
  */
 async function deriveFieldKey(passphrase: string, salt: Buffer): Promise<Buffer> {
   const { scryptSync } = await import('node:crypto');
@@ -41,6 +42,7 @@ async function deriveFieldKey(passphrase: string, salt: Buffer): Promise<Buffer>
     N: SCRYPT_N,
     r: SCRYPT_R,
     p: SCRYPT_P,
+    maxmem: 64 * 1024 * 1024, // 64MB - accommodate OWASP N=32768, r=8 (requires ~32MB)
   });
 }
 
@@ -77,8 +79,18 @@ export async function encryptField(
   // Derive key
   const key = await deriveFieldKey(passphrase, salt);
 
-  // Encrypt
+  // Build AAD (Additional Authenticated Data) to prevent ciphertext transplant attacks
+  // AAD binds ciphertext to its context without being encrypted
+  const aadComponents = [
+    'savestate-field-v1', // Version tag
+    valueType,            // Data type
+    keyId || 'default',   // Key identifier
+  ];
+  const aad = Buffer.from(aadComponents.join(':'), 'utf8');
+
+  // Encrypt with AAD
   const cipher = createCipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
+  cipher.setAAD(aad);
   const encrypted = Buffer.concat([
     cipher.update(plaintext, 'utf8'),
     cipher.final(),
@@ -91,7 +103,7 @@ export async function encryptField(
   return {
     __encrypted: true,
     algorithm: 'aes-256-gcm',
-    kdf: 'argon2id', // Note: actually using scrypt for Node.js compat
+    kdf: 'scrypt',
     data: packed.toString('base64'),
     meta: {
       type: valueType,
@@ -134,9 +146,18 @@ export async function decryptField(
   // Derive key
   const key = await deriveFieldKey(passphrase, salt);
 
-  // Decrypt
+  // Reconstruct AAD (must match encryption)
+  const aadComponents = [
+    'savestate-field-v1',
+    field.meta?.type || 'string',
+    field.meta?.keyId || 'default',
+  ];
+  const aad = Buffer.from(aadComponents.join(':'), 'utf8');
+
+  // Decrypt with AAD
   const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
   decipher.setAuthTag(authTag);
+  decipher.setAAD(aad);
 
   let plaintext: string;
   try {

@@ -181,8 +181,8 @@ export interface EncryptedField {
   __encrypted: true;
   /** Encryption algorithm used */
   algorithm: 'aes-256-gcm';
-  /** Key derivation function */
-  kdf: 'argon2id';
+  /** Key derivation function (scrypt for Node.js compatibility, argon2id for production) */
+  kdf: 'scrypt' | 'argon2id';
   /** Base64-encoded encrypted data (includes salt, IV, auth tag) */
   data: string;
   /** Field metadata (not encrypted) */

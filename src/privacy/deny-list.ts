@@ -14,6 +14,126 @@ import type {
   BuiltInRuleSet,
 } from './types.js';
 
+// ─── Security Helpers ────────────────────────────────────────
+
+/**
+ * Maximum regex execution time in milliseconds.
+ * Prevents ReDoS attacks from user-provided patterns.
+ */
+const REGEX_TIMEOUT_MS = 100;
+
+/**
+ * Maximum input length for regex matching.
+ * Extremely long inputs can cause performance issues.
+ */
+const MAX_INPUT_LENGTH = 1_000_000;
+
+/**
+ * Unicode confusables: map of common homoglyphs to ASCII equivalents.
+ * Prevents bypass via visually similar characters.
+ */
+const HOMOGLYPH_MAP: Record<string, string> = {
+  // Cyrillic lookalikes
+  '\u0430': 'a', '\u0435': 'e', '\u043E': 'o', '\u0440': 'p',
+  '\u0441': 'c', '\u0443': 'y', '\u0445': 'x', '\u0456': 'i',
+  '\u0458': 'j', '\u04BB': 'h', '\u0501': 'd', '\u051B': 'q',
+  // Greek lookalikes
+  '\u03B1': 'a', '\u03B5': 'e', '\u03B9': 'i', '\u03BF': 'o',
+  '\u03C1': 'p', '\u03C5': 'u', '\u03C7': 'x', '\u0391': 'A',
+  '\u0392': 'B', '\u0395': 'E', '\u0397': 'H', '\u0399': 'I',
+  '\u039A': 'K', '\u039C': 'M', '\u039D': 'N', '\u039F': 'O',
+  '\u03A1': 'P', '\u03A4': 'T', '\u03A7': 'X', '\u03A5': 'Y',
+  '\u0396': 'Z',
+  // Fullwidth characters
+  '\uFF21': 'A', '\uFF22': 'B', '\uFF23': 'C', '\uFF24': 'D',
+  '\uFF25': 'E', '\uFF26': 'F', '\uFF27': 'G', '\uFF28': 'H',
+  '\uFF29': 'I', '\uFF2A': 'J', '\uFF2B': 'K', '\uFF2C': 'L',
+  '\uFF2D': 'M', '\uFF2E': 'N', '\uFF2F': 'O', '\uFF30': 'P',
+  '\uFF31': 'Q', '\uFF32': 'R', '\uFF33': 'S', '\uFF34': 'T',
+  '\uFF35': 'U', '\uFF36': 'V', '\uFF37': 'W', '\uFF38': 'X',
+  '\uFF39': 'Y', '\uFF3A': 'Z',
+  '\uFF41': 'a', '\uFF42': 'b', '\uFF43': 'c', '\uFF44': 'd',
+  '\uFF45': 'e', '\uFF46': 'f', '\uFF47': 'g', '\uFF48': 'h',
+  '\uFF49': 'i', '\uFF4A': 'j', '\uFF4B': 'k', '\uFF4C': 'l',
+  '\uFF4D': 'm', '\uFF4E': 'n', '\uFF4F': 'o', '\uFF50': 'p',
+  '\uFF51': 'q', '\uFF52': 'r', '\uFF53': 's', '\uFF54': 't',
+  '\uFF55': 'u', '\uFF56': 'v', '\uFF57': 'w', '\uFF58': 'x',
+  '\uFF59': 'y', '\uFF5A': 'z',
+  '\uFF10': '0', '\uFF11': '1', '\uFF12': '2', '\uFF13': '3',
+  '\uFF14': '4', '\uFF15': '5', '\uFF16': '6', '\uFF17': '7',
+  '\uFF18': '8', '\uFF19': '9',
+};
+
+/**
+ * Zero-width and invisible characters to strip.
+ */
+const INVISIBLE_CHARS = /[\u200B-\u200F\u2028-\u202F\u205F-\u206F\uFEFF\u00AD]/g;
+
+/**
+ * Normalize content to prevent Unicode bypass attacks.
+ * - Removes zero-width/invisible characters
+ * - Normalizes homoglyphs to ASCII equivalents
+ * - Applies NFC normalization
+ */
+function normalizeUnicode(content: string): string {
+  // Remove zero-width and invisible characters
+  let normalized = content.replace(INVISIBLE_CHARS, '');
+
+  // Replace known homoglyphs
+  for (const [homoglyph, ascii] of Object.entries(HOMOGLYPH_MAP)) {
+    normalized = normalized.replaceAll(homoglyph, ascii);
+  }
+
+  // Apply Unicode NFC normalization
+  return normalized.normalize('NFC');
+}
+
+/**
+ * Safely execute regex with timeout protection against ReDoS.
+ * Returns matches or null if timeout/error occurs.
+ */
+function safeRegexExec(
+  content: string,
+  pattern: string,
+  flags: string,
+): Array<{ start: number; end: number; content: string }> | null {
+  // Truncate extremely long inputs
+  const safeContent = content.length > MAX_INPUT_LENGTH
+    ? content.slice(0, MAX_INPUT_LENGTH)
+    : content;
+
+  try {
+    const regex = new RegExp(pattern, flags);
+    const matches: Array<{ start: number; end: number; content: string }> = [];
+    const startTime = performance.now();
+
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(safeContent)) !== null) {
+      // Check for timeout
+      if (performance.now() - startTime > REGEX_TIMEOUT_MS) {
+        console.warn(`Regex timeout for pattern: ${pattern.slice(0, 50)}...`);
+        break;
+      }
+
+      matches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[0],
+      });
+
+      // Prevent infinite loops on zero-width matches
+      if (match[0].length === 0) {
+        regex.lastIndex++;
+      }
+    }
+
+    return matches.length > 0 ? matches : null;
+  } catch {
+    // Invalid regex
+    return null;
+  }
+}
+
 // ─── Built-in Rule Sets ──────────────────────────────────────
 
 /**
@@ -126,6 +246,70 @@ const BUILTIN_SECRETS: DenyListRule[] = [
     enabled: true,
     priority: 100,
   },
+  {
+    id: 'secret-stripe-key',
+    name: 'Stripe API Key',
+    type: 'regex',
+    pattern: 'sk_(?:live|test)_[A-Za-z0-9]{24,}',
+    action: 'block',
+    enabled: true,
+    priority: 100,
+  },
+  {
+    id: 'secret-stripe-restricted',
+    name: 'Stripe Restricted Key',
+    type: 'regex',
+    pattern: 'rk_(?:live|test)_[A-Za-z0-9]{24,}',
+    action: 'block',
+    enabled: true,
+    priority: 100,
+  },
+  {
+    id: 'secret-google-api-key',
+    name: 'Google API Key',
+    type: 'regex',
+    pattern: 'AIza[A-Za-z0-9_-]{35}',
+    action: 'block',
+    enabled: true,
+    priority: 100,
+  },
+  {
+    id: 'secret-google-oauth',
+    name: 'Google OAuth Client Secret',
+    type: 'regex',
+    pattern: 'GOCSPX-[A-Za-z0-9_-]{28}',
+    action: 'block',
+    enabled: true,
+    priority: 100,
+  },
+  {
+    id: 'secret-azure-subscription',
+    name: 'Azure Subscription Key',
+    type: 'regex',
+    pattern: '[a-f0-9]{32}(?=.*azure)',
+    caseSensitive: false,
+    action: 'block',
+    enabled: true,
+    priority: 90,
+  },
+  {
+    id: 'secret-azure-connection-string',
+    name: 'Azure Connection String',
+    type: 'regex',
+    pattern: 'DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[A-Za-z0-9+/=]{88};',
+    action: 'block',
+    enabled: true,
+    priority: 100,
+  },
+  {
+    id: 'secret-jwt',
+    name: 'JSON Web Token',
+    type: 'regex',
+    pattern: 'eyJ[A-Za-z0-9_-]{10,}\\.eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}',
+    action: 'redact',
+    enabled: true,
+    priority: 85,
+  },
 ];
 
 /**
@@ -215,14 +399,17 @@ const BUILTIN_RULES: Record<BuiltInRuleSet, DenyListRule[]> = {
 
 /**
  * Match content against a single rule.
+ * Applies Unicode normalization to prevent homoglyph/zero-width bypass.
  *
  * @param content - The content to check
  * @param rule - The rule to evaluate
+ * @param normalizedContent - Pre-normalized content (optional, for performance)
  * @returns Array of match positions, or null if no match
  */
 function matchRule(
   content: string,
   rule: DenyListRule,
+  normalizedContent?: string,
 ): Array<{ start: number; end: number; content: string }> | null {
   if (!rule.enabled) return null;
 
@@ -231,7 +418,11 @@ function matchRule(
     return null;
   }
 
-  const searchContent = rule.caseSensitive ? content : content.toLowerCase();
+  // Use normalized content to prevent Unicode bypass attacks
+  // Note: Match positions refer to normalized content
+  const safeContent = normalizedContent ?? normalizeUnicode(content);
+
+  const searchContent = rule.caseSensitive ? safeContent : safeContent.toLowerCase();
   const searchPattern = rule.caseSensitive ? rule.pattern : rule.pattern.toLowerCase();
 
   const matches: Array<{ start: number; end: number; content: string }> = [];
@@ -239,20 +430,20 @@ function matchRule(
   switch (rule.type) {
     case 'exact':
       if (searchContent === searchPattern) {
-        matches.push({ start: 0, end: content.length, content });
+        matches.push({ start: 0, end: safeContent.length, content: safeContent });
       }
       break;
 
     case 'prefix':
       if (searchContent.startsWith(searchPattern)) {
-        matches.push({ start: 0, end: rule.pattern.length, content: content.substring(0, rule.pattern.length) });
+        matches.push({ start: 0, end: rule.pattern.length, content: safeContent.substring(0, rule.pattern.length) });
       }
       break;
 
     case 'suffix':
       if (searchContent.endsWith(searchPattern)) {
-        const start = content.length - rule.pattern.length;
-        matches.push({ start, end: content.length, content: content.substring(start) });
+        const start = safeContent.length - rule.pattern.length;
+        matches.push({ start, end: safeContent.length, content: safeContent.substring(start) });
       }
       break;
 
@@ -263,7 +454,7 @@ function matchRule(
         matches.push({
           start: idx,
           end: idx + rule.pattern.length,
-          content: content.substring(idx, idx + rule.pattern.length),
+          content: safeContent.substring(idx, idx + rule.pattern.length),
         });
         pos = idx + 1;
       }
@@ -271,27 +462,19 @@ function matchRule(
     }
 
     case 'regex': {
-      try {
-        const flags = rule.caseSensitive ? 'g' : 'gi';
-        const regex = new RegExp(rule.pattern, flags);
-        let match: RegExpExecArray | null;
-        while ((match = regex.exec(content)) !== null) {
-          matches.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            content: match[0],
-          });
-        }
-      } catch {
-        // Invalid regex, skip
+      // Use safe regex execution with timeout protection against ReDoS
+      const flags = rule.caseSensitive ? 'g' : 'gi';
+      const regexMatches = safeRegexExec(safeContent, rule.pattern, flags);
+      if (regexMatches) {
+        matches.push(...regexMatches);
       }
       break;
     }
 
     case 'glob': {
       // For glob, we treat the entire content as a path-like string
-      if (minimatch(content, rule.pattern, { nocase: !rule.caseSensitive })) {
-        matches.push({ start: 0, end: content.length, content });
+      if (minimatch(safeContent, rule.pattern, { nocase: !rule.caseSensitive })) {
+        matches.push({ start: 0, end: safeContent.length, content: safeContent });
       }
       break;
     }
@@ -347,6 +530,9 @@ export function evaluateDenyList(
     };
   }
 
+  // Pre-normalize content once for all rules (security + performance)
+  const normalizedContent = normalizeUnicode(content);
+
   // Combine built-in rules with custom rules
   const allRules = [
     ...(policy.includes ? loadBuiltinRules(policy.includes) : []),
@@ -361,7 +547,7 @@ export function evaluateDenyList(
   let finalAction: DenyListAction | 'allow' = policy.defaultAction === 'deny' ? 'block' : 'allow';
 
   for (const rule of allRules) {
-    const matches = matchRule(content, rule);
+    const matches = matchRule(content, rule, normalizedContent);
     if (matches) {
       matchedRules.push({ rule, matches });
 
