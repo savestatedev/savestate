@@ -32,6 +32,15 @@ export {
   ProvenanceEntry,
   CreateMemoryInput,
 
+  // Lifecycle Controls (Issue #110)
+  MemoryVersion,
+  EditMemoryInput,
+  MergeMemoriesResult,
+  ExpireMemoriesResult,
+  TTLPolicy,
+  ListMemoryOptions,
+
+
   // Retrieval
   MemoryQuery,
   RankingWeights,
@@ -43,6 +52,7 @@ export {
   ScoreBreakdown,
   SourceTrace,
   PolicyPath,
+
 
   // Restore
   ResumePack,

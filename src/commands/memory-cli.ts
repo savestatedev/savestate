@@ -1,7 +1,8 @@
 /**
  * SaveState Memory CLI Commands
  *
- * Registers the memory tier management commands.
+ * Registers the memory tier management commands and lifecycle controls.
+ * Issue #110: Memory Lifecycle Controls - mutation, correction, expiry, audit
  */
 
 import type { Command } from 'commander';
@@ -15,6 +16,13 @@ import {
   showTierConfig,
   explainMemoryCommand,
 } from './memory.js';
+import {
+  editMemoryCommand,
+  deleteMemoryCommand,
+  rollbackMemoryCommand,
+  expireMemoriesCommand,
+  memoryLogCommand,
+} from './memory-lifecycle.js';
 import { loadConfig } from '../config.js';
 import { resolveStorage } from '../storage/index.js';
 import type { MemoryTier } from '../types.js';
@@ -202,6 +210,124 @@ export function registerMemoryCommands(program: Command): void {
           limit: parseInt(options.limit, 10),
           tags: options.tags?.split(',').map((t: string) => t.trim()),
           format: options.json ? 'json' : 'pretty',
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+
+  // ─── Lifecycle Controls (Issue #110) ───────────────────────
+
+  // ─── savestate memory edit ──────────────────────────────────
+
+  memory
+    .command('edit <memory-id>')
+    .description('Edit a memory\'s content or metadata')
+    .option('-c, --content <content>', 'New content for the memory')
+    .option('-t, --tags <tags>', 'New tags (comma-separated)')
+    .option('-i, --importance <n>', 'New importance score (0-1)')
+    .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
+    .option('-r, --reason <reason>', 'Reason for the edit')
+    .action(async (memoryId, options) => {
+      try {
+        const config = await loadConfig();
+        const storage = await resolveStorage(config);
+        const passphrase = await promptPassphrase();
+
+        await editMemoryCommand(storage, passphrase, memoryId, {
+          content: options.content,
+          tags: options.tags?.split(',').map((t: string) => t.trim()),
+          importance: options.importance ? parseFloat(options.importance) : undefined,
+          actorId: options.actor,
+          reason: options.reason,
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+
+  // ─── savestate memory delete ────────────────────────────────
+
+  memory
+    .command('delete <memory-id>')
+    .alias('rm')
+    .description('Delete a memory (soft delete with audit trail)')
+    .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
+    .requiredOption('-r, --reason <reason>', 'Reason for deletion (required)')
+    .action(async (memoryId, options) => {
+      try {
+        const config = await loadConfig();
+        const storage = await resolveStorage(config);
+        const passphrase = await promptPassphrase();
+
+        await deleteMemoryCommand(storage, passphrase, memoryId, {
+          actorId: options.actor,
+          reason: options.reason,
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+
+  // ─── savestate memory rollback ──────────────────────────────
+
+  memory
+    .command('rollback <memory-id>')
+    .description('Rollback a memory to a previous version')
+    .requiredOption('-v, --version <n>', 'Version number to rollback to')
+    .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
+    .action(async (memoryId, options) => {
+      try {
+        const config = await loadConfig();
+        const storage = await resolveStorage(config);
+        const passphrase = await promptPassphrase();
+
+        await rollbackMemoryCommand(storage, passphrase, memoryId, {
+          version: parseInt(options.version, 10),
+          actorId: options.actor,
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+
+  // ─── savestate memory expire ────────────────────────────────
+
+  memory
+    .command('expire')
+    .description('Expire memories based on TTL policy')
+    .requiredOption('-n, --namespace <ns>', 'Namespace (format: org:app:agent[:user])')
+    .option('--dry-run', 'Show what would be expired without applying')
+    .action(async (options) => {
+      try {
+        const config = await loadConfig();
+        const storage = await resolveStorage(config);
+        const passphrase = await promptPassphrase();
+
+        await expireMemoriesCommand(storage, passphrase, {
+          namespace: options.namespace,
+          dryRun: options.dryRun,
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+
+  // ─── savestate memory log ───────────────────────────────────
+
+  memory
+    .command('log <memory-id>')
+    .alias('history')
+    .description('Show audit history for a memory')
+    .option('--json', 'Output as JSON')
+    .action(async (memoryId, options) => {
+      try {
+        const config = await loadConfig();
+        const storage = await resolveStorage(config);
+        const passphrase = await promptPassphrase();
+
+        await memoryLogCommand(storage, passphrase, memoryId, {
+          format: options.json ? 'json' : 'table',
         });
       } catch (err) {
         handleError(err);

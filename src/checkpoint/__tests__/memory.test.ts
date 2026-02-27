@@ -635,6 +635,8 @@ describe('Scoring Functions', () => {
         task_criticality: 1.0,
         created_at: new Date().toISOString(),
         checkpoint_refs: [],
+        version: 1,
+        status: 'active',
       };
 
       const { score, components } = calculateMemoryScore(memory, 1.0);
@@ -670,6 +672,8 @@ describe('Scoring Functions', () => {
         task_criticality: 0.0,
         created_at: new Date().toISOString(),
         checkpoint_refs: [],
+        version: 1,
+        status: 'active',
       };
 
       // Custom weights: only importance matters

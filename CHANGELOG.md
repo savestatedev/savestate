@@ -2,27 +2,61 @@
 
 ## [Unreleased]
 
-### 🧾 Askable Echoes — Auditable Trace Ledger
+---
 
-A new audit trail for agent runs! Captures tool calls, results, checkpoints, and errors for debugging, compliance, and learning.
+## [0.9.0] - 2026-02-27
 
-#### Features
-- **Trace Ledger Store** — Append-only JSONL event stream per agent run
-- **SAF Integration** — Traces encrypted alongside snapshots (backwards compatible)
-- **CLI Commands** — `savestate trace list|show|export` for inspection
-- **Secret Redaction** — API keys, tokens, passwords auto-redacted by default
-- **Full Adapter Support** — Clawdbot adapter captures + restores traces end-to-end
+### 🔒 Privacy Controls (#117)
+- **PII Redaction**: Auto-detect and redact emails, phone numbers, SSNs, API keys before storage
+- **Deny-list Policy**: Configure fields and patterns that must never be persisted
+- **Deletion Guarantees**: Cryptographic proof of deletion for compliance workflows
 
-#### Schema
-- Trace schema versioned independently (`schema_version: 1`)
-- Event types: `tool_call`, `tool_result`, `message`, `checkpoint`, `error`
-- See `docs/trace-ledger.md` for full spec
+### 🔄 Memory Lifecycle Controls (#110)
+- `savestate memory edit` to correct stored facts
+- `savestate memory rollback` to revert to previous state
+- `savestate memory expire` with TTL and decay policies
+- Full audit log for all memory mutations
 
-#### Security
-- Path traversal protection in trace filenames
-- Configurable redaction keys + custom hooks
+### 📊 Memory Quality Framework (#113)
+- Confidence scoring for stored memories
+- Staleness detection and relevance ranking
+- Ingestion quarantine for low-confidence entries (#106)
+- Retrieval relevance improvements (#101)
 
-Closes #94.
+### 🏗️ Multi-tier Memory Architecture
+- **L1 (Hot)**: In-session working memory
+- **L2 (Warm)**: Cross-session persistent memory
+- **L3 (Cold)**: Archived, searchable long-term storage
+
+### 🧾 Askable Echoes: Trace Ledger (#94)
+- Append-only JSONL event stream per agent run
+- SAF integration (encrypted, backwards compatible)
+- CLI: `savestate trace list|show|export`
+- Auto-redaction of secrets (API keys, tokens, passwords)
+
+### 🛡️ Core Integrity + Decision Guard (#68)
+- Memory ingestion validation and quarantine
+- Decision guard for high-stakes agent actions
+
+### 📍 Path-addressable State Filesystem (#70)
+- Address any piece of agent state by path
+- Granular backup and restore of specific state subtrees
+
+### 📋 Checkpoint Ledger (#47)
+- Deterministic memory checkpoint system
+- Point-in-time restore for any checkpoint
+
+### 🎯 Action Recall Drillbook (#73)
+- Structured action history with recall scoring
+- Agent self-evaluation of past decisions
+
+### 🩹 Failure Antibody System (#100)
+- Warn-only failure pattern detection
+- Agents learn from past failures to avoid repeating them
+
+### 🧹 Repo Cleanup (#124)
+- Cleaned up stray files from repo root
+- Organized blog posts and documentation
 
 ---
 
