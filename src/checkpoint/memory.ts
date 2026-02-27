@@ -8,10 +8,15 @@ import { randomUUID } from 'crypto';
 import {
   CheckpointStorage,
   CreateMemoryInput,
+  EditMemoryInput,
+  ExpireMemoriesResult,
   ListOptions,
+  ListMemoryOptions,
   MemoryObject,
   MemoryQuery,
   MemoryResult,
+  MemoryVersion,
+  MergeMemoriesResult,
   Namespace,
   ProvenanceEntry,
   DEFAULT_RANKING_WEIGHTS,
@@ -151,6 +156,10 @@ export class KnowledgeLane {
       created_at,
       ttl_seconds: input.ttl_seconds,
       checkpoint_refs: [],
+      // Lifecycle control fields (Issue #110)
+      version: 1,
+      previous_versions: [],
+      status: validation.quarantined ? 'quarantined' : 'active',
     };
 
     if (validation.quarantined) {
@@ -322,17 +331,494 @@ export class KnowledgeLane {
     if (!memory) {
       throw new Error(`Memory ${memory_id} not found`);
     }
-    
+
     memory.provenance.push({
       action: 'invalidated',
       actor_id,
       timestamp: new Date().toISOString(),
       reason,
     });
-    
+
     // Set TTL to 0 to mark as expired
     memory.ttl_seconds = 0;
-    
+
     await this.storage.saveMemory(memory);
+  }
+
+  // ─── Lifecycle Controls (Issue #110) ───────────────────────
+
+  /**
+   * Edit a memory's content or metadata.
+   * Creates a version snapshot for rollback support.
+   */
+  async editMemory(
+    memory_id: string,
+    updates: EditMemoryInput,
+    actor_id: string,
+    reason?: string
+  ): Promise<MemoryObject> {
+    const memory = await this.storage.getMemory(memory_id);
+    if (!memory) {
+      throw new Error(`Memory ${memory_id} not found`);
+    }
+
+    if (memory.status === 'deleted') {
+      throw new Error(`Cannot edit deleted memory ${memory_id}`);
+    }
+
+    const editedAt = new Date().toISOString();
+
+    // Create version snapshot of current state
+    const versionSnapshot: MemoryVersion = {
+      version: memory.version,
+      content: memory.content,
+      content_type: memory.content_type,
+      tags: [...memory.tags],
+      importance: memory.importance,
+      task_criticality: memory.task_criticality,
+      superseded_at: editedAt,
+      superseded_by: actor_id,
+      change_reason: reason,
+    };
+
+    // Initialize previous_versions if needed
+    if (!memory.previous_versions) {
+      memory.previous_versions = [];
+    }
+    memory.previous_versions.push(versionSnapshot);
+
+    // Apply updates
+    const previousContent = memory.content;
+    if (updates.content !== undefined) {
+      memory.content = updates.content;
+    }
+    if (updates.content_type !== undefined) {
+      memory.content_type = updates.content_type;
+    }
+    if (updates.tags !== undefined) {
+      memory.tags = updates.tags;
+    }
+    if (updates.importance !== undefined) {
+      memory.importance = updates.importance;
+    }
+    if (updates.task_criticality !== undefined) {
+      memory.task_criticality = updates.task_criticality;
+    }
+    if (updates.embedding !== undefined) {
+      memory.embedding = updates.embedding;
+    }
+
+    // Increment version
+    memory.version += 1;
+
+    // Add provenance entry
+    memory.provenance.push({
+      action: 'edited',
+      actor_id,
+      timestamp: editedAt,
+      reason: reason ?? 'Memory edited',
+      version: memory.version,
+      previous_content: previousContent,
+    });
+
+    await this.storage.updateMemory(memory);
+
+    await this.storage.logAudit({
+      namespace: memory.namespace,
+      action: 'update',
+      resource_type: 'memory',
+      resource_id: memory_id,
+      actor_id,
+      metadata: {
+        action_type: 'edit',
+        new_version: memory.version,
+        reason,
+      },
+    });
+
+    return memory;
+  }
+
+  /**
+   * Soft delete a memory with audit trail.
+   */
+  async deleteMemory(
+    memory_id: string,
+    actor_id: string,
+    reason: string
+  ): Promise<void> {
+    const memory = await this.storage.getMemory(memory_id);
+    if (!memory) {
+      throw new Error(`Memory ${memory_id} not found`);
+    }
+
+    if (memory.status === 'deleted') {
+      throw new Error(`Memory ${memory_id} is already deleted`);
+    }
+
+    const deletedAt = new Date().toISOString();
+
+    // Mark as deleted (soft delete)
+    memory.status = 'deleted';
+
+    // Add provenance entry
+    memory.provenance.push({
+      action: 'deleted',
+      actor_id,
+      timestamp: deletedAt,
+      reason,
+    });
+
+    await this.storage.updateMemory(memory);
+
+    await this.storage.logAudit({
+      namespace: memory.namespace,
+      action: 'delete',
+      resource_type: 'memory',
+      resource_id: memory_id,
+      actor_id,
+      metadata: {
+        reason,
+        soft_delete: true,
+      },
+    });
+  }
+
+  /**
+   * Merge multiple memories into one.
+   * Original memories are soft-deleted.
+   */
+  async mergeMemories(
+    memory_ids: string[],
+    merged_content: string,
+    actor_id: string,
+    options?: {
+      tags?: string[];
+      importance?: number;
+      task_criticality?: number;
+    }
+  ): Promise<MergeMemoriesResult> {
+    if (memory_ids.length < 2) {
+      throw new Error('At least 2 memories are required for merging');
+    }
+
+    // Fetch all memories
+    const memories: MemoryObject[] = [];
+    for (const id of memory_ids) {
+      const mem = await this.storage.getMemory(id);
+      if (!mem) {
+        throw new Error(`Memory ${id} not found`);
+      }
+      if (mem.status === 'deleted') {
+        throw new Error(`Cannot merge deleted memory ${id}`);
+      }
+      memories.push(mem);
+    }
+
+    // Verify all memories are in the same namespace
+    const namespace = memories[0].namespace;
+    for (const mem of memories) {
+      if (JSON.stringify(mem.namespace) !== JSON.stringify(namespace)) {
+        throw new Error('All memories must be in the same namespace to merge');
+      }
+    }
+
+    const mergedAt = new Date().toISOString();
+
+    // Combine tags from all memories (unique)
+    const allTags = new Set<string>();
+    for (const mem of memories) {
+      for (const tag of mem.tags) {
+        allTags.add(tag);
+      }
+    }
+    const combinedTags = options?.tags ?? Array.from(allTags);
+
+    // Calculate combined importance (average by default)
+    const avgImportance = memories.reduce((sum, m) => sum + m.importance, 0) / memories.length;
+    const avgCriticality = memories.reduce((sum, m) => sum + m.task_criticality, 0) / memories.length;
+
+    // Create new merged memory
+    const merged = await this.storeMemory({
+      namespace,
+      content: merged_content,
+      content_type: 'text',
+      source: {
+        type: 'system',
+        identifier: actor_id,
+        metadata: {
+          merged_from: memory_ids,
+          merge_timestamp: mergedAt,
+        },
+      },
+      tags: combinedTags,
+      importance: options?.importance ?? avgImportance,
+      task_criticality: options?.task_criticality ?? avgCriticality,
+    });
+
+    // Add merge provenance to the new memory
+    merged.provenance.push({
+      action: 'merged',
+      actor_id,
+      timestamp: mergedAt,
+      reason: `Merged from ${memory_ids.length} memories`,
+      merged_from: memory_ids,
+    });
+    await this.storage.updateMemory(merged);
+
+    // Soft-delete original memories
+    for (const mem of memories) {
+      mem.status = 'deleted';
+      mem.provenance.push({
+        action: 'deleted',
+        actor_id,
+        timestamp: mergedAt,
+        reason: `Merged into ${merged.memory_id}`,
+      });
+      await this.storage.updateMemory(mem);
+    }
+
+    await this.storage.logAudit({
+      namespace,
+      action: 'update',
+      resource_type: 'memory',
+      resource_id: merged.memory_id,
+      actor_id,
+      metadata: {
+        action_type: 'merge',
+        merged_ids: memory_ids,
+      },
+    });
+
+    return {
+      merged_memory: merged,
+      merged_ids: memory_ids,
+    };
+  }
+
+  /**
+   * Quarantine a memory (move out of normal retrieval).
+   */
+  async quarantineMemory(
+    memory_id: string,
+    actor_id: string,
+    reason: string
+  ): Promise<MemoryObject> {
+    // Check both primary and quarantine stores
+    let memory = await this.storage.getMemory(memory_id);
+    if (!memory) {
+      // Check if already in quarantine store
+      const quarantined = await this.storage.getQuarantinedMemory(memory_id);
+      if (quarantined) {
+        throw new Error(`Memory ${memory_id} is already quarantined`);
+      }
+      throw new Error(`Memory ${memory_id} not found`);
+    }
+
+    if (memory.status === 'quarantined') {
+      throw new Error(`Memory ${memory_id} is already quarantined`);
+    }
+
+    if (memory.status === 'deleted') {
+      throw new Error(`Cannot quarantine deleted memory ${memory_id}`);
+    }
+
+    const quarantinedAt = new Date().toISOString();
+
+    memory.status = 'quarantined';
+    memory.ingestion.quarantined = true;
+
+    memory.provenance.push({
+      action: 'quarantined',
+      actor_id,
+      timestamp: quarantinedAt,
+      reason,
+    });
+
+    await this.storage.updateMemory(memory);
+
+    await this.storage.logAudit({
+      namespace: memory.namespace,
+      action: 'update',
+      resource_type: 'memory',
+      resource_id: memory_id,
+      actor_id,
+      metadata: {
+        action_type: 'quarantine',
+        reason,
+      },
+    });
+
+    return memory;
+  }
+
+  /**
+   * Rollback a memory to a previous version.
+   */
+  async rollbackMemory(
+    memory_id: string,
+    target_version: number,
+    actor_id: string
+  ): Promise<MemoryObject> {
+    const memory = await this.storage.getMemory(memory_id);
+    if (!memory) {
+      throw new Error(`Memory ${memory_id} not found`);
+    }
+
+    if (memory.status === 'deleted') {
+      throw new Error(`Cannot rollback deleted memory ${memory_id}`);
+    }
+
+    if (!memory.previous_versions || memory.previous_versions.length === 0) {
+      throw new Error(`Memory ${memory_id} has no previous versions to rollback to`);
+    }
+
+    // Find the target version
+    const targetSnapshot = memory.previous_versions.find(v => v.version === target_version);
+    if (!targetSnapshot) {
+      const availableVersions = memory.previous_versions.map(v => v.version).join(', ');
+      throw new Error(
+        `Version ${target_version} not found. Available versions: ${availableVersions}`
+      );
+    }
+
+    const rolledBackAt = new Date().toISOString();
+
+    // Save current state before rollback
+    const currentSnapshot: MemoryVersion = {
+      version: memory.version,
+      content: memory.content,
+      content_type: memory.content_type,
+      tags: [...memory.tags],
+      importance: memory.importance,
+      task_criticality: memory.task_criticality,
+      superseded_at: rolledBackAt,
+      superseded_by: actor_id,
+      change_reason: `Rolled back to version ${target_version}`,
+    };
+    memory.previous_versions.push(currentSnapshot);
+
+    // Restore from target version
+    const previousContent = memory.content;
+    memory.content = targetSnapshot.content;
+    memory.content_type = targetSnapshot.content_type;
+    memory.tags = [...targetSnapshot.tags];
+    memory.importance = targetSnapshot.importance;
+    memory.task_criticality = targetSnapshot.task_criticality;
+    memory.version += 1;
+
+    memory.provenance.push({
+      action: 'rolled_back',
+      actor_id,
+      timestamp: rolledBackAt,
+      reason: `Rolled back to version ${target_version}`,
+      version: memory.version,
+      previous_content: previousContent,
+    });
+
+    await this.storage.updateMemory(memory);
+
+    await this.storage.logAudit({
+      namespace: memory.namespace,
+      action: 'update',
+      resource_type: 'memory',
+      resource_id: memory_id,
+      actor_id,
+      metadata: {
+        action_type: 'rollback',
+        target_version,
+        new_version: memory.version,
+      },
+    });
+
+    return memory;
+  }
+
+  /**
+   * Expire memories based on TTL policy.
+   */
+  async expireMemories(namespace: Namespace): Promise<ExpireMemoriesResult> {
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const expiredIds: string[] = [];
+
+    // Get all memories including those with expires_at
+    const memories = await this.storage.listMemories(namespace, {
+      include_expired: true,
+      status: 'active',
+    });
+
+    for (const memory of memories) {
+      let shouldExpire = false;
+
+      // Check expires_at timestamp
+      if (memory.expires_at) {
+        if (new Date(memory.expires_at).getTime() <= now.getTime()) {
+          shouldExpire = true;
+        }
+      }
+
+      // Check ttl_seconds
+      if (memory.ttl_seconds !== undefined && memory.ttl_seconds !== null) {
+        if (memory.ttl_seconds === 0) {
+          shouldExpire = true;
+        } else {
+          const createdAt = new Date(memory.created_at).getTime();
+          const expiresAt = createdAt + memory.ttl_seconds * 1000;
+          if (now.getTime() >= expiresAt) {
+            shouldExpire = true;
+          }
+        }
+      }
+
+      if (shouldExpire && memory.status !== 'deleted') {
+        memory.status = 'deleted';
+        memory.provenance.push({
+          action: 'expired',
+          actor_id: 'system',
+          timestamp: nowIso,
+          reason: 'TTL expired',
+        });
+        await this.storage.updateMemory(memory);
+        expiredIds.push(memory.memory_id);
+      }
+    }
+
+    if (expiredIds.length > 0) {
+      await this.storage.logAudit({
+        namespace,
+        action: 'delete',
+        resource_type: 'memory',
+        resource_id: `batch:${expiredIds.length}`,
+        actor_id: 'system',
+        metadata: {
+          action_type: 'expire',
+          expired_count: expiredIds.length,
+          expired_ids: expiredIds,
+        },
+      });
+    }
+
+    return {
+      expired_count: expiredIds.length,
+      expired_ids: expiredIds,
+    };
+  }
+
+  /**
+   * Get the complete audit/provenance log for a memory.
+   */
+  async memoryAuditLog(memory_id: string): Promise<ProvenanceEntry[]> {
+    return this.storage.getMemoryAuditLog(memory_id);
+  }
+
+  /**
+   * List memories in a namespace with optional filters.
+   */
+  async listMemories(
+    namespace: Namespace,
+    options?: ListMemoryOptions
+  ): Promise<MemoryObject[]> {
+    return this.storage.listMemories(namespace, options);
   }
 }
