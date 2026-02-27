@@ -27,6 +27,7 @@ import {
   configCommand,
   adaptersCommand,
   antibodiesCommand,
+  evalCommand,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 import { registerTraceCommands } from './commands/trace.js';
@@ -122,6 +123,17 @@ program
   .option('--confidence <0..1>', 'Rule confidence (0-1)')
   .option('--semantic', 'Enable semantic matcher stub')
   .action(antibodiesCommand);
+
+// ─── savestate eval ──────────────────────────────────────────
+
+program
+  .command('eval <subcommand>')
+  .description('Memory quality evaluation (quality, report)')
+  .option('--json', 'Output as JSON')
+  .option('--threshold <0..1>', 'Confidence threshold (default: 0.7)')
+  .option('--suite <name>', 'Run only a specific benchmark suite')
+  .option('-v, --verbose', 'Show detailed test results')
+  .action(evalCommand);
 
 // ─── savestate search ────────────────────────────────────────
 
