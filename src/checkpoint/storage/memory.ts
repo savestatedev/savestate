@@ -11,6 +11,7 @@ import {
   Checkpoint,
   CheckpointStorage,
   ListOptions,
+  ListMemoryOptions,
   MemoryObject,
   MemoryQuery,
   MemoryResult,
@@ -345,21 +346,108 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
   async updateMemoryAccess(memory_id: string, checkpoint_id?: string): Promise<void> {
     const memory = this.memories.get(memory_id);
     if (!memory) return;
-    
+
     memory.last_accessed_at = new Date().toISOString();
-    
+
     if (checkpoint_id && !memory.checkpoint_refs.includes(checkpoint_id)) {
       memory.checkpoint_refs.push(checkpoint_id);
     }
-    
+
     memory.provenance.push({
       action: 'accessed',
       actor_id: 'system',
       checkpoint_id,
       timestamp: memory.last_accessed_at,
     });
-    
+
     this.memories.set(memory_id, memory);
+  }
+
+  // ─── Lifecycle Operations (Issue #110) ─────────────────────
+
+  async listMemories(
+    namespace: Namespace,
+    options?: ListMemoryOptions
+  ): Promise<MemoryObject[]> {
+    const nsKey = namespaceKey(namespace);
+    const now = Date.now();
+
+    let memories = Array.from(this.memories.values()).filter(
+      mem => namespaceKey(mem.namespace) === nsKey
+    );
+
+    // Filter by status if specified
+    if (options?.status) {
+      memories = memories.filter(mem => mem.status === options.status);
+    } else {
+      // By default, exclude deleted memories
+      memories = memories.filter(mem => mem.status !== 'deleted');
+    }
+
+    // Filter out expired memories unless explicitly included
+    if (!options?.include_expired) {
+      memories = memories.filter(mem => {
+        if (!mem.expires_at) return true;
+        return new Date(mem.expires_at).getTime() > now;
+      });
+    }
+
+    // Sort by created_at
+    const order = options?.order ?? 'desc';
+    memories.sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return order === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+
+    // Pagination
+    const offset = options?.offset ?? 0;
+    const limit = options?.limit ?? 100;
+    memories = memories.slice(offset, offset + limit);
+
+    return memories.map(memory => ({ ...memory }));
+  }
+
+  async updateMemory(memory: MemoryObject): Promise<void> {
+    // Check if memory exists in either store
+    const existing = this.memories.get(memory.memory_id)
+      || this.quarantinedMemories.get(memory.memory_id);
+
+    if (!existing) {
+      throw new Error(`Memory ${memory.memory_id} not found`);
+    }
+
+    // Handle status transitions
+    if (memory.status === 'quarantined') {
+      // Move to quarantine store
+      this.memories.delete(memory.memory_id);
+      this.quarantinedMemories.set(memory.memory_id, { ...memory });
+    } else if (memory.status === 'deleted') {
+      // Keep in main store but marked as deleted (soft delete)
+      this.quarantinedMemories.delete(memory.memory_id);
+      this.memories.set(memory.memory_id, { ...memory });
+    } else {
+      // Active status - ensure in main store
+      this.quarantinedMemories.delete(memory.memory_id);
+      this.memories.set(memory.memory_id, { ...memory });
+    }
+  }
+
+  async getMemoryAuditLog(memory_id: string): Promise<ProvenanceEntry[]> {
+    // Check both stores for the memory
+    const memory = this.memories.get(memory_id)
+      || this.quarantinedMemories.get(memory_id);
+
+    if (!memory) {
+      return [];
+    }
+
+    // Return provenance sorted by timestamp (newest first)
+    return [...memory.provenance].sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      return timeB - timeA;
+    });
   }
 
   // ─── Audit Operations ──────────────────────────────────────

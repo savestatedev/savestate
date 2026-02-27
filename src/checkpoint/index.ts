@@ -15,37 +15,45 @@ export {
   // Namespace
   Namespace,
   namespaceKey,
-  
+
   // Goals & Tasks
   Goal,
   Task,
   Action,
-  
+
   // Checkpoints
   Checkpoint,
   CreateCheckpointInput,
-  
+
   // Memory
   MemoryObject,
   MemorySource,
   MemoryIngestionMetadata,
   ProvenanceEntry,
   CreateMemoryInput,
-  
+
+  // Lifecycle Controls (Issue #110)
+  MemoryVersion,
+  EditMemoryInput,
+  MergeMemoriesResult,
+  ExpireMemoriesResult,
+  TTLPolicy,
+  ListMemoryOptions,
+
   // Retrieval
   MemoryQuery,
   RankingWeights,
   DEFAULT_RANKING_WEIGHTS,
   MemoryResult,
-  
+
   // Restore
   ResumePack,
   RestoreRationale,
   RestoreOptions,
-  
+
   // Audit
   AuditEntry,
-  
+
   // Storage
   CheckpointStorage,
   ListOptions,

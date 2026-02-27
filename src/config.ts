@@ -36,6 +36,12 @@ export function defaultConfig(): SaveStateConfig {
     memory: {
       approvalMode: 'threshold',
       confidenceThreshold: 0.7,
+      // Issue #110: TTL policy defaults
+      ttl: {
+        enabled: false,
+        defaultDays: null,
+        decayEnabled: false,
+      },
     },
   };
 }

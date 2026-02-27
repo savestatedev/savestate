@@ -148,48 +148,86 @@ export interface CreateCheckpointInput {
 export interface MemoryObject {
   /** Unique memory identifier */
   memory_id: string;
-  
+
   /** Namespace for isolation */
   namespace: Namespace;
-  
+
   /** Memory content */
   content: string;
-  
+
   /** Content type (text, json, code, etc.) */
   content_type: string;
-  
+
   /** Where this memory came from */
   source: MemorySource;
 
   /** Ingestion metadata for provenance and trust decisions */
   ingestion: MemoryIngestionMetadata;
-  
+
   /** Provenance chain for auditability */
   provenance: ProvenanceEntry[];
-  
+
   /** Tags for filtering and retrieval */
   tags: string[];
-  
+
   /** Importance score (0-1) for ranking */
   importance: number;
-  
+
   /** Task criticality score (0-1) */
   task_criticality: number;
-  
+
   /** Optional vector embedding for semantic search */
   embedding?: number[];
-  
+
   /** ISO 8601 creation timestamp */
   created_at: string;
-  
+
   /** ISO 8601 last access timestamp */
   last_accessed_at?: string;
-  
+
   /** Time-to-live in seconds (null = permanent) */
   ttl_seconds?: number;
-  
+
   /** Associated checkpoint IDs */
   checkpoint_refs: string[];
+
+  // ─── Lifecycle Control Fields (Issue #110) ─────────────────
+
+  /** Version number for tracking edits (starts at 1) */
+  version: number;
+
+  /** Previous versions for rollback support */
+  previous_versions?: MemoryVersion[];
+
+  /** ISO 8601 expiry timestamp (computed from TTL policy) */
+  expires_at?: string;
+
+  /** Memory lifecycle status */
+  status: 'active' | 'quarantined' | 'deleted';
+}
+
+/**
+ * Snapshot of a previous memory version for rollback support.
+ */
+export interface MemoryVersion {
+  /** Version number */
+  version: number;
+  /** Content at this version */
+  content: string;
+  /** Content type at this version */
+  content_type: string;
+  /** Tags at this version */
+  tags: string[];
+  /** Importance at this version */
+  importance: number;
+  /** Task criticality at this version */
+  task_criticality: number;
+  /** ISO 8601 timestamp when this version was superseded */
+  superseded_at: string;
+  /** Actor who created the next version */
+  superseded_by: string;
+  /** Reason for the change */
+  change_reason?: string;
 }
 
 export interface MemorySource {
@@ -211,11 +249,28 @@ export interface MemoryIngestionMetadata {
 }
 
 export interface ProvenanceEntry {
-  action: 'created' | 'accessed' | 'modified' | 'cited' | 'invalidated';
+  action:
+    | 'created'
+    | 'accessed'
+    | 'modified'
+    | 'cited'
+    | 'invalidated'
+    | 'edited'
+    | 'deleted'
+    | 'merged'
+    | 'quarantined'
+    | 'rolled_back'
+    | 'expired';
   actor_id: string;
   checkpoint_id?: string;
   timestamp: string;
   reason?: string;
+  /** For edits/rollbacks: the version number after this action */
+  version?: number;
+  /** For merges: IDs of memories that were merged */
+  merged_from?: string[];
+  /** For diffs: content before the change (for audit) */
+  previous_content?: string;
 }
 
 /**
@@ -231,6 +286,58 @@ export interface CreateMemoryInput {
   task_criticality?: number;
   embedding?: number[];
   ttl_seconds?: number;
+}
+
+/**
+ * Input for editing an existing memory
+ */
+export interface EditMemoryInput {
+  /** New content (optional) */
+  content?: string;
+  /** New content type (optional) */
+  content_type?: string;
+  /** New tags (optional, replaces existing) */
+  tags?: string[];
+  /** New importance score (optional) */
+  importance?: number;
+  /** New task criticality (optional) */
+  task_criticality?: number;
+  /** New embedding (optional) */
+  embedding?: number[];
+}
+
+/**
+ * Result of a memory merge operation
+ */
+export interface MergeMemoriesResult {
+  /** The new merged memory */
+  merged_memory: MemoryObject;
+  /** IDs of memories that were deleted/merged */
+  merged_ids: string[];
+}
+
+/**
+ * Result of an expiry operation
+ */
+export interface ExpireMemoriesResult {
+  /** Number of memories expired */
+  expired_count: number;
+  /** IDs of expired memories */
+  expired_ids: string[];
+}
+
+// ─── TTL Policy Configuration ─────────────────────────────────
+
+/**
+ * TTL policy configuration for automatic memory expiration
+ */
+export interface TTLPolicy {
+  /** Whether TTL is enabled */
+  enabled: boolean;
+  /** Default TTL in days for new memories (null = permanent) */
+  default_ttl_days: number | null;
+  /** Whether to apply decay-based expiration */
+  decay_enabled: boolean;
 }
 
 // ─── Memory Retrieval ────────────────────────────────────────
@@ -400,6 +507,16 @@ export interface AuditEntry {
 // ─── Storage Backend ─────────────────────────────────────────
 
 /**
+ * Options for listing memories
+ */
+export interface ListMemoryOptions extends ListOptions {
+  /** Filter by status */
+  status?: 'active' | 'quarantined' | 'deleted';
+  /** Include expired memories */
+  include_expired?: boolean;
+}
+
+/**
  * Storage backend interface for checkpoint persistence.
  * Implementations can use Postgres, SQLite, S3, etc.
  */
@@ -409,7 +526,7 @@ export interface CheckpointStorage {
   getCheckpoint(checkpoint_id: string): Promise<Checkpoint | null>;
   getLatestCheckpoint(namespace: Namespace, run_id?: string): Promise<Checkpoint | null>;
   listCheckpoints(namespace: Namespace, options?: ListOptions): Promise<Checkpoint[]>;
-  
+
   // Memory operations
   saveMemory(memory: MemoryObject): Promise<void>;
   saveQuarantinedMemory(memory: MemoryObject): Promise<void>;
@@ -419,7 +536,15 @@ export interface CheckpointStorage {
   deleteQuarantinedMemory(memory_id: string): Promise<void>;
   searchMemories(query: MemoryQuery): Promise<MemoryResult[]>;
   updateMemoryAccess(memory_id: string, checkpoint_id?: string): Promise<void>;
-  
+
+  // Lifecycle operations (Issue #110)
+  /** List all memories in a namespace with optional filters */
+  listMemories(namespace: Namespace, options?: ListMemoryOptions): Promise<MemoryObject[]>;
+  /** Update an existing memory (for edits, status changes) */
+  updateMemory(memory: MemoryObject): Promise<void>;
+  /** Get audit/provenance log for a specific memory */
+  getMemoryAuditLog(memory_id: string): Promise<ProvenanceEntry[]>;
+
   // Audit operations
   logAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>): Promise<void>;
   getAuditLog(namespace: Namespace, options?: ListOptions): Promise<AuditEntry[]>;
