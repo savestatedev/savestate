@@ -33,6 +33,10 @@ export function defaultConfig(): SaveStateConfig {
       },
     },
     adapters: [],
+    memory: {
+      approvalMode: 'threshold',
+      confidenceThreshold: 0.7,
+    },
   };
 }
 
