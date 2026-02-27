@@ -15,11 +15,18 @@ import {
   MemoryObject,
   MemoryQuery,
   MemoryResult,
+  MemorySearchResponse,
+  RecallFailure,
   Namespace,
   namespaceKey,
   ProvenanceEntry,
 } from '../types.js';
 import { calculateMemoryScore } from '../memory.js';
+import {
+  computeStalenessMetrics,
+  DEFAULT_FRESHNESS_SLO,
+  type FreshnessSLO,
+} from '../../slo/types.js';
 
 /**
  * Simple cosine similarity for vector comparison.
@@ -313,18 +320,26 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
           query.ranking_weights
         );
 
-        // Staleness detection is based on memory age (created_at), not access.
-        const nowIso = new Date().toISOString();
-        const ageDays = daysBetween(mem.created_at, nowIso);
-        const isStale = ageDays >= 90;
+        // Compute staleness metrics using SLO-aware calculation (Issue #108)
+        const stalenessMetrics = computeStalenessMetrics(
+          mem.created_at,
+          mem.last_accessed_at,
+          DEFAULT_FRESHNESS_SLO,
+        );
 
         const result: MemoryResult = {
           memory_id: mem.memory_id,
           score,
           score_components: components,
-          is_stale: isStale,
-          age_days: ageDays,
-          stale_reason: isStale ? `Memory is ${Math.floor(ageDays)} days old` : undefined,
+          // Staleness metrics (Issue #108)
+          staleness_score: stalenessMetrics.staleness_score,
+          is_stale: stalenessMetrics.is_stale,
+          age_days: stalenessMetrics.age_days,
+          age_hours: stalenessMetrics.age_hours,
+          stale_reason: stalenessMetrics.stale_reason,
+          time_until_stale_hours: stalenessMetrics.time_until_stale_hours,
+          // Cross-session tracking (Issue #108)
+          session_id: mem.session_id,
           content: query.include_content !== false ? mem.content : undefined,
           tags: mem.tags,
           source: mem.source,
@@ -341,6 +356,200 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
     // Apply limit
     const limit = query.limit ?? 10;
     return results.slice(0, limit);
+  }
+
+  /**
+   * Search memories with full response including failures (Issue #108).
+   * Unlike searchMemories, this surfaces recall failures instead of silently returning empty.
+   */
+  async searchMemoriesWithResponse(query: MemoryQuery): Promise<MemorySearchResponse> {
+    const startTime = Date.now();
+    const nsKey = namespaceKey(query.namespace);
+    const failures: RecallFailure[] = [];
+
+    let candidates = Array.from(this.memories.values())
+      .filter(mem => namespaceKey(mem.namespace) === nsKey);
+
+    const totalCandidates = candidates.length;
+    let staleFiltered = 0;
+    let relevanceFiltered = 0;
+
+    // Handle namespace not found
+    if (totalCandidates === 0) {
+      failures.push({
+        failure_id: `rf_${Date.now()}_${randomUUID().slice(0, 8)}`,
+        reason: 'no_matches',
+        message: 'No memories found in namespace',
+        query: query.query,
+        filtered_count: 0,
+        timestamp: new Date().toISOString(),
+        suggestions: ['Create memories in this namespace', 'Check namespace configuration'],
+      });
+    }
+
+    // Cross-session tracking
+    const crossSessionAttempted = query.include_cross_session ?? false;
+    let crossSessionSuccess = true;
+
+    // Filter by session if specified
+    if (query.session_id) {
+      candidates = candidates.filter(mem => mem.session_id === query.session_id);
+    }
+
+    // Filter by tags
+    if (query.tags && query.tags.length > 0) {
+      candidates = candidates.filter(mem =>
+        query.tags!.every(tag => mem.tags.includes(tag))
+      );
+    }
+
+    // Filter by source types
+    if (query.source_types && query.source_types.length > 0) {
+      candidates = candidates.filter(mem =>
+        query.source_types!.includes(mem.source.type)
+      );
+    }
+
+    // Filter by minimum importance
+    if (query.min_importance !== undefined) {
+      candidates = candidates.filter(mem => mem.importance >= query.min_importance!);
+    }
+
+    // Filter out expired memories
+    const now = Date.now();
+    candidates = candidates.filter(mem => {
+      if (!mem.ttl_seconds) return true;
+      if (mem.ttl_seconds === 0) return false;
+      const createdAt = new Date(mem.created_at).getTime();
+      return now < createdAt + mem.ttl_seconds * 1000;
+    });
+
+    // Staleness filtering with tracking
+    const preStaleCount = candidates.length;
+    if (query.max_age_seconds !== undefined) {
+      const maxAgeMs = query.max_age_seconds * 1000;
+      candidates = candidates.filter(mem => {
+        const createdAt = new Date(mem.created_at).getTime();
+        const accessedAt = mem.last_accessed_at ? new Date(mem.last_accessed_at).getTime() : NaN;
+        const effective = Number.isFinite(accessedAt) ? Math.max(createdAt, accessedAt) : createdAt;
+        if (!Number.isFinite(effective)) return false;
+        return now - effective <= maxAgeMs;
+      });
+      staleFiltered = preStaleCount - candidates.length;
+
+      if (candidates.length === 0 && preStaleCount > 0) {
+        failures.push({
+          failure_id: `rf_${Date.now()}_${randomUUID().slice(0, 8)}`,
+          reason: 'all_stale',
+          message: 'All matching memories exceeded freshness SLO',
+          query: query.query,
+          filtered_count: staleFiltered,
+          timestamp: new Date().toISOString(),
+          suggestions: ['Refresh memories with updated content', 'Increase max_age_seconds in query'],
+        });
+      }
+    }
+
+    const minSemantic = query.query ? (query.min_semantic_similarity ?? 0.03) : 0;
+
+    // Calculate scores
+    const preRelevanceCount = candidates.length;
+    const scoredResults = candidates
+      .map(mem => {
+        let semanticSimilarity = 0;
+        if (query.query) {
+          const searchable = [
+            mem.content,
+            ...(mem.tags ?? []),
+            mem.source?.type ?? '',
+            mem.source?.identifier ?? '',
+          ].join(' ');
+          semanticSimilarity = relevanceScore(query.query, searchable);
+        }
+
+        if (query.query && semanticSimilarity < minSemantic) {
+          relevanceFiltered++;
+          return null;
+        }
+
+        const { score, components } = calculateMemoryScore(
+          mem,
+          semanticSimilarity,
+          query.ranking_weights
+        );
+
+        const stalenessMetrics = computeStalenessMetrics(
+          mem.created_at,
+          mem.last_accessed_at,
+          DEFAULT_FRESHNESS_SLO,
+        );
+
+        const result: MemoryResult = {
+          memory_id: mem.memory_id,
+          score,
+          score_components: components,
+          staleness_score: stalenessMetrics.staleness_score,
+          is_stale: stalenessMetrics.is_stale,
+          age_days: stalenessMetrics.age_days,
+          age_hours: stalenessMetrics.age_hours,
+          stale_reason: stalenessMetrics.stale_reason,
+          time_until_stale_hours: stalenessMetrics.time_until_stale_hours,
+          session_id: mem.session_id,
+          content: query.include_content !== false ? mem.content : undefined,
+          tags: mem.tags,
+          source: mem.source,
+          provenance: mem.provenance,
+        };
+        return result;
+      })
+      .filter((r): r is MemoryResult => r !== null);
+
+    if (scoredResults.length === 0 && preRelevanceCount > 0 && relevanceFiltered > 0) {
+      failures.push({
+        failure_id: `rf_${Date.now()}_${randomUUID().slice(0, 8)}`,
+        reason: 'below_relevance_threshold',
+        message: 'No memories met the relevance threshold',
+        query: query.query,
+        filtered_count: relevanceFiltered,
+        timestamp: new Date().toISOString(),
+        suggestions: ['Lower min_semantic_similarity', 'Use broader search terms'],
+      });
+    }
+
+    // Sort by score and apply limit
+    scoredResults.sort((a, b) => b.score - a.score);
+    const limit = query.limit ?? 10;
+    const results = scoredResults.slice(0, limit);
+
+    // Update cross-session access tracking
+    if (query.current_session_id) {
+      for (const result of results) {
+        const mem = this.memories.get(result.memory_id);
+        if (mem && mem.session_id !== query.current_session_id) {
+          // Cross-session access
+          if (!mem.accessed_in_sessions) {
+            mem.accessed_in_sessions = [];
+          }
+          if (!mem.accessed_in_sessions.includes(query.current_session_id)) {
+            mem.accessed_in_sessions.push(query.current_session_id);
+            mem.cross_session_recall_count = (mem.cross_session_recall_count ?? 0) + 1;
+          }
+        }
+      }
+    }
+
+    const queryTimeMs = Date.now() - startTime;
+
+    return {
+      results,
+      failures,
+      total_candidates: totalCandidates,
+      stale_filtered: staleFiltered,
+      relevance_filtered: relevanceFiltered,
+      cross_session_attempted: crossSessionAttempted,
+      cross_session_success: crossSessionSuccess && results.length > 0,
+      query_time_ms: queryTimeMs,
+    };
   }
 
   async updateMemoryAccess(memory_id: string, checkpoint_id?: string): Promise<void> {

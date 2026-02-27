@@ -18,6 +18,7 @@ import {
   MemoryVersion,
   MergeMemoriesResult,
   Namespace,
+  namespaceKey,
   ProvenanceEntry,
   DEFAULT_RANKING_WEIGHTS,
   RankingWeights,
@@ -160,6 +161,10 @@ export class KnowledgeLane {
       version: 1,
       previous_versions: [],
       status: validation.quarantined ? 'quarantined' : 'active',
+      // Cross-session tracking (Issue #108)
+      session_id: input.session_id,
+      accessed_in_sessions: [],
+      cross_session_recall_count: 0,
     };
 
     if (validation.quarantined) {
@@ -821,4 +826,223 @@ export class KnowledgeLane {
   ): Promise<MemoryObject[]> {
     return this.storage.listMemories(namespace, options);
   }
+
+  // ─── Cross-Session Tracking (Issue #108) ────────────────────
+
+  /**
+   * Get session history for a namespace.
+   * Returns all sessions and their associated memories.
+   */
+  async sessionHistory(namespace: Namespace): Promise<SessionHistoryEntry[]> {
+    const memories = await this.storage.listMemories(namespace, { status: 'active' });
+
+    // Group memories by session
+    const sessionMap = new Map<string, SessionHistoryEntry>();
+
+    for (const memory of memories) {
+      const sessionId = memory.session_id ?? 'default';
+
+      if (!sessionMap.has(sessionId)) {
+        sessionMap.set(sessionId, {
+          session_id: sessionId,
+          namespace_key: namespaceKey(namespace),
+          started_at: memory.created_at,
+          memory_ids: [],
+          memory_count: 0,
+          cross_session_recalls: 0,
+        });
+      }
+
+      const entry = sessionMap.get(sessionId)!;
+      entry.memory_ids.push(memory.memory_id);
+      entry.memory_count++;
+      entry.cross_session_recalls += memory.cross_session_recall_count ?? 0;
+
+      // Update started_at to earliest memory
+      if (memory.created_at < entry.started_at) {
+        entry.started_at = memory.created_at;
+      }
+    }
+
+    // Sort sessions by start time (newest first)
+    const sessions = Array.from(sessionMap.values());
+    sessions.sort((a, b) =>
+      new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
+    );
+
+    return sessions;
+  }
+
+  /**
+   * Get memories for a specific session.
+   */
+  async getSessionMemories(
+    namespace: Namespace,
+    sessionId: string
+  ): Promise<MemoryObject[]> {
+    const memories = await this.storage.listMemories(namespace, { status: 'active' });
+    return memories.filter(m => m.session_id === sessionId);
+  }
+
+  // ─── Drift Detection (Issue #108) ───────────────────────────
+
+  /**
+   * Calculate drift score for a session.
+   * Higher scores indicate less coherence/more topic changes.
+   */
+  async driftScore(
+    namespace: Namespace,
+    sessionId: string,
+    thresholds?: DriftThresholds
+  ): Promise<DriftMetrics> {
+    const memories = await this.getSessionMemories(namespace, sessionId);
+    return calculateDriftMetrics(memories, thresholds);
+  }
+
+  /**
+   * Check if session drift exceeds thresholds.
+   */
+  async checkDrift(
+    namespace: Namespace,
+    sessionId: string,
+    thresholds?: DriftThresholds
+  ): Promise<{ alert: boolean; metrics: DriftMetrics }> {
+    const metrics = await this.driftScore(namespace, sessionId, thresholds);
+    return {
+      alert: metrics.drift_detected,
+      metrics,
+    };
+  }
+}
+
+// ─── Session History Types (Issue #108) ──────────────────────
+
+/**
+ * Session history entry for cross-session tracking.
+ */
+export interface SessionHistoryEntry {
+  session_id: string;
+  namespace_key: string;
+  started_at: string;
+  ended_at?: string;
+  memory_ids: string[];
+  memory_count: number;
+  parent_session_id?: string;
+  cross_session_recalls: number;
+}
+
+// ─── Drift Detection Types (Issue #108) ──────────────────────
+
+/**
+ * Drift thresholds for alerting.
+ */
+export interface DriftThresholds {
+  max_drift_score: number;
+  min_coherence_score: number;
+  max_fragmentation_score: number;
+}
+
+export const DEFAULT_DRIFT_THRESHOLDS: DriftThresholds = {
+  max_drift_score: 0.4,
+  min_coherence_score: 0.6,
+  max_fragmentation_score: 0.3,
+};
+
+/**
+ * Drift metrics for a session.
+ */
+export interface DriftMetrics {
+  drift_score: number;
+  drift_detected: boolean;
+  topic_changes: number;
+  coherence_score: number;
+  fragmentation_score: number;
+  last_checked_at: string;
+}
+
+/**
+ * Calculate drift metrics for a set of memories.
+ */
+export function calculateDriftMetrics(
+  memories: MemoryObject[],
+  thresholds: DriftThresholds = DEFAULT_DRIFT_THRESHOLDS,
+): DriftMetrics {
+  if (memories.length === 0) {
+    return {
+      drift_score: 0,
+      drift_detected: false,
+      topic_changes: 0,
+      coherence_score: 1,
+      fragmentation_score: 0,
+      last_checked_at: new Date().toISOString(),
+    };
+  }
+
+  // Sort memories by creation time
+  const sorted = [...memories].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+
+  // Calculate topic changes based on tag differences
+  let topicChanges = 0;
+  for (let i = 1; i < sorted.length; i++) {
+    const prevTags = new Set(sorted[i - 1].tags);
+    const currTags = new Set(sorted[i].tags);
+    const intersection = [...currTags].filter((t) => prevTags.has(t));
+    const union = new Set([...prevTags, ...currTags]);
+
+    // Jaccard distance - if tags are very different, count as topic change
+    const similarity = union.size > 0 ? intersection.length / union.size : 1;
+    if (similarity < 0.3) {
+      topicChanges++;
+    }
+  }
+
+  // Calculate fragmentation (memories with no shared tags)
+  let isolatedCount = 0;
+  for (const mem of memories) {
+    const hasSharedTags = memories.some(
+      (other) =>
+        other.memory_id !== mem.memory_id &&
+        other.tags.some((t) => mem.tags.includes(t)),
+    );
+    if (!hasSharedTags && mem.tags.length > 0) {
+      isolatedCount++;
+    }
+  }
+  const fragmentationScore = memories.length > 1 ? isolatedCount / memories.length : 0;
+
+  // Calculate coherence based on tag overlap across all memories
+  const allTags = new Map<string, number>();
+  for (const mem of memories) {
+    for (const tag of mem.tags) {
+      allTags.set(tag, (allTags.get(tag) ?? 0) + 1);
+    }
+  }
+  const avgTagFrequency =
+    allTags.size > 0
+      ? Array.from(allTags.values()).reduce((a, b) => a + b, 0) / allTags.size / memories.length
+      : 0;
+  const coherenceScore = Math.min(1, avgTagFrequency * 2);
+
+  // Compute drift score
+  const topicChangeRate = sorted.length > 1 ? topicChanges / (sorted.length - 1) : 0;
+  const driftScore = Math.min(
+    1,
+    topicChangeRate * 0.4 + fragmentationScore * 0.3 + (1 - coherenceScore) * 0.3,
+  );
+
+  const driftDetected =
+    driftScore > thresholds.max_drift_score ||
+    coherenceScore < thresholds.min_coherence_score ||
+    fragmentationScore > thresholds.max_fragmentation_score;
+
+  return {
+    drift_score: driftScore,
+    drift_detected: driftDetected,
+    topic_changes: topicChanges,
+    coherence_score: coherenceScore,
+    fragmentation_score: fragmentationScore,
+    last_checked_at: new Date().toISOString(),
+  };
 }

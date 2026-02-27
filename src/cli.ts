@@ -216,6 +216,12 @@ import { registerMemoryCommands } from './commands/memory-cli.js';
 
 registerMemoryCommands(program);
 
+// ─── savestate slo ───────────────────────────────────────────
+
+import { registerSLOCommands } from './commands/slo.js';
+
+registerSLOCommands(program);
+
 // ─── savestate mcp ───────────────────────────────────────────
 
 program

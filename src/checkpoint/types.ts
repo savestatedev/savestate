@@ -204,6 +204,17 @@ export interface MemoryObject {
 
   /** Memory lifecycle status */
   status: 'active' | 'quarantined' | 'deleted';
+
+  // ─── Cross-Session Tracking (Issue #108) ────────────────────
+
+  /** Session ID where this memory was created */
+  session_id?: string;
+
+  /** Sessions where this memory has been accessed */
+  accessed_in_sessions?: string[];
+
+  /** Number of times recalled in different sessions */
+  cross_session_recall_count?: number;
 }
 
 /**
@@ -286,6 +297,8 @@ export interface CreateMemoryInput {
   task_criticality?: number;
   embedding?: number[];
   ttl_seconds?: number;
+  /** Session ID for cross-session tracking (Issue #108) */
+  session_id?: string;
 }
 
 /**
@@ -385,6 +398,17 @@ export interface MemoryQuery {
 
   /** Custom ranking weights (overrides defaults) */
   ranking_weights?: RankingWeights;
+
+  // ─── Cross-Session Options (Issue #108) ─────────────────────
+
+  /** Filter to memories from a specific session */
+  session_id?: string;
+
+  /** Include memories from other sessions (cross-session recall) */
+  include_cross_session?: boolean;
+
+  /** Current session ID for tracking cross-session access */
+  current_session_id?: string;
 }
 
 /**
@@ -419,17 +443,89 @@ export interface MemoryResult {
   };
 
   /**
-   * Staleness hints (best-effort).
+   * Staleness metrics (Issue #108: Freshness SLOs).
    * These fields are optional to preserve backwards compatibility.
    */
+  /** Staleness score (0-1, higher = more stale) */
+  staleness_score?: number;
+  /** Whether memory exceeds freshness SLO threshold */
   is_stale?: boolean;
+  /** Age of memory in days */
   age_days?: number;
+  /** Age of memory in hours */
+  age_hours?: number;
+  /** Human-readable staleness reason */
   stale_reason?: string;
+  /** Hours until memory becomes stale (negative if already stale) */
+  time_until_stale_hours?: number;
+
+  /** Session ID where this memory was created (Issue #108: Cross-session tracking) */
+  session_id?: string;
 
   content?: string;
   tags: string[];
   source: MemorySource;
   provenance: ProvenanceEntry[];
+}
+
+// ─── Memory Search Response (Issue #108) ─────────────────────
+
+/**
+ * Recall failure reason codes.
+ */
+export type RecallFailureReason =
+  | 'no_matches'
+  | 'all_stale'
+  | 'below_relevance_threshold'
+  | 'cross_session_unavailable'
+  | 'storage_error'
+  | 'timeout'
+  | 'embedding_unavailable'
+  | 'namespace_not_found'
+  | 'quota_exceeded';
+
+/**
+ * A recall failure with context for debugging.
+ * Issue #108: Visible recall failures.
+ */
+export interface RecallFailure {
+  /** Unique identifier for this failure */
+  failure_id: string;
+  /** Why the recall failed */
+  reason: RecallFailureReason;
+  /** Human-readable description */
+  message: string;
+  /** Original query that caused the failure */
+  query?: string;
+  /** Number of candidates filtered out */
+  filtered_count?: number;
+  /** ISO 8601 timestamp of failure */
+  timestamp: string;
+  /** Suggested actions to resolve */
+  suggestions?: string[];
+}
+
+/**
+ * Full response from memory search including failures.
+ * Issue #108: Surfaces recall failures instead of silently returning empty.
+ */
+export interface MemorySearchResponse {
+  /** Successfully retrieved memories */
+  results: MemoryResult[];
+  /** Any failures encountered during retrieval */
+  failures: RecallFailure[];
+  /** Total candidate memories before filtering */
+  total_candidates: number;
+  /** Number filtered by staleness */
+  stale_filtered: number;
+  /** Number filtered by relevance */
+  relevance_filtered: number;
+  /** Whether cross-session recall was attempted */
+  cross_session_attempted: boolean;
+  /** Whether cross-session recall succeeded */
+  cross_session_success: boolean;
+  /** Query execution time in milliseconds */
+  query_time_ms: number;
 }
 
 // ─── Restore ─────────────────────────────────────────────────
