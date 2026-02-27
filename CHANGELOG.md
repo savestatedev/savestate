@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### 🔍 Retrieval Explainability: "Why This Memory?" Inspector
+
+No more black-box retrieval! SaveState now provides full transparency into why specific memories are selected.
+
+#### Features
+- **Score Breakdown** — See exactly how each factor (relevance, recency, tier, access, pinned) contributes to retrieval ranking
+- **Source Trace** — Track memory provenance: origin snapshot, adapter, platform, and full snapshot chain
+- **Policy Path** — Understand which config rules affected each memory (tier assignment, context inclusion, pin protection, demotion warnings)
+- **Multiple Formats** — Human-readable terminal output, JSON for automation, Markdown for docs
+
+#### CLI
+```bash
+savestate memory explain <memory-id>              # Human-readable explanation
+savestate memory explain <id> --query "search"    # With query context
+savestate memory explain <id> --format json       # Machine-readable
+savestate memory explain <id> --format markdown   # Documentation-friendly
+```
+
+#### Scoring Algorithm
+- **Relevance** (40%) — Content similarity to query
+- **Recency** (25%) — Exponential decay based on age
+- **Tier** (15%) — L1=100%, L2=70%, L3=40%
+- **Access** (10%) — Recent access frequency boost
+- **Pinned** (10%) — Manual pin status
+
+See `docs/explainability.md` for full documentation.
+
+Closes #115.
+
+---
+
 ### 🧾 Askable Echoes — Auditable Trace Ledger
 
 A new audit trail for agent runs! Captures tool calls, results, checkpoints, and errors for debugging, compliance, and learning.

@@ -35,6 +35,7 @@ npx savestate diff v3 v5               # What changed between snapshots
 - 💾 **Flexible storage** — Local filesystem (free) or SaveState Cloud (Pro/Team).
 - ⏰ **Scheduled backups** — Set it and forget it. Auto-snapshot on your schedule.
 - 🖥️ **CLI-first** — Built for developers. Also has a web dashboard (coming soon).
+- 🔍 **Explainable retrieval** — "Why this memory?" inspector shows exactly why memories are selected.
 
 ## Quick Start
 
@@ -195,6 +196,16 @@ savestate trace show <run_id>         Show events for a trace run
 savestate trace export                Export trace as JSONL (stdout)
   --run <id>                         Export only a specific run
   --format jsonl                     Export format
+
+savestate memory list                 List memories with tier info
+  --tier <L1|L2|L3>                  Filter by tier
+  --pinned                           Show only pinned
+savestate memory explain <id>         "Why this memory?" inspector
+  --query <query>                    Query for relevance scoring
+  --format <human|json|markdown>     Output format
+savestate memory promote <id>         Promote to higher tier
+savestate memory demote <id>          Demote to lower tier
+savestate memory pin <id>             Pin memory (prevent demotion)
 ```
 
 ## Storage
