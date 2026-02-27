@@ -336,6 +336,38 @@ export interface SaveStateConfig {
   retention?: RetentionPolicy;
   /** Registered adapters */
   adapters: AdapterConfig[];
+  /** Memory quality and approval settings */
+  memory?: MemoryConfig;
+}
+
+/**
+ * Memory approval mode determines how memory operations are validated.
+ * - 'auto': Automatically approve operations meeting confidence threshold
+ * - 'manual': Require manual approval for all memory operations
+ * - 'threshold': Auto-approve above threshold, manual below
+ */
+export type MemoryApprovalMode = 'auto' | 'manual' | 'threshold';
+
+/**
+ * TTL (Time-to-Live) policy configuration for automatic memory expiration.
+ * Issue #110: Memory Lifecycle Controls
+ */
+export interface MemoryTTLConfig {
+  /** Whether TTL-based expiration is enabled */
+  enabled: boolean;
+  /** Default TTL in days for new memories (null = permanent) */
+  defaultDays: number | null;
+  /** Whether to apply decay-based expiration (reduces importance over time) */
+  decayEnabled: boolean;
+}
+
+export interface MemoryConfig {
+  /** Approval mode for memory operations */
+  approvalMode: MemoryApprovalMode;
+  /** Confidence threshold for auto-approval (0-1, default: 0.7) */
+  confidenceThreshold: number;
+  /** TTL policy configuration (Issue #110) */
+  ttl?: MemoryTTLConfig;
 }
 
 export interface StorageConfig {
