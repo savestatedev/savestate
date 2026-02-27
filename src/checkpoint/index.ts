@@ -15,37 +15,43 @@ export {
   // Namespace
   Namespace,
   namespaceKey,
-  
+
   // Goals & Tasks
   Goal,
   Task,
   Action,
-  
+
   // Checkpoints
   Checkpoint,
   CreateCheckpointInput,
-  
+
   // Memory
   MemoryObject,
   MemorySource,
   MemoryIngestionMetadata,
   ProvenanceEntry,
   CreateMemoryInput,
-  
+
   // Retrieval
   MemoryQuery,
   RankingWeights,
   DEFAULT_RANKING_WEIGHTS,
   MemoryResult,
-  
+
+  // Retrieval Explainability (Issue #115)
+  RetrievalExplanation,
+  ScoreBreakdown,
+  SourceTrace,
+  PolicyPath,
+
   // Restore
   ResumePack,
   RestoreRationale,
   RestoreOptions,
-  
+
   // Audit
   AuditEntry,
-  
+
   // Storage
   CheckpointStorage,
   ListOptions,

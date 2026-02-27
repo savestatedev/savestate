@@ -13,6 +13,7 @@ import {
   unpinMemoryCommand,
   applyPoliciesCommand,
   showTierConfig,
+  explainMemoryCommand,
 } from './memory.js';
 import { loadConfig } from '../config.js';
 import { resolveStorage } from '../storage/index.js';
@@ -175,6 +176,32 @@ export function registerMemoryCommands(program: Command): void {
 
         await showTierConfig(storage, passphrase, {
           snapshotId: options.snapshot,
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+
+  // ─── savestate memory explain ───────────────────────────────
+
+  memory
+    .command('explain <query>')
+    .description('Explain why memories were retrieved for a query')
+    .option('-n, --namespace <ns>', 'Namespace to search (org:app:agent format)')
+    .option('-l, --limit <n>', 'Maximum number of results', '5')
+    .option('-t, --tags <tags>', 'Filter by tags (comma-separated)')
+    .option('--json', 'Output as JSON')
+    .action(async (query, options) => {
+      try {
+        const config = await loadConfig();
+        const storage = await resolveStorage(config);
+        const passphrase = await promptPassphrase();
+
+        await explainMemoryCommand(storage, passphrase, query, {
+          namespace: options.namespace,
+          limit: parseInt(options.limit, 10),
+          tags: options.tags?.split(',').map((t: string) => t.trim()),
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);

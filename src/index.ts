@@ -205,3 +205,54 @@ export type {
   PrivacyConfig,
   PrivacyPipelineResult,
 } from './privacy/index.js';
+
+// Checkpoint System - Memory with Provenance
+export {
+  // Core services
+  KnowledgeLane,
+  CheckpointLedger,
+  RestoreService,
+  InMemoryCheckpointStorage,
+  // Utilities
+  calculateRecencyScore,
+  calculateMemoryScore,
+  computeCheckpointHash,
+  verifyCheckpointIntegrity,
+  verifyChainIntegrity,
+  namespaceKey,
+  DEFAULT_RANKING_WEIGHTS,
+} from './checkpoint/index.js';
+export type {
+  // Namespace
+  Namespace,
+  // Checkpoints
+  Checkpoint,
+  CreateCheckpointInput,
+  // Goals & Tasks
+  Goal,
+  Task,
+  Action,
+  // Memory
+  MemoryObject,
+  MemorySource,
+  MemoryIngestionMetadata,
+  ProvenanceEntry,
+  CreateMemoryInput,
+  // Retrieval
+  MemoryQuery,
+  RankingWeights,
+  MemoryResult,
+  // Retrieval Explainability (Issue #115)
+  RetrievalExplanation,
+  ScoreBreakdown,
+  SourceTrace,
+  PolicyPath,
+  // Restore
+  ResumePack,
+  RestoreRationale,
+  RestoreOptions,
+  // Audit & Storage
+  AuditEntry,
+  CheckpointStorage,
+  ListOptions,
+} from './checkpoint/index.js';
