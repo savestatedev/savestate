@@ -376,6 +376,96 @@ export interface SearchResult {
   path: string;
 }
 
+// ─── Retrieval Explainability ────────────────────────────────
+
+/**
+ * Detailed explanation of why a memory was selected/retrieved.
+ * Addresses the "black box retrieval" concern for production users.
+ */
+export interface RetrievalExplanation {
+  /** Memory entry ID being explained */
+  memoryId: string;
+  /** Overall composite score (0-1) */
+  compositeScore: number;
+  /** Breakdown of individual scoring factors */
+  scoreBreakdown: ScoreBreakdown;
+  /** Source tracing information */
+  sourceTrace: SourceTrace;
+  /** Policy rules that affected this memory */
+  policyPath: PolicyPathEntry[];
+  /** Human-readable summary */
+  summary: string;
+}
+
+/**
+ * Breakdown of scoring factors contributing to retrieval.
+ */
+export interface ScoreBreakdown {
+  /** Base relevance score from content similarity (0-1) */
+  relevanceScore: number;
+  /** Recency weight based on age (0-1, newer = higher) */
+  recencyWeight: number;
+  /** Tier boost factor (L1 > L2 > L3) */
+  tierBoost: number;
+  /** Access frequency boost */
+  accessBoost: number;
+  /** Pinned status boost */
+  pinnedBoost: number;
+  /** Individual factor contributions with explanations */
+  factors: ScoreFactor[];
+}
+
+export interface ScoreFactor {
+  /** Factor name */
+  name: string;
+  /** Factor value (0-1) */
+  value: number;
+  /** Weight applied to this factor */
+  weight: number;
+  /** Contribution to final score (value * weight) */
+  contribution: number;
+  /** Human-readable explanation */
+  explanation: string;
+}
+
+/**
+ * Source tracing: where did this memory come from?
+ */
+export interface SourceTrace {
+  /** Original snapshot ID where memory was created */
+  originSnapshotId: string;
+  /** Timestamp of origin snapshot */
+  originTimestamp: string;
+  /** Adapter that captured this memory */
+  adapter: string;
+  /** Platform identifier */
+  platform: string;
+  /** Current snapshot ID (may differ if memory was migrated) */
+  currentSnapshotId: string;
+  /** Chain of snapshots this memory has been part of */
+  snapshotChain: string[];
+  /** Original source identifier (e.g., conversation ID, file path) */
+  sourceId?: string;
+  /** Source type */
+  sourceType: 'conversation' | 'manual' | 'import' | 'system' | 'unknown';
+}
+
+/**
+ * Policy path entry showing which rules affected this memory.
+ */
+export interface PolicyPathEntry {
+  /** Policy name */
+  policyName: string;
+  /** Rule type (age, access, overflow, manual) */
+  ruleType: 'age' | 'access' | 'overflow' | 'manual' | 'tier' | 'pin';
+  /** Action taken */
+  action: 'include' | 'exclude' | 'promote' | 'demote' | 'boost' | 'penalize';
+  /** Timestamp when rule was applied */
+  appliedAt?: string;
+  /** Human-readable reason */
+  reason: string;
+}
+
 // ─── Diff ────────────────────────────────────────────────────
 
 export interface DiffResult {

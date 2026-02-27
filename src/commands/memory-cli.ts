@@ -13,10 +13,12 @@ import {
   unpinMemoryCommand,
   applyPoliciesCommand,
   showTierConfig,
+  explainMemoryCommand,
 } from './memory.js';
 import { loadConfig } from '../config.js';
 import { resolveStorage } from '../storage/index.js';
 import type { MemoryTier } from '../types.js';
+import type { ExplainOptions } from '../explainability/types.js';
 
 /**
  * Register memory-related commands on the CLI program.
@@ -175,6 +177,37 @@ export function registerMemoryCommands(program: Command): void {
 
         await showTierConfig(storage, passphrase, {
           snapshotId: options.snapshot,
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+
+  // ─── savestate memory explain ────────────────────────────────
+
+  memory
+    .command('explain <memory-id>')
+    .alias('why')
+    .description('Explain why a memory was selected ("Why this memory?" inspector)')
+    .option('-q, --query <query>', 'Query that triggered retrieval (for relevance scoring)')
+    .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
+    .option('-f, --format <format>', 'Output format: human, json, markdown', 'human')
+    .option('--include-trace', 'Include full trace history')
+    .action(async (memoryId, options) => {
+      try {
+        const config = await loadConfig();
+        const storage = await resolveStorage(config);
+        const passphrase = await promptPassphrase();
+
+        const explainOptions: ExplainOptions = {
+          query: options.query,
+          includeTraceHistory: options.includeTrace,
+          format: options.format as 'human' | 'json' | 'markdown',
+        };
+
+        await explainMemoryCommand(storage, passphrase, memoryId, {
+          snapshotId: options.snapshot,
+          ...explainOptions,
         });
       } catch (err) {
         handleError(err);

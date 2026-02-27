@@ -21,6 +21,11 @@ import { findEntry, getLatestEntry, updateEntry } from '../index-file.js';
 import { decrypt, encrypt } from '../encryption.js';
 import { unpackFromArchive, unpackSnapshot, packSnapshot, packToArchive, snapshotFilename } from '../format.js';
 import { isIncremental, reconstructFromChain } from '../incremental.js';
+import {
+  explainMemory,
+  formatExplanationHuman,
+  formatExplanationMarkdown,
+} from '../explainability/index.js';
 
 /** Default tier configuration for new setups */
 export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
@@ -535,6 +540,55 @@ export async function showTierConfig(
 
   console.log('\nMemory Tier Configuration:\n');
   console.log(JSON.stringify(config, null, 2));
+}
+
+/**
+ * Explain why a memory was selected ("Why this memory?" inspector).
+ *
+ * Provides transparency into retrieval decisions:
+ * - Relevance score breakdown
+ * - Source trace (which snapshot/adapter)
+ * - Timestamp and recency weight
+ * - Policy path (which config rules applied)
+ */
+export async function explainMemoryCommand(
+  storage: StorageBackend,
+  passphrase: string,
+  memoryId: string,
+  options?: {
+    snapshotId?: string;
+    query?: string;
+    includeTraceHistory?: boolean;
+    format?: 'human' | 'json' | 'markdown';
+  },
+): Promise<void> {
+  const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
+
+  const entry = snapshot.memory.core.find((e) => e.id === memoryId);
+  if (!entry) {
+    throw new Error(`Memory entry not found: ${memoryId}`);
+  }
+
+  const explanation = explainMemory(entry, snapshot, {
+    query: options?.query,
+    includeTraceHistory: options?.includeTraceHistory,
+    format: options?.format,
+  });
+
+  const format = options?.format ?? 'human';
+
+  switch (format) {
+    case 'json':
+      console.log(JSON.stringify(explanation, null, 2));
+      break;
+    case 'markdown':
+      console.log(formatExplanationMarkdown(explanation));
+      break;
+    case 'human':
+    default:
+      console.log(formatExplanationHuman(explanation));
+      break;
+  }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
