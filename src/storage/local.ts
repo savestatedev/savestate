@@ -3,15 +3,30 @@
  *
  * Default backend. Stores encrypted archives at ~/.savestate/snapshots/
  * or a user-configured directory.
+ *
+ * Issue #126: Added write verification and atomic operations
  */
 
-import { readFile, writeFile, readdir, unlink, mkdir, stat } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFile, writeFile, readdir, unlink, mkdir, stat, rename } from 'node:fs/promises';
+import { existsSync, createWriteStream } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
+import { createHash, randomBytes } from 'node:crypto';
 import type { StorageBackend } from '../types.js';
 
 const DEFAULT_BASE_DIR = join(homedir(), '.savestate', 'snapshots');
+
+/**
+ * Write verification result
+ */
+export interface WriteVerification {
+  success: boolean;
+  key: string;
+  expectedHash: string;
+  actualHash: string;
+  size: number;
+  timestamp: string;
+}
 
 export class LocalStorageBackend implements StorageBackend {
   readonly id = 'local';
@@ -33,12 +48,92 @@ export class LocalStorageBackend implements StorageBackend {
     }
   }
 
+  /**
+   * Store data with atomic write and verification.
+   *
+   * Issue #126: Uses temp file + rename for atomicity, then verifies
+   * the write by reading back and comparing hash.
+   */
   async put(key: string, data: Buffer): Promise<void> {
     await this.ensureDir();
     const filePath = this.resolvePath(key);
-    const dir = filePath.substring(0, filePath.lastIndexOf('/'));
+    const dir = dirname(filePath);
     await mkdir(dir, { recursive: true });
-    await writeFile(filePath, data);
+
+    // Compute expected hash before writing
+    const expectedHash = createHash('sha256').update(data).digest('hex');
+
+    // Use temp file + atomic rename for crash safety
+    const tempPath = `${filePath}.tmp.${randomBytes(4).toString('hex')}`;
+    try {
+      await writeFile(tempPath, data);
+      await rename(tempPath, filePath);
+    } catch (err) {
+      // Clean up temp file on failure
+      try {
+        await unlink(tempPath);
+      } catch {
+        // Ignore cleanup errors
+      }
+      throw new Error(
+        `Storage write failed for key "${key}": ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+
+    // Verify write by reading back and comparing hash
+    const verification = await this.verifyWrite(key, expectedHash, data.length);
+    if (!verification.success) {
+      throw new Error(
+        `Write verification failed for key "${key}": ` +
+        `expected hash ${verification.expectedHash}, got ${verification.actualHash}`
+      );
+    }
+  }
+
+  /**
+   * Verify a write operation by reading back and comparing hash.
+   *
+   * Issue #126: Ensures data was actually persisted correctly.
+   */
+  async verifyWrite(key: string, expectedHash: string, expectedSize: number): Promise<WriteVerification> {
+    const filePath = this.resolvePath(key);
+    const timestamp = new Date().toISOString();
+
+    try {
+      const readBack = await readFile(filePath);
+
+      if (readBack.length !== expectedSize) {
+        return {
+          success: false,
+          key,
+          expectedHash,
+          actualHash: `size_mismatch:${readBack.length}`,
+          size: readBack.length,
+          timestamp,
+        };
+      }
+
+      const actualHash = createHash('sha256').update(readBack).digest('hex');
+      const success = actualHash === expectedHash;
+
+      return {
+        success,
+        key,
+        expectedHash,
+        actualHash,
+        size: readBack.length,
+        timestamp,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        key,
+        expectedHash,
+        actualHash: `read_error:${err instanceof Error ? err.message : String(err)}`,
+        size: 0,
+        timestamp,
+      };
+    }
   }
 
   async get(key: string): Promise<Buffer> {
