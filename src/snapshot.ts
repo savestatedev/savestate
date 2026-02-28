@@ -12,7 +12,11 @@
  * 5. Re-pack with updated manifest
  * 6. encrypt() → encrypted buffer
  * 7. storage.put() with snapshot filename
- * 8. Update local index
+ * 8. Verify write succeeded (Issue #126)
+ * 9. Generate save receipt (Issue #126)
+ * 10. Update local index
+ *
+ * Issue #126: Added write verification and save receipts
  */
 
 import type { Adapter, SaveStateConfig, Snapshot, StorageBackend } from './types.js';
@@ -33,6 +37,12 @@ import {
   packDelta,
   type DeltaManifest,
 } from './incremental.js';
+import {
+  generateReceipt,
+  storeReceipt,
+  logAudit,
+  type SaveReceipt,
+} from './save-receipt.js';
 
 export interface CreateSnapshotResult {
   snapshot: Snapshot;
@@ -51,6 +61,8 @@ export interface CreateSnapshotResult {
     bytesSaved: number;
     chainDepth: number;
   };
+  /** Save receipt for verification (Issue #126) */
+  receipt: SaveReceipt;
 }
 
 /**
@@ -85,12 +97,23 @@ export async function createSnapshot(
   const now = new Date().toISOString();
 
   // Step 3: Check for incremental opportunity
+  // Issue #126: Log failures instead of silently catching
   let parentInfo: Awaited<ReturnType<typeof getParentHashes>> = null;
+  let parentLoadError: string | undefined;
   if (!options?.full) {
     try {
       parentInfo = await getParentHashes(storage, passphrase);
-    } catch {
-      // Can't load parent — proceed with full snapshot
+    } catch (err) {
+      // Log the failure for debugging - don't silently swallow errors
+      parentLoadError = err instanceof Error ? err.message : String(err);
+      logAudit({
+        timestamp: new Date().toISOString(),
+        operation: 'save',
+        resource_id: snapshotId,
+        resource_type: 'snapshot',
+        success: true, // We'll proceed with full snapshot
+        error: `Parent load failed, using full snapshot: ${parentLoadError}`,
+      });
     }
   }
 
@@ -172,20 +195,83 @@ export async function createSnapshot(
   // Step 10: Encrypt
   const encrypted = await encrypt(finalArchive, passphrase);
 
-  // Step 11: Store
+  // Step 11: Store with verification (Issue #126)
   const filename = snapshotFilename(snapshotId);
-  await storage.put(filename, encrypted);
+  const saveStartTime = Date.now();
 
-  // Step 12: Update local index
-  await addToIndex({
-    id: snapshotId,
-    timestamp: now,
-    platform: adapter.platform,
-    adapter: adapter.id,
-    label: options?.label,
-    tags: options?.tags,
-    filename,
-    size: encrypted.length,
+  try {
+    // storage.put now includes write verification
+    await storage.put(filename, encrypted);
+  } catch (err) {
+    // Log the failure for audit trail
+    logAudit({
+      timestamp: new Date().toISOString(),
+      operation: 'save',
+      resource_id: snapshotId,
+      resource_type: 'snapshot',
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+      duration_ms: Date.now() - saveStartTime,
+    });
+    throw err;
+  }
+
+  // Step 12: Generate save receipt (Issue #126)
+  const receipt = generateReceipt({
+    resourceId: snapshotId,
+    resourceType: 'snapshot',
+    contentData: finalArchive,
+    encryptedData: encrypted,
+    storageLocation: filename,
+    storageBackend: storage.id,
+    savedAt: new Date(now),
+    verified: true, // storage.put now verifies
+  });
+
+  // Store receipt for later verification
+  await storeReceipt(receipt);
+
+  // Step 13: Update local index
+  // Issue #126: If index update fails, we have the receipt as backup
+  try {
+    await addToIndex({
+      id: snapshotId,
+      timestamp: now,
+      platform: adapter.platform,
+      adapter: adapter.id,
+      label: options?.label,
+      tags: options?.tags,
+      filename,
+      size: encrypted.length,
+    });
+  } catch (err) {
+    // Log the index failure but don't fail the whole operation
+    // The snapshot is saved and we have a receipt
+    logAudit({
+      timestamp: new Date().toISOString(),
+      operation: 'save',
+      resource_id: snapshotId,
+      resource_type: 'snapshot',
+      success: true,
+      receipt_id: receipt.receipt_id,
+      error: `Index update failed (snapshot saved): ${err instanceof Error ? err.message : String(err)}`,
+      duration_ms: Date.now() - saveStartTime,
+    });
+    // Re-throw to inform caller, but snapshot IS saved
+    throw new Error(
+      `Snapshot saved successfully (receipt: ${receipt.receipt_id}) but index update failed: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+
+  // Log successful save
+  logAudit({
+    timestamp: new Date().toISOString(),
+    operation: 'save',
+    resource_id: snapshotId,
+    resource_type: 'snapshot',
+    success: true,
+    receipt_id: receipt.receipt_id,
+    duration_ms: Date.now() - saveStartTime,
   });
 
   return {
@@ -205,6 +291,7 @@ export async function createSnapshot(
           chainDepth: deltaManifest.chainDepth,
         }
       : undefined,
+    receipt,
   };
 }
 
