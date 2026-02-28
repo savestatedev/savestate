@@ -537,6 +537,239 @@ export async function showTierConfig(
   console.log(JSON.stringify(config, null, 2));
 }
 
+/**
+ * Explain why memories were retrieved for a query.
+ * Shows detailed breakdown of scores and policy decisions.
+ *
+ * @see https://github.com/savestatedev/savestate/issues/115
+ */
+export async function explainMemoryCommand(
+  storage: StorageBackend,
+  passphrase: string,
+  query: string,
+  options?: {
+    namespace?: string;
+    limit?: number;
+    tags?: string[];
+    format?: 'pretty' | 'json';
+  },
+): Promise<void> {
+  const { snapshot } = await loadSnapshot(storage, passphrase);
+
+  // Parse namespace from option or use default
+  const namespace = parseNamespace(options?.namespace);
+
+  // For this demo, we search the memory entries in the snapshot
+  // In a full implementation, this would use the checkpoint storage searchMemories
+  const normalized = normalizeMemory(snapshot.memory);
+  const entries = normalized.core;
+
+  // Simple relevance scoring for demonstration
+  const queryLower = query.toLowerCase();
+  const scored = entries
+    .map((entry) => {
+      const contentLower = entry.content.toLowerCase();
+      // Access tags from metadata if available
+      const entryTags = (entry.metadata?.tags as string[] | undefined) ?? [];
+      const tagMatch = entryTags.some((t: string) => t.toLowerCase().includes(queryLower));
+
+      // Calculate simple relevance score
+      let semanticScore = 0;
+      if (contentLower.includes(queryLower)) {
+        semanticScore = 0.8;
+      } else if (tagMatch) {
+        semanticScore = 0.6;
+      } else {
+        // Check for partial word matches
+        const words = queryLower.split(/\s+/);
+        const matches = words.filter((w) => contentLower.includes(w)).length;
+        semanticScore = matches / words.length * 0.5;
+      }
+
+      if (semanticScore === 0) return null;
+
+      // Apply tag filter
+      if (options?.tags && options.tags.length > 0) {
+        if (!options.tags.every((t) => entryTags.includes(t))) {
+          return null;
+        }
+      }
+
+      // Calculate other scores
+      const tier = getEffectiveTier(entry);
+      const tierWeights = { L1: 1.0, L2: 0.8, L3: 0.5 };
+      const tierScore = tierWeights[tier];
+
+      const age = Date.now() - new Date(entry.createdAt).getTime();
+      const recencyScore = Math.exp(-age / (7 * 24 * 60 * 60 * 1000)); // 7-day half-life
+
+      const importance = (entry.metadata?.importance as number | undefined) ?? 0.5;
+      const criticality = (entry.metadata?.criticality as number | undefined) ?? 0.5;
+
+      // Weighted score (matches checkpoint ranking formula)
+      const finalScore =
+        criticality * 0.45 +
+        semanticScore * 0.25 +
+        importance * 0.20 +
+        recencyScore * 0.10;
+
+      return {
+        entry,
+        scores: {
+          semantic: semanticScore,
+          recency: recencyScore,
+          importance,
+          criticality,
+          tier: tierScore,
+        },
+        finalScore,
+        explanation: {
+          memory_id: entry.id,
+          relevance_score_breakdown: {
+            semantic_similarity: semanticScore,
+            recency_decay: recencyScore,
+            importance,
+            task_criticality: criticality,
+            confidence_boost: 1.0,
+          },
+          source_trace: {
+            ingestion_timestamp: entry.createdAt,
+            source_type: 'user_input' as const,
+            source_id: entry.source ?? 'unknown',
+          },
+          timestamp_weight: recencyScore,
+          policy_path: {
+            rules_applied: [
+              `task_criticality weight: 0.45`,
+              `semantic_similarity weight: 0.25`,
+              `importance weight: 0.20`,
+              `recency_decay weight: 0.10`,
+            ],
+            filters_matched: options?.tags ? [`tags: [${options.tags.join(', ')}]`] : [],
+            boosts_applied: [
+              ...(semanticScore > 0.7 ? [`strong semantic match (${semanticScore.toFixed(2)})`] : []),
+              ...(importance > 0.7 ? [`high importance (${importance.toFixed(2)})`] : []),
+              ...(criticality > 0.7 ? [`high criticality (${criticality.toFixed(2)})`] : []),
+              ...(recencyScore > 0.8 ? [`recent memory (${recencyScore.toFixed(2)})`] : []),
+            ],
+          },
+          final_score: finalScore,
+          summary: generateSummary(entry, semanticScore, query),
+        },
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a, b) => b.finalScore - a.finalScore)
+    .slice(0, options?.limit ?? 5);
+
+  if (options?.format === 'json') {
+    const output = scored.map((r) => ({
+      memory_id: r.entry.id,
+      content: r.entry.content.slice(0, 200),
+      score: r.finalScore,
+      explanation: r.explanation,
+    }));
+    console.log(JSON.stringify(output, null, 2));
+    return;
+  }
+
+  // Pretty print format
+  console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
+  console.log(`Found ${scored.length} relevant memories:\n`);
+  console.log('─'.repeat(80));
+
+  for (const [index, result] of scored.entries()) {
+    const { entry, scores, finalScore, explanation } = result;
+    const tier = getEffectiveTier(entry);
+    const pinned = entry.pinned ? ' 📌' : '';
+
+    console.log(`\n#${index + 1} ${entry.id}${pinned}`);
+    console.log(`   Tier: ${tier} | Final Score: ${(finalScore * 100).toFixed(1)}%`);
+    console.log(`   Content: ${entry.content.slice(0, 60).replace(/\n/g, ' ')}...`);
+    console.log();
+
+    // Score breakdown
+    console.log('   📊 Score Breakdown:');
+    console.log(`      • Semantic Similarity: ${(scores.semantic * 100).toFixed(1)}% (weight: 25%)`);
+    console.log(`      • Task Criticality:    ${(scores.criticality * 100).toFixed(1)}% (weight: 45%)`);
+    console.log(`      • Importance:          ${(scores.importance * 100).toFixed(1)}% (weight: 20%)`);
+    console.log(`      • Recency:             ${(scores.recency * 100).toFixed(1)}% (weight: 10%)`);
+    console.log();
+
+    // Source trace
+    // Access tags from metadata
+    const displayTags = (entry.metadata?.tags as string[] | undefined) ?? [];
+
+    console.log('   📍 Source Trace:');
+    console.log(`      • Created: ${entry.createdAt}`);
+    console.log(`      • Source: ${entry.source ?? 'unknown'}`);
+    if (displayTags.length) {
+      console.log(`      • Tags: ${displayTags.join(', ')}`);
+    }
+    console.log();
+
+    // Policy path
+    if (explanation.policy_path.boosts_applied.length > 0) {
+      console.log('   ⚡ Boosts Applied:');
+      for (const boost of explanation.policy_path.boosts_applied) {
+        console.log(`      • ${boost}`);
+      }
+      console.log();
+    }
+
+    // Summary
+    console.log(`   💡 ${explanation.summary}`);
+    console.log('─'.repeat(80));
+  }
+
+  if (scored.length === 0) {
+    console.log('\n   No memories matched the query.\n');
+    console.log('   Tips:');
+    console.log('   • Try broader search terms');
+    console.log('   • Check if memories exist with `savestate memory list`');
+    console.log('   • Verify the namespace is correct\n');
+  }
+}
+
+function parseNamespace(ns?: string): { org_id: string; app_id: string; agent_id: string } {
+  if (!ns) {
+    return { org_id: 'default', app_id: 'default', agent_id: 'default' };
+  }
+  const parts = ns.split(':');
+  return {
+    org_id: parts[0] ?? 'default',
+    app_id: parts[1] ?? 'default',
+    agent_id: parts[2] ?? 'default',
+  };
+}
+
+function generateSummary(entry: MemoryEntry, semanticScore: number, query: string): string {
+  const parts: string[] = [];
+
+  if (semanticScore > 0.7) {
+    parts.push(`Strong match for "${query.slice(0, 20)}${query.length > 20 ? '...' : ''}"`);
+  } else if (semanticScore > 0.4) {
+    parts.push(`Partial match for query`);
+  } else {
+    parts.push(`Weak relevance to query`);
+  }
+
+  const tier = getEffectiveTier(entry);
+  if (tier === 'L1') {
+    parts.push('in active short-term memory');
+  } else if (tier === 'L2') {
+    parts.push('in working memory');
+  } else {
+    parts.push('retrieved from archive');
+  }
+
+  if (entry.pinned) {
+    parts.push('(pinned)');
+  }
+
+  return parts.join(' ') + '.';
+}
+
 // ─── Helpers ─────────────────────────────────────────────────
 
 import type { Snapshot } from '../types.js';

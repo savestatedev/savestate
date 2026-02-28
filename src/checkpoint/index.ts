@@ -40,11 +40,19 @@ export {
   TTLPolicy,
   ListMemoryOptions,
 
+
   // Retrieval
   MemoryQuery,
   RankingWeights,
   DEFAULT_RANKING_WEIGHTS,
   MemoryResult,
+
+  // Retrieval Explainability (Issue #115)
+  RetrievalExplanation,
+  ScoreBreakdown,
+  SourceTrace,
+  PolicyPath,
+
 
   // Restore
   ResumePack,

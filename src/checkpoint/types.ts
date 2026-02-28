@@ -399,6 +399,14 @@ export interface MemoryQuery {
   /** Custom ranking weights (overrides defaults) */
   ranking_weights?: RankingWeights;
 
+  /**
+   * Include detailed explanation of why each memory was retrieved.
+   * When true, each result will include a RetrievalExplanation.
+   *
+   * @see https://github.com/savestatedev/savestate/issues/115
+   */
+  explain?: boolean;
+
   // ─── Cross-Session Options (Issue #108) ─────────────────────
 
   /** Filter to memories from a specific session */
@@ -466,6 +474,86 @@ export interface MemoryResult {
   tags: string[];
   source: MemorySource;
   provenance: ProvenanceEntry[];
+
+  /**
+   * Detailed explanation of why this memory was retrieved.
+   * Only populated when explain=true is set in the query.
+   */
+  explanation?: RetrievalExplanation;
+}
+
+// ─── Retrieval Explainability ────────────────────────────────
+
+/**
+ * Detailed breakdown of relevance score components.
+ * Shows how each factor contributed to the final score.
+ *
+ * @see https://github.com/savestatedev/savestate/issues/115
+ */
+export interface ScoreBreakdown {
+  /** Semantic similarity to query (0-1) */
+  semantic_similarity: number;
+  /** Recency decay factor (0-1, 1 = very recent) */
+  recency_decay: number;
+  /** Base importance score (0-1) */
+  importance: number;
+  /** Task criticality score (0-1) */
+  task_criticality: number;
+  /** Confidence boost from ingestion validation (0-1) */
+  confidence_boost: number;
+}
+
+/**
+ * Trace of where this memory came from.
+ * Provides full provenance for auditability.
+ */
+export interface SourceTrace {
+  /** Snapshot ID where this memory was created (if applicable) */
+  snapshot_id?: string;
+  /** Adapter that ingested this memory */
+  adapter?: string;
+  /** When this memory was ingested */
+  ingestion_timestamp: string;
+  /** Type of source (user_input, tool_output, etc.) */
+  source_type: MemorySource['type'];
+  /** Original source identifier */
+  source_id: string;
+}
+
+/**
+ * Policy decisions that affected retrieval.
+ * Shows which rules were applied during ranking.
+ */
+export interface PolicyPath {
+  /** Rules that were evaluated during retrieval */
+  rules_applied: string[];
+  /** Filters that this memory matched */
+  filters_matched: string[];
+  /** Score boosts that were applied */
+  boosts_applied: string[];
+}
+
+/**
+ * Complete explanation of why a memory was retrieved.
+ * Provides transparency into the retrieval decision.
+ *
+ * @see https://github.com/savestatedev/savestate/issues/115
+ */
+export interface RetrievalExplanation {
+  /** Memory ID this explanation is for */
+  memory_id: string;
+  /** Detailed score breakdown */
+  relevance_score_breakdown: ScoreBreakdown;
+  /** Source provenance trace */
+  source_trace: SourceTrace;
+  /** Weight applied based on timestamp/recency */
+  timestamp_weight: number;
+  /** Policy decisions that affected ranking */
+  policy_path: PolicyPath;
+  /** Final computed score */
+  final_score: number;
+  /** Human-readable summary of why this memory was selected */
+  summary: string;
 }
 
 // ─── Memory Search Response (Issue #108) ─────────────────────

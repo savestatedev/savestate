@@ -350,6 +350,36 @@ export class KnowledgeLane {
     await this.storage.saveMemory(memory);
   }
 
+  /**
+   * Search memories with detailed explanations of why each was retrieved.
+   * This is a convenience wrapper around searchMemories with explain=true.
+   *
+   * @see https://github.com/savestatedev/savestate/issues/115
+   */
+  async explainRetrieval(query: Omit<MemoryQuery, 'explain'>): Promise<MemoryResult[]> {
+    const results = await this.storage.searchMemories({
+      ...query,
+      explain: true,
+    });
+
+    // Log explain access
+    await this.storage.logAudit({
+      namespace: query.namespace,
+      action: 'search',
+      resource_type: 'memory',
+      resource_id: `explain:${query.query ?? 'tags'}`,
+      actor_id: 'system',
+      metadata: {
+        query: query.query,
+        tags: query.tags,
+        result_count: results.length,
+        explain: true,
+      },
+    });
+
+    return results;
+  }
+
   // ─── Lifecycle Controls (Issue #110) ───────────────────────
 
   /**

@@ -20,8 +20,13 @@ import {
   Namespace,
   namespaceKey,
   ProvenanceEntry,
+  RetrievalExplanation,
+  ScoreBreakdown,
+  SourceTrace,
+  PolicyPath,
+  DEFAULT_RANKING_WEIGHTS,
 } from '../types.js';
-import { calculateMemoryScore } from '../memory.js';
+import { calculateMemoryScore, calculateRecencyScore } from '../memory.js';
 import {
   computeStalenessMetrics,
   DEFAULT_FRESHNESS_SLO,
@@ -118,6 +123,129 @@ function daysBetween(aIso: string, bIso: string): number {
   const a = new Date(aIso).getTime();
   const b = new Date(bIso).getTime();
   return Math.max(0, (b - a) / (24 * 60 * 60 * 1000));
+}
+
+/**
+ * Generate a detailed explanation for why a memory was retrieved.
+ */
+function generateExplanation(
+  memory: MemoryObject,
+  semanticSimilarity: number,
+  finalScore: number,
+  components: MemoryResult['score_components'],
+  query: MemoryQuery
+): RetrievalExplanation {
+  const weights = query.ranking_weights ?? DEFAULT_RANKING_WEIGHTS;
+  const recencyScore = calculateRecencyScore(memory.created_at, memory.last_accessed_at);
+
+  // Build score breakdown
+  const scoreBreakdown: ScoreBreakdown = {
+    semantic_similarity: semanticSimilarity,
+    recency_decay: recencyScore,
+    importance: memory.importance,
+    task_criticality: memory.task_criticality,
+    confidence_boost: memory.ingestion?.confidence_score ?? 1.0,
+  };
+
+  // Build source trace
+  const sourceTrace: SourceTrace = {
+    snapshot_id: memory.checkpoint_refs[0],
+    adapter: memory.source.metadata?.adapter as string | undefined,
+    ingestion_timestamp: memory.ingestion?.ingestion_timestamp ?? memory.created_at,
+    source_type: memory.source.type,
+    source_id: memory.source.identifier,
+  };
+
+  // Build policy path
+  const rulesApplied: string[] = [];
+  const filtersMatched: string[] = [];
+  const boostsApplied: string[] = [];
+
+  // Document which filters were applied
+  if (query.tags && query.tags.length > 0) {
+    filtersMatched.push(`tags: [${query.tags.join(', ')}]`);
+  }
+  if (query.source_types && query.source_types.length > 0) {
+    filtersMatched.push(`source_types: [${query.source_types.join(', ')}]`);
+  }
+  if (query.min_importance !== undefined) {
+    filtersMatched.push(`min_importance >= ${query.min_importance}`);
+  }
+  if (query.min_semantic_similarity !== undefined) {
+    filtersMatched.push(`min_semantic_similarity >= ${query.min_semantic_similarity}`);
+  }
+  if (query.max_age_seconds !== undefined) {
+    filtersMatched.push(`max_age_seconds <= ${query.max_age_seconds}`);
+  }
+
+  // Document ranking rules
+  rulesApplied.push(`task_criticality weight: ${weights.task_criticality}`);
+  rulesApplied.push(`semantic_similarity weight: ${weights.semantic_similarity}`);
+  rulesApplied.push(`importance weight: ${weights.importance}`);
+  rulesApplied.push(`recency_decay weight: ${weights.recency_decay}`);
+
+  // Document boosts
+  if (memory.importance > 0.7) {
+    boostsApplied.push(`high importance (${memory.importance.toFixed(2)})`);
+  }
+  if (memory.task_criticality > 0.7) {
+    boostsApplied.push(`high task criticality (${memory.task_criticality.toFixed(2)})`);
+  }
+  if (semanticSimilarity > 0.8) {
+    boostsApplied.push(`strong semantic match (${semanticSimilarity.toFixed(2)})`);
+  }
+  if (recencyScore > 0.8) {
+    boostsApplied.push(`recent memory (recency: ${recencyScore.toFixed(2)})`);
+  }
+
+  const policyPath: PolicyPath = {
+    rules_applied: rulesApplied,
+    filters_matched: filtersMatched,
+    boosts_applied: boostsApplied,
+  };
+
+  // Generate human-readable summary
+  const summaryParts: string[] = [];
+
+  const topFactor = Object.entries(components)
+    .sort(([, a], [, b]) => b - a)[0];
+
+  if (topFactor) {
+    const factorNames: Record<string, string> = {
+      task_criticality: 'task criticality',
+      semantic_similarity: 'semantic relevance',
+      importance: 'importance',
+      recency: 'recency',
+    };
+    summaryParts.push(`Primary factor: ${factorNames[topFactor[0]] ?? topFactor[0]} (${(topFactor[1] * 100).toFixed(1)}% contribution)`);
+  }
+
+  if (query.query && semanticSimilarity > 0.5) {
+    summaryParts.push(`Matches query "${query.query.slice(0, 30)}${query.query.length > 30 ? '...' : ''}"`);
+  }
+
+  if (memory.tags.length > 0) {
+    summaryParts.push(`Tags: ${memory.tags.slice(0, 3).join(', ')}${memory.tags.length > 3 ? '...' : ''}`);
+  }
+
+  const ageDays = daysBetween(memory.created_at, new Date().toISOString());
+  if (ageDays < 1) {
+    summaryParts.push('Created today');
+  } else if (ageDays < 7) {
+    summaryParts.push(`Created ${Math.floor(ageDays)} day(s) ago`);
+  } else {
+    summaryParts.push(`Created ${Math.floor(ageDays / 7)} week(s) ago`);
+  }
+
+  return {
+    memory_id: memory.memory_id,
+    relevance_score_breakdown: scoreBreakdown,
+    source_trace: sourceTrace,
+    timestamp_weight: recencyScore,
+    policy_path: policyPath,
+    final_score: finalScore,
+    summary: summaryParts.join('. ') + '.',
+  };
 }
 
 export class InMemoryCheckpointStorage implements CheckpointStorage {
@@ -345,6 +473,18 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
           source: mem.source,
           provenance: mem.provenance,
         };
+
+        // Generate explanation if requested
+        if (query.explain) {
+          result.explanation = generateExplanation(
+            mem,
+            semanticSimilarity,
+            score,
+            components,
+            query
+          );
+        }
+
         return result;
       })
       .filter((r): r is MemoryResult => r !== null);

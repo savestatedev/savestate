@@ -396,6 +396,181 @@ describe('KnowledgeLane', () => {
   });
 });
 
+describe('Retrieval Explainability', () => {
+  let storage: InMemoryCheckpointStorage;
+  let knowledge: KnowledgeLane;
+  const testNamespace: Namespace = {
+    org_id: 'test-org',
+    app_id: 'test-app',
+    agent_id: 'test-agent',
+  };
+
+  beforeEach(async () => {
+    storage = new InMemoryCheckpointStorage();
+    knowledge = new KnowledgeLane(storage);
+
+    // Create test memories
+    await knowledge.storeMemory({
+      namespace: testNamespace,
+      content: 'User requested dark mode theme preference',
+      source: { type: 'user_input', identifier: 'user-1' },
+      tags: ['preference', 'ui', 'theme'],
+      importance: 0.9,
+      task_criticality: 0.3,
+    });
+
+    await knowledge.storeMemory({
+      namespace: testNamespace,
+      content: 'Deploy to production with zero downtime',
+      source: { type: 'tool_output', identifier: 'ci-cd' },
+      tags: ['deployment', 'production'],
+      importance: 0.7,
+      task_criticality: 0.95,
+    });
+  });
+
+  describe('searchMemories with explain=true', () => {
+    it('should include explanation when explain is true', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'dark mode',
+        explain: true,
+      });
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].explanation).toBeDefined();
+    });
+
+    it('should not include explanation when explain is false or undefined', async () => {
+      const resultsWithoutExplain = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'dark mode',
+      });
+
+      expect(resultsWithoutExplain[0].explanation).toBeUndefined();
+
+      const resultsExplainFalse = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'dark mode',
+        explain: false,
+      });
+
+      expect(resultsExplainFalse[0].explanation).toBeUndefined();
+    });
+
+    it('should include score breakdown in explanation', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'deploy production',
+        explain: true,
+      });
+
+      const explanation = results[0].explanation;
+      expect(explanation).toBeDefined();
+      expect(explanation?.relevance_score_breakdown).toBeDefined();
+      expect(explanation?.relevance_score_breakdown.semantic_similarity).toBeGreaterThanOrEqual(0);
+      expect(explanation?.relevance_score_breakdown.recency_decay).toBeGreaterThanOrEqual(0);
+      expect(explanation?.relevance_score_breakdown.importance).toBeGreaterThanOrEqual(0);
+      expect(explanation?.relevance_score_breakdown.task_criticality).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should include source trace in explanation', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'dark mode',
+        explain: true,
+      });
+
+      const explanation = results[0].explanation;
+      expect(explanation?.source_trace).toBeDefined();
+      expect(explanation?.source_trace.source_type).toBe('user_input');
+      expect(explanation?.source_trace.source_id).toBe('user-1');
+      expect(explanation?.source_trace.ingestion_timestamp).toBeDefined();
+    });
+
+    it('should include policy path in explanation', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'deploy',
+        tags: ['deployment'],
+        explain: true,
+      });
+
+      const explanation = results[0].explanation;
+      expect(explanation?.policy_path).toBeDefined();
+      expect(explanation?.policy_path.rules_applied.length).toBeGreaterThan(0);
+      expect(explanation?.policy_path.filters_matched).toContain('tags: [deployment]');
+    });
+
+    it('should include human-readable summary', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'dark mode theme',
+        explain: true,
+      });
+
+      const explanation = results[0].explanation;
+      expect(explanation?.summary).toBeDefined();
+      expect(typeof explanation?.summary).toBe('string');
+      expect(explanation?.summary.length).toBeGreaterThan(0);
+    });
+
+    it('should have final_score matching result score', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        query: 'production deploy',
+        explain: true,
+      });
+
+      const result = results[0];
+      expect(result.explanation?.final_score).toBeCloseTo(result.score, 5);
+    });
+  });
+
+  describe('explainRetrieval', () => {
+    it('should return results with explanations', async () => {
+      const results = await knowledge.explainRetrieval({
+        namespace: testNamespace,
+        query: 'dark mode preferences',
+      });
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].explanation).toBeDefined();
+      expect(results[0].explanation?.memory_id).toBe(results[0].memory_id);
+    });
+
+    it('should log audit entry for explain queries', async () => {
+      await knowledge.explainRetrieval({
+        namespace: testNamespace,
+        query: 'test query',
+      });
+
+      const auditLog = await storage.getAuditLog(testNamespace);
+      const explainEntry = auditLog.find(
+        e => e.action === 'search' && e.metadata?.explain === true
+      );
+      expect(explainEntry).toBeDefined();
+    });
+
+    it('should document applied boosts in policy path', async () => {
+      const results = await knowledge.explainRetrieval({
+        namespace: testNamespace,
+        query: 'production deploy zero',
+      });
+
+      const deployResult = results.find(r => r.content?.includes('production'));
+      expect(deployResult).toBeDefined();
+      expect(deployResult?.explanation?.policy_path.boosts_applied.length).toBeGreaterThan(0);
+      // High task criticality should be noted
+      expect(
+        deployResult?.explanation?.policy_path.boosts_applied.some(
+          b => b.includes('task criticality')
+        )
+      ).toBe(true);
+    });
+  });
+});
+
 describe('Scoring Functions', () => {
   describe('calculateRecencyScore', () => {
     it('should return 1.0 for very recent memory', () => {
