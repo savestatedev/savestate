@@ -338,6 +338,8 @@ export interface SaveStateConfig {
   adapters: AdapterConfig[];
   /** Memory quality and approval settings */
   memory?: MemoryConfig;
+  /** MCP server configuration (Issue #107) */
+  mcp?: MCPConfig;
 }
 
 /**
@@ -390,6 +392,32 @@ export interface AdapterConfig {
   id: string;
   enabled: boolean;
   options?: Record<string, unknown>;
+}
+
+// ─── MCP Server Config ────────────────────────────────────────
+
+/**
+ * MCP server authentication configuration.
+ * Issue #107: MCP-native memory interface
+ */
+export interface MCPAuthConfig {
+  /** Authentication type: 'none' for open access, 'token' for bearer token auth */
+  type: 'none' | 'token';
+  /** Bearer token for authentication (required when type is 'token') */
+  token?: string;
+}
+
+/**
+ * MCP server configuration for cross-platform interoperability.
+ * Issue #107: MCP-native memory interface
+ */
+export interface MCPConfig {
+  /** Whether MCP server is enabled */
+  enabled: boolean;
+  /** Port number for MCP HTTP server (default: 3333) */
+  port: number;
+  /** Authentication configuration */
+  auth: MCPAuthConfig;
 }
 
 // ─── Search ──────────────────────────────────────────────────

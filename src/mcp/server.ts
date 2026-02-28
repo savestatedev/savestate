@@ -2,14 +2,23 @@
 /**
  * SaveState MCP Server
  *
- * Exposes SaveState functionality as MCP tools for Claude Code integration.
- * Uses stdio transport for seamless Claude Code integration.
+ * Exposes SaveState functionality as MCP tools for cross-platform interoperability.
+ * Compatible with Claude Desktop, Cursor, and other MCP-compatible clients.
+ *
+ * Issue #107: MCP-native memory interface
  *
  * Tools:
- * - savestate_snapshot: Create a new snapshot of the current workspace
- * - savestate_restore: Restore from a snapshot
- * - savestate_list: List available snapshots
- * - savestate_diff: Compare two snapshots
+ * - savestate_snapshot: Create a new snapshot of agent state
+ * - savestate_restore: Restore from a specific snapshot
+ * - savestate_list: List available snapshots for an agent
+ * - savestate_status: Check SaveState initialization status
+ * - savestate_memory_store: Store a memory entry
+ * - savestate_memory_search: Search memories
+ * - savestate_memory_delete: Delete a memory
+ *
+ * Resources:
+ * - savestate://snapshots/{agent_id} - List of snapshots
+ * - savestate://memories/{namespace} - Memories in a namespace
  *
  * Usage in Claude Code:
  *   Add to ~/.claude/settings.json:
@@ -28,7 +37,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
   type Tool,
+  type Resource,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
@@ -38,6 +50,29 @@ import { createSnapshot } from '../snapshot.js';
 import { restoreSnapshot } from '../restore.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
+import { KnowledgeLane } from '../checkpoint/memory.js';
+import { InMemoryCheckpointStorage } from '../checkpoint/storage/index.js';
+import type { Namespace } from '../checkpoint/types.js';
+import type { MemoryEntry } from '../types.js';
+
+// ─── Shared Storage Instance ─────────────────────────────────
+
+let checkpointStorage: InMemoryCheckpointStorage | null = null;
+let knowledgeLane: KnowledgeLane | null = null;
+
+function getCheckpointStorage(): InMemoryCheckpointStorage {
+  if (!checkpointStorage) {
+    checkpointStorage = new InMemoryCheckpointStorage();
+  }
+  return checkpointStorage;
+}
+
+function getKnowledgeLane(): KnowledgeLane {
+  if (!knowledgeLane) {
+    knowledgeLane = new KnowledgeLane(getCheckpointStorage());
+  }
+  return knowledgeLane;
+}
 
 // ─── Tool Definitions ────────────────────────────────────────
 
@@ -135,6 +170,127 @@ const tools: Tool[] = [
       properties: {},
     },
   },
+  // ─── Memory Tools (Issue #107) ─────────────────────────────
+  {
+    name: 'savestate_memory_store',
+    description:
+      'Store a new memory entry in the SaveState memory system. ' +
+      'Memories are indexed for semantic search and can be retrieved later.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        namespace: {
+          type: 'object',
+          description: 'Namespace for memory isolation',
+          properties: {
+            org_id: { type: 'string', description: 'Organization ID' },
+            app_id: { type: 'string', description: 'Application ID' },
+            agent_id: { type: 'string', description: 'Agent ID' },
+            user_id: { type: 'string', description: 'User ID (optional)' },
+          },
+          required: ['org_id', 'app_id', 'agent_id'],
+        },
+        content: {
+          type: 'string',
+          description: 'Memory content to store',
+        },
+        content_type: {
+          type: 'string',
+          description: 'Content type (text, json, code, etc.). Defaults to "text"',
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Tags for filtering and organization',
+        },
+        importance: {
+          type: 'number',
+          description: 'Importance score (0-1). Defaults to 0.5',
+        },
+        source: {
+          type: 'string',
+          description: 'Source identifier (e.g., "user", "tool", "agent")',
+        },
+      },
+      required: ['namespace', 'content'],
+    },
+  },
+  {
+    name: 'savestate_memory_search',
+    description:
+      'Search memories using semantic query and filters. ' +
+      'Returns ranked results with relevance scores.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        namespace: {
+          type: 'object',
+          description: 'Namespace to search within',
+          properties: {
+            org_id: { type: 'string', description: 'Organization ID' },
+            app_id: { type: 'string', description: 'Application ID' },
+            agent_id: { type: 'string', description: 'Agent ID' },
+            user_id: { type: 'string', description: 'User ID (optional)' },
+          },
+          required: ['org_id', 'app_id', 'agent_id'],
+        },
+        query: {
+          type: 'string',
+          description: 'Semantic search query',
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Filter by tags (AND logic)',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum results to return (default: 10)',
+        },
+        min_importance: {
+          type: 'number',
+          description: 'Minimum importance score filter (0-1)',
+        },
+      },
+      required: ['namespace'],
+    },
+  },
+  {
+    name: 'savestate_memory_delete',
+    description:
+      'Delete a memory by ID. Performs a soft delete with audit trail.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        memory_id: {
+          type: 'string',
+          description: 'ID of the memory to delete',
+        },
+        reason: {
+          type: 'string',
+          description: 'Reason for deletion (for audit trail)',
+        },
+      },
+      required: ['memory_id', 'reason'],
+    },
+  },
+];
+
+// ─── Resource Definitions ────────────────────────────────────
+
+const resources: Resource[] = [
+  {
+    uri: 'savestate://snapshots',
+    name: 'Snapshots',
+    description: 'List of all available snapshots',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'savestate://memories',
+    name: 'Memories',
+    description: 'Memory entries in the default namespace',
+    mimeType: 'application/json',
+  },
 ];
 
 // ─── Tool Input Schemas (Zod) ────────────────────────────────
@@ -157,6 +313,35 @@ const RestoreInputSchema = z.object({
 const ListInputSchema = z.object({
   limit: z.number().optional(),
   platform: z.string().optional(),
+});
+
+const NamespaceSchema = z.object({
+  org_id: z.string(),
+  app_id: z.string(),
+  agent_id: z.string(),
+  user_id: z.string().optional(),
+});
+
+const MemoryStoreInputSchema = z.object({
+  namespace: NamespaceSchema,
+  content: z.string(),
+  content_type: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  importance: z.number().min(0).max(1).optional(),
+  source: z.string().optional(),
+});
+
+const MemorySearchInputSchema = z.object({
+  namespace: NamespaceSchema,
+  query: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  limit: z.number().optional(),
+  min_importance: z.number().optional(),
+});
+
+const MemoryDeleteInputSchema = z.object({
+  memory_id: z.string(),
+  reason: z.string(),
 });
 
 // ─── Tool Handlers ───────────────────────────────────────────
@@ -197,7 +382,7 @@ async function handleSnapshot(
     });
 
     const lines = [
-      `✓ Snapshot created successfully!`,
+      `Snapshot created successfully!`,
       ``,
       `ID: ${result.snapshot.manifest.id}`,
       `Adapter: ${adapter.name}`,
@@ -264,7 +449,7 @@ async function handleRestore(
     );
 
     const lines = [
-      input.dryRun ? '✓ Dry run complete (no changes made)' : '✓ Restore complete!',
+      input.dryRun ? 'Dry run complete (no changes made)' : 'Restore complete!',
       ``,
       `Snapshot: ${result.snapshotId}`,
       `Timestamp: ${result.timestamp}`,
@@ -303,7 +488,7 @@ async function handleList(
     }
 
     // Sort by timestamp (newest first)
-    entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) => 
+    entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
@@ -321,7 +506,7 @@ async function handleList(
       const date = new Date(entry.timestamp).toLocaleString();
       const labelPart = entry.label ? ` "${entry.label}"` : '';
       const sizePart = entry.size ? ` (${formatBytes(entry.size)})` : '';
-      lines.push(`• ${entry.id}${labelPart}`);
+      lines.push(`- ${entry.id}${labelPart}`);
       lines.push(`  ${date} | ${entry.platform}${sizePart}`);
     }
 
@@ -346,7 +531,7 @@ async function handleStatus(): Promise<string> {
   const adapter = await detectAdapter();
 
   const lines = [
-    'SaveState Status: Initialized ✓',
+    'SaveState Status: Initialized',
     '',
     `Storage: ${config.storage.type}`,
     `Default adapter: ${config.defaultAdapter ?? 'auto-detect'}`,
@@ -357,7 +542,198 @@ async function handleStatus(): Promise<string> {
     lines.push(`Adapter version: ${adapter.version}`);
   }
 
+  // MCP config status
+  if (config.mcp) {
+    lines.push('');
+    lines.push('MCP Configuration:');
+    lines.push(`  Enabled: ${config.mcp.enabled}`);
+    lines.push(`  Port: ${config.mcp.port}`);
+    lines.push(`  Auth: ${config.mcp.auth.type}`);
+  }
+
   return lines.join('\n');
+}
+
+// ─── Memory Tool Handlers (Issue #107) ───────────────────────
+
+async function handleMemoryStore(
+  input: z.infer<typeof MemoryStoreInputSchema>,
+): Promise<string> {
+  try {
+    const lane = getKnowledgeLane();
+
+    const memory = await lane.storeMemory({
+      namespace: input.namespace as Namespace,
+      content: input.content,
+      content_type: input.content_type ?? 'text',
+      source: {
+        type: (input.source as 'user_input' | 'tool_output' | 'agent_inference' | 'external' | 'system') ?? 'external',
+        identifier: input.source ?? 'mcp',
+      },
+      tags: input.tags,
+      importance: input.importance,
+    });
+
+    const lines = [
+      'Memory stored successfully!',
+      '',
+      `ID: ${memory.memory_id}`,
+      `Content type: ${memory.content_type}`,
+      `Tags: ${memory.tags.length > 0 ? memory.tags.join(', ') : 'none'}`,
+      `Importance: ${memory.importance}`,
+      `Created: ${memory.created_at}`,
+    ];
+
+    return lines.join('\n');
+  } catch (err) {
+    return `Error storing memory: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+async function handleMemorySearch(
+  input: z.infer<typeof MemorySearchInputSchema>,
+): Promise<string> {
+  try {
+    const lane = getKnowledgeLane();
+
+    const results = await lane.searchMemories({
+      namespace: input.namespace as Namespace,
+      query: input.query,
+      tags: input.tags,
+      limit: input.limit ?? 10,
+      min_importance: input.min_importance,
+      include_content: true,
+    });
+
+    if (results.length === 0) {
+      return 'No memories found matching your query.';
+    }
+
+    const lines = [`Found ${results.length} memory(ies):`, ''];
+
+    for (const result of results) {
+      lines.push(`- ${result.memory_id}`);
+      lines.push(`  Score: ${result.score.toFixed(3)}`);
+      lines.push(`  Tags: ${result.tags.length > 0 ? result.tags.join(', ') : 'none'}`);
+      if (result.content) {
+        const preview = result.content.length > 100
+          ? result.content.slice(0, 100) + '...'
+          : result.content;
+        lines.push(`  Content: ${preview}`);
+      }
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  } catch (err) {
+    return `Error searching memories: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+async function handleMemoryDelete(
+  input: z.infer<typeof MemoryDeleteInputSchema>,
+): Promise<string> {
+  try {
+    const lane = getKnowledgeLane();
+
+    await lane.deleteMemory(input.memory_id, 'mcp-client', input.reason);
+
+    return [
+      'Memory deleted successfully!',
+      '',
+      `ID: ${input.memory_id}`,
+      `Reason: ${input.reason}`,
+    ].join('\n');
+  } catch (err) {
+    return `Error deleting memory: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+// ─── Resource Handlers ───────────────────────────────────────
+
+async function handleReadResource(uri: string): Promise<string> {
+  const url = new URL(uri);
+
+  if (url.protocol !== 'savestate:') {
+    throw new Error(`Unknown protocol: ${url.protocol}`);
+  }
+
+  // For custom protocols, Node.js URL puts the resource type in hostname
+  const resourceType = url.hostname;
+  const pathParts = url.pathname.replace(/^\//, '').split('/').filter(Boolean);
+
+  switch (resourceType) {
+    case 'snapshots': {
+      if (!isInitialized()) {
+        return JSON.stringify({ error: 'SaveState not initialized' });
+      }
+
+      const agentId = pathParts[0];
+      const index = await loadIndex();
+      let entries = index.snapshots;
+
+      if (agentId) {
+        entries = entries.filter((e: SnapshotIndexEntry) =>
+          e.platform === agentId || e.id.includes(agentId)
+        );
+      }
+
+      entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+
+      return JSON.stringify({
+        count: entries.length,
+        snapshots: entries.map((e: SnapshotIndexEntry) => ({
+          id: e.id,
+          timestamp: e.timestamp,
+          platform: e.platform,
+          label: e.label,
+          size: e.size,
+        })),
+      }, null, 2);
+    }
+
+    case 'memories': {
+      const namespaceStr = pathParts[0];
+      let namespace: Namespace;
+
+      if (namespaceStr) {
+        const nsParts = namespaceStr.split(':');
+        namespace = {
+          org_id: nsParts[0] ?? 'default',
+          app_id: nsParts[1] ?? 'default',
+          agent_id: nsParts[2] ?? 'default',
+          user_id: nsParts[3],
+        };
+      } else {
+        namespace = {
+          org_id: 'default',
+          app_id: 'default',
+          agent_id: 'default',
+        };
+      }
+
+      const lane = getKnowledgeLane();
+      const memories = await lane.listMemories(namespace, { limit: 100 });
+
+      return JSON.stringify({
+        count: memories.length,
+        namespace: namespace,
+        memories: memories.map(m => ({
+          id: m.memory_id,
+          content: m.content,
+          tags: m.tags,
+          importance: m.importance,
+          created_at: m.created_at,
+          status: m.status,
+        })),
+      }, null, 2);
+    }
+
+    default:
+      throw new Error(`Unknown resource type: ${resourceType}`);
+  }
 }
 
 // ─── Utilities ───────────────────────────────────────────────
@@ -370,15 +746,16 @@ function formatBytes(bytes: number): string {
 
 // ─── Server Setup ────────────────────────────────────────────
 
-async function main(): Promise<void> {
+export async function startMCPServer(): Promise<void> {
   const server = new Server(
     {
       name: 'savestate',
-      version: '0.5.0',
+      version: '0.9.0',
     },
     {
       capabilities: {
         tools: {},
+        resources: {},
       },
     },
   );
@@ -386,6 +763,41 @@ async function main(): Promise<void> {
   // Handle tool listing
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return { tools };
+  });
+
+  // Handle resource listing
+  server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    return { resources };
+  });
+
+  // Handle resource reading
+  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    const { uri } = request.params;
+
+    try {
+      const content = await handleReadResource(uri);
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: content,
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify({
+              error: err instanceof Error ? err.message : String(err)
+            }),
+          },
+        ],
+      };
+    }
   });
 
   // Handle tool calls
@@ -415,6 +827,21 @@ async function main(): Promise<void> {
           result = await handleStatus();
           break;
         }
+        case 'savestate_memory_store': {
+          const input = MemoryStoreInputSchema.parse(args);
+          result = await handleMemoryStore(input);
+          break;
+        }
+        case 'savestate_memory_search': {
+          const input = MemorySearchInputSchema.parse(args);
+          result = await handleMemorySearch(input);
+          break;
+        }
+        case 'savestate_memory_delete': {
+          const input = MemoryDeleteInputSchema.parse(args);
+          result = await handleMemoryDelete(input);
+          break;
+        }
         default:
           result = `Unknown tool: ${name}`;
       }
@@ -439,7 +866,8 @@ async function main(): Promise<void> {
   console.error('SaveState MCP server running on stdio');
 }
 
-main().catch((err) => {
+// Run when executed directly
+startMCPServer().catch((err) => {
   console.error('Fatal error:', err);
   process.exit(1);
 });

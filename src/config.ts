@@ -43,6 +43,14 @@ export function defaultConfig(): SaveStateConfig {
         decayEnabled: false,
       },
     },
+    // Issue #107: MCP server defaults
+    mcp: {
+      enabled: false,
+      port: 3333,
+      auth: {
+        type: 'none',
+      },
+    },
   };
 }
 
