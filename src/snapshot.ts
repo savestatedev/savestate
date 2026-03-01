@@ -20,6 +20,8 @@
  */
 
 import type { Adapter, SaveStateConfig, Snapshot, StorageBackend } from './types.js';
+import type { StateEventStore } from './state-events/store.js';
+import { STATE_EVENTS_VERSION } from './state-events/types.js';
 import {
   generateSnapshotId,
   SAF_VERSION,
@@ -87,6 +89,8 @@ export async function createSnapshot(
     parentId?: string;
     /** Force a full snapshot (skip incremental) */
     full?: boolean;
+    /** State events to include in snapshot (Issue #91) */
+    stateEvents?: StateEventStore;
   },
 ): Promise<CreateSnapshotResult> {
   // Step 1: Extract state from the platform
@@ -166,6 +170,15 @@ export async function createSnapshot(
         ? [...(snapshot.chain?.ancestors ?? []), options.parentId]
         : [],
   };
+
+  // Step 7b: Add state events (Issue #91)
+  if (options?.stateEvents && options.stateEvents.count() > 0) {
+    snapshot.stateEvents = {
+      version: STATE_EVENTS_VERSION,
+      count: options.stateEvents.count(),
+      events: options.stateEvents.getAll(),
+    };
+  }
 
   // Step 8: Pack the archive (incremental or full)
   let archiveFileMap: Map<string, Buffer>;

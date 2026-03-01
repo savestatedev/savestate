@@ -6,6 +6,10 @@
  */
 
 import type { SnapshotTrace } from './trace/types.js';
+import type { SnapshotStateEvents as StateEventsType } from './state-events/types.js';
+
+/** Re-export SnapshotStateEvents for external use */
+export type SnapshotStateEvents = StateEventsType;
 
 // ─── Manifest ────────────────────────────────────────────────
 
@@ -272,6 +276,8 @@ export interface Snapshot {
   chain: SnapshotChain;
   restoreHints: RestoreHints;
   trace?: SnapshotTrace;
+  /** Structured state events (Issue #91) */
+  stateEvents?: SnapshotStateEvents;
 }
 
 // ─── Adapter Interface ───────────────────────────────────────
@@ -297,6 +303,12 @@ export interface Adapter {
 
   /** Get platform-specific identity information */
   identify(): Promise<PlatformMeta>;
+
+  /**
+   * Get state events from the last restored snapshot (Issue #91).
+   * Available after restore() is called with a snapshot containing state events.
+   */
+  getStateEvents?(): SnapshotStateEvents | undefined;
 }
 
 // ─── Storage Backend Interface ───────────────────────────────
