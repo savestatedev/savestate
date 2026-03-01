@@ -13,6 +13,7 @@ import { pipeline } from 'node:stream/promises';
 import { Header, Parser } from 'tar';
 import type { Snapshot } from './types.js';
 import { TRACE_SCHEMA_VERSION, type SnapshotTrace, type TraceRunIndexEntry } from './trace/types.js';
+import type { AgentIdentity } from './identity/schema.js';
 
 /** File extension for encrypted SaveState archives */
 export const SAF_EXTENSION = '.saf.enc';
@@ -23,12 +24,23 @@ export const SAF_VERSION = '0.1.0';
 /**
  * Build the directory structure for a snapshot, ready to be tarred.
  * Returns a map of relative paths → content buffers.
+ *
+ * @param snapshot - The snapshot object
+ * @param agentIdentity - Optional agent identity document (Issue #92)
  */
-export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
+export function packSnapshot(
+  snapshot: Snapshot,
+  agentIdentity?: AgentIdentity,
+): Map<string, Buffer> {
   const files = new Map<string, Buffer>();
 
   // manifest.json
   files.set('manifest.json', Buffer.from(JSON.stringify(snapshot.manifest, null, 2)));
+
+  // identity/identity.json (Issue #92: Agent identity document)
+  if (agentIdentity) {
+    files.set('identity/identity.json', Buffer.from(JSON.stringify(agentIdentity, null, 2)));
+  }
 
   // identity/
   if (snapshot.identity.personality) {
