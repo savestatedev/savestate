@@ -68,3 +68,60 @@ export {
   RiskThresholds,
   EvaluableMemory,
 } from './decision-guard.js';
+
+// ─── Memory Integrity Grid (Issue #112) ───────────────────────
+
+// Honeyfact Seeder
+export {
+  HoneyfactCategory,
+  HoneyfactTemplate,
+  HoneyfactGenerationOptions,
+  SeedResult,
+  RotationResult,
+  generateHoneyfacts,
+  seedHoneyfacts,
+  getActiveHoneyfacts,
+  getAllHoneyfacts,
+  rotateHoneyfacts,
+  checkForHoneyfacts,
+  clearHoneyfacts,
+  getHoneyfactStats,
+} from './honeyfact.js';
+
+// Tripwire Monitor
+export {
+  DetectionSource,
+  IncidentSeverity,
+  TripwireEvent,
+  TripwireContext,
+  IntegrityIncident,
+  TripwireConfig,
+  MonitorResult,
+  TripwireMonitor,
+  DEFAULT_TRIPWIRE_CONFIG,
+  getIncidents,
+  getIncident,
+  updateIncidentStatus,
+  getTripwireEvents,
+  getIncidentStats,
+} from './tripwire.js';
+
+// Containment Controls
+export {
+  ContainmentPolicy,
+  ContainmentActionType,
+  QuarantineStatus,
+  ContainmentEvent,
+  QuarantinedMemory,
+  QuarantinedAgent,
+  ContainmentConfig,
+  ContainmentResult,
+  ContainmentStatus,
+  ContainmentController,
+  DEFAULT_CONTAINMENT_CONFIG,
+  getQuarantinedMemories,
+  getQuarantinedAgents,
+  getContainmentEvents,
+  getPendingApprovals,
+  getContainmentConfig,
+} from './containment.js';

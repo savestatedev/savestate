@@ -51,6 +51,22 @@ export function defaultConfig(): SaveStateConfig {
         type: 'none',
       },
     },
+    // Issue #112: Integrity Grid defaults
+    integrity: {
+      enabled: false,
+      honeyfact: {
+        count: 10,
+        ttl_days: 7,
+      },
+      tripwire: {
+        threshold: 0.8,
+        fuzzy_enabled: true,
+      },
+      containment: {
+        policy: 'approve',
+        auto_escalate_critical: true,
+      },
+    },
   };
 }
 
