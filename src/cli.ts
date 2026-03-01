@@ -228,6 +228,12 @@ import { registerMCPCommands } from './commands/mcp.js';
 
 registerMCPCommands(program);
 
+// ─── savestate integrity ─────────────────────────────────────
+
+import { registerIntegrityCommands } from './commands/integrity.js';
+
+registerIntegrityCommands(program);
+
 // ─── Parse & run ─────────────────────────────────────────────
 
 program.parse();
