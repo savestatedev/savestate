@@ -20,6 +20,7 @@
  */
 
 import type { Adapter, SaveStateConfig, Snapshot, StorageBackend } from './types.js';
+import type { AgentIdentity } from './identity/schema.js';
 import {
   generateSnapshotId,
   SAF_VERSION,
@@ -87,6 +88,8 @@ export async function createSnapshot(
     parentId?: string;
     /** Force a full snapshot (skip incremental) */
     full?: boolean;
+    /** Agent identity document to include (Issue #92) */
+    identity?: AgentIdentity;
   },
 ): Promise<CreateSnapshotResult> {
   // Step 1: Extract state from the platform
@@ -119,7 +122,8 @@ export async function createSnapshot(
 
   // Step 4: Pack the full snapshot to get file map
   // (we need this regardless — for delta comparison or full storage)
-  const fullFileMap = packSnapshot(snapshot);
+  // Include agent identity if provided (Issue #92)
+  const fullFileMap = packSnapshot(snapshot, options?.identity);
 
   // Step 5: Determine if we should do incremental or full
   let deltaManifest: DeltaManifest | undefined;
@@ -173,7 +177,7 @@ export async function createSnapshot(
   if (isIncremental && deltaResult && deltaManifest) {
     archiveFileMap = packDelta(snapshot, deltaManifest, deltaResult.changedFiles);
   } else {
-    archiveFileMap = packSnapshot(snapshot);
+    archiveFileMap = packSnapshot(snapshot, options?.identity);
   }
 
   // Step 9: Compute checksum and finalize
@@ -187,7 +191,7 @@ export async function createSnapshot(
   if (isIncremental && deltaResult && deltaManifest) {
     archiveFileMap.set('manifest.json', Buffer.from(JSON.stringify(snapshot.manifest, null, 2)));
   } else {
-    archiveFileMap = packSnapshot(snapshot);
+    archiveFileMap = packSnapshot(snapshot, options?.identity);
   }
 
   const finalArchive = packToArchive(archiveFileMap);

@@ -9,6 +9,8 @@ import { detectAdapter, getAdapter } from '../adapters/registry.js';
 import { createSnapshot } from '../snapshot.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { getPassphrase } from '../passphrase.js';
+import { loadIdentityFromFile } from '../identity/store.js';
+import type { AgentIdentity } from '../identity/schema.js';
 
 interface SnapshotOptions {
   label?: string;
@@ -16,6 +18,7 @@ interface SnapshotOptions {
   adapter?: string;
   schedule?: string;
   full?: boolean;
+  identity?: string;
 }
 
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
@@ -64,12 +67,23 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     // Resolve storage backend
     const storage = resolveStorage(config);
 
+    // Load identity document if specified (Issue #92)
+    let identity: AgentIdentity | undefined;
+    if (options.identity) {
+      identity = await loadIdentityFromFile(options.identity);
+      if (!identity) {
+        console.log(chalk.red(`✗ Identity file not found or invalid: ${options.identity}`));
+        process.exit(1);
+      }
+    }
+
     const spinner = ora(`Extracting state via ${adapter.name} adapter...`).start();
 
     const result = await createSnapshot(adapter, storage, passphrase, {
       label: options.label,
       tags: options.tags?.split(',').map((t) => t.trim()),
       full: options.full,
+      identity,
     });
 
     const typeLabel = result.incremental ? 'Incremental snapshot' : 'Full snapshot';
@@ -80,6 +94,9 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     console.log(`  ${chalk.dim('Type:')}       ${result.incremental ? chalk.yellow('incremental (delta)') : chalk.blue('full')}`);
     if (options.label) {
       console.log(`  ${chalk.dim('Label:')}      ${options.label}`);
+    }
+    if (identity) {
+      console.log(`  ${chalk.dim('Identity:')}   ${chalk.green('✓')} ${identity.name} v${identity.version}`);
     }
     if (result.incremental && result.delta) {
       console.log(`  ${chalk.dim('Changes:')}    ${chalk.green(`+${result.delta.added}`)} added, ${chalk.yellow(`~${result.delta.modified}`)} modified, ${chalk.red(`-${result.delta.removed}`)} removed, ${chalk.dim(`${result.delta.unchanged} unchanged`)}`);
