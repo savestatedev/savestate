@@ -225,8 +225,13 @@ registerSLOCommands(program);
 // ─── savestate mcp ───────────────────────────────────────────
 
 import { registerMCPCommands } from './commands/mcp.js';
+import { registerContextCommands } from './commands/context.js';
 
 registerMCPCommands(program);
+
+// ─── savestate context ─────────────────────────────────────
+
+registerContextCommands(program);
 
 // ─── Parse & run ─────────────────────────────────────────────
 
