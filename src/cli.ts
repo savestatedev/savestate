@@ -60,6 +60,8 @@ program
   .option('-a, --adapter <adapter>', 'Adapter to use (default: auto-detect)')
   .option('-s, --schedule <interval>', 'Set up auto-snapshot schedule (e.g., 6h, 1d)')
   .option('--full', 'Force a full snapshot (skip incremental)')
+  .option('--tag <entry...>', 'Record structured state entry (type:key=value)')
+  .option('--meta <entry...>', 'Additional metadata for state entries (key=value)')
   .action(snapshotCommand);
 
 // ─── savestate restore ───────────────────────────────────────
@@ -225,13 +227,14 @@ registerSLOCommands(program);
 // ─── savestate mcp ───────────────────────────────────────────
 
 import { registerMCPCommands } from './commands/mcp.js';
-import { registerContainerCommands } from './commands/container.js';
 
 registerMCPCommands(program);
 
-// ─── savestate container ───────────────────────────────────
+// ─── savestate integrity ─────────────────────────────────────
 
-registerContainerCommands(program);
+import { registerIntegrityCommands } from './commands/integrity.js';
+
+registerIntegrityCommands(program);
 
 // ─── Parse & run ─────────────────────────────────────────────
 
