@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observational Memory Is Reshaping AI Agents — Here's Why It Matters — SaveState</title>
+<meta name="description" content="New research shows observational memory cutting AI agent costs 10x. But there's still one critical piece missing: backup and restore.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root { --navy: #1a1a2e; --blue: #03C1DF; --blue-light: #9BCDE4; --blue-dim: #025A6A; --bg: #06060c; --bg-card: #0d0d18; --bg-code: #0a0a14; --text: #e2e8f0; --text-muted: #94a3b8; --text-dim: #64748b; --border: #1e293b; --glow: rgba(3, 193, 223, 0.15); --radius: 12px; --radius-sm: 8px; --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; --mono: 'JetBrains Mono', 'SF Mono', monospace; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; }
+body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px); background-size: 32px 32px; pointer-events: none; z-index: 0; }
+.container { max-width: 720px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-logo img { flex-shrink: 0; }
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--blue-light), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.nav-links .btn-nav:hover {
+  background: var(--blue-light);
+  transform: translateY(-1px);
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+main { padding: 120px 0 80px; }
+.hero { margin-bottom: 48px; }
+.hero .date { font-family: var(--mono); font-size: 13px; color: var(--blue); margin-bottom: 12px; }
+.hero h1 { font-size: 42px; font-weight: 800; line-height: 1.15; margin-bottom: 20px; background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero .subtitle { font-size: 20px; color: var(--text-muted); line-height: 1.6; }
+.content { font-size: 17px; }
+.content h2 { font-size: 28px; font-weight: 700; margin: 48px 0 20px; color: var(--text); }
+.content p { margin-bottom: 20px; color: var(--text-muted); }
+.content ul, .content ol { margin: 0 0 20px 24px; color: var(--text-muted); }
+.content li { margin-bottom: 8px; }
+.content a { color: var(--blue); text-decoration: none; }
+.content a:hover { text-decoration: underline; }
+.content code { font-family: var(--mono); font-size: 14px; background: var(--bg-code); padding: 2px 6px; border-radius: 4px; color: var(--blue-light); }
+.content pre { background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; overflow-x: auto; margin: 24px 0; }
+.content pre code { background: none; padding: 0; font-size: 13px; }
+.cta { background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-code) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-top: 48px; text-align: center; }
+.cta h3 { font-size: 24px; margin-bottom: 12px; }
+.cta p { color: var(--text-muted); margin-bottom: 20px; }
+.btn { display: inline-block; background: var(--blue); color: var(--navy); font-weight: 600; padding: 12px 24px; border-radius: var(--radius-sm); text-decoration: none; transition: all 0.2s; }
+.btn:hover { background: var(--blue-light); transform: translateY(-2px); }
+
+footer { border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--text-dim); font-size: 14px; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+<main><div class="container">
+<div class="hero">
+<p class="date">February 12, 2026</p>
+<h1>Observational Memory Is Reshaping AI Agents</h1>
+<p class="subtitle">New research shows memory architecture is evolving faster than expected. But there's a gap no one is talking about.</p>
+</div>
+<div class="content">
+<p>The AI agent memory landscape shifted dramatically this week. A new study from VentureBeat highlighted how "observational memory" is cutting agent costs by 10x while outperforming traditional RAG approaches on long-context benchmarks. Meanwhile, Neo4j just released <code>neo4j-agent-memory</code>, an open-source library for building context graphs with LangChain, Pydantic AI, and LlamaIndex.</p>
+
+<p>And if that was not enough, AI Context Flow launched as a browser extension that bridges ChatGPT, Claude, Gemini, and Perplexity, letting your context follow you across platforms.</p>
+
+<p>This is a massive shift. For months, developers have been wrestling with context windows, token limits, and the painful reality that every new session starts from scratch. Now the industry is converging on a new model, and it changes everything.</p>
+
+<h2>What Is Observational Memory?</h2>
+
+<p>Traditional RAG (Retrieval-Augmented Generation) works by pulling relevant documents into the context window at query time. It works, but it gets expensive fast when you are dealing with long-running conversations that span weeks or months.</p>
+
+<p>Observational memory takes a different approach. Instead of retrieving documents, the agent observes its own interactions and learns what to remember and what to forget. The result, according to the research, is a 10x reduction in computational costs while delivering better accuracy on long-context tasks.</p>
+
+<p>Think of it like how humans work. You do not store every conversation verbatim. You remember the important parts, the decisions made, and the context around them. That is exactly what observational memory enables for AI agents.</p>
+
+<h2>The Missing Piece: Backup and Restore</h2>
+
+<p>Here is the thing though. All of these memory solutions share one critical flaw: they focus on <em>active</em> memory, but what happens when things go wrong?</p>
+
+<p>Consider these scenarios:</p>
+<ul>
+<li>Your agent crashes and loses weeks of learned context</li>
+<li>You switch from ChatGPT to Claude and have to start over</li>
+<li>A context window limit forces aggressive summarization, and nuance is lost forever</li>
+<li>You want to roll back to an earlier state because something went wrong</li>
+</ul>
+
+<p>These are not edge cases. They are daily realities for developers building production AI agents. The industry is racing to give agents better memory, but nobody is solving the backup problem.</p>
+
+<h2>Where SaveState Fits</h2>
+
+<p>SaveState is the missing layer. While the industry builds smarter memory systems, we are building the backup and restore capability that those systems desperately need.</p>
+
+<p>Our encrypted snapshot system lets you:</p>
+<ul>
+<li>Create point-in-time backups of your agent's complete state</li>
+<li>Restore to any previous snapshot, even across platforms</li>
+<li>Sync securely to cloud storage with zero-knowledge encryption</li>
+<li>Export your data in the open SaveState Archive Format (SAF)</li>
+</ul>
+
+<pre><code># Create a snapshot
+savestate snapshot
+
+# List available snapshots
+savestate list
+
+# Restore to a specific point
+savestate restore --id abc123</code></pre>
+
+<p>Observational memory is the future, but the future needs a safety net. When your agent's memory is valuable, it deserves the same protection you give your code, your data, and your infrastructure.</p>
+
+<p>That protection is SaveState.</p>
+
+<div class="cta">
+<h3>Ready to protect your AI agent's memory?</h3>
+<p>Get started with the CLI or learn more about our cloud backup plans.</p>
+<a href="https://savestate.dev" class="btn">Try SaveState Now</a>
+</div>
+</div>
+</div></main>
+<footer><div class="container"><p>SaveState: Time Machine for AI Agents</p></div></footer>
+</body>
+</html>

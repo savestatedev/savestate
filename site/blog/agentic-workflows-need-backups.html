@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Workflows Need Backups: Durable State for AI Agents - SaveState</title>
+<meta name="description" content="As agentic workflows move into CI and repo automation, durable state becomes a production requirement. Learn how to checkpoint, restore, and migrate AI agent context with SaveState.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">February 20, 2026</div>
+      <h1>Agentic Workflows Need Backups: Durable State for AI Agents</h1>
+      <p class="subtitle">When your agent moves into CI, “memory” becomes production data, and production data needs restore.</p>
+    </header>
+
+    <div class="article-content">
+      <p>Last year, most developers treated an AI agent like a chat tab. This year, that agent is becoming part of your build system. GitHub is even previewing <a href="https://github.blog/changelog/2026-02-13-github-agentic-workflows-are-now-in-technical-preview/" target="_blank" rel="noopener">Agentic Workflows</a>, where repository automation is defined in Markdown and runs like any other pipeline.</p>
+
+      <p>That shift changes the risk profile. A failed conversation is annoying. A failed workflow can mean a broken release, a half applied refactor, or a repo full of noisy PRs. If you are running agents in production systems, you need <strong>durable state</strong>, the ability to checkpoint and restore an agent run the same way you would restore a database.</p>
+
+      <h2>Agent “memory” is bigger than you think</h2>
+      <p>Most long term memory discussions focus on vector stores. Those matter, but they are only part of the picture. A real agent run includes:</p>
+      <ul>
+        <li><strong>Prompts and system instructions</strong>: the policies and constraints that shaped decisions.</li>
+        <li><strong>Tool configuration</strong>: API keys, scopes, enabled tools, and rate limits.</li>
+        <li><strong>Environment</strong>: package versions, repo state, and operating assumptions.</li>
+        <li><strong>Transcript</strong>: the full chain of reasoning inputs and outputs, including tool calls.</li>
+      </ul>
+
+      <p>Frameworks are starting to acknowledge this. Tutorials on agent memory increasingly mention checkpointing and run state, not just retrieval. For example, DigitalOcean’s overview of long term memory approaches highlights checkpointing and state stores as practical components, not academic extras.</p>
+
+      <h2>Checkpointing: treat agent runs like deployments</h2>
+      <p>Agentic workflows have failure modes that feel a lot like CI failures: timeouts, flaky tools, token limits, and dependency drift. The fix is familiar too. Add checkpoints at milestones where you would want a rollback:</p>
+      <ul>
+        <li>Before a tool call that can mutate code or data</li>
+        <li>After the agent selects a plan</li>
+        <li>After generating a patch, before opening a PR</li>
+      </ul>
+
+      <p>In practice, your pipeline can snapshot at the start of a run, then snapshot again before risky steps:</p>
+      <pre><code># one time
+npm install -g @savestate/cli
+savestate init
+
+# during an agentic workflow
+savestate snapshot --note "before refactor"
+# agent runs, edits files, calls tools
+savestate snapshot --note "after patch generated"</code></pre>
+
+      <p>If the run fails, you restore to a known good snapshot and continue. If you change models or update prompts, you can diff snapshots to see what changed. If you need to migrate between agent platforms, you can restore the same state in a different adapter.</p>
+
+      <h2>Security and portability matter more in CI</h2>
+      <p>Once agents run in automation, state becomes sensitive. It can contain proprietary code context, credentials metadata, and internal decision logs. SaveState uses client side encryption, so your backups are protected even if they are stored remotely. You control the key, and you can move your state across machines and environments.</p>
+
+      <div class="cta-box">
+        <h3>Ready to back up your AI workflows?</h3>
+        <p>Your first snapshot takes about 30 seconds. If agent state is production data, treat it like production data.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Install SaveState</a>
+      </div>
+
+      <pre><code>npm install -g @savestate/cli
+savestate init
+savestate snapshot
+savestate restore</code></pre>
+
+      <hr>
+
+      <p><em>Questions or ideas for workflow integrations? Find us on X <a href="https://x.com/SaveStateDev" target="_blank" rel="noopener">@SaveStateDev</a> or open an issue on GitHub.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

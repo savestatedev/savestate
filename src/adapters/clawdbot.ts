@@ -38,6 +38,7 @@ import type {
   ExtensionEntry,
 } from '../types.js';
 import { SAF_VERSION, generateSnapshotId, computeChecksum } from '../format.js';
+import { TraceStore } from '../trace/index.js';
 
 // ─── OpenClaw Runtime State Types ────────────────────────────
 
@@ -173,6 +174,7 @@ export class ClawdbotAdapter implements Adapter {
     const extensions = await this.readExtensions();
     const configEntries = await this.readConfigFiles();
     const knowledge = await this.buildKnowledgeIndex(skills, scripts);
+    const trace = await this.readTraceData();
 
     // NEW: OpenClaw runtime state
     const openclawState = await this.readOpenClawState();
@@ -254,6 +256,11 @@ export class ClawdbotAdapter implements Adapter {
           },
           {
             type: 'file',
+            description: 'Restore Askable Echoes trace ledger',
+            target: '.savestate/traces/',
+          },
+          {
+            type: 'file',
             description: 'Restore OpenClaw gateway config',
             target: '~/.openclaw/openclaw.json',
           },
@@ -275,6 +282,7 @@ export class ClawdbotAdapter implements Adapter {
           'Verify API keys in gateway config',
         ],
       },
+      trace,
     };
 
     return snapshot;
@@ -315,6 +323,12 @@ export class ClawdbotAdapter implements Adapter {
       if (_openclaw) {
         await this.restoreOpenClawState(_openclaw as OpenClawState);
       }
+    }
+
+    // Restore trace ledger (if available)
+    if (snapshot.trace) {
+      const traceStore = new TraceStore({ cwd: this.workspaceDir, redactSecrets: false });
+      await traceStore.writeSnapshotTrace(snapshot.trace);
     }
   }
 
@@ -970,6 +984,18 @@ export class ClawdbotAdapter implements Adapter {
     }
 
     return docs;
+  }
+
+  private async readTraceData(): Promise<Snapshot['trace'] | undefined> {
+    try {
+      const traceStore = new TraceStore({ cwd: this.workspaceDir });
+      return await traceStore.readSnapshotTrace();
+    } catch (err) {
+      this.warnings.push(
+        `Failed to read trace ledger: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return undefined;
+    }
   }
 
   private async walkDir(dir: string, extensions?: string[]): Promise<string[]> {

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your AI Agent Has Amnesia (And It's About to Forget Everything Again)</title>
+  <meta name="description" content="AI coding tools have a serious memory problem. Claude Code, Cursor, and Windsurf silently lose context. Here's why the industry is finally paying attention.">
+  <meta name="author" content="SaveState">
+  <meta property="og:title" content="Your AI Agent Has Amnesia (And It's About to Forget Everything Again)">
+  <meta property="og:description" content="AI coding tools have a serious memory problem. The industry is finally paying attention.">
+  <meta property="og:type" content="article">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; max-width: 720px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
+    h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 0.5rem; }
+    h2 { margin-top: 2rem; color: #333; }
+    .meta { color: #666; margin-bottom: 2rem; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 1.5rem; border-radius: 8px; overflow-x: auto; }
+    code { font-family: 'SF Mono', Monaco, monospace; font-size: 0.9rem; }
+    .cta { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-top: 2rem; text-align: center; }
+    .cta code { background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 4px; }
+    a { color: #667eea; }
+    blockquote { border-left: 4px solid #667eea; margin-left: 0; padding-left: 1.5rem; color: #555; }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>Your AI Agent Has Amnesia (And It's About to Forget Everything Again)</h1>
+    <p class="meta">February 23, 2026 · 4 min read</p>
+
+    <p>A post hit the DEV.to front page last week that made developers cringe in recognition. A developer lost four hours of careful authentication refactoring to Claude Code's silent context compaction. No warning. No save point. Just gone.</p>
+
+    <p>Meanwhile, Qodo shipped their 2.1 release targeting what their CEO calls the "Memento problem." You know, like the movie where the guy wakes up every day with no memory of yesterday.</p>
+
+    <p>Sound familiar? It should. Every AI coding agent you use has the same problem.</p>
+
+    <h2>The Silent Killer in Your Terminal</h2>
+
+    <p>Claude Code, Cursor, Windsurf: they all do it. When context gets too long, they quietly compact or truncate. Those nuanced architectural decisions you spent an hour explaining? The careful reasoning about why you chose that specific authentication pattern? Silently evicted to make room for your next prompt.</p>
+
+    <p>The worst part? You don't know it happened until you ask a follow-up question and get a response that ignores everything you established.</p>
+
+    <h2>The Memento Problem</h2>
+
+    <p>Every session, your AI agent wakes up with amnesia. The workarounds are everywhere: CLAUDE.md files, agents.md conventions, .context folders stuffed with markdown brain dumps. Developers are building their own memory systems with session JSONL snapshots and elaborate folder structures.</p>
+
+    <p>A recent Medium post proposed a ".context convention" for AI memory. The fact that developers are standardizing DIY solutions tells you everything about how real this pain is.</p>
+
+    <h2>The Industry Finally Admits the Problem</h2>
+
+    <p>Qodo 2.1 explicitly targets persistent agent memory. LangMem SDK launched to give agents long-term recall. Mantra is building memory infrastructure. VentureBeat called it "solving the amnesia problem."</p>
+
+    <p>This is becoming a recognized category. The question is: who solves it, and how?</p>
+
+    <h2>It's Not Just Coding Agents</h2>
+
+    <p>Here's what everyone misses: this isn't a Claude Code problem. It's an AI problem.</p>
+
+    <p>Your ChatGPT conversations? At risk. Your Claude.ai projects with carefully built context? Vulnerable. OpenAI Assistants with custom instructions you've refined over months? One API change away from gone. That Gemini session where you finally got it to understand your codebase? Hope you didn't need that tomorrow.</p>
+
+    <p>Every AI interaction you value is living on borrowed time.</p>
+
+    <h2>Time Machine for AI State</h2>
+
+    <p>SaveState takes a different approach. Instead of building memory into one tool, we backup the state itself. Think Time Machine, but for AI.</p>
+
+<pre><code># Snapshot your Claude Code session
+savestate snapshot claude-code ./my-project
+
+# List your snapshots
+savestate list
+
+# Restore to yesterday's context
+savestate restore claude-code --snapshot 2026-02-22
+
+# Encrypted, versioned, yours
+</code></pre>
+
+    <p>Not just coding agents. Claude.ai threads. ChatGPT conversations. OpenAI Assistants. All of it, encrypted and versioned. Because your AI context is an asset, and assets deserve backup.</p>
+
+    <div class="cta">
+      <h3>Stop Losing Your AI's Memory</h3>
+      <p>SaveState backs up and restores AI context across all your tools. One command. Encrypted. Versioned.</p>
+      <p><code>npm install -g @savestate/cli</code></p>
+      <p><a href="https://savestate.dev" style="color: white;">Learn more at savestate.dev</a></p>
+    </div>
+  </article>
+</body>
+</html>
