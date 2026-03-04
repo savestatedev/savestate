@@ -25,6 +25,8 @@ import {
   diffCommand,
   configCommand,
   adaptersCommand,
+  exportCommandDefinition,
+  importCommandDefinition,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 
@@ -100,6 +102,14 @@ program
   .command('adapters')
   .description('List available platform adapters')
   .action(adaptersCommand);
+
+// ─── savestate export ───────────────────────────────────────
+
+exportCommandDefinition(program);
+
+// ─── savestate import ───────────────────────────────────────
+
+importCommandDefinition(program);
 
 // ─── savestate search ────────────────────────────────────────
 
