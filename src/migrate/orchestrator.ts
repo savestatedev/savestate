@@ -508,9 +508,13 @@ export class MigrationOrchestrator {
     return this.bundle;
   }
 
+  setBundle(bundle: MigrationBundle): void {
+    this.bundle = bundle;
+  }
+
   // ─── Phase Runners ─────────────────────────────────────────
 
-  private async runExtractPhase(): Promise<void> {
+  async runExtractPhase(): Promise<void> {
     this.setPhase('extracting');
     this.emit({ type: 'phase:start', phase: 'extracting', message: 'Starting extraction...' });
 
@@ -542,7 +546,7 @@ export class MigrationOrchestrator {
     this.emit({ type: 'phase:complete', phase: 'extracting', message: 'Extraction complete' });
   }
 
-  private async runTransformPhase(): Promise<void> {
+  async runTransformPhase(): Promise<void> {
     if (!this.bundle) {
       throw new Error('No bundle to transform - run extract phase first');
     }
@@ -573,7 +577,7 @@ export class MigrationOrchestrator {
     this.emit({ type: 'phase:complete', phase: 'transforming', message: 'Transformation complete' });
   }
 
-  private async runLoadPhase(): Promise<LoadResult> {
+  async runLoadPhase(): Promise<LoadResult> {
     if (!this.bundle) {
       throw new Error('No bundle to load - run extract and transform phases first');
     }

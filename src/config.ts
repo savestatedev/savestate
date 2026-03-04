@@ -26,6 +26,9 @@ export const GLOBAL_SAVESTATE_DIR = join(homedir(), '.savestate');
 export function defaultConfig(): SaveStateConfig {
   return {
     version: '0.1.0',
+    encryption: {
+      enabled: true,
+    },
     storage: {
       type: 'local',
       options: {
