@@ -13,7 +13,8 @@ import { pipeline } from 'node:stream/promises';
 import { Header, Parser } from 'tar';
 import type { Snapshot } from './types.js';
 import { TRACE_SCHEMA_VERSION, type SnapshotTrace, type TraceRunIndexEntry } from './trace/types.js';
-import type { AgentIdentity } from './identity/schema.js';
+import { STATE_EVENTS_VERSION, type SnapshotStateEvents, type StateEvent } from './state-events/types.js';
+import { STATE_EVENTS_FILE } from './state-events/store.js';
 
 /** File extension for encrypted SaveState archives */
 export const SAF_EXTENSION = '.saf.enc';
@@ -24,23 +25,12 @@ export const SAF_VERSION = '0.1.0';
 /**
  * Build the directory structure for a snapshot, ready to be tarred.
  * Returns a map of relative paths → content buffers.
- *
- * @param snapshot - The snapshot object
- * @param agentIdentity - Optional agent identity document (Issue #92)
  */
-export function packSnapshot(
-  snapshot: Snapshot,
-  agentIdentity?: AgentIdentity,
-): Map<string, Buffer> {
+export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
   const files = new Map<string, Buffer>();
 
   // manifest.json
   files.set('manifest.json', Buffer.from(JSON.stringify(snapshot.manifest, null, 2)));
-
-  // identity/identity.json (Issue #92: Agent identity document)
-  if (agentIdentity) {
-    files.set('identity/identity.json', Buffer.from(JSON.stringify(agentIdentity, null, 2)));
-  }
 
   // identity/
   if (snapshot.identity.personality) {
@@ -114,6 +104,21 @@ export function packSnapshot(
     }
   }
 
+  // state-events/ (Issue #91)
+  if (snapshot.stateEvents && snapshot.stateEvents.count > 0) {
+    const stateEventsIndex: SnapshotStateEvents = {
+      version: snapshot.stateEvents.version ?? STATE_EVENTS_VERSION,
+      count: snapshot.stateEvents.count,
+      eventsPath: STATE_EVENTS_FILE,
+    };
+    files.set('state-events/index.json', Buffer.from(JSON.stringify(stateEventsIndex, null, 2)));
+
+    if (snapshot.stateEvents.events) {
+      const jsonl = snapshot.stateEvents.events.map(e => JSON.stringify(e)).join('\n') + '\n';
+      files.set(`state-events/${STATE_EVENTS_FILE}`, Buffer.from(jsonl));
+    }
+  }
+
   return files;
 }
 
@@ -173,8 +178,9 @@ export function unpackSnapshot(files: Map<string, Buffer>): Snapshot {
   const chain = getJson<Snapshot['chain']>('meta/snapshot-chain.json');
   const restoreHints = getJson<Snapshot['restoreHints']>('meta/restore-hints.json');
   const trace = unpackTrace(files);
+  const stateEvents = unpackStateEvents(files);
 
-  return { manifest, identity, memory, conversations, platform, chain, restoreHints, trace };
+  return { manifest, identity, memory, conversations, platform, chain, restoreHints, trace, stateEvents };
 }
 
 function unpackTrace(files: Map<string, Buffer>): SnapshotTrace | undefined {
@@ -203,6 +209,42 @@ function unpackTrace(files: Map<string, Buffer>): SnapshotTrace | undefined {
     schema_version: rawIndex.schema_version ?? TRACE_SCHEMA_VERSION,
     index,
     runs,
+  };
+}
+
+/**
+ * Unpack state events from extracted archive files (Issue #91).
+ */
+function unpackStateEvents(files: Map<string, Buffer>): SnapshotStateEvents | undefined {
+  if (!files.has('state-events/index.json')) {
+    return undefined;
+  }
+
+  const rawIndex = JSON.parse(files.get('state-events/index.json')!.toString('utf-8')) as {
+    version?: string;
+    count?: number;
+    eventsPath?: string;
+  };
+
+  const events: StateEvent[] = [];
+  const eventsPath = `state-events/${rawIndex.eventsPath ?? STATE_EVENTS_FILE}`;
+  const buf = files.get(eventsPath);
+
+  if (buf) {
+    const lines = buf.toString('utf-8').trim().split('\n').filter(line => line.trim());
+    for (const line of lines) {
+      try {
+        events.push(JSON.parse(line) as StateEvent);
+      } catch {
+        // Skip invalid lines
+      }
+    }
+  }
+
+  return {
+    version: rawIndex.version ?? STATE_EVENTS_VERSION,
+    count: events.length,
+    events,
   };
 }
 

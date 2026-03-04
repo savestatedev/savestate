@@ -20,7 +20,8 @@
  */
 
 import type { Adapter, SaveStateConfig, Snapshot, StorageBackend } from './types.js';
-import type { AgentIdentity } from './identity/schema.js';
+import type { StateEventStore } from './state-events/store.js';
+import { STATE_EVENTS_VERSION } from './state-events/types.js';
 import {
   generateSnapshotId,
   SAF_VERSION,
@@ -88,8 +89,8 @@ export async function createSnapshot(
     parentId?: string;
     /** Force a full snapshot (skip incremental) */
     full?: boolean;
-    /** Agent identity document to include (Issue #92) */
-    identity?: AgentIdentity;
+    /** State events to include in snapshot (Issue #91) */
+    stateEvents?: StateEventStore;
   },
 ): Promise<CreateSnapshotResult> {
   // Step 1: Extract state from the platform
@@ -122,8 +123,7 @@ export async function createSnapshot(
 
   // Step 4: Pack the full snapshot to get file map
   // (we need this regardless — for delta comparison or full storage)
-  // Include agent identity if provided (Issue #92)
-  const fullFileMap = packSnapshot(snapshot, options?.identity);
+  const fullFileMap = packSnapshot(snapshot);
 
   // Step 5: Determine if we should do incremental or full
   let deltaManifest: DeltaManifest | undefined;
@@ -171,13 +171,22 @@ export async function createSnapshot(
         : [],
   };
 
+  // Step 7b: Add state events (Issue #91)
+  if (options?.stateEvents && options.stateEvents.count() > 0) {
+    snapshot.stateEvents = {
+      version: STATE_EVENTS_VERSION,
+      count: options.stateEvents.count(),
+      events: options.stateEvents.getAll(),
+    };
+  }
+
   // Step 8: Pack the archive (incremental or full)
   let archiveFileMap: Map<string, Buffer>;
 
   if (isIncremental && deltaResult && deltaManifest) {
     archiveFileMap = packDelta(snapshot, deltaManifest, deltaResult.changedFiles);
   } else {
-    archiveFileMap = packSnapshot(snapshot, options?.identity);
+    archiveFileMap = packSnapshot(snapshot);
   }
 
   // Step 9: Compute checksum and finalize
@@ -191,7 +200,7 @@ export async function createSnapshot(
   if (isIncremental && deltaResult && deltaManifest) {
     archiveFileMap.set('manifest.json', Buffer.from(JSON.stringify(snapshot.manifest, null, 2)));
   } else {
-    archiveFileMap = packSnapshot(snapshot, options?.identity);
+    archiveFileMap = packSnapshot(snapshot);
   }
 
   const finalArchive = packToArchive(archiveFileMap);

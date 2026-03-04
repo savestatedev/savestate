@@ -144,7 +144,8 @@ describe('KnowledgeLane', () => {
       expect(memory.ingestion.quarantined).toBe(true);
 
       const primary = await knowledge.getMemory(memory.memory_id);
-      expect(primary).toBeNull();
+      expect(primary).not.toBeNull();
+      expect(primary!.status).toBe('quarantined');
 
       const quarantined = await knowledge.listQuarantinedMemories(testNamespace);
       expect(quarantined.some(item => item.memory_id === memory.memory_id)).toBe(true);

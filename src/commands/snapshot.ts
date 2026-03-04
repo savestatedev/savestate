@@ -9,8 +9,8 @@ import { detectAdapter, getAdapter } from '../adapters/registry.js';
 import { createSnapshot } from '../snapshot.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { getPassphrase } from '../passphrase.js';
-import { loadIdentityFromFile } from '../identity/store.js';
-import type { AgentIdentity } from '../identity/schema.js';
+import { parseTagString, parseMetaString } from '../state-events/types.js';
+import { getGlobalStore, clearGlobalStore } from '../state-events/helpers.js';
 
 interface SnapshotOptions {
   label?: string;
@@ -18,7 +18,10 @@ interface SnapshotOptions {
   adapter?: string;
   schedule?: string;
   full?: boolean;
-  identity?: string;
+  /** Structured state entries (type:key=value) - Issue #91 */
+  tag?: string[];
+  /** Additional metadata for state entries (key=value) - Issue #91 */
+  meta?: string[];
 }
 
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
@@ -67,13 +70,36 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     // Resolve storage backend
     const storage = resolveStorage(config);
 
-    // Load identity document if specified (Issue #92)
-    let identity: AgentIdentity | undefined;
-    if (options.identity) {
-      identity = await loadIdentityFromFile(options.identity);
-      if (!identity) {
-        console.log(chalk.red(`✗ Identity file not found or invalid: ${options.identity}`));
-        process.exit(1);
+    // Process state event tags (Issue #91)
+    clearGlobalStore(); // Start with fresh store
+    const stateEventStore = getGlobalStore();
+    let stateEventCount = 0;
+
+    if (options.tag && options.tag.length > 0) {
+      // Parse global metadata first
+      const globalMeta: Record<string, unknown> = {};
+      if (options.meta && options.meta.length > 0) {
+        for (const metaStr of options.meta) {
+          const parsed = parseMetaString(metaStr);
+          if (parsed) {
+            globalMeta[parsed.key] = parsed.value;
+          }
+        }
+      }
+
+      // Process each tag entry
+      for (const tagStr of options.tag) {
+        const parsed = parseTagString(tagStr);
+        if (parsed) {
+          stateEventStore.add({
+            ...parsed,
+            metadata: { ...globalMeta, ...parsed.metadata },
+          });
+          stateEventCount++;
+        } else {
+          console.log(chalk.yellow(`  ⚠ Invalid state entry format: ${tagStr}`));
+          console.log(chalk.dim('    Expected: type:key=value (e.g., decision:api_provider=openai)'));
+        }
       }
     }
 
@@ -83,7 +109,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
       label: options.label,
       tags: options.tags?.split(',').map((t) => t.trim()),
       full: options.full,
-      identity,
+      stateEvents: stateEventCount > 0 ? stateEventStore : undefined,
     });
 
     const typeLabel = result.incremental ? 'Incremental snapshot' : 'Full snapshot';
@@ -95,9 +121,6 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     if (options.label) {
       console.log(`  ${chalk.dim('Label:')}      ${options.label}`);
     }
-    if (identity) {
-      console.log(`  ${chalk.dim('Identity:')}   ${chalk.green('✓')} ${identity.name} v${identity.version}`);
-    }
     if (result.incremental && result.delta) {
       console.log(`  ${chalk.dim('Changes:')}    ${chalk.green(`+${result.delta.added}`)} added, ${chalk.yellow(`~${result.delta.modified}`)} modified, ${chalk.red(`-${result.delta.removed}`)} removed, ${chalk.dim(`${result.delta.unchanged} unchanged`)}`);
       console.log(`  ${chalk.dim('Chain:')}      depth ${result.delta.chainDepth} (parent: ${result.snapshot.manifest.parent})`);
@@ -107,6 +130,9 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     console.log(`  ${chalk.dim('Archive:')}    ${formatBytes(result.archiveSize)}`);
     console.log(`  ${chalk.dim('Encrypted:')}  ${formatBytes(result.encryptedSize)}`);
     console.log(`  ${chalk.dim('Storage:')}    ${config.storage.type}`);
+    if (stateEventCount > 0) {
+      console.log(`  ${chalk.dim('State:')}      ${chalk.cyan(`${stateEventCount} event${stateEventCount === 1 ? '' : 's'}`)} recorded`);
+    }
     console.log(`  ${chalk.dim('Status:')}     ${chalk.green('✓ Encrypted & stored')}`);
     console.log();
     console.log(chalk.dim(`  Restore with: savestate restore ${result.snapshot.manifest.id}`));

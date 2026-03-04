@@ -60,7 +60,8 @@ program
   .option('-a, --adapter <adapter>', 'Adapter to use (default: auto-detect)')
   .option('-s, --schedule <interval>', 'Set up auto-snapshot schedule (e.g., 6h, 1d)')
   .option('--full', 'Force a full snapshot (skip incremental)')
-  .option('--identity <path>', 'Include identity document from specified path')
+  .option('--tag <entry...>', 'Record structured state entry (type:key=value)')
+  .option('--meta <entry...>', 'Additional metadata for state entries (key=value)')
   .action(snapshotCommand);
 
 // ─── savestate restore ───────────────────────────────────────
@@ -87,21 +88,8 @@ program
 
 program
   .command('diff <a> <b>')
-  .description('Compare two snapshots (semantic diff)')
-  .option('--json', 'Output as JSON')
+  .description('Compare two snapshots')
   .action(diffCommand);
-
-// ─── savestate identity ──────────────────────────────────────
-
-import { identityCommand } from './commands/identity.js';
-
-program
-  .command('identity <subcommand> [args...]')
-  .description('Agent identity management (show, init, set, schema)')
-  .option('--json', 'Output as JSON')
-  .action((subcommand: string, args: string[], options: { json?: boolean }) => {
-    identityCommand(subcommand, args, options);
-  });
 
 // ─── savestate config ────────────────────────────────────────
 
@@ -241,6 +229,12 @@ registerSLOCommands(program);
 import { registerMCPCommands } from './commands/mcp.js';
 
 registerMCPCommands(program);
+
+// ─── savestate integrity ─────────────────────────────────────
+
+import { registerIntegrityCommands } from './commands/integrity.js';
+
+registerIntegrityCommands(program);
 
 // ─── Parse & run ─────────────────────────────────────────────
 
