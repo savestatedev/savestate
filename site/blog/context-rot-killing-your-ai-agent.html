@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Context Rot Is Killing Your AI Agent (Here's the Fix) — SaveState</title>
+<meta name="description" content="Context rot happens when your agent's context window fills with irrelevant information, degrading output quality. Here's how to fix it without losing valuable context.">
+<meta name="keywords" content="context rot, AI agent, context window, Claude Code, LLM, semantic caching, agent memory">
+<meta property="og:title" content="Context Rot Is Killing Your AI Agent (Here's the Fix)">
+<meta property="og:description" content="Context rot happens when your agent's context window fills with irrelevant information, degrading output quality. Here's how to fix it.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/blog/context-rot-killing-your-ai-agent.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Context Rot Is Killing Your AI Agent (Here's the Fix)">
+<meta name="twitter:description" content="Context rot happens when your agent's context window fills with irrelevant information. Here's the fix.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="canonical" href="https://savestate.dev/blog/context-rot-killing-your-ai-agent.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.nav-wordmark {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.btn-nav {
+  background: var(--blue);
+  color: var(--bg) !important;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600 !important;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding: 140px 0 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--blue);
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.article-header h1 {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+.article-header .summary {
+  font-size: 18px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.article-content {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 36px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong { color: var(--text); }
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.article-content a:hover {
+  border-bottom-color: var(--blue);
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--blue-light);
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+}
+
+.article-content blockquote {
+  border-left: 3px solid var(--blue);
+  padding-left: 20px;
+  margin: 24px 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* Back link */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 32px;
+  transition: color 0.2s;
+}
+
+.back-link:hover { color: var(--text); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+    
+    <header class="article-header">
+      <div class="date">February 10, 2026</div>
+      <h1>Context Rot Is Killing Your AI Agent (Here's the Fix)</h1>
+      <p class="summary">Your agent starts sharp. Two hours later, it's suggesting code you rejected three times. That's context rot, and it's costing you more than you think.</p>
+    </header>
+
+    <div class="article-content">
+      <p>If you've spent any time with Claude Code, Codex, or any agentic coding tool, you know the pattern: the first hour is magic. Your agent understands your codebase, follows your conventions, and ships clean PRs.</p>
+
+      <p>Then something shifts. Responses get slower. The agent starts re-suggesting approaches you already rejected. It forgets constraints you mentioned twenty minutes ago. By hour three, you're fighting your own tool.</p>
+
+      <p>This isn't a bug. It's <strong>context rot</strong>. And it's becoming the silent killer of developer productivity in the age of AI agents.</p>
+
+      <h2>What Is Context Rot?</h2>
+
+      <p>Context rot happens when an agent's context window fills with irrelevant, outdated, or contradictory information, degrading the quality of its outputs over time.</p>
+
+      <p>Every AI agent operates within a context window: a fixed-size buffer of information the model can "see" at any given moment. As a session progresses, this window accumulates:</p>
+
+      <ul>
+        <li>Abandoned code paths and rejected approaches</li>
+        <li>Debugging tangents that led nowhere</li>
+        <li>Outdated file contents from earlier in the session</li>
+        <li>Irrelevant conversation history</li>
+        <li>Conflicting instructions from different phases of work</li>
+      </ul>
+
+      <p>The result? Your agent's signal-to-noise ratio collapses. Critical context gets pushed out. Fresh instructions compete with stale ones. The model starts making decisions based on a polluted worldview.</p>
+
+      <p>As InfoWorld recently put it in their analysis of agent failures:</p>
+
+      <blockquote>"Agents fail most often when their context becomes polluted, overloaded, or irrelevant to the task at hand."</blockquote>
+
+      <p>It's not that your agent got dumber. It's drowning in its own history.</p>
+
+      <h2>The /clear Ritual</h2>
+
+      <p>Developers have already discovered the crude workaround. On Hacker News, you'll find thread after thread of Claude Code users admitting they run <code>/clear</code> constantly, sometimes every 30 minutes, just to keep their agent functional.</p>
+
+      <p>One commenter described it perfectly: "I've trained myself to /clear before I get frustrated. If Claude starts repeating itself or missing obvious things, the context is rotted. Nuke it."</p>
+
+      <p>This works. Kind of.</p>
+
+      <p>The problem is that <code>/clear</code> is a nuclear option. Yes, you eliminate the noise, but you also eliminate everything valuable your agent learned during the session. That careful understanding of your codebase architecture? Gone. The context about why you're building this feature? Gone. The preferences and patterns the agent picked up? Gone.</p>
+
+      <p>You're back to square one, re-explaining basics to a fresh agent with no memory of the last two hours of work.</p>
+
+      <h2>The Hidden Cost</h2>
+
+      <p>Context rot doesn't just hurt productivity. It hits your wallet.</p>
+
+      <p>A recent Redis blog post on semantic caching put hard numbers on the problem:</p>
+
+      <blockquote>"When your LLM hits context limits, semantic caching can cut costs 50-80%."</blockquote>
+
+      <p>Think about what happens when context rots: your agent re-processes the same files, re-reads the same documentation, re-discovers the same constraints. Every token of redundant processing is money you're paying again for knowledge the agent already had.</p>
+
+      <p>Microsoft's DevBlogs team flagged another angle: context rot from loading too many skills at once. Agents with bloated tool sets suffer from "skill pollution" where irrelevant capabilities crowd out relevant context. Your code agent doesn't need a web scraper, a data visualization suite, and an email composer loaded simultaneously, but that cruft is eating your context window.</p>
+
+      <p>The irony is brutal: we're paying for 200K context windows and then polluting them so badly that we're effectively working with 20K.</p>
+
+      <h2>The Real Problem: Memory Is Ephemeral</h2>
+
+      <p>The <code>/clear</code> trap reveals a deeper issue. Agent context isn't just a performance concern. It's a <strong>state management problem</strong>.</p>
+
+      <p>Right now, there are exactly two options:</p>
+
+      <ol>
+        <li><strong>Keep the rotted context</strong>: suffer degraded performance</li>
+        <li><strong>Clear the context</strong>: lose all accumulated knowledge</li>
+      </ol>
+
+      <p>Neither is acceptable. What developers actually need is a third option:</p>
+
+      <p><strong>Save the valuable context before it rots. Restore it when you need a fresh start.</strong></p>
+
+      <p>This is basic version control thinking applied to agent state. You wouldn't work on code for three hours without committing. Why would you let your agent's knowledge accumulate without checkpoints?</p>
+
+      <h2>Time Machine for AI</h2>
+
+      <p>This is exactly why we built SaveState.</p>
+
+      <pre><code># Snapshot your agent's state when it's working well
+savestate snapshot --label "clean-context-v2"
+
+# Later, when context starts rotting...
+# instead of /clear (which loses everything)
+savestate restore "clean-context-v2"
+
+# Your agent is back with all the valuable context
+# but none of the accumulated cruft</code></pre>
+
+      <p>The key insight: <strong>snapshot before degradation, not after</strong>.</p>
+
+      <p>When your agent finally "gets" your codebase (understands the architecture, knows your conventions, has the right context loaded), that's the moment to capture. Not when things are already rotting.</p>
+
+      <pre><code># Perfect workflow for long coding sessions:
+
+# 1. Start fresh
+savestate restore "project-baseline"
+
+# 2. Get your agent oriented
+# (load key files, explain the task, establish conventions)
+
+# 3. Once it's working well, checkpoint
+savestate snapshot --label "feature-x-oriented"
+
+# 4. Work until context starts degrading
+# ...
+
+# 5. Instead of /clear, restore your checkpoint
+savestate restore "feature-x-oriented"
+
+# 6. Continue with clean context + retained knowledge</code></pre>
+
+      <p>No more losing hours of context orientation. No more re-explaining your architecture from scratch. No more fighting an agent that's drowning in its own history.</p>
+
+      <h2>Practical Anti-Rot Patterns</h2>
+
+      <p>Beyond snapshots, here are patterns we've seen work for managing context rot:</p>
+
+      <h3>1. The Checkpoint Rhythm</h3>
+
+      <p>Set a timer. Every 45-60 minutes, evaluate: is my agent still sharp? If yes, snapshot. If degradation is starting, restore to your last clean snapshot instead of pushing through.</p>
+
+      <pre><code># Quick context health check
+# If your agent can answer these correctly, context is clean:
+"What's the main file we're working on?"
+"What approach did we decide against?"
+"What's the key constraint I mentioned?"
+
+# If it fumbles, restore
+savestate restore latest</code></pre>
+
+      <h3>2. Task-Based Snapshots</h3>
+
+      <p>Don't just snapshot on time. Snapshot on task boundaries. Finished implementing the auth flow? Snapshot. Moving from backend to frontend? Snapshot. About to try an experimental approach? Snapshot first.</p>
+
+      <pre><code>savestate snapshot --label "auth-complete"
+savestate snapshot --label "pre-experimental"
+savestate snapshot --label "backend-done"</code></pre>
+
+      <h3>3. The Clean Baseline</h3>
+
+      <p>Maintain a "golden" snapshot for each project: your agent at peak orientation before any session-specific context. This becomes your restart point when things go sideways.</p>
+
+      <pre><code># Create once, use forever
+savestate snapshot --label "myproject-baseline"
+
+# Any session can start fresh-but-oriented
+savestate restore "myproject-baseline"</code></pre>
+
+      <h3>4. Diff Before You Clear</h3>
+
+      <p>Before a full reset, check what you'd lose. SaveState's diff feature shows exactly what context has accumulated since your last snapshot.</p>
+
+      <pre><code># See what's changed
+savestate diff "clean-context" current
+
+# Now make an informed decision:
+# - Restore to clean? 
+# - Snapshot current state first?
+# - Or selectively clear?</code></pre>
+
+      <h2>The Compounding Advantage</h2>
+
+      <p>Here's what happens when you solve context rot properly:</p>
+
+      <p><strong>Sessions get longer.</strong> Instead of degrading at 90 minutes, your effective session time stretches to 4-5 hours with periodic restores.</p>
+
+      <p><strong>Onboarding gets instant.</strong> That two-hour process of getting your agent to understand a new codebase? Do it once, snapshot, and skip it forever.</p>
+
+      <p><strong>Costs drop.</strong> Less re-processing means fewer tokens means lower bills. The Redis research suggests 50-80% reduction. We've seen similar numbers.</p>
+
+      <p><strong>Consistency improves.</strong> Your agent always starts from a known-good state instead of whatever cruft accumulated during your last marathon session.</p>
+
+      <h2>The Bottom Line</h2>
+
+      <p>Context rot is real, it's costing you time and money, and <code>/clear</code> isn't the answer.</p>
+
+      <p>The fix isn't complicated: treat your agent's context like you treat your code. Version it. Checkpoint it. Restore to known-good states when things degrade.</p>
+
+      <pre><code># Get started in 60 seconds
+npm install -g @savestate/cli
+savestate init
+savestate snapshot --label "my-first-checkpoint"
+
+# Next time context rots, restore instead of clear
+savestate restore "my-first-checkpoint"</code></pre>
+
+      <p>Your agent's context is valuable. Stop throwing it away every time you hit <code>/clear</code>.</p>
+
+      <p><strong><a href="https://savestate.dev">SaveState is free to try.</a></strong> Protect your agent's context at <a href="https://savestate.dev">savestate.dev</a>.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -36,6 +36,40 @@ export function defaultConfig(): SaveStateConfig {
       },
     },
     adapters: [],
+    memory: {
+      approvalMode: 'threshold',
+      confidenceThreshold: 0.7,
+      // Issue #110: TTL policy defaults
+      ttl: {
+        enabled: false,
+        defaultDays: null,
+        decayEnabled: false,
+      },
+    },
+    // Issue #107: MCP server defaults
+    mcp: {
+      enabled: false,
+      port: 3333,
+      auth: {
+        type: 'none',
+      },
+    },
+    // Issue #112: Integrity Grid defaults
+    integrity: {
+      enabled: false,
+      honeyfact: {
+        count: 10,
+        ttl_days: 7,
+      },
+      tripwire: {
+        threshold: 0.8,
+        fuzzy_enabled: true,
+      },
+      containment: {
+        policy: 'approve',
+        auto_escalate_critical: true,
+      },
+    },
   };
 }
 

@@ -84,6 +84,21 @@ export type {
   DeltaResult,
 } from './incremental.js';
 
+// Trace ledger
+export {
+  TraceStore,
+  TRACE_SCHEMA_VERSION,
+  type TraceStoreOptions,
+  type TraceExportFormat,
+  type TraceExportTarget,
+  type JsonValue,
+  type TraceEvent,
+  type TraceEventType,
+  type TraceRunIndexEntry,
+  type TraceIndexFile,
+  type SnapshotTrace,
+} from './trace/index.js';
+
 // Restore
 export { restoreSnapshot, validateSnapshot } from './restore.js';
 
@@ -103,3 +118,141 @@ export {
   detectAdapter,
   getAdapterInfo,
 } from './adapters/index.js';
+
+// Failure Antibody System (MVP)
+export {
+  AntibodyStore,
+  AntibodyCompiler,
+  deriveRuleId,
+  AntibodyEngine,
+} from './antibodies/index.js';
+export type {
+  Intervention,
+  RiskLevel,
+  SafeActionType,
+  SafeAction,
+  FailureEvent,
+  FailureEventBase,
+  UserCorrectionEvent,
+  ToolFailureEvent,
+  AntibodyTrigger,
+  AntibodyScope,
+  AntibodyRule,
+  AntibodyStoreFile,
+  AntibodyStats,
+  PreflightContext,
+  PreflightWarning,
+  PreflightResult,
+  AntibodyEngineOptions,
+  PreflightOptions,
+  ListRulesOptions,
+} from './antibodies/index.js';
+
+// Privacy Controls
+export {
+  // PII Detection & Redaction
+  detectPII,
+  redactPII,
+  containsPII,
+  summarizePII,
+  // Deny-List Policy Engine
+  evaluateDenyList,
+  applyDenyList,
+  createPolicy,
+  addRule,
+  removeRule,
+  getBuiltinRuleSets,
+  getBuiltinRules,
+  // Field-Level Encryption
+  encryptField,
+  decryptField,
+  isEncryptedField,
+  encryptFields,
+  decryptFields,
+  rotateFieldKeys,
+  defaultFieldEncryptionConfig,
+  // Deletion Attestations
+  createPIIAttestation,
+  createDenyListAttestation,
+  createRetentionAttestation,
+  createManualDeletionAttestation,
+  createAttestationLog,
+  addAttestation,
+  finalizeAttestationLog,
+  verifyAttestationLog,
+  summarizeAttestations,
+  // Pipeline
+  applyPrivacyPipeline,
+  processMemoryPrivacy,
+  validatePrivacy,
+  defaultPrivacyConfig,
+} from './privacy/index.js';
+export type {
+  PIIType,
+  PIIMatch,
+  PIIDetectionResult,
+  PIIRedactionResult,
+  RedactionMethod,
+  DenyListRule,
+  DenyListPolicy,
+  DenyListEvaluation,
+  DenyListAction,
+  BuiltInRuleSet,
+  EncryptedField,
+  FieldEncryptionConfig,
+  DeletionAttestation,
+  DeletionAttestationLog,
+  PrivacyConfig,
+  PrivacyPipelineResult,
+} from './privacy/index.js';
+
+// Checkpoint System - Memory with Provenance
+export {
+  // Core services
+  KnowledgeLane,
+  CheckpointLedger,
+  RestoreService,
+  InMemoryCheckpointStorage,
+  // Utilities
+  calculateRecencyScore,
+  calculateMemoryScore,
+  computeCheckpointHash,
+  verifyCheckpointIntegrity,
+  verifyChainIntegrity,
+  namespaceKey,
+  DEFAULT_RANKING_WEIGHTS,
+} from './checkpoint/index.js';
+export type {
+  // Namespace
+  Namespace,
+  // Checkpoints
+  Checkpoint,
+  CreateCheckpointInput,
+  // Goals & Tasks
+  Goal,
+  Task,
+  Action,
+  // Memory
+  MemoryObject,
+  MemorySource,
+  MemoryIngestionMetadata,
+  ProvenanceEntry,
+  CreateMemoryInput,
+  // Retrieval
+  MemoryQuery,
+  RankingWeights,
+  MemoryResult,
+  // Retrieval Explainability (Issue #115)
+  RetrievalExplanation,
+  ScoreBreakdown,
+  SourceTrace,
+  PolicyPath,
+  // Restore
+  ResumePack,
+  RestoreRationale,
+  RestoreOptions,
+  // Audit & Storage
+  AuditEntry,
+  CheckpointStorage,
+  ListOptions,
+} from './checkpoint/index.js';

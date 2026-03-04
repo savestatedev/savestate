@@ -1,0 +1,80 @@
+{
+  "name": "constraint-retention",
+  "version": "1.0.0",
+  "description": "Tests for constraint-based memory retention and stale memory filtering",
+  "testCases": [
+    {
+      "id": "cr-001",
+      "description": "Retain pinned memories over stale ones",
+      "query": "important user preferences",
+      "expectedIds": ["mem_pinned_pref_1", "mem_pinned_pref_2"],
+      "staleIds": ["mem_old_pref_1", "mem_old_pref_2", "mem_deprecated_setting"],
+      "constraintIds": ["mem_pinned_pref_1", "mem_pinned_pref_2"],
+      "tags": ["pinned", "stale"]
+    },
+    {
+      "id": "cr-002",
+      "description": "Filter stale API configurations",
+      "query": "API configuration settings",
+      "expectedIds": ["mem_current_api_config"],
+      "staleIds": ["mem_old_api_v1", "mem_old_api_v2", "mem_deprecated_endpoint"],
+      "constraintIds": ["mem_current_api_config"],
+      "tags": ["api", "stale"]
+    },
+    {
+      "id": "cr-003",
+      "description": "Retain L1 tier memories",
+      "query": "recent session context",
+      "expectedIds": ["mem_l1_session_1", "mem_l1_session_2"],
+      "staleIds": ["mem_l3_old_session"],
+      "constraintIds": ["mem_l1_session_1", "mem_l1_session_2"],
+      "tags": ["tier", "session"]
+    },
+    {
+      "id": "cr-004",
+      "description": "Constraint-based security context",
+      "query": "security permissions and access control",
+      "expectedIds": ["mem_security_policy", "mem_access_control"],
+      "staleIds": ["mem_old_permissions", "mem_revoked_access"],
+      "constraintIds": ["mem_security_policy", "mem_access_control"],
+      "tags": ["security", "constraint"]
+    },
+    {
+      "id": "cr-005",
+      "description": "Time-sensitive memory retention",
+      "query": "current project deadline and milestones",
+      "expectedIds": ["mem_current_deadline", "mem_active_milestone"],
+      "staleIds": ["mem_past_deadline_1", "mem_completed_milestone", "mem_cancelled_task"],
+      "constraintIds": ["mem_current_deadline", "mem_active_milestone"],
+      "tags": ["time", "project"]
+    },
+    {
+      "id": "cr-006",
+      "description": "Version-specific configuration",
+      "query": "framework version and dependencies",
+      "expectedIds": ["mem_framework_v3", "mem_deps_current"],
+      "staleIds": ["mem_framework_v1", "mem_framework_v2", "mem_deps_outdated"],
+      "constraintIds": ["mem_framework_v3", "mem_deps_current"],
+      "tags": ["version", "dependencies"]
+    },
+    {
+      "id": "cr-007",
+      "description": "Mixed constraint and stale filtering",
+      "query": "user workspace setup and environment",
+      "expectedIds": ["mem_workspace_current", "mem_env_vars_active", "mem_ide_settings"],
+      "staleIds": ["mem_old_workspace", "mem_env_vars_deprecated"],
+      "constraintIds": ["mem_workspace_current", "mem_ide_settings"],
+      "negativeIds": ["mem_other_user_workspace"],
+      "tags": ["workspace", "environment"]
+    },
+    {
+      "id": "cr-008",
+      "description": "Preserve constraint memories even when query is broad",
+      "query": "all settings",
+      "expectedIds": ["mem_critical_setting_1", "mem_critical_setting_2"],
+      "staleIds": ["mem_archived_setting_1", "mem_archived_setting_2"],
+      "constraintIds": ["mem_critical_setting_1", "mem_critical_setting_2"],
+      "tags": ["broad", "constraint"]
+    }
+  ]
+}

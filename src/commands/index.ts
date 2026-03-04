@@ -9,5 +9,6 @@ export { listCommand } from './list.js';
 export { diffCommand } from './diff.js';
 export { configCommand } from './config.js';
 export { adaptersCommand } from './adapters.js';
-export { exportCommandDefinition } from './export.js';
-export { importCommandDefinition } from './import.js';
+export { antibodiesCommand } from './antibodies.js';
+export { evalCommand } from './eval.js';
+export { sloCommand, registerSLOCommands } from './slo.js';

@@ -1,5 +1,88 @@
 # Changelog
 
+## [Unreleased]
+
+---
+
+## [0.9.0] - 2026-02-27
+
+### 🔒 Privacy Controls (#117)
+- **PII Redaction**: Auto-detect and redact emails, phone numbers, SSNs, API keys before storage
+- **Deny-list Policy**: Configure fields and patterns that must never be persisted
+- **Deletion Guarantees**: Cryptographic proof of deletion for compliance workflows
+
+### 🔄 Memory Lifecycle Controls (#110)
+- `savestate memory edit` to correct stored facts
+- `savestate memory rollback` to revert to previous state
+- `savestate memory expire` with TTL and decay policies
+- Full audit log for all memory mutations
+
+### 📊 Memory Quality Framework (#113)
+- Confidence scoring for stored memories
+- Staleness detection and relevance ranking
+- Ingestion quarantine for low-confidence entries (#106)
+- Retrieval relevance improvements (#101)
+
+### 🏗️ Multi-tier Memory Architecture
+- **L1 (Hot)**: In-session working memory
+- **L2 (Warm)**: Cross-session persistent memory
+- **L3 (Cold)**: Archived, searchable long-term storage
+
+### 🧾 Askable Echoes: Trace Ledger (#94)
+- Append-only JSONL event stream per agent run
+- SAF integration (encrypted, backwards compatible)
+- CLI: `savestate trace list|show|export`
+- Auto-redaction of secrets (API keys, tokens, passwords)
+
+### 🛡️ Core Integrity + Decision Guard (#68)
+- Memory ingestion validation and quarantine
+- Decision guard for high-stakes agent actions
+
+### 📍 Path-addressable State Filesystem (#70)
+- Address any piece of agent state by path
+- Granular backup and restore of specific state subtrees
+
+### 📋 Checkpoint Ledger (#47)
+- Deterministic memory checkpoint system
+- Point-in-time restore for any checkpoint
+
+### 🎯 Action Recall Drillbook (#73)
+- Structured action history with recall scoring
+- Agent self-evaluation of past decisions
+
+### 🩹 Failure Antibody System (#100)
+- Warn-only failure pattern detection
+- Agents learn from past failures to avoid repeating them
+
+### 🧹 Repo Cleanup (#124)
+- Cleaned up stray files from repo root
+- Organized blog posts and documentation
+
+---
+
+## [0.8.0] - 2026-02-10
+
+### 🚀 Migration Wizard — Full Release
+
+Complete bidirectional migration between ChatGPT and Claude is here!
+
+#### Features
+- **Full Bidirectional Migration** — Seamlessly move your AI identity between ChatGPT ↔ Claude
+- **Interactive CLI** — Beautiful progress bars and step-by-step guidance
+- **`--dry-run` Mode** — Preview what will be migrated without making changes
+- **`--review` Mode** — Inspect and approve each migration step interactively
+- **`--resume` Mode** — Continue interrupted migrations from the last checkpoint
+
+#### Testing & Quality
+- **372 tests** — Comprehensive test coverage across all migration paths
+- Complete documentation for migration workflows
+
+#### Security
+- Path traversal protection in all file handling operations
+- Secure checkpoint storage with integrity verification
+
+---
+
 ## [0.7.0] - 2026-02-09
 
 ### Added

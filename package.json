@@ -1,6 +1,6 @@
 {
   "name": "@savestate/cli",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "description": "Time Machine for AI. Backup, restore, and migrate your AI identity.",
   "type": "module",
   "main": "dist/index.js",
@@ -13,6 +13,7 @@
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
     "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -64,6 +65,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.8.3",
     "vitest": "^4.0.18"
   }
