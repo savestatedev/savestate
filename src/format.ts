@@ -6,11 +6,15 @@
  */
 
 import { createHash } from 'node:crypto';
+import { basename } from 'node:path';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { Header, Parser } from 'tar';
 import type { Snapshot } from './types.js';
+import { TRACE_SCHEMA_VERSION, type SnapshotTrace, type TraceRunIndexEntry } from './trace/types.js';
+import { STATE_EVENTS_VERSION, type SnapshotStateEvents, type StateEvent } from './state-events/types.js';
+import { STATE_EVENTS_FILE } from './state-events/store.js';
 
 /** File extension for encrypted SaveState archives */
 export const SAF_EXTENSION = '.saf.enc';
@@ -59,6 +63,9 @@ export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
   if (snapshot.memory.knowledge.length > 0) {
     files.set('memory/knowledge/index.json', Buffer.from(JSON.stringify(snapshot.memory.knowledge, null, 2)));
   }
+  if (snapshot.memory.tierConfig) {
+    files.set('memory/tier-config.json', Buffer.from(JSON.stringify(snapshot.memory.tierConfig, null, 2)));
+  }
 
   // conversations/
   files.set('conversations/index.json', Buffer.from(JSON.stringify(snapshot.conversations, null, 2)));
@@ -67,6 +74,50 @@ export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
   files.set('meta/platform.json', Buffer.from(JSON.stringify(snapshot.platform, null, 2)));
   files.set('meta/snapshot-chain.json', Buffer.from(JSON.stringify(snapshot.chain, null, 2)));
   files.set('meta/restore-hints.json', Buffer.from(JSON.stringify(snapshot.restoreHints, null, 2)));
+
+  // trace/
+  if (snapshot.trace) {
+    const trace = snapshot.trace;
+    const traceIndex = {
+      schema_version: trace.schema_version ?? TRACE_SCHEMA_VERSION,
+      runs: trace.index,
+    };
+    files.set('trace/index.json', Buffer.from(JSON.stringify(traceIndex, null, 2)));
+
+    const indexedRunIds = new Set<string>();
+    for (const run of trace.index) {
+      indexedRunIds.add(run.run_id);
+      const runJsonl = trace.runs[run.run_id];
+      if (runJsonl === undefined) {
+        continue;
+      }
+      const sanitizedFile = sanitizeTraceFilename(run.file);
+      files.set(`trace/runs/${sanitizedFile}`, Buffer.from(normalizeJsonl(runJsonl)));
+    }
+
+    for (const [runId, runJsonl] of Object.entries(trace.runs)) {
+      if (indexedRunIds.has(runId)) {
+        continue;
+      }
+      const fallbackFile = makeTraceRunFilename(runId);
+      files.set(`trace/runs/${fallbackFile}`, Buffer.from(normalizeJsonl(runJsonl)));
+    }
+  }
+
+  // state-events/ (Issue #91)
+  if (snapshot.stateEvents && snapshot.stateEvents.count > 0) {
+    const stateEventsIndex: SnapshotStateEvents = {
+      version: snapshot.stateEvents.version ?? STATE_EVENTS_VERSION,
+      count: snapshot.stateEvents.count,
+      eventsPath: STATE_EVENTS_FILE,
+    };
+    files.set('state-events/index.json', Buffer.from(JSON.stringify(stateEventsIndex, null, 2)));
+
+    if (snapshot.stateEvents.events) {
+      const jsonl = snapshot.stateEvents.events.map(e => JSON.stringify(e)).join('\n') + '\n';
+      files.set(`state-events/${STATE_EVENTS_FILE}`, Buffer.from(jsonl));
+    }
+  }
 
   return files;
 }
@@ -117,14 +168,101 @@ export function unpackSnapshot(files: Map<string, Buffer>): Snapshot {
     knowledge: files.has('memory/knowledge/index.json')
       ? getJson<Snapshot['memory']['knowledge']>('memory/knowledge/index.json')
       : [],
+    tierConfig: files.has('memory/tier-config.json')
+      ? getJson<Snapshot['memory']['tierConfig']>('memory/tier-config.json')
+      : undefined,
   };
 
   const conversations = getJson<Snapshot['conversations']>('conversations/index.json');
   const platform = getJson<Snapshot['platform']>('meta/platform.json');
   const chain = getJson<Snapshot['chain']>('meta/snapshot-chain.json');
   const restoreHints = getJson<Snapshot['restoreHints']>('meta/restore-hints.json');
+  const trace = unpackTrace(files);
+  const stateEvents = unpackStateEvents(files);
 
-  return { manifest, identity, memory, conversations, platform, chain, restoreHints };
+  return { manifest, identity, memory, conversations, platform, chain, restoreHints, trace, stateEvents };
+}
+
+function unpackTrace(files: Map<string, Buffer>): SnapshotTrace | undefined {
+  if (!files.has('trace/index.json')) {
+    return undefined;
+  }
+
+  const rawIndex = JSON.parse(files.get('trace/index.json')!.toString('utf-8')) as {
+    schema_version?: number;
+    runs?: TraceRunIndexEntry[];
+  };
+  const index = rawIndex.runs ?? [];
+  const runs: Record<string, string> = {};
+
+  for (const run of index) {
+    const sanitizedFile = sanitizeTraceFilename(run.file);
+    const runPath = `trace/runs/${sanitizedFile}`;
+    const buf = files.get(runPath);
+    if (!buf) {
+      continue;
+    }
+    runs[run.run_id] = buf.toString('utf-8');
+  }
+
+  return {
+    schema_version: rawIndex.schema_version ?? TRACE_SCHEMA_VERSION,
+    index,
+    runs,
+  };
+}
+
+/**
+ * Unpack state events from extracted archive files (Issue #91).
+ */
+function unpackStateEvents(files: Map<string, Buffer>): SnapshotStateEvents | undefined {
+  if (!files.has('state-events/index.json')) {
+    return undefined;
+  }
+
+  const rawIndex = JSON.parse(files.get('state-events/index.json')!.toString('utf-8')) as {
+    version?: string;
+    count?: number;
+    eventsPath?: string;
+  };
+
+  const events: StateEvent[] = [];
+  const eventsPath = `state-events/${rawIndex.eventsPath ?? STATE_EVENTS_FILE}`;
+  const buf = files.get(eventsPath);
+
+  if (buf) {
+    const lines = buf.toString('utf-8').trim().split('\n').filter(line => line.trim());
+    for (const line of lines) {
+      try {
+        events.push(JSON.parse(line) as StateEvent);
+      } catch {
+        // Skip invalid lines
+      }
+    }
+  }
+
+  return {
+    version: rawIndex.version ?? STATE_EVENTS_VERSION,
+    count: events.length,
+    events,
+  };
+}
+
+function makeTraceRunFilename(runId: string): string {
+  return `run-${encodeURIComponent(runId)}.jsonl`;
+}
+
+function sanitizeTraceFilename(file: string): string {
+  const sanitized = basename(file);
+  if (sanitized !== file || file.includes('..')) {
+    throw new Error(`Invalid trace filename: ${file}`);
+  }
+  return sanitized;
+}
+
+function normalizeJsonl(content: string): string {
+  const trimmed = content.trimEnd();
+  return trimmed.length > 0 ? `${trimmed}\n` : '';
 }
 
 /**

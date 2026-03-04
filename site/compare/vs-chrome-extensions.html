@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaveState CLI vs Chrome Extensions for ChatGPT Backup — Comparison</title>
+<meta name="description" content="Compare SaveState CLI to browser extensions for backing up ChatGPT. SaveState offers better security, works with any AI platform, and runs outside the browser.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/compare/vs-chrome-extensions.html">
+<meta property="og:title" content="SaveState CLI vs Chrome Extensions for AI Backup">
+<meta property="og:description" content="Why developers choose a CLI over browser extensions for AI backup.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://savestate.dev/compare/vs-chrome-extensions.html">
+
+<!-- Schema.org -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "SaveState CLI vs Chrome Extensions for ChatGPT Backup",
+  "description": "A comparison of SaveState CLI versus browser extensions for backing up AI conversations.",
+  "author": {
+    "@type": "Organization",
+    "name": "SaveState.dev"
+  }
+}
+</script>
+
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--blue-light), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Main */
+main { padding: 140px 0 80px; }
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text), var(--blue-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 48px;
+  max-width: 700px;
+}
+
+/* Summary */
+.summary-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 48px;
+}
+
+.summary-box p {
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.summary-box strong { color: var(--blue-light); }
+
+/* Comparison table */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 32px 0 48px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparison-table th {
+  background: var(--bg-card);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.comparison-table th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.comparison-table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+.comparison-table td { background: var(--bg); }
+.comparison-table tr:last-child td { border-bottom: none; }
+.comparison-table .feature-name { font-weight: 600; color: var(--text); }
+
+.check { color: var(--green); font-weight: 700; }
+.cross { color: var(--red); font-weight: 700; }
+.partial { color: var(--yellow); font-weight: 700; }
+
+/* Sections */
+.section { margin-bottom: 48px; }
+
+.section h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--blue-light);
+}
+
+.section p {
+  color: var(--text);
+  margin-bottom: 16px;
+  line-height: 1.8;
+}
+
+.command-block {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 14px;
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.command-block code { color: var(--blue); }
+.command-block .prompt { color: var(--text-dim); }
+
+ul.benefits {
+  list-style: none;
+  margin: 16px 0;
+}
+
+ul.benefits li {
+  padding: 8px 0 8px 28px;
+  position: relative;
+  color: var(--text);
+}
+
+ul.benefits li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* Warning box */
+.warning-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.warning-box h3 {
+  color: var(--red);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.warning-box p {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* CTA */
+.cta-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  margin-top: 48px;
+}
+
+.cta-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.cta-section p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--blue), #0284c7);
+  color: #fff;
+}
+
+.btn:hover { transform: translateY(-2px); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); text-decoration: none; }
+footer a:hover { color: var(--blue); }
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.6rem; }
+  .comparison-table { font-size: 14px; }
+  .comparison-table th, .comparison-table td { padding: 12px; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="../logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/docs/">Docs</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <h1>SaveState CLI vs Chrome Extensions</h1>
+    <p class="subtitle">Browser extensions are convenient, but they have fundamental limitations for AI backup. Here's why developers choose SaveState CLI.</p>
+
+    <!-- Summary -->
+    <div class="summary-box">
+      <p><strong>SaveState CLI is a command-line tool that backs up AI conversations outside the browser.</strong> Unlike Chrome extensions, it offers better security, works with any AI platform (not just web-based ones), and integrates with developer workflows like cron jobs and CI/CD pipelines.</p>
+    </div>
+
+    <!-- Comparison Table -->
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Chrome Extensions</th>
+          <th>SaveState CLI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="feature-name">Security Model</td>
+          <td><span class="partial">~</span> Runs in browser sandbox</td>
+          <td><span class="check">✓</span> Runs locally, no browser access</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Data Access</td>
+          <td><span class="cross">✗</span> Can see all browser activity</td>
+          <td><span class="check">✓</span> Only accesses what you specify</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Platform Support</td>
+          <td><span class="partial">~</span> Web apps only</td>
+          <td><span class="check">✓</span> Web, desktop, CLI agents</td>
+        </tr>
+        <tr>
+          <td class="feature-name">AI Coding Agents</td>
+          <td><span class="cross">✗</span> Can't backup Claude Code, Cursor</td>
+          <td><span class="check">✓</span> Full support</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Automation</td>
+          <td><span class="cross">✗</span> Requires browser running</td>
+          <td><span class="check">✓</span> Cron, CI/CD, scripts</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Encryption</td>
+          <td><span class="partial">~</span> Varies by extension</td>
+          <td><span class="check">✓</span> AES-256 always</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Cloud Storage</td>
+          <td><span class="partial">~</span> Limited options</td>
+          <td><span class="check">✓</span> S3, R2, any storage</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Open Source</td>
+          <td><span class="partial">~</span> Some are</td>
+          <td><span class="check">✓</span> Fully open source</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Cross-Platform Migration</td>
+          <td><span class="cross">✗</span> Export only</td>
+          <td><span class="check">✓</span> Full migration support</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Security -->
+    <section class="section">
+      <h2>Security: CLI vs Browser Extension</h2>
+      <p>Browser extensions run inside your browser and often require broad permissions to function. A ChatGPT backup extension typically needs access to "read and change all your data on chat.openai.com" — and sometimes more.</p>
+      
+      <div class="warning-box">
+        <h3>⚠️ Extension Security Risks</h3>
+        <p>Browser extensions can be sold or compromised. Several popular extensions have been caught injecting ads, tracking users, or stealing data after acquisition. Your AI conversations may contain sensitive information.</p>
+      </div>
+      
+      <p><strong>SaveState CLI runs entirely on your machine.</strong> It doesn't run in your browser, doesn't have access to your browsing activity, and only touches the data you explicitly tell it to backup.</p>
+      
+      <div class="command-block">
+        <code><span class="prompt"># SaveState runs locally — no browser extension needed</span></code><br>
+        <code><span class="prompt">$ </span>savestate snapshot --adapter chatgpt</code>
+      </div>
+    </section>
+
+    <!-- AI Coding Agents -->
+    <section class="section">
+      <h2>Support for AI Coding Agents</h2>
+      <p>Chrome extensions can only backup web-based AI tools. They cannot access:</p>
+      <ul style="margin: 16px 0 16px 24px; color: var(--text-muted);">
+        <li><strong>Claude Code</strong> — runs in terminal</li>
+        <li><strong>Cursor</strong> — desktop IDE application</li>
+        <li><strong>Windsurf</strong> — desktop application</li>
+        <li><strong>GitHub Copilot CLI</strong> — terminal tool</li>
+        <li><strong>Local LLMs</strong> — Ollama, LM Studio</li>
+      </ul>
+      <p><strong>SaveState CLI works with all of these.</strong> It has dedicated adapters for AI coding agents that browser extensions simply cannot support.</p>
+      
+      <div class="command-block">
+        <code><span class="prompt"># Backup AI coding agents</span></code><br>
+        <code><span class="prompt">$ </span>savestate snapshot --adapter claude-code</code><br>
+        <code><span class="prompt">$ </span>savestate snapshot --adapter cursor</code><br>
+        <code><span class="prompt">$ </span>savestate snapshot --adapter windsurf</code>
+      </div>
+    </section>
+
+    <!-- Automation -->
+    <section class="section">
+      <h2>Automation and Developer Workflows</h2>
+      <p>Browser extensions require your browser to be running. You can't schedule automated backups or integrate with CI/CD pipelines.</p>
+      <p><strong>SaveState CLI is designed for automation:</strong></p>
+      
+      <ul class="benefits">
+        <li>Schedule daily backups with cron</li>
+        <li>Run in CI/CD pipelines</li>
+        <li>Integrate with shell scripts</li>
+        <li>Use in Docker containers</li>
+        <li>Run on headless servers</li>
+      </ul>
+      
+      <div class="command-block">
+        <code><span class="prompt"># Example: daily backup with cron</span></code><br>
+        <code><span class="prompt">$ </span>crontab -e</code><br>
+        <code>0 2 * * * /usr/local/bin/savestate snapshot --quiet</code>
+      </div>
+    </section>
+
+    <!-- When Extensions Make Sense -->
+    <section class="section">
+      <h2>When to Use a Chrome Extension</h2>
+      <p>Browser extensions aren't always wrong. They can make sense if:</p>
+      <ul style="margin: 16px 0 16px 24px; color: var(--text-muted);">
+        <li>You only use ChatGPT in the browser</li>
+        <li>You don't need automation</li>
+        <li>You don't use AI coding agents</li>
+        <li>You trust the extension developer</li>
+      </ul>
+      <p>But if you're a developer working with multiple AI tools, need automation, or care about security — <strong>SaveState CLI is the better choice.</strong></p>
+    </section>
+
+    <!-- Benefits Summary -->
+    <section class="section">
+      <h2>Why Developers Choose SaveState CLI</h2>
+      <ul class="benefits">
+        <li><strong>Better security:</strong> Runs locally, not in browser sandbox</li>
+        <li><strong>More platforms:</strong> Works with AI coding agents and desktop apps</li>
+        <li><strong>Automation:</strong> Scriptable, cron-friendly, CI/CD ready</li>
+        <li><strong>Migration:</strong> Move between AI platforms freely</li>
+        <li><strong>Open source:</strong> Audit the code yourself</li>
+        <li><strong>Developer-first:</strong> Built by developers, for developers</li>
+      </ul>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+      <h2>Try SaveState CLI</h2>
+      <p>Install in 30 seconds. Backup all your AI tools with one command.</p>
+      <a href="https://www.npmjs.com/package/@savestate/cli" class="btn" target="_blank">
+        Get Started →
+      </a>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>© 2025 <a href="https://savestate.dev">SaveState.dev</a> · <a href="https://github.com/savestatedev/savestate">GitHub</a> · <a href="/docs/">Documentation</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

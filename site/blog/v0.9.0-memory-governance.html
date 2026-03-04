@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaveState v0.9.0: Memory Governance Your Agents Actually Need</title>
+  <meta name="description" content="SaveState v0.9.0 introduces memory lifecycle controls, explainability, and privacy-first features for AI agents.">
+</head>
+<body>
+  <article>
+    <header>
+      <h1>SaveState v0.9.0: Memory Governance Your Agents Actually Need</h1>
+      <time datetime="2026-02-28">February 28, 2026</time>
+    </header>
+
+    <p>Your AI agent remembered something wrong. Now it's confidently wrong across every session. Sound familiar?</p>
+
+    <p>SaveState v0.9.0 tackles the hard problems of AI memory: not just storing state, but governing it. This release introduces memory lifecycle controls, retrieval explainability, and privacy guarantees that production agents demand.</p>
+
+    <h2>Memory Lifecycle Controls</h2>
+
+    <p>Memories aren't permanent. They need mutation, correction, expiry, and audit trails. v0.9.0 gives you full control:</p>
+
+    <pre><code>import { SaveState } from '@savestate/cli';
+
+const ss = new SaveState();
+
+// Set memory with expiry and audit metadata
+await ss.memory.set('user_preference', {
+  value: 'dark_mode',
+  expiresAt: '2026-06-01',
+  source: 'user_settings_v2',
+  confidence: 0.95
+});
+
+// Correct a memory with full audit trail
+await ss.memory.correct('user_preference', {
+  value: 'light_mode',
+  reason: 'user_override',
+  previousValue: 'dark_mode'
+});
+
+// Query the audit history
+const history = await ss.memory.audit('user_preference');
+// Returns: [{ action: 'set', timestamp, ... }, { action: 'correct', ... }]</code></pre>
+
+    <h2>"Why This Memory?" Explainability Inspector</h2>
+
+    <p>When your agent retrieves a memory, you need to know why. The new explainability inspector shows retrieval reasoning, confidence scores, and the decision path:</p>
+
+    <pre><code>const result = await ss.memory.get('user_preference', { explain: true });
+
+console.log(result.explanation);
+// {
+//   retrievedFrom: 'L1_cache',
+//   confidence: 0.95,
+//   matchReason: 'exact_key_match',
+//   alternatives: [...],
+//   decisionPath: ['L1_lookup', 'freshness_check', 'confidence_threshold']
+// }</code></pre>
+
+    <p>No more black box memory retrieval. Every decision is traceable.</p>
+
+    <h2>Privacy by Default</h2>
+
+    <p>PII redaction, deny-list policies, and deletion guarantees are now first-class features. When GDPR or CCPA comes knocking, you're ready. Memories can be tagged, filtered, and purged with cryptographic proof of deletion.</p>
+
+    <h2>Production Reliability</h2>
+
+    <p>The new multi-tier memory architecture (L1/L2/L3) optimizes retrieval performance. The failure antibody system detects cascading failures before they spread. Checkpoint validation quarantines low-confidence entries automatically.</p>
+
+    <p>Your agents stay reliable even when individual memories fail.</p>
+
+    <h2>Get Started</h2>
+
+    <p>Upgrade now:</p>
+
+    <pre><code>npm install -g @savestate/cli@latest</code></pre>
+
+    <p>Or if you're new:</p>
+
+    <pre><code>curl -fsSL https://savestate.dev/install.sh | sh</code></pre>
+
+    <p>Full release notes and migration guide at <a href="https://savestate.dev/changelog">savestate.dev/changelog</a>.</p>
+
+    <p>Your agents have memories worth protecting. SaveState makes sure they're governed, explainable, and production-ready.</p>
+
+  </article>
+</body>
+</html>

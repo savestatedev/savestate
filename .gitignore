@@ -17,3 +17,4 @@ dist/
 Thumbs.db
 .vercel
 .env*.local
+coverage/

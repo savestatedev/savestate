@@ -9,6 +9,8 @@ import { detectAdapter, getAdapter } from '../adapters/registry.js';
 import { createSnapshot } from '../snapshot.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { getPassphrase } from '../passphrase.js';
+import { parseTagString, parseMetaString } from '../state-events/types.js';
+import { getGlobalStore, clearGlobalStore } from '../state-events/helpers.js';
 
 interface SnapshotOptions {
   label?: string;
@@ -16,6 +18,10 @@ interface SnapshotOptions {
   adapter?: string;
   schedule?: string;
   full?: boolean;
+  /** Structured state entries (type:key=value) - Issue #91 */
+  tag?: string[];
+  /** Additional metadata for state entries (key=value) - Issue #91 */
+  meta?: string[];
 }
 
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
@@ -64,12 +70,46 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     // Resolve storage backend
     const storage = resolveStorage(config);
 
+    // Process state event tags (Issue #91)
+    clearGlobalStore(); // Start with fresh store
+    const stateEventStore = getGlobalStore();
+    let stateEventCount = 0;
+
+    if (options.tag && options.tag.length > 0) {
+      // Parse global metadata first
+      const globalMeta: Record<string, unknown> = {};
+      if (options.meta && options.meta.length > 0) {
+        for (const metaStr of options.meta) {
+          const parsed = parseMetaString(metaStr);
+          if (parsed) {
+            globalMeta[parsed.key] = parsed.value;
+          }
+        }
+      }
+
+      // Process each tag entry
+      for (const tagStr of options.tag) {
+        const parsed = parseTagString(tagStr);
+        if (parsed) {
+          stateEventStore.add({
+            ...parsed,
+            metadata: { ...globalMeta, ...parsed.metadata },
+          });
+          stateEventCount++;
+        } else {
+          console.log(chalk.yellow(`  ⚠ Invalid state entry format: ${tagStr}`));
+          console.log(chalk.dim('    Expected: type:key=value (e.g., decision:api_provider=openai)'));
+        }
+      }
+    }
+
     const spinner = ora(`Extracting state via ${adapter.name} adapter...`).start();
 
     const result = await createSnapshot(adapter, storage, passphrase, {
       label: options.label,
       tags: options.tags?.split(',').map((t) => t.trim()),
       full: options.full,
+      stateEvents: stateEventCount > 0 ? stateEventStore : undefined,
     });
 
     const typeLabel = result.incremental ? 'Incremental snapshot' : 'Full snapshot';
@@ -90,6 +130,9 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     console.log(`  ${chalk.dim('Archive:')}    ${formatBytes(result.archiveSize)}`);
     console.log(`  ${chalk.dim('Encrypted:')}  ${formatBytes(result.encryptedSize)}`);
     console.log(`  ${chalk.dim('Storage:')}    ${config.storage.type}`);
+    if (stateEventCount > 0) {
+      console.log(`  ${chalk.dim('State:')}      ${chalk.cyan(`${stateEventCount} event${stateEventCount === 1 ? '' : 's'}`)} recorded`);
+    }
     console.log(`  ${chalk.dim('Status:')}     ${chalk.green('✓ Encrypted & stored')}`);
     console.log();
     console.log(chalk.dim(`  Restore with: savestate restore ${result.snapshot.manifest.id}`));

@@ -13,6 +13,7 @@
  *   savestate diff <a> <b>            Compare two snapshots
  *   savestate config                  View/edit configuration
  *   savestate adapters                List available adapters
+ *   savestate antibodies              Manage failure antibodies
  */
 
 import { Command } from 'commander';
@@ -25,8 +26,11 @@ import {
   diffCommand,
   configCommand,
   adaptersCommand,
+  antibodiesCommand,
+  evalCommand,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
+import { registerTraceCommands } from './commands/trace.js';
 
 // Get version from package.json
 const require = createRequire(import.meta.url);
@@ -56,6 +60,8 @@ program
   .option('-a, --adapter <adapter>', 'Adapter to use (default: auto-detect)')
   .option('-s, --schedule <interval>', 'Set up auto-snapshot schedule (e.g., 6h, 1d)')
   .option('--full', 'Force a full snapshot (skip incremental)')
+  .option('--tag <entry...>', 'Record structured state entry (type:key=value)')
+  .option('--meta <entry...>', 'Additional metadata for state entries (key=value)')
   .action(snapshotCommand);
 
 // ─── savestate restore ───────────────────────────────────────
@@ -100,6 +106,36 @@ program
   .command('adapters')
   .description('List available platform adapters')
   .action(adaptersCommand);
+
+// ─── savestate antibodies ───────────────────────────────────
+
+program
+  .command('antibodies <subcommand>')
+  .description('Failure antibody system (list, add, preflight, stats)')
+  .option('--id <id>', 'Rule ID (for manual add)')
+  .option('--all', 'Include retired rules in list')
+  .option('--json', 'Output as JSON')
+  .option('--tool <tool>', 'Tool name in trigger/context')
+  .option('--error-code <code>', 'Error code in trigger/context')
+  .option('--path <path>', 'Path in preflight context')
+  .option('--path-prefix <prefix>', 'Path prefix in rule trigger')
+  .option('--tags <tags>', 'Comma-separated tags')
+  .option('--risk <risk>', 'Risk level (low, medium, high, critical)')
+  .option('--safe-action <type>', 'Safe action type for manual rule')
+  .option('--confidence <0..1>', 'Rule confidence (0-1)')
+  .option('--semantic', 'Enable semantic matcher stub')
+  .action(antibodiesCommand);
+
+// ─── savestate eval ──────────────────────────────────────────
+
+program
+  .command('eval <subcommand>')
+  .description('Memory quality evaluation (quality, report)')
+  .option('--json', 'Output as JSON')
+  .option('--threshold <0..1>', 'Confidence threshold (default: 0.7)')
+  .option('--suite <name>', 'Run only a specific benchmark suite')
+  .option('-v, --verbose', 'Show detailed test results')
+  .action(evalCommand);
 
 // ─── savestate search ────────────────────────────────────────
 
@@ -150,8 +186,14 @@ program
   .option('-f, --from <platform>', 'Source platform to migrate from')
   .option('-t, --to <platform>', 'Target platform to migrate to')
   .option('-s, --snapshot <id>', 'Use existing snapshot instead of creating new one')
-  .option('--dry-run', 'Show migration plan without making changes')
+  .option('--dry-run', 'Show compatibility report without making changes')
+  .option('--review', 'Inspect items needing manual attention')
+  .option('--resume', 'Resume an interrupted migration')
+  .option('-i, --include <types>', 'Only migrate specific types (instructions,memories,conversations,files,customBots)')
   .option('-l, --list', 'List available platforms and their capabilities')
+  .option('--no-color', 'Disable colorized output')
+  .option('--force', 'Skip confirmation prompts')
+  .option('-v, --verbose', 'Show detailed progress')
   .action(migrateCommand);
 
 // ─── savestate cloud ─────────────────────────────────────────
@@ -166,15 +208,33 @@ program
   .option('-f, --force', 'Overwrite existing files')
   .action(cloudCommand);
 
+// ─── savestate trace ─────────────────────────────────────────
+
+registerTraceCommands(program);
+
+// ─── savestate memory ────────────────────────────────────────
+
+import { registerMemoryCommands } from './commands/memory-cli.js';
+
+registerMemoryCommands(program);
+
+// ─── savestate slo ───────────────────────────────────────────
+
+import { registerSLOCommands } from './commands/slo.js';
+
+registerSLOCommands(program);
+
 // ─── savestate mcp ───────────────────────────────────────────
 
-program
-  .command('mcp')
-  .description('Start MCP server for Claude Code integration')
-  .action(async () => {
-    // Dynamic import to avoid loading MCP deps for regular CLI usage
-    await import('./mcp/server.js');
-  });
+import { registerMCPCommands } from './commands/mcp.js';
+
+registerMCPCommands(program);
+
+// ─── savestate integrity ─────────────────────────────────────
+
+import { registerIntegrityCommands } from './commands/integrity.js';
+
+registerIntegrityCommands(program);
 
 // ─── Parse & run ─────────────────────────────────────────────
 
