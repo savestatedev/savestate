@@ -17,6 +17,8 @@ import { unpackFromArchive, unpackSnapshot, computeChecksum, snapshotFilename } 
 import { decrypt } from './encryption.js';
 import { findEntry, getLatestEntry } from './index-file.js';
 import { isIncremental, reconstructFromChain } from './incremental.js';
+import { setGlobalStore, clearGlobalStore } from './state-events/helpers.js';
+import { StateEventStore } from './state-events/store.js';
 
 export interface RestoreResult {
   snapshotId: string;
@@ -27,6 +29,8 @@ export interface RestoreResult {
   memoryCount: number;
   conversationCount: number;
   hasIdentity: boolean;
+  /** Number of state events restored (Issue #91) */
+  stateEventCount: number;
 }
 
 /**
@@ -111,7 +115,18 @@ export async function restoreSnapshot(
     // for now but log a warning if they differ.
   }
 
-  // Step 5: Feed through adapter.restore()
+  // Step 5a: Load state events into global store (Issue #91)
+  clearGlobalStore(); // Clear any previous state
+  if (snapshot.stateEvents?.events && snapshot.stateEvents.events.length > 0) {
+    const store = new StateEventStore();
+    for (const event of snapshot.stateEvents.events) {
+      // Manually set events to preserve IDs and timestamps
+      (store as unknown as { events: Map<string, unknown> }).events.set(event.id, event);
+    }
+    setGlobalStore(store);
+  }
+
+  // Step 5b: Feed through adapter.restore()
   if (!options?.dryRun) {
     await adapter.restore(snapshot);
   }
@@ -125,6 +140,7 @@ export async function restoreSnapshot(
     memoryCount: snapshot.memory.core.length,
     conversationCount: snapshot.conversations.total,
     hasIdentity: !!snapshot.identity.personality,
+    stateEventCount: snapshot.stateEvents?.count ?? 0,
   };
 }
 

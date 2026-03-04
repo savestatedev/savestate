@@ -328,7 +328,11 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
 
   async getMemory(memory_id: string): Promise<MemoryObject | null> {
     const memory = this.memories.get(memory_id);
-    return memory ? { ...memory } : null;
+    if (memory) return { ...memory };
+    // Fall through to quarantine store so callers (e.g. restore) can still
+    // locate memories that were quarantined after being referenced.
+    const quarantined = this.quarantinedMemories.get(memory_id);
+    return quarantined ? { ...quarantined } : null;
   }
 
   async getQuarantinedMemory(memory_id: string): Promise<MemoryObject | null> {
@@ -368,7 +372,8 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
     const nsKey = namespaceKey(query.namespace);
     
     let candidates = Array.from(this.memories.values())
-      .filter(mem => namespaceKey(mem.namespace) === nsKey);
+      .filter(mem => namespaceKey(mem.namespace) === nsKey)
+      .filter(mem => mem.status === 'active'); // Exclude deleted/quarantined memories
     
     // Filter by tags
     if (query.tags && query.tags.length > 0) {
