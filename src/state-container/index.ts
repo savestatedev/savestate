@@ -1,6 +1,6 @@
 /**
  * State Container Module
- * 
+ *
  * Portable, encrypted, cross-platform state container for AI agents.
  * Enables identity preservation across different LLM providers.
  */
@@ -18,16 +18,16 @@ export const CONTAINER_VERSION = '1.0.0';
 export interface AgentPersonality {
   /** Display name for the agent */
   name: string;
-  
+
   /** Role/description */
   role: string;
-  
+
   /** Core traits/characteristics */
   traits: string[];
-  
+
   /** Communication style */
   communicationStyle: 'formal' | 'casual' | 'technical' | 'friendly';
-  
+
   /** Custom instructions */
   customInstructions?: string;
 }
@@ -38,17 +38,17 @@ export interface AgentPersonality {
 export interface AgentTool {
   /** Tool name */
   name: string;
-  
+
   /** Tool description */
   description: string;
-  
+
   /** Function definition */
   function: {
     name: string;
     description: string;
     parameters: Record<string, unknown>;
   };
-  
+
   /** Whether tool is enabled */
   enabled: boolean;
 }
@@ -59,19 +59,19 @@ export interface AgentTool {
 export interface AgentPreferences {
   /** Preferred language */
   language?: string;
-  
+
   /** Timezone */
   timezone?: string;
-  
+
   /** Response format */
   responseFormat?: 'json' | 'markdown' | 'text';
-  
+
   /** Temperature setting */
   temperature?: number;
-  
+
   /** Max tokens */
   maxTokens?: number;
-  
+
   /** Custom preferences */
   [key: string]: unknown;
 }
@@ -82,22 +82,22 @@ export interface AgentPreferences {
 export interface ContainerMetadata {
   /** Container version */
   version: string;
-  
+
   /** Creation timestamp */
   createdAt: string;
-  
+
   /** Last modified */
   modifiedAt: string;
-  
+
   /** Memory reference (snapshot ID) */
   memoryRef?: string;
-  
+
   /** Source platform */
   sourcePlatform?: string;
-  
+
   /** Target platform */
   targetPlatform?: string;
-  
+
   /** Custom tags */
   tags?: string[];
 }
@@ -108,26 +108,26 @@ export interface ContainerMetadata {
 export interface StateContainerContents {
   /** Container metadata */
   metadata: ContainerMetadata;
-  
+
   /** Agent personality */
   personality: AgentPersonality;
-  
+
   /** Agent memory reference (optional - could be a snapshot ID) */
   memoryRef?: string;
-  
+
   /** Conversation history (recent, for context) */
   conversationHistory?: Array<{
     role: 'user' | 'assistant' | 'system';
     content: string;
     timestamp: string;
   }>;
-  
+
   /** Agent tools */
   tools: AgentTool[];
-  
+
   /** Agent preferences */
   preferences: AgentPreferences;
-  
+
   /** Custom data */
   customData?: Record<string, unknown>;
 }
@@ -138,22 +138,22 @@ export interface StateContainerContents {
 export interface EncryptedContainer {
   /** Container version */
   version: string;
-  
+
   /** Encryption algorithm */
   algorithm: 'aes-256-gcm';
-  
+
   /** Initialization vector */
   iv: string;
-  
+
   /** Authentication tag */
   authTag: string;
-  
+
   /** Salt for key derivation */
   salt: string;
-  
+
   /** Encrypted payload (base64) */
   payload: string;
-  
+
   /** Metadata (unencrypted) */
   metadata: ContainerMetadata;
 }
@@ -164,13 +164,13 @@ export interface EncryptedContainer {
 export interface SerializedContainer {
   /** Version */
   version: string;
-  
+
   /** Whether encrypted */
   encrypted: boolean;
-  
+
   /** Container data */
   data: string;
-  
+
   /** Metadata */
   metadata: ContainerMetadata;
 }
@@ -181,13 +181,13 @@ export interface SerializedContainer {
 export interface StateContainerConfig {
   /** Encryption enabled */
   encrypt: boolean;
-  
+
   /** Passphrase for encryption */
   passphrase?: string;
-  
+
   /** Source platform */
   sourcePlatform?: string;
-  
+
   /** Target platform */
   targetPlatform?: string;
 }
@@ -254,15 +254,15 @@ export class StateContainer {
     const salt = randomBytes(16);
     const key = this.deriveKey(this.config.passphrase, salt);
     const iv = randomBytes(12);
-    
+
     const cipher = createCipheriv('aes-256-gcm', key, iv);
-    
+
     const plaintext = JSON.stringify(this.contents);
     const encrypted = Buffer.concat([
       cipher.update(plaintext, 'utf8'),
       cipher.final(),
     ]);
-    
+
     const authTag = cipher.getAuthTag();
 
     return {
@@ -390,12 +390,12 @@ export class StateContainer {
       content,
       timestamp: new Date().toISOString(),
     });
-    
+
     // Keep only last 100 messages
     if (this.contents.conversationHistory.length > 100) {
       this.contents.conversationHistory = this.contents.conversationHistory.slice(-100);
     }
-    
+
     this.contents.metadata.modifiedAt = new Date().toISOString();
   }
 
@@ -429,7 +429,7 @@ export class StateContainer {
    */
   serialize(): SerializedContainer {
     let data: string;
-    
+
     if (this.config.encrypt && this.config.passphrase) {
       const encrypted = this.encryptContents();
       this.encryptedData = encrypted;
@@ -453,7 +453,7 @@ export class StateContainer {
    */
   static deserialize(serialized: SerializedContainer, passphrase?: string): StateContainer {
     const container = new StateContainer({ passphrase });
-    
+
     if (serialized.encrypted) {
       const encrypted = JSON.parse(serialized.data) as EncryptedContainer;
       container.encryptedData = encrypted;
@@ -462,7 +462,7 @@ export class StateContainer {
     } else {
       container.contents = JSON.parse(serialized.data);
     }
-    
+
     return container;
   }
 
@@ -485,7 +485,7 @@ export class StateContainer {
    * Get metadata
    */
   getMetadata(): ContainerMetadata {
-    return { 
+    return {
       ...this.contents.metadata,
       // Include memoryRef from contents if present
       ...(this.contents.memoryRef && { memoryRef: this.contents.memoryRef }),
@@ -508,6 +508,219 @@ export class StateContainer {
     }
     return JSON.parse(JSON.stringify(this.contents));
   }
+}
+
+// ============ Functional API (for compatibility with tests) ============
+
+import type { Identity, Memory, ConversationIndex, PlatformMeta } from '../types.js';
+import { encrypt, decrypt, verify } from '../encryption.js';
+
+/**
+ * Functional API version constant
+ */
+export const STATE_CONTAINER_VERSION = '1.0.0';
+
+/**
+ * Container metadata (functional API)
+ */
+export interface FunctionalContainerMetadata {
+  name?: string;
+  description?: string;
+  tags?: string[];
+  targetPlatforms?: string[];
+  parentId?: string;
+}
+
+/**
+ * Full container structure (functional API)
+ */
+export interface Container {
+  /** Unique container ID */
+  id: string;
+
+  /** Container version */
+  version: string;
+
+  /** Creation timestamp */
+  timestamp: string;
+
+  /** Identity data */
+  identity: Identity;
+
+  /** Memory data */
+  memory: Memory;
+
+  /** Conversation index */
+  conversations: ConversationIndex;
+
+  /** Platform metadata */
+  platform: PlatformMeta;
+
+  /** Container metadata */
+  metadata: FunctionalContainerMetadata;
+}
+
+/**
+ * Options for creating a container
+ */
+export interface ContainerOptions {
+  /** Container name */
+  name?: string;
+
+  /** Container description */
+  description?: string;
+
+  /** Container tags */
+  tags?: string[];
+
+  /** Target platforms */
+  targetPlatforms?: string[];
+}
+
+/**
+ * Create a new state container
+ */
+export function createContainer(
+  identity: Identity,
+  memory: Memory,
+  conversations: ConversationIndex,
+  platform: PlatformMeta,
+  options: ContainerOptions = {}
+): Container {
+  const id = `sc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+  return {
+    id,
+    version: STATE_CONTAINER_VERSION,
+    timestamp: new Date().toISOString(),
+    identity,
+    memory,
+    conversations,
+    platform,
+    metadata: {
+      name: options.name,
+      description: options.description,
+      tags: options.tags,
+      targetPlatforms: options.targetPlatforms ?? [platform.name],
+    },
+  };
+}
+
+/**
+ * Serialize a container to JSON string
+ */
+export function serializeContainer(container: Container): string {
+  return JSON.stringify(container, null, 2);
+}
+
+/**
+ * Deserialize a container from JSON string
+ */
+export function deserializeContainer(json: string): Container {
+  try {
+    const parsed = JSON.parse(json) as Container;
+
+    // Validate required fields
+    if (!parsed.id || !parsed.version || !parsed.timestamp) {
+      throw new Error('Invalid container: missing required fields');
+    }
+    if (!parsed.identity || !parsed.memory || !parsed.conversations || !parsed.platform) {
+      throw new Error('Invalid container: missing required sections');
+    }
+
+    return parsed;
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      throw new Error('Invalid JSON format');
+    }
+    throw err;
+  }
+}
+
+/**
+ * Validation result
+ */
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
+/**
+ * Validate a container structure
+ */
+export function validateContainer(container: unknown): ValidationResult {
+  const errors: string[] = [];
+
+  if (!container || typeof container !== 'object') {
+    return { valid: false, errors: ['Container must be an object'] };
+  }
+
+  const c = container as Record<string, unknown>;
+
+  if (!c.id || typeof c.id !== 'string') {
+    errors.push('Missing or invalid id');
+  }
+  if (!c.version || typeof c.version !== 'string') {
+    errors.push('Missing or invalid version');
+  }
+  if (!c.timestamp || typeof c.timestamp !== 'string') {
+    errors.push('Missing or invalid timestamp');
+  }
+  if (!c.identity) {
+    errors.push('Missing identity section');
+  }
+  if (!c.memory) {
+    errors.push('Missing memory section');
+  }
+  if (!c.conversations) {
+    errors.push('Missing conversations section');
+  }
+  if (!c.platform) {
+    errors.push('Missing platform section');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Container inspection result
+ */
+export interface ContainerInspectResult {
+  id: string;
+  version: string;
+  platform: string;
+  timestamp: string;
+  memoryEntries: number;
+  knowledgeDocs: number;
+  conversations: number;
+  tools: number;
+  skills: number;
+}
+
+/**
+ * Inspect a container and return summary information
+ */
+export function inspectContainer(container: Container): ContainerInspectResult {
+  const memoryEntries = container.memory?.core?.length ?? 0;
+  const knowledgeDocs = container.memory?.knowledge?.length ?? 0;
+  const conversations = container.conversations?.conversations?.length ?? 0;
+  const tools = container.identity?.tools?.length ?? 0;
+  const skills = container.identity?.skills?.length ?? 0;
+
+  return {
+    id: container.id,
+    version: container.version,
+    platform: container.platform?.name ?? 'unknown',
+    timestamp: container.timestamp,
+    memoryEntries,
+    knowledgeDocs,
+    conversations,
+    tools,
+    skills,
+  };
 }
 
 export default StateContainer;
