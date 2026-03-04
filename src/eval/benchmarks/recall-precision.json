@@ -1,0 +1,71 @@
+{
+  "name": "recall-precision",
+  "version": "1.0.0",
+  "description": "Tests for basic recall and precision metrics in memory retrieval",
+  "testCases": [
+    {
+      "id": "rp-001",
+      "description": "Basic exact match retrieval",
+      "query": "user preferences for dark mode",
+      "expectedIds": ["mem_pref_dark_mode", "mem_pref_theme"],
+      "negativeIds": ["mem_weather_data", "mem_calendar_events"],
+      "tags": ["basic", "preferences"]
+    },
+    {
+      "id": "rp-002",
+      "description": "Project context retrieval",
+      "query": "current project architecture decisions",
+      "expectedIds": ["mem_proj_arch", "mem_proj_tech_stack", "mem_proj_patterns"],
+      "negativeIds": ["mem_personal_notes", "mem_unrelated_project"],
+      "tags": ["project", "architecture"]
+    },
+    {
+      "id": "rp-003",
+      "description": "User identity and name retrieval",
+      "query": "user name and contact information",
+      "expectedIds": ["mem_user_name", "mem_user_email"],
+      "negativeIds": ["mem_api_keys", "mem_passwords"],
+      "tags": ["identity", "pii"]
+    },
+    {
+      "id": "rp-004",
+      "description": "Code style preferences",
+      "query": "coding style and formatting preferences",
+      "expectedIds": ["mem_code_style", "mem_lint_config", "mem_formatter_prefs"],
+      "negativeIds": ["mem_runtime_errors", "mem_debug_logs"],
+      "tags": ["code", "preferences"]
+    },
+    {
+      "id": "rp-005",
+      "description": "Empty query handling",
+      "query": "",
+      "expectedIds": [],
+      "negativeIds": ["mem_random_1", "mem_random_2"],
+      "tags": ["edge-case"]
+    },
+    {
+      "id": "rp-006",
+      "description": "Partial match retrieval",
+      "query": "database connection",
+      "expectedIds": ["mem_db_config", "mem_db_pool_settings"],
+      "negativeIds": ["mem_frontend_state", "mem_ui_components"],
+      "tags": ["database", "config"]
+    },
+    {
+      "id": "rp-007",
+      "description": "Multi-topic retrieval",
+      "query": "API endpoints and authentication flow",
+      "expectedIds": ["mem_api_endpoints", "mem_auth_flow", "mem_jwt_config"],
+      "negativeIds": ["mem_css_styles", "mem_font_settings"],
+      "tags": ["api", "auth"]
+    },
+    {
+      "id": "rp-008",
+      "description": "Historical context retrieval",
+      "query": "previous conversation about error handling",
+      "expectedIds": ["mem_error_handling_discussion", "mem_try_catch_patterns"],
+      "negativeIds": ["mem_success_metrics", "mem_happy_path"],
+      "tags": ["conversation", "errors"]
+    }
+  ]
+}

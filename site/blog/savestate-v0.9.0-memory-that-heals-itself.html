@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaveState v0.9.0: Memory That Heals Itself — SaveState</title>
+<meta name="description" content="SaveState v0.9.0 delivers privacy controls, memory lifecycle management, quality scoring, and agents that learn from their own failures. 76 commits across 25 days of work.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .summary {
+  font-size: 20px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.article-content {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 36px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong { color: var(--text); }
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.article-content a:hover {
+  border-bottom-color: var(--blue);
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--blue-light);
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+}
+
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+.article-content th, .article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+.article-content th {
+  background: var(--bg-code);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
+.article-content blockquote {
+  border-left: 3px solid var(--blue);
+  padding-left: 20px;
+  margin: 24px 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 32px;
+  transition: color 0.2s;
+}
+
+.back-link:hover { color: var(--text); }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+    
+    <header class="article-header">
+      <div class="date">February 27, 2026</div>
+      <h1>SaveState v0.9.0: Memory That Heals Itself</h1>
+      <p class="summary">Privacy controls, memory lifecycle management, quality scoring, and agents that learn from failure. 76 commits and 25 days of building the future of AI state.</p>
+    </header>
+
+    <div class="article-content">
+      <p>Your AI agent has a memory problem. Not capacity: quality. It remembers things it shouldn't, forgets to question stale facts, and repeats the same mistakes. Until now, you had two options: trust the chaos or nuke everything and start fresh.</p>
+
+      <p><strong>SaveState v0.9.0 gives you a third option: memory that manages itself.</strong></p>
+
+      <p>This is our biggest release yet. 76 commits since v0.7.0, spanning privacy, lifecycle controls, quality scoring, tiered storage, audit trails, and failure learning. Let's dig in.</p>
+
+      <h2>🔒 Privacy Controls: Your Data, Your Rules</h2>
+
+      <p>AI agents see everything. They remember everything. That's powerful, but it's also risky. SaveState v0.9.0 introduces comprehensive privacy controls that let you define what gets stored and guarantee deletion when requested.</p>
+
+      <pre><code># Enable PII redaction
+savestate config set privacy.pii_redaction enabled
+
+# Add patterns to the deny list
+savestate privacy deny-add "ssn:*"
+savestate privacy deny-add "credit_card:*"
+savestate privacy deny-add "*@company-internal.com"
+
+# View your deny list
+savestate privacy deny-list</code></pre>
+
+      <p>The system scans incoming memories and redacts matching patterns before storage. This isn't regex theater: it's backed by deletion guarantees. When you remove something, it's gone from all tiers.</p>
+
+      <pre><code># Delete all memories matching a pattern
+savestate privacy delete "user.medical.*" --confirm
+
+# Verify deletion
+savestate privacy audit "user.medical.*"
+✓ No matching entries found in L1, L2, or L3 storage</code></pre>
+
+      <h2>🔄 Memory Lifecycle Controls</h2>
+
+      <p>Memories aren't permanent. Facts expire. Contexts shift. Your agent's memory should reflect that reality.</p>
+
+      <pre><code># Edit a specific memory
+savestate memory edit user.preferences.editor --value "neovim"
+
+# Roll back to a previous state
+savestate memory rollback user.preferences --to 2026-02-15
+
+# Set expiration on volatile memories
+savestate memory expire user.session.auth_token --in 24h
+
+# View the audit trail for any memory path
+savestate memory audit user.preferences.editor
+┌────────────────────┬──────────┬────────────────┐
+│ Timestamp          │ Action   │ Value          │
+├────────────────────┼──────────┼────────────────┤
+│ 2026-02-27 10:32   │ edit     │ neovim         │
+│ 2026-02-15 14:11   │ create   │ vscode         │
+└────────────────────┴──────────┴────────────────┘</code></pre>
+
+      <p>Every change is tracked. Every rollback is reversible. Your agent's memory isn't a black box anymore.</p>
+
+      <h2>📊 Memory Quality Framework</h2>
+
+      <p>Not all memories are created equal. Some are rock solid. Some are inferences. Some are outdated opinions from six months ago that your agent still treats as gospel.</p>
+
+      <p>The new quality framework scores every memory along three dimensions:</p>
+
+      <ul>
+        <li><strong>Confidence</strong>: How reliable is the source? Direct user input scores higher than inferred preferences.</li>
+        <li><strong>Staleness</strong>: When was this last validated? Memories decay over time without reinforcement.</li>
+        <li><strong>Quarantine status</strong>: Is this memory flagged for review before use?</li>
+      </ul>
+
+      <pre><code># Check quality scores across your memory graph
+savestate memory quality --summary
+┌─────────────────────┬────────────┬───────────┬─────────────┐
+│ Path                │ Confidence │ Staleness │ Quarantine  │
+├─────────────────────┼────────────┼───────────┼─────────────┤
+│ user.name           │ 0.99       │ fresh     │ no          │
+│ user.employer       │ 0.85       │ stale     │ no          │
+│ user.preferences.*  │ 0.72       │ mixed     │ 3 items     │
+└─────────────────────┴────────────┴───────────┴─────────────┘
+
+# Quarantine suspicious ingestions
+savestate memory quarantine user.preferences.diet
+Memory quarantined. Agent will request confirmation before using.
+
+# Promote quarantined memory after validation
+savestate memory promote user.preferences.diet</code></pre>
+
+      <h2>🗄️ Multi-Tier Memory: L1, L2, L3</h2>
+
+      <p>Not every memory needs instant access. Your agent's favorite coffee order belongs in fast storage. The project you finished two years ago can live in the archives.</p>
+
+      <p>SaveState now supports three storage tiers:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Access Speed</th>
+            <th>Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>L1 (Hot)</strong></td>
+            <td>&lt;10ms</td>
+            <td>Active context, recent conversations, working memory</td>
+          </tr>
+          <tr>
+            <td><strong>L2 (Warm)</strong></td>
+            <td>&lt;100ms</td>
+            <td>Frequently referenced facts, project knowledge, preferences</td>
+          </tr>
+          <tr>
+            <td><strong>L3 (Cold)</strong></td>
+            <td>&lt;1s</td>
+            <td>Archives, historical context, rarely accessed memories</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code># Check current tier distribution
+savestate memory tiers
+
+# Manually promote a memory to hot storage
+savestate memory promote project.current --tier L1
+
+# Archive old project data
+savestate memory archive project.legacy.* --tier L3</code></pre>
+
+      <p>Tier placement is automatic by default, based on access patterns. Override when you know better.</p>
+
+      <h2>📜 Askable Echoes Trace Ledger</h2>
+
+      <p>When your agent makes a decision, can you trace why? The new Trace Ledger records every agent run with full audit capability.</p>
+
+      <pre><code># List recent agent runs
+savestate echoes list --limit 10
+
+# Inspect a specific run
+savestate echoes trace run_abc123
+┌────────────────────────────────────────────────────┐
+│ Run: run_abc123                                    │
+│ Started: 2026-02-27 09:15:32                       │
+│ Duration: 4.2s                                     │
+├────────────────────────────────────────────────────┤
+│ Memories Accessed:                                 │
+│   • user.preferences.timezone (L1, confidence 0.99)│
+│   • project.deadlines (L2, confidence 0.91)        │
+│   • calendar.events.today (L1, confidence 0.95)    │
+├────────────────────────────────────────────────────┤
+│ Decision Points:                                   │
+│   1. Selected morning slot based on timezone pref  │
+│   2. Avoided 2pm conflict from calendar            │
+└────────────────────────────────────────────────────┘
+
+# Ask natural language questions about past runs
+savestate echoes ask "Why did the agent suggest Tuesday?"</code></pre>
+
+      <h2>🛡️ Core Integrity and Decision Guard</h2>
+
+      <p>Some memories shouldn't change without explicit approval. Core Integrity lets you designate protected paths that require confirmation before modification.</p>
+
+      <pre><code># Protect critical configuration
+savestate guard protect system.config.*
+savestate guard protect user.identity.*
+
+# Attempted modification triggers confirmation
+savestate memory edit user.identity.name --value "New Name"
+⚠️  Protected path: user.identity.name
+   Requires confirmation via: savestate guard approve req_xyz</code></pre>
+
+      <p>Decision Guard extends this to runtime. High stakes decisions can require human approval before execution.</p>
+
+      <h2>🦠 Failure Antibody System</h2>
+
+      <p>This is the one that changes everything.</p>
+
+      <p>When your agent fails, it usually fails the same way again. And again. The Failure Antibody System records failures and their contexts, creating "antibodies" that prevent repeat mistakes.</p>
+
+      <pre><code># View failure antibodies
+savestate antibodies list
+┌─────────────────────────────────────────────────────┐
+│ Antibody: ab_deploy_friday                          │
+│ Created: 2026-02-20                                 │
+│ Trigger: deploy command + friday context            │
+│ Action: Block with warning                          │
+│ Prevented: 3 times                                  │
+└─────────────────────────────────────────────────────┘
+
+# Create manual antibody
+savestate antibodies create \
+  --trigger "rm -rf with production path" \
+  --action block \
+  --message "This command would delete production data"
+
+# Review antibody effectiveness
+savestate antibodies stats
+Total failures prevented: 47
+Most active antibody: ab_api_rate_limit (12 blocks)</code></pre>
+
+      <p>Your agent learns from its mistakes. Not in a vague "continuous learning" way. In a concrete, auditable, "this specific failure will never happen again" way.</p>
+
+      <h2>📁 Path-Addressable State Filesystem</h2>
+
+      <p>Memory is now a filesystem. Browse it, query it, watch it change.</p>
+
+      <pre><code># Browse memory like a filesystem
+savestate fs ls /user/preferences/
+editor/
+timezone
+theme
+language
+
+# Read values directly
+savestate fs cat /user/preferences/timezone
+America/New_York
+
+# Watch for changes
+savestate fs watch /project/current/
+Watching /project/current/ for changes... (Ctrl+C to stop)</code></pre>
+
+      <h2>📍 Checkpoint Ledger</h2>
+
+      <p>Create named checkpoints before risky operations. Roll back instantly if things go wrong.</p>
+
+      <pre><code># Create a checkpoint before major changes
+savestate checkpoint create "before-refactor"
+Checkpoint created: chk_before_refactor_20260227
+
+# Something went wrong? Roll back
+savestate checkpoint restore "before-refactor"
+Restored 247 memories to checkpoint state
+
+# List all checkpoints
+savestate checkpoint list</code></pre>
+
+      <h2>📖 Action Recall Drillbook</h2>
+
+      <p>The Drillbook stores successful action sequences that your agent can recall and replay. Think of it as muscle memory for AI.</p>
+
+      <pre><code># Record a successful workflow
+savestate drillbook record "deploy-staging"
+Recording actions... (run 'savestate drillbook stop' when done)
+
+# Later, recall the workflow
+savestate drillbook recall "deploy-staging"
+Found matching drill. Steps:
+  1. Pull latest from main
+  2. Run test suite
+  3. Build Docker image
+  4. Push to staging registry
+  5. Trigger staging deploy
+
+Execute? [y/N]</code></pre>
+
+      <h2>🚀 Get v0.9.0</h2>
+
+      <pre><code># npm
+npm install -g @savestate/cli@latest
+
+# Homebrew
+brew upgrade savestate
+
+# Verify
+savestate --version
+0.9.0</code></pre>
+
+      <p>This release represents 25 days of focused work. Privacy, quality, lifecycle, learning. These aren't features for their own sake. They're the foundation for AI agents that actually earn your trust.</p>
+
+      <p>Memory is the moat. Now you control it.</p>
+
+      <p><strong><a href="https://www.npmjs.com/package/@savestate/cli">Install SaveState →</a></strong></p>
+
+      <p><em>Questions? Ideas? Find us at <a href="https://github.com/savestatedev/savestate">GitHub</a>, <a href="https://x.com/SaveStateDev">@SaveStateDev</a>, or hello@savestate.dev.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

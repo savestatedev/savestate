@@ -41,9 +41,10 @@ export function hasExtractor(platform: Platform): boolean {
 // ─── Register Built-in Extractors ────────────────────────────
 
 import { ChatGPTExtractor } from './chatgpt.js';
+import { ClaudeExtractor } from './claude.js';
 
 // ChatGPT extractor (#24)
 registerExtractor('chatgpt', () => new ChatGPTExtractor());
 
-// Claude extractor will be registered in #29
-// registerExtractor('claude', () => new ClaudeExtractor());
+// Claude extractor (#29)
+registerExtractor('claude', () => new ClaudeExtractor());

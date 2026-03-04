@@ -5,6 +5,12 @@
  * Structure: tar.gz → AES-256-GCM encrypted → .saf.enc
  */
 
+import type { SnapshotTrace } from './trace/types.js';
+import type { SnapshotStateEvents as StateEventsType } from './state-events/types.js';
+
+/** Re-export SnapshotStateEvents for external use */
+export type SnapshotStateEvents = StateEventsType;
+
 // ─── Manifest ────────────────────────────────────────────────
 
 export interface Manifest {
@@ -94,6 +100,14 @@ export interface FileManifestEntry {
 
 // ─── Memory ──────────────────────────────────────────────────
 
+/**
+ * Memory tier levels for the multi-tier architecture:
+ * - L1: Short-term buffer (current session/window, fastest access)
+ * - L2: Working set (recent + pinned items, fast retrieval)
+ * - L3: Long-term archive (full history, slower retrieval, searchable)
+ */
+export type MemoryTier = 'L1' | 'L2' | 'L3';
+
 export interface Memory {
   /** Platform memory entries (ChatGPT memories, Claude memory, etc.) */
   core: MemoryEntry[];
@@ -101,6 +115,48 @@ export interface Memory {
   knowledge: KnowledgeDocument[];
   /** Optional vector embeddings for search */
   embeddings?: EmbeddingData;
+  /** Memory tier configuration and metadata */
+  tierConfig?: MemoryTierConfig;
+}
+
+/**
+ * Configuration for the multi-tier memory system.
+ */
+export interface MemoryTierConfig {
+  /** Schema version for tier config */
+  version: string;
+  /** Default tier for new memories */
+  defaultTier: MemoryTier;
+  /** Automatic tier policies */
+  policies?: MemoryTierPolicy[];
+  /** Tier-specific settings */
+  tiers: {
+    L1: TierSettings;
+    L2: TierSettings;
+    L3: TierSettings;
+  };
+}
+
+export interface TierSettings {
+  /** Maximum number of items in this tier (null = unlimited) */
+  maxItems?: number | null;
+  /** Maximum age before auto-demotion (e.g., '24h', '7d', '30d') */
+  maxAge?: string | null;
+  /** Whether items in this tier are included in default context */
+  includeInContext: boolean;
+}
+
+export interface MemoryTierPolicy {
+  /** Policy name */
+  name: string;
+  /** Condition for triggering the policy */
+  trigger: 'age' | 'access' | 'overflow' | 'manual';
+  /** Source tier */
+  from: MemoryTier;
+  /** Destination tier */
+  to: MemoryTier;
+  /** Condition threshold (e.g., '7d' for age, count for overflow) */
+  threshold?: string | number;
 }
 
 export interface MemoryEntry {
@@ -110,6 +166,20 @@ export interface MemoryEntry {
   createdAt: string;
   updatedAt?: string;
   metadata?: Record<string, unknown>;
+  /** Memory tier (L1/L2/L3). Defaults to L3 for backward compatibility. */
+  tier?: MemoryTier;
+  /** Whether this memory is pinned (prevents automatic demotion) */
+  pinned?: boolean;
+  /** ISO 8601 timestamp when the memory was pinned */
+  pinnedAt?: string;
+  /** ISO 8601 timestamp of last access (for LRU-style policies) */
+  lastAccessedAt?: string;
+  /** ISO 8601 timestamp when promoted to current tier */
+  promotedAt?: string;
+  /** ISO 8601 timestamp when demoted to current tier */
+  demotedAt?: string;
+  /** Previous tier before last promotion/demotion */
+  previousTier?: MemoryTier;
 }
 
 export interface KnowledgeDocument {
@@ -205,6 +275,9 @@ export interface Snapshot {
   platform: PlatformMeta;
   chain: SnapshotChain;
   restoreHints: RestoreHints;
+  trace?: SnapshotTrace;
+  /** Structured state events (Issue #91) */
+  stateEvents?: SnapshotStateEvents;
 }
 
 // ─── Adapter Interface ───────────────────────────────────────
@@ -230,6 +303,12 @@ export interface Adapter {
 
   /** Get platform-specific identity information */
   identify(): Promise<PlatformMeta>;
+
+  /**
+   * Get state events from the last restored snapshot (Issue #91).
+   * Available after restore() is called with a snapshot containing state events.
+   */
+  getStateEvents?(): SnapshotStateEvents | undefined;
 }
 
 // ─── Storage Backend Interface ───────────────────────────────
@@ -269,6 +348,42 @@ export interface SaveStateConfig {
   retention?: RetentionPolicy;
   /** Registered adapters */
   adapters: AdapterConfig[];
+  /** Memory quality and approval settings */
+  memory?: MemoryConfig;
+  /** MCP server configuration (Issue #107) */
+  mcp?: MCPConfig;
+  /** Integrity Grid configuration (Issue #112) */
+  integrity?: IntegrityConfig;
+}
+
+/**
+ * Memory approval mode determines how memory operations are validated.
+ * - 'auto': Automatically approve operations meeting confidence threshold
+ * - 'manual': Require manual approval for all memory operations
+ * - 'threshold': Auto-approve above threshold, manual below
+ */
+export type MemoryApprovalMode = 'auto' | 'manual' | 'threshold';
+
+/**
+ * TTL (Time-to-Live) policy configuration for automatic memory expiration.
+ * Issue #110: Memory Lifecycle Controls
+ */
+export interface MemoryTTLConfig {
+  /** Whether TTL-based expiration is enabled */
+  enabled: boolean;
+  /** Default TTL in days for new memories (null = permanent) */
+  defaultDays: number | null;
+  /** Whether to apply decay-based expiration (reduces importance over time) */
+  decayEnabled: boolean;
+}
+
+export interface MemoryConfig {
+  /** Approval mode for memory operations */
+  approvalMode: MemoryApprovalMode;
+  /** Confidence threshold for auto-approval (0-1, default: 0.7) */
+  confidenceThreshold: number;
+  /** TTL policy configuration (Issue #110) */
+  ttl?: MemoryTTLConfig;
 }
 
 export interface StorageConfig {
@@ -291,6 +406,90 @@ export interface AdapterConfig {
   id: string;
   enabled: boolean;
   options?: Record<string, unknown>;
+}
+
+// ─── MCP Server Config ────────────────────────────────────────
+
+/**
+ * MCP server authentication configuration.
+ * Issue #107: MCP-native memory interface
+ */
+export interface MCPAuthConfig {
+  /** Authentication type: 'none' for open access, 'token' for bearer token auth */
+  type: 'none' | 'token';
+  /** Bearer token for authentication (required when type is 'token') */
+  token?: string;
+}
+
+/**
+ * MCP server configuration for cross-platform interoperability.
+ * Issue #107: MCP-native memory interface
+ */
+export interface MCPConfig {
+  /** Whether MCP server is enabled */
+  enabled: boolean;
+  /** Port number for MCP HTTP server (default: 3333) */
+  port: number;
+  /** Authentication configuration */
+  auth: MCPAuthConfig;
+}
+
+// ─── Integrity Grid Config ────────────────────────────────────
+
+/**
+ * Honeyfact configuration for integrity monitoring.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface HoneyfactConfig {
+  /** Number of honeyfacts to seed per tenant (default: 10) */
+  count: number;
+  /** TTL in days before honeyfact rotation (default: 7) */
+  ttl_days: number;
+}
+
+/**
+ * Tripwire configuration for detecting honeyfact leakage.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface TripwireConfig {
+  /** Fuzzy match threshold (0-1, default: 0.8) */
+  threshold: number;
+  /** Enable fuzzy matching (default: true) */
+  fuzzy_enabled: boolean;
+}
+
+/**
+ * Containment policy for responding to detected incidents.
+ * - observe: Log only, no automatic action
+ * - approve: Require manual approval for containment
+ * - auto: Automatically quarantine based on severity
+ */
+export type ContainmentPolicy = 'observe' | 'approve' | 'auto';
+
+/**
+ * Containment configuration for incident response.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface ContainmentConfig {
+  /** Containment policy (default: approve) */
+  policy: ContainmentPolicy;
+  /** Auto-escalate critical incidents to agent quarantine (default: true) */
+  auto_escalate_critical: boolean;
+}
+
+/**
+ * Integrity Grid configuration for memory poisoning detection.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface IntegrityConfig {
+  /** Whether integrity monitoring is enabled */
+  enabled: boolean;
+  /** Honeyfact configuration */
+  honeyfact: HoneyfactConfig;
+  /** Tripwire configuration */
+  tripwire: TripwireConfig;
+  /** Containment configuration */
+  containment: ContainmentConfig;
 }
 
 // ─── Search ──────────────────────────────────────────────────
