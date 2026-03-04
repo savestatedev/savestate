@@ -338,6 +338,8 @@ export interface StorageBackend {
 export interface SaveStateConfig {
   /** Config format version */
   version: string;
+  /** Encryption configuration */
+  encryption?: EncryptionConfig;
   /** Storage backend configuration */
   storage: StorageConfig;
   /** Default adapter to use */
@@ -384,6 +386,15 @@ export interface MemoryConfig {
   confidenceThreshold: number;
   /** TTL policy configuration (Issue #110) */
   ttl?: MemoryTTLConfig;
+}
+
+export interface EncryptionConfig {
+  /** Enable encryption (default: true) */
+  enabled: boolean;
+  /** Encryption algorithm (default: aes-256-gcm) */
+  algorithm?: string;
+  /** Key derivation function (default: scrypt) */
+  keyDerivation?: string;
 }
 
 export interface StorageConfig {
