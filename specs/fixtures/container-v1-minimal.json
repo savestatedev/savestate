@@ -1,0 +1,20 @@
+{
+  "formatVersion": 1,
+  "created": "2026-03-04T12:00:00Z",
+  "agentId": "test-agent-001",
+  "description": "Minimal v1 container manifest for testing",
+  "payloads": [
+    {
+      "name": "personality",
+      "contentType": "application/json",
+      "byteLength": 156,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "memory",
+      "contentType": "application/json",
+      "byteLength": 89,
+      "sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35"
+    }
+  ]
+}
