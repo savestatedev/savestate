@@ -30,6 +30,7 @@ import {
   evalCommand,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
+import { verifyCommand } from './commands/verify.js';
 import { registerTraceCommands } from './commands/trace.js';
 
 // Get version from package.json
@@ -136,6 +137,14 @@ program
   .option('--suite <name>', 'Run only a specific benchmark suite')
   .option('-v, --verbose', 'Show detailed test results')
   .action(evalCommand);
+
+// ─── savestate verify ────────────────────────────────────────
+
+program
+  .command('verify <path>')
+  .description('Verify the integrity of a .savestate state file (encryption + schema)')
+  .option('-p, --passphrase <passphrase>', 'Decryption passphrase (or use SAVESTATE_PASSPHRASE env)')
+  .action((filePath: string, options) => verifyCommand(filePath, options));
 
 // ─── savestate search ────────────────────────────────────────
 

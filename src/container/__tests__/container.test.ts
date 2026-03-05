@@ -4,18 +4,19 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { rmSync, mkdirSync, existsSync } from 'fs';
+import { rmSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import {
   exportContainer,
   importContainer,
   validateContainer,
+  verifyContainer,
   getContainerInfo,
   createEmptyAgentState,
   AgentState,
   CONTAINER_FORMAT_VERSION,
   CURRENT_SCHEMA_VERSION
-} from '../container/index.js';
+} from '../index.js';
 
 const TEST_DIR = join(process.cwd(), 'test-tmp-container');
 const TEST_PASSPHRASE = 'test-password-123';
@@ -104,6 +105,48 @@ describe('Portable State Container', () => {
     expect(validationResult.metadata?.agent_name).toBe(agentId);
   });
   
+  it('should verify a valid container (checksum + decrypt + schema)', async () => {
+    const agentId = 'test-agent-verify';
+    const outputPath = join(TEST_DIR, 'test-agent-verify.savestate');
+    const state = createTestState(agentId);
+
+    await exportContainer(state, { agentId, passphrase: TEST_PASSPHRASE, outputPath });
+
+    const result = verifyContainer(outputPath, TEST_PASSPHRASE);
+    expect(result.status).toBe('valid');
+    expect(result.errors.length).toBe(0);
+    expect(result.metadata?.agent_name).toBe(agentId);
+  });
+
+  it('should report wrong_password when checksum passes but passphrase is incorrect', async () => {
+    const agentId = 'test-agent-verify-wrong-pass';
+    const outputPath = join(TEST_DIR, 'test-agent-verify-wrong-pass.savestate');
+    const state = createTestState(agentId);
+
+    await exportContainer(state, { agentId, passphrase: TEST_PASSPHRASE, outputPath });
+
+    const result = verifyContainer(outputPath, 'wrong-password');
+    expect(result.status).toBe('wrong_password');
+  });
+
+  it('should report corrupted when checksum verification fails', async () => {
+    const agentId = 'test-agent-verify-tamper';
+    const outputPath = join(TEST_DIR, 'test-agent-verify-tamper.savestate');
+    const state = createTestState(agentId);
+
+    await exportContainer(state, { agentId, passphrase: TEST_PASSPHRASE, outputPath });
+
+    const raw = readFileSync(outputPath, 'utf8');
+    const json = JSON.parse(raw) as any;
+    // Tamper with ciphertext so checksum fails
+    json.encrypted_payload.ciphertext = json.encrypted_payload.ciphertext.slice(0, -2) + 'aa';
+    writeFileSync(outputPath, JSON.stringify(json, null, 2));
+
+    const result = verifyContainer(outputPath, TEST_PASSPHRASE);
+    expect(result.status).toBe('corrupted');
+    expect(result.errors.join('\n')).toContain('Checksum');
+  });
+
   it('should get info from a valid container', async () => {
     const agentId = 'test-agent-info';
     const outputPath = join(TEST_DIR, 'test-agent-info.savestate');

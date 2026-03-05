@@ -51,6 +51,14 @@ export interface ValidationResult {
   metadata?: ContainerMetadata;
 }
 
+export type VerifyStatus = 'valid' | 'corrupted' | 'wrong_password';
+
+export interface VerifyResult {
+  status: VerifyStatus;
+  errors: string[];
+  metadata?: ContainerMetadata;
+}
+
 /**
  * Export agent state to encrypted .savestate container
  */
@@ -221,6 +229,55 @@ export function validateContainer(filePath: string): ValidationResult {
     errors,
     metadata: errors.length === 0 ? container.metadata : undefined,
   };
+}
+
+/**
+ * Verify a container file's integrity + decryptability + schema validity.
+ *
+ * This is stricter than validateContainer(): it checks checksum, attempts
+ * decryption (to validate GCM auth tag), and validates the decrypted JSON
+ * against the AgentState schema.
+ */
+export function verifyContainer(filePath: string, passphrase: string): VerifyResult {
+  const errors: string[] = [];
+
+  // 1) Structural + checksum validation (no passphrase needed)
+  const validation = validateContainer(filePath);
+  if (!validation.valid) {
+    return { status: 'corrupted', errors: validation.errors, metadata: validation.metadata };
+  }
+
+  // 2) Attempt decryption (verifies encryption/auth tag)
+  let stateJson: string;
+  try {
+    const content = readFileSync(filePath, 'utf8');
+    const container: SavestateContainer = JSON.parse(content);
+    stateJson = decrypt(container.encrypted_payload, passphrase);
+  } catch {
+    return {
+      status: 'wrong_password',
+      errors: ['Decryption failed - incorrect passphrase'],
+      metadata: validation.metadata,
+    };
+  }
+
+  // 3) Validate decrypted payload schema
+  try {
+    const state = JSON.parse(stateJson) as unknown;
+    const stateValidation = validateAgentState(state);
+
+    if (!stateValidation.valid) {
+      errors.push(`Invalid state schema: ${stateValidation.errors?.join(', ')}`);
+    }
+  } catch {
+    errors.push('Invalid state data after decryption');
+  }
+
+  if (errors.length > 0) {
+    return { status: 'corrupted', errors, metadata: validation.metadata };
+  }
+
+  return { status: 'valid', errors: [], metadata: validation.metadata };
 }
 
 /**

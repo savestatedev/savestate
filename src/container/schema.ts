@@ -18,7 +18,7 @@ export const AgentIdentitySchema = z.object({
   instructions: z.string().optional(),
   goals: z.array(z.string()).optional(),
   constraints: z.array(z.string()).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type AgentIdentity = z.infer<typeof AgentIdentitySchema>;
@@ -34,7 +34,7 @@ export const MemoryEntrySchema = z.object({
   importance: z.number().min(0).max(1).optional(),
   created_at: z.string(),
   updated_at: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type MemoryEntry = z.infer<typeof MemoryEntrySchema>;
@@ -46,7 +46,7 @@ export const ConversationMessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system', 'tool']),
   content: z.string(),
   timestamp: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type ConversationMessage = z.infer<typeof ConversationMessageSchema>;
@@ -57,7 +57,7 @@ export type ConversationMessage = z.infer<typeof ConversationMessageSchema>;
 export const ToolConfigSchema = z.object({
   name: z.string(),
   enabled: z.boolean().optional(),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type ToolConfig = z.infer<typeof ToolConfigSchema>;
@@ -69,10 +69,10 @@ export const AgentStateSchema = z.object({
   schema_version: z.string(),
   identity: AgentIdentitySchema,
   memories: z.array(MemoryEntrySchema).optional(),
-  preferences: z.record(z.unknown()).optional(),
+  preferences: z.record(z.string(), z.unknown()).optional(),
   history: z.array(ConversationMessageSchema).optional(),
   tools: z.array(ToolConfigSchema).optional(),
-  custom: z.record(z.unknown()).optional(),
+  custom: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type AgentState = z.infer<typeof AgentStateSchema>;
@@ -87,7 +87,7 @@ export function validateAgentState(state: unknown): { valid: boolean; errors?: s
     return { valid: true };
   }
   
-  const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+  const errors = result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`);
   return { valid: false, errors };
 }
 
