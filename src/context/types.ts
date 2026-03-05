@@ -223,6 +223,74 @@ export const DEFAULT_SCORING_WEIGHTS: ScoringWeights = {
 };
 
 /**
+ * Context pressure thresholds - trigger safeguards at these utilization levels
+ * Issue #169: Quiet Forgetting and Constraint Drift
+ */
+export interface ContextPressureThresholds {
+  /** Warning threshold (default: 60%) */
+  warning: number;
+  /** Critical threshold (default: 75%) */
+  critical: number;
+  /** Emergency threshold (default: 90%) */
+  emergency: number;
+}
+
+export const DEFAULT_PRESSURE_THRESHOLDS: ContextPressureThresholds = {
+  warning: 0.60,
+  critical: 0.75,
+  emergency: 0.90,
+};
+
+/**
+ * Context pressure level
+ */
+export type ContextPressureLevel = 'normal' | 'warning' | 'critical' | 'emergency';
+
+/**
+ * Context pressure state
+ */
+export interface ContextPressureState {
+  level: ContextPressureLevel;
+  utilizedTokens: number;
+  totalBudget: number;
+  utilizationPercent: number;
+  triggeredThresholds: ContextPressureLevel[];
+  recommendedActions: string[];
+}
+
+/**
+ * Constraint pinning configuration
+ * Issue #169: Prevent constraint drift
+ */
+export interface ConstraintPinningConfig {
+  /** Always pin policy constraints */
+  pinPolicyConstraints: boolean;
+  /** Always pin system constraints */
+  pinSystemConstraints: boolean;
+  /** Always pin high-criticality constraints (0.8+) */
+  pinHighCriticality: boolean;
+  /** Maximum pinned constraints to include regardless of budget */
+  maxPinnedConstraints: number;
+}
+
+export const DEFAULT_CONSTRAINT_PINNING: ConstraintPinningConfig = {
+  pinPolicyConstraints: true,
+  pinSystemConstraints: true,
+  pinHighCriticality: true,
+  maxPinnedConstraints: 10,
+};
+
+/**
+ * Memory refresh recommendation
+ */
+export interface MemoryRefreshRecommendation {
+  shouldRefresh: boolean;
+  reason: string;
+  suggestedActions: string[];
+  priority: 'low' | 'medium' | 'high';
+}
+
+/**
  * Budget allocation configuration
  */
 export interface BudgetAllocation {
