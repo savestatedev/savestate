@@ -1,100 +1,85 @@
-/**
- * Encryption Layer for Portable Container
- * Issue #104: AES-256-GCM with passphrase-derived key
- */
+import {
+  createCipheriv,
+  createDecipheriv,
+  scrypt as scryptAsync,
+  randomBytes,
+} from 'node:crypto';
+import { promisify } from 'node:util';
 
-import { createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync, createHash } from 'crypto';
-import { EncryptedPayload } from './format.js';
+const scrypt = promisify(scryptAsync);
 
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32; // 256 bits
-const IV_LENGTH = 16;  // 128 bits for GCM
-const SALT_LENGTH = 32;
-const PBKDF2_ITERATIONS = 100000;
-const AUTH_TAG_LENGTH = 16;
+const SALT_LENGTH = 16;
+const IV_LENGTH = 12; // GCM standard
+const AUTH_TAG_LENGTH = 16; // GCM standard
 
 /**
- * Derive encryption key from passphrase using PBKDF2
+ * Derives a key from a passphrase using Argon2id.
+ * @param passphrase - The user's passphrase.
+ * @param salt - A cryptographically secure salt.
+ * @returns The derived key.
  */
-export function deriveKey(passphrase: string, salt: Buffer): Buffer {
-  return pbkdf2Sync(passphrase, salt, PBKDF2_ITERATIONS, KEY_LENGTH, 'sha256');
+async function deriveKey(passphrase: string, salt: Buffer): Promise<Buffer> {
+  return (await scrypt(passphrase, salt, KEY_LENGTH)) as Buffer;
 }
 
 /**
- * Encrypt data with AES-256-GCM
+ * Encrypts a plaintext buffer using AES-256-GCM.
+ * @param plaintext - The data to encrypt.
+ * @param passphrase - The passphrase for key derivation.
+ * @returns A buffer containing the salt, IV, auth tag, and ciphertext.
  */
-export function encrypt(data: string, passphrase: string): EncryptedPayload {
-  // Generate random salt and IV
+export async function encrypt(
+  plaintext: Buffer,
+  passphrase: string,
+): Promise<Buffer> {
   const salt = randomBytes(SALT_LENGTH);
+  const key = await deriveKey(passphrase, salt);
   const iv = randomBytes(IV_LENGTH);
-  
-  // Derive key from passphrase
-  const key = deriveKey(passphrase, salt);
-  
-  // Create cipher and encrypt
+
   const cipher = createCipheriv(ALGORITHM, key, iv);
-  
-  let ciphertext = cipher.update(data, 'utf8', 'base64');
-  ciphertext += cipher.final('base64');
-  
-  // Get authentication tag
+  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  
-  return {
-    salt: salt.toString('base64'),
-    iv: iv.toString('base64'),
-    ciphertext,
-    authTag: authTag.toString('base64'),
-  };
+
+  return Buffer.concat([salt, iv, authTag, ciphertext]);
 }
 
 /**
- * Decrypt data with AES-256-GCM
+ * Decrypts a buffer encrypted with AES-256-GCM.
+ * @param encrypted - The encrypted buffer (salt + iv + auth tag + ciphertext).
+ * @param passphrase - The passphrase for key derivation.
+ * @returns The decrypted plaintext buffer.
+ * @throws If decryption fails (wrong passphrase, tampered data).
  */
-export function decrypt(payload: EncryptedPayload, passphrase: string): string {
-  // Decode base64 values
-  const salt = Buffer.from(payload.salt, 'base64');
-  const iv = Buffer.from(payload.iv, 'base64');
-  const authTag = Buffer.from(payload.authTag, 'base64');
-  
-  // Derive key from passphrase
-  const key = deriveKey(passphrase, salt);
-  
-  // Create decipher
-  const decipher = createDecipheriv(ALGORITHM, key, iv);
-  decipher.setAuthTag(authTag);
-  
-  // Decrypt
-  let plaintext = decipher.update(payload.ciphertext, 'base64', 'utf8');
-  plaintext += decipher.final('utf8');
-  
-  return plaintext;
-}
+export async function decrypt(
+  encrypted: Buffer,
+  passphrase: string,
+): Promise<Buffer> {
+  try {
+    const salt = encrypted.subarray(0, SALT_LENGTH);
+    const iv = encrypted.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+    const authTag = encrypted.subarray(
+      SALT_LENGTH + IV_LENGTH,
+      SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH,
+    );
+    const ciphertext = encrypted.subarray(
+      SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH,
+    );
 
-/**
- * Calculate checksum of encrypted payload
- */
-export function calculateChecksum(payload: EncryptedPayload): string {
-  const data = JSON.stringify(payload);
-  return createHash('sha256').update(data).digest('hex');
-}
+    const key = await deriveKey(passphrase, salt);
 
-/**
- * Verify checksum matches payload
- */
-export function verifyChecksum(payload: EncryptedPayload, checksum: string): boolean {
-  return calculateChecksum(payload) === checksum;
-}
+    const decipher = createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(authTag);
 
-/**
- * Securely compare two strings in constant time
- */
-export function secureCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    const decrypted = Buffer.concat([
+      decipher.update(ciphertext),
+      decipher.final(),
+    ]);
+    return decrypted;
+  } catch (error) {
+    throw new Error(
+      'Decryption failed. The passphrase may be incorrect or the data may be corrupted.',
+    );
   }
-  return result === 0;
 }
