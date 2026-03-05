@@ -102,29 +102,11 @@ Each payload must have:
 
 **Upgrade strategy:** Future versions may add new payload types. Readers should gracefully handle unknown payload names.
 
-## Integrity Verification and Encryption
+## Integrity Verification
 
-State containers are encrypted by default to ensure privacy and integrity.
-
-### Encryption Scheme
-- **Algorithm:** AES-256-GCM
-- **Key Derivation:** Argon2id
-
-AES-256-GCM is an authenticated encryption with associated data (AEAD) cipher, which means it provides both confidentiality and authenticity. Any modification to the ciphertext will cause decryption to fail, protecting against tampering.
-
-### Key Derivation Function (KDF)
-A 256-bit encryption key is derived from the user-provided passphrase using `Argon2id` with parameters chosen by the underlying `node:crypto` library for a balance of security and performance. A unique, random 16-byte salt is generated for each encryption and stored within the encrypted payload.
-
-### Encrypted Layout
-The encrypted payload contains the salt, IV, authentication tag, and the ciphertext. The manifest itself remains in plaintext to allow for reading metadata without decryption.
-
-**Decryption Process:**
-1. Read the manifest and `formatVersion`.
-2. Extract the combined encrypted blob.
-3. Slice the salt, IV, and auth tag from the beginning of the blob.
-4. Derive the key using the passphrase and salt.
-5. Attempt to decrypt the ciphertext. If it fails, the passphrase was wrong or the data was tampered with.
-6. After decryption, verify the `sha256` of the resulting plaintext against the hash in the manifest.
+1. Read manifest, verify `formatVersion` is supported
+2. For each payload, verify `sha256` matches content
+3. If encrypted, verify decryption succeeded (authentication tag)
 
 ## Example
 

@@ -1,142 +1,150 @@
-/**
- * CLI Commands for Portable Container
- * Issue #104: export, import, validate, info commands
- */
-
 import { Command } from 'commander';
-import { 
-  exportContainer, 
-  importContainer, 
-  validateContainer,
-  getContainerInfo,
-  ExportOptions 
-} from '../container/operations.js';
-import { createEmptyAgentState, AgentState } from '../container/schema.js';
-import { CONTAINER_FILE_EXTENSION } from '../container/format.js';
+import { promises as fs } from 'fs';
+import { encrypt, decrypt } from '../container/crypto.js';
+import { createHash } from 'node:crypto';
 
-export function registerContainerCommands(program: Command): void {
+// Placeholder for actual agent state loading
+async function getAgentState(agentId: string): Promise<string> {
+  console.log(`(Placeholder) Loading state for agent: ${agentId}`);
+  const state = {
+    agentId,
+    personality: 'A helpful assistant.',
+    memory: {
+      lastInteraction: new Date().toISOString(),
+    },
+    version: 1,
+  };
+  return JSON.stringify(state, null, 2);
+}
+
+// Placeholder for actual agent state restoration
+async function restoreAgentState(agentId: string, state: string): Promise<void> {
+  console.log(`(Placeholder) Restoring state for agent: ${agentId}`);
+  const parsedState = JSON.parse(state);
+  console.log('Restored state version:', parsedState.version);
+  // In a real implementation, this would save the state to disk/db
+}
+
+async function exportState(options: {
+  agent: string;
+  out: string;
+  passphrase?: string;
+}) {
+  try {
+    const { agent, out, passphrase } = options;
+    if (!passphrase) {
+      console.error(
+        'Error: A passphrase is required for encryption. Please provide one with --passphrase.',
+      );
+      process.exit(1);
+    }
+
+    const agentState = await getAgentState(agent);
+    const plaintext = Buffer.from(agentState);
+
+    const manifest = {
+      formatVersion: 1,
+      created: new Date().toISOString(),
+      agentId: agent,
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: createHash('sha256').update(plaintext).digest('hex'),
+        },
+      ],
+    };
+
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const encryptedState = await encrypt(plaintext, passphrase);
+
+    const magicHeader = Buffer.from('SAVESTATE\x01\x00\x00\x00\x00\x00\x00\x00');
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+
+    const finalBuffer = Buffer.concat([
+      magicHeader,
+      manifestLength,
+      manifestBuffer,
+      encryptedState,
+    ]);
+
+    await fs.writeFile(out, finalBuffer);
+    console.log(`Successfully exported agent '${agent}' to ${out}`);
+  } catch (error) {
+    console.error('Export failed:', error.message);
+    process.exit(1);
+  }
+}
+
+async function importState(options: { in: string; passphrase?: string }) {
+  try {
+    const { in: inFile, passphrase } = options;
+    if (!passphrase) {
+      console.error(
+        'Error: A passphrase is required for decryption. Please provide one with --passphrase.',
+      );
+      process.exit(1);
+    }
+
+    const fileBuffer = await fs.readFile(inFile);
+
+    // 1. Read header and manifest
+    const magic = fileBuffer.subarray(0, 8).toString();
+    const version = fileBuffer.readUInt8(8);
+    if (magic !== 'SAVESTATE' || version !== 1) {
+      throw new Error('Invalid or unsupported container format.');
+    }
+
+    const manifestLength = fileBuffer.readUInt32LE(16);
+    const manifestEnd = 20 + manifestLength;
+    const manifestBuffer = fileBuffer.subarray(20, manifestEnd);
+    const manifest = JSON.parse(manifestBuffer.toString());
+
+    // 2. Decrypt and verify
+    const encryptedState = fileBuffer.subarray(manifestEnd);
+    const decryptedState = await decrypt(encryptedState, passphrase);
+    
+    const payload = manifest.payloads.find(p => p.name === 'agent_state');
+    if (!payload) {
+      throw new Error('Agent state payload not found in manifest.');
+    }
+
+    const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
+    if (calculatedHash !== payload.sha256) {
+      throw new Error('Integrity check failed: Hashes do not match. The file may be corrupt.');
+    }
+    
+    // 3. Restore state
+    await restoreAgentState(manifest.agentId, decryptedState.toString());
+
+    console.log(
+      `Successfully imported and restored agent '${manifest.agentId}' from ${inFile}`,
+    );
+  } catch (error) {
+    console.error('Import failed:', error.message);
+    process.exit(1);
+  }
+}
+
+export function registerContainerCommands(program: Command) {
   const container = program
     .command('container')
-    .description('Manage portable state containers');
+    .description('Manage encrypted agent state containers.');
 
-  // Export command
-  program
-    .command('export <agent-id>')
-    .description('Export agent state to encrypted .savestate container')
-    .option('-o, --output <path>', 'Output file path', `agent${CONTAINER_FILE_EXTENSION}`)
-    .option('-p, --passphrase <passphrase>', 'Encryption passphrase (or use SAVESTATE_PASSPHRASE env)')
-    .option('-d, --description <description>', 'Container description')
-    .action(async (agentId: string, options) => {
-      const passphrase = options.passphrase || process.env.SAVESTATE_PASSPHRASE;
-      
-      if (!passphrase) {
-        console.error('Error: Passphrase required. Use --passphrase or set SAVESTATE_PASSPHRASE env var.');
-        process.exit(1);
-      }
-
-      console.log(`Exporting agent "${agentId}" to ${options.output}...`);
-
-      // TODO: Load actual agent state from SaveState storage
-      // For now, create a placeholder state
-      const state: AgentState = createEmptyAgentState(agentId);
-      
-      const exportOpts: ExportOptions = {
-        agentId,
-        passphrase,
-        outputPath: options.output,
-        description: options.description,
-      };
-
-      const result = await exportContainer(state, exportOpts);
-
-      if (result.success) {
-        console.log(`✅ Successfully exported to ${result.path}`);
-      } else {
-        console.error(`❌ Export failed: ${result.error}`);
-        process.exit(1);
-      }
-    });
-
-  // Import command
-  program
-    .command('import <path>')
-    .description('Import agent state from encrypted .savestate container')
-    .option('-p, --passphrase <passphrase>', 'Decryption passphrase (or use SAVESTATE_PASSPHRASE env)')
-    .option('-a, --agent-id <id>', 'Target agent ID (defaults to original agent name)')
-    .action(async (filePath: string, options) => {
-      const passphrase = options.passphrase || process.env.SAVESTATE_PASSPHRASE;
-      
-      if (!passphrase) {
-        console.error('Error: Passphrase required. Use --passphrase or set SAVESTATE_PASSPHRASE env var.');
-        process.exit(1);
-      }
-
-      console.log(`Importing from ${filePath}...`);
-
-      const result = await importContainer({
-        filePath,
-        passphrase,
-        targetAgentId: options.agentId,
-      });
-
-      if (result.success) {
-        console.log(`✅ Successfully imported agent "${result.agentId}"`);
-        console.log(`   Memories: ${result.state?.memories?.length || 0}`);
-        console.log(`   Preferences: ${Object.keys(result.state?.preferences || {}).length}`);
-        console.log(`   History: ${result.state?.history?.length || 0} messages`);
-      } else {
-        console.error(`❌ Import failed: ${result.error}`);
-        process.exit(1);
-      }
-    });
-
-  // Validate command
   container
-    .command('validate <path>')
-    .description('Validate a .savestate container without decrypting')
-    .action((filePath: string) => {
-      console.log(`Validating ${filePath}...`);
+    .command('export')
+    .description('Export agent state to an encrypted file.')
+    .requiredOption('-a, --agent <id>', 'ID of the agent to export')
+    .requiredOption('-o, --out <file>', 'Output file path (.savestate)')
+    .option('-p, --passphrase <pass>', 'Passphrase for encryption')
+    .action(exportState);
 
-      const result = validateContainer(filePath);
-
-      if (result.valid) {
-        console.log('✅ Container is valid');
-        if (result.metadata) {
-          console.log(`   Agent: ${result.metadata.agent_name}`);
-          console.log(`   Schema: ${result.metadata.schema_version}`);
-          console.log(`   Created: ${result.metadata.created_at}`);
-        }
-      } else {
-        console.error('❌ Container validation failed:');
-        result.errors.forEach(err => console.error(`   - ${err}`));
-        process.exit(1);
-      }
-    });
-
-  // Info command
   container
-    .command('info <path>')
-    .description('Show container metadata without decrypting')
-    .option('--json', 'Output as JSON')
-    .action((filePath: string, options) => {
-      const metadata = getContainerInfo(filePath);
-
-      if (!metadata) {
-        console.error('❌ Could not read container metadata');
-        process.exit(1);
-      }
-
-      if (options.json) {
-        console.log(JSON.stringify(metadata, null, 2));
-      } else {
-        console.log('📦 Container Info:');
-        console.log(`   Agent Name:    ${metadata.agent_name}`);
-        console.log(`   Schema Version: ${metadata.schema_version}`);
-        console.log(`   Created By:    ${metadata.created_by}`);
-        console.log(`   Created At:    ${metadata.created_at}`);
-        if (metadata.description) {
-          console.log(`   Description:   ${metadata.description}`);
-        }
-      }
-    });
+    .command('import')
+    .description('Import agent state from an encrypted file.')
+    .requiredOption('-i, --in <file>', 'Input file path (.savestate)')
+    .option('-p, --passphrase <pass>', 'Passphrase for decryption')
+    .action(importState);
 }

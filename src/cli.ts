@@ -28,6 +28,7 @@ import {
   adaptersCommand,
   antibodiesCommand,
   evalCommand,
+  registerContainerCommands,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 import { registerTraceCommands } from './commands/trace.js';
@@ -211,6 +212,7 @@ program
 // ─── savestate trace ─────────────────────────────────────────
 
 registerTraceCommands(program);
+registerContainerCommands(program);
 
 // ─── savestate memory ────────────────────────────────────────
 
