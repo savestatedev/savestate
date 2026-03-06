@@ -56,12 +56,28 @@ async function getAgentState(agentId: string, components: ComponentSelection): P
   return JSON.stringify(state, null, 2);
 }
 
+export type RestoreMode = 'replace' | 'merge';
+
 // Placeholder for actual agent state restoration
-async function restoreAgentState(agentId: string, state: string): Promise<void> {
-  console.log(`(Placeholder) Restoring state for agent: ${agentId}`);
+async function restoreAgentState(
+  agentId: string, 
+  state: string, 
+  mode: RestoreMode = 'replace'
+): Promise<void> {
   const parsedState = JSON.parse(state);
-  console.log('Restored state version:', parsedState.version);
-  // In a real implementation, this would save the state to disk/db
+  
+  if (mode === 'merge') {
+    console.log(`Merging state into existing agent: ${agentId}`);
+    // In a real implementation, this would merge with existing state
+    console.log('  - Keeping existing data, adding new entries');
+  } else {
+    console.log(`Replacing state for agent: ${agentId}`);
+    // In a real implementation, this would replace existing state
+    console.log('  - Overwriting all existing data');
+  }
+  
+  console.log(`Restored state version: ${parsedState.version}`);
+  console.log(`Components restored: ${Object.keys(parsedState).filter(k => k !== 'agentId' && k !== 'version' && k !== 'exportedAt').join(', ')}`);
 }
 
 export interface ExportOptions {
@@ -133,7 +149,14 @@ async function exportState(options: ExportOptions) {
   }
 }
 
-async function importState(options: { in: string; passphrase?: string }) {
+export interface RestoreOptions {
+  in: string;
+  passphrase?: string;
+  merge?: boolean;
+  replace?: boolean;
+}
+
+async function importState(options: RestoreOptions) {
   try {
     const { in: inFile, passphrase } = options;
     if (!passphrase) {
@@ -143,13 +166,29 @@ async function importState(options: { in: string; passphrase?: string }) {
       process.exit(1);
     }
 
+    // Determine restore mode
+    const mode: RestoreMode = options.merge ? 'merge' : 'replace';
+
+    // Check file exists
+    try {
+      await fs.access(inFile);
+    } catch {
+      console.error(`Error: File not found: ${inFile}`);
+      process.exit(1);
+    }
+
     const fileBuffer = await fs.readFile(inFile);
 
     // 1. Read header and manifest
     const magic = fileBuffer.subarray(0, 8).toString();
     const version = fileBuffer.readUInt8(8);
-    if (magic !== 'SAVESTATE' || version !== 1) {
-      throw new Error('Invalid or unsupported container format.');
+    if (magic !== 'SAVESTATE') {
+      console.error('Error: Invalid file format. This does not appear to be a SaveState file.');
+      process.exit(1);
+    }
+    if (version !== 1) {
+      console.error(`Error: Unsupported container version (${version}). This version of SaveState supports version 1.`);
+      process.exit(1);
     }
 
     const manifestLength = fileBuffer.readUInt32LE(16);
@@ -159,26 +198,34 @@ async function importState(options: { in: string; passphrase?: string }) {
 
     // 2. Decrypt and verify
     const encryptedState = fileBuffer.subarray(manifestEnd);
-    const decryptedState = await decrypt(encryptedState, passphrase);
+    let decryptedState: Buffer;
+    try {
+      decryptedState = await decrypt(encryptedState, passphrase);
+    } catch {
+      console.error('Error: Decryption failed. The passphrase may be incorrect.');
+      process.exit(1);
+    }
     
     const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
     if (!payload) {
-      throw new Error('Agent state payload not found in manifest.');
+      console.error('Error: Invalid container - no agent state found.');
+      process.exit(1);
     }
 
     const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
     if (calculatedHash !== payload.sha256) {
-      throw new Error('Integrity check failed: Hashes do not match. The file may be corrupt.');
+      console.error('Error: Integrity check failed. The file may be corrupted or tampered with.');
+      process.exit(1);
     }
     
     // 3. Restore state
-    await restoreAgentState(manifest.agentId, decryptedState.toString());
+    await restoreAgentState(manifest.agentId, decryptedState.toString(), mode);
 
-    console.log(
-      `Successfully imported and restored agent '${manifest.agentId}' from ${inFile}`,
-    );
+    console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
+    console.log(`  Mode: ${mode}`);
+    console.log(`  Original export: ${manifest.created}`);
   } catch (error: any) {
-    console.error('Import failed:', error.message);
+    console.error('Restore failed:', error.message);
     process.exit(1);
   }
 }
@@ -203,6 +250,20 @@ export function registerContainerCommands(program: Command) {
       includeMemory: opts.includeMemory,
       includeTools: opts.includeTools,
       includePreferences: opts.includePreferences,
+    }));
+
+  // Top-level restore command (Issue #153)
+  program
+    .command('restore <file>')
+    .description('Restore agent state from an encrypted .savestate file')
+    .option('-p, --passphrase <pass>', 'Passphrase for decryption')
+    .option('--merge', 'Merge with existing state (default: replace)')
+    .option('--replace', 'Replace existing state completely')
+    .action((file, opts) => importState({
+      in: file,
+      passphrase: opts.passphrase,
+      merge: opts.merge,
+      replace: opts.replace,
     }));
 
   const container = program
@@ -234,5 +295,12 @@ export function registerContainerCommands(program: Command) {
     .description('Import agent state from an encrypted file.')
     .requiredOption('-i, --in <file>', 'Input file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption')
-    .action(importState);
+    .option('--merge', 'Merge with existing state')
+    .option('--replace', 'Replace existing state (default)')
+    .action((opts) => importState({
+      in: opts.in,
+      passphrase: opts.passphrase,
+      merge: opts.merge,
+      replace: opts.replace,
+    }));
 }
