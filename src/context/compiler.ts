@@ -22,6 +22,13 @@ import {
   BudgetAllocation,
   DEFAULT_SCORING_WEIGHTS,
   DEFAULT_BUDGET_ALLOCATION,
+  ContextPressureThresholds,
+  DEFAULT_PRESSURE_THRESHOLDS,
+  ContextPressureState,
+  ContextPressureLevel,
+  ConstraintPinningConfig,
+  DEFAULT_CONSTRAINT_PINNING,
+  MemoryRefreshRecommendation,
 } from './types.js';
 import { Candidate, ScoredCandidate, rankCandidates } from './scorer.js';
 
@@ -29,6 +36,10 @@ export interface CompilerConfig {
   weights?: ScoringWeights;
   budget?: BudgetAllocation;
   minConstraintCoverage?: number;
+  /** Context pressure thresholds */
+  pressureThresholds?: ContextPressureThresholds;
+  /** Constraint pinning configuration */
+  constraintPinning?: ConstraintPinningConfig;
 }
 
 export interface CompileResult {
@@ -38,19 +49,31 @@ export interface CompileResult {
 
 /**
  * The Preflight Context Compiler
+ * 
+ * Issue #169: Quiet Forgetting and Constraint Drift
+ * - Context pressure monitoring at 60/75/90% thresholds
+ * - Constraint pinning for policy/system/high-criticality constraints
+ * - Memory refresh recommendations
  */
 export class ContextCompiler {
   private weights: ScoringWeights;
   private budget: BudgetAllocation;
   private minConstraintCoverage: number;
+  private pressureThresholds: ContextPressureThresholds;
+  private constraintPinning: ConstraintPinningConfig;
   
   // Storage for explanation traces
   private traces: Map<string, ExplanationTrace> = new Map();
+  
+  // Track context pressure state for the current compilation
+  private currentPressureState: ContextPressureState | null = null;
 
   constructor(config: CompilerConfig = {}) {
     this.weights = config.weights ?? DEFAULT_SCORING_WEIGHTS;
     this.budget = config.budget ?? DEFAULT_BUDGET_ALLOCATION;
     this.minConstraintCoverage = config.minConstraintCoverage ?? 0.99;
+    this.pressureThresholds = config.pressureThresholds ?? DEFAULT_PRESSURE_THRESHOLDS;
+    this.constraintPinning = config.constraintPinning ?? DEFAULT_CONSTRAINT_PINNING;
   }
 
   /**
@@ -161,6 +184,184 @@ export class ContextCompiler {
     };
   }
 
+  // ============ Issue #169: Context Pressure Monitoring ============
+
+  /**
+   * Check context pressure level based on token utilization
+   */
+  checkContextPressure(utilizedTokens: number, totalBudget: number): ContextPressureState {
+    const utilizationPercent = totalBudget > 0 ? utilizedTokens / totalBudget : 0;
+    const triggeredThresholds: ContextPressureLevel[] = [];
+    const recommendedActions: string[] = [];
+
+    // Determine pressure level
+    let level: ContextPressureLevel = 'normal';
+    
+    if (utilizationPercent >= this.pressureThresholds.emergency) {
+      level = 'emergency';
+      triggeredThresholds.push('emergency');
+      recommendedActions.push(
+        'EMERGENCY: Consider immediate snapshot and context refresh',
+        'Drop all non-essential context immediately',
+        'Pin all critical constraints'
+      );
+    } else if (utilizationPercent >= this.pressureThresholds.critical) {
+      level = 'critical';
+      triggeredThresholds.push('critical');
+      recommendedActions.push(
+        'CRITICAL: Initiate memory compaction',
+        'Prioritize constraint preservation',
+        'Consider triggering snapshot'
+      );
+    } else if (utilizationPercent >= this.pressureThresholds.warning) {
+      level = 'warning';
+      triggeredThresholds.push('warning');
+      recommendedActions.push(
+        'WARNING: Begin preparing for context pressure',
+        'Identify low-priority memories for eviction',
+        'Ensure critical constraints are pinned'
+      );
+    }
+
+    // Store current pressure state
+    this.currentPressureState = {
+      level,
+      utilizedTokens,
+      totalBudget,
+      utilizationPercent,
+      triggeredThresholds,
+      recommendedActions,
+    };
+
+    return this.currentPressureState;
+  }
+
+  /**
+   * Get the current context pressure state
+   */
+  getCurrentPressureState(): ContextPressureState | null {
+    return this.currentPressureState;
+  }
+
+  /**
+   * Get pressure thresholds configuration
+   */
+  getPressureThresholds(): ContextPressureThresholds {
+    return { ...this.pressureThresholds };
+  }
+
+  // ============ Issue #169: Constraint Pinning ============
+
+  /**
+   * Identify constraints that must be pinned (never dropped)
+   * These are protected regardless of budget pressure
+   */
+  getPinnedConstraints(candidates: ScoredCandidate[]): ScoredCandidate[] {
+    const pinned: ScoredCandidate[] = [];
+    const constraintCandidates = candidates.filter(c => c.type === 'constraint');
+    
+    for (const candidate of constraintCandidates) {
+      if (pinned.length >= this.constraintPinning.maxPinnedConstraints) break;
+      
+      const constraintType = candidate.metadata?.constraint_type as string | undefined;
+      const criticality = candidate.criticality ?? 0;
+      
+      // Pin policy constraints
+      if (this.constraintPinning.pinPolicyConstraints && constraintType === 'policy') {
+        pinned.push(candidate);
+        continue;
+      }
+      
+      // Pin system constraints
+      if (this.constraintPinning.pinSystemConstraints && constraintType === 'system') {
+        pinned.push(candidate);
+        continue;
+      }
+      
+      // Pin high-criticality constraints
+      if (this.constraintPinning.pinHighCriticality && criticality >= 0.8) {
+        pinned.push(candidate);
+        continue;
+      }
+    }
+    
+    return pinned;
+  }
+
+  /**
+   * Get constraint pinning configuration
+   */
+  getConstraintPinningConfig(): ConstraintPinningConfig {
+    return { ...this.constraintPinning };
+  }
+
+  // ============ Issue #169: Memory Refresh Recommendations ============
+
+  /**
+   * Recommend memory refresh actions based on context pressure
+   */
+  getMemoryRefreshRecommendation(
+    utilizedTokens: number,
+    totalBudget: number,
+    memoryCount: number
+  ): MemoryRefreshRecommendation {
+    const pressure = this.checkContextPressure(utilizedTokens, totalBudget);
+    const suggestedActions: string[] = [];
+    let shouldRefresh = false;
+    let priority: 'low' | 'medium' | 'high' = 'low';
+    
+    switch (pressure.level) {
+      case 'emergency':
+        shouldRefresh = true;
+        priority = 'high';
+        suggestedActions.push(
+          'Compact all eligible memories',
+          'Archive completed task memories',
+          'Evict memories below importance threshold 0.3'
+        );
+        break;
+        
+      case 'critical':
+        shouldRefresh = true;
+        priority = 'high';
+        suggestedActions.push(
+          'Begin memory compaction process',
+          'Archive memories older than 7 days with low importance',
+          'Consolidate similar memories'
+        );
+        break;
+        
+      case 'warning':
+        // Only recommend if many memories exist
+        if (memoryCount > 100) {
+          shouldRefresh = true;
+          priority = 'medium';
+          suggestedActions.push(
+            'Prepare for compaction by tagging old memories',
+            'Identify redundant memories for consolidation'
+          );
+        }
+        break;
+        
+      case 'normal':
+      default:
+        shouldRefresh = false;
+        priority = 'low';
+        break;
+    }
+
+    const reason = shouldRefresh
+      ? `Context at ${(pressure.utilizationPercent * 100).toFixed(0)}% (${pressure.level} level)`
+      : 'Context pressure within normal parameters';
+
+    return {
+      shouldRefresh,
+      reason,
+      suggestedActions,
+      priority,
+    };
+  }
+
   /**
    * Extract keywords from task description
    */
@@ -222,6 +423,8 @@ export class ContextCompiler {
 
   /**
    * Build the RunBrief from categorized candidates
+   * 
+   * Issue #169: Now includes constraint pinning to prevent constraint drift
    */
   private buildBrief(
     runId: string,
@@ -230,9 +433,25 @@ export class ContextCompiler {
     allocated: Record<string, number>,
     totalBudget: number
   ): RunBrief {
+    // Issue #169: Get pinned constraints (never drop these)
+    const allCandidates = Object.values(categorized).flat();
+    const pinnedConstraints = this.getPinnedConstraints(allCandidates);
+    const pinnedConstraintIds = new Set(pinnedConstraints.map(c => c.id));
+    
     // Convert candidates to brief sections
     const must_know_facts = this.selectFacts(categorized.fact, allocated.must_know_facts);
-    const constraints = this.selectConstraints(categorized.constraint, allocated.constraints);
+    
+    // Select constraints with pinning protection
+    const regularConstraints = categorized.constraint.filter(c => !pinnedConstraintIds.has(c.id));
+    
+    // Combine pinned + regular constraint candidates (pinned go first)
+    const allConstraintCandidates = [...pinnedConstraints, ...regularConstraints];
+    const constraints = this.selectConstraintsWithPinned(
+      allConstraintCandidates,
+      allocated.constraints,
+      pinnedConstraintIds
+    );
+    
     const open_loops = this.selectOpenLoops(categorized.loop, allocated.open_loops);
     const active_state = this.selectEntities(categorized.entity, allocated.active_state);
     const recent_decisions = this.selectDecisions(categorized.decision, allocated.recent_decisions);
@@ -298,6 +517,61 @@ export class ContextCompiler {
     let tokens = 0;
     
     for (const c of candidates) {
+      const constraintTokens = this.estimateTokens([c.content]);
+      if (tokens + constraintTokens > budget) break;
+      
+      constraints.push({
+        id: c.id,
+        type: (c.metadata?.constraint_type as Constraint['type']) || 'custom',
+        description: c.content,
+        source: (c.metadata?.source as string) || 'system',
+        active: true,
+      });
+      tokens += constraintTokens;
+    }
+    
+    return constraints;
+  }
+
+  /**
+   * Select constraints with pinned protection (Issue #169)
+   * Pinned constraints are always included regardless of budget
+   */
+  private selectConstraintsWithPinned(
+    candidates: ScoredCandidate[],
+    budget: number,
+    pinnedIds: Set<string>
+  ): Constraint[] {
+    const constraints: Constraint[] = [];
+    let tokens = 0;
+    
+    if (!candidates || candidates.length === 0) {
+      return constraints;
+    }
+    
+    // First pass: include all pinned constraints (ignore budget for pinned)
+    const pinnedCandidates = candidates.filter(c => pinnedIds.has(c.id));
+    for (const c of pinnedCandidates) {
+      if (!c.content) continue;
+      
+      constraints.push({
+        id: c.id,
+        type: (c.metadata?.constraint_type as Constraint['type']) || 'custom',
+        description: c.content,
+        source: (c.metadata?.source as string) || 'system',
+        active: true,
+      });
+      // Note: We count pinned tokens but don't limit them
+      tokens += this.estimateTokens([c.content]);
+    }
+    
+    // Second pass: include regular constraints within remaining budget
+    const regularCandidates = candidates.filter(c => !pinnedIds.has(c.id));
+    const remainingBudget = Math.max(0, budget - tokens);
+    
+    for (const c of regularCandidates) {
+      if (!c.content) continue;
+      
       const constraintTokens = this.estimateTokens([c.content]);
       if (tokens + constraintTokens > budget) break;
       
@@ -506,3 +780,6 @@ export class ContextCompiler {
 
 // Export singleton instance
 export const contextCompiler = new ContextCompiler();
+
+// Re-export types for convenience
+export { CompileRequest } from './types.js';
