@@ -27,7 +27,7 @@ async function aclPropose(options: {
     console.log(`State: ${commitment.state}`);
     console.log(`Criticality: ${commitment.criticality}`);
     console.log(`Expires: ${commitment.expiresAt || 'Never'}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error proposing commitment:', error.message);
     process.exit(1);
   }
@@ -42,7 +42,7 @@ async function aclVerify(options: { id: string; verifier: string; approve: boole
     }
     console.log(`Commitment ${options.id} is now: ${commitment.state}`);
     console.log(`Verified by: ${commitment.verifier}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error verifying commitment:', error.message);
     process.exit(1);
   }
@@ -59,7 +59,7 @@ async function aclGate(options: { action: string }) {
       console.log(`Reason: ${result.reason}`);
       process.exit(1);
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error gating action:', error.message);
     process.exit(1);
   }
@@ -80,7 +80,7 @@ async function aclList() {
       console.log(`  Description: ${c.description}`);
       console.log('');
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error listing commitments:', error.message);
     process.exit(1);
   }

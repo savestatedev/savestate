@@ -72,7 +72,7 @@ async function exportState(options: {
 
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Export failed:', error.message);
     process.exit(1);
   }
@@ -106,7 +106,7 @@ async function importState(options: { in: string; passphrase?: string }) {
     const encryptedState = fileBuffer.subarray(manifestEnd);
     const decryptedState = await decrypt(encryptedState, passphrase);
     
-    const payload = manifest.payloads.find(p => p.name === 'agent_state');
+    const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
     if (!payload) {
       throw new Error('Agent state payload not found in manifest.');
     }
@@ -122,7 +122,7 @@ async function importState(options: { in: string; passphrase?: string }) {
     console.log(
       `Successfully imported and restored agent '${manifest.agentId}' from ${inFile}`,
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Import failed:', error.message);
     process.exit(1);
   }
