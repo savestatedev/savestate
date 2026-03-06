@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { promises as fs } from 'fs';
-import { encrypt, decrypt } from '../container/crypto.js';
+import { encrypt, decrypt, KeySource } from '../container/crypto.js';
 import { createHash } from 'node:crypto';
 
 interface ComponentSelection {
@@ -84,6 +84,7 @@ export interface ExportOptions {
   agent: string;
   out: string;
   passphrase?: string;
+  keyfile?: string;
   includePersonality?: boolean;
   includeMemory?: boolean;
   includeTools?: boolean;
@@ -92,13 +93,23 @@ export interface ExportOptions {
 
 async function exportState(options: ExportOptions) {
   try {
-    const { agent, out, passphrase } = options;
-    if (!passphrase) {
+    const { agent, out, passphrase, keyfile } = options;
+    
+    // Validate key source
+    if (!passphrase && !keyfile) {
       console.error(
-        'Error: A passphrase is required for encryption. Please provide one with --passphrase.',
+        'Error: Either --passphrase or --keyfile is required for encryption.',
       );
       process.exit(1);
     }
+    if (passphrase && keyfile) {
+      console.error(
+        'Error: Cannot use both --passphrase and --keyfile. Choose one.',
+      );
+      process.exit(1);
+    }
+
+    const keySource: KeySource = keyfile ? { keyfile } : { passphrase };
 
     // Determine which components to include (default: all)
     const includeAll = !options.includePersonality && !options.includeMemory && 
@@ -128,7 +139,7 @@ async function exportState(options: ExportOptions) {
     };
 
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
-    const encryptedState = await encrypt(plaintext, passphrase);
+    const encryptedState = await encrypt(plaintext, keySource);
 
     const magicHeader = Buffer.from('SAVESTATE\x01\x00\x00\x00\x00\x00\x00\x00');
     const manifestLength = Buffer.alloc(4);
@@ -152,19 +163,30 @@ async function exportState(options: ExportOptions) {
 export interface RestoreOptions {
   in: string;
   passphrase?: string;
+  keyfile?: string;
   merge?: boolean;
   replace?: boolean;
 }
 
 async function importState(options: RestoreOptions) {
   try {
-    const { in: inFile, passphrase } = options;
-    if (!passphrase) {
+    const { in: inFile, passphrase, keyfile } = options;
+    
+    // Validate key source
+    if (!passphrase && !keyfile) {
       console.error(
-        'Error: A passphrase is required for decryption. Please provide one with --passphrase.',
+        'Error: Either --passphrase or --keyfile is required for decryption.',
       );
       process.exit(1);
     }
+    if (passphrase && keyfile) {
+      console.error(
+        'Error: Cannot use both --passphrase and --keyfile. Choose one.',
+      );
+      process.exit(1);
+    }
+
+    const keySource: KeySource = keyfile ? { keyfile } : { passphrase };
 
     // Determine restore mode
     const mode: RestoreMode = options.merge ? 'merge' : 'replace';
@@ -200,9 +222,9 @@ async function importState(options: RestoreOptions) {
     const encryptedState = fileBuffer.subarray(manifestEnd);
     let decryptedState: Buffer;
     try {
-      decryptedState = await decrypt(encryptedState, passphrase);
+      decryptedState = await decrypt(encryptedState, keySource);
     } catch {
-      console.error('Error: Decryption failed. The passphrase may be incorrect.');
+      console.error('Error: Decryption failed. The passphrase or keyfile may be incorrect.');
       process.exit(1);
     }
     
@@ -238,6 +260,7 @@ export function registerContainerCommands(program: Command) {
     .requiredOption('-a, --agent <id>', 'ID of the agent to export')
     .option('-o, --output <file>', 'Output file path', 'agent.savestate')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption')
+    .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -246,6 +269,7 @@ export function registerContainerCommands(program: Command) {
       agent: opts.agent,
       out: opts.output,
       passphrase: opts.passphrase,
+      keyfile: opts.keyfile,
       includePersonality: opts.includePersonality,
       includeMemory: opts.includeMemory,
       includeTools: opts.includeTools,
@@ -257,11 +281,13 @@ export function registerContainerCommands(program: Command) {
     .command('restore <file>')
     .description('Restore agent state from an encrypted .savestate file')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption')
+    .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase)')
     .option('--merge', 'Merge with existing state (default: replace)')
     .option('--replace', 'Replace existing state completely')
     .action((file, opts) => importState({
       in: file,
       passphrase: opts.passphrase,
+      keyfile: opts.keyfile,
       merge: opts.merge,
       replace: opts.replace,
     }));
@@ -276,6 +302,7 @@ export function registerContainerCommands(program: Command) {
     .requiredOption('-a, --agent <id>', 'ID of the agent to export')
     .requiredOption('-o, --out <file>', 'Output file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption')
+    .option('-k, --keyfile <path>', 'Keyfile for encryption')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -284,6 +311,7 @@ export function registerContainerCommands(program: Command) {
       agent: opts.agent,
       out: opts.out,
       passphrase: opts.passphrase,
+      keyfile: opts.keyfile,
       includePersonality: opts.includePersonality,
       includeMemory: opts.includeMemory,
       includeTools: opts.includeTools,
@@ -295,11 +323,13 @@ export function registerContainerCommands(program: Command) {
     .description('Import agent state from an encrypted file.')
     .requiredOption('-i, --in <file>', 'Input file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption')
+    .option('-k, --keyfile <path>', 'Keyfile for decryption')
     .option('--merge', 'Merge with existing state')
     .option('--replace', 'Replace existing state (default)')
     .action((opts) => importState({
       in: opts.in,
       passphrase: opts.passphrase,
+      keyfile: opts.keyfile,
       merge: opts.merge,
       replace: opts.replace,
     }));
