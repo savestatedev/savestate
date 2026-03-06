@@ -443,10 +443,9 @@ export class ContextCompiler {
     
     // Select constraints with pinning protection
     const regularConstraints = categorized.constraint.filter(c => !pinnedConstraintIds.has(c.id));
-    const selectedRegularConstraints = this.selectConstraints(regularConstraints, allocated.constraints);
     
-    // Combine pinned + selected constraints (pinned go first)
-    const allConstraintCandidates = [...pinnedConstraints, ...selectedRegularConstraints];
+    // Combine pinned + regular constraint candidates (pinned go first)
+    const allConstraintCandidates = [...pinnedConstraints, ...regularConstraints];
     const constraints = this.selectConstraintsWithPinned(
       allConstraintCandidates,
       allocated.constraints,
@@ -781,3 +780,6 @@ export class ContextCompiler {
 
 // Export singleton instance
 export const contextCompiler = new ContextCompiler();
+
+// Re-export types for convenience
+export { CompileRequest } from './types.js';

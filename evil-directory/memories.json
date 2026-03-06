@@ -1,0 +1,20 @@
+[
+  {
+    "id": "m1",
+    "content": "User prefers dark mode",
+    "createdAt": "2026-01-01T00:00:00Z",
+    "category": "Preferences"
+  },
+  {
+    "id": "m2",
+    "content": "User works in tech industry",
+    "createdAt": "2026-01-02T00:00:00Z",
+    "category": "Work"
+  },
+  {
+    "id": "m3",
+    "content": "User likes TypeScript",
+    "createdAt": "2026-01-03T00:00:00Z",
+    "category": "Preferences"
+  }
+]
