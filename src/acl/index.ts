@@ -14,6 +14,7 @@ export interface Commitment {
   id: string;
   type: CommitmentType;
   criticality: Criticality;
+  state: CommitmentState;
   description: string;
   proposedAt: string;
   verifiedAt?: string;
@@ -56,6 +57,7 @@ export function proposeCommitment(params: {
     id: randomUUID(),
     type: params.type,
     criticality: params.criticality,
+    state: 'proposed',
     description: params.description,
     proposedAt: new Date().toISOString(),
     proposer: params.proposer,

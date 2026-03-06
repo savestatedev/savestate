@@ -35,7 +35,7 @@ export interface PacketNamespace {
   org_id: string;
   app_id: string;
   agent_id: string;
-  user_id: string;
+  user_id?: string;
 }
 
 /**
