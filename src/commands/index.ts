@@ -12,3 +12,6 @@ export { adaptersCommand } from './adapters.js';
 export { antibodiesCommand } from './antibodies.js';
 export { evalCommand } from './eval.js';
 export { sloCommand, registerSLOCommands } from './slo.js';
+export { identityCommand } from './identity.js';
+export { registerContainerCommands } from './container.js';
+export { registerACLCommands } from './acl.js';

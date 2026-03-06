@@ -6,6 +6,10 @@
  */
 
 import type { SnapshotTrace } from './trace/types.js';
+import type { SnapshotStateEvents as StateEventsType } from './state-events/types.js';
+
+/** Re-export SnapshotStateEvents for external use */
+export type SnapshotStateEvents = StateEventsType;
 
 // ─── Manifest ────────────────────────────────────────────────
 
@@ -272,6 +276,8 @@ export interface Snapshot {
   chain: SnapshotChain;
   restoreHints: RestoreHints;
   trace?: SnapshotTrace;
+  /** Structured state events (Issue #91) */
+  stateEvents?: SnapshotStateEvents;
 }
 
 // ─── Adapter Interface ───────────────────────────────────────
@@ -297,6 +303,12 @@ export interface Adapter {
 
   /** Get platform-specific identity information */
   identify(): Promise<PlatformMeta>;
+
+  /**
+   * Get state events from the last restored snapshot (Issue #91).
+   * Available after restore() is called with a snapshot containing state events.
+   */
+  getStateEvents?(): SnapshotStateEvents | undefined;
 }
 
 // ─── Storage Backend Interface ───────────────────────────────
@@ -326,6 +338,8 @@ export interface StorageBackend {
 export interface SaveStateConfig {
   /** Config format version */
   version: string;
+  /** Encryption configuration */
+  encryption?: EncryptionConfig;
   /** Storage backend configuration */
   storage: StorageConfig;
   /** Default adapter to use */
@@ -340,6 +354,8 @@ export interface SaveStateConfig {
   memory?: MemoryConfig;
   /** MCP server configuration (Issue #107) */
   mcp?: MCPConfig;
+  /** Integrity Grid configuration (Issue #112) */
+  integrity?: IntegrityConfig;
 }
 
 /**
@@ -370,6 +386,15 @@ export interface MemoryConfig {
   confidenceThreshold: number;
   /** TTL policy configuration (Issue #110) */
   ttl?: MemoryTTLConfig;
+}
+
+export interface EncryptionConfig {
+  /** Enable encryption (default: true) */
+  enabled: boolean;
+  /** Encryption algorithm (default: aes-256-gcm) */
+  algorithm?: string;
+  /** Key derivation function (default: scrypt) */
+  keyDerivation?: string;
 }
 
 export interface StorageConfig {
@@ -418,6 +443,64 @@ export interface MCPConfig {
   port: number;
   /** Authentication configuration */
   auth: MCPAuthConfig;
+}
+
+// ─── Integrity Grid Config ────────────────────────────────────
+
+/**
+ * Honeyfact configuration for integrity monitoring.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface HoneyfactConfig {
+  /** Number of honeyfacts to seed per tenant (default: 10) */
+  count: number;
+  /** TTL in days before honeyfact rotation (default: 7) */
+  ttl_days: number;
+}
+
+/**
+ * Tripwire configuration for detecting honeyfact leakage.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface TripwireConfig {
+  /** Fuzzy match threshold (0-1, default: 0.8) */
+  threshold: number;
+  /** Enable fuzzy matching (default: true) */
+  fuzzy_enabled: boolean;
+}
+
+/**
+ * Containment policy for responding to detected incidents.
+ * - observe: Log only, no automatic action
+ * - approve: Require manual approval for containment
+ * - auto: Automatically quarantine based on severity
+ */
+export type ContainmentPolicy = 'observe' | 'approve' | 'auto';
+
+/**
+ * Containment configuration for incident response.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface ContainmentConfig {
+  /** Containment policy (default: approve) */
+  policy: ContainmentPolicy;
+  /** Auto-escalate critical incidents to agent quarantine (default: true) */
+  auto_escalate_critical: boolean;
+}
+
+/**
+ * Integrity Grid configuration for memory poisoning detection.
+ * Issue #112: Memory Integrity Grid
+ */
+export interface IntegrityConfig {
+  /** Whether integrity monitoring is enabled */
+  enabled: boolean;
+  /** Honeyfact configuration */
+  honeyfact: HoneyfactConfig;
+  /** Tripwire configuration */
+  tripwire: TripwireConfig;
+  /** Containment configuration */
+  containment: ContainmentConfig;
 }
 
 // ─── Search ──────────────────────────────────────────────────

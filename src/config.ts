@@ -26,6 +26,9 @@ export const GLOBAL_SAVESTATE_DIR = join(homedir(), '.savestate');
 export function defaultConfig(): SaveStateConfig {
   return {
     version: '0.1.0',
+    encryption: {
+      enabled: true,
+    },
     storage: {
       type: 'local',
       options: {
@@ -49,6 +52,22 @@ export function defaultConfig(): SaveStateConfig {
       port: 3333,
       auth: {
         type: 'none',
+      },
+    },
+    // Issue #112: Integrity Grid defaults
+    integrity: {
+      enabled: false,
+      honeyfact: {
+        count: 10,
+        ttl_days: 7,
+      },
+      tripwire: {
+        threshold: 0.8,
+        fuzzy_enabled: true,
+      },
+      containment: {
+        policy: 'approve',
+        auto_escalate_critical: true,
       },
     },
   };

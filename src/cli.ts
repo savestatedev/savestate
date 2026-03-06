@@ -28,6 +28,8 @@ import {
   adaptersCommand,
   antibodiesCommand,
   evalCommand,
+  registerContainerCommands,
+  registerACLCommands,
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 import { registerTraceCommands } from './commands/trace.js';
@@ -60,6 +62,8 @@ program
   .option('-a, --adapter <adapter>', 'Adapter to use (default: auto-detect)')
   .option('-s, --schedule <interval>', 'Set up auto-snapshot schedule (e.g., 6h, 1d)')
   .option('--full', 'Force a full snapshot (skip incremental)')
+  .option('--tag <entry...>', 'Record structured state entry (type:key=value)')
+  .option('--meta <entry...>', 'Additional metadata for state entries (key=value)')
   .action(snapshotCommand);
 
 // ─── savestate restore ───────────────────────────────────────
@@ -209,6 +213,8 @@ program
 // ─── savestate trace ─────────────────────────────────────────
 
 registerTraceCommands(program);
+registerContainerCommands(program);
+registerACLCommands(program);
 
 // ─── savestate memory ────────────────────────────────────────
 
