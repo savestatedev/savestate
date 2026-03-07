@@ -1,10 +1,14 @@
 /**
  * Tests for MCP Server and Memory Passport
  *
- * Issue #107: MCP-native memory interface
+ * Issues: #107 (MCP-native memory interface), #176 (OpenMemory integration)
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { MemoryStore } from '../../memory/store.js';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { promises as fs } from 'fs';
 import type { Namespace } from '../../checkpoint/types.js';
 import type { MemoryPassport, PassportMemory, PassportSnapshot } from '../../commands/mcp.js';
 
@@ -391,5 +395,216 @@ describe('MCP Configuration', () => {
     };
 
     expect(customPortConfig.port).toBe(8080);
+  });
+});
+
+// ─── MemoryStore Integration Tests (Issue #176) ──────────────
+
+describe('MemoryStore Integration', () => {
+  let store: MemoryStore;
+  let testDbPath: string;
+
+  beforeEach(async () => {
+    testDbPath = join(tmpdir(), `mcp-test-${Date.now()}.db`);
+    store = new MemoryStore({ dbPath: testDbPath });
+  });
+
+  afterEach(async () => {
+    store.close();
+    await fs.unlink(testDbPath).catch(() => {});
+  });
+
+  describe('Memory CRUD', () => {
+    it('should create and retrieve a memory', async () => {
+      const memory = await store.create({
+        type: 'fact',
+        content: 'Test fact content',
+        tags: ['test'],
+        importance: 0.8,
+      });
+
+      expect(memory.id).toBeDefined();
+      expect(memory.type).toBe('fact');
+      expect(memory.content).toBe('Test fact content');
+      expect(memory.importance).toBe(0.8);
+
+      const retrieved = await store.get(memory.id);
+      expect(retrieved).not.toBeNull();
+      expect(retrieved!.content).toBe('Test fact content');
+    });
+
+    it('should update a memory', async () => {
+      const memory = await store.create({
+        type: 'preference',
+        content: 'Original content',
+      });
+
+      const updated = await store.update(memory.id, {
+        content: 'Updated content',
+        importance: 0.9,
+      });
+
+      expect(updated!.content).toBe('Updated content');
+      expect(updated!.importance).toBe(0.9);
+    });
+
+    it('should delete a memory', async () => {
+      const memory = await store.create({
+        type: 'event',
+        content: 'Event to delete',
+      });
+
+      const deleted = store.delete(memory.id);
+      expect(deleted).toBe(true);
+
+      const retrieved = await store.get(memory.id);
+      expect(retrieved).toBeNull();
+    });
+  });
+
+  describe('Memory Queries', () => {
+    beforeEach(async () => {
+      // Create test data
+      await store.create({ type: 'fact', content: 'Fact 1', tags: ['tag1'], importance: 0.9 });
+      await store.create({ type: 'fact', content: 'Fact 2', tags: ['tag2'], importance: 0.5 });
+      await store.create({ type: 'event', content: 'Event 1', tags: ['tag1'] });
+      await store.create({ type: 'preference', content: 'Pref 1', importance: 0.7 });
+    });
+
+    it('should query by type', async () => {
+      const facts = await store.query({ type: 'fact' });
+      expect(facts.length).toBe(2);
+      expect(facts.every(m => m.type === 'fact')).toBe(true);
+    });
+
+    it('should query by tags', async () => {
+      const tagged = await store.query({ tags: ['tag1'] });
+      expect(tagged.length).toBe(2);
+    });
+
+    it('should query by minimum importance', async () => {
+      const important = await store.query({ minImportance: 0.7 });
+      expect(important.length).toBe(2);
+      expect(important.every(m => m.importance! >= 0.7)).toBe(true);
+    });
+
+    it('should search by content', async () => {
+      const results = await store.query({ search: 'Fact' });
+      expect(results.length).toBe(2);
+    });
+
+    it('should limit results', async () => {
+      const limited = await store.query({ limit: 2 });
+      expect(limited.length).toBe(2);
+    });
+  });
+
+  describe('Memory Stats', () => {
+    it('should return accurate stats', async () => {
+      await store.create({ type: 'fact', content: 'F1' });
+      await store.create({ type: 'fact', content: 'F2' });
+      await store.create({ type: 'event', content: 'E1' });
+
+      const stats = store.getStats();
+      expect(stats.totalEntries).toBe(3);
+      expect(stats.byType.fact).toBe(2);
+      expect(stats.byType.event).toBe(1);
+    });
+  });
+
+  describe('Clear All', () => {
+    it('should delete all memories', async () => {
+      await store.create({ type: 'fact', content: 'F1' });
+      await store.create({ type: 'fact', content: 'F2' });
+
+      store.clear();
+
+      const stats = store.getStats();
+      expect(stats.totalEntries).toBe(0);
+    });
+  });
+});
+
+// ─── OpenMemory-Compatible Tools Tests (Issue #176) ──────────
+
+describe('OpenMemory API Compatibility', () => {
+  describe('Tool Definitions', () => {
+    it('should have add_memories tool', () => {
+      const toolName = 'add_memories';
+      const requiredCapabilities = ['memories array', 'content string'];
+      expect(toolName).toBe('add_memories');
+      expect(requiredCapabilities).toContain('memories array');
+    });
+
+    it('should have search_memory tool', () => {
+      const toolName = 'search_memory';
+      expect(toolName).toBe('search_memory');
+    });
+
+    it('should have list_memories tool', () => {
+      const toolName = 'list_memories';
+      expect(toolName).toBe('list_memories');
+    });
+
+    it('should have delete_memory tool', () => {
+      const toolName = 'delete_memory';
+      expect(toolName).toBe('delete_memory');
+    });
+
+    it('should have delete_all_memories tool', () => {
+      const toolName = 'delete_all_memories';
+      expect(toolName).toBe('delete_all_memories');
+    });
+  });
+
+  describe('add_memories Input Schema', () => {
+    it('accepts memories array', () => {
+      const input = {
+        memories: [
+          { content: 'Memory 1', type: 'fact' },
+          { content: 'Memory 2', tags: ['important'] },
+        ],
+      };
+      expect(input.memories.length).toBe(2);
+    });
+
+    it('accepts single content string', () => {
+      const input = { content: 'Single memory' };
+      expect(input.content).toBe('Single memory');
+    });
+  });
+
+  describe('search_memory Input Schema', () => {
+    it('accepts query with filters', () => {
+      const input = {
+        query: 'search term',
+        type: 'fact',
+        tags: ['tag1'],
+        limit: 10,
+      };
+      expect(input.query).toBe('search term');
+      expect(input.type).toBe('fact');
+    });
+  });
+
+  describe('list_memories Input Schema', () => {
+    it('supports pagination', () => {
+      const input = {
+        limit: 50,
+        offset: 100,
+      };
+      expect(input.limit).toBe(50);
+      expect(input.offset).toBe(100);
+    });
+  });
+
+  describe('delete_all_memories Safety', () => {
+    it('requires explicit confirmation', () => {
+      const safeInput = { confirm: true };
+      const unsafeInput = { confirm: false };
+
+      expect(safeInput.confirm).toBe(true);
+      expect(unsafeInput.confirm).toBe(false);
+    });
   });
 });

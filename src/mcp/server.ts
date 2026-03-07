@@ -5,9 +5,9 @@
  * Exposes SaveState functionality as MCP tools for cross-platform interoperability.
  * Compatible with Claude Desktop, Cursor, and other MCP-compatible clients.
  *
- * Issue #107: MCP-native memory interface
+ * Issues: #107, #176
  *
- * Tools:
+ * SaveState Tools:
  * - savestate_snapshot: Create a new snapshot of agent state
  * - savestate_restore: Restore from a specific snapshot
  * - savestate_list: List available snapshots for an agent
@@ -15,6 +15,13 @@
  * - savestate_memory_store: Store a memory entry
  * - savestate_memory_search: Search memories
  * - savestate_memory_delete: Delete a memory
+ *
+ * OpenMemory-Compatible Tools (Issue #176):
+ * - add_memories: Store memory entries (OpenMemory API)
+ * - search_memory: Search memories (OpenMemory API)
+ * - list_memories: List all memories (OpenMemory API)
+ * - delete_memory: Delete a memory (OpenMemory API)
+ * - delete_all_memories: Clear all memories (OpenMemory API)
  *
  * Resources:
  * - savestate://snapshots/{agent_id} - List of snapshots
@@ -50,33 +57,30 @@ import { createSnapshot } from '../snapshot.js';
 import { restoreSnapshot } from '../restore.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
-import { KnowledgeLane } from '../checkpoint/memory.js';
-import { InMemoryCheckpointStorage } from '../checkpoint/storage/index.js';
-import type { Namespace } from '../checkpoint/types.js';
-import type { MemoryEntry } from '../types.js';
+import { MemoryStore } from '../memory/store.js';
+import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 
-// ─── Shared Storage Instance ─────────────────────────────────
+// ─── Shared Memory Store Instance ────────────────────────────
 
-let checkpointStorage: InMemoryCheckpointStorage | null = null;
-let knowledgeLane: KnowledgeLane | null = null;
+let memoryStore: MemoryStore | null = null;
 
-function getCheckpointStorage(): InMemoryCheckpointStorage {
-  if (!checkpointStorage) {
-    checkpointStorage = new InMemoryCheckpointStorage();
+function getMemoryStore(): MemoryStore {
+  if (!memoryStore) {
+    // Initialize with default settings (no encryption by default for MCP)
+    // Users can configure encryption via environment variables
+    const passphrase = process.env.SAVESTATE_MCP_PASSPHRASE;
+    memoryStore = new MemoryStore({
+      keySource: passphrase ? { passphrase } : undefined,
+      encryptionEnabled: !!passphrase,
+    });
   }
-  return checkpointStorage;
-}
-
-function getKnowledgeLane(): KnowledgeLane {
-  if (!knowledgeLane) {
-    knowledgeLane = new KnowledgeLane(getCheckpointStorage());
-  }
-  return knowledgeLane;
+  return memoryStore;
 }
 
 // ─── Tool Definitions ────────────────────────────────────────
 
 const tools: Tool[] = [
+  // ─── SaveState Core Tools ──────────────────────────────────
   {
     name: 'savestate_snapshot',
     description:
@@ -170,33 +174,23 @@ const tools: Tool[] = [
       properties: {},
     },
   },
-  // ─── Memory Tools (Issue #107) ─────────────────────────────
+  // ─── SaveState Memory Tools ────────────────────────────────
   {
     name: 'savestate_memory_store',
     description:
       'Store a new memory entry in the SaveState memory system. ' +
-      'Memories are indexed for semantic search and can be retrieved later.',
+      'Memories are persisted to SQLite and can be retrieved later.',
     inputSchema: {
       type: 'object',
       properties: {
-        namespace: {
-          type: 'object',
-          description: 'Namespace for memory isolation',
-          properties: {
-            org_id: { type: 'string', description: 'Organization ID' },
-            app_id: { type: 'string', description: 'Application ID' },
-            agent_id: { type: 'string', description: 'Agent ID' },
-            user_id: { type: 'string', description: 'User ID (optional)' },
-          },
-          required: ['org_id', 'app_id', 'agent_id'],
-        },
         content: {
           type: 'string',
           description: 'Memory content to store',
         },
-        content_type: {
+        type: {
           type: 'string',
-          description: 'Content type (text, json, code, etc.). Defaults to "text"',
+          enum: ['fact', 'event', 'preference', 'conversation'],
+          description: 'Memory type. Defaults to "fact"',
         },
         tags: {
           type: 'array',
@@ -207,71 +201,182 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Importance score (0-1). Defaults to 0.5',
         },
-        source: {
-          type: 'string',
-          description: 'Source identifier (e.g., "user", "tool", "agent")',
+        metadata: {
+          type: 'object',
+          description: 'Additional metadata to store with the memory',
         },
       },
-      required: ['namespace', 'content'],
+      required: ['content'],
     },
   },
   {
     name: 'savestate_memory_search',
     description:
-      'Search memories using semantic query and filters. ' +
-      'Returns ranked results with relevance scores.',
+      'Search memories using text query and filters. ' +
+      'Returns matching memories with their metadata.',
     inputSchema: {
       type: 'object',
       properties: {
-        namespace: {
-          type: 'object',
-          description: 'Namespace to search within',
-          properties: {
-            org_id: { type: 'string', description: 'Organization ID' },
-            app_id: { type: 'string', description: 'Application ID' },
-            agent_id: { type: 'string', description: 'Agent ID' },
-            user_id: { type: 'string', description: 'User ID (optional)' },
-          },
-          required: ['org_id', 'app_id', 'agent_id'],
-        },
         query: {
           type: 'string',
-          description: 'Semantic search query',
+          description: 'Text search query',
+        },
+        type: {
+          type: 'string',
+          enum: ['fact', 'event', 'preference', 'conversation'],
+          description: 'Filter by memory type',
         },
         tags: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Filter by tags (AND logic)',
+          description: 'Filter by tags',
         },
         limit: {
           type: 'number',
           description: 'Maximum results to return (default: 10)',
         },
-        min_importance: {
+        minImportance: {
           type: 'number',
           description: 'Minimum importance score filter (0-1)',
         },
       },
-      required: ['namespace'],
     },
   },
   {
     name: 'savestate_memory_delete',
-    description:
-      'Delete a memory by ID. Performs a soft delete with audit trail.',
+    description: 'Delete a memory by ID.',
     inputSchema: {
       type: 'object',
       properties: {
-        memory_id: {
+        id: {
           type: 'string',
           description: 'ID of the memory to delete',
         },
-        reason: {
+      },
+      required: ['id'],
+    },
+  },
+  // ─── OpenMemory-Compatible Tools (Issue #176) ──────────────
+  {
+    name: 'add_memories',
+    description:
+      'Store new memory entries. Compatible with OpenMemory MCP API. ' +
+      'Use this to persist facts, preferences, events, or conversation context.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        memories: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              content: { type: 'string', description: 'Memory content' },
+              type: {
+                type: 'string',
+                enum: ['fact', 'event', 'preference', 'conversation'],
+                description: 'Memory type',
+              },
+              tags: { type: 'array', items: { type: 'string' } },
+              importance: { type: 'number' },
+              metadata: { type: 'object' },
+            },
+            required: ['content'],
+          },
+          description: 'Array of memories to store',
+        },
+        content: {
           type: 'string',
-          description: 'Reason for deletion (for audit trail)',
+          description: 'Single memory content (alternative to memories array)',
         },
       },
-      required: ['memory_id', 'reason'],
+    },
+  },
+  {
+    name: 'search_memory',
+    description:
+      'Search stored memories. Compatible with OpenMemory MCP API. ' +
+      'Returns relevant memories based on query and filters.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query text',
+        },
+        type: {
+          type: 'string',
+          enum: ['fact', 'event', 'preference', 'conversation'],
+          description: 'Filter by memory type',
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Filter by tags',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum results (default: 10)',
+        },
+      },
+    },
+  },
+  {
+    name: 'list_memories',
+    description:
+      'List all stored memories. Compatible with OpenMemory MCP API. ' +
+      'Returns memories with optional filtering.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['fact', 'event', 'preference', 'conversation'],
+          description: 'Filter by memory type',
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Filter by tags',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum results (default: 50)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset',
+        },
+      },
+    },
+  },
+  {
+    name: 'delete_memory',
+    description: 'Delete a specific memory by ID. Compatible with OpenMemory MCP API.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          description: 'Memory ID to delete',
+        },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'delete_all_memories',
+    description:
+      'Delete all stored memories. Compatible with OpenMemory MCP API. ' +
+      'USE WITH CAUTION: This action is irreversible.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        confirm: {
+          type: 'boolean',
+          description: 'Must be true to confirm deletion',
+        },
+      },
+      required: ['confirm'],
     },
   },
 ];
@@ -288,7 +393,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries in the default namespace',
+    description: 'Memory entries',
     mimeType: 'application/json',
   },
 ];
@@ -315,33 +420,47 @@ const ListInputSchema = z.object({
   platform: z.string().optional(),
 });
 
-const NamespaceSchema = z.object({
-  org_id: z.string(),
-  app_id: z.string(),
-  agent_id: z.string(),
-  user_id: z.string().optional(),
-});
-
 const MemoryStoreInputSchema = z.object({
-  namespace: NamespaceSchema,
   content: z.string(),
-  content_type: z.string().optional(),
+  type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
   tags: z.array(z.string()).optional(),
   importance: z.number().min(0).max(1).optional(),
-  source: z.string().optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 const MemorySearchInputSchema = z.object({
-  namespace: NamespaceSchema,
   query: z.string().optional(),
+  type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
   tags: z.array(z.string()).optional(),
   limit: z.number().optional(),
-  min_importance: z.number().optional(),
+  minImportance: z.number().optional(),
 });
 
 const MemoryDeleteInputSchema = z.object({
-  memory_id: z.string(),
-  reason: z.string(),
+  id: z.string(),
+});
+
+// OpenMemory-compatible schemas
+const AddMemoriesInputSchema = z.object({
+  memories: z.array(z.object({
+    content: z.string(),
+    type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
+    tags: z.array(z.string()).optional(),
+    importance: z.number().min(0).max(1).optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
+  })).optional(),
+  content: z.string().optional(),
+});
+
+const ListMemoriesInputSchema = z.object({
+  type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
+  tags: z.array(z.string()).optional(),
+  limit: z.number().optional(),
+  offset: z.number().optional(),
+});
+
+const DeleteAllMemoriesInputSchema = z.object({
+  confirm: z.boolean(),
 });
 
 // ─── Tool Handlers ───────────────────────────────────────────
@@ -542,6 +661,17 @@ async function handleStatus(): Promise<string> {
     lines.push(`Adapter version: ${adapter.version}`);
   }
 
+  // Memory store status
+  const store = getMemoryStore();
+  const stats = store.getStats();
+  lines.push('');
+  lines.push('Memory Store:');
+  lines.push(`  Total entries: ${stats.totalEntries}`);
+  lines.push(`  Facts: ${stats.byType.fact}`);
+  lines.push(`  Events: ${stats.byType.event}`);
+  lines.push(`  Preferences: ${stats.byType.preference}`);
+  lines.push(`  Conversations: ${stats.byType.conversation}`);
+
   // MCP config status
   if (config.mcp) {
     lines.push('');
@@ -554,34 +684,30 @@ async function handleStatus(): Promise<string> {
   return lines.join('\n');
 }
 
-// ─── Memory Tool Handlers (Issue #107) ───────────────────────
+// ─── Memory Tool Handlers ────────────────────────────────────
 
 async function handleMemoryStore(
   input: z.infer<typeof MemoryStoreInputSchema>,
 ): Promise<string> {
   try {
-    const lane = getKnowledgeLane();
+    const store = getMemoryStore();
 
-    const memory = await lane.storeMemory({
-      namespace: input.namespace as Namespace,
+    const memory = await store.create({
+      type: input.type ?? 'fact',
       content: input.content,
-      content_type: input.content_type ?? 'text',
-      source: {
-        type: (input.source as 'user_input' | 'tool_output' | 'agent_inference' | 'external' | 'system') ?? 'external',
-        identifier: input.source ?? 'mcp',
-      },
       tags: input.tags,
       importance: input.importance,
+      metadata: input.metadata,
     });
 
     const lines = [
       'Memory stored successfully!',
       '',
-      `ID: ${memory.memory_id}`,
-      `Content type: ${memory.content_type}`,
-      `Tags: ${memory.tags.length > 0 ? memory.tags.join(', ') : 'none'}`,
+      `ID: ${memory.id}`,
+      `Type: ${memory.type}`,
+      `Tags: ${memory.tags?.join(', ') ?? 'none'}`,
       `Importance: ${memory.importance}`,
-      `Created: ${memory.created_at}`,
+      `Created: ${memory.createdAt}`,
     ];
 
     return lines.join('\n');
@@ -594,16 +720,17 @@ async function handleMemorySearch(
   input: z.infer<typeof MemorySearchInputSchema>,
 ): Promise<string> {
   try {
-    const lane = getKnowledgeLane();
+    const store = getMemoryStore();
 
-    const results = await lane.searchMemories({
-      namespace: input.namespace as Namespace,
-      query: input.query,
+    const query: MemoryQuery = {
+      type: input.type,
       tags: input.tags,
+      search: input.query,
       limit: input.limit ?? 10,
-      min_importance: input.min_importance,
-      include_content: true,
-    });
+      minImportance: input.minImportance,
+    };
+
+    const results = await store.query(query);
 
     if (results.length === 0) {
       return 'No memories found matching your query.';
@@ -611,16 +738,15 @@ async function handleMemorySearch(
 
     const lines = [`Found ${results.length} memory(ies):`, ''];
 
-    for (const result of results) {
-      lines.push(`- ${result.memory_id}`);
-      lines.push(`  Score: ${result.score.toFixed(3)}`);
-      lines.push(`  Tags: ${result.tags.length > 0 ? result.tags.join(', ') : 'none'}`);
-      if (result.content) {
-        const preview = result.content.length > 100
-          ? result.content.slice(0, 100) + '...'
-          : result.content;
-        lines.push(`  Content: ${preview}`);
-      }
+    for (const memory of results) {
+      lines.push(`- ${memory.id}`);
+      lines.push(`  Type: ${memory.type}`);
+      lines.push(`  Tags: ${memory.tags?.join(', ') ?? 'none'}`);
+      lines.push(`  Importance: ${memory.importance}`);
+      const preview = memory.content.length > 100
+        ? memory.content.slice(0, 100) + '...'
+        : memory.content;
+      lines.push(`  Content: ${preview}`);
       lines.push('');
     }
 
@@ -634,18 +760,152 @@ async function handleMemoryDelete(
   input: z.infer<typeof MemoryDeleteInputSchema>,
 ): Promise<string> {
   try {
-    const lane = getKnowledgeLane();
+    const store = getMemoryStore();
+    const deleted = store.delete(input.id);
 
-    await lane.deleteMemory(input.memory_id, 'mcp-client', input.reason);
+    if (!deleted) {
+      return `Memory not found: ${input.id}`;
+    }
 
     return [
       'Memory deleted successfully!',
       '',
-      `ID: ${input.memory_id}`,
-      `Reason: ${input.reason}`,
+      `ID: ${input.id}`,
     ].join('\n');
   } catch (err) {
     return `Error deleting memory: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+// ─── OpenMemory-Compatible Handlers (Issue #176) ─────────────
+
+async function handleAddMemories(
+  input: z.infer<typeof AddMemoriesInputSchema>,
+): Promise<string> {
+  try {
+    const store = getMemoryStore();
+    const created: MemoryEntry[] = [];
+
+    // Handle array of memories
+    if (input.memories && input.memories.length > 0) {
+      for (const mem of input.memories) {
+        const entry = await store.create({
+          type: mem.type ?? 'fact',
+          content: mem.content,
+          tags: mem.tags,
+          importance: mem.importance,
+          metadata: mem.metadata,
+        });
+        created.push(entry);
+      }
+    }
+
+    // Handle single content string
+    if (input.content) {
+      const entry = await store.create({
+        type: 'fact',
+        content: input.content,
+      });
+      created.push(entry);
+    }
+
+    if (created.length === 0) {
+      return 'No memories provided. Use "memories" array or "content" string.';
+    }
+
+    const lines = [
+      `Added ${created.length} memory(ies) successfully!`,
+      '',
+    ];
+
+    for (const memory of created) {
+      lines.push(`- ${memory.id} (${memory.type})`);
+    }
+
+    return lines.join('\n');
+  } catch (err) {
+    return `Error adding memories: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+async function handleSearchMemory(
+  input: z.infer<typeof MemorySearchInputSchema>,
+): Promise<string> {
+  // Reuse the SaveState handler
+  return handleMemorySearch(input);
+}
+
+async function handleListMemories(
+  input: z.infer<typeof ListMemoriesInputSchema>,
+): Promise<string> {
+  try {
+    const store = getMemoryStore();
+
+    const query: MemoryQuery = {
+      type: input.type,
+      tags: input.tags,
+      limit: input.limit ?? 50,
+      offset: input.offset,
+    };
+
+    const results = await store.query(query);
+    const stats = store.getStats();
+
+    if (results.length === 0) {
+      return `No memories found. Total stored: ${stats.totalEntries}`;
+    }
+
+    const lines = [
+      `Memories (${results.length} of ${stats.totalEntries} total):`,
+      '',
+    ];
+
+    for (const memory of results) {
+      const preview = memory.content.length > 80
+        ? memory.content.slice(0, 80) + '...'
+        : memory.content;
+      lines.push(`- [${memory.type}] ${memory.id}`);
+      lines.push(`  ${preview}`);
+      if (memory.tags && memory.tags.length > 0) {
+        lines.push(`  Tags: ${memory.tags.join(', ')}`);
+      }
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  } catch (err) {
+    return `Error listing memories: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+async function handleDeleteMemory(
+  input: z.infer<typeof MemoryDeleteInputSchema>,
+): Promise<string> {
+  // Reuse the SaveState handler
+  return handleMemoryDelete(input);
+}
+
+async function handleDeleteAllMemories(
+  input: z.infer<typeof DeleteAllMemoriesInputSchema>,
+): Promise<string> {
+  if (!input.confirm) {
+    return 'Error: Must set confirm=true to delete all memories.';
+  }
+
+  try {
+    const store = getMemoryStore();
+    const stats = store.getStats();
+    const count = stats.totalEntries;
+
+    store.clear();
+
+    return [
+      'All memories deleted.',
+      '',
+      `Deleted: ${count} memory(ies)`,
+    ].join('\n');
+  } catch (err) {
+    return `Error deleting memories: ${err instanceof Error ? err.message : String(err)}`;
   }
 }
 
@@ -660,7 +920,6 @@ async function handleReadResource(uri: string): Promise<string> {
 
   // For custom protocols, Node.js URL puts the resource type in hostname
   const resourceType = url.hostname;
-  const pathParts = url.pathname.replace(/^\//, '').split('/').filter(Boolean);
 
   switch (resourceType) {
     case 'snapshots': {
@@ -668,15 +927,8 @@ async function handleReadResource(uri: string): Promise<string> {
         return JSON.stringify({ error: 'SaveState not initialized' });
       }
 
-      const agentId = pathParts[0];
       const index = await loadIndex();
-      let entries = index.snapshots;
-
-      if (agentId) {
-        entries = entries.filter((e: SnapshotIndexEntry) =>
-          e.platform === agentId || e.id.includes(agentId)
-        );
-      }
+      const entries = index.snapshots;
 
       entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -695,38 +947,21 @@ async function handleReadResource(uri: string): Promise<string> {
     }
 
     case 'memories': {
-      const namespaceStr = pathParts[0];
-      let namespace: Namespace;
-
-      if (namespaceStr) {
-        const nsParts = namespaceStr.split(':');
-        namespace = {
-          org_id: nsParts[0] ?? 'default',
-          app_id: nsParts[1] ?? 'default',
-          agent_id: nsParts[2] ?? 'default',
-          user_id: nsParts[3],
-        };
-      } else {
-        namespace = {
-          org_id: 'default',
-          app_id: 'default',
-          agent_id: 'default',
-        };
-      }
-
-      const lane = getKnowledgeLane();
-      const memories = await lane.listMemories(namespace, { limit: 100 });
+      const store = getMemoryStore();
+      const memories = await store.query({ limit: 100 });
+      const stats = store.getStats();
 
       return JSON.stringify({
         count: memories.length,
-        namespace: namespace,
+        total: stats.totalEntries,
+        byType: stats.byType,
         memories: memories.map(m => ({
-          id: m.memory_id,
+          id: m.id,
+          type: m.type,
           content: m.content,
           tags: m.tags,
           importance: m.importance,
-          created_at: m.created_at,
-          status: m.status,
+          createdAt: m.createdAt,
         })),
       }, null, 2);
     }
@@ -808,6 +1043,7 @@ export async function startMCPServer(): Promise<void> {
       let result: string;
 
       switch (name) {
+        // SaveState Core Tools
         case 'savestate_snapshot': {
           const input = SnapshotInputSchema.parse(args);
           result = await handleSnapshot(input);
@@ -827,6 +1063,7 @@ export async function startMCPServer(): Promise<void> {
           result = await handleStatus();
           break;
         }
+        // SaveState Memory Tools
         case 'savestate_memory_store': {
           const input = MemoryStoreInputSchema.parse(args);
           result = await handleMemoryStore(input);
@@ -840,6 +1077,32 @@ export async function startMCPServer(): Promise<void> {
         case 'savestate_memory_delete': {
           const input = MemoryDeleteInputSchema.parse(args);
           result = await handleMemoryDelete(input);
+          break;
+        }
+        // OpenMemory-Compatible Tools
+        case 'add_memories': {
+          const input = AddMemoriesInputSchema.parse(args);
+          result = await handleAddMemories(input);
+          break;
+        }
+        case 'search_memory': {
+          const input = MemorySearchInputSchema.parse(args);
+          result = await handleSearchMemory(input);
+          break;
+        }
+        case 'list_memories': {
+          const input = ListMemoriesInputSchema.parse(args);
+          result = await handleListMemories(input);
+          break;
+        }
+        case 'delete_memory': {
+          const input = MemoryDeleteInputSchema.parse(args);
+          result = await handleDeleteMemory(input);
+          break;
+        }
+        case 'delete_all_memories': {
+          const input = DeleteAllMemoriesInputSchema.parse(args);
+          result = await handleDeleteAllMemories(input);
           break;
         }
         default:
