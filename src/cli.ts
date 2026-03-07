@@ -33,6 +33,7 @@ import {
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 import { registerTraceCommands } from './commands/trace.js';
+import { verifyCommand } from './commands/verify.js';
 
 // Get version from package.json
 const require = createRequire(import.meta.url);
@@ -215,6 +216,15 @@ program
 registerTraceCommands(program);
 registerContainerCommands(program);
 registerACLCommands(program);
+
+// ─── savestate verify ────────────────────────────────────────
+
+program
+  .command('verify <file>')
+  .description('Verify integrity of a .savestate file')
+  .option('-p, --passphrase <pass>', 'Passphrase for verification')
+  .option('-k, --keyfile <path>', 'Keyfile for verification (alternative to passphrase)')
+  .action(verifyCommand);
 
 // ─── savestate memory ────────────────────────────────────────
 
