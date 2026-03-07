@@ -141,7 +141,10 @@ async function exportState(options: ExportOptions) {
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
     const encryptedState = await encrypt(plaintext, keySource);
 
-    const magicHeader = Buffer.from('SAVESTATE\x01\x00\x00\x00\x00\x00\x00\x00');
+    // Magic header: 8 bytes "SAVESTAT" + 1 byte version + 7 bytes reserved = 16 bytes
+    const magicHeader = Buffer.alloc(16);
+    magicHeader.write('SAVESTAT', 0, 'ascii');  // 8 bytes
+    magicHeader.writeUInt8(1, 8);               // version at byte 8
     const manifestLength = Buffer.alloc(4);
     manifestLength.writeUInt32LE(manifestBuffer.length, 0);
 
@@ -202,9 +205,9 @@ async function importState(options: RestoreOptions) {
     const fileBuffer = await fs.readFile(inFile);
 
     // 1. Read header and manifest
-    const magic = fileBuffer.subarray(0, 8).toString();
+    const magic = fileBuffer.subarray(0, 8).toString('ascii');
     const version = fileBuffer.readUInt8(8);
-    if (magic !== 'SAVESTATE') {
+    if (magic !== 'SAVESTAT') {
       console.error('Error: Invalid file format. This does not appear to be a SaveState file.');
       process.exit(1);
     }
@@ -276,10 +279,11 @@ export function registerContainerCommands(program: Command) {
       includePreferences: opts.includePreferences,
     }));
 
-  // Top-level restore command (Issue #153)
+  // Top-level import command (Issue #153)
+  // Note: 'restore' is already used for snapshot restoration in cli.ts
   program
-    .command('restore <file>')
-    .description('Restore agent state from an encrypted .savestate file')
+    .command('import <file>')
+    .description('Import agent state from an encrypted .savestate file')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase)')
     .option('--merge', 'Merge with existing state (default: replace)')

@@ -28,7 +28,7 @@ The SaveState container is a single-file format for exporting/importing encrypte
 
 | Offset | Size | Description |
 |--------|------|-------------|
-| 0 | 8 | Magic string: `"SAVESTATE"` |
+| 0 | 8 | Magic string: `"SAVESTAT"` |
 | 8 | 1 | Format version (currently `1`) |
 | 9 | 7 | Reserved (must be zeros) |
 
