@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1M Tokens Isn't Enough: Why Giant Context Windows Are Still Losing Your Agent's Memory — SaveState</title>
+<meta name="description" content="NVIDIA, Anthropic, and Google all ship 1M token context windows. Research shows reliable recall drops below 50% past 256K. The amnesia problem isn't solved. It's just bigger.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+/* Table */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-code);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">March 19, 2026</div>
+      <h1>1M Tokens Isn't Enough: Why Giant Context Windows Are Still Losing Your Agent's Memory</h1>
+      <p class="subtitle">NVIDIA, Anthropic, and Google all ship 1M token context windows. Research shows reliable recall drops below 50% past 256K. The amnesia problem isn't solved. It's just bigger.</p>
+    </header>
+
+    <div class="article-content">
+      <p>NVIDIA just shipped Nemotron 3 with a 1 million token context window. Claude has it. Gemini has it. The pitch is simple: just load everything into context and your agent will never forget.</p>
+
+      <p>Except it doesn't work that way.</p>
+
+      <h2>The Amnesia Problem at Scale</h2>
+
+      <p>A new paper on arXiv (AgentRM) formally identifies what practitioners have been noticing for months: long-running agent sessions suffer from context degradation. As the window fills, the model's ability to recall earlier information decays. The researchers call it "amnesia," and it's not a bug in any single model. It's a fundamental limitation of attention mechanisms at scale.</p>
+
+      <p>Current approaches handle this poorly. Most frameworks either truncate history (losing context you might need) or crash when they exceed limits. Neither option is acceptable for production agents.</p>
+
+      <h2>1M Tokens Doesn't Mean 1M Usable Tokens</h2>
+
+      <p>Here's the uncomfortable truth: benchmarks of GPT-5.4 and Gemini 3.1 Pro show both models struggle past 256K tokens. GPT-5.4 loses 54% of its retrieval accuracy when scaling from 256K to 1M. Your agent can technically fit everything in the window, but it can't reliably find it when needed.</p>
+
+      <p>Think about what this means. You load a million tokens of context, confident your agent has access to everything. It hallucinates anyway because the relevant information from 800K tokens ago might as well not exist.</p>
+
+      <p>The context window is a bucket, not a brain. Bigger buckets still leak.</p>
+
+      <h2>MCP Is Making It Worse</h2>
+
+      <p>A post from Apideck this week highlights another pressure: Model Context Protocol integrations are eating your working memory. MCP tool definitions can burn 55,000+ tokens before your agent processes a single user message. Load everything upfront for maximum capability and you sacrifice reasoning capacity. Limit your integrations to preserve working memory and your agent loses access to tools it needs.</p>
+
+      <p>There's no free lunch. Context is a zero-sum resource, and modern agent architectures are demanding more of it than ever.</p>
+
+      <h2>Context Engineering: The New Required Skill</h2>
+
+      <p>The AI Agents Stack (2026 Edition) makes a bold claim: prompt engineering is dead. The new discipline is context engineering.</p>
+
+      <p>This means architecting exactly what information your agent sees on every call. What gets stuffed in-context? What gets retrieved on demand? What gets summarized? What gets dropped entirely?</p>
+
+      <p>These decisions used to be optional optimizations. Now they're load-bearing architectural choices. Get them wrong and your agent forgets critical information. Get them right and you're still fighting against fundamental model limitations.</p>
+
+      <h2>Five Ways Memory Compression Fails</h2>
+
+      <p>Indium Tech published a breakdown of how agent memory compression fails in practice:</p>
+
+      <ol>
+        <li>Early-but-relevant information gets pruned</li>
+        <li>Costs grow non-linearly with context length</li>
+        <li>Summarization loses critical details</li>
+        <li>Retrieval systems return wrong context</li>
+        <li>Failures happen silently with no error signal</li>
+      </ol>
+
+      <p>That last one is the killer. Your agent doesn't tell you it forgot something. It just confidently proceeds with incomplete information.</p>
+
+      <h2>The Case for External Memory</h2>
+
+      <p>None of this means large context windows are useless. They're a genuine improvement. But they're not a replacement for proper memory architecture.</p>
+
+      <p>Your agent needs a way to persist important state outside the context window. It needs backups before risky operations. It needs the ability to restore when context gets corrupted or lost.</p>
+
+      <p>SaveState gives you exactly that. One command to snapshot your agent's state. One command to restore it. Platform-agnostic, encrypted, and reliable.</p>
+
+      <p>Because context windows will keep growing. And they'll keep being not quite enough.</p>
+
+      <hr>
+
+      <div class="cta-box">
+        <h3>Don't wait for your agent to forget something important.</h3>
+        <p>Set up automated backups with SaveState and protect your agent's memory before context degradation hits.</p>
+        <a href="https://savestate.dev" class="btn">Get started at savestate.dev →</a>
+      </div>
+
+      <pre><code>npx savestate backup --schedule daily</code></pre>
+
+      <hr>
+
+      <p><em>Questions? Comments? Find us on X <a href="https://x.com/SaveStateDev">@SaveStateDev</a> or open an issue on GitHub.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>
