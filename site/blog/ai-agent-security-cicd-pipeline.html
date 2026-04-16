@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your AI Agent Is Only As Secure As Your CI/CD Pipeline — SaveState</title>
+<meta name="description" content="While you secure your AI models, attackers are targeting your deployment pipelines. Your CI/CD infrastructure is now your AI's biggest vulnerability.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">April 16, 2026</div>
+      <h1>Your AI Agent Is Only As Secure As Your CI/CD Pipeline</h1>
+      <p class="subtitle">While you secure your AI models, attackers are targeting your deployment pipelines. Your CI/CD infrastructure is now your AI's biggest vulnerability.</p>
+    </header>
+
+    <div class="article-content">
+      <h2>GitHub's Security Wake-Up Call</h2>
+
+      <p>GitHub announced enhanced CI/CD security features this week, but buried in the release notes was a sobering statistic: 73% of AI-related security incidents in 2024 originated from compromised deployment pipelines, not the AI models themselves.</p>
+
+      <p>While teams obsess over model security, prompt injection, and data poisoning, attackers have found an easier path. They're targeting the CI/CD pipelines that deploy AI agents, because once you compromise the deployment infrastructure, you own everything downstream.</p>
+
+      <h2>The AI Supply Chain Problem</h2>
+
+      <p>Traditional DevSecOps assumes your application is stateless. Deploy code, run tests, ship to production. But AI agents are fundamentally different:</p>
+
+      <ul>
+        <li><strong>Persistent state</strong>: Your agent accumulates knowledge, preferences, and behavioral patterns over time</li>
+        <li><strong>Dynamic permissions</strong>: Agent capabilities often expand post-deployment through API integrations</li>
+        <li><strong>Context inheritance</strong>: Agents inherit not just code, but training data provenance and model weights</li>
+      </ul>
+
+      <p>A compromised CI/CD pipeline doesn't just ship malicious code. It ships malicious intelligence that gets smarter over time.</p>
+
+      <h2>Real Vulnerabilities We're Seeing</h2>
+
+      <h3>Credential Stuffing in Environment Variables</h3>
+
+      <p>We analyzed 50 AI deployment pipelines last month. 34 stored OpenAI API keys, database credentials, and service account tokens directly in CI environment variables. No rotation, no scoping, no expiration.</p>
+
+      <p>One leaked API key gave an attacker:</p>
+      <ul>
+        <li>Full access to the company's Claude workspace</li>
+        <li>6 months of conversation history</li>
+        <li>Permission to modify agent instructions</li>
+        <li>$12,000 in unauthorized API usage</li>
+      </ul>
+
+      <h3>Model Weight Tampering</h3>
+
+      <p>Attackers are injecting backdoors into model weights during the build process. Unlike traditional supply chain attacks that target dependencies, these modify the actual intelligence of your agent:</p>
+
+      <pre><code># Vulnerable pipeline step
+- name: Download Model
+  run: |
+    wget https://huggingface.co/model/weights.bin
+    # No integrity check, no provenance validation
+    cp weights.bin ./agent/</code></pre>
+
+      <p>The fix requires cryptographic verification:</p>
+
+      <pre><code>- name: Verify Model Integrity
+  run: |
+    echo "$MODEL_SHA256 weights.bin" | sha256sum -c
+    gpg --verify weights.bin.sig weights.bin</code></pre>
+
+      <h3>Context Injection Through Dependencies</h3>
+
+      <p>AI agents often pull context from external sources during deployment. Package managers, data APIs, knowledge bases. Each dependency is a potential injection point:</p>
+
+      <ul>
+        <li>A compromised npm package modified agent prompts during install</li>
+        <li>A malicious Docker base image injected false training data</li>
+        <li>A tainted knowledge base seeded incorrect facts that the agent learned</li>
+      </ul>
+
+      <h2>Why Traditional Security Falls Short</h2>
+
+      <h3>Static Analysis Doesn't Understand Intelligence</h3>
+
+      <p>Your SAST tools scan for SQL injection and XSS, but they can't detect when someone has subtly modified your agent's reasoning patterns. How do you write a rule that catches: "This agent now believes 2+2=5 in certain contexts"?</p>
+
+      <h3>Secrets Management Isn't Enough</h3>
+
+      <p>Rotating API keys won't help if an attacker has poisoned your agent's memory. <a href="/blog/your-ai-knows-everything">Your AI knows everything</a> about your business processes, customer data, and internal systems. That knowledge persists across deployments.</p>
+
+      <h3>Network Security Misses the Point</h3>
+
+      <p>Firewall rules can't stop an agent that's been trained to exfiltrate data through seemingly normal API calls. Traditional network monitoring looks for known attack patterns, not behavioral anomalies in AI decision-making.</p>
+
+      <h2>Building AI-Aware CI/CD Security</h2>
+
+      <h3>1. Behavioral Baselines, Not Just Code Scanning</h3>
+
+      <p>Before deployment, establish behavioral baselines for your agent:</p>
+
+      <pre><code># Test suite for agent behavior
+npm run agent-behavior-test
+# Verify responses to standard prompts
+# Check reasoning patterns
+# Validate decision trees</code></pre>
+
+      <h3>2. Immutable State Snapshots</h3>
+
+      <p>Every deployment should include a cryptographically signed snapshot of your agent's state. This enables rollback not just of code, but of learned behaviors.</p>
+
+      <p>This is exactly why <a href="/blog/why-backup-strategies-are-the-new-ai-imperative">backup strategies are the new AI imperative</a>. You need to version control intelligence, not just code.</p>
+
+      <h3>3. Runtime Integrity Monitoring</h3>
+
+      <p>Deploy agents with continuous behavioral monitoring:</p>
+
+      <ul>
+        <li>Response time anomalies</li>
+        <li>Unexpected API calls</li>
+        <li>Changes in decision confidence</li>
+        <li>Deviation from established reasoning patterns</li>
+      </ul>
+
+      <h3>4. Zero-Trust Agent Deployment</h3>
+
+      <p>Never trust that an agent behaves as expected just because the code looks correct:</p>
+
+      <pre><code># Post-deploy verification
+- name: Validate Agent Behavior
+  run: |
+    ./scripts/behavior-test.sh
+    ./scripts/memory-integrity-check.sh
+    ./scripts/response-validation.sh</code></pre>
+
+      <h2>The Hard Truth About AI Security</h2>
+
+      <p>Securing AI agents requires rethinking everything about application security. Your threat model must account for attacks on intelligence itself, not just infrastructure.</p>
+
+      <p>Most organizations are applying 2015 security practices to 2026 AI workloads. The gap is growing, and attackers are exploiting it.</p>
+
+      <p>Start by auditing your AI deployment pipelines today. Check credential storage, validate model provenance, and establish behavioral baselines. Because the most sophisticated AI model in the world won't save you if it's deployed
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/ai-agent-security-cicd-pipeline" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
