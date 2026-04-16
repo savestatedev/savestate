@@ -1,0 +1,58 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "SaveState Blog",
+  "home_page_url": "https://savestate.dev/blog",
+  "feed_url": "https://savestate.dev/api/blog/feed.json",
+  "description": "Updates, guides, and insights about AI identity backup and migration.",
+  "icon": "https://savestate.dev/logo.png",
+  "favicon": "https://savestate.dev/logo.png",
+  "authors": [
+    {
+      "name": "SaveState Team",
+      "url": "https://savestate.dev"
+    }
+  ],
+  "language": "en-US",
+  "items": [
+    {
+      "id": "https://savestate.dev/blog/ai-memory-management-dilemma",
+      "url": "https://savestate.dev/blog/ai-memory-management-dilemma",
+      "title": "The AI Memory Management Dilemma: Are We Prepared?",
+      "summary": "As AI memory capabilities grow, so do the risks. Are we ready to tackle the challenges of memory management and backups in AI agents?",
+      "date_published": "2026-04-01T00:00:00Z",
+      "tags": ["memory-management", "ai-agents", "backup"]
+    },
+    {
+      "id": "https://savestate.dev/blog/ai-backup-strategies",
+      "url": "https://savestate.dev/blog/ai-backup-strategies",
+      "title": "Why Your AI Needs Robust Backup Strategies Now",
+      "summary": "As AI systems grow more complex, effective backup strategies are crucial for reliability.",
+      "date_published": "2026-03-31T00:00:00Z",
+      "tags": ["backup", "strategy", "reliability"]
+    },
+    {
+      "id": "https://savestate.dev/blog/ai-memory-management-lessons-from-recent-rollbacks",
+      "url": "https://savestate.dev/blog/ai-memory-management-lessons-from-recent-rollbacks",
+      "title": "AI Memory Management: Lessons from Recent Rollbacks",
+      "summary": "Exploring the implications of recent AI memory rollbacks and what they mean for developers.",
+      "date_published": "2026-03-30T00:00:00Z",
+      "tags": ["memory-management", "rollbacks", "lessons"]
+    },
+    {
+      "id": "https://savestate.dev/blog/v0.9.0-memory-governance",
+      "url": "https://savestate.dev/blog/v0.9.0-memory-governance",
+      "title": "SaveState v0.9.0: Memory Governance Your Agents Actually Need",
+      "summary": "SaveState v0.9.0 introduces memory lifecycle controls, explainability, and privacy-first features for AI agents.",
+      "date_published": "2026-02-27T00:00:00Z",
+      "tags": ["release", "v0.9.0", "memory-governance"]
+    },
+    {
+      "id": "https://savestate.dev/blog/mcp-memory-servers-ai-context-infrastructure",
+      "url": "https://savestate.dev/blog/mcp-memory-servers-ai-context-infrastructure",
+      "title": "MCP Memory Servers: Your AI's Context Is Now Infrastructure (Back It Up)",
+      "summary": "MCP memory servers are turning agent context from ephemeral chat into persistent, queryable infrastructure. Infrastructure needs backup.",
+      "date_published": "2026-02-23T00:00:00Z",
+      "tags": ["mcp", "memory-servers", "infrastructure"]
+    }
+  ]
+}

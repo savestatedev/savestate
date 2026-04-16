@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Blog — SaveState</title>
-<meta name="description" content="Updates, guides, and insights about AI identity backup and migration.">
+<meta name="description" content="Updates, guides, and insights about AI identity backup, memory management, and cross-platform migration.">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,9 +17,14 @@
   --blue: #03C1DF;
   --blue-light: #9BCDE4;
   --blue-dim: #025A6A;
+  --green: #22c55e;
+  --gold: #eab308;
+  --red: #ef4444;
+  --purple: #a855f7;
   --bg: #06060c;
   --bg-card: #0d0d18;
   --bg-card-hover: #111122;
+  --bg-code: #0a0a14;
   --text: #e2e8f0;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
@@ -51,14 +56,12 @@ body::before {
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
   position: relative;
   z-index: 1;
 }
-
-
 
 /* ============================================================
    NAV
@@ -77,7 +80,7 @@ nav {
 }
 
 nav .container {
-  max-width: 1120px;
+  max-width: 1200px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -119,6 +122,7 @@ nav .container {
 }
 
 .nav-links a:hover { color: var(--text); }
+.nav-links a.active { color: var(--blue); }
 
 .nav-links .btn-nav {
   background: var(--blue);
@@ -180,97 +184,735 @@ nav .container {
   }
 }
 
-/* Main */
-main {
-  padding-top: 120px;
+/* ============================================================
+   HERO
+   ============================================================ */
+.blog-hero {
+  padding: 140px 0 80px;
+  position: relative;
+  background: linear-gradient(180deg, rgba(3, 193, 223, 0.06) 0%, transparent 100%);
+}
+
+.blog-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(3, 193, 223, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3, 193, 223, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+}
+
+.hero-text {
+  flex: 1;
+  max-width: 600px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 10px;
+  background: rgba(3, 193, 223, 0.08);
+  border: 1px solid rgba(3, 193, 223, 0.2);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-light);
+  margin-bottom: 24px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hero-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--blue);
+  border-radius: 2px;
+}
+
+.hero-title {
+  font-size: clamp(36px, 5vw, 52px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+.hero-title .accent { color: var(--blue); }
+
+.hero-subtitle {
+  font-size: 18px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.hero-stats span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-stats strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.hero-image {
+  flex-shrink: 0;
+}
+
+.hero-image img {
+  width: 200px;
+  height: 200px;
+  border-radius: 24px;
+  animation: float 4s ease-in-out infinite;
+  box-shadow: 0 20px 60px rgba(3, 193, 223, 0.2);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@media (max-width: 768px) {
+  .hero-content { flex-direction: column; text-align: center; }
+  .hero-image { order: -1; }
+  .hero-image img { width: 120px; height: 120px; }
+  .hero-stats { justify-content: center; }
+}
+
+/* ============================================================
+   FEATURED POST
+   ============================================================ */
+.featured-section {
+  margin-top: -40px;
+  margin-bottom: 64px;
+  position: relative;
+  z-index: 2;
+}
+
+.featured-card {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: linear-gradient(135deg, #0f1729 0%, #0a0f1a 100%);
+  border: 1px solid rgba(3, 193, 223, 0.2);
+  border-radius: 16px;
+  padding: 32px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.featured-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 0 40px rgba(3, 193, 223, 0.15);
+  transform: translateY(-4px);
+}
+
+.featured-content {
+  flex: 1;
+}
+
+.featured-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.featured-tag {
+  background: rgba(3, 193, 223, 0.15);
+  color: var(--blue);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.featured-card h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  line-height: 1.3;
+  transition: color 0.2s;
+}
+
+.featured-card:hover h2 { color: var(--blue-light); }
+
+.featured-card p {
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.featured-arrow {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 193, 223, 0.1);
+  border: 1px solid rgba(3, 193, 223, 0.2);
+  border-radius: 50%;
+  color: var(--blue);
+  transition: all 0.2s;
+}
+
+.featured-card:hover .featured-arrow {
+  background: var(--blue);
+  color: #fff;
+  transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .featured-card { flex-direction: column; text-align: center; }
+  .featured-arrow { display: none; }
+}
+
+/* ============================================================
+   MAIN LAYOUT
+   ============================================================ */
+.blog-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 48px;
   padding-bottom: 80px;
 }
 
-.page-header {
-  text-align: center;
-  margin-bottom: 64px;
+@media (max-width: 1024px) {
+  .blog-layout {
+    grid-template-columns: 1fr;
+  }
+  .blog-sidebar { order: -1; }
 }
 
-.page-header h1 {
-  font-size: 48px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-bottom: 16px;
+/* ============================================================
+   CATEGORIES
+   ============================================================ */
+.category-section {
+  margin-bottom: 48px;
 }
 
-.page-header p {
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.category-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.category-dot.blue { background: var(--blue); }
+.category-dot.green { background: var(--green); }
+.category-dot.gold { background: var(--gold); }
+.category-dot.red { background: var(--red); }
+.category-dot.purple { background: var(--purple); }
+
+.category-name {
   font-size: 18px;
-  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-/* Blog Grid */
-.blog-grid {
+.category-count {
+  background: var(--bg-card);
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .category-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   BLOG CARDS
+   ============================================================ */
+.blog-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.blog-card:hover {
+  border-color: var(--blue-dim);
+  background: var(--bg-card-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.blog-card .meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.blog-tag {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.blog-tag.blue { background: rgba(3, 193, 223, 0.15); color: var(--blue); }
+.blog-tag.green { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+.blog-tag.gold { background: rgba(234, 179, 8, 0.15); color: var(--gold); }
+.blog-tag.red { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+.blog-tag.purple { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+
+.blog-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+
+.blog-card:hover h3 { color: var(--blue-light); }
+
+.blog-card p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.blog-card .read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.blog-card .read-more svg {
+  transition: transform 0.2s;
+}
+
+.blog-card:hover .read-more svg {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.blog-sidebar {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-.blog-card {
+.sidebar-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 32px;
-  text-decoration: none;
-  color: var(--text);
-  transition: border-color 0.2s, transform 0.2s;
+  padding: 24px;
 }
 
-.blog-card:hover {
-  border-color: var(--blue-dim);
-  transform: translateY(-2px);
-}
-
-.blog-card .date {
-  font-size: 13px;
-  color: var(--text-dim);
-  margin-bottom: 12px;
+.sidebar-card h4 {
+  font-size: 14px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  color: var(--text);
 }
 
-.blog-card h2 {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: 12px;
-  line-height: 1.3;
+/* Agent Card */
+.sidebar-agent {
+  background: linear-gradient(135deg, #0f1729 0%, #0a0f1a 100%);
+  border-color: rgba(3, 193, 223, 0.2);
 }
 
-.blog-card p {
+.sidebar-agent h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue-light);
+}
+
+.sidebar-agent h4::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--blue);
+  border-radius: 2px;
+}
+
+.agent-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agent-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(3, 193, 223, 0.05);
+  border: 1px solid rgba(3, 193, 223, 0.1);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.agent-link:hover {
+  background: rgba(3, 193, 223, 0.1);
+  border-color: rgba(3, 193, 223, 0.3);
+}
+
+.agent-link-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 193, 223, 0.15);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.agent-link-text {
+  flex: 1;
+}
+
+.agent-link-text strong {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.agent-link-text span {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Resources */
+.resource-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resource-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
   color: var(--text-muted);
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.resource-link:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+}
+
+.resource-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.resource-icon.blue { background: rgba(3, 193, 223, 0.15); }
+.resource-icon.green { background: rgba(34, 197, 94, 0.15); }
+.resource-icon.gold { background: rgba(234, 179, 8, 0.15); }
+.resource-icon.purple { background: rgba(168, 85, 247, 0.15); }
+
+/* Tags */
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-cloud a {
+  padding: 6px 12px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.tag-cloud a:hover {
+  border-color: var(--blue-dim);
+  color: var(--blue-light);
+}
+
+/* SOM Ready */
+.som-ready {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.som-ready:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.som-dot {
+  width: 12px;
+  height: 12px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  animation: pulse-som 2s infinite;
+}
+
+@keyframes pulse-som {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.som-text {
+  flex: 1;
+}
+
+.som-text strong {
+  display: block;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 2px;
+}
+
+.som-text span {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* CTA Card */
+.sidebar-cta {
+  background: linear-gradient(135deg, rgba(3, 193, 223, 0.08) 0%, var(--bg-card) 100%);
+  border-color: rgba(3, 193, 223, 0.2);
+  text-align: center;
+}
+
+.sidebar-cta h4 {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.sidebar-cta p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
   line-height: 1.6;
 }
 
-.blog-card .read-more {
-  display: inline-block;
-  margin-top: 16px;
-  color: var(--blue);
-  font-weight: 500;
+.sidebar-cta .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--blue);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
   font-size: 14px;
+  text-decoration: none;
+  transition: all 0.2s;
 }
 
-/* Footer */
+.sidebar-cta .btn:hover {
+  background: var(--blue-light);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
 footer {
   border-top: 1px solid var(--border);
-  padding: 40px 0;
-  text-align: center;
-  color: var(--text-dim);
+  padding: 60px 0;
+  background: var(--bg-card);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr repeat(3, 1fr);
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.footer-brand p {
+  color: var(--text-muted);
   font-size: 14px;
+  line-height: 1.6;
+  margin-top: 16px;
+  max-width: 280px;
 }
 
-footer a { color: var(--text-muted); }
-
-@media (max-width: 600px) {
-  .nav-links { display: none; }
-  .page-header h1 { font-size: 32px; }
-  .blog-card { padding: 24px; }
-  .blog-card h2 { font-size: 20px; }
+.footer-col h5 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  margin-bottom: 16px;
 }
+
+.footer-col ul {
+  list-style: none;
+}
+
+.footer-col li {
+  margin-bottom: 10px;
+}
+
+.footer-col a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.footer-col a:hover { color: var(--blue-light); }
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.footer-bottom a { color: var(--text-muted); }
+
+.footer-social {
+  display: flex;
+  gap: 16px;
+}
+
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.footer-social a:hover {
+  border-color: var(--blue-dim);
+  color: var(--blue-light);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .footer-brand { grid-column: span 2; }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+.fade-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.fade-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+.fade-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
 </head>
@@ -288,7 +930,7 @@ footer a { color: var(--text-muted); }
       <li><a href="/#pricing">Pricing</a></li>
       <li><a href="/#cli">CLI</a></li>
       <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
-      <li><a href="/blog">Blog</a></li>
+      <li><a href="/blog" class="active">Blog</a></li>
       <li><a href="/faq.html">FAQ</a></li>
       <li><a href="/dashboard">Dashboard</a></li>
       <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
@@ -299,326 +941,391 @@ footer a { color: var(--text-muted); }
   </div>
 </nav>
 
+<!-- Hero Section -->
+<section class="blog-hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-text fade-in">
+        <div class="hero-badge">State Dispatches</div>
+        <h1 class="hero-title">The <span class="accent">SaveState</span> Blog</h1>
+        <p class="hero-subtitle">Updates, guides, and insights about AI memory management, backup strategies, and cross-platform migration.</p>
+        <div class="hero-stats">
+          <span><strong>50+</strong> articles</span>
+          <span><strong>4</strong> categories</span>
+          <span><strong>Weekly</strong> updates</span>
+        </div>
+      </div>
+      <div class="hero-image fade-in fade-in-delay-1">
+        <img src="/logo.png" alt="SaveState">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Post -->
+<section class="featured-section">
+  <div class="container">
+    <a href="/blog/ai-memory-management-dilemma" class="featured-card fade-in fade-in-delay-2">
+      <div class="featured-content">
+        <div class="featured-label">
+          <span class="featured-tag">Latest</span>
+          <span>April 1, 2026</span>
+        </div>
+        <h2>The AI Memory Management Dilemma: Are We Prepared?</h2>
+        <p>As AI memory capabilities grow, so do the risks. Are we ready to tackle the challenges of memory management and backups in AI agents?</p>
+      </div>
+      <div class="featured-arrow">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- Main Content -->
 <main>
   <div class="container">
-    <div class="page-header">
-      <h1>Blog</h1>
-      <p>Updates, guides, and insights about AI identity backup</p>
-    </div>
+    <div class="blog-layout">
 
-    <div class="blog-grid">
+      <!-- Posts Column -->
+      <div class="blog-main">
 
-        <a href="/blog/ai-memory-management-dilemma" class="blog-card">
-          <div class="date">April 1, 2026</div>
-          <h2>The AI Memory Management Dilemma: Are We Prepared?</h2>
-          <p>As AI memory capabilities grow, so do the risks. Are we ready to tackle the challenges of memory management and backups in AI agents?</p>
-        </a>
+        <!-- Memory Management Category -->
+        <section class="category-section">
+          <div class="category-header">
+            <div class="category-dot blue"></div>
+            <h2 class="category-name">Memory Management</h2>
+            <span class="category-count">15 posts</span>
+          </div>
+          <div class="category-grid">
+            <a href="/blog/ai-backup-strategies" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag blue">Backup</span>
+                <span>Mar 31, 2026</span>
+              </div>
+              <h3>Why Your AI Needs Robust Backup Strategies Now</h3>
+              <p>As AI systems grow more complex, effective backup strategies are crucial for reliability.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/ai-memory-management-lessons-from-recent-rollbacks" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag blue">Memory</span>
+                <span>Mar 30, 2026</span>
+              </div>
+              <h3>AI Memory Management: Lessons from Recent Rollbacks</h3>
+              <p>Exploring the implications of recent AI memory rollbacks and what they mean for developers.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/ai-memory-continuous-deployment" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag blue">CI/CD</span>
+                <span>Mar 28, 2026</span>
+              </div>
+              <h3>The Role of AI Memory in Continuous Deployment</h3>
+              <p>AI memory management is crucial for seamless deployments. Learn how to enhance your CI/CD workflows.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/context-rot-killing-your-ai-agent" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag blue">Context</span>
+                <span>Feb 2026</span>
+              </div>
+              <h3>Context Rot Is Killing Your AI Agent (Here's the Fix)</h3>
+              <p>Context rot happens when your agent's context window fills with irrelevant information.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+          </div>
+        </section>
 
-        <a href="/blog/ai-backup-strategies" class="blog-card">
-          <div class="date">March 31, 2026</div>
-          <h2>Why Your AI Needs Robust Backup Strategies Now</h2>
-          <p>As AI systems grow more complex, effective backup strategies are crucial for reliability. Here’s why you can’t afford to overlook this.</p>
-        </a>
+        <!-- Security Category -->
+        <section class="category-section">
+          <div class="category-header">
+            <div class="category-dot red"></div>
+            <h2 class="category-name">Security</h2>
+            <span class="category-count">8 posts</span>
+          </div>
+          <div class="category-grid">
+            <a href="/blog/agent-security-wake-up-call" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag red">Security</span>
+                <span>Feb 6, 2026</span>
+              </div>
+              <h3>The Great AI Agent Security Wake-Up Call</h3>
+              <p>48% of security professionals believe agentic AI will become the #1 attack vector by end of 2026.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/memory-poisoning-87-percent" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag red">Attack</span>
+                <span>Feb 2026</span>
+              </div>
+              <h3>87% Compromised in 4 Hours: Why Your AI Agent Needs a Rollback Plan</h3>
+              <p>New research shows memory poisoning can corrupt 87% of an AI agent's decision-making.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/memory-poisoning-ai-agent-security-risk" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag red">OWASP</span>
+                <span>Feb 2026</span>
+              </div>
+              <h3>Memory Poisoning: Your AI's Biggest Security Risk</h3>
+              <p>Memory poisoning (OWASP ASI06) turns your agent's persistent context into a weapon.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/agent-security-incidents-2026" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag red">Report</span>
+                <span>2026</span>
+              </div>
+              <h3>88% of Organizations Had AI Agent Security Incidents</h3>
+              <p>The State of AI Agent Security 2026 Report reveals alarming incident rates.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+          </div>
+        </section>
 
-        <a href="/blog/ai-memory-management-lessons-from-recent-rollbacks" class="blog-card">
-          <div class="date">March 30, 2026</div>
-          <h2>AI Memory Management: Lessons from Recent Rollbacks</h2>
-          <p>Exploring the implications of recent AI memory rollbacks and what they mean for developers managing state in their applications.</p>
-        </a>
+        <!-- Migration Category -->
+        <section class="category-section">
+          <div class="category-header">
+            <div class="category-dot green"></div>
+            <h2 class="category-name">Migration</h2>
+            <span class="category-count">6 posts</span>
+          </div>
+          <div class="category-grid">
+            <a href="/blog/migrate-chatgpt-to-claude" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag green">Guide</span>
+                <span>Jan 29, 2026</span>
+              </div>
+              <h3>Migrating from ChatGPT to Claude (Without Losing Everything)</h3>
+              <p>A practical guide to moving your AI relationship between platforms.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/great-ai-migration-chatgpt-claude-context-loss" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag green">Migration</span>
+                <span>Feb 2026</span>
+              </div>
+              <h3>The Great AI Migration: Why Switching Costs You Context</h3>
+              <p>ChatGPT's ad rollout triggered a mass exodus. But migrating means losing years of context.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/migration-wizard-architecture" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag green">Architecture</span>
+                <span>Feb 2026</span>
+              </div>
+              <h3>Migration Wizard: The Architecture Behind AI Identity Portability</h3>
+              <p>How we built cross-platform AI migration with Extract-Transform-Load architecture.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/savestate-v0.8.0-migration-wizard-here" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag green">Release</span>
+                <span>Feb 2026</span>
+              </div>
+              <h3>SaveState v0.8.0: The Migration Wizard is Here</h3>
+              <p>Bidirectional Claude-ChatGPT migration. Your AI memories are no longer locked.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+          </div>
+        </section>
 
-        <a href="/blog/ai-memory-continuous-deployment" class="blog-card">
-          <div class="date">March 28, 2026</div>
-          <h2>The Role of AI Memory in Continuous Deployment</h2>
-          <p>AI memory management is crucial for seamless deployments. Learn how to enhance your CI/CD workflows with effective backup strategies.</p>
-        </a>
+        <!-- Product Updates Category -->
+        <section class="category-section">
+          <div class="category-header">
+            <div class="category-dot purple"></div>
+            <h2 class="category-name">Product Updates</h2>
+            <span class="category-count">10 posts</span>
+          </div>
+          <div class="category-grid">
+            <a href="/blog/v0.9.0-memory-governance" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag purple">v0.9.0</span>
+                <span>Feb 27, 2026</span>
+              </div>
+              <h3>SaveState v0.9.0: Memory Governance Your Agents Actually Need</h3>
+              <p>Memory lifecycle controls, explainability, and privacy-first features for AI agents.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/savestate-v0.9.0-memory-that-heals-itself" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag purple">v0.9.0</span>
+                <span>Feb 14, 2026</span>
+              </div>
+              <h3>SaveState v0.9.0: Memory That Heals Itself</h3>
+              <p>Privacy controls, memory lifecycle management, quality scoring, and self-learning agents.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/claude-code-mcp-integration" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag purple">MCP</span>
+                <span>Feb 6, 2026</span>
+              </div>
+              <h3>Claude Code MCP Integration: Backup Your AI with Natural Language</h3>
+              <p>SaveState now integrates directly with Claude Code via MCP.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+            <a href="/blog/savestate-architecture-deep-dive" class="blog-card">
+              <div class="meta">
+                <span class="blog-tag purple">Architecture</span>
+                <span>Jan 26, 2026</span>
+              </div>
+              <h3>SaveState Architecture Deep Dive: How We Built Time Machine for AI</h3>
+              <p>Inside the SaveState Archive Format, encryption system, and adapter architecture.</p>
+              <span class="read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+            </a>
+          </div>
+        </section>
 
-        <a href="/blog/openai-memory-changes-impact-developers" class="blog-card">
-          <div class="date">March 28, 2026</div>
-          <h2>OpenAI’s Memory Changes: What They Mean for Developers</h2>
-          <p>OpenAI's recent updates on memory management raise critical questions for developers. Here's what you need to know.</p>
-        </a>
-
-        <a href="/blog/ai-agent-backups-heroes-of-stability" class="blog-card">
-          <div class="date">March 27, 2026</div>
-          <h2>AI Agent Backups: The Unsung Heroes of Stability</h2>
-          <p>Recent shifts in AI memory management highlight the critical need for robust backup systems. Here's why backups are essential for your AI agents.</p>
-        </a>
-
-        <a href="/blog/ai-agent-memory-management-complexity" class="blog-card">
-          <div class="date">March 25, 2026</div>
-          <h2>AI Agent Memory Management Just Got More Complex</h2>
-          <p>Recent updates in AI agent frameworks are reshaping memory management, demanding a new approach to backup strategies.</p>
-        </a>
-
-        <a href="/blog/ai-state-management-ci-cd" class="blog-card">
-          <div class="date">March 24, 2026</div>
-          <h2>AI State Management: The New Frontier in CI/CD Workflows</h2>
-          <p>Explore the latest trends in AI state management for CI/CD workflows, and learn how it impacts your development process.</p>
-        </a>
-
-        <a href="/blog/cost-of-ignoring-ai-state-management" class="blog-card">
-          <div class="date">March 19, 2026</div>
-          <h2>The Cost of Ignoring AI State Management</h2>
-          <p>Failing to manage AI state effectively can lead to significant operational risks. Let's explore why that is and how to mitigate it.</p>
-        </a>
-
-        <a href="/blog/v0.9.0-memory-governance" class="blog-card">
-          <div class="date">February 27, 2026</div>
-          <h2>SaveState v0.9.0: Memory Governance Your Agents Actually Need</h2>
-          <p>SaveState v0.9.0 introduces memory lifecycle controls, explainability, and privacy-first features for AI agents.</p>
-        </a>
-
-        <a href="/blog/mcp-memory-servers-ai-context-infrastructure" class="blog-card">
-          <div class="date">February 23, 2026</div>
-          <h2>MCP Memory Servers: Your AI's Context Is Now Infrastructure (Back It Up)</h2>
-          <p>MCP memory servers are turning agent context from ephemeral chat into persistent, queryable infrastructure. Infrastructure needs backup. Here's why this matters.</p>
-        </a>
-
-        <a href="/blog/ai-agent-amnesia-crisis" class="blog-card">
-          <div class="date">February 21, 2026</div>
-          <h2>Your AI Agent Has Amnesia (And It's About to Forget Everything Again)</h2>
-          <p>AI coding tools have a serious memory problem. Claude Code, Cursor, and Windsurf silently lose context. Here's why the industry is finally paying attention.</p>
-        </a>
-
-        <a href="/blog/one-click-two-years-gone" class="blog-card">
-          <div class="date">February 18, 2026</div>
-          <h2>One Click, Two Years Gone: The Case for AI Agent Backup</h2>
-          <p>A professor lost two years of academic work in ChatGPT with a single setting change. No warning, no undo. As AI memory expands, so does the risk of losing everything.</p>
-        </a>
-
-        <a href="/blog/memory-vs-backup-gap" class="blog-card">
-          <div class="date">February 17, 2026</div>
-          <h2>Everyone's Teaching AI to Remember. Nobody's Teaching It to Recover.</h2>
-          <p>The industry races to give AI agents better memory. But when your agent crashes or your vector DB corrupts, where's your backup? The memory-backup gap is 2026's biggest blind spot.</p>
-        </a>
-
-        <a href="/blog/ai-memory-crisis-2026" class="blog-card">
-          <div class="date">February 16, 2026</div>
-          <h2>The AI Memory Crisis Is Real, And 2026 Is the Year Developers Finally Fixed It | SaveState</h2>
-          <p>Mastra's observational memory cuts costs 10x. StateLM gives models agency over their own context. The industry is finally fixing AI amnesia. But who's protecting all this new memory?</p>
-        </a>
-
-        <a href="/blog/savestate-v0.9.0-memory-that-heals-itself" class="blog-card">
-          <div class="date">February 14, 2026</div>
-          <h2>SaveState v0.9.0: Memory That Heals Itself</h2>
-          <p>SaveState v0.9.0 delivers privacy controls, memory lifecycle management, quality scoring, and agents that learn from their own failures. 76 commits across 25 days of work.</p>
-        </a>
-
-        <a href="/blog/agentic-workflows-need-backups" class="blog-card">
-          <div class="date">February 12, 2026</div>
-          <h2>Agentic Workflows Need Backups: Durable State for AI Agents - SaveState</h2>
-          <p>As agentic workflows move into CI and repo automation, durable state becomes a production requirement. Learn how to checkpoint, restore, and migrate AI agent context with SaveState.</p>
-        </a>
-
-        <a href="/blog/savestate-v0.7.0-migration-wizard" class="blog-card">
-          <div class="date">February 9, 2026</div>
-          <h2>SaveState v0.7.0: The Migration Wizard Is Here</h2>
-          <p>Announcing the Migration Wizard — move your AI conversations between platforms with a single command. ChatGPT to Claude, Claude to Gemini, and more.</p>
-        </a>
-
-        <a href="/blog/agent-memory-crisis-2026" class="blog-card">
-          <div class="date">February 8, 2026</div>
-          <h2>The Agent Memory Crisis: Why 2026's AI Explosion Needs a Time Machine</h2>
-          <p>The agent gold rush is officially underway. But there's a problem nobody's talking about: agent memory is fundamentally broken.</p>
-        </a>
-
-        <a href="/blog/agent-security-wake-up-call" class="blog-card">
-          <div class="date">February 6, 2026</div>
-          <h2>The Great AI Agent Security Wake-Up Call: Why Your Agent's State Is Now a Liability</h2>
-          <p>48% of security professionals believe agentic AI will become the #1 attack vector by end of 2026. Your agent's context is too valuable to lose and too sensitive to leave unprotected.</p>
-        </a>
-
-        <a href="/blog/claude-code-mcp-integration" class="blog-card">
-          <div class="date">February 6, 2026</div>
-          <h2>Claude Code MCP Integration: Backup Your AI with Natural Language</h2>
-          <p>SaveState now integrates directly with Claude Code via MCP. Backup and restore your agent state using natural language commands.</p>
-        </a>
-
-        <a href="/blog/building-custom-adapters" class="blog-card">
-          <div class="date">January 30, 2026</div>
-          <h2>Building Custom Adapters for SaveState: A Developer's Guide</h2>
-          <p>Learn how to create SaveState adapters for any AI platform. This step-by-step tutorial covers the adapter interface, data extraction, restoration, and publishing your adapter to npm.</p>
-        </a>
-
-        <a href="/blog/migrate-chatgpt-to-claude" class="blog-card">
-          <div class="date">January 29, 2026</div>
-          <h2>Migrating from ChatGPT to Claude (Without Losing Everything)</h2>
-          <p>A practical guide to moving your AI relationship between platforms. Keep your memories, custom instructions, and conversation history when switching from ChatGPT to Claude.</p>
-        </a>
-
-        <a href="/blog/savestate-architecture-deep-dive" class="blog-card">
-          <div class="date">January 26, 2026</div>
-          <h2>SaveState Architecture Deep Dive: How We Built Time Machine for AI</h2>
-          <p>Inside the SaveState Archive Format, encryption system, and adapter architecture. A technical deep dive into how SaveState protects your AI identity.</p>
-        </a>
-
-        <a href="/blog/agent-security-incidents-2026" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>88% of Organizations Had AI Agent Security Incidents Last Year — Is Your Agent Recoverable?</h2>
-          <p>The State of AI Agent Security 2026 Report reveals 88% of organizations experienced AI agent security incidents. If you can't see what your agents are doing, you certainly can't recover what they broke.</p>
-        </a>
-
-        <a href="/blog/ai-agent-memory-backup-strategy" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Your AI Agent Has a Memory Now. Do You Have a Backup? | SaveState Blog</h2>
-          <p>2026 is the year AI agents got real memory. Enterprise agents maintain context for weeks. But the more valuable that memory becomes, the more catastrophic losing it is.</p>
-        </a>
-
-        <a href="/blog/ai-agent-state-management-lessons-failures" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>AI Agent State Management: Lessons from Recent Failures</h2>
-          <p>Recent AI agent failures highlight critical lessons in state management. Let's dive into what went wrong and how to avoid these pitfalls.</p>
-        </a>
-
-        <a href="/blog/ai-agents-as-employees-hr-gap" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>OpenAI Frontier Treats AI Agents Like Employees — But Where's Their HR File?</h2>
-          <p>As enterprises adopt the 'AI as employee' paradigm with onboarding and performance reviews, they're missing the critical offboarding piece. What happens when an agent leaves?</p>
-        </a>
-
-        <a href="/blog/ai-amnesia-agent-memory" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>AI Amnesia: Why Your Agent's Memory Is More Fragile Than You Think | SaveState Blog</h2>
-          <p>Most AI agents forget everything between sessions. Here's why that costs you, and why full snapshots are the only reliable memory.</p>
-        </a>
-
-        <a href="/blog/ai-backup-strategies-critical" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Why AI Backup Strategies Just Became Critical</h2>
-          <p>Recent shifts in AI memory management highlight the urgent need for robust backup strategies in AI development. Here's what you need to know.</p>
-        </a>
-
-        <a href="/blog/ai-backup-strategies-lessons-recent-outages" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>AI Backup Strategies: Lessons from Recent Outages</h2>
-          <p>Recent AI service outages highlight the critical need for robust backup strategies. Here’s how to safeguard your AI agents effectively.</p>
-        </a>
-
-        <a href="/blog/context-rot-killing-your-ai-agent" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Context Rot Is Killing Your AI Agent (Here's the Fix)</h2>
-          <p>Context rot happens when your agent's context window fills with irrelevant information, degrading output quality. Here's how to fix it without losing valuable context.</p>
-        </a>
-
-        <a href="/blog/great-ai-migration-chatgpt-claude-context-loss" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>The Great AI Migration: Why Switching from ChatGPT to Claude Costs You Years of Context</h2>
-          <p>ChatGPT's ad rollout triggered a mass exodus. But migrating means losing years of accumulated context. Your AI relationship shouldn't require a clean break.</p>
-        </a>
-
-        <a href="/blog/hidden-cost-ai-context-loss" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>The Hidden Cost of AI Context Loss</h2>
-          <p>Context loss during AI coding sessions is costing developers hours per week. Here is what actually works to prevent it.</p>
-        </a>
-
-        <a href="/blog/hidden-crisis-agentic-coding" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>The Hidden Crisis in Agentic Coding: Who's Watching the State?</h2>
-          <p>As AI agents proliferate with OpenAI's Codex app, who's preserving their accumulated knowledge? The missing infrastructure layer for agentic development.</p>
-        </a>
-
-        <a href="/blog/how-savestate-works" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>How SaveState Works: A Technical Deep Dive</h2>
-          <p>Under the hood of AI identity backup and migration. Learn about encryption, the SaveState Archive Format, platform adapters, and cross-platform migration.</p>
-        </a>
-
-        <a href="/blog/memory-engineering-disaster-recovery" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Memory Engineering Is the New Discipline. Where's Your Disaster Recovery?</h2>
-          <p>DeepLearning.AI launched a course on it. JetBrains built it into Koog. Memory Engineering is now a formal discipline. But if memory is critical infrastructure, it needs a backup plan.</p>
-        </a>
-
-        <a href="/blog/memory-is-the-new-moat" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Memory Is the New Moat: Why Your AI's Context Is Your Most Valuable Asset</h2>
-          <p>The AI industry spent 2025 racing for bigger context windows. In 2026, we're realizing something more fundamental: memory isn't just a feature—it's the moat.</p>
-        </a>
-
-        <a href="/blog/memory-poisoning-87-percent" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>87% Compromised in 4 Hours: Why Your AI Agent Needs a Rollback Plan</h2>
-          <p>New research shows memory poisoning can corrupt 87% of an AI agent's decision-making in just four hours. Here's why secure backups are now a security requirement.</p>
-        </a>
-
-        <a href="/blog/memory-poisoning-ai-agent-security-risk" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Memory Poisoning: Why Your AI's Long-Term Memory Is Its Biggest Security Risk</h2>
-          <p>Memory poisoning (OWASP ASI06) turns your agent's persistent context into a weapon. Unlike prompt injection, poisoned memories last forever. Here's how to defend against it.</p>
-        </a>
-
-        <a href="/blog/migration-wizard-architecture" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Migration Wizard: The Architecture Behind AI Identity Portability</h2>
-          <p>How we built cross-platform AI migration with Extract → Transform → Load architecture. The foundation for ChatGPT ↔ Claude and beyond.</p>
-        </a>
-
-        <a href="/blog/observational-memory-ai-agents" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Observational Memory Is Reshaping AI Agents — Here's Why It Matters</h2>
-          <p>New research shows observational memory cutting AI agent costs 10x. But there's still one critical piece missing: backup and restore.</p>
-        </a>
-
-        <a href="/blog/openai-api-changes-memory-management" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Why OpenAI's API Changes Demand Better Memory Management</h2>
-          <p>OpenAI's recent API updates highlight the urgent need for effective memory management in AI systems. Here's what you need to know.</p>
-        </a>
-
-        <a href="/blog/savestate-now-on-clawhub" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>SaveState Now Available on ClawHub</h2>
-          <p>Install SaveState as an OpenClaw skill in seconds. Time Machine for AI with AES-256-GCM encryption, 6 platform adapters, and cross-platform migration.</p>
-        </a>
-
-        <a href="/blog/savestate-v0.6.0-release" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>SaveState v0.6.0: Migration Wizard, MCP, and GitHub Actions</h2>
-          <p>SaveState v0.6.0 brings automated migration with smart framework detection, Claude Code MCP integration, and production-ready GitHub Actions for CI/CD workflows.</p>
-        </a>
-
-        <a href="/blog/savestate-v0.8.0-migration-wizard-here" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>SaveState v0.8.0: The Migration Wizard is Here</h2>
-          <p>SaveState v0.8.0 delivers the full Migration Wizard with bidirectional Claude ↔ ChatGPT migration. Your AI memories are no longer locked to one platform.</p>
-        </a>
-
-        <a href="/blog/the-great-ai-memory-crisis" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>The Great AI Memory Crisis: Why Your AI's Memory Is More Fragile Than You Think</h2>
-          <p>Your AI assistant knows more about you than your closest friends. So why is that knowledge so easy to lose? Exploring the hidden fragility of AI memory.</p>
-        </a>
-
-        <a href="/blog/v0-7-0-migration-wizard" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>SaveState v0.7.0: Your AI Context Is Finally Portable</h2>
-          <p>SaveState v0.7.0 ships the Migration Wizard core — extract from ChatGPT, load into Claude, and never lose context switching platforms again.</p>
-        </a>
-
-        <a href="/blog/why-ai-agents-need-memory-backups-now" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Why AI Agents Need Memory Backups Now | SaveState Blog</h2>
-          <p>As AI agents become persistent companions, the data they accumulate becomes invaluable. Here's why you need backup strategies for your AI agent memory.</p>
-        </a>
-
-        <a href="/blog/why-ai-needs-backup" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Why Your AI Should Have a Backup Plan</h2>
-          <p>Your most important digital relationship is running without a safety net. Learn why backing up your AI assistant is crucial and how to protect your AI identity.</p>
-        </a>
-
-        <a href="/blog/your-ai-knows-everything" class="blog-card">
-          <div class="date">Unknown</div>
-          <h2>Your AI Knows Everything About You. What's Your Backup Plan?</h2>
-          <p>Introducing SaveState — Time Machine for your AI identity. Encrypted backup, restore, and migration for ChatGPT, Claude, Gemini, and more.</p>
-        </a>
       </div>
+
+      <!-- Sidebar -->
+      <aside class="blog-sidebar">
+
+        <!-- For AI Agents -->
+        <div class="sidebar-card sidebar-agent">
+          <h4>For AI Agents</h4>
+          <div class="agent-links">
+            <a href="/llms.txt" class="agent-link">
+              <div class="agent-link-icon">TXT</div>
+              <div class="agent-link-text">
+                <strong>llms.txt</strong>
+                <span>LLM-friendly overview</span>
+              </div>
+            </a>
+            <a href="/api/blog/feed.json" class="agent-link">
+              <div class="agent-link-icon">{ }</div>
+              <div class="agent-link-text">
+                <strong>JSON Feed</strong>
+                <span>Machine-readable blog</span>
+              </div>
+            </a>
+            <a href="/robots.txt" class="agent-link">
+              <div class="agent-link-icon">BOT</div>
+              <div class="agent-link-text">
+                <strong>robots.txt + SOM</strong>
+                <span>Agent directives</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- SOM Ready -->
+        <a href="https://somready.com/check?url=savestate.dev" target="_blank" rel="noopener" class="som-ready">
+          <div class="som-dot"></div>
+          <div class="som-text">
+            <strong>SOM Ready</strong>
+            <span>AI agents can read our content</span>
+          </div>
+        </a>
+
+        <!-- Resources -->
+        <div class="sidebar-card">
+          <h4>Resources</h4>
+          <div class="resource-links">
+            <a href="/docs/" class="resource-link">
+              <div class="resource-icon blue">DOC</div>
+              <span>Documentation</span>
+            </a>
+            <a href="/#pricing" class="resource-link">
+              <div class="resource-icon gold">$</div>
+              <span>Pricing</span>
+            </a>
+            <a href="/dashboard" class="resource-link">
+              <div class="resource-icon green">WEB</div>
+              <span>Dashboard</span>
+            </a>
+            <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener" class="resource-link">
+              <div class="resource-icon purple">GIT</div>
+              <span>GitHub Repo</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Popular Tags -->
+        <div class="sidebar-card">
+          <h4>Popular Tags</h4>
+          <div class="tag-cloud">
+            <a href="#">memory</a>
+            <a href="#">backup</a>
+            <a href="#">migration</a>
+            <a href="#">security</a>
+            <a href="#">claude</a>
+            <a href="#">chatgpt</a>
+            <a href="#">mcp</a>
+            <a href="#">ci-cd</a>
+            <a href="#">encryption</a>
+            <a href="#">release</a>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="sidebar-card sidebar-cta">
+          <h4>Back Up Your AI Today</h4>
+          <p>Your first backup takes 30 seconds. Your AI's memory is too valuable to leave unprotected.</p>
+          <a href="https://www.npmjs.com/package/@savestate/cli" class="btn" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            Get Started Free
+          </a>
+        </div>
+
+      </aside>
+    </div>
+  </div>
 </main>
 
+<!-- Footer -->
 <footer>
   <div class="container">
-    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="nav-logo">
+          <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+          <span class="nav-wordmark">SaveState</span>
+        </a>
+        <p>Time Machine for AI. Encrypted backup, restore, and migration for your AI identity.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/#how-it-works">How it Works</a></li>
+          <li><a href="/#features">Features</a></li>
+          <li><a href="/#pricing">Pricing</a></li>
+          <li><a href="/#cli">CLI Reference</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/faq.html">FAQ</a></li>
+          <li><a href="https://github.com/savestatedev/savestate">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 SaveState. Open Source under MIT License.</span>
+      <div class="footer-social">
+        <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+        <a href="https://x.com/SaveStateDev" target="_blank" rel="noopener" aria-label="X/Twitter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" aria-label="npm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8V8.667h5.334v5.332h-2.668zm12.001 0h-2.668v-4h-1.333v4h-1.333v-4h-1.334v4h-2.667V8.667h9.335v5.331z"/></svg>
+        </a>
+      </div>
+    </div>
   </div>
 </footer>
 

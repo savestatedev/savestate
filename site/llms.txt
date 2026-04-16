@@ -1,0 +1,75 @@
+# SaveState - Time Machine for AI
+> Encrypted backup, restore, and migration for your AI identity. Never lose your AI again.
+
+## About
+
+SaveState is an open-source CLI tool that backs up, restores, and migrates AI agent state across platforms. It captures conversations, memories, custom instructions, and configuration from ChatGPT, Claude, Claude Code, Gemini, and other AI platforms, encrypts everything with AES-256-GCM, and stores it locally or in the cloud.
+
+## Key Capabilities
+
+- **Encrypted Backups**: AES-256-GCM encryption with scrypt key derivation. Your keys, your data.
+- **6 Platform Adapters**: ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, Clawdbot
+- **Incremental Snapshots**: Git-like versioning - only captures what changed
+- **Cross-Platform Migration**: Move your AI identity between platforms (ChatGPT to Claude, etc.)
+- **Cloud or Local Storage**: Store locally, S3, Cloudflare R2, or any sync folder
+- **Open Format (SAF)**: SaveState Archive Format is an open spec with no vendor lock-in
+- **CLI-First**: Built for developers who live in the terminal
+
+## Quick Start
+
+```bash
+npm install -g @savestate/cli
+savestate init      # Set up encryption
+savestate snapshot  # Capture AI state
+savestate restore   # Restore from backup
+```
+
+## Pricing
+
+- **Free**: CLI tool, local storage, manual snapshots, 1 adapter
+- **Pro ($9/mo)**: Scheduled backups, cloud storage (10GB), all adapters, web dashboard
+- **Team ($29/mo)**: Shared backups, compliance/audit trails, SSO, priority support
+
+## Blog Categories
+
+- **Memory Management**: AI context, state management, memory engineering
+- **Security**: Memory poisoning, agent security, backup strategies
+- **Migration**: Cross-platform migration, ChatGPT to Claude guides
+- **Product Updates**: Release notes, new features, roadmap
+
+## Recent Articles
+
+1. The AI Memory Management Dilemma: Are We Prepared? (2026-04-01)
+   https://savestate.dev/blog/ai-memory-management-dilemma
+   As AI memory capabilities grow, so do the risks. Are we ready to tackle the challenges of memory management and backups in AI agents?
+
+2. Why Your AI Needs Robust Backup Strategies Now (2026-03-31)
+   https://savestate.dev/blog/ai-backup-strategies
+   As AI systems grow more complex, effective backup strategies are crucial for reliability.
+
+3. AI Memory Management: Lessons from Recent Rollbacks (2026-03-30)
+   https://savestate.dev/blog/ai-memory-management-lessons-from-recent-rollbacks
+   Exploring the implications of recent AI memory rollbacks and what they mean for developers.
+
+4. The Role of AI Memory in Continuous Deployment (2026-03-28)
+   https://savestate.dev/blog/ai-memory-continuous-deployment
+   AI memory management is crucial for seamless deployments. Learn how to enhance your CI/CD workflows.
+
+5. SaveState v0.9.0: Memory Governance Your Agents Actually Need (2026-02-27)
+   https://savestate.dev/blog/v0.9.0-memory-governance
+   Introduces memory lifecycle controls, explainability, and privacy-first features for AI agents.
+
+## Links
+
+- Website: https://savestate.dev
+- GitHub: https://github.com/savestatedev/savestate
+- npm: https://www.npmjs.com/package/@savestate/cli
+- Documentation: https://savestate.dev/docs/
+- Blog: https://savestate.dev/blog
+- Blog JSON Feed: https://savestate.dev/api/blog/feed.json
+
+## Contact
+
+- Twitter/X: @SaveStateDev
+- Email: hello@savestate.dev
+- GitHub Issues: https://github.com/savestatedev/savestate/issues

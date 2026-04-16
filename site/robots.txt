@@ -4,3 +4,13 @@ Allow: /
 
 # Sitemap
 Sitemap: https://savestate.dev/sitemap.xml
+
+# SOM (Semantic Object Model) Directives for AI Agents
+# Learn more: https://somready.com
+SOM-Endpoint: https://savestate.dev/llms.txt
+SOM-Format: SOM/1.0
+SOM-Scope: main-content
+SOM-Freshness: 3600
+SOM-Token-Budget: 15000
+SOM-Attribution: required
+SOM-Contact: hello@savestate.dev
