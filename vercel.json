@@ -3,6 +3,12 @@
   "outputDirectory": "site",
   "buildCommand": "npx ts-node scripts/generate-blog-index.ts",
   "redirects": [
+    {
+      "source": "/:path((?!meet).*)",
+      "has": [{ "type": "host", "value": "meet.savestate.dev" }],
+      "destination": "https://savestate.dev/meet",
+      "permanent": false
+    },
     { "source": "/pricing", "destination": "/#pricing", "permanent": false },
     { "source": "/login", "destination": "/dashboard", "permanent": false }
   ],
