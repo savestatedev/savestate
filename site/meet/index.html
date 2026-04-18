@@ -18,33 +18,33 @@
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ============================================================
-   RESET & BASE — identical to savestate.dev
-   ============================================================ */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
+/* ================================================================
+   VARIABLES
+   ================================================================ */
 :root {
-  --navy: #1a1a2e;
   --blue: #03C1DF;
   --blue-light: #9BCDE4;
   --blue-dim: #025A6A;
-  --bg: #06060c;
-  --bg-card: #0d0d18;
-  --bg-card-hover: #111122;
-  --bg-code: #0a0a14;
+  --bg: #060609;
+  --bg-card: #0b0b16;
+  --bg-code: #08080f;
   --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --border: #1e293b;
-  --glow: rgba(3, 193, 223, 0.15);
-  --glow-strong: rgba(3, 193, 223, 0.3);
-  --radius: 12px;
-  --radius-sm: 8px;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --text-muted: #8899aa;
+  --text-dim: #566677;
+  --border: #161d2d;
+  --border-light: #1c2640;
+  --red: #e85454;
+  --display: 'Syne', system-ui, sans-serif;
+  --body: 'Outfit', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
 }
+
+/* ================================================================
+   RESET & BASE
+   ================================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 html {
   scroll-behavior: smooth;
@@ -53,36 +53,49 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
+html, body { overflow-x: hidden; }
 
 body {
-  font-family: var(--font);
+  font-family: var(--body);
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
+  font-weight: 400;
 }
 
-/* Dot grid background */
+/* Subtle grid */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image:
+    linear-gradient(rgba(3, 193, 223, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3, 193, 223, 0.018) 1px, transparent 1px);
+  background-size: 60px 60px;
   pointer-events: none;
   z-index: 0;
 }
 
-/* ============================================================
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.028;
+  pointer-events: none;
+  z-index: 10000;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+/* ================================================================
    LAYOUT
-   ============================================================ */
-.container {
-  max-width: 1120px;
+   ================================================================ */
+.wrap {
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 40px;
   position: relative;
   z-index: 1;
 }
@@ -94,911 +107,965 @@ body::before {
   display: flex;
   align-items: center;
   position: relative;
-  padding: 100px 0;
+  padding: 120px 0;
 }
 
-/* ============================================================
-   NAV — identical to savestate.dev
-   ============================================================ */
-nav {
+/* ================================================================
+   PROGRESS BAR
+   ================================================================ */
+.progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--blue), var(--blue-light));
+  z-index: 500;
+  box-shadow: 0 0 12px rgba(3, 193, 223, 0.4);
+  transition: width 0.08s linear;
+}
+
+/* ================================================================
+   NAV
+   ================================================================ */
+.topnav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
-  padding: 16px 0;
-  background: rgba(6, 6, 12, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+  z-index: 300;
+  padding: 14px 0;
+  background: rgba(6, 6, 9, 0.82);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid rgba(22, 29, 45, 0.5);
 }
 
-nav .container {
+.topnav .wrap {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.nav-logo {
+.brand {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--text);
 }
 
-.nav-logo img { flex-shrink: 0; }
+.brand img {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+}
 
-.nav-wordmark {
-  font-size: 18px;
+.brand-name {
+  font-family: var(--display);
+  font-size: 17px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--blue-light), var(--blue));
+  background: linear-gradient(135deg, var(--blue-light) 0%, var(--blue) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.02em;
 }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  list-style: none;
-}
-
-.nav-links a {
-  color: var(--text-muted);
+.topnav-link {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
+  letter-spacing: 0.02em;
   transition: color 0.2s;
 }
 
-.nav-links a:hover { color: var(--text); }
+.topnav-link:hover { color: var(--blue); }
 
-.nav-links .btn-nav {
+/* ================================================================
+   SLIDE NAV DOTS
+   ================================================================ */
+.dotnav {
+  position: fixed;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 300;
+}
+
+.dotnav a {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  transition: all 0.35s ease;
+  text-decoration: none;
+}
+
+.dotnav a.on {
   background: var(--blue);
-  color: #fff;
-  padding: 8px 18px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 0 10px rgba(3, 193, 223, 0.5);
+  transform: scale(1.4);
 }
 
-.nav-links .btn-nav:hover {
-  background: var(--blue-light);
-  transform: translateY(-1px);
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+.eyebrow {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 20px;
 }
 
-.nav-mobile-toggle {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text);
-  cursor: pointer;
-  padding: 8px;
+.heading {
+  font-family: var(--display);
+  font-size: clamp(30px, 4.5vw, 50px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  margin-bottom: 16px;
 }
 
-/* ============================================================
-   BUTTONS — identical to savestate.dev
-   ============================================================ */
+.subtext {
+  font-size: 17px;
+  font-weight: 300;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 520px;
+}
+
+/* ================================================================
+   BUTTONS
+   ================================================================ */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 28px;
+  padding: 13px 26px;
   border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--body);
   text-decoration: none;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--blue), #0284c7);
+.btn-fill {
+  background: linear-gradient(135deg, var(--blue), #0891b2);
   color: #fff;
-  box-shadow: 0 0 20px rgba(3, 193, 223, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 20px rgba(3, 193, 223, 0.18), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
-.btn-primary:hover {
-  background: linear-gradient(135deg, var(--blue-light), var(--blue));
-  box-shadow: 0 0 30px rgba(3, 193, 223, 0.4), 0 6px 16px rgba(0, 0, 0, 0.3);
+.btn-fill:hover {
+  box-shadow: 0 0 32px rgba(3, 193, 223, 0.32), 0 6px 20px rgba(0, 0, 0, 0.3);
   transform: translateY(-2px);
 }
 
-.btn-secondary {
+.btn-outline {
   background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(4px);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
 }
 
-.btn-secondary:hover {
-  border-color: var(--blue);
-  background: rgba(3, 193, 223, 0.05);
+.btn-outline:hover {
+  color: var(--text);
+  border-color: rgba(3, 193, 223, 0.35);
+  background: rgba(3, 193, 223, 0.04);
   transform: translateY(-2px);
 }
 
-.btn-group {
+.btn-row {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   flex-wrap: wrap;
 }
 
-/* ============================================================
-   SECTION HEADERS — identical to savestate.dev
-   ============================================================ */
-.section-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--blue);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 16px;
-}
-
-.section-label::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: var(--blue);
-  border-radius: 2px;
-}
-
-.section-title {
-  font-size: clamp(28px, 4vw, 42px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin-bottom: 16px;
-}
-
-.section-subtitle {
-  font-size: 17px;
-  color: var(--text-muted);
-  max-width: 560px;
-  line-height: 1.7;
-}
-
-/* ============================================================
-   SLIDE 1 — HERO
-   ============================================================ */
+/* ================================================================
+   HERO
+   ================================================================ */
 .slide-hero {
-  padding: 160px 0 120px;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
+  padding-top: 160px;
+  padding-bottom: 100px;
 }
 
+/* Radial ambient glow */
 .slide-hero::before {
   content: '';
   position: absolute;
-  top: -100px;
+  top: -10%;
   left: 50%;
   transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(3, 193, 223, 0.08), transparent 70%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(3, 193, 223, 0.07) 0%, transparent 65%);
   pointer-events: none;
 }
 
-.slide-hero::after {
-  content: '';
-  position: absolute;
-  top: 60px;
-  right: 10%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(155, 205, 228, 0.05), transparent 70%);
-  pointer-events: none;
+.hero-visual {
+  margin-bottom: 48px;
+  position: relative;
+  animation: fadeIn 1s ease-out both;
+}
+
+.hero-rings {
+  display: block;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-family: var(--display);
+  font-size: clamp(48px, 7.5vw, 86px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  margin-bottom: 28px;
+  background: linear-gradient(180deg, #ffffff 20%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeUp 0.7s ease-out 0.15s both;
+}
+
+.hero-sub {
+  font-size: clamp(15px, 1.8vw, 19px);
+  font-weight: 300;
+  color: var(--text-muted);
+  max-width: 540px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+  text-wrap: balance;
+  animation: fadeUp 0.7s ease-out 0.3s both;
+}
+
+.hero-actions {
+  animation: fadeUp 0.7s ease-out 0.45s both;
+  justify-content: center;
 }
 
 .hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px 6px 8px;
-  background: rgba(3, 193, 223, 0.08);
-  border: 1px solid rgba(3, 193, 223, 0.2);
-  border-radius: 100px;
-  font-size: 13px;
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 500;
   color: var(--blue-light);
-  margin-bottom: 32px;
-  animation: fadeInDown 0.6s ease-out;
+  letter-spacing: 0.06em;
+  padding: 6px 16px;
+  background: rgba(3, 193, 223, 0.06);
+  border: 1px solid rgba(3, 193, 223, 0.14);
+  border-radius: 100px;
+  margin-bottom: 36px;
+  animation: fadeUp 0.5s ease-out 0.6s both;
 }
 
 .hero-badge-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: var(--blue);
   border-radius: 50%;
-  animation: pulse-dot 2s infinite;
+  animation: pulse-dot 2.5s ease-in-out infinite;
 }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(3, 193, 223, 0.5); }
-  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(3, 193, 223, 0); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(3, 193, 223, 0); }
 }
 
-.slide-hero h1 {
-  font-size: clamp(40px, 6.5vw, 76px);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1.05;
-  margin-bottom: 24px;
-  color: #ffffff;
-  animation: fadeInUp 0.7s ease-out;
+/* ================================================================
+   HERO RINGS (SVG)
+   ================================================================ */
+.ring-solid {
+  fill: none;
+  stroke-width: 0.8;
 }
 
-.hero-subtitle {
-  font-size: clamp(16px, 2vw, 20px);
-  color: var(--text-muted);
-  max-width: 600px;
-  margin: 0 auto 40px;
-  line-height: 1.6;
-  animation: fadeInUp 0.8s ease-out;
-  text-wrap: balance;
+.ring-flow {
+  fill: none;
+  stroke-linecap: round;
 }
 
-.slide-hero .btn-group {
-  justify-content: center;
-  animation: fadeInUp 0.9s ease-out;
-  margin-bottom: 64px;
+.flow-outer {
+  stroke: rgba(3, 193, 223, 0.22);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 14;
+  animation: flowCW 22s linear infinite;
+  transform-origin: 200px 200px;
 }
 
-/* Terminal — identical to savestate.dev */
-.terminal {
-  max-width: 640px;
-  margin: 0 auto;
-  background: var(--bg-code);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  text-align: left;
-  box-shadow:
-    0 0 40px rgba(3, 193, 223, 0.06),
-    0 20px 60px rgba(0, 0, 0, 0.5);
-  animation: fadeInUp 1s ease-out;
+.flow-mid {
+  stroke: rgba(3, 193, 223, 0.16);
+  stroke-width: 1;
+  stroke-dasharray: 4 18;
+  animation: flowCCW 18s linear infinite;
+  transform-origin: 200px 200px;
 }
 
-.terminal-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 18px;
-  background: rgba(15, 15, 30, 0.9);
-  border-bottom: 1px solid var(--border);
+.flow-inner {
+  stroke: rgba(3, 193, 223, 0.12);
+  stroke-width: 0.8;
+  stroke-dasharray: 3 14;
+  animation: flowCW 14s linear infinite;
+  transform-origin: 200px 200px;
 }
 
-.terminal-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+@keyframes flowCW {
+  to { stroke-dashoffset: -200; }
 }
 
-.terminal-dot:nth-child(1) { background: #ef4444; }
-.terminal-dot:nth-child(2) { background: #eab308; }
-.terminal-dot:nth-child(3) { background: #22c55e; }
-
-.terminal-title {
-  flex: 1;
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-dim);
-  font-family: var(--mono);
+@keyframes flowCCW {
+  to { stroke-dashoffset: 200; }
 }
 
-.terminal-body {
-  padding: 20px 24px;
-  font-family: var(--mono);
-  font-size: 14px;
-  line-height: 1.8;
-  min-height: 160px;
+.orb {
+  transform-origin: 200px 200px;
 }
 
-.terminal-line {
-  opacity: 0;
-  animation: typeLine 0.4s ease-out forwards;
+.orb-1 { animation: spin 14s linear infinite; }
+.orb-2 { animation: spin 10s linear infinite reverse; }
+.orb-3 { animation: spin 8s linear infinite; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.terminal-line:nth-child(1) { animation-delay: 0.5s; }
-.terminal-line:nth-child(2) { animation-delay: 1.2s; }
-.terminal-line:nth-child(3) { animation-delay: 1.9s; }
-.terminal-line:nth-child(4) { animation-delay: 2.4s; }
-.terminal-line:nth-child(5) { animation-delay: 2.9s; }
-.terminal-line:nth-child(6) { animation-delay: 3.4s; }
-.terminal-line:nth-child(7) { animation-delay: 3.9s; }
-
-@keyframes typeLine {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+.pause-bar {
+  fill: var(--blue);
+  opacity: 0.45;
 }
 
-.terminal-prompt { color: var(--blue); }
-.terminal-cmd { color: #e2e8f0; }
-.terminal-output { color: var(--text-dim); }
-.terminal-success { color: #22c55e; }
-.terminal-accent { color: var(--blue-light); }
-.terminal-muted { color: #475569; }
+.data-wave {
+  stroke: var(--blue-light);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  opacity: 0.12;
+}
 
-/* ============================================================
-   SLIDE 2 — PROBLEM
-   ============================================================ */
+/* ================================================================
+   PROBLEM
+   ================================================================ */
 .slide-problem {
   border-top: 1px solid var(--border);
 }
 
-.problem-header {
-  text-align: center;
-  margin-bottom: 64px;
+.problem-intro {
+  margin-bottom: 60px;
 }
 
-.problem-header .section-title {
-  max-width: 620px;
-  margin: 0 auto 16px;
+.problem-intro .heading {
+  max-width: 540px;
 }
 
-.problem-grid {
+.problem-intro .subtext {
+  color: var(--text-dim);
+  font-size: 18px;
+  margin-top: 4px;
+}
+
+.problem-list {
+  border-top: 1px solid var(--border);
+}
+
+.problem-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.problem-card {
-  padding: 36px 28px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  text-align: center;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.problem-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #ef4444, transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.problem-card:hover {
-  border-color: rgba(239, 68, 68, 0.3);
-  background: var(--bg-card-hover);
-}
-
-.problem-card:hover::before { opacity: 1; }
-
-.problem-icon {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 20px;
-  display: flex;
+  grid-template-columns: 260px 1fr;
+  gap: 48px;
   align-items: center;
-  justify-content: center;
-  background: rgba(239, 68, 68, 0.08);
-  border-radius: 14px;
-  font-size: 26px;
+  padding: 44px 0;
+  border-bottom: 1px solid var(--border);
 }
 
-.problem-card h3 {
-  font-size: 17px;
+.problem-num {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--red);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.problem-row h3 {
+  font-family: var(--display);
+  font-size: 23px;
   font-weight: 700;
-  margin-bottom: 10px;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
-.problem-card p {
-  font-size: 14px;
+.problem-row p {
+  font-size: 16px;
+  font-weight: 300;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.75;
 }
 
-/* ============================================================
-   SLIDE 3 — HOW IT WORKS
-   ============================================================ */
+/* ================================================================
+   HOW IT WORKS
+   ================================================================ */
 .slide-how {
   border-top: 1px solid var(--border);
 }
 
 .how-header {
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 72px;
 }
 
-.steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
+.how-header .subtext {
+  margin: 4px auto 0;
+}
+
+.steps-row {
+  display: flex;
+  gap: 0;
   position: relative;
 }
 
-.steps::before {
+/* Connecting line */
+.steps-row::before {
   content: '';
   position: absolute;
-  top: 38px;
-  left: calc(16.67% + 30px);
-  right: calc(16.67% + 30px);
-  height: 2px;
-  background: linear-gradient(90deg, var(--blue), var(--blue-light), var(--blue));
+  top: 24px;
+  left: calc(16.67% + 28px);
+  right: calc(16.67% + 28px);
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--blue), rgba(3, 193, 223, 0.4), var(--blue));
   opacity: 0.3;
+  z-index: 1;
 }
 
-.step { text-align: center; }
+.step {
+  flex: 1;
+  text-align: center;
+  padding: 0 16px;
+}
 
-.step-number {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 24px;
+.step-num {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--blue), #0284c7);
-  border-radius: 16px;
-  font-size: 20px;
+  background: linear-gradient(145deg, var(--blue) 0%, #0891b2 100%);
+  border-radius: 14px;
+  font-family: var(--display);
+  font-size: 19px;
   font-weight: 800;
   color: #fff;
   position: relative;
   z-index: 2;
-  box-shadow: 0 0 20px rgba(3, 193, 223, 0.25);
+  box-shadow: 0 0 24px rgba(3, 193, 223, 0.22);
 }
 
 .step h3 {
+  font-family: var(--display);
   font-size: 19px;
   font-weight: 700;
-  margin-bottom: 10px;
-  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
 }
 
 .step p {
   font-size: 14px;
+  font-weight: 300;
   color: var(--text-muted);
-  margin-bottom: 20px;
+  margin-bottom: 22px;
   line-height: 1.6;
 }
 
 .step-code {
   background: var(--bg-code);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 16px;
+  border-radius: 8px;
+  padding: 14px 18px;
   font-family: var(--mono);
   font-size: 13px;
   text-align: left;
   color: var(--text);
-  line-height: 1.7;
-  overflow-x: auto;
+  line-height: 1.6;
 }
 
-.step-code .prompt { color: var(--blue); }
-.step-code .comment { color: #475569; }
-.step-code .string { color: #22c55e; }
+.c-prompt { color: var(--blue); }
+.c-dim { color: var(--text-dim); }
+.c-ok { color: #34d399; }
 
-/* ============================================================
-   SLIDE 4 — FEATURES
-   ============================================================ */
+/* ================================================================
+   FEATURES — BENTO GRID
+   ================================================================ */
 .slide-features {
   border-top: 1px solid var(--border);
 }
 
 .features-header {
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 56px;
 }
 
-.features-grid {
+.features-header .subtext {
+  margin: 4px auto 0;
+}
+
+.bento {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  max-width: 960px;
-  margin: 0 auto;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
 }
 
-.feature-card {
-  padding: 32px 28px;
+.card {
+  padding: 30px 28px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 12px;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
-.feature-card::before {
+.card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 10%, var(--blue) 50%, transparent 90%);
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.35s;
 }
 
-.feature-card:hover {
-  border-color: rgba(3, 193, 223, 0.3);
-  background: var(--bg-card-hover);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+.card:hover {
+  border-color: rgba(3, 193, 223, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35), 0 0 24px rgba(3, 193, 223, 0.05);
 }
 
-.feature-card:hover::before { opacity: 1; }
+.card:hover::before { opacity: 1; }
 
-.feature-icon {
-  font-size: 32px;
-  margin-bottom: 18px;
-  display: block;
+/* Bento layout: zigzag wide/narrow */
+.card:nth-child(1) { grid-column: span 7; }
+.card:nth-child(2) { grid-column: span 5; }
+.card:nth-child(3) { grid-column: span 5; }
+.card:nth-child(4) { grid-column: span 7; }
+.card:nth-child(5) { grid-column: span 6; }
+.card:nth-child(6) { grid-column: span 6; }
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--blue);
+  margin-bottom: 16px;
 }
 
-.feature-card h3 {
+.card-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.5;
+}
+
+.card h3 {
+  font-family: var(--display);
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   letter-spacing: -0.01em;
 }
 
-.feature-card p {
+.card p {
   font-size: 14px;
+  font-weight: 300;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
-/* ============================================================
-   SLIDE 5 — CTA
-   ============================================================ */
+/* ================================================================
+   CTA
+   ================================================================ */
 .slide-cta {
-  border-top: 1px solid var(--border);
   text-align: center;
+  border-top: 1px solid var(--border);
 }
 
-.install-block {
+/* Ambient glow */
+.slide-cta::before {
+  content: '';
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(3, 193, 223, 0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.cta-heading {
+  font-family: var(--display);
+  font-size: clamp(30px, 4.5vw, 50px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+
+.cta-sub {
+  font-size: 17px;
+  font-weight: 300;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+}
+
+.install {
   display: inline-flex;
   align-items: center;
   gap: 12px;
   background: var(--bg-code);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px 4px 4px 20px;
-  margin-bottom: 48px;
+  border-radius: 12px;
+  padding: 6px 6px 6px 24px;
+  margin-bottom: 56px;
   font-family: var(--mono);
   font-size: 15px;
 }
 
-.install-block code { color: var(--text); }
-.install-block .prompt-char { color: var(--blue); }
+.install code { color: var(--text); }
+.install .p { color: var(--blue); }
 
 .copy-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(3, 193, 223, 0.1);
-  border: 1px solid rgba(3, 193, 223, 0.2);
+  gap: 6px;
+  background: rgba(3, 193, 223, 0.08);
+  border: 1px solid rgba(3, 193, 223, 0.18);
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   color: var(--blue-light);
   cursor: pointer;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 600;
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 500;
   transition: all 0.2s;
-  gap: 6px;
 }
 
 .copy-btn:hover {
-  background: rgba(3, 193, 223, 0.15);
+  background: rgba(3, 193, 223, 0.14);
   border-color: var(--blue);
 }
 
-.copy-btn svg {
-  width: 16px;
-  height: 16px;
-}
+.copy-btn svg { width: 14px; height: 14px; }
 
 .footer-links {
   display: flex;
   justify-content: center;
-  gap: 32px;
+  gap: 28px;
   margin-bottom: 48px;
 }
 
 .footer-links a {
-  color: var(--text-muted);
+  color: var(--text-dim);
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 400;
   transition: color 0.2s;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .footer-links a:hover { color: var(--blue-light); }
 
-.footer-bottom {
-  padding-top: 32px;
+.footer-end {
+  padding-top: 28px;
   border-top: 1px solid var(--border);
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.footer-bottom a {
+.footer-end a {
   color: var(--text-muted);
   text-decoration: none;
 }
 
-.footer-bottom a:hover { color: var(--blue-light); }
+.footer-end a:hover { color: var(--blue-light); }
 
-/* ============================================================
-   ANIMATIONS — identical to savestate.dev
-   ============================================================ */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-12px); }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .reveal {
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transform: translateY(28px);
+  transition: opacity 0.65s ease-out, transform 0.65s ease-out;
 }
 
-.reveal.visible {
+.reveal.vis {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* ============================================================
-   RESPONSIVE — identical to savestate.dev
-   ============================================================ */
-@media (max-width: 900px) {
-  .problem-grid,
-  .features-grid,
-  .steps {
-    grid-template-columns: 1fr;
-    max-width: 480px;
-    margin: 0 auto;
-  }
+.reveal-d1 { transition-delay: 0.08s; }
+.reveal-d2 { transition-delay: 0.16s; }
+.reveal-d3 { transition-delay: 0.24s; }
+.reveal-d4 { transition-delay: 0.32s; }
+.reveal-d5 { transition-delay: 0.4s; }
+.reveal-d6 { transition-delay: 0.48s; }
 
-  .steps::before { display: none; }
-  .slide { padding: 72px 0; }
-  .slide-hero { padding: 120px 0 80px; }
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 900px) {
+  .steps-row {
+    flex-direction: column;
+    gap: 48px;
+  }
+  .steps-row::before { display: none; }
+  .problem-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 32px 0;
+  }
+  .bento {
+    grid-template-columns: 1fr;
+  }
+  .card:nth-child(n) { grid-column: span 1; }
+  .slide { padding: 80px 0; }
   html { scroll-snap-type: y proximity; }
 }
 
 @media (max-width: 768px) {
-  .nav-mobile-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .nav-links { display: none; }
-  .nav-links.show {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: rgba(6, 6, 12, 0.98);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 24px;
-    gap: 16px;
-  }
-  .nav-links.show a { padding: 12px 0; font-size: 16px; }
-  .nav-links.show .btn-nav { margin-top: 8px; text-align: center; }
+  .dotnav { display: none; }
+  .wrap { padding: 0 24px; }
 }
 
 @media (max-width: 640px) {
-  .container { padding: 0 16px; }
-  .slide { padding: 56px 0; }
-  .slide-hero { padding: 100px 0 64px; }
-  .slide-hero h1 { font-size: 32px; line-height: 1.1; padding: 0 8px; }
-  .hero-subtitle { font-size: 15px; padding: 0 8px; line-height: 1.5; }
-  .hero-badge { font-size: 11px; padding: 6px 12px 6px 8px; }
-  .hero-badge-dot { display: none; }
-  .btn { padding: 14px 24px; font-size: 15px; width: 100%; justify-content: center; }
-  .btn-group { flex-direction: column; align-items: stretch; width: 100%; max-width: 280px; margin: 0 auto; }
-  .terminal { border-radius: 12px; }
-  .terminal-body { padding: 16px; font-size: 11px; overflow-x: auto; line-height: 1.6; min-height: auto; }
-  .terminal-title { display: none; }
-  .section-title { font-size: 24px; padding: 0 8px; }
-  .section-subtitle { font-size: 15px; padding: 0 8px; }
-  .section-label { font-size: 11px; }
-  .problem-header { margin-bottom: 40px; }
-  .problem-card { padding: 28px 20px; }
-  .problem-icon { width: 48px; height: 48px; font-size: 22px; }
-  .problem-card h3 { font-size: 16px; }
-  .problem-card p { font-size: 13px; }
-  .how-header { margin-bottom: 40px; }
-  .step-number { width: 48px; height: 48px; font-size: 18px; margin-bottom: 16px; }
+  .slide-hero { padding-top: 120px; padding-bottom: 64px; }
+  .hero-rings { width: 200px !important; height: 200px !important; }
+  .hero-visual { margin-bottom: 32px; }
+  .hero-title { font-size: 38px; letter-spacing: -0.04em; }
+  .hero-sub { font-size: 15px; }
+  .hero-badge { font-size: 10px; padding: 5px 12px; }
+  .heading { font-size: 26px; }
+  .problem-row h3 { font-size: 19px; }
+  .problem-row p { font-size: 14px; }
   .step h3 { font-size: 17px; }
-  .step p { font-size: 13px; }
-  .step-code { font-size: 11px; padding: 14px; overflow-x: auto; }
-  .features-header { margin-bottom: 40px; }
-  .feature-card { padding: 24px 20px; }
-  .feature-icon { font-size: 28px; }
-  .feature-card h3 { font-size: 15px; }
-  .feature-card p { font-size: 13px; }
-  .install-block { font-size: 12px; padding: 4px 4px 4px 14px; }
-  .install-block code { font-size: 12px; }
-  .footer-links { gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .step-code { font-size: 12px; padding: 12px 14px; }
+  .card { padding: 24px 22px; }
+  .card h3 { font-size: 15px; }
+  .card p { font-size: 13px; }
+  .cta-heading { font-size: 26px; }
+  .install { font-size: 13px; padding: 5px 5px 5px 16px; }
+  .btn { padding: 12px 22px; font-size: 13px; }
+  .btn-row { flex-direction: column; align-items: center; }
+  .footer-links { gap: 16px; flex-wrap: wrap; }
 }
 
 @media (max-width: 380px) {
-  .slide-hero h1 { font-size: 28px; }
-  .hero-subtitle { font-size: 14px; }
-  .hero-badge { font-size: 10px; padding: 5px 10px; }
-  .section-title { font-size: 22px; }
-  .terminal-body { font-size: 10px; }
+  .hero-title { font-size: 32px; }
+  .heading { font-size: 24px; }
 }
 
-/* ============================================================
-   PRINT
-   ============================================================ */
+/* Print */
 @media print {
   html { scroll-snap-type: none; }
   .slide { min-height: auto; page-break-after: always; padding: 40px 0; }
-  body::before { display: none; }
-  nav { display: none; }
+  body::before, body::after { display: none; }
+  .topnav, .dotnav, .progress { display: none; }
   .reveal { opacity: 1 !important; transform: none !important; }
 }
 </style>
 </head>
 <body>
 
-<!-- ==================== NAV ==================== -->
-<nav>
-  <div class="container">
-    <a href="https://savestate.dev" class="nav-logo">
-      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
-      <span class="nav-wordmark">SaveState</span>
+<!-- Progress bar -->
+<div class="progress" id="progress"></div>
+
+<!-- Nav -->
+<nav class="topnav">
+  <div class="wrap">
+    <a href="https://savestate.dev" class="brand">
+      <img src="/logo.svg" alt="SaveState" width="28" height="28">
+      <span class="brand-name">SaveState</span>
     </a>
-    <ul class="nav-links">
-      <li><a href="https://savestate.dev/#how-it-works">How it Works</a></li>
-      <li><a href="https://savestate.dev/#features">Features</a></li>
-      <li><a href="https://savestate.dev/#pricing">Pricing</a></li>
-      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
-      <li><a href="https://savestate.dev/blog">Blog</a></li>
-      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
-    </ul>
-    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
+    <a href="https://savestate.dev" class="topnav-link">savestate.dev</a>
   </div>
 </nav>
 
+<!-- Slide dots -->
+<div class="dotnav" id="dotnav">
+  <a href="#hero" class="on" aria-label="Hero"></a>
+  <a href="#problem" aria-label="Problem"></a>
+  <a href="#how" aria-label="How it works"></a>
+  <a href="#features" aria-label="Features"></a>
+  <a href="#cta" aria-label="Get started"></a>
+</div>
+
 <!-- ==================== SLIDE 1: HERO ==================== -->
 <section class="slide slide-hero" id="hero">
-  <div class="container">
-    <div class="hero-badge">
-      <span class="hero-badge-dot"></span>
-      Open Source &middot; Encrypted &middot; Portable
+  <div class="wrap">
+
+    <!-- Animated Time Rings -->
+    <div class="hero-visual">
+      <svg class="hero-rings" viewBox="0 0 400 400" width="280" height="280" aria-hidden="true">
+        <defs>
+          <radialGradient id="amb">
+            <stop offset="0%" stop-color="rgba(3,193,223,0.12)" />
+            <stop offset="100%" stop-color="transparent" />
+          </radialGradient>
+          <filter id="glo" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="b" />
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Ambient -->
+        <circle cx="200" cy="200" r="190" fill="url(#amb)" />
+
+        <!-- Solid rings -->
+        <circle cx="200" cy="200" r="175" class="ring-solid" stroke="rgba(3,193,223,0.08)" />
+        <circle cx="200" cy="200" r="135" class="ring-solid" stroke="rgba(3,193,223,0.06)" />
+        <circle cx="200" cy="200" r="95" class="ring-solid" stroke="rgba(3,193,223,0.05)" />
+
+        <!-- Data-flow dashed rings -->
+        <circle cx="200" cy="200" r="175" class="ring-flow flow-outer" />
+        <circle cx="200" cy="200" r="135" class="ring-flow flow-mid" />
+        <circle cx="200" cy="200" r="95" class="ring-flow flow-inner" />
+
+        <!-- Orbiting dots -->
+        <circle cx="375" cy="200" r="3" fill="#03C1DF" filter="url(#glo)" class="orb orb-1" />
+        <circle cx="200" cy="65" r="2.5" fill="#9BCDE4" filter="url(#glo)" class="orb orb-2" />
+        <circle cx="105" cy="200" r="2" fill="#03C1DF" filter="url(#glo)" class="orb orb-3" />
+
+        <!-- Data waves (logo motif) -->
+        <line x1="168" y1="188" x2="142" y2="188" class="data-wave" />
+        <line x1="168" y1="200" x2="132" y2="200" class="data-wave" />
+        <line x1="168" y1="212" x2="142" y2="212" class="data-wave" />
+        <line x1="232" y1="188" x2="258" y2="188" class="data-wave" />
+        <line x1="232" y1="200" x2="268" y2="200" class="data-wave" />
+        <line x1="232" y1="212" x2="258" y2="212" class="data-wave" />
+
+        <!-- Pause symbol -->
+        <rect x="181" y="178" width="13" height="44" rx="3" class="pause-bar" />
+        <rect x="206" y="178" width="13" height="44" rx="3" class="pause-bar" />
+      </svg>
     </div>
-    <h1>Time Machine<br>for AI</h1>
-    <p class="hero-subtitle">
-      Your AI assistant has spent months learning who you are. SaveState keeps that relationship safe &mdash; backed up, encrypted, and portable across platforms.
-    </p>
-    <div class="btn-group">
-      <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-primary" target="_blank" rel="noopener">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+
+    <h1 class="hero-title">Time Machine<br>for AI</h1>
+
+    <p class="hero-sub">Your AI assistant has months of context about who you are. SaveState keeps that relationship safe &mdash; backed up, encrypted, and portable.</p>
+
+    <div class="btn-row hero-actions">
+      <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-fill" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         Get Started
       </a>
-      <a href="https://github.com/savestatedev/savestate" class="btn btn-secondary" target="_blank" rel="noopener">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      <a href="https://github.com/savestatedev/savestate" class="btn btn-outline" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
         View on GitHub
       </a>
     </div>
 
-    <!-- Animated Terminal -->
-    <div class="terminal">
-      <div class="terminal-header">
-        <span class="terminal-dot"></span>
-        <span class="terminal-dot"></span>
-        <span class="terminal-dot"></span>
-        <span class="terminal-title">Terminal</span>
-      </div>
-      <div class="terminal-body">
-        <div class="terminal-line">
-          <span class="terminal-prompt">$</span> <span class="terminal-cmd">savestate snapshot</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-success">&#10003;</span> <span class="terminal-output">Platform detected: <span class="terminal-accent">claude-code</span></span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-success">&#10003;</span> <span class="terminal-output">Conversations, memory, instructions captured</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-success">&#10003;</span> <span class="terminal-output">Encrypted &amp; stored (<span class="terminal-accent">12.4 KB</span>)</span>
-        </div>
-        <div class="terminal-line">
-          <br><span class="terminal-prompt">$</span> <span class="terminal-muted">&#9608;</span>
-        </div>
-      </div>
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Open Source &middot; Encrypted &middot; Portable
     </div>
   </div>
 </section>
 
 <!-- ==================== SLIDE 2: PROBLEM ==================== -->
-<section class="slide slide-problem reveal" id="problem">
-  <div class="container">
-    <div class="problem-header">
-      <span class="section-label">The Problem</span>
-      <h2 class="section-title">Your AI knows everything about you.<br>What's your backup plan?</h2>
+<section class="slide slide-problem" id="problem">
+  <div class="wrap">
+    <div class="problem-intro reveal">
+      <span class="eyebrow">The Problem</span>
+      <h2 class="heading">Your AI knows everything<br>about you.</h2>
+      <p class="subtext" style="max-width: none; color: var(--text-dim); font-size: 19px;">What's your backup plan?</p>
     </div>
-    <div class="problem-grid">
-      <div class="problem-card">
-        <div class="problem-icon">&#128274;</div>
-        <h3>No Portability</h3>
-        <p>Locked into one platform. Switch to a new AI and start from scratch &mdash; months of context, gone.</p>
+
+    <div class="problem-list">
+      <div class="problem-row reveal reveal-d1">
+        <div>
+          <span class="problem-num">01</span>
+          <h3>Zero Portability</h3>
+        </div>
+        <p>Switch platforms and start from scratch. Months of context &mdash; preferences, writing style, project knowledge &mdash; gone in an instant.</p>
       </div>
-      <div class="problem-card">
-        <div class="problem-icon">&#128190;</div>
-        <h3>No Backups</h3>
-        <p>No scheduled snapshots, no versioning, no safety net. One API change and your AI's memory vanishes.</p>
+      <div class="problem-row reveal reveal-d2">
+        <div>
+          <span class="problem-num">02</span>
+          <h3>Zero Backups</h3>
+        </div>
+        <p>No snapshots. No versioning. No safety net. One API deprecation, one account issue, and your AI's memory disappears forever.</p>
       </div>
-      <div class="problem-card">
-        <div class="problem-icon">&#128275;</div>
-        <h3>No Control</h3>
-        <p>Your conversations, preferences, and context live on someone else's servers with no encryption you control.</p>
+      <div class="problem-row reveal reveal-d3">
+        <div>
+          <span class="problem-num">03</span>
+          <h3>Zero Control</h3>
+        </div>
+        <p>Your conversations, instructions, and identity live on someone else's servers. No encryption you own. No export you control.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ==================== SLIDE 3: HOW IT WORKS ==================== -->
-<section class="slide slide-how reveal" id="how-it-works">
-  <div class="container">
-    <div class="how-header">
-      <span class="section-label">How It Works</span>
-      <h2 class="section-title">Three commands. That's it.</h2>
-      <p class="section-subtitle" style="margin: 0 auto;">Initialize once, snapshot anytime, restore anywhere.</p>
+<section class="slide slide-how" id="how">
+  <div class="wrap">
+    <div class="how-header reveal">
+      <span class="eyebrow">How It Works</span>
+      <h2 class="heading">Three commands.<br>Full control.</h2>
+      <p class="subtext">Initialize once, snapshot anytime, restore anywhere.</p>
     </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-number">1</div>
+
+    <div class="steps-row">
+      <div class="step reveal reveal-d1">
+        <div class="step-num">1</div>
         <h3>Initialize</h3>
         <p>Set up encryption and choose your AI platform.</p>
         <div class="step-code">
-          <span class="prompt">$</span> savestate init<br>
-          <span class="comment"># Set passphrase, pick adapter</span>
+          <span class="c-prompt">$</span> savestate init<br>
+          <span class="c-dim"># set passphrase, pick adapter</span>
         </div>
       </div>
-      <div class="step">
-        <div class="step-number">2</div>
+      <div class="step reveal reveal-d2">
+        <div class="step-num">2</div>
         <h3>Snapshot</h3>
-        <p>Capture everything &mdash; conversations, memory, config.</p>
+        <p>Capture conversations, memory, and config.</p>
         <div class="step-code">
-          <span class="prompt">$</span> savestate snapshot<br>
-          <span class="comment"># Encrypted &amp; versioned</span>
+          <span class="c-prompt">$</span> savestate snapshot<br>
+          <span class="c-ok">&#10003;</span> <span class="c-dim">encrypted &amp; versioned</span>
         </div>
       </div>
-      <div class="step">
-        <div class="step-number">3</div>
+      <div class="step reveal reveal-d3">
+        <div class="step-num">3</div>
         <h3>Restore</h3>
         <p>Bring it all back, on any platform.</p>
         <div class="step-code">
-          <span class="prompt">$</span> savestate restore latest<br>
-          <span class="comment"># Same or different platform</span>
+          <span class="c-prompt">$</span> savestate restore latest<br>
+          <span class="c-ok">&#10003;</span> <span class="c-dim">same or different platform</span>
         </div>
       </div>
     </div>
@@ -1006,65 +1073,78 @@ nav .container {
 </section>
 
 <!-- ==================== SLIDE 4: FEATURES ==================== -->
-<section class="slide slide-features reveal" id="features">
-  <div class="container">
-    <div class="features-header">
-      <span class="section-label">Why SaveState</span>
-      <h2 class="section-title">Everything you'd expect.<br>And then some.</h2>
+<section class="slide slide-features" id="features">
+  <div class="wrap">
+    <div class="features-header reveal">
+      <span class="eyebrow">Why SaveState</span>
+      <h2 class="heading">Built for developers<br>who don't lose data.</h2>
     </div>
-    <div class="features-grid">
-      <div class="feature-card">
-        <span class="feature-icon">&#128272;</span>
-        <h3>Encrypted at Rest</h3>
-        <p>AES-256-GCM encryption with keys derived from your passphrase. We never see or store your keys.</p>
+
+    <div class="bento">
+      <div class="card reveal reveal-d1">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 4.5v5c0 5.25-3.75 10.05-9 11.5-5.25-1.45-9-6.25-9-11.5v-5L12 2z"/><rect x="10" y="12" width="4" height="4" rx="0.5"/><circle cx="12" cy="10" r="1"/></svg>
+        </div>
+        <h3>End-to-End Encrypted</h3>
+        <p>AES-256-GCM encryption with keys derived from your passphrase. Your keys never leave your machine.</p>
       </div>
-      <div class="feature-card">
-        <span class="feature-icon">&#128260;</span>
-        <h3>Cross-Platform Migration</h3>
-        <p>Move your AI identity between ChatGPT, Claude, Gemini, and more with a single command.</p>
+      <div class="card reveal reveal-d2">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+        </div>
+        <h3>Cross-Platform</h3>
+        <p>Migrate your AI identity between ChatGPT, Claude, Gemini, and more with a single command.</p>
       </div>
-      <div class="feature-card">
-        <span class="feature-icon">&#128230;</span>
+      <div class="card reveal reveal-d3">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+        </div>
         <h3>Open Archive Format</h3>
-        <p>The SaveState Archive Format is an open spec. Your data, in a format you can always parse. Zero lock-in.</p>
+        <p>The SaveState Archive Format is an open spec. Your data in a format you can always parse. Zero lock-in.</p>
       </div>
-      <div class="feature-card">
-        <span class="feature-icon">&#9889;</span>
+      <div class="card reveal reveal-d4">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
         <h3>Incremental Snapshots</h3>
-        <p>Only captures what changed since the last snapshot. Git-style versioning for AI memory.</p>
+        <p>Only captures what changed since the last snapshot. Git-style versioning for your AI memory and identity.</p>
       </div>
-      <div class="feature-card">
-        <span class="feature-icon">&#128421;</span>
+      <div class="card reveal reveal-d5">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </div>
         <h3>6 Platform Adapters</h3>
-        <p>ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, and custom agents. More shipping constantly.</p>
+        <p>ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, and custom agents.</p>
       </div>
-      <div class="feature-card">
-        <span class="feature-icon">&#9201;</span>
+      <div class="card reveal reveal-d6">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
         <h3>Scheduled Backups</h3>
-        <p>Set it and forget it. Automatic snapshots on your schedule, stored locally or in the cloud.</p>
+        <p>Automatic snapshots on your schedule, stored locally or in the cloud. Set it and forget it.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ==================== SLIDE 5: CTA ==================== -->
-<section class="slide slide-cta reveal" id="cta">
-  <div class="container">
-    <span class="section-label">Get Started</span>
-    <h2 class="section-title">Start backing up your AI<br>in 30 seconds.</h2>
-    <p class="section-subtitle" style="margin-bottom: 40px;">Free and open source. One command to install.</p>
+<section class="slide slide-cta" id="cta">
+  <div class="wrap">
+    <span class="eyebrow reveal">Get Started</span>
+    <h2 class="cta-heading reveal reveal-d1">Start backing up your AI<br>in 30 seconds.</h2>
+    <p class="cta-sub reveal reveal-d2">Free and open source. One command to install.</p>
 
-    <div class="install-block">
-      <code><span class="prompt-char">$</span> npm i -g @savestate/cli</code>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText('npm i -g @savestate/cli').then(()=>{this.innerHTML='Copied!';setTimeout(()=>{this.innerHTML='<svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1&quot;/></svg> Copy';},1500)})">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    <div class="install reveal reveal-d3">
+      <code><span class="p">$</span> npm i -g @savestate/cli</code>
+      <button class="copy-btn" id="copyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         Copy
       </button>
     </div>
 
-    <div class="footer-links">
+    <div class="footer-links reveal reveal-d4">
       <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
         GitHub
       </a>
       <a href="https://savestate.dev">Website</a>
@@ -1072,8 +1152,8 @@ nav .container {
       <a href="https://savestate.dev/#pricing">Pricing</a>
     </div>
 
-    <div class="footer-bottom">
-      <p>&copy; 2026 <a href="https://savestate.dev">SaveState</a> &middot; MIT License &middot; Built by <a href="https://savestate.dev">DBH Ventures</a></p>
+    <div class="footer-end">
+      <p>&copy; 2026 <a href="https://savestate.dev">SaveState</a> &middot; MIT License &middot; <a href="https://savestate.dev">DBH Ventures</a></p>
     </div>
   </div>
 </section>
@@ -1081,16 +1161,62 @@ nav .container {
 <!-- ==================== SCRIPTS ==================== -->
 <script>
 (function () {
-  // Scroll reveal — identical to savestate.dev
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) e.target.classList.add('visible');
-      });
-    },
-    { threshold: 0.15 }
+  /* Scroll reveal */
+  const revealObs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }),
+    { threshold: 0.12 }
   );
-  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+  /* Active slide dot */
+  const dots = document.querySelectorAll('#dotnav a');
+  const slideObs = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting && e.intersectionRatio >= 0.4) {
+        dots.forEach(d => d.classList.remove('on'));
+        const dot = document.querySelector('#dotnav a[href="#' + e.target.id + '"]');
+        if (dot) dot.classList.add('on');
+      }
+    }),
+    { threshold: 0.4 }
+  );
+  document.querySelectorAll('.slide').forEach(s => slideObs.observe(s));
+
+  /* Progress bar */
+  const bar = document.getElementById('progress');
+  function updateProgress() {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = h > 0 ? ((window.scrollY / h) * 100) + '%' : '0%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  /* Keyboard nav */
+  const slides = [...document.querySelectorAll('.slide')];
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+      e.preventDefault();
+      const cur = slides.findIndex(s => s.getBoundingClientRect().top >= -10);
+      const next = Math.min((cur >= 0 ? cur : 0) + 1, slides.length - 1);
+      slides[next].scrollIntoView({ behavior: 'smooth' });
+    }
+    if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      const cur = slides.findIndex(s => s.getBoundingClientRect().top >= -10);
+      const prev = Math.max((cur >= 0 ? cur : 1) - 1, 0);
+      slides[prev].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  /* Copy button */
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    const btn = this;
+    navigator.clipboard.writeText('npm i -g @savestate/cli').then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+      }, 1800);
+    });
+  });
 })();
 </script>
 
