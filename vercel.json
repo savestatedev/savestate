@@ -12,6 +12,11 @@
     }
   },
   "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "meet.savestate.dev" }],
+      "destination": "/meet/index.html"
+    },
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/blog", "destination": "/blog/index.html" },
     { "source": "/blog/your-ai-knows-everything", "destination": "/blog/your-ai-knows-everything.html" },

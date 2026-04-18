@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaveState — Deck</title>
+<meta name="description" content="SaveState: the open-source time machine for AI. Backup, restore, and migrate your AI identity across platforms.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://meet.savestate.dev/">
+<meta property="og:title" content="SaveState — Time Machine for AI">
+<meta property="og:description" content="The open-source backup and migration system for AI agent state. Encrypted. Portable. Yours.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SaveState — Time Machine for AI">
+<meta name="twitter:description" content="The open-source backup and migration system for AI agent state. Encrypted. Portable. Yours.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
+<link rel="canonical" href="https://meet.savestate.dev/">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Brand Tokens ────────────────────────────────── */
+:root {
+  --bg: #06060c;
+  --bg-card: #0c0c16;
+  --bg-card-hover: #10101e;
+  --accent: #03C1DF;
+  --accent-light: #9BCDE4;
+  --accent-dim: #025A6A;
+  --accent-glow: rgba(3, 193, 223, 0.12);
+  --accent-glow-strong: rgba(3, 193, 223, 0.25);
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #4a5568;
+  --border: #1a2332;
+  --danger: #ef4444;
+  --danger-dim: rgba(239, 68, 68, 0.15);
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+}
+
+/* ── Slide Base ──────────────────────────────────── */
+.slide {
+  min-height: 100vh;
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 80px 48px;
+}
+.slide-inner {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Overline (section label) ────────────────────── */
+.overline {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.overline::before {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+/* ── Reveal Animation ────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+.reveal-delay-6 { transition-delay: 0.6s; }
+
+/* ── Fixed Navigation Dots ───────────────────────── */
+.nav-dots {
+  position: fixed;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 100;
+}
+.nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-dim);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  position: relative;
+}
+.nav-dot:hover {
+  border-color: var(--accent-light);
+  transform: scale(1.3);
+}
+.nav-dot.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow-strong);
+}
+.nav-dot-label {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  text-transform: uppercase;
+}
+.nav-dot:hover .nav-dot-label {
+  opacity: 1;
+}
+
+/* ── Page Number ─────────────────────────────────── */
+.page-num {
+  position: fixed;
+  bottom: 28px;
+  left: 32px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  z-index: 100;
+  transition: opacity 0.3s;
+}
+
+/* ── Home Link ───────────────────────────────────── */
+.home-link {
+  position: fixed;
+  top: 28px;
+  left: 32px;
+  z-index: 100;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.home-link:hover { opacity: 1; }
+.home-link svg { width: 28px; height: 28px; }
+.home-link span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 1 — COVER
+   ═══════════════════════════════════════════════════ */
+.slide-cover {
+  text-align: center;
+  flex-direction: column;
+}
+.cover-logo {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 48px;
+  opacity: 0.9;
+}
+.cover-title {
+  font-size: clamp(4rem, 14vw, 11rem);
+  font-weight: 900;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  margin-bottom: 8px;
+}
+.cover-title-top {
+  display: block;
+  color: var(--text);
+}
+.cover-title-bot {
+  display: block;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.cover-rule {
+  width: 80px;
+  height: 1px;
+  background: var(--accent);
+  margin: 36px auto 28px;
+  opacity: 0.4;
+}
+.cover-sub {
+  font-size: clamp(0.75rem, 1.4vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.cover-issue {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+/* Concentric circles decoration */
+.cover-circles {
+  position: absolute;
+  bottom: -30%;
+  right: -15%;
+  width: 70vmin;
+  height: 70vmin;
+  pointer-events: none;
+}
+.cover-circles .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+}
+.cover-circles .ring:nth-child(1) { opacity: 0.06; }
+.cover-circles .ring:nth-child(2) { inset: 12%; opacity: 0.05; }
+.cover-circles .ring:nth-child(3) { inset: 24%; opacity: 0.04; }
+.cover-circles .ring:nth-child(4) { inset: 36%; opacity: 0.03; }
+.cover-circles .ring:nth-child(5) { inset: 48%; opacity: 0.025; }
+.cover-circles .ring:nth-child(6) { inset: 60%; opacity: 0.02; }
+/* Top-left subtle circles */
+.cover-circles-tl {
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 50vmin;
+  height: 50vmin;
+  pointer-events: none;
+}
+.cover-circles-tl .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+}
+.cover-circles-tl .ring:nth-child(1) { opacity: 0.03; }
+.cover-circles-tl .ring:nth-child(2) { inset: 20%; opacity: 0.025; }
+.cover-circles-tl .ring:nth-child(3) { inset: 40%; opacity: 0.02; }
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 2 — THE STAKES
+   ═══════════════════════════════════════════════════ */
+.slide-stakes {
+  background: linear-gradient(135deg, #06060c 0%, #0a0a18 100%);
+}
+.stakes-quote-mark {
+  font-size: clamp(6rem, 12vw, 10rem);
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.1;
+  font-family: Georgia, 'Times New Roman', serif;
+  position: absolute;
+  top: -20px;
+  left: -12px;
+  user-select: none;
+}
+.stakes-text {
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  max-width: 820px;
+  position: relative;
+  padding-left: 32px;
+  border-left: 2px solid var(--accent-dim);
+}
+.stakes-text em {
+  font-style: normal;
+  color: var(--accent-light);
+}
+.stakes-attr {
+  margin-top: 48px;
+  padding-left: 32px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+.stakes-attr::before {
+  content: '—';
+  margin-right: 8px;
+  color: var(--accent-dim);
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 3 — THE PROBLEM
+   ═══════════════════════════════════════════════════ */
+.slide-problem {
+  background: var(--bg);
+}
+.problem-heading {
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+.problem-sub {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-bottom: 48px;
+  max-width: 600px;
+}
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+.problem-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--danger);
+  border-radius: 10px;
+  padding: 32px 28px;
+  transition: border-color 0.3s, background 0.3s;
+}
+.problem-card:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--bg-card-hover);
+}
+.problem-card-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--danger);
+  margin-bottom: 16px;
+}
+.problem-card-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.problem-bottom {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.problem-bottom span {
+  color: var(--danger);
+  margin: 0 6px;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 4 — THE ANSWER
+   ═══════════════════════════════════════════════════ */
+.slide-answer {
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 50%, rgba(3, 193, 223, 0.04) 0%, transparent 70%);
+}
+.answer-name {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 60%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+}
+.answer-desc {
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.answer-pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+.answer-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  border-radius: 100px;
+  padding: 6px 18px;
+}
+.answer-terminal {
+  background: #0a0a14;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 32px;
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  position: relative;
+}
+.answer-terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+}
+.term-prompt { color: var(--accent); }
+.term-cmd { color: var(--text); }
+.term-flag { color: var(--accent-light); }
+.term-comment { color: var(--text-dim); }
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 5 — HOW IT WORKS
+   ═══════════════════════════════════════════════════ */
+.slide-how { background: var(--bg); }
+.how-heading {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 60px;
+}
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px;
+  position: relative;
+}
+/* connecting line */
+.how-steps::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent), var(--accent-dim));
+  opacity: 0.3;
+}
+.how-step { text-align: center; position: relative; }
+.how-num {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg);
+  position: relative;
+  z-index: 2;
+}
+.how-step-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.how-step-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.how-code {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  background: #0a0a14;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 6 — WHAT WE PROTECT
+   ═══════════════════════════════════════════════════ */
+.slide-protect {
+  background: linear-gradient(180deg, var(--bg) 0%, #080812 100%);
+}
+.protect-heading {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.protect-sub {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-bottom: 52px;
+  max-width: 540px;
+}
+.protect-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.protect-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 24px;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.protect-item:hover {
+  border-color: var(--accent-dim);
+  transform: translateY(-3px);
+}
+.protect-icon {
+  font-size: 1.4rem;
+  margin-bottom: 14px;
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--accent-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.protect-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.protect-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 7 — PLATFORMS
+   ═══════════════════════════════════════════════════ */
+.slide-platforms { background: var(--bg); }
+.platforms-heading {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.platforms-sub {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-bottom: 52px;
+}
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 48px;
+}
+.platform-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.3s;
+}
+.platform-card:hover { border-color: var(--accent-dim); }
+.platform-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+.platform-dot.soon {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+.platform-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.platform-status {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.platforms-tagline {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+.platforms-tagline em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 8 — BUILT DIFFERENT
+   ═══════════════════════════════════════════════════ */
+.slide-edge {
+  background: linear-gradient(135deg, #06060c 0%, #0a0a18 100%);
+}
+.edge-heading {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 52px;
+}
+.edge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.edge-item {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: baseline;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+.edge-item:first-child { border-top: 1px solid var(--border); }
+.edge-item:hover { border-color: var(--accent-dim); }
+.edge-item-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.edge-item-name::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.edge-item-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 9 — PRICING
+   ═══════════════════════════════════════════════════ */
+.slide-pricing { background: var(--bg); }
+.pricing-heading {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.pricing-sub {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-bottom: 52px;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.pricing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 36px 28px;
+  transition: border-color 0.3s, transform 0.3s;
+  position: relative;
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+}
+.pricing-card.featured {
+  border-color: var(--accent-dim);
+  background: linear-gradient(180deg, rgba(3, 193, 223, 0.04) 0%, var(--bg-card) 100%);
+}
+.pricing-card.featured::before {
+  content: 'POPULAR';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 4px 16px;
+  border-radius: 0 0 6px 6px;
+}
+.pricing-tier {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+.pricing-price {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+.pricing-price span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+.pricing-card.featured .pricing-price { color: var(--accent); }
+.pricing-features {
+  list-style: none;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pricing-features li {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+.pricing-features li::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 10 — VISION
+   ═══════════════════════════════════════════════════ */
+.slide-vision {
+  background: linear-gradient(135deg, #060610 0%, #0a1018 50%, #06060c 100%);
+  text-align: center;
+}
+.vision-text {
+  font-size: clamp(1.5rem, 3.2vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text);
+  max-width: 780px;
+  margin: 0 auto 40px;
+  position: relative;
+}
+.vision-text em {
+  font-style: normal;
+  color: var(--accent);
+}
+.vision-mark {
+  font-size: clamp(5rem, 10vw, 8rem);
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--accent);
+  opacity: 0.08;
+  line-height: 0.6;
+  display: block;
+  margin-bottom: 20px;
+  user-select: none;
+}
+.vision-attr {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+/* Glow orb behind text */
+.slide-vision::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60vmin;
+  height: 60vmin;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 11 — CTA
+   ═══════════════════════════════════════════════════ */
+.slide-cta {
+  background: var(--bg);
+  text-align: center;
+}
+.cta-ready {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 40px;
+}
+.cta-terminal {
+  background: #0a0a14;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 36px;
+  font-family: var(--mono);
+  font-size: clamp(0.8rem, 1.4vw, 1rem);
+  color: var(--accent);
+  display: inline-block;
+  margin-bottom: 24px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+.cta-terminal:hover { border-color: var(--accent-dim); }
+.cta-terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+}
+.cta-oss {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 48px;
+}
+.cta-links {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.cta-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-decoration: none;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cta-link:hover { color: var(--accent); }
+.cta-link::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+.cta-footer {
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.cta-footer-logo {
+  width: 36px;
+  height: 36px;
+  opacity: 0.4;
+  margin-bottom: 12px;
+}
+.cta-footer-text {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* ═══════════════════════════════════════════════════
+   DOT GRID BACKGROUND (GLOBAL)
+   ═══════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .slide { padding: 60px 28px; }
+  .problem-grid,
+  .protect-grid,
+  .platforms-grid,
+  .pricing-grid,
+  .how-steps { grid-template-columns: 1fr; gap: 16px; }
+  .how-steps::before { display: none; }
+  .edge-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .nav-dots { display: none; }
+  .home-link span { display: none; }
+  html { scroll-snap-type: y proximity; }
+}
+@media (max-width: 600px) {
+  .slide { padding: 48px 20px; }
+  .cover-title { letter-spacing: -0.03em; }
+  .page-num { display: none; }
+  .home-link { top: 16px; left: 16px; }
+}
+
+/* ═══════════════════════════════════════════════════
+   PRINT
+   ═══════════════════════════════════════════════════ */
+@media print {
+  html { scroll-snap-type: none; }
+  .slide { min-height: auto; page-break-after: always; padding: 40px; }
+  .nav-dots, .page-num, .home-link { display: none; }
+  body::before { display: none; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Fixed: Home Link ─────────────────────────── -->
+<a href="https://savestate.dev" class="home-link" aria-label="Back to savestate.dev">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+    <circle cx="256" cy="256" r="232" stroke="#3DA1F2" stroke-width="22" fill="none"/>
+    <circle cx="256" cy="256" r="195" stroke="#2B8AE0" stroke-width="18" fill="none"/>
+    <path d="M 290 118 A 148 148 0 1 1 190 140" stroke="#1C1250" stroke-width="24" fill="none" stroke-linecap="round"/>
+    <path d="M 260 82 L 290 118 L 260 112 Z" fill="#3DA1F2"/>
+    <path d="M 258 80 L 296 122 L 260 108 Z" fill="#2B8AE0"/>
+    <rect x="224" y="208" width="26" height="96" rx="5" fill="#1C1250"/>
+    <rect x="262" y="208" width="26" height="96" rx="5" fill="#1C1250"/>
+  </svg>
+  <span>savestate.dev</span>
+</a>
+
+<!-- ─── Fixed: Navigation Dots ───────────────────── -->
+<nav class="nav-dots" aria-label="Slide navigation">
+  <button class="nav-dot active" data-slide="0" aria-label="Cover"><span class="nav-dot-label">Cover</span></button>
+  <button class="nav-dot" data-slide="1" aria-label="The Stakes"><span class="nav-dot-label">Stakes</span></button>
+  <button class="nav-dot" data-slide="2" aria-label="The Crisis"><span class="nav-dot-label">Crisis</span></button>
+  <button class="nav-dot" data-slide="3" aria-label="The Answer"><span class="nav-dot-label">Answer</span></button>
+  <button class="nav-dot" data-slide="4" aria-label="How It Works"><span class="nav-dot-label">Process</span></button>
+  <button class="nav-dot" data-slide="5" aria-label="Your Data"><span class="nav-dot-label">Data</span></button>
+  <button class="nav-dot" data-slide="6" aria-label="Platforms"><span class="nav-dot-label">Platforms</span></button>
+  <button class="nav-dot" data-slide="7" aria-label="The Edge"><span class="nav-dot-label">Edge</span></button>
+  <button class="nav-dot" data-slide="8" aria-label="Pricing"><span class="nav-dot-label">Pricing</span></button>
+  <button class="nav-dot" data-slide="9" aria-label="Vision"><span class="nav-dot-label">Vision</span></button>
+  <button class="nav-dot" data-slide="10" aria-label="Get Started"><span class="nav-dot-label">Start</span></button>
+</nav>
+
+<!-- ─── Fixed: Page Number ───────────────────────── -->
+<div class="page-num" aria-hidden="true">01 / 11</div>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 1 — COVER
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-cover" id="s0">
+  <div class="cover-circles-tl" aria-hidden="true">
+    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+  </div>
+  <div class="cover-circles" aria-hidden="true">
+    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+  </div>
+  <div class="slide-inner" style="text-align:center;">
+    <svg class="cover-logo reveal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" aria-hidden="true">
+      <circle cx="256" cy="256" r="232" stroke="#3DA1F2" stroke-width="22" fill="none"/>
+      <circle cx="256" cy="256" r="195" stroke="#2B8AE0" stroke-width="18" fill="none"/>
+      <path d="M 290 118 A 148 148 0 1 1 190 140" stroke="#1C1250" stroke-width="24" fill="none" stroke-linecap="round"/>
+      <path d="M 260 82 L 290 118 L 260 112 Z" fill="#3DA1F2"/>
+      <path d="M 258 80 L 296 122 L 260 108 Z" fill="#2B8AE0"/>
+      <g opacity="0.35" stroke="#9AC4EC" stroke-width="3.5" stroke-linecap="round">
+        <line x1="207" y1="218" x2="178" y2="218"/><line x1="207" y1="230" x2="170" y2="230"/>
+        <line x1="207" y1="242" x2="162" y2="242"/><line x1="207" y1="256" x2="155" y2="256"/>
+        <line x1="207" y1="270" x2="162" y2="270"/><line x1="207" y1="282" x2="170" y2="282"/>
+        <line x1="207" y1="294" x2="178" y2="294"/>
+        <line x1="305" y1="218" x2="334" y2="218"/><line x1="305" y1="230" x2="342" y2="230"/>
+        <line x1="305" y1="242" x2="350" y2="242"/><line x1="305" y1="256" x2="357" y2="256"/>
+        <line x1="305" y1="270" x2="350" y2="270"/><line x1="305" y1="282" x2="342" y2="282"/>
+        <line x1="305" y1="294" x2="334" y2="294"/>
+      </g>
+      <rect x="224" y="208" width="26" height="96" rx="5" fill="#1C1250"/>
+      <rect x="262" y="208" width="26" height="96" rx="5" fill="#1C1250"/>
+    </svg>
+    <h1 class="cover-title reveal reveal-delay-1">
+      <span class="cover-title-top">SAVE</span>
+      <span class="cover-title-bot">STATE</span>
+    </h1>
+    <div class="cover-rule reveal reveal-delay-2"></div>
+    <p class="cover-sub reveal reveal-delay-3">Time Machine for AI</p>
+    <span class="cover-issue reveal reveal-delay-4">No. 01 &mdash; April 2026</span>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 2 — THE STAKES
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-stakes" id="s1">
+  <div class="slide-inner">
+    <div class="overline reveal">The Stakes</div>
+    <div style="position:relative;">
+      <div class="stakes-quote-mark reveal" aria-hidden="true">&ldquo;</div>
+      <p class="stakes-text reveal reveal-delay-1">
+        Your AI has spent months learning who you are&thinsp;&mdash;&thinsp;your code style, your communication patterns, your decision-making framework. It remembers context your <em>team</em> has forgotten. One platform change, one policy update, one outage&thinsp;&mdash;&thinsp;and that entire relationship <em>disappears</em>.
+      </p>
+      <p class="stakes-attr reveal reveal-delay-2">The reality for every AI power user today</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 3 — THE PROBLEM
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-problem" id="s2">
+  <div class="slide-inner">
+    <div class="overline reveal">01 / The Crisis</div>
+    <h2 class="problem-heading reveal reveal-delay-1">The AI Amnesia Crisis</h2>
+    <p class="problem-sub reveal reveal-delay-2">Every platform locks your AI memory inside its walls. Here's what you're up against.</p>
+    <div class="problem-grid">
+      <div class="problem-card reveal reveal-delay-2">
+        <div class="problem-card-name">ChatGPT</div>
+        <p class="problem-card-text">Manual export only. A 24&ndash;48 hour wait for a raw JSON dump. No encryption. No structure. No way to use it elsewhere.</p>
+      </div>
+      <div class="problem-card reveal reveal-delay-3">
+        <div class="problem-card-name">Claude</div>
+        <p class="problem-card-text">Text-only memory export. No conversation history included. Your months of context reduced to a plain text file.</p>
+      </div>
+      <div class="problem-card reveal reveal-delay-4">
+        <div class="problem-card-name">Gemini</div>
+        <p class="problem-card-text">No meaningful export capability. Your data lives and dies on Google's servers. Switch platforms, lose everything.</p>
+      </div>
+    </div>
+    <p class="problem-bottom reveal reveal-delay-5">No encryption<span>&middot;</span>No portability<span>&middot;</span>No control</p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 4 — THE ANSWER
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-answer" id="s3">
+  <div class="slide-inner">
+    <div class="overline reveal" style="justify-content:center;">02 / The Answer</div>
+    <h2 class="answer-name reveal reveal-delay-1">SaveState</h2>
+    <p class="answer-desc reveal reveal-delay-2">CLI-first backup and migration for AI agent state. One command captures everything your AI knows about you.</p>
+    <div class="answer-pills reveal reveal-delay-3">
+      <span class="answer-pill">Open Source</span>
+      <span class="answer-pill">Encrypted</span>
+      <span class="answer-pill">Portable</span>
+    </div>
+    <div class="answer-terminal reveal reveal-delay-4">
+      <div><span class="term-prompt">$</span> <span class="term-cmd">npx @savestate/cli snapshot</span></div>
+      <div style="margin-top:10px;"><span class="term-comment"># Conversations, memory, instructions &mdash; captured &amp; encrypted</span></div>
+      <div><span class="term-comment"># Stored locally or in your cloud. Your keys. Your data.</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 5 — HOW IT WORKS
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-how" id="s4">
+  <div class="slide-inner">
+    <div class="overline reveal">03 / The Process</div>
+    <h2 class="how-heading reveal reveal-delay-1">Three steps. That's it.</h2>
+    <div class="how-steps">
+      <div class="how-step reveal reveal-delay-2">
+        <div class="how-num">01</div>
+        <h3 class="how-step-title">Init</h3>
+        <p class="how-step-desc">Set up encryption and choose your AI platform. Takes thirty seconds.</p>
+        <code class="how-code">savestate init</code>
+      </div>
+      <div class="how-step reveal reveal-delay-3">
+        <div class="how-num">02</div>
+        <h3 class="how-step-title">Snapshot</h3>
+        <p class="how-step-desc">Capture conversations, memory, instructions, and config. Encrypted at rest.</p>
+        <code class="how-code">savestate snapshot</code>
+      </div>
+      <div class="how-step reveal reveal-delay-4">
+        <div class="how-num">03</div>
+        <h3 class="how-step-title">Restore</h3>
+        <p class="how-step-desc">Bring it all back &mdash; same platform, different platform, new machine. You choose.</p>
+        <code class="how-code">savestate restore latest</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 6 — WHAT WE PROTECT
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-protect" id="s5">
+  <div class="slide-inner">
+    <div class="overline reveal">04 / Your Data</div>
+    <h2 class="protect-heading reveal reveal-delay-1">Everything your AI knows</h2>
+    <p class="protect-sub reveal reveal-delay-1">SaveState captures the full picture of your AI relationship &mdash; not just chat logs.</p>
+    <div class="protect-grid">
+      <div class="protect-item reveal reveal-delay-2">
+        <div class="protect-icon" aria-hidden="true">&para;</div>
+        <div class="protect-name">Conversations</div>
+        <p class="protect-desc">Every thread, every turn. Full conversation history with metadata, encrypted and versioned.</p>
+      </div>
+      <div class="protect-item reveal reveal-delay-2">
+        <div class="protect-icon" aria-hidden="true">&lowast;</div>
+        <div class="protect-name">Memory</div>
+        <p class="protect-desc">Learned preferences, behavioral patterns, and accumulated context. The knowledge your AI built over time.</p>
+      </div>
+      <div class="protect-item reveal reveal-delay-3">
+        <div class="protect-icon" aria-hidden="true">&gt;</div>
+        <div class="protect-name">Instructions</div>
+        <p class="protect-desc">Custom prompts, system messages, and persona configurations that define how your AI works.</p>
+      </div>
+      <div class="protect-item reveal reveal-delay-3">
+        <div class="protect-icon" aria-hidden="true">&Delta;</div>
+        <div class="protect-name">Tools &amp; Skills</div>
+        <p class="protect-desc">Functions, integrations, and capabilities. Everything your AI can do, backed up and portable.</p>
+      </div>
+      <div class="protect-item reveal reveal-delay-4">
+        <div class="protect-icon" aria-hidden="true">#</div>
+        <div class="protect-name">Knowledge Bases</div>
+        <p class="protect-desc">Attached files, reference documents, and domain knowledge your AI relies on.</p>
+      </div>
+      <div class="protect-item reveal reveal-delay-4">
+        <div class="protect-icon" aria-hidden="true">&cir;</div>
+        <div class="protect-name">Configuration</div>
+        <p class="protect-desc">Platform settings, model preferences, and access controls. Your setup, preserved exactly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 7 — PLATFORMS
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-platforms" id="s6">
+  <div class="slide-inner">
+    <div class="overline reveal">05 / The Ecosystem</div>
+    <h2 class="platforms-heading reveal reveal-delay-1">One tool. Every platform.</h2>
+    <p class="platforms-sub reveal reveal-delay-1">Adapters for the platforms you already use. More shipping constantly.</p>
+    <div class="platforms-grid">
+      <div class="platform-card reveal reveal-delay-2">
+        <span class="platform-dot"></span>
+        <span class="platform-name">ChatGPT</span>
+        <span class="platform-status">Available</span>
+      </div>
+      <div class="platform-card reveal reveal-delay-2">
+        <span class="platform-dot"></span>
+        <span class="platform-name">Claude</span>
+        <span class="platform-status">Available</span>
+      </div>
+      <div class="platform-card reveal reveal-delay-3">
+        <span class="platform-dot"></span>
+        <span class="platform-name">Claude Code</span>
+        <span class="platform-status">Available</span>
+      </div>
+      <div class="platform-card reveal reveal-delay-3">
+        <span class="platform-dot"></span>
+        <span class="platform-name">Gemini</span>
+        <span class="platform-status">Available</span>
+      </div>
+      <div class="platform-card reveal reveal-delay-4">
+        <span class="platform-dot"></span>
+        <span class="platform-name">OpenAI Assistants</span>
+        <span class="platform-status">Available</span>
+      </div>
+      <div class="platform-card reveal reveal-delay-4">
+        <span class="platform-dot"></span>
+        <span class="platform-name">Custom Agents</span>
+        <span class="platform-status">Available</span>
+      </div>
+    </div>
+    <p class="platforms-tagline reveal reveal-delay-5"><em>Zero lock-in.</em> Migrate freely between any supported platform.</p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 8 — BUILT DIFFERENT
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-edge" id="s7">
+  <div class="slide-inner">
+    <div class="overline reveal">06 / The Edge</div>
+    <h2 class="edge-heading reveal reveal-delay-1">Why SaveState</h2>
+    <div class="edge-list">
+      <div class="edge-item reveal reveal-delay-2">
+        <div class="edge-item-name">AES-256-GCM Encryption</div>
+        <div class="edge-item-desc">Your keys, derived from your passphrase via Argon2. We never see them. We never store them. Military-grade encryption, user-controlled.</div>
+      </div>
+      <div class="edge-item reveal reveal-delay-3">
+        <div class="edge-item-name">Incremental Snapshots</div>
+        <div class="edge-item-desc">Only captures what changed since your last snapshot. Git-style versioning for AI memory &mdash; efficient, fast, and space-conscious.</div>
+      </div>
+      <div class="edge-item reveal reveal-delay-3">
+        <div class="edge-item-name">Open Archive Format</div>
+        <div class="edge-item-desc">The SaveState Archive Format (SAF) is an open specification. Read it, build on it, audit it. Your data in a format you can always parse.</div>
+      </div>
+      <div class="edge-item reveal reveal-delay-4">
+        <div class="edge-item-name">Cross-Platform Migration</div>
+        <div class="edge-item-desc">Move your AI identity between platforms with a single command. ChatGPT to Claude. Claude to Gemini. No manual re-training.</div>
+      </div>
+      <div class="edge-item reveal reveal-delay-4">
+        <div class="edge-item-name">CLI-First</div>
+        <div class="edge-item-desc">Built for developers who ship. Scriptable, composable, CI/CD-friendly. Runs everywhere Node.js runs &mdash; macOS, Linux, Windows.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 9 — PRICING
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-pricing" id="s8">
+  <div class="slide-inner">
+    <div class="overline reveal">07 / The Plan</div>
+    <h2 class="pricing-heading reveal reveal-delay-1">Simple, transparent pricing</h2>
+    <p class="pricing-sub reveal reveal-delay-1">Start free. Scale when you need to.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card reveal reveal-delay-2">
+        <div class="pricing-tier">Free</div>
+        <div class="pricing-price">$0</div>
+        <ul class="pricing-features">
+          <li>Full CLI tool</li>
+          <li>Local encrypted backups</li>
+          <li>Manual snapshots</li>
+          <li>1 platform adapter</li>
+          <li>Open source, MIT licensed</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured reveal reveal-delay-3">
+        <div class="pricing-tier">Pro</div>
+        <div class="pricing-price">$9 <span>/ mo</span></div>
+        <ul class="pricing-features">
+          <li>Cloud storage (10 GB)</li>
+          <li>Scheduled auto-backups</li>
+          <li>All platform adapters</li>
+          <li>Web dashboard</li>
+          <li>Email alerts &amp; monitoring</li>
+        </ul>
+      </div>
+      <div class="pricing-card reveal reveal-delay-4">
+        <div class="pricing-tier">Team</div>
+        <div class="pricing-price">$29 <span>/ mo</span></div>
+        <ul class="pricing-features">
+          <li>Shared team backups</li>
+          <li>Compliance &amp; audit trails</li>
+          <li>SSO integration</li>
+          <li>Custom adapters</li>
+          <li>Priority support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 10 — VISION
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-vision" id="s9">
+  <div class="slide-inner">
+    <span class="vision-mark reveal" aria-hidden="true">&ldquo;</span>
+    <p class="vision-text reveal reveal-delay-1">
+      AI assistants are becoming <em>long-term collaborators</em>.
+      SaveState ensures that relationship is yours to keep&thinsp;&mdash;&thinsp;not a platform's to hold hostage.
+    </p>
+    <p class="vision-attr reveal reveal-delay-2">SaveState</p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════
+     SLIDE 11 — GET STARTED
+     ═════════════════════════════════════════════════ -->
+<section class="slide slide-cta" id="s10">
+  <div class="slide-inner">
+    <h2 class="cta-ready reveal">Ready?</h2>
+    <div class="cta-terminal reveal reveal-delay-1" role="button" tabindex="0" title="Click to copy" id="copyCmd">
+      <span class="term-prompt">$</span> npm install -g @savestate/cli
+    </div>
+    <p class="cta-oss reveal reveal-delay-2">Free and open source under the MIT License.</p>
+    <div class="cta-links reveal reveal-delay-3">
+      <a href="https://github.com/savestatedev/savestate" class="cta-link" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://savestate.dev" class="cta-link" target="_blank" rel="noopener">Website</a>
+      <a href="https://savestate.dev/blog" class="cta-link" target="_blank" rel="noopener">Blog</a>
+    </div>
+    <div class="cta-footer reveal reveal-delay-4">
+      <svg class="cta-footer-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" aria-hidden="true">
+        <circle cx="256" cy="256" r="232" stroke="#3DA1F2" stroke-width="22" fill="none"/>
+        <circle cx="256" cy="256" r="195" stroke="#2B8AE0" stroke-width="18" fill="none"/>
+        <path d="M 290 118 A 148 148 0 1 1 190 140" stroke="#1C1250" stroke-width="24" fill="none" stroke-linecap="round"/>
+        <path d="M 260 82 L 290 118 L 260 112 Z" fill="#3DA1F2"/>
+        <path d="M 258 80 L 296 122 L 260 108 Z" fill="#2B8AE0"/>
+        <rect x="224" y="208" width="26" height="96" rx="5" fill="#1C1250"/>
+        <rect x="262" y="208" width="26" height="96" rx="5" fill="#1C1250"/>
+      </svg>
+      <p class="cta-footer-text">savestate.dev &mdash; Time Machine for AI</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.nav-dot');
+  const pageNum = document.querySelector('.page-num');
+  const total = slides.length;
+  let current = 0;
+
+  /* ── Intersection Observer: reveal animations + slide tracking ── */
+  const revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add('visible');
+      });
+    },
+    { threshold: 0.15 }
+  );
+  document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
+
+  const slideObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting && e.intersectionRatio > 0.4) {
+          const idx = Array.from(slides).indexOf(e.target);
+          if (idx !== -1) setActive(idx);
+        }
+      });
+    },
+    { threshold: 0.45 }
+  );
+  slides.forEach((s) => slideObserver.observe(s));
+
+  function setActive(idx) {
+    current = idx;
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    if (pageNum) pageNum.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+  }
+
+  /* ── Dot click navigation ── */
+  dots.forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const idx = parseInt(dot.dataset.slide, 10);
+      slides[idx]?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  /* ── Keyboard navigation ── */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+      e.preventDefault();
+      if (current < total - 1) slides[current + 1].scrollIntoView({ behavior: 'smooth' });
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      if (current > 0) slides[current - 1].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  /* ── Copy install command ── */
+  const copyBtn = document.getElementById('copyCmd');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText('npm install -g @savestate/cli').then(() => {
+        copyBtn.style.borderColor = '#22c55e';
+        setTimeout(() => { copyBtn.style.borderColor = ''; }, 1200);
+      });
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
