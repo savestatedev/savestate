@@ -55,6 +55,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@vercel/functions": "^3.4.3",
     "@vercel/node": "^5.5.28",
     "argon2": "^0.44.0",
     "better-sqlite3": "^12.6.2",
