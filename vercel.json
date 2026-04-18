@@ -13,6 +13,11 @@
   },
   "rewrites": [
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "meet.savestate.dev" }],
+      "destination": "/meet/index.html"
+    },
+    {
       "source": "/:match*",
       "has": [{ "type": "host", "value": "meet.savestate.dev" }],
       "destination": "/meet/:match*"
