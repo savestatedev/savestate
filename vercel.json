@@ -3,12 +3,6 @@
   "outputDirectory": "site",
   "buildCommand": "npx ts-node scripts/generate-blog-index.ts",
   "redirects": [
-    {
-      "source": "/:path((?!meet).*)",
-      "has": [{ "type": "host", "value": "meet.savestate.dev" }],
-      "destination": "https://savestate.dev/meet",
-      "permanent": false
-    },
     { "source": "/pricing", "destination": "/#pricing", "permanent": false },
     { "source": "/login", "destination": "/dashboard", "permanent": false }
   ],
@@ -18,6 +12,11 @@
     }
   },
   "rewrites": [
+    {
+      "source": "/:match*",
+      "has": [{ "type": "host", "value": "meet.savestate.dev" }],
+      "destination": "/meet/:match*"
+    },
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/blog", "destination": "/blog/index.html" },
     { "source": "/blog/your-ai-knows-everything", "destination": "/blog/your-ai-knows-everything.html" },
