@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your AI Infrastructure Has a Single Point of Failure You're Not Monitoring — SaveState</title>
+<meta name="description" content="Most teams treat AI APIs like internal services. The recent OpenAI, Anthropic, and Google outages prove why that's a mistake.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">April 23, 2026</div>
+      <h1>Your AI Infrastructure Has a Single Point of Failure You're Not Monitoring</h1>
+      <p class="subtitle">Most teams treat AI APIs like internal services. The recent OpenAI, Anthropic, and Google outages prove why that's a mistake.</p>
+    </header>
+
+    <div class="article-content">
+      <h2>The $2M Question Nobody Asked</h2>
+
+      <p>Last Tuesday at 3:47 PM PST, OpenAI's API went dark for 47 minutes. Anthropic followed with a 23-minute outage on Thursday. Google's AI services hiccupped for an hour on Friday. Three separate incidents, three different providers, one common thread: hundreds of applications grinding to a halt.</p>
+
+      <p>Your monitoring dashboards showed green. Your load balancers were healthy. Your databases hummed along perfectly. But your AI-powered features stopped working because you treated external AI services like internal infrastructure.</p>
+
+      <p>We've been thinking about AI reliability all wrong.</p>
+
+      <h2>The API Dependency Blind Spot</h2>
+
+      <p>Most infrastructure teams apply traditional high-availability patterns to AI services. Circuit breakers, retries, timeouts. The same patterns they'd use for calling their user service or payment API. But AI services aren't internal microservices.</p>
+
+      <p>They're third-party dependencies with their own:</p>
+      <ul>
+        <li>Rate limiting policies that change without notice</li>
+        <li>Regional availability that varies by model</li>
+        <li>Performance characteristics that degrade under load</li>
+        <li>Pricing models that can spike your costs during outages (hello, retry storms)</li>
+      </ul>
+
+      <p>Yet we monitor them like internal services. We alert on response times and error rates, but we don't track model availability across providers or monitor our dependency risk.</p>
+
+      <p>I've seen teams with 99.9% SLA commitments whose entire user experience depends on a single AI provider's uptime. That's not high availability, that's hope as a strategy.</p>
+
+      <h2>What Real AI Infrastructure Monitoring Looks Like</h2>
+
+      <p>Infrastructure teams that understand AI dependencies monitor these metrics:</p>
+
+      <p><strong>Provider Health Across Regions:</strong></p>
+
+      <pre><code># Monitor model availability, not just API health
+curl -s https://api.openai.com/v1/models | jq '.data[] | select(.id == "gpt-4") | .available'
+curl -s https://api.anthropic.com/v1/models | jq '.models[] | select(.name == "claude-3-opus") | .status'</code></pre>
+
+      <p><strong>Cross-Provider Response Time Distribution:</strong><br>
+      Track P99 latencies across OpenAI, Anthropic, and Google for the same workload type. When one provider's latency spikes, you need automatic failover, not manual intervention.</p>
+
+      <p><strong>Model-Specific Error Rates:</strong><br>
+      GPT-4 might be healthy while GPT-3.5-turbo throws 500s. Your monitoring should be granular enough to catch model-level failures.</p>
+
+      <p><strong>Cost Per Provider During Incidents:</strong><br>
+      Retry storms during outages can burn through your monthly AI budget in hours. Monitor spending velocity, not just usage.</p>
+
+      <h2>The Patterns That Actually Work</h2>
+
+      <p>Here's what we've learned from teams running AI in production:</p>
+
+      <p><strong>Graceful Degradation Over Perfect Uptime:</strong><br>
+      Instead of trying to maintain 99.9% AI availability, design for graceful degradation. Can your app provide value with simpler models or cached responses when primary AI services fail?</p>
+
+      <p><strong>Provider Diversity as a Design Constraint:</strong><br>
+      Build features that can work across multiple providers from day one. Don't treat provider choice as an implementation detail you can change later.</p>
+
+      <p><strong>Context-Aware Circuit Breaking:</strong><br>
+      Traditional circuit breakers don't understand AI workloads. A model that fails for code generation might work fine for text classification. Your circuit breakers should be context-aware.</p>
+
+      <p>As I wrote in <a href="/blog/your-ai-agents-will-break-in-production">your ai agents will break in production</a>, the question isn't whether your AI infrastructure will fail, but how you'll handle it when it does.</p>
+
+      <h2>The Cost of Getting This Wrong</h2>
+
+      <p>The teams that get this right treat AI services like what they are: powerful but unreliable third-party dependencies. They build redundancy, monitor intelligently, and design for failure.</p>
+
+      <p>The teams that get this wrong treat AI APIs like internal services. They discover their single point of failure during the next major outage, usually at the worst possible time.</p>
+
+      <p>Which team are you on?</p>
+
+      <h2>Start Monitoring What Matters</h2>
+
+      <p>Your AI infrastructure has dependencies your traditional monitoring doesn't understand. Start treating them seriously:</p>
+
+      <ol>
+        <li>Map your AI service dependencies and their blast radius</li>
+        <li>Implement model-aware health checks across providers</li>
+        <li>Set up cost monitoring for AI spending during incidents</li>
+        <li>Design graceful degradation paths for when AI services fail</li>
+      </ol>
+
+      <p>Don't wait for the next outage to discover your blind spots. SaveState helps teams build resilient AI infrastructure with proper state management and failover strategies. <a href="https://savestate.dev">Start monitoring your AI dependencies</a> before they become your single point of failure.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2025 SaveState. <a href="/privacy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Service</a></p>
+  </div>
+</footer>
+
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/your-ai-infrastructure-has-a-single-point-of-failure-youre-not-monitoring" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
+</body>
+</html>
