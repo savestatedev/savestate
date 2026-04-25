@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub's New AI Security Misses the Biggest Risk: Your Agent's State — SaveState</title>
+<meta name="description" content="GitHub's enhanced AI code scanning secures the output but ignores the stateful agents generating it, creating a new supply chain vulnerability.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">April 25, 2026</div>
+      <h1>GitHub's New AI Security Misses the Biggest Risk: Your Agent's State</h1>
+      <p class="subtitle">GitHub's enhanced AI code scanning secures the output but ignores the stateful agents generating it, creating a new supply chain vulnerability.</p>
+    </header>
+
+    <div class="article-content">
+      <h2>The Blind Spot in GitHub's AI Security Strategy</h2>
+
+      <p>GitHub announced enhanced security scanning for AI-generated code this week, extending GitHub Advanced Security to catch vulnerabilities in code written by AI assistants. It's a smart move after recent supply chain attacks, but it misses the forest for the trees.</p>
+
+      <p>While GitHub scans the code your AI agent writes, they're completely ignoring the agent itself. Your Cursor AI, your GitHub Copilot, your Claude Dev—these tools accumulate state, learn patterns, and remember context across sessions. And that stateful memory? It's an unmonitored attack vector sitting right in your development pipeline.</p>
+
+      <h2>Why Agent State Matters More Than Generated Code</h2>
+
+      <p>Here's the problem GitHub isn't solving: a compromised AI agent doesn't just write bad code once. It poisons every subsequent interaction.</p>
+
+      <p>Consider this scenario: Your AI coding assistant learns from a malicious code pattern early in a project. Maybe it was introduced through a dependency update, or leaked in through documentation you referenced. The agent's memory now carries that pattern forward, subtly incorporating similar vulnerabilities into future code suggestions.</p>
+
+      <p>GitHub's new scanning might catch individual instances, but it won't catch the systematic bias the agent has developed. Worse, as the agent sees its suggestions accepted (because static analysis doesn't flag them every time), it reinforces the malicious pattern in its working memory.</p>
+
+      <p>We saw this exact dynamic play out at a fintech company last month. Their Cursor instance had learned to suggest a particular authentication bypass pattern after processing some legacy code examples. Over six weeks, variations of that pattern appeared in twelve different microservices. Each instance looked different enough that code review missed it, but they all shared the same fundamental flaw: the agent's corrupted state.</p>
+
+      <h2>The Attack Vector Nobody's Monitoring</h2>
+
+      <p>Traditional supply chain security focuses on dependencies, build processes, and deployment pipelines. But AI agents introduce a new category: cognitive supply chain attacks.</p>
+
+      <p>An attacker doesn't need to compromise your GitHub repository directly. They just need to influence your agent's learning process:</p>
+
+      <ul>
+        <li><strong>Context poisoning</strong>: Submit PRs with subtle vulnerabilities that train the agent</li>
+        <li><strong>Memory injection</strong>: Feed malicious examples through documentation or code comments</li>
+        <li><strong>Pattern drift</strong>: Gradually shift the agent's understanding of "good" code</li>
+      </ul>
+
+      <p>The insidious part? These attacks compound over time. Each poisoned suggestion that gets accepted makes the agent more confident in the malicious pattern.</p>
+
+      <p>As we discussed in <a href="/blog/your-ai-infrastructure-has-a-single-point-of-failure-youre-not-monitoring">your ai infrastructure has a single point of failure youre not monitoring</a>, most teams don't even know what state their AI agents are carrying. They treat them like stateless tools when they're actually accumulating organizational knowledge and biases.</p>
+
+      <h2>What GitHub's Approach Misses</h2>
+
+      <p>GitHub's enhanced scanning addresses the symptom, not the cause. They're checking if this specific code suggestion is malicious, but they're not asking: why did the agent suggest this pattern in the first place?</p>
+
+      <p>The scanning workflow looks like this:</p>
+
+      <pre><code># What GitHub scans
+AI Agent → Code Suggestion → Security Scan → Accept/Reject
+
+# What they're missing
+Context + Memory + Learning → AI Agent → Code Suggestion</code></pre>
+
+      <p>Without visibility into the agent's state, you're playing an endless game of whack-a-mole. The agent keeps generating variations of the same problematic patterns because its underlying model of "good code" has been corrupted.</p>
+
+      <h2>The Real Solution: Agent State Hygiene</h2>
+
+      <p>The security model needs to start with the agent, not the output. That means:</p>
+
+      <p><strong>State auditing</strong>: Regular snapshots of what your AI agent has learned and remembered</p>
+
+      <p><strong>Memory validation</strong>: Checking that the agent's accumulated context aligns with your security standards</p>
+
+      <p><strong>Learning rollbacks</strong>: Ability to revert the agent to a clean state when contamination is detected</p>
+
+      <p><strong>Context isolation</strong>: Preventing cross-project memory leakage that could spread vulnerabilities</p>
+
+      <p>We've seen teams implement basic agent state management with simple JSON exports:</p>
+
+      <pre><code># Backup current agent state
+savestate backup --agent-id cursor-main --snapshot pre-review
+
+# Work on potentially risky codebase
+# ...
+
+# Validate agent learned correctly
+savestate audit --agent-id cursor-main --check-patterns security-rules.json
+
+# Rollback if needed
+savestate restore --agent-id cursor-main --snapshot pre-review</code></pre>
+
+      <h2>Why This Matters Now</h2>
+
+      <p>GitHub's announcement signals that AI-generated code is becoming a mainstream security concern. But focusing only on output scanning while ignoring agent state is like securing your database queries while leaving the database itself unmonitored.</p>
+
+      <p>The teams that understand this distinction—that AI agents are stateful systems requiring their own security protocols—will have a significant advantage. They'll catch supply chain attacks at the source instead of playing defense at every code review.</p>
+
+      <p>As AI agents become more sophisticated and maintain richer context, this problem will only compound. The time to establish agent state security practices is now, before your development workflow becomes dependent on compromised AI memory.</p>
+
+      <p>Start with visibility: know what state your AI agents are carrying and how it changes over time. SaveState provides the tooling to backup, audit, and restore AI agent state across your development workflow.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2024 <a href="/">SaveState</a>. Time Machine for AI.</p>
+  </div>
+</footer>
+
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/github-ai-security-misses-agent-state-risk" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
+</body>
+</html>
