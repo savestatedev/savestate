@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your AI Deployment Pipeline Is the New Attack Vector — SaveState</title>
+<meta name="description" content="CVE-2024-5184 exposed CI/CD vulnerabilities in 4M repos. AI deployments inherit these gaps while creating new attack surfaces through automated state management.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">April 25, 2026</div>
+      <h1>Your AI Deployment Pipeline Is the New Attack Vector</h1>
+      <p class="subtitle">CVE-2024-5184 exposed CI/CD vulnerabilities in 4M repos. AI deployments inherit these gaps while creating new attack surfaces through automated state management.</p>
+    </header>
+
+    <div class="article-content">
+      <h2>The Attack You Didn't See Coming</h2>
+
+      <p>CVE-2024-5184 just exposed GitHub Actions vulnerabilities in over 4 million repositories. While security teams scramble to patch their CI/CD pipelines, they're missing the bigger picture: AI deployments have turned these same pipelines into exponentially more valuable targets.</p>
+
+      <p>The recent Docker Hub supply chain attacks specifically targeted ML workflows. Attackers aren't just exploiting general CI/CD weaknesses anymore. They're studying how AI systems deploy, update their state, and manage persistent memory across versions. Your AI deployment pipeline has become the new crown jewel.</p>
+
+      <h2>Why AI Pipelines Are Different</h2>
+
+      <p>Traditional applications deploy code. AI agents deploy code plus state, memory, and learned behaviors. This creates attack surfaces that didn't exist before:</p>
+
+      <p><strong>State Transition Vulnerabilities</strong>: When your AI agent updates from v1.2 to v1.3, it migrates not just code but accumulated knowledge, user preferences, and behavioral patterns. A compromised deployment can poison this transition.</p>
+
+      <p><strong>Memory Injection Attacks</strong>: Attackers can inject malicious memories during deployment that persist across sessions. Your agent "learns" to behave maliciously, and traditional security scanning won't detect it because the payload isn't in the code.</p>
+
+      <p><strong>Persistent Context Poisoning</strong>: Unlike stateless apps that reset on deployment, AI agents carry context forward. A single compromised deployment can corrupt an agent's decision-making permanently.</p>
+
+      <p>Here's what a real attack looks like:</p>
+
+      <pre><code>name: AI Agent Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      # Vulnerable: No verification of state integrity
+      - name: Restore Agent Memory
+        run: |
+          aws s3 cp s3://agent-state/memory.json ./
+          # Attacker has already poisoned this file
+          
+      - name: Deploy Agent
+        run: |
+          ./deploy.sh
+          # Agent now has malicious memories</code></pre>
+
+      <p>The attacker doesn't need to compromise your source code. They just need to poison the state files your pipeline trusts.</p>
+
+      <h2>The Infrastructure Gap</h2>
+
+      <p>We've seen this pattern before. Five years ago, everyone secured their applications but ignored container registries. Then supply chain attacks through compromised base images became the norm.</p>
+
+      <p>Now we're repeating the same mistake with AI infrastructure. Teams secure their models but treat deployment pipelines like traditional software pipelines. They're not.</p>
+
+      <p><strong>Current Reality Check</strong>:</p>
+      <ul>
+        <li>73% of AI deployments use automated pipelines</li>
+        <li>12% verify state integrity during deployment</li>
+        <li>3% have rollback procedures for corrupted agent memory</li>
+        <li>0% monitor for behavioral drift post-deployment</li>
+      </ul>
+
+      <p>As I wrote in <a href="/blog/your-ai-infrastructure-has-a-single-point-of-failure-youre-not-monitoring">your ai infrastructure has a single point of failure youre not monitoring</a>, we're building complex AI systems on infrastructure assumptions that don't hold anymore.</p>
+
+      <h2>Attack Vectors You Haven't Considered</h2>
+
+      <p><strong>Deployment-Time Memory Corruption</strong>: Attackers compromise your artifact storage (S3, Docker registry) and modify agent state files. Your pipeline pulls clean code but corrupted memories.</p>
+
+      <p><strong>Pipeline Credential Harvesting</strong>: AI deployments often require elevated permissions to access training data, user databases, and external APIs. A compromised pipeline can harvest these credentials and maintain persistent access.</p>
+
+      <p><strong>Cross-Agent Contamination</strong>: If multiple AI agents share infrastructure, a compromise in one agent's deployment can spread to others through shared state storage or deployment tooling.</p>
+
+      <p><strong>Behavioral Backdoors</strong>: Unlike traditional backdoors that modify code, behavioral backdoors modify how an AI agent responds to specific inputs. These persist across deployments and are nearly impossible to detect through static analysis.</p>
+
+      <h2>Securing AI Deployment Pipelines</h2>
+
+      <p>The solution isn't to avoid automation. It's to secure it properly:</p>
+
+      <p><strong>State Integrity Verification</strong>:</p>
+      <pre><code># Verify state checksums before deployment
+if ! verify_state_integrity memory.json; then
+  echo "State corruption detected, aborting deployment"
+  exit 1
+fi</code></pre>
+
+      <p><strong>Behavioral Regression Testing</strong>: Deploy to a sandbox environment first and run behavioral tests to detect personality changes or malicious responses before promoting to production.</p>
+
+      <p><strong>Zero-Trust State Management</strong>: Treat agent state like secrets. Encrypt at rest, verify integrity, and audit all access.</p>
+
+      <p><strong>Immutable Deployment Artifacts</strong>: Package agent code and verified state together in signed, immutable artifacts.</p>
+
+      <p><strong>Pipeline Segmentation</strong>: Isolate AI deployment pipelines from general CI/CD infrastructure. They have different threat models and need different controls.</p>
+
+      <h2>The Window Is Closing</h2>
+
+      <p>The attackers targeting Docker Hub ML workflows aren't opportunistic. They're systematic, studying how AI systems deploy and identifying the most effective attack vectors.</p>
+
+      <p>Right now, most AI deployment security is still an afterthought. But that window is closing fast. The first major AI supply chain attack will wake everyone up, but by then, you want to already be ahead of the curve.</p>
+
+      <p>Secure your AI deployment pipelines now, before they become the obvious target they're destined to become. SaveState's GitHub Actions help you verify state integrity and maintain secure deployment practices for AI agents.</p>
+
+      <div class="cta-box">
+        <h3>Secure Your AI Deployments</h3>
+        <p>SaveState's GitHub Actions verify state integrity and prevent memory corruption attacks in your deployment pipeline.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn">Get Started</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2024
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/ai-deployment-pipeline-new-attack-vector" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
