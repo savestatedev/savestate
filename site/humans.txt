@@ -1,0 +1,7 @@
+/* TEAM */
+Founder: David Hurley
+Site: https://dbhurley.com
+Twitter: @dbhurley
+
+/* SITE */
+Software: TypeScript, Node.js, Vercel, Neon Postgres, Cloudflare R2

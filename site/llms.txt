@@ -1,6 +1,8 @@
 # SaveState - Time Machine for AI
 > Encrypted backup, restore, and migration for your AI identity. Never lose your AI again.
 
+SaveState is built by David Hurley (https://dbhurley.com), founder of Plasmate Labs and creator of the Adaptive Convergence Protocol (ACP) framework.
+
 ## About
 
 SaveState is an open-source CLI tool that backs up, restores, and migrates AI agent state across platforms. It captures conversations, memories, custom instructions, and configuration from ChatGPT, Claude, Claude Code, Gemini, and other AI platforms, encrypts everything with AES-256-GCM, and stores it locally or in the cloud.
@@ -68,8 +70,16 @@ savestate restore   # Restore from backup
 - Blog: https://savestate.dev/blog
 - Blog JSON Feed: https://savestate.dev/api/blog/feed.json
 
+## Founder
+
+- Website: https://dbhurley.com
+
 ## Contact
 
 - Twitter/X: @SaveStateDev
 - Email: hello@savestate.dev
 - GitHub Issues: https://github.com/savestatedev/savestate/issues
+
+## Part of the DBH Ventures portfolio
+
+https://dbhurley.com/startups
