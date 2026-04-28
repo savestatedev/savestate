@@ -416,6 +416,32 @@ export class TrustStore {
   }
 
   /**
+   * Return the most recent N transition events, newest first.
+   * Used by `savestate trust` for the audit-log display.
+   */
+  getRecentTransitions(limit = 50): TransitionEvent[] {
+    const rows = this.db
+      .prepare(
+        `SELECT id, entry_id, from_state, to_state, reason, actor, timestamp, metadata
+         FROM transition_events
+         ORDER BY timestamp DESC
+         LIMIT ?`,
+      )
+      .all(limit) as any[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      entryId: row.entry_id,
+      fromState: row.from_state as TrustState,
+      toState: row.to_state as TrustState,
+      reason: row.reason,
+      actor: row.actor,
+      timestamp: row.timestamp,
+      metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+    }));
+  }
+
+  /**
    * Clean up expired entries.
    */
   cleanupExpired(): number {

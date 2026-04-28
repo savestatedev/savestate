@@ -49,7 +49,7 @@ savestate/
     incremental.ts      # Delta/incremental snapshot logic
     search.ts           # Cross-snapshot search (decrypt-on-the-fly, scored)
     commands/           # CLI command handlers (init, snapshot, restore, list, diff, search, stats, etc.)
-    adapters/           # Platform adapters (chatgpt, claude, gemini, openai, clawdbot, claude-code)
+    adapters/           # Platform adapters (chatgpt, claude, gemini, openai, clawdbot, claude-code, cursor)
     storage/            # Storage backends (local, s3, cloud)
     integrity/          # Data integrity verification
     privacy/            # Privacy controls
@@ -80,7 +80,7 @@ savestate/
 ## Key Concepts
 
 1. **SaveState Archive Format (SAF)** -- Open spec for AI state snapshots (.saf.enc files)
-2. **Adapters** -- Platform-specific extractors/restorers (6 adapters: ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, Clawdbot)
+2. **Adapters** -- Platform-specific extractors/restorers (7 adapters: ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, Clawdbot, Cursor)
 3. **Storage Backends** -- Where encrypted snapshots are stored (local, S3/R2, cloud API)
 4. **Encryption** -- AES-256-GCM with scrypt KDF; master key is never stored
 
@@ -221,14 +221,44 @@ Phase 5 pivot (April 28, 2026):
   `site/blog/from-backup-tool-to-memory-layer-the-savestate-pivot.html`,
   now the featured post on /blog after regenerating the index.
 
+Recently shipped (April 28, 2026, iteration 4):
+- **Cursor adapter** (`src/adapters/cursor.ts`, v0.1.0) — first community-tier
+  adapter. Captures `~/.cursor/mcp.json` (global MCP servers),
+  `~/.cursor/composer-rules`, project `.cursor/rules/*.mdc` (as skills),
+  and project `.cursor/mcp.json` (merged into tools, project overrides
+  global). Records workspaceStorage SQLite paths in the file manifest;
+  v2 will parse Composer chat history.
+- **Per-snapshot encrypted FTS index** (`src/search/index-builder.ts`) —
+  every SAF now ships a `search/index.json` inverted-index file that
+  `searchSnapshots` uses as a fast pre-filter. Bidirectional substring
+  match (`indexToken.includes(q) || q.includes(indexToken)`) preserves
+  scoreMatch's substring semantics, e.g. "cocktail" still matches the
+  indexed token "cocktails". Auto-built in `packSnapshot`,
+  manifest-invariant checksum stays stable. Legacy snapshots without an
+  index fall back to brute-force scan with identical observable output.
+- **Trust Kernel Phase 2 (write-path integration)** — `MemoryStore` now
+  takes an optional `writeGate` option. When present, every `create()`
+  call routes through `WriteGate.evaluate` first; rejected writes raise
+  `TrustGateRejection` (with `blockers[]`) and never hit SQLite. Opt-in,
+  zero-impact for callers that don't pass a gate.
+- **`savestate trust` CLI** — `trust status` shows entries-by-state,
+  entries-by-scope, denylist size, and recent-hour promotion/rejection
+  counts; `trust audit [--limit n]` prints the most recent state-
+  transition events with reasons + actors. Both have `--json`.
+- **`TrustStore.getRecentTransitions(limit)`** — newest-first audit log
+  query, used by the new `trust audit` command.
+- 23 new tests across the three workstreams (8 cursor, 9 search-index,
+  6 trust-integration). Total: 1249 passing.
+
 Next-up Phase 5 work (in priority order):
-1. Trust Kernel Phase 2 — TrustGate integration into the live memory
-   path, ActionGate enforcement, full audit logging.
-2. Encrypted full-text search index (per-snapshot, separately keyed) —
-   turns `savestate search` from O(N decrypts) into O(1).
-3. Team / compliance tier (SSO, audit logs, data-residency selection).
-4. MCP catalog presence across Claude Code / Cursor / Codex registries.
-5. Community adapters: Cursor, Windsurf, Codeium, Zed AI.
+1. Trust Kernel Phase 3 — shadow-mode rollout, eval harness,
+   auto-rollback on drift.
+2. Team / compliance tier (SSO, audit logs, data-residency selection,
+   shared snapshots with role-scoped decryption, SOC2 path).
+3. MCP catalog presence across Claude Code / Cursor / Codex registries.
+4. Community adapters: Windsurf, Codeium, Zed AI (Cursor shipped).
+5. Cursor adapter v2 — parse Composer chat history from
+   workspaceStorage SQLite into conversations.
 
 ## Claude Code Guidelines
 

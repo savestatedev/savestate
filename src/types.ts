@@ -278,6 +278,8 @@ export interface Snapshot {
   trace?: SnapshotTrace;
   /** Structured state events (Issue #91) */
   stateEvents?: SnapshotStateEvents;
+  /** Per-snapshot inverted search index (packed under search/index.json). */
+  searchIndex?: SearchIndexFile;
 }
 
 // ─── Adapter Interface ───────────────────────────────────────
@@ -517,6 +519,33 @@ export interface SearchResult {
   score: number;
   /** Source path within the archive */
   path: string;
+}
+
+/** Categories of indexed content (matches SearchResult.type). */
+export type SearchIndexPostingType = 'memory' | 'conversation' | 'identity' | 'knowledge';
+
+/**
+ * One entry in a token's posting list.
+ *
+ * `sourceId` identifies the underlying record (e.g. memory entry id,
+ * conversation id, knowledge doc id) and `path` is the SAF path used
+ * by SearchResult for direct linkage.
+ */
+export interface SearchIndexPosting {
+  type: SearchIndexPostingType;
+  sourceId: string;
+  path: string;
+}
+
+/**
+ * Per-snapshot inverted index. Packed into the SAF at
+ * `search/index.json` so it inherits end-to-end encryption.
+ */
+export interface SearchIndexFile {
+  /** Search index format version. */
+  version: string;
+  /** token → de-duplicated posting list. */
+  tokens: Record<string, SearchIndexPosting[]>;
 }
 
 // ─── Diff ────────────────────────────────────────────────────

@@ -365,12 +365,23 @@ This phase pivots from pure backup to "AI memory layer with portability".
       write/trust/action gates, denylist, audit trail, six-file
       decomposed implementation (types/store/gates/worker) under
       `src/trust-kernel/`. Foundation for the enterprise / Team tier.
-      Phase 2 (TrustGate live integration, ActionGate enforcement, audit
-      logging) and Phase 3 (shadow rollout, eval harness) still TODO.
-- [ ] **Encrypted full-text search index** — current search decrypts every
-      snapshot on each query. Build a per-snapshot client-side search index
-      that ships alongside the SAF, encrypted with a separate key. Sub-second
-      search across hundreds of snapshots without bulk decrypt.
+- [x] **Trust Kernel Phase 2 (write-path integration)** (April 28,
+      iteration 4) — `MemoryStore` accepts an optional `writeGate`. When
+      present, every `create()` call routes through `WriteGate.evaluate`
+      first; rejected writes raise `TrustGateRejection` (with
+      `blockers[]`) and never hit SQLite. Shipped alongside a
+      `savestate trust status / audit` CLI for surfacing the audit log.
+      Phase 3 (shadow rollout, eval harness, auto-rollback) still TODO.
+- [x] **Encrypted full-text search index** (April 28, iteration 4) — every
+      SAF now ships a `search/index.json` inverted-index file. Built
+      automatically by `packSnapshot`, encrypted alongside the rest of
+      the archive (so still end-to-end encrypted at rest), used by
+      `searchSnapshots` as a fast pre-filter so per-query work shrinks
+      from "scan every memory body" to "look up tokens." Bidirectional
+      substring match preserves the existing scoreMatch semantics
+      (e.g. "cocktail" still matches indexed "cocktails"). Legacy
+      snapshots without an index fall back to brute-force scan with
+      identical observable output.
 - [x] **MCP memory server adapter** — partial; `savestate_search_snapshots`
       and `savestate_stats` shipped April 28. Still TODO: write-side audit,
       governance integration with Trust Kernel, namespacing.
@@ -383,8 +394,13 @@ This phase pivots from pure backup to "AI memory layer with portability".
 - [ ] **Team / compliance tier**: shared snapshots with role-scoped
       decryption, audit logs, SSO, data-residency selection (US / EU R2
       buckets), DPA/SOC2 path. Drives ARPU.
+- [x] **Cursor adapter** (v0.1.0, April 28, 2026) — first community-tier
+      adapter shipped. Captures `~/.cursor/mcp.json`,
+      `~/.cursor/composer-rules`, project `.cursor/rules/*.mdc`, and
+      project `.cursor/mcp.json`. Workspace SQLite chat history is
+      tracked in the file manifest; v2 will parse it.
 - [ ] **Community adapters**: Copilot, Poe, Character.ai, Ollama/LM Studio,
-      Cursor, Windsurf, Codeium, Zed AI.
+      Windsurf, Codeium, Zed AI.
 
 ### Stickiness thesis (why pivot)
 

@@ -11,10 +11,11 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { Header, Parser } from 'tar';
-import type { Snapshot } from './types.js';
+import type { Snapshot, SearchIndexFile } from './types.js';
 import { TRACE_SCHEMA_VERSION, type SnapshotTrace, type TraceRunIndexEntry } from './trace/types.js';
 import { STATE_EVENTS_VERSION, type SnapshotStateEvents, type StateEvent } from './state-events/types.js';
 import { STATE_EVENTS_FILE } from './state-events/store.js';
+import { buildSearchIndex } from './search/index-builder.js';
 
 /** File extension for encrypted SaveState archives */
 export const SAF_EXTENSION = '.saf.enc';
@@ -104,6 +105,12 @@ export function packSnapshot(snapshot: Snapshot): Map<string, Buffer> {
     }
   }
 
+  // search/ — per-snapshot inverted index for fast cross-snapshot search.
+  // Built deterministically from snapshot content so the archive checksum
+  // stays stable across re-packs that don't change the snapshot data.
+  const searchIndex: SearchIndexFile = snapshot.searchIndex ?? buildSearchIndex(snapshot);
+  files.set('search/index.json', Buffer.from(JSON.stringify(searchIndex)));
+
   // state-events/ (Issue #91)
   if (snapshot.stateEvents && snapshot.stateEvents.count > 0) {
     const stateEventsIndex: SnapshotStateEvents = {
@@ -179,8 +186,22 @@ export function unpackSnapshot(files: Map<string, Buffer>): Snapshot {
   const restoreHints = getJson<Snapshot['restoreHints']>('meta/restore-hints.json');
   const trace = unpackTrace(files);
   const stateEvents = unpackStateEvents(files);
+  const searchIndex = files.has('search/index.json')
+    ? getJson<SearchIndexFile>('search/index.json')
+    : undefined;
 
-  return { manifest, identity, memory, conversations, platform, chain, restoreHints, trace, stateEvents };
+  return {
+    manifest,
+    identity,
+    memory,
+    conversations,
+    platform,
+    chain,
+    restoreHints,
+    trace,
+    stateEvents,
+    searchIndex,
+  };
 }
 
 function unpackTrace(files: Map<string, Buffer>): SnapshotTrace | undefined {

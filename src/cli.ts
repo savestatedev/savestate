@@ -123,6 +123,27 @@ program
   .option('--json', 'Output as JSON')
   .action(inspectCommand);
 
+// ─── savestate trust ─────────────────────────────────────────
+
+import { trustStatusCommand, trustAuditCommand } from './commands/trust.js';
+
+const trustCmd = program
+  .command('trust')
+  .description('Inspect Trust Kernel state and audit trail');
+
+trustCmd
+  .command('status')
+  .description('Show Trust Kernel metrics: entries by state/scope, denylist size, recent activity')
+  .option('--json', 'Output as JSON')
+  .action(trustStatusCommand);
+
+trustCmd
+  .command('audit')
+  .description('Show recent state-transition events')
+  .option('--limit <n>', 'Number of recent events to show')
+  .option('--json', 'Output as JSON')
+  .action(trustAuditCommand);
+
 // ─── savestate prune ─────────────────────────────────────────
 
 import { pruneCommand } from './commands/prune.js';

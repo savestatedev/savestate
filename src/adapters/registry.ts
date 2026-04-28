@@ -18,6 +18,7 @@ import { ClaudeWebAdapter } from './claude-web.js';
 import { OpenAIAssistantsAdapter } from './openai-assistants.js';
 import { ChatGPTAdapter } from './chatgpt.js';
 import { GeminiAdapter } from './gemini.js';
+import { CursorAdapter } from './cursor.js';
 
 /** Registry of all known adapters */
 const adapters = new Map<string, () => Adapter>();
@@ -96,3 +97,4 @@ register('claude-web', () => new ClaudeWebAdapter());
 register('openai-assistants', () => new OpenAIAssistantsAdapter());
 register('chatgpt', () => new ChatGPTAdapter());
 register('gemini', () => new GeminiAdapter());
+register('cursor', () => new CursorAdapter());

@@ -69,6 +69,7 @@ savestate restore latest
 | **ChatGPT** | ✅ | ⚠️ Partial | Available |
 | **Claude (consumer)** | ✅ | ⚠️ Partial | Available |
 | **Gemini** | ✅ | ⚠️ Limited | Available |
+| **Cursor** | ✅ | ✅ | Community (v0.1.0) |
 
 ### OpenClaw Full Backup (v0.3.0+)
 

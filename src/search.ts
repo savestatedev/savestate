@@ -12,6 +12,7 @@ import { resolveStorage } from './storage/index.js';
 import { decrypt } from './encryption.js';
 import { unpackFromArchive, unpackSnapshot } from './format.js';
 import { isIncremental, reconstructFromChain } from './incremental.js';
+import { tokenize } from './search/index-builder.js';
 import { createHash } from 'node:crypto';
 
 type SearchType = 'memory' | 'conversation' | 'identity' | 'knowledge';
@@ -126,7 +127,13 @@ export async function searchSnapshots(
     const includeKnowledge = !types || types.includes('knowledge');
 
     if (includeMemory) {
+      // Use the per-snapshot search index (if present) as a fast pre-filter:
+      // only score memory entries whose ids are in at least one query token's
+      // posting list. Legacy snapshots without an index fall back to the
+      // brute-force scan with identical observable behavior.
+      const memoryFilter = buildMemoryIdFilter(query, snapshot);
       for (const mem of snapshot.memory.core) {
+        if (memoryFilter && !memoryFilter.has(mem.id)) continue;
         const score = scoreMatch(query, mem.content);
         if (score > 0) {
           results.push({
@@ -227,6 +234,44 @@ export function scoreMatch(query: string, content: string): number {
   const positionScore = Math.max(0, 1 - position / Math.max(lowerContent.length, 1));
 
   return wordScore * 0.7 + positionScore * 0.3;
+}
+
+/**
+ * Build a Set of memory entry ids that appear in the snapshot's search
+ * index for at least one query token. Returns `null` when no index is
+ * available (legacy snapshots) so the caller falls back to a full scan.
+ *
+ * Matching is substring against index tokens — the brute-force scorer
+ * uses `String.includes`, so "cocktail" must still match content that
+ * tokenized to "cocktails". This is still O(distinct_tokens) per query,
+ * which is dramatically smaller than scanning every memory body.
+ *
+ * If the query tokenizes to nothing (e.g. only punctuation), we return
+ * null so the caller falls back to brute-force behavior.
+ */
+function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | null {
+  const idx = snapshot.searchIndex;
+  if (!idx) return null;
+
+  const queryTokens = tokenize(query);
+  if (queryTokens.length === 0) return null;
+
+  const ids = new Set<string>();
+  for (const indexToken of Object.keys(idx.tokens)) {
+    let hit = false;
+    for (const q of queryTokens) {
+      if (indexToken.includes(q) || q.includes(indexToken)) {
+        hit = true;
+        break;
+      }
+    }
+    if (!hit) continue;
+    const postings = idx.tokens[indexToken];
+    for (const posting of postings) {
+      if (posting.type === 'memory') ids.add(posting.sourceId);
+    }
+  }
+  return ids;
 }
 
 function extractContext(query: string, content: string): string | undefined {

@@ -9,12 +9,13 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { encrypt, decrypt, KeySource } from '../container/crypto.js';
-import type { 
-  MemoryEntry, 
-  MemoryType, 
-  MemoryQuery, 
-  MemoryStats 
+import type {
+  MemoryEntry,
+  MemoryType,
+  MemoryQuery,
+  MemoryStats
 } from './types.js';
+import type { WriteGate } from '../trust-kernel/gates.js';
 
 const DEFAULT_DB_PATH = join(homedir(), '.savestate', 'memory.db');
 
@@ -22,16 +23,37 @@ export interface MemoryStoreOptions {
   dbPath?: string;
   keySource?: KeySource;
   encryptionEnabled?: boolean;
+  /**
+   * Optional Trust Kernel gate. When set, every `create()` call routes
+   * through `writeGate.evaluate()` first. Rejected writes raise
+   * `TrustGateRejection` and never hit the DB.
+   */
+  writeGate?: WriteGate;
+}
+
+/**
+ * Thrown when a memory write is rejected by the Trust Kernel WriteGate.
+ * Carries the gate's blockers list so callers can surface it back to users.
+ */
+export class TrustGateRejection extends Error {
+  constructor(
+    message: string,
+    public readonly blockers: string[],
+  ) {
+    super(message);
+    this.name = 'TrustGateRejection';
+  }
 }
 
 export class MemoryStore {
   private db: Database.Database;
   private keySource?: KeySource;
   private encryptionEnabled: boolean;
+  private writeGate?: WriteGate;
 
   constructor(options: MemoryStoreOptions = {}) {
     const dbPath = options.dbPath || DEFAULT_DB_PATH;
-    
+
     // Ensure directory exists
     const dbDir = dirname(dbPath);
     if (!existsSync(dbDir)) {
@@ -41,7 +63,8 @@ export class MemoryStore {
     this.db = new Database(dbPath);
     this.keySource = options.keySource;
     this.encryptionEnabled = options.encryptionEnabled ?? !!options.keySource;
-    
+    this.writeGate = options.writeGate;
+
     this.initSchema();
   }
 
@@ -70,9 +93,24 @@ export class MemoryStore {
    * Create a new memory entry
    */
   async create(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<MemoryEntry> {
+    if (this.writeGate) {
+      const gateResult = this.writeGate.evaluate({
+        content: entry.content,
+        source: 'memory-store',
+        tags: entry.tags,
+        metadata: entry.metadata,
+      });
+      if (!gateResult.allowed) {
+        throw new TrustGateRejection(
+          `Memory write rejected by Trust Kernel: ${gateResult.blockers.join('; ')}`,
+          gateResult.blockers,
+        );
+      }
+    }
+
     const id = randomUUID();
     const now = new Date().toISOString();
-    
+
     let content = entry.content;
     let encrypted = 0;
     
