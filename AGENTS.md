@@ -4,9 +4,11 @@ This file is for AI coding agents working on the SaveState codebase. Read this f
 
 ## What is SaveState?
 
-**SaveState is Time Machine for AI.** It's an encrypted backup and restore CLI for AI agent state — capturing memories, conversations, custom instructions, and configurations so they can be restored or migrated between platforms.
+**SaveState is the portable, encrypted memory layer for every AI** — the cross-platform memory infrastructure users actually own. CLI + MCP server + cloud-optional API. It captures memories, conversations, custom instructions, and configurations from ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, and Clawdbot, then makes them searchable, restorable, and migratable across platforms — encrypted with user-controlled keys.
 
-Think of it like 1Password for AI identity: your data, encrypted with your keys, portable across platforms.
+Think of it like 1Password for AI identity: your data, encrypted with your keys, portable across platforms. Backup is one of many things you can do with the portable archive — the bigger story is owning your memory layer.
+
+(Originally launched as "Time Machine for AI" in January 2026; pivoted in April 2026 to lead with the memory-layer framing.)
 
 ## Quick Links
 

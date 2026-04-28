@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Server — SaveState Docs</title>
+<meta name="description" content="Use SaveState as a Model Context Protocol (MCP) memory provider in Claude Code, Cursor, Codex, and any MCP-compatible client.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+      <li><a href="/docs/mcp.html" class="active">MCP Server</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>SaveState as an MCP Memory Provider</h1>
+    <p class="subtitle">Run SaveState as a Model Context Protocol server. Claude Code, Cursor, Codex, and any MCP-compatible client can read your encrypted memory archive in real time — no manual export, no platform silo.</p>
+
+    <div class="callout callout-tip">
+      <span class="callout-label">⚡</span> SaveState is the only MCP memory provider with end-to-end encryption, cross-platform portability, and an open archive format. Your keys, your data, every client.
+    </div>
+
+    <h2 id="why">Why MCP changes the framing</h2>
+    <p>Most "AI memory" tools today are either platform silos (ChatGPT Memory, Claude Projects) or unencrypted runtime stores (community MCP memory servers). SaveState ships both halves: an encrypted, portable archive <em>and</em> the runtime tools to query it from any client. Snapshot once, recall everywhere.</p>
+
+    <h2 id="install">Quick install (Claude Code)</h2>
+    <p>Add SaveState to <code>~/.claude/settings.json</code>:</p>
+    <pre><code>{
+  "mcpServers": {
+    "savestate": {
+      "command": "npx",
+      "args": ["-y", "@savestate/cli", "mcp"],
+      "env": {
+        "SAVESTATE_MCP_PASSPHRASE": "your-passphrase-here"
+      }
+    }
+  }
+}</code></pre>
+    <p>Then restart Claude Code. The new tools (<code>savestate_search_snapshots</code>, <code>savestate_stats</code>, plus the memory + snapshot toolset) are now available to the model.</p>
+
+    <h2 id="cursor">Cursor</h2>
+    <p>Add to <code>.cursor/mcp.json</code> or <code>~/.cursor/mcp.json</code>:</p>
+    <pre><code>{
+  "mcpServers": {
+    "savestate": {
+      "command": "npx",
+      "args": ["-y", "@savestate/cli", "mcp"]
+    }
+  }
+}</code></pre>
+
+    <h2 id="codex">Codex CLI / OpenAI Codex</h2>
+    <pre><code>codex mcp add savestate -- npx -y @savestate/cli mcp</code></pre>
+
+    <h2 id="tools">Tools exposed</h2>
+    <table>
+      <thead>
+        <tr><th>Tool</th><th>What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>savestate_snapshot</code></td><td>Create a new encrypted snapshot of the current AI state.</td></tr>
+        <tr><td><code>savestate_restore</code></td><td>Restore a specific snapshot.</td></tr>
+        <tr><td><code>savestate_list</code></td><td>List available snapshots.</td></tr>
+        <tr><td><code>savestate_status</code></td><td>Check SaveState initialization + adapter status.</td></tr>
+        <tr><td><code>savestate_search_snapshots</code></td><td>Full-text search across <em>every</em> snapshot — even on a different platform. The killer feature.</td></tr>
+        <tr><td><code>savestate_stats</code></td><td>Aggregate stats: total snapshots, cadence, adapter mix, top tags.</td></tr>
+        <tr><td><code>savestate_memory_store</code> / <code>_search</code> / <code>_delete</code></td><td>Live memory CRUD against the SQLite-backed memory store.</td></tr>
+        <tr><td><code>add_memories</code> / <code>search_memory</code> / <code>list_memories</code> / <code>delete_memory</code> / <code>delete_all_memories</code></td><td>OpenMemory-compatible API surface, drop-in for any client expecting the OpenMemory protocol.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="resources">Resources</h2>
+    <ul>
+      <li><code>savestate://snapshots</code> — JSON list of all snapshots in the local index.</li>
+      <li><code>savestate://memories</code> — Live memory entries from the SQLite store.</li>
+    </ul>
+
+    <h2 id="passphrase">Passphrase handling</h2>
+    <p>The MCP server can run with or without encryption. If <code>SAVESTATE_MCP_PASSPHRASE</code> is set, the SQLite-backed memory store encrypts content; cross-snapshot search tools always require a passphrase per-call so the user keeps control. Pass the passphrase via the <code>passphrase</code> argument when invoking <code>savestate_search_snapshots</code> or <code>savestate_snapshot</code>.</p>
+
+    <div class="callout callout-tip">
+      <span class="callout-label">🔒</span> Passphrases never leave the local process. SaveState derives keys with scrypt, encrypts with AES-256-GCM, and never sends plaintext to the cloud or to any MCP client.
+    </div>
+
+    <h2 id="why-savestate">Why SaveState specifically?</h2>
+    <ul>
+      <li><strong>Encrypted by default</strong> — AES-256-GCM with user-controlled keys. Other MCP memory servers store plaintext on disk.</li>
+      <li><strong>Cross-platform</strong> — One memory archive, six adapters (ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, Clawdbot), with more coming. No re-onboarding when you switch tools.</li>
+      <li><strong>Open format</strong> — The SaveState Archive Format (SAF) is an open spec. Your archive is yours forever, even if SaveState disappears.</li>
+      <li><strong>Memory governance</strong> — Signal Fitness League scoring + Trust Kernel staged promotion (in progress) means low-quality memory drops out automatically.</li>
+      <li><strong>Backup as a side effect</strong> — Every MCP interaction is captured into the same encrypted, portable archive. No second tool needed.</li>
+    </ul>
+
+    <h2 id="next">Next steps</h2>
+    <ul>
+      <li><a href="/docs/cli.html">CLI Reference</a> — every command, every flag.</li>
+      <li><a href="/docs/encryption.html">Encryption</a> — how passphrases, scrypt, and GCM fit together.</li>
+      <li><a href="/docs/format.html">SAF Archive Format</a> — the open format spec.</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+
+</body>
+</html>

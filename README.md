@@ -1,30 +1,33 @@
 # ⚡ SaveState
 
-### Time Machine for AI
+### Your AI's memory. Yours.
 
-**Backup, restore, and migrate your AI identity.**
+**The portable, encrypted memory layer for every AI you use.**
 
-> Your AI knows you — your preferences, your history, your workflows.
-> What happens when it disappears?
+> ChatGPT keeps your memory. Claude keeps your memory. Gemini keeps your memory.
+> **You don't.** SaveState fixes that.
 
 ---
 
 ## The Problem
 
-People build deep relationships with AI assistants. Months of conversations, learned preferences, custom instructions, tool configurations — **none of it is portable, none of it is backed up.**
+Every AI you use is building a model of you — your preferences, history, projects, voice. Each platform locks that memory up in its own silo. There is no portability, no audit trail, no encryption boundary the user controls. If a service changes its API, you switch platforms, or your account is suspended, **everything that AI learned about you is gone.**
 
-If the service changes, the API breaks, or you want to switch platforms — you lose everything.
+Worse: even within a single platform, "memory" is shallow. 1M-token context windows don't fix it — research shows reliable recall drops below 50% past 256K. Your assistant forgets what you told it last month.
 
 ## The Solution
 
-SaveState is an encrypted backup and restore system for AI agent state. Think **Time Machine**, but for your AI.
+SaveState is the cross-platform memory layer you control. One encrypted, searchable, portable archive for everything your AIs know about you.
 
 ```bash
-npx savestate init                     # Set up encryption + storage
-npx savestate snapshot                 # Capture current state
-npx savestate restore latest           # Restore from last snapshot
-npx savestate diff v3 v5               # What changed between snapshots
+npx savestate init                     # one-time: encryption + storage
+npx savestate snapshot                 # capture state from any platform
+npx savestate search "cocktail recs"   # full-text across every snapshot
+npx savestate restore latest --to claude  # move state between platforms
+npx savestate mcp                      # serve memory to Claude Code / Cursor / Codex
 ```
+
+Think of it as **1Password for AI identity**: your data, encrypted with your keys, portable across every platform — backup is just one of the things you can do with it.
 
 ## Features
 

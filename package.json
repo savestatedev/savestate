@@ -1,7 +1,7 @@
 {
   "name": "@savestate/cli",
   "version": "0.9.0",
-  "description": "Time Machine for AI. Backup, restore, and migrate your AI identity.",
+  "description": "Your AI's memory. Yours. The portable, encrypted memory layer for ChatGPT, Claude, Gemini, and any agent — cross-platform search, MCP runtime, open archive format.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

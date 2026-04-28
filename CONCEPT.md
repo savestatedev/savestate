@@ -1,8 +1,12 @@
 # Savestate
 
-**Time Machine for AI. Backup, restore, and migrate your AI identity.**
+**Your AI's memory. Yours.**
 
-> Your AI knows you — your preferences, your history, your workflows. What happens when it disappears?
+The portable, encrypted memory layer for every AI you use — ChatGPT, Claude, Gemini, Claude Code, OpenAI Assistants, and any agent built on top. Search, restore, and move your AI identity without giving up the keys.
+
+> ChatGPT keeps your memory. Claude keeps your memory. Gemini keeps your memory. **You don't.** SaveState fixes that.
+
+(Originally launched in January 2026 as "Time Machine for AI" — encrypted backup/restore. Pivoted in April 2026 to lead with the memory-layer story; backup is one of many things you can do with the portable archive.)
 
 ## The Problem
 
@@ -356,9 +360,13 @@ This phase pivots from pure backup to "AI memory layer with portability".
 - [x] **Manifest-invariant content checksum** — fixed restore-time integrity
       verification. Previous archive-hash semantics were unverifiable because
       the manifest mutates between hash and final pack. Shipped April 28.
-- [ ] **Trust Kernel Phase 1** — state model + promotion pipeline (PR #183
-      draft). Candidate → stable → revoked transitions, write/trust/action
-      gates, denylist, audit trail. Required for enterprise / Team tier.
+- [x] **Trust Kernel Phase 1** — state model + promotion pipeline. PR #183
+      merged April 28. Candidate → stable → revoked transitions,
+      write/trust/action gates, denylist, audit trail, six-file
+      decomposed implementation (types/store/gates/worker) under
+      `src/trust-kernel/`. Foundation for the enterprise / Team tier.
+      Phase 2 (TrustGate live integration, ActionGate enforcement, audit
+      logging) and Phase 3 (shadow rollout, eval harness) still TODO.
 - [ ] **Encrypted full-text search index** — current search decrypts every
       snapshot on each query. Build a per-snapshot client-side search index
       that ships alongside the SAF, encrypted with a separate key. Sub-second

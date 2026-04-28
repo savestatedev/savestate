@@ -3,7 +3,7 @@
 /**
  * SaveState CLI
  *
- * Time Machine for AI. Backup, restore, and migrate your AI identity.
+ * Your AI's memory. Yours. The portable, encrypted memory layer for every AI.
  *
  * Usage:
  *   savestate init                    Set up encryption + storage
@@ -43,7 +43,7 @@ const program = new Command();
 
 program
   .name('savestate')
-  .description('Time Machine for AI. Backup, restore, and migrate your AI identity.')
+  .description('Your AI\'s memory. Yours. Portable, encrypted memory layer for every AI.')
   .version(version);
 
 // ─── savestate init ──────────────────────────────────────────

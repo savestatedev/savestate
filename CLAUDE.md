@@ -2,7 +2,9 @@
 
 ## Project Summary
 
-SaveState is "Time Machine for AI" -- an open-source CLI tool that backs up, restores, and migrates AI agent state across platforms. It captures conversations, memories, custom instructions, and configuration from ChatGPT, Claude, Claude Code, Gemini, and other AI platforms, encrypts everything with AES-256-GCM, and stores it locally or in the cloud.
+SaveState is "Your AI's memory. Yours." — the portable, encrypted memory layer for every AI a user touches. Open-source CLI + MCP server + cloud-optional backend that captures conversations, memories, custom instructions, and configuration from ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, and Clawdbot, encrypts everything with AES-256-GCM, and lets users search / restore / migrate across platforms — without giving up the keys.
+
+(Originally launched January 2026 as "Time Machine for AI" — encrypted backup/restore. Pivoted in April 2026 to lead with the memory-layer story. Same product, much bigger market: backup is one of many things you can do with the portable archive, alongside cross-platform search, MCP runtime memory, governance, and migration.)
 
 **Website:** https://savestate.dev
 **npm:** @savestate/cli
@@ -194,17 +196,38 @@ Recently landed (April 28, 2026):
 Open PRs reviewed:
 - **#184** (Signal Fitness League) — module merged April 28; PR closed.
 - **#185** (Looper template strip) — closed April 28 as regression.
-- **#183** (Trust Kernel Phase 1, draft) — left open; conflicting layout
-  with existing `src/trust-kernel/` so cherry-pick is risky. Author still
-  needs to take it out of draft.
+- **#183** (Trust Kernel Phase 1) — module merged April 28; PR closed.
+  Replaced the prior single-file `src/trust-kernel/index.ts` (zero callers)
+  with PR #183's six-file decomposed implementation
+  (types/store/gates/worker), kept the directory name `src/trust-kernel/`
+  to match documentation. 25 trust tests added; total 1226 passing.
+
+Phase 5 pivot (April 28, 2026):
+- Hero reframe shipped across landing, README, CONCEPT, AGENTS, CLAUDE,
+  package.json, CLI description: "Time Machine for AI" → "Your AI's
+  memory. Yours." Backup is now framed as one of many things you can do
+  with the portable archive; the headline is the cross-platform memory
+  layer.
+- MCP-first distribution: new `site/docs/mcp.html` setup guide for
+  Claude Code / Cursor / Codex; landing CTA includes the MCP JSON
+  snippet alongside the npm one-liner; "Run as an MCP memory provider"
+  card with NEW badge.
+- Time Machine UI shipped in `site/dashboard.html`: horizontal timeline
+  of cloud snapshots, color-coded by inferred adapter, click any dot to
+  expand details + copy a `savestate restore <id>` command.
+- Obsidian project doc moved from `Projects/4-Active/` to
+  `Projects/2-Core/` and updated to reflect Phase 5 status.
+- Founder-narrative pivot blog post:
+  `site/blog/from-backup-tool-to-memory-layer-the-savestate-pivot.html`,
+  now the featured post on /blog after regenerating the index.
 
 Next-up Phase 5 work (in priority order):
-1. Trust Kernel Phase 1 merge (PR #183, draft) — reconcile with existing
-   `src/trust-kernel/index.ts` first.
-2. Encrypted full-text search index (per-snapshot, separate-keyed) — turns
-   `savestate search` from O(N decrypts) into O(1).
-3. Time Machine UI in the dashboard — visceral demo of the value.
-4. Team / compliance tier (SSO, audit logs, data-residency selection).
+1. Trust Kernel Phase 2 — TrustGate integration into the live memory
+   path, ActionGate enforcement, full audit logging.
+2. Encrypted full-text search index (per-snapshot, separately keyed) —
+   turns `savestate search` from O(N decrypts) into O(1).
+3. Team / compliance tier (SSO, audit logs, data-residency selection).
+4. MCP catalog presence across Claude Code / Cursor / Codex registries.
 5. Community adapters: Cursor, Windsurf, Codeium, Zed AI.
 
 ## Claude Code Guidelines

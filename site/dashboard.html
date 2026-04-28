@@ -517,6 +517,142 @@ tr:hover td { background: rgba(3, 193, 223, 0.02); }
 }
 
 /* ============================================================
+   TIME MACHINE TIMELINE
+   ============================================================ */
+.timeline-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 28px 36px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.timeline-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.timeline-sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.timeline-track-wrap {
+  position: relative;
+  padding: 24px 0 8px;
+}
+
+.timeline-track {
+  position: relative;
+  height: 4px;
+  background: linear-gradient(90deg, transparent 0%, var(--border) 8%, var(--border) 92%, transparent 100%);
+  border-radius: 2px;
+  margin: 0 16px;
+}
+
+.timeline-dot {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid var(--bg-card);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  z-index: 2;
+}
+
+.timeline-dot:hover,
+.timeline-dot.active {
+  transform: translate(-50%, -50%) scale(1.5);
+  box-shadow: 0 0 0 4px var(--glow);
+  z-index: 3;
+}
+
+.timeline-dot.adapter-claude-code,
+.timeline-dot.adapter-claude-web,
+.timeline-dot.adapter-clawdbot { background: var(--blue); }
+.timeline-dot.adapter-chatgpt,
+.timeline-dot.adapter-openai-assistants { background: #10b981; }
+.timeline-dot.adapter-gemini { background: #f59e0b; }
+
+.timeline-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 0 16px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.timeline-detail {
+  margin-top: 24px;
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: none;
+}
+
+.timeline-detail.show { display: block; }
+
+.timeline-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.timeline-detail-row .label {
+  color: var(--text-muted);
+}
+
+.timeline-detail-row .value {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: right;
+  word-break: break-all;
+}
+
+.timeline-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.timeline-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeline-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 900px) {
@@ -610,6 +746,25 @@ tr:hover td { background: rgba(3, 193, 223, 0.02); }
           <div class="label">Plan</div>
           <div class="value highlight" id="stat-plan">—</div>
         </div>
+      </div>
+
+      <!-- Time Machine Timeline -->
+      <div class="timeline-card" id="timeline-card" style="display: none;">
+        <div class="timeline-header">
+          <div>
+            <h2>🕰 Time Machine</h2>
+            <p class="timeline-sub">Click a dot to rewind to any captured state.</p>
+          </div>
+        </div>
+        <div class="timeline-track-wrap">
+          <div class="timeline-track" id="timeline-track"></div>
+          <div class="timeline-axis" id="timeline-axis">
+            <span id="timeline-start">—</span>
+            <span id="timeline-end">—</span>
+          </div>
+        </div>
+        <div class="timeline-detail" id="timeline-detail"></div>
+        <div class="timeline-legend" id="timeline-legend"></div>
       </div>
 
       <!-- Snapshots Table -->
@@ -780,6 +935,8 @@ async function loadSnapshots() {
     // Sort by date descending
     items.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
 
+    renderTimeline(items);
+
     tbody.innerHTML = items.map(item => `
       <tr>
         <td class="snapshot-id">${escapeHtml(item.key)}</td>
@@ -796,6 +953,118 @@ async function loadSnapshots() {
   } catch (err) {
     loading.innerHTML = `<span style="color: var(--error)">Failed to load snapshots</span>`;
   }
+}
+
+function renderTimeline(items) {
+  const card = document.getElementById('timeline-card');
+  const track = document.getElementById('timeline-track');
+  const axisStart = document.getElementById('timeline-start');
+  const axisEnd = document.getElementById('timeline-end');
+  const detail = document.getElementById('timeline-detail');
+  const legend = document.getElementById('timeline-legend');
+
+  if (!card || !items || items.length === 0) {
+    if (card) card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+  track.innerHTML = '';
+  detail.classList.remove('show');
+  detail.innerHTML = '';
+
+  // Use timestamps for axis range
+  const sorted = [...items].sort(
+    (a, b) => new Date(a.lastModified) - new Date(b.lastModified),
+  );
+  const minT = new Date(sorted[0].lastModified).getTime();
+  const maxT = new Date(sorted[sorted.length - 1].lastModified).getTime();
+  const span = Math.max(maxT - minT, 1);
+
+  axisStart.textContent = formatShortDate(sorted[0].lastModified);
+  axisEnd.textContent = formatShortDate(sorted[sorted.length - 1].lastModified);
+
+  const adaptersSeen = new Set();
+
+  sorted.forEach((item) => {
+    const t = new Date(item.lastModified).getTime();
+    const pct = ((t - minT) / span) * 100;
+    const adapter = inferAdapterFromKey(item.key);
+    adaptersSeen.add(adapter);
+
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = `timeline-dot adapter-${adapter}`;
+    dot.style.left = `${Math.max(0, Math.min(100, pct))}%`;
+    dot.title = `${item.key} — ${formatDate(item.lastModified)}`;
+    dot.setAttribute('aria-label', `Snapshot ${item.key}`);
+    dot.addEventListener('click', () => showTimelineDetail(item, adapter, dot));
+    track.appendChild(dot);
+  });
+
+  // Legend
+  const legendKnown = ['claude-code', 'claude-web', 'clawdbot', 'chatgpt', 'openai-assistants', 'gemini'];
+  legend.innerHTML = legendKnown
+    .filter((a) => adaptersSeen.has(a))
+    .map((a) => `<span class="timeline-legend-item"><span class="timeline-legend-dot adapter-${a}" style="${legendDotStyle(a)}"></span>${a}</span>`)
+    .join('');
+}
+
+function inferAdapterFromKey(key) {
+  // Filenames look like ss-2026-04-28T13-03-49-abc123.saf.enc; we don't get
+  // the adapter from the storage list. Fall back to a stable default and let
+  // any explicit hints in the key win.
+  const lower = key.toLowerCase();
+  if (lower.includes('chatgpt')) return 'chatgpt';
+  if (lower.includes('gemini')) return 'gemini';
+  if (lower.includes('openai')) return 'openai-assistants';
+  if (lower.includes('clawdbot')) return 'clawdbot';
+  if (lower.includes('claude-web')) return 'claude-web';
+  return 'claude-code';
+}
+
+function legendDotStyle(adapter) {
+  const colors = {
+    'claude-code': 'var(--blue)',
+    'claude-web': 'var(--blue)',
+    clawdbot: 'var(--blue)',
+    chatgpt: '#10b981',
+    'openai-assistants': '#10b981',
+    gemini: '#f59e0b',
+  };
+  return `background: ${colors[adapter] || 'var(--blue)'}`;
+}
+
+function showTimelineDetail(item, adapter, dotEl) {
+  const detail = document.getElementById('timeline-detail');
+  document.querySelectorAll('.timeline-dot.active').forEach((d) => d.classList.remove('active'));
+  dotEl.classList.add('active');
+  detail.innerHTML = `
+    <div class="timeline-detail-row"><span class="label">Snapshot</span><span class="value">${escapeHtml(item.key)}</span></div>
+    <div class="timeline-detail-row"><span class="label">Captured</span><span class="value">${formatDate(item.lastModified)}</span></div>
+    <div class="timeline-detail-row"><span class="label">Size</span><span class="value">${formatBytes(item.size)}</span></div>
+    <div class="timeline-detail-row"><span class="label">Adapter (inferred)</span><span class="value">${adapter}</span></div>
+    <div style="margin-top: 14px; display:flex; gap:8px; flex-wrap: wrap;">
+      <button class="btn secondary sm" onclick="downloadSnapshot('${escapeHtml(item.key)}')">⬇ Download</button>
+      <button class="btn secondary sm" onclick="copyRestoreCmd('${escapeHtml(item.key)}', this)">📋 Copy restore command</button>
+    </div>
+  `;
+  detail.classList.add('show');
+}
+
+function copyRestoreCmd(key, btn) {
+  const id = key.replace(/\.saf\.enc$/, '');
+  const cmd = `savestate restore ${id}`;
+  navigator.clipboard?.writeText(cmd).then(() => {
+    const old = btn.textContent;
+    btn.textContent = '✓ Copied';
+    setTimeout(() => (btn.textContent = old), 1400);
+  });
+}
+
+function formatShortDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 async function refreshSnapshots() {

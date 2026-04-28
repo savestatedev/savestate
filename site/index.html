@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SaveState — Time Machine for AI</title>
-<meta name="description" content="Encrypted backup, restore, and migration for your AI identity. Never lose your AI again.">
+<title>SaveState — The Memory Layer Your AI Doesn't Give You</title>
+<meta name="description" content="The portable, encrypted memory layer for every AI you use. Search, restore, and move your AI identity across ChatGPT, Claude, Gemini, and more — without giving up the keys.">
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://savestate.dev/">
-<meta property="og:title" content="SaveState — Time Machine for AI">
-<meta property="og:description" content="Encrypted backup, restore, and migration for your AI identity. Never lose your AI again.">
+<meta property="og:title" content="SaveState — The Memory Layer Your AI Doesn't Give You">
+<meta property="og:description" content="The portable, encrypted memory layer for every AI you use. Search, restore, and move your AI identity across ChatGPT, Claude, Gemini, and more — without giving up the keys.">
 <meta property="og:image" content="https://savestate.dev/og-image.png">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:url" content="https://savestate.dev/">
-<meta name="twitter:title" content="SaveState — Time Machine for AI">
-<meta name="twitter:description" content="Encrypted backup, restore, and migration for your AI identity. Never lose your AI again.">
+<meta name="twitter:title" content="SaveState — The Memory Layer Your AI Doesn't Give You">
+<meta name="twitter:description" content="The portable, encrypted memory layer for every AI you use. Search, restore, and move your AI identity across ChatGPT, Claude, Gemini, and more — without giving up the keys.">
 <meta name="twitter:image" content="https://savestate.dev/og-image.png">
 
 <!-- Canonical -->
@@ -32,7 +32,7 @@
   "alternateName": ["SaveState.dev", "SaveState Developer Tool"],
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "macOS, Linux, Windows",
-  "description": "Open-source backup and migration tool for AI agents. Export, encrypt, and migrate your ChatGPT, Claude, and other AI conversation history. Time Machine for AI.",
+  "description": "SaveState is the portable, encrypted memory layer for every AI. Search, restore, and migrate your AI identity across ChatGPT, Claude, Gemini, and more — with user-controlled keys, MCP integration, and an open archive format.",
   "url": "https://savestate.dev",
   "downloadUrl": "https://www.npmjs.com/package/@savestate/cli",
   "softwareVersion": "0.7.0",
@@ -1735,12 +1735,12 @@ nav .container {
   <div class="container">
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
-      v0.8.0 — migration wizard, bidirectional ChatGPT ↔ Claude transfers
+      v0.9.0 — cross-snapshot search, MCP memory tools, fitness scoring
     </div>
-    <h1>Time Machine<span class="mobile-break"></span> for AI</h1>
+    <h1>Your AI's memory.<span class="mobile-break"></span> Yours.</h1>
     <p class="hero-subtitle">
-      Encrypted backup, restore, and migration for your AI identity.<br>
-      Never lose your AI again.
+      The portable, encrypted memory layer for every AI you use.<br>
+      Search, restore, and move your AI identity — without giving up the keys.
     </p>
     <div class="btn-group">
       <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-primary" target="_blank" rel="noopener">
@@ -2124,8 +2124,8 @@ nav .container {
 <section class="footer-cta" id="get-started">
   <div class="container">
     <span class="section-label">Get Started</span>
-    <h2 class="section-title">Start backing up your AI<br>in 30 seconds.</h2>
-    <p class="footer-cta-sub">One command. No account required.</p>
+    <h2 class="section-title">Plug your AI's memory<br>into every client.</h2>
+    <p class="footer-cta-sub">One command for the CLI. One JSON snippet for the MCP server.</p>
 
     <div class="install-block">
       <code><span class="prompt-char">$</span> npm install -g @savestate/cli</code>
@@ -2134,10 +2134,31 @@ nav .container {
         Copy
       </button>
     </div>
-    <p style="color: var(--text-dim); font-size: 13px; margin-top: -32px; margin-bottom: 48px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.8; word-break: break-word;">
+    <p style="color: var(--text-dim); font-size: 13px; margin-top: -32px; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.8; word-break: break-word;">
       Also via Homebrew: <code style="color: var(--text-muted); font-size: 12px;">brew install savestatedev/tap/savestate</code><br>
       Or: <code style="color: var(--text-muted); font-size: 12px;">curl -fsSL https://savestate.dev/install.sh | sh</code>
     </p>
+
+    <div style="max-width: 640px; margin: 0 auto 48px; text-align: left; background: var(--bg-card, #0d0d18); border: 1px solid var(--border, #1e293b); border-radius: 12px; padding: 24px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom: 12px;">
+        <span style="font-weight:700; font-size:14px; letter-spacing:0.02em; color: var(--text, #e2e8f0);">Run as an MCP memory provider</span>
+        <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(3,193,223,0.15); color: var(--blue, #03C1DF); font-weight: 600;">NEW</span>
+      </div>
+      <p style="font-size: 13px; line-height: 1.7; color: var(--text-muted, #94a3b8); margin: 0 0 14px;">
+        Drop SaveState into Claude Code, Cursor, or Codex and your encrypted memory archive becomes searchable from inside the model. One archive, every client.
+      </p>
+      <pre style="margin:0; padding: 16px; background: var(--bg-code, #0a0a14); border-radius: 8px; overflow-x: auto;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text, #e2e8f0); line-height: 1.6;">{
+  "mcpServers": {
+    "savestate": {
+      "command": "npx",
+      "args": ["-y", "@savestate/cli", "mcp"]
+    }
+  }
+}</code></pre>
+      <p style="font-size: 12px; line-height: 1.7; color: var(--text-dim, #64748b); margin: 14px 0 0;">
+        Works with any MCP-compatible client. <a href="/docs/mcp.html" style="color: var(--blue, #03C1DF); text-decoration: none;">Full MCP setup guide →</a>
+      </p>
+    </div>
 
     <div class="footer-links">
       <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">
