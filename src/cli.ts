@@ -109,6 +109,8 @@ program
   .command('doctor')
   .description('Health-check every snapshot: decrypt, unpack, verify checksums, walk chains')
   .option('--json', 'Output as JSON')
+  .option('--adapter <id>', 'Only check snapshots from this adapter')
+  .option('--limit <n>', 'Only check the N most recent snapshots')
   .action(doctorCommand);
 
 // ─── savestate inspect ───────────────────────────────────────
@@ -120,6 +122,19 @@ program
   .description('Decrypt and summarize a snapshot without restoring it')
   .option('--json', 'Output as JSON')
   .action(inspectCommand);
+
+// ─── savestate prune ─────────────────────────────────────────
+
+import { pruneCommand } from './commands/prune.js';
+
+program
+  .command('prune')
+  .description('Drop old snapshots according to a retention policy (dry-run by default)')
+  .option('--keep-last <n>', 'Keep the N most recent snapshots')
+  .option('--older-than <date>', 'Drop snapshots older than this date (ISO 8601)')
+  .option('--apply', 'Actually delete (default is dry-run)')
+  .option('--json', 'Output the plan as JSON')
+  .action(pruneCommand);
 
 // ─── savestate diff ──────────────────────────────────────────
 

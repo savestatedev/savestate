@@ -5,18 +5,55 @@
  * and performs text matching across all stored data.
  */
 
-import type { SaveStateConfig, SearchResult } from './types.js';
+import type { SaveStateConfig, SearchResult, Snapshot } from './types.js';
 import type { SnapshotIndexEntry } from './index-file.js';
 import { loadIndex } from './index-file.js';
 import { resolveStorage } from './storage/index.js';
 import { decrypt } from './encryption.js';
 import { unpackFromArchive, unpackSnapshot } from './format.js';
 import { isIncremental, reconstructFromChain } from './incremental.js';
+import { createHash } from 'node:crypto';
 
 type SearchType = 'memory' | 'conversation' | 'identity' | 'knowledge';
 
 const DEFAULT_LIMIT = 20;
 const CONTEXT_RADIUS = 60;
+
+/**
+ * Per-process LRU cache of decrypted snapshots, keyed by snapshot id +
+ * passphrase fingerprint. Same-process repeat searches skip decrypt + unpack.
+ * Bounded to 32 entries to keep RSS sane on big indexes.
+ */
+const SNAPSHOT_CACHE_LIMIT = 32;
+const snapshotCache = new Map<string, Snapshot>();
+
+function cacheKey(snapshotId: string, passphrase: string): string {
+  const fp = createHash('sha256').update(passphrase).digest('hex').slice(0, 12);
+  return `${snapshotId}:${fp}`;
+}
+
+function cacheGet(key: string): Snapshot | undefined {
+  const hit = snapshotCache.get(key);
+  if (hit) {
+    snapshotCache.delete(key);
+    snapshotCache.set(key, hit);
+  }
+  return hit;
+}
+
+function cachePut(key: string, value: Snapshot): void {
+  if (snapshotCache.has(key)) snapshotCache.delete(key);
+  snapshotCache.set(key, value);
+  while (snapshotCache.size > SNAPSHOT_CACHE_LIMIT) {
+    const oldest = snapshotCache.keys().next().value;
+    if (oldest) snapshotCache.delete(oldest);
+  }
+}
+
+/** Test/dev helper: drop the in-process snapshot cache. */
+export function clearSnapshotCache(): void {
+  snapshotCache.clear();
+}
 
 export interface SearchOptions {
   /** Only search specific snapshot IDs */
@@ -65,20 +102,24 @@ export async function searchSnapshots(
   const results: SearchResult[] = [];
 
   for (const entry of targets) {
-    let fileMap;
-    try {
-      const encrypted = await storage.get(entry.filename);
-      const archive = await decrypt(encrypted, passphrase);
-      fileMap = await unpackFromArchive(archive);
-      if (isIncremental(fileMap)) {
-        fileMap = await reconstructFromChain(entry.id, storage, passphrase);
+    const key = cacheKey(entry.id, passphrase);
+    let snapshot = cacheGet(key);
+    if (!snapshot) {
+      let fileMap;
+      try {
+        const encrypted = await storage.get(entry.filename);
+        const archive = await decrypt(encrypted, passphrase);
+        fileMap = await unpackFromArchive(archive);
+        if (isIncremental(fileMap)) {
+          fileMap = await reconstructFromChain(entry.id, storage, passphrase);
+        }
+      } catch {
+        // Skip snapshots we cannot decrypt or load — wrong passphrase, missing parents, etc.
+        continue;
       }
-    } catch {
-      // Skip snapshots we cannot decrypt or load — wrong passphrase, missing parents, etc.
-      continue;
+      snapshot = unpackSnapshot(fileMap);
+      cachePut(key, snapshot);
     }
-
-    const snapshot = unpackSnapshot(fileMap);
     const includeMemory = !types || types.includes('memory');
     const includeIdentity = !types || types.includes('identity');
     const includeConversation = !types || types.includes('conversation');

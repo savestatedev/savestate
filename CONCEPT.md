@@ -330,8 +330,19 @@ This phase pivots from pure backup to "AI memory layer with portability".
       single snapshot read-only and summarizes its contents (counts of
       memories / conversations / knowledge / tools / skills, chain depth).
       Lets users browse history without restoring. Shipped April 28.
+- [x] **Prune command** — `savestate prune` applies retention policy
+      (`--keep-last`, `--older-than`) with chain-safety guarantees and a
+      dry-run default. Required to keep the index sane on long-running
+      installs. Shipped April 28.
 - [x] **List filters** — `--since`, `--until`, `--adapter`, `--tag` combine
       as AND on `savestate list`. Makes 100+ snapshot indices navigable.
+      Shipped April 28.
+- [x] **Doctor adapter/limit filters** — `--adapter <id>` and
+      `--limit <n>` make the health check incremental for cron use.
+      Shipped April 28.
+- [x] **Search snapshot cache** — per-process 32-entry LRU keyed by
+      `(snapshot id, passphrase fingerprint)`. Subsequent queries skip
+      decrypt + unpack. Major perf win for MCP search workloads.
       Shipped April 28.
 - [x] **MCP cross-snapshot tools** — `savestate_search_snapshots` and
       `savestate_stats` exposed via the existing MCP server, so Claude

@@ -23,6 +23,8 @@ import { getPassphrase } from '../passphrase.js';
 
 interface DoctorOptions {
   json?: boolean;
+  adapter?: string;
+  limit?: string;
 }
 
 export interface SnapshotDiagnosis {
@@ -45,12 +47,29 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   const config = await loadConfig();
   const index = await loadIndex();
 
-  if (index.snapshots.length === 0) {
+  let targets = index.snapshots;
+  if (options.adapter) {
+    targets = targets.filter((s) => s.adapter === options.adapter);
+  }
+  if (options.limit) {
+    const n = parseInt(options.limit, 10);
+    targets = [...targets]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, n);
+  }
+
+  if (targets.length === 0) {
     if (options.json) {
       console.log(JSON.stringify({ total: 0, healthy: 0, unhealthy: 0, results: [] }, null, 2));
       return;
     }
-    console.log(chalk.dim('  No snapshots in index. Nothing to check.'));
+    console.log(
+      chalk.dim(
+        index.snapshots.length === 0
+          ? '  No snapshots in index. Nothing to check.'
+          : '  No snapshots match those filters.',
+      ),
+    );
     console.log();
     return;
   }
@@ -60,10 +79,10 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
 
   const spinner = options.json
     ? null
-    : ora(`Checking ${index.snapshots.length} snapshot(s)...`).start();
+    : ora(`Checking ${targets.length} snapshot(s)...`).start();
 
   const results: SnapshotDiagnosis[] = [];
-  for (const entry of index.snapshots) {
+  for (const entry of targets) {
     const diag = await diagnoseSnapshot(entry, storage, passphrase);
     results.push(diag);
   }

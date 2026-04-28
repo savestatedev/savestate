@@ -161,6 +161,17 @@ Recently landed (April 28, 2026):
   without restoring. Read-only counterpart to `restore`; counts of
   memories / conversations / knowledge / tools / skills, chain depth,
   parent. Useful for browsing history and debugging.
+- `savestate prune` — apply retention policy. `--keep-last N` and/or
+  `--older-than DATE` select drops; `--apply` actually deletes (default
+  is dry-run). Refuses to drop the newest snapshot or any sole snapshot
+  per adapter. JSON plan output for tooling.
+- `savestate doctor --adapter <id> --limit <n>` — restrict the health
+  check to one adapter or the most recent N snapshots. Useful for cron
+  jobs that run incrementally.
+- Search snapshot cache — `searchSnapshots` now keeps a 32-entry LRU of
+  decrypted snapshots keyed by `(snapshot id, passphrase fingerprint)`.
+  Repeat queries within a process avoid re-decrypt + re-unpack. Real
+  win when the MCP search tool gets called multiple times in a session.
 - `savestate list` filters: `--since`, `--until`, `--adapter`, `--tag`
   combine as AND. Throws on invalid date strings. The base `list` is now
   practical at 100+ snapshots.

@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto';
 
 import { LocalStorageBackend } from '../storage/local.js';
 import { createSnapshot } from '../snapshot.js';
-import { searchSnapshots, scoreMatch } from '../search.js';
+import { searchSnapshots, scoreMatch, clearSnapshotCache } from '../search.js';
 import { saveIndex } from '../index-file.js';
 import type { Adapter, Snapshot, SaveStateConfig } from '../types.js';
 
@@ -65,6 +65,7 @@ describe('searchSnapshots', () => {
     testDir = join(tmpdir(), `savestate-search-${Date.now()}-${randomBytes(4).toString('hex')}`);
     await mkdir(testDir, { recursive: true });
     process.chdir(testDir);
+    clearSnapshotCache();
     storage = new LocalStorageBackend({ path: join(testDir, 'snapshots') });
     config = {
       version: '1',
@@ -128,6 +129,17 @@ describe('searchSnapshots', () => {
     await saveIndex({ snapshots: [] });
     const results = await searchSnapshots('anything', config, { passphrase: PASSPHRASE });
     expect(results).toEqual([]);
+  });
+
+  it('returns identical results on a second call (cache warmth)', async () => {
+    const snap = buildSnapshot([{ id: 'm1', content: 'cache test phrase' }]);
+    const adapter = new FakeAdapter(snap);
+    await createSnapshot(adapter, storage, PASSPHRASE);
+
+    const first = await searchSnapshots('cache test', config, { passphrase: PASSPHRASE });
+    const second = await searchSnapshots('cache test', config, { passphrase: PASSPHRASE });
+    expect(first).toEqual(second);
+    expect(first[0].content).toBe('cache test phrase');
   });
 
   it('limits the result count', async () => {
