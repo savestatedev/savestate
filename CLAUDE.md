@@ -153,10 +153,26 @@ Recently landed (April 28, 2026):
   memory / identity / conversations / knowledge.
 - `savestate stats [--json]` — engagement loop: shows total snapshots, time
   covered, cadence, adapter mix, top tags.
+- `savestate doctor [--json]` — chain-integrity health check across every
+  snapshot. Decrypts, unpacks, walks incremental chains, verifies content
+  checksums, reports per-snapshot status + summary. Exit non-zero on any
+  unhealthy snapshot so it can be wired into cron.
+- `savestate inspect <id> [--json]` — decrypt + summarize a snapshot
+  without restoring. Read-only counterpart to `restore`; counts of
+  memories / conversations / knowledge / tools / skills, chain depth,
+  parent. Useful for browsing history and debugging.
+- `savestate list` filters: `--since`, `--until`, `--adapter`, `--tag`
+  combine as AND. Throws on invalid date strings. The base `list` is now
+  practical at 100+ snapshots.
+- MCP `savestate_search_snapshots` + `savestate_stats` tools — the cross-
+  snapshot search and stats surfaces are now callable from any MCP client
+  (Claude Code, Cursor, Codex, etc.). This is the Phase 5 "hot
+  infrastructure" hook; SaveState becomes a memory provider, not just a
+  backup tool.
 - **Signal Fitness League** (`src/fitness/`) — paired-inference shadow
   scoring of memory snippets so low-fitness items demote/drop while
   rare-but-impactful items are protected. Foundation for "memory that earns
-  its place." Cherry-picked from PR #184; keeps tests green at 1185 passing.
+  its place." Cherry-picked from PR #184.
 - **Manifest-invariant content checksum** — `computeContentChecksum` hashes
   archive files excluding `manifest.json`, fixing a long-standing bug where
   `restore` could not actually verify integrity (the manifest mutates after
@@ -165,18 +181,20 @@ Recently landed (April 28, 2026):
   failing locally on Node 25 with NODE_MODULE_VERSION mismatch).
 
 Open PRs reviewed:
-- **#184** (Signal Fitness League) — module cherry-picked into main; PR
-  itself superseded.
-- **#185** (Looper template strip) — closed as regression: removed
-  structured fields from the bug template.
-- **#183** (Trust Kernel Phase 1, draft) — kept open; Phase 5 roadmap item.
+- **#184** (Signal Fitness League) — module merged April 28; PR closed.
+- **#185** (Looper template strip) — closed April 28 as regression.
+- **#183** (Trust Kernel Phase 1, draft) — left open; conflicting layout
+  with existing `src/trust-kernel/` so cherry-pick is risky. Author still
+  needs to take it out of draft.
 
 Next-up Phase 5 work (in priority order):
-1. Trust Kernel Phase 1 merge (PR #183 review-out-of-draft).
-2. Encrypted full-text search index (per-snapshot, separate-keyed).
-3. MCP memory server adapter (turn SaveState into hot infrastructure).
-4. Time Machine UI in the dashboard.
-5. Team / compliance tier (SSO, audit, data residency).
+1. Trust Kernel Phase 1 merge (PR #183, draft) — reconcile with existing
+   `src/trust-kernel/index.ts` first.
+2. Encrypted full-text search index (per-snapshot, separate-keyed) — turns
+   `savestate search` from O(N decrypts) into O(1).
+3. Time Machine UI in the dashboard — visceral demo of the value.
+4. Team / compliance tier (SSO, audit logs, data-residency selection).
+5. Community adapters: Cursor, Windsurf, Codeium, Zed AI.
 
 ## Claude Code Guidelines
 

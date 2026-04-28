@@ -9,6 +9,10 @@ import { loadIndex } from '../index-file.js';
 interface ListOptions {
   json?: boolean;
   limit?: string;
+  since?: string;
+  until?: string;
+  adapter?: string;
+  tag?: string;
 }
 
 export async function listCommand(options: ListOptions): Promise<void> {
@@ -23,8 +27,10 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const limit = options.limit ? parseInt(options.limit, 10) : 50;
   const index = await loadIndex();
 
+  const filtered = applyListFilters(index.snapshots, options);
+
   if (options.json) {
-    const output = index.snapshots.slice(0, limit);
+    const output = filtered.slice(0, limit);
     console.log(JSON.stringify(output, null, 2));
     return;
   }
@@ -41,8 +47,14 @@ export async function listCommand(options: ListOptions): Promise<void> {
     return;
   }
 
+  if (filtered.length === 0) {
+    console.log(chalk.dim('  No snapshots match those filters.'));
+    console.log();
+    return;
+  }
+
   // Sort by timestamp descending (most recent first)
-  const sorted = [...index.snapshots]
+  const sorted = [...filtered]
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, limit);
 
@@ -84,10 +96,39 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   console.log();
   console.log(chalk.dim(`  ${sorted.length} snapshot${sorted.length !== 1 ? 's' : ''}`));
-  if (index.snapshots.length > limit) {
-    console.log(chalk.dim(`  (showing ${limit} of ${index.snapshots.length})`));
+  if (filtered.length > limit) {
+    console.log(chalk.dim(`  (showing ${limit} of ${filtered.length} after filters)`));
+  } else if (filtered.length !== index.snapshots.length) {
+    console.log(chalk.dim(`  (filtered from ${index.snapshots.length} total)`));
   }
   console.log();
+}
+
+import type { SnapshotIndexEntry } from '../index-file.js';
+
+export function applyListFilters(
+  snapshots: SnapshotIndexEntry[],
+  options: { since?: string; until?: string; adapter?: string; tag?: string },
+): SnapshotIndexEntry[] {
+  const since = options.since ? parseDateOrThrow(options.since, '--since') : null;
+  const until = options.until ? parseDateOrThrow(options.until, '--until') : null;
+
+  return snapshots.filter((s) => {
+    const ts = new Date(s.timestamp).getTime();
+    if (since !== null && ts < since) return false;
+    if (until !== null && ts > until) return false;
+    if (options.adapter && s.adapter !== options.adapter) return false;
+    if (options.tag && !(s.tags ?? []).includes(options.tag)) return false;
+    return true;
+  });
+}
+
+function parseDateOrThrow(input: string, flag: string): number {
+  const ms = new Date(input).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(`Invalid date for ${flag}: ${input} (use ISO format like 2026-04-01)`);
+  }
+  return ms;
 }
 
 function formatDate(iso: string): string {

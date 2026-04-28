@@ -322,6 +322,22 @@ This phase pivots from pure backup to "AI memory layer with portability".
 - [x] **Stats command** — `savestate stats [--json]` surfaces total snapshots,
       cadence, time covered, adapter mix, and top tags. Engagement loop:
       users come back to see their own data. Shipped April 28.
+- [x] **Doctor command** — `savestate doctor [--json]` walks every snapshot
+      end-to-end (decrypt → unpack → reconstruct chain → verify checksum)
+      and reports per-snapshot health. Cron-friendly exit codes. Shipped
+      April 28.
+- [x] **Inspect command** — `savestate inspect <id> [--json]` decrypts a
+      single snapshot read-only and summarizes its contents (counts of
+      memories / conversations / knowledge / tools / skills, chain depth).
+      Lets users browse history without restoring. Shipped April 28.
+- [x] **List filters** — `--since`, `--until`, `--adapter`, `--tag` combine
+      as AND on `savestate list`. Makes 100+ snapshot indices navigable.
+      Shipped April 28.
+- [x] **MCP cross-snapshot tools** — `savestate_search_snapshots` and
+      `savestate_stats` exposed via the existing MCP server, so Claude
+      Code / Cursor / Codex / any MCP client can recall what a user said
+      months ago on a different platform. Shipped April 28. This is the
+      "hot infrastructure" pivot point.
 - [x] **Signal Fitness League (memory optimization engine)** — paired-inference
       scoring of memory snippets so that low-fitness items are demoted/dropped
       while rare-but-impactful items are protected. Lays the groundwork for
@@ -336,10 +352,9 @@ This phase pivots from pure backup to "AI memory layer with portability".
       snapshot on each query. Build a per-snapshot client-side search index
       that ships alongside the SAF, encrypted with a separate key. Sub-second
       search across hundreds of snapshots without bulk decrypt.
-- [ ] **MCP memory server adapter** — expose SaveState as an MCP server so any
-      MCP-compatible client (Claude Code, Cursor, etc.) can read/write
-      memories with audit + governance. Convert "backup" into an active
-      runtime tool; massive stickiness.
+- [x] **MCP memory server adapter** — partial; `savestate_search_snapshots`
+      and `savestate_stats` shipped April 28. Still TODO: write-side audit,
+      governance integration with Trust Kernel, namespacing.
 - [ ] **Time Machine UI** — visual timeline view in the dashboard. Browse
       memories by date, "rewind" to a prior identity state, diff between any
       two points in time. Visceral hook that makes the value obvious.

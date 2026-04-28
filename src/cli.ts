@@ -85,6 +85,10 @@ program
   .description('List all snapshots')
   .option('--json', 'Output as JSON')
   .option('--limit <n>', 'Maximum number of snapshots to show')
+  .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
+  .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
+  .option('--adapter <id>', 'Only snapshots from this adapter')
+  .option('--tag <tag>', 'Only snapshots tagged with this label')
   .action(listCommand);
 
 // ─── savestate stats ─────────────────────────────────────────
@@ -96,6 +100,26 @@ program
   .description('Show usage statistics about your snapshots')
   .option('--json', 'Output as JSON')
   .action(statsCommand);
+
+// ─── savestate doctor ────────────────────────────────────────
+
+import { doctorCommand } from './commands/doctor.js';
+
+program
+  .command('doctor')
+  .description('Health-check every snapshot: decrypt, unpack, verify checksums, walk chains')
+  .option('--json', 'Output as JSON')
+  .action(doctorCommand);
+
+// ─── savestate inspect ───────────────────────────────────────
+
+import { inspectCommand } from './commands/inspect.js';
+
+program
+  .command('inspect <snapshot-id>')
+  .description('Decrypt and summarize a snapshot without restoring it')
+  .option('--json', 'Output as JSON')
+  .action(inspectCommand);
 
 // ─── savestate diff ──────────────────────────────────────────
 

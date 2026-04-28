@@ -256,6 +256,39 @@ const tools: Tool[] = [
       required: ['id'],
     },
   },
+  {
+    name: 'savestate_search_snapshots',
+    description:
+      'Search across ALL encrypted SaveState snapshots (not just live memory). ' +
+      'Decrypts and scores matches across memory entries, identity/personality docs, ' +
+      'conversation titles, and knowledge documents. Useful for recalling something ' +
+      'the user said weeks or months ago, even on a different platform.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query' },
+        type: {
+          type: 'string',
+          enum: ['memory', 'conversation', 'identity', 'knowledge'],
+          description: 'Optional filter by content type',
+        },
+        limit: { type: 'number', description: 'Maximum results (default: 20)' },
+        passphrase: { type: 'string', description: 'Decryption passphrase' },
+      },
+      required: ['query', 'passphrase'],
+    },
+  },
+  {
+    name: 'savestate_stats',
+    description:
+      'Return aggregate statistics about the local snapshot index: total snapshots, ' +
+      'storage usage, time covered, average cadence, adapter mix, and top tags. ' +
+      'Useful for surfacing the user\'s own AI history back to them.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
   // ─── OpenMemory-Compatible Tools (Issue #176) ──────────────
   {
     name: 'add_memories',
@@ -461,6 +494,13 @@ const ListMemoriesInputSchema = z.object({
 
 const DeleteAllMemoriesInputSchema = z.object({
   confirm: z.boolean(),
+});
+
+const SearchSnapshotsInputSchema = z.object({
+  query: z.string(),
+  type: z.enum(['memory', 'conversation', 'identity', 'knowledge']).optional(),
+  limit: z.number().optional(),
+  passphrase: z.string(),
 });
 
 // ─── Tool Handlers ───────────────────────────────────────────
@@ -909,6 +949,51 @@ async function handleDeleteAllMemories(
   }
 }
 
+async function handleSearchSnapshots(
+  input: z.infer<typeof SearchSnapshotsInputSchema>,
+): Promise<string> {
+  const { searchSnapshots } = await import('../search.js');
+  try {
+    if (!isInitialized()) {
+      return 'Error: SaveState not initialized in this directory. Run `savestate init` first.';
+    }
+    const config = await loadConfig();
+    const results = await searchSnapshots(input.query, config, {
+      types: input.type ? [input.type] : undefined,
+      limit: input.limit ?? 20,
+      passphrase: input.passphrase,
+    });
+    if (results.length === 0) return 'No matches found across snapshots.';
+
+    const lines: string[] = [`Found ${results.length} match(es):`, ''];
+    for (const r of results) {
+      const date = r.snapshotTimestamp.slice(0, 10);
+      const score = (r.score * 100).toFixed(0);
+      lines.push(`[${r.type}] ${r.snapshotId} (${date}) — ${score}% relevance`);
+      if (r.context) lines.push(`  ${r.context}`);
+      lines.push(`  ${r.path}`);
+      lines.push('');
+    }
+    return lines.join('\n');
+  } catch (err) {
+    return `Error searching snapshots: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+async function handleStats(): Promise<string> {
+  const { computeStats } = await import('../commands/stats.js');
+  try {
+    if (!isInitialized()) {
+      return 'Error: SaveState not initialized. Run `savestate init` first.';
+    }
+    const index = await loadIndex();
+    const stats = computeStats(index.snapshots);
+    return JSON.stringify(stats, null, 2);
+  } catch (err) {
+    return `Error computing stats: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
 // ─── Resource Handlers ───────────────────────────────────────
 
 async function handleReadResource(uri: string): Promise<string> {
@@ -1077,6 +1162,15 @@ export async function startMCPServer(): Promise<void> {
         case 'savestate_memory_delete': {
           const input = MemoryDeleteInputSchema.parse(args);
           result = await handleMemoryDelete(input);
+          break;
+        }
+        case 'savestate_search_snapshots': {
+          const input = SearchSnapshotsInputSchema.parse(args);
+          result = await handleSearchSnapshots(input);
+          break;
+        }
+        case 'savestate_stats': {
+          result = await handleStats();
           break;
         }
         // OpenMemory-Compatible Tools
