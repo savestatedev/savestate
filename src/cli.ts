@@ -125,11 +125,17 @@ program
 
 // ─── savestate trust ─────────────────────────────────────────
 
-import { trustStatusCommand, trustAuditCommand } from './commands/trust.js';
+import {
+  trustStatusCommand,
+  trustAuditCommand,
+  trustDenyAddCommand,
+  trustDenyRemoveCommand,
+  trustDenyListCommand,
+} from './commands/trust.js';
 
 const trustCmd = program
   .command('trust')
-  .description('Inspect Trust Kernel state and audit trail');
+  .description('Inspect Trust Kernel state, audit trail, and denylist');
 
 trustCmd
   .command('status')
@@ -143,6 +149,32 @@ trustCmd
   .option('--limit <n>', 'Number of recent events to show')
   .option('--json', 'Output as JSON')
   .action(trustAuditCommand);
+
+const denyCmd = trustCmd
+  .command('deny')
+  .description('Manage the Trust Kernel denylist (patterns blocked at the WriteGate)');
+
+denyCmd
+  .command('add <pattern>')
+  .description('Add a pattern to the denylist')
+  .option('-r, --reason <reason>', 'Why this pattern is denylisted')
+  .option('-b, --by <actor>', 'Who is adding this entry (defaults to "cli")')
+  .option('--json', 'Output as JSON')
+  .action(trustDenyAddCommand);
+
+denyCmd
+  .command('remove <pattern>')
+  .alias('rm')
+  .description('Remove a pattern from the denylist (exact match)')
+  .option('--json', 'Output as JSON')
+  .action(trustDenyRemoveCommand);
+
+denyCmd
+  .command('list')
+  .alias('ls')
+  .description('Show all denylist entries')
+  .option('--json', 'Output as JSON')
+  .action(trustDenyListCommand);
 
 // ─── savestate prune ─────────────────────────────────────────
 

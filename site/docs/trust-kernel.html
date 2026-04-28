@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trust Kernel — SaveState Docs</title>
+<meta name="description" content="The Trust Kernel is SaveState's staged memory promotion engine: a state machine, three gates, and an audit log that turn memory into governed memory.">
+<link rel="icon" type="image/png" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="../logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Docs</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/">Installation &amp; Quick Start</a></li>
+      <li><a href="/docs/cli.html">CLI Reference</a></li>
+      <li><a href="/docs/mcp.html">MCP Server</a></li>
+      <li><a href="/docs/trust-kernel.html" class="active">Trust Kernel</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Core Concepts</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/adapters.html">Platform Adapters</a></li>
+      <li><a href="/docs/storage.html">Storage Backends</a></li>
+      <li><a href="/docs/encryption.html">Encryption</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Advanced</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/format.html">SAF Archive Format</a></li>
+      <li><a href="/docs/incremental.html">Incremental Snapshots</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs/pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</aside>
+
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Trust Kernel</h1>
+    <p class="subtitle">Staged memory promotion, three gates, and a full audit trail. SaveState is the only AI memory layer with a state machine instead of a black box.</p>
+
+    <div class="callout callout-tip">
+      <span class="callout-label">🛡</span> Every memory in SaveState starts life as a <code>candidate</code>. It only becomes <code>stable</code> after passing evaluation. Every transition is recorded with a reason and an actor. That is what governance looks like.
+    </div>
+
+    <h2 id="what">What is the Trust Kernel</h2>
+    <p>Most "AI memory" products store whatever the model decides to write, surface it back on the next call, and call it a day. SaveState's Trust Kernel sits in between. It is a small, deterministic engine that:</p>
+    <ul>
+      <li><strong>Stages every write</strong> through a state machine — <code>candidate → stable → revoked</code>, with terminal <code>rejected</code> and <code>quarantined</code> states for problem entries.</li>
+      <li><strong>Gates the read and action paths</strong> with three enforcement points — WriteGate, TrustGate, ActionGate.</li>
+      <li><strong>Logs every transition</strong> — id, from-state, to-state, reason, actor, timestamp — to a queryable audit trail.</li>
+      <li><strong>Denies by default</strong> on the action path. Tools and side effects must be explicitly registered, or they will not run.</li>
+    </ul>
+
+    <h2 id="states">States</h2>
+    <p>Every entry in the trust store has a <code>state</code>. Only some transitions are allowed.</p>
+    <table>
+      <thead>
+        <tr><th>State</th><th>Meaning</th><th>Allowed transitions</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>candidate</code></td><td>The default landing state for every accepted write. Visible to debug surfaces, not yet trusted for retrieval in enforce mode.</td><td>→ <code>stable</code>, <code>rejected</code>, <code>quarantined</code></td></tr>
+        <tr><td><code>stable</code></td><td>Promoted by the worker after the entry has passed the configured promotion rule (minimum confidence, minimum age, required tags). Returned by TrustGate in all modes.</td><td>→ <code>revoked</code>, <code>quarantined</code></td></tr>
+        <tr><td><code>rejected</code></td><td>Terminal. The WriteGate refused the entry — usually because it matched a denylist pattern or fell below the minimum confidence threshold. The content never hits the underlying memory database.</td><td>none (terminal)</td></tr>
+        <tr><td><code>quarantined</code></td><td>Held aside for human or automated review. Retained for auditing but excluded from retrieval.</td><td>→ <code>stable</code>, <code>revoked</code></td></tr>
+        <tr><td><code>revoked</code></td><td>Terminal. The entry was promoted at one point and has since been retracted. The pattern is added to the denylist so re-writes are blocked at the WriteGate.</td><td>none (terminal)</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="scopes">Scopes</h2>
+    <p>Every entry also has a <code>scope</code>. Scope determines how the entry can be used and how it ages.</p>
+    <table>
+      <thead>
+        <tr><th>Scope</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>semantic</code></td><td>Stable facts. "The user prefers TypeScript strict mode." Eligible for promotion to <code>stable</code> and indefinite retention.</td></tr>
+        <tr><td><code>procedural</code></td><td>Workflow patterns and how-to. "When deploying, always run the type check first." Eligible for promotion; useful for the ActionGate's <code>stable_facts</code> trust level.</td></tr>
+        <tr><td><code>episodic</code></td><td>Time-bound, context-specific. "Today the user is debugging the auth migration." TTL-bound, never promoted to <code>stable</code>, drops out automatically when <code>expiresAt</code> passes.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="gates">The three gates</h2>
+    <p>The kernel exposes its enforcement points as small, composable classes you can wire into any storage layer.</p>
+    <ul>
+      <li><strong>WriteGate</strong> — runs on every memory write. Checks denylist + confidence threshold, assigns initial state and scope, persists the entry. Rejected writes never reach the database.</li>
+      <li><strong>TrustGate</strong> — runs on retrieval. Filters candidate entries out of context windows in <code>enforce_query</code> mode; logs would-be filters in <code>shadow</code> mode so you can validate before flipping the switch.</li>
+      <li><strong>ActionGate</strong> — runs before any registered side effect (tool call, API call, mutation). Deny-by-default: unregistered tools are blocked. Registered tools must meet the configured trust level (<code>any</code>, <code>stable_facts</code>, or <code>high_confidence</code>) on the supporting memory.</li>
+    </ul>
+
+    <div class="callout callout-tip">
+      <span class="callout-label">⚡</span> The three modes — <code>shadow</code>, <code>enforce_query</code>, <code>enforce_action</code> — let you stage rollout. Run in shadow first, watch the would-block logs, then flip to enforce when you trust the rules. No big-bang flag day.
+    </div>
+
+    <h2 id="cli">CLI usage</h2>
+    <p>Two read-only commands surface the kernel's state and audit trail.</p>
+
+    <h3 id="cli-status"><code>savestate trust status</code></h3>
+    <p>Snapshot of the trust store: entries by state, entries by scope, last-hour activity, denylist size.</p>
+    <pre><code>$ savestate trust status
+
+🛡  Trust Kernel
+
+  Entries by state:
+    candidate    14
+    stable       208
+    rejected     6
+    quarantined  0
+    revoked      2
+
+  Entries by scope:
+    semantic     180
+    procedural   42
+    episodic     8
+
+  Last hour:
+  Promotions       3
+  Rejections       1
+
+  Denylist size    7
+</code></pre>
+    <p>Pass <code>--json</code> for machine output (suitable for cron + alerting):</p>
+    <pre><code>$ savestate trust status --json
+{
+  "entriesByState": { "candidate": 14, "stable": 208, "rejected": 6, "quarantined": 0, "revoked": 2 },
+  "entriesByScope": { "semantic": 180, "procedural": 42, "episodic": 8 },
+  "promotionsLastHour": 3,
+  "rejectionsLastHour": 1,
+  "denylistSize": 7,
+  ...
+}</code></pre>
+
+    <h3 id="cli-audit"><code>savestate trust audit</code></h3>
+    <p>The audit trail. Every state transition that has ever happened, most recent first.</p>
+    <pre><code>$ savestate trust audit --limit 5
+
+🧾 Trust Audit  (last 5)
+
+  2026-04-28 14:02:11  candidate → stable      (promotion-worker)
+    id: 8e3a4b9c-1a2f-4f6e-9d1e-2c7b1d4a55b8
+    reason: confidence 0.92 ≥ 0.8 and age 21m ≥ 10m
+
+  2026-04-28 13:58:02  candidate → rejected    (write-gate)
+    id: a91b3322-77af-4f0d-b3e5-19c8d6b0ee71
+    reason: Denylisted: matches secret-pattern rule "api-key-prefix"
+
+  2026-04-28 13:51:44  stable → revoked        (operator:david)
+    id: 6f0e1a55-2d13-4b8f-ab44-8a9e1c2d3f10
+    reason: User requested removal; pattern added to denylist
+
+  2026-04-28 13:40:20  candidate → stable      (promotion-worker)
+    id: 4d2c8f01-8e9a-4a1b-8e44-1f6c7e9d3aa2
+    reason: confidence 0.88 ≥ 0.8 and age 12m ≥ 10m
+
+  2026-04-28 13:32:09  candidate → quarantined (action-gate)
+    id: c4f2b1d9-9c01-4f12-9e3d-7e9b8f1a23c6
+    reason: Held for review: low-confidence tag "external-claim"
+</code></pre>
+    <p>Flags: <code>--limit n</code> (default 50), <code>--json</code> for raw events.</p>
+
+    <h2 id="programmatic">Programmatic usage</h2>
+    <p>Wiring a <code>WriteGate</code> into the <code>MemoryStore</code> is the supported path for surfacing rejections back to the caller. Rejected writes raise <code>TrustGateRejection</code>; the error carries the gate's blockers list so you can show the user exactly why the write was refused.</p>
+    <pre><code>import { MemoryStore, TrustGateRejection } from '@savestate/cli';
+import { TrustStore, WriteGate } from '@savestate/cli';
+
+const trustStore = new TrustStore();
+const writeGate = new WriteGate({ store: trustStore, minConfidence: 0.5 });
+
+const memory = new MemoryStore({ writeGate });
+
+try {
+  await memory.create({
+    type: 'semantic',
+    content: 'User prefers TypeScript strict mode',
+    importance: 0.9,
+  });
+} catch (err) {
+  if (err instanceof TrustGateRejection) {
+    // err.blockers is a string[] of human-readable reasons.
+    console.error('Trust Kernel refused this write:', err.blockers);
+  } else {
+    throw err;
+  }
+}</code></pre>
+
+    <h2 id="why">Why this matters</h2>
+    <div class="callout callout-tip">
+      <span class="callout-label">🔐</span> Every other AI memory product is a black box. ChatGPT Memory, Claude Projects, Mem.ai, Letta — none of them ship a state machine, an audit log, or a deny-by-default action gate. SaveState does. If you are a compliance team, this is the layer you have been waiting for.
+    </div>
+    <ul>
+      <li><strong>Audit-grade memory.</strong> Every promotion, rejection, and revocation is recorded. You can answer "why did the model know that?" without grepping logs.</li>
+      <li><strong>Deny by default.</strong> Tools and side effects do not run unless they are registered with a known trust level. Prompt-injected memory cannot escalate to action.</li>
+      <li><strong>Staged rollout.</strong> Shadow mode lets you observe before enforcing. No flag-day surprises.</li>
+      <li><strong>Compliance-ready.</strong> Audit trail + role-scoped decryption + portable archive add up to a memory layer your security team can actually sign off on.</li>
+    </ul>
+
+    <h2 id="roadmap">Roadmap</h2>
+    <p>Phases 1 and 2 (state machine, three gates, audit trail, CLI surfaces, MemoryStore integration) shipped in April 2026. Phase 3 is in progress and covers:</p>
+    <ul>
+      <li><strong>Shadow rollout harness</strong> — run TrustGate in <code>shadow</code> mode against a live workload and diff retrieval results before flipping to enforce.</li>
+      <li><strong>Eval harness</strong> — paired-inference scoring (with the Signal Fitness League) to grade promotion-rule changes against real recall quality.</li>
+      <li><strong>Auto-rollback</strong> — automatic revocation of promoted entries when downstream eval scores collapse.</li>
+      <li><strong>Team-tier UI</strong> — the audit trail and gate metrics surfaced in the web dashboard with role-scoped access. <em>Roadmap.</em></li>
+    </ul>
+
+    <h2 id="next">Next steps</h2>
+    <ul>
+      <li><a href="/docs/cli.html">CLI Reference</a> — every command, every flag.</li>
+      <li><a href="/docs/encryption.html">Encryption</a> — how the trust audit trail integrates with the encrypted store.</li>
+      <li><a href="/docs/mcp.html">MCP Server</a> — surface the same trust-gated memory to any MCP client.</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+
+</body>
+</html>

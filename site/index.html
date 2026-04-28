@@ -1908,6 +1908,54 @@ nav .container {
   </div>
 </section>
 
+<!-- ==================== GOVERNANCE ==================== -->
+<section class="reveal" id="governance" style="padding: 96px 0;">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 48px;">
+      <span class="section-label">Governance</span>
+      <h2 class="section-title">Memory governance,<br>not just memory.</h2>
+      <p class="section-subtitle" style="margin: 16px auto 0; max-width: 640px;">
+        Every other AI memory product is a black box. SaveState ships a state machine, an audit log, and a deny-by-default action gate. The Trust Kernel is the layer your compliance team has been waiting for.
+      </p>
+    </div>
+
+    <div style="max-width: 880px; margin: 0 auto; background: var(--bg-card, #0d0d18); border: 1px solid var(--border, #1e293b); border-radius: 12px; padding: 32px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
+        <span style="font-weight:700; font-size:14px; letter-spacing:0.02em; color: var(--text, #e2e8f0);">Trust Kernel — staged memory promotion</span>
+        <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(3,193,223,0.15); color: var(--blue, #03C1DF); font-weight: 600;">NEW</span>
+      </div>
+      <ul style="list-style: none; padding: 0; margin: 0 0 20px; display: grid; gap: 16px;">
+        <li style="display: flex; gap: 14px; align-items: flex-start;">
+          <span style="flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: rgba(3,193,223,0.15); color: var(--blue, #03C1DF); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-top: 2px;">1</span>
+          <div>
+            <strong style="color: var(--text, #e2e8f0); font-weight: 600;">Staged promotion.</strong>
+            <span style="color: var(--text-muted, #94a3b8); font-size: 14px; line-height: 1.7;"> Every memory starts as <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 6px; background: var(--bg-code, #0a0a14); border-radius: 4px; color: var(--blue, #03C1DF);">candidate</code>. Only writes that pass evaluation become <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 6px; background: var(--bg-code, #0a0a14); border-radius: 4px; color: var(--blue, #03C1DF);">stable</code>.</span>
+          </div>
+        </li>
+        <li style="display: flex; gap: 14px; align-items: flex-start;">
+          <span style="flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: rgba(3,193,223,0.15); color: var(--blue, #03C1DF); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-top: 2px;">2</span>
+          <div>
+            <strong style="color: var(--text, #e2e8f0); font-weight: 600;">Audit log.</strong>
+            <span style="color: var(--text-muted, #94a3b8); font-size: 14px; line-height: 1.7;"> Every state transition is recorded with reason and actor. Run <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 6px; background: var(--bg-code, #0a0a14); border-radius: 4px; color: var(--blue, #03C1DF);">savestate trust audit</code> to see the full trail.</span>
+          </div>
+        </li>
+        <li style="display: flex; gap: 14px; align-items: flex-start;">
+          <span style="flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: rgba(3,193,223,0.15); color: var(--blue, #03C1DF); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-top: 2px;">3</span>
+          <div>
+            <strong style="color: var(--text, #e2e8f0); font-weight: 600;">Deny by default.</strong>
+            <span style="color: var(--text-muted, #94a3b8); font-size: 14px; line-height: 1.7;"> Actions and writes against denylisted patterns never reach storage. Prompt-injected memory cannot escalate to action.</span>
+          </div>
+        </li>
+      </ul>
+      <div style="border-top: 1px solid var(--border, #1e293b); padding-top: 20px; text-align: center;">
+        <a href="/docs/trust-kernel.html" style="color: var(--blue, #03C1DF); text-decoration: none; font-weight: 600; font-size: 14px;">
+          Read the Trust Kernel docs →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ==================== PLATFORMS ==================== -->
 <section class="platforms reveal" id="platforms">
   <div class="container">

@@ -371,7 +371,16 @@ This phase pivots from pure backup to "AI memory layer with portability".
       first; rejected writes raise `TrustGateRejection` (with
       `blockers[]`) and never hit SQLite. Shipped alongside a
       `savestate trust status / audit` CLI for surfacing the audit log.
-      Phase 3 (shadow rollout, eval harness, auto-rollback) still TODO.
+- [x] **Trust Kernel Phase 3 (shadow mode + denylist CLI)** (iteration
+      5) — `WriteGate` now supports `shadow: true` for safe rollout: it
+      runs the same evaluation but forces `allowed: true`, exposing the
+      would-have-been blockers via `result.shadowBlockers` and an
+      optional `onShadowReject` callback. Operators can deploy gate
+      rules in observe-only mode, watch what they would have rejected
+      on real traffic, and flip to enforce only when confident.
+      Also shipped `savestate trust deny add|remove|list` for managing
+      the denylist from the CLI without touching SQLite by hand. Eval
+      harness + auto-rollback are still on the Phase 5 backlog.
 - [x] **Encrypted full-text search index** (April 28, iteration 4) — every
       SAF now ships a `search/index.json` inverted-index file. Built
       automatically by `packSnapshot`, encrypted alongside the rest of
@@ -399,8 +408,14 @@ This phase pivots from pure backup to "AI memory layer with portability".
       `~/.cursor/composer-rules`, project `.cursor/rules/*.mdc`, and
       project `.cursor/mcp.json`. Workspace SQLite chat history is
       tracked in the file manifest; v2 will parse it.
+- [x] **Windsurf adapter** (v0.1.0, April 28, 2026) — second community-tier
+      adapter. Captures `~/.codeium/windsurf/mcp_config.json`,
+      `~/.codeium/windsurf/memories/global_rules.md`, project
+      `.windsurf/rules/*.md`, and the legacy single-file
+      `.windsurfrules`. globalStorage SQLite chat history is tracked in
+      the file manifest; v2 will parse it.
 - [ ] **Community adapters**: Copilot, Poe, Character.ai, Ollama/LM Studio,
-      Windsurf, Codeium, Zed AI.
+      Codeium, Zed AI.
 
 ### Stickiness thesis (why pivot)
 

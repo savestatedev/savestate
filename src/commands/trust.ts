@@ -19,6 +19,16 @@ interface TrustOptions {
   limit?: string;
 }
 
+interface DenyAddOptions {
+  reason?: string;
+  by?: string;
+  json?: boolean;
+}
+
+interface DenyListOptions {
+  json?: boolean;
+}
+
 export async function trustStatusCommand(options: TrustOptions): Promise<void> {
   const store = new TrustStore();
   const metrics = store.getMetrics();
@@ -103,6 +113,76 @@ function stateColor(state: string): string {
 
 function printRow(label: string, value: string): void {
   console.log(`  ${chalk.dim(label.padEnd(18))} ${value}`);
+}
+
+export async function trustDenyAddCommand(
+  pattern: string,
+  options: DenyAddOptions,
+): Promise<void> {
+  const store = new TrustStore();
+  const reason = options.reason ?? 'no reason given';
+  const addedBy = options.by ?? 'cli';
+  store.addToDenylist(pattern, reason, addedBy);
+  store.close();
+
+  if (options.json) {
+    console.log(JSON.stringify({ added: pattern, reason, addedBy }, null, 2));
+    return;
+  }
+  console.log();
+  console.log(chalk.green(`✓ Added to denylist: ${chalk.cyan(pattern)}`));
+  console.log(chalk.dim(`  reason: ${reason}`));
+  console.log(chalk.dim(`  by:     ${addedBy}`));
+  console.log();
+}
+
+export async function trustDenyRemoveCommand(
+  pattern: string,
+  options: DenyListOptions,
+): Promise<void> {
+  const store = new TrustStore();
+  const removed = store.removeFromDenylist(pattern);
+  store.close();
+
+  if (options.json) {
+    console.log(JSON.stringify({ pattern, removed }, null, 2));
+    return;
+  }
+  console.log();
+  if (removed === 0) {
+    console.log(chalk.yellow(`⚠ No denylist entry matched: ${pattern}`));
+  } else {
+    console.log(chalk.green(`✓ Removed ${removed} denylist entry(ies) matching: ${chalk.cyan(pattern)}`));
+  }
+  console.log();
+}
+
+export async function trustDenyListCommand(options: DenyListOptions): Promise<void> {
+  const store = new TrustStore();
+  const entries = store.listDenylist();
+  store.close();
+
+  if (options.json) {
+    console.log(JSON.stringify(entries, null, 2));
+    return;
+  }
+
+  console.log();
+  console.log(chalk.bold(`🚫 Denylist  ${chalk.dim(`(${entries.length} entries)`)}`));
+  console.log();
+  if (entries.length === 0) {
+    console.log(chalk.dim('  No patterns on the denylist.'));
+    console.log();
+    return;
+  }
+
+  for (const e of entries) {
+    const ts = new Date(e.addedAt).toISOString().slice(0, 19).replace('T', ' ');
+    console.log(`  ${chalk.cyan(e.pattern)}`);
+    console.log(`    ${chalk.dim('reason:')} ${e.reason}`);
+    console.log(`    ${chalk.dim('by:')} ${e.addedBy}  ${chalk.dim(ts)}  ${chalk.dim(`epoch ${e.epoch}`)}`);
+    console.log();
+  }
 }
 
 // Type re-export so the index module can pick it up.

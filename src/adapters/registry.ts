@@ -19,6 +19,7 @@ import { OpenAIAssistantsAdapter } from './openai-assistants.js';
 import { ChatGPTAdapter } from './chatgpt.js';
 import { GeminiAdapter } from './gemini.js';
 import { CursorAdapter } from './cursor.js';
+import { WindsurfAdapter } from './windsurf.js';
 
 /** Registry of all known adapters */
 const adapters = new Map<string, () => Adapter>();
@@ -98,3 +99,4 @@ register('openai-assistants', () => new OpenAIAssistantsAdapter());
 register('chatgpt', () => new ChatGPTAdapter());
 register('gemini', () => new GeminiAdapter());
 register('cursor', () => new CursorAdapter());
+register('windsurf', () => new WindsurfAdapter());

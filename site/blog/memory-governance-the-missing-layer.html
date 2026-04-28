@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Governance: The Missing Layer — SaveState</title>
+<meta name="description" content="Every other AI memory product is a black box. SaveState ships a state machine, an audit log, and a deny-by-default action gate. Here is why governance — not capacity — is the next memory frontier.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">April 28, 2026</div>
+      <h1>Memory Governance: The Missing Layer</h1>
+      <p class="subtitle">Every other AI memory product is a black box. SaveState ships a state machine, an audit log, and a deny-by-default action gate. Here is why governance &mdash; not capacity &mdash; is the next memory frontier.</p>
+    </header>
+
+    <div class="article-content">
+      <h2>The black-box memory problem</h2>
+
+      <p>If you have used ChatGPT Memory, Claude Projects, Gemini's saved info, Mem.ai, or Letta in the last six months, you have used a system that quietly accumulated information about you and surfaced it back across sessions. Some of those products do this well. None of them do it transparently.</p>
+
+      <p>I cannot tell you, as a user of any of those products:</p>
+
+      <ul>
+        <li><strong>Which memory the model is using right now.</strong> A reference appears in the response, or it doesn't. The retrieval set is invisible.</li>
+        <li><strong>Why a particular memory exists.</strong> There is no audit trail mapping the memory back to the conversation that produced it, the confidence the system had in it, or whether it has ever been revised.</li>
+        <li><strong>What the encryption boundary is.</strong> The vendor holds the keys. "Your memory" lives in their database with their access controls.</li>
+        <li><strong>Whether a piece of memory can take action on my behalf.</strong> Increasingly the answer is yes &mdash; but the rules are inside the platform, not in my hands.</li>
+      </ul>
+
+      <p>Three months ago we shipped SaveState as &ldquo;Time Machine for AI&rdquo; &mdash; encrypted backup and restore for your AI state. The market told us something more interesting. Backup is a feature. The real gap is that nobody owns the <em>memory layer</em>: the encrypted, portable, governed substrate that should sit beneath every AI product you use. <a href="/blog/from-backup-tool-to-memory-layer-the-savestate-pivot">We pivoted into that gap</a>. The Trust Kernel is the governance half of that pivot.</p>
+
+      <h2>What governance actually means</h2>
+
+      <p>Governance isn't a feature flag. It is three things together: a state machine, a set of enforcement points, and an audit trail.</p>
+
+      <p><strong>The state machine.</strong> Every memory in SaveState lives in one of five states. Writes land as <code>candidate</code>. A worker promotes them to <code>stable</code> only after they have passed a configurable promotion rule &mdash; minimum confidence, minimum age, required tags. If a write matches a denylist pattern or fails confidence, it terminates as <code>rejected</code> and never reaches the database. Things go wrong &mdash; bad memories slip through, prompt-injected content lands &mdash; and the operator can move them to <code>quarantined</code> for review or <code>revoked</code>, which adds the pattern back to the denylist so it cannot be re-written.</p>
+
+      <p><strong>The three gates.</strong> The state machine is enforced at three points. The <strong>WriteGate</strong> runs on every memory write. The <strong>TrustGate</strong> filters memory at retrieval time so candidate entries don't pollute context windows in production. The <strong>ActionGate</strong> sits in front of any registered side effect &mdash; tool call, API call, mutation &mdash; and refuses to run anything that isn't explicitly registered with a known trust level. <em>Deny by default, on the action path</em>. This is the part that compliance teams care about.</p>
+
+      <p><strong>The audit trail.</strong> Every transition between states is recorded with id, from-state, to-state, reason, actor, and timestamp. You can query it from the CLI:</p>
+
+      <pre><code>$ savestate trust audit --limit 5
+
+🧾 Trust Audit  (last 5)
+
+  2026-04-28 14:02:11  candidate → stable      (promotion-worker)
+    id: 8e3a4b9c-1a2f-4f6e-9d1e-2c7b1d4a55b8
+    reason: confidence 0.92 ≥ 0.8 and age 21m ≥ 10m
+
+  2026-04-28 13:58:02  candidate → rejected    (write-gate)
+    id: a91b3322-77af-4f0d-b3e5-19c8d6b0ee71
+    reason: Denylisted: matches secret-pattern rule "api-key-prefix"
+
+  2026-04-28 13:51:44  stable → revoked        (operator:david)
+    id: 6f0e1a55-2d13-4b8f-ab44-8a9e1c2d3f10
+    reason: User requested removal; pattern added to denylist
+</code></pre>
+
+      <p>That's not a log file. That's an answer to the question every compliance review eventually asks: <em>why did the model know that, and who decided it should?</em></p>
+
+      <h2>Why this is the Team-tier wedge</h2>
+
+      <p>Most of the AI memory market is racing on capacity &mdash; longer context, more recall, smarter retrieval. That race is fine. It is also commoditizing fast. The thing nobody is racing on is the thing every regulated buyer asks about first: <strong>can you tell me, with receipts, what this system remembers, why, and what it is allowed to do with that?</strong></p>
+
+      <p>The Trust Kernel is the answer. Three concrete things compliance teams will care about, all shipping today:</p>
+
+      <ul>
+        <li><strong>Audit-grade memory.</strong> Every promotion, rejection, and revocation is recorded. The CLI emits <code>--json</code> for cron-able alerting; the same data will surface in the upcoming Team-tier dashboard.</li>
+        <li><strong>Deny-by-default actions.</strong> Tools that aren't registered cannot run. Memory that hasn't passed the gate cannot escalate to action. A prompt-injected note that says &ldquo;email everyone in finance&rdquo; doesn't get to send the email.</li>
+        <li><strong>Role-scoped decryption.</strong> The encryption boundary is yours, not ours. SaveState never sees plaintext. The keys live with you, and as we move into the Team tier, role-scoped decryption lets a security lead audit the trail without having to access the underlying memory content.</li>
+      </ul>
+
+      <p>The Trust Kernel is open source today, in the same repo as the rest of SaveState. The Team tier &mdash; SSO, audit-log retention, data-residency selection, the dashboard UI &mdash; is the next thing on the roadmap. We are not promising it ships next week. We are promising the substrate is already in place.</p>
+
+      <p>If you have a compliance team breathing down your neck about &ldquo;what does the AI actually remember about our customers,&rdquo; this is the layer you have been waiting for. The state machine is in your hands. The audit trail is queryable. The action gate is deny-by-default. The encryption keys never leave your machine.</p>
+
+      <p>Memory is the new moat. Governed memory is the new compliance story.</p>
+
+      <div class="cta-box">
+        <h3>Read the Trust Kernel docs</h3>
+        <p>States, scopes, gates, CLI usage, and how to wire it into your own memory store.</p>
+        <a href="/docs/trust-kernel.html" class="btn">Trust Kernel Docs →</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 SaveState. Your AI's memory. Yours.</p>
+    <p style="margin-top: 8px;">
+      <a href="/">Home</a> &middot; <a href="/blog">Blog</a> &middot; <a href="/docs/">Docs</a> &middot; <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

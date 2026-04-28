@@ -351,6 +351,36 @@ export class TrustStore {
   }
 
   /**
+   * Return all denylist entries, newest first. Used by `savestate trust deny list`.
+   */
+  listDenylist(): Array<{ id: string; pattern: string; reason: string; addedAt: string; addedBy: string; epoch: number }> {
+    const rows = this.db
+      .prepare(
+        `SELECT id, pattern, reason, added_at, added_by, epoch
+         FROM denylist
+         ORDER BY epoch DESC`,
+      )
+      .all() as any[];
+    return rows.map((row) => ({
+      id: row.id,
+      pattern: row.pattern,
+      reason: row.reason,
+      addedAt: row.added_at,
+      addedBy: row.added_by,
+      epoch: row.epoch,
+    }));
+  }
+
+  /**
+   * Remove a denylist entry by exact pattern match. Returns the number of
+   * rows removed (0 if no match). Used by `savestate trust deny remove`.
+   */
+  removeFromDenylist(pattern: string): number {
+    const result = this.db.prepare('DELETE FROM denylist WHERE pattern = ?').run(pattern);
+    return result.changes;
+  }
+
+  /**
    * Get trust metrics.
    */
   getMetrics(): TrustMetrics {

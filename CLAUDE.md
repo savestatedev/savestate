@@ -80,7 +80,7 @@ savestate/
 ## Key Concepts
 
 1. **SaveState Archive Format (SAF)** -- Open spec for AI state snapshots (.saf.enc files)
-2. **Adapters** -- Platform-specific extractors/restorers (7 adapters: ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, Clawdbot, Cursor)
+2. **Adapters** -- Platform-specific extractors/restorers (8 adapters: ChatGPT, Claude, Claude Code, Gemini, OpenAI Assistants, Clawdbot, Cursor, Windsurf)
 3. **Storage Backends** -- Where encrypted snapshots are stored (local, S3/R2, cloud API)
 4. **Encryption** -- AES-256-GCM with scrypt KDF; master key is never stored
 
@@ -249,16 +249,45 @@ Recently shipped (April 28, 2026, iteration 4):
   query, used by the new `trust audit` command.
 - 23 new tests across the three workstreams (8 cursor, 9 search-index,
   6 trust-integration). Total: 1249 passing.
+- **Windsurf adapter** (`src/adapters/windsurf.ts`, v0.1.0) — second
+  community-tier adapter, mirrors Cursor's structure. Captures
+  `~/.codeium/windsurf/mcp_config.json` (global MCP servers, tagged
+  `config.scope = 'global'`), `~/.codeium/windsurf/memories/global_rules.md`
+  (wrapped with a marker into `identity.personality`), project
+  `.windsurf/rules/*.md` (as skills), and the legacy single-file
+  `.windsurfrules` (as a script entry, since it's project-specific text).
+  Records globalStorage SQLite paths in the file manifest; v2 will parse
+  chat history. Registered in `src/adapters/registry.ts` after Cursor so
+  it never preempts Claude Code or Clawdbot.
+- **Trust Kernel Phase 3 (shadow mode)** — `WriteGate` accepts
+  `shadow: true` for safe rollout. In shadow mode evaluation runs as
+  normal but `allowed` is forced true; the would-have-been blockers
+  surface via `result.shadowBlockers` and an optional `onShadowReject`
+  callback fires for every observed reject. New `getShadowRejectionCount()`
+  / `resetShadowRejectionCount()` / `isShadow()` accessors. Lets ops
+  teams deploy gate rules, watch what they'd reject on real traffic,
+  and flip to enforce when confident. Eval harness + auto-rollback
+  remain Phase 5 backlog.
+- **`savestate trust deny` subcommands** — `add <pattern> [--reason r]
+  [--by actor]`, `remove <pattern>`, `list`. Manage the denylist from
+  the CLI without touching SQLite directly. All have `--json`.
+- **TrustStore denylist mgmt** — `listDenylist()` (newest-epoch first)
+  and `removeFromDenylist(pattern)` (returns number of rows removed).
+- **Trust Kernel docs page** (`site/docs/trust-kernel.html`) and
+  governance content section on landing + `memory-governance-the-missing-layer.html`
+  blog post — landed by the docs/content agent in iteration 5.
+- 17 new tests this iteration (10 windsurf, 4 shadow, 3 denylist
+  mgmt). Total: **1266 passing**.
 
 Next-up Phase 5 work (in priority order):
-1. Trust Kernel Phase 3 — shadow-mode rollout, eval harness,
-   auto-rollback on drift.
+1. Trust Kernel Phase 4 — eval harness + auto-rollback on drift.
 2. Team / compliance tier (SSO, audit logs, data-residency selection,
    shared snapshots with role-scoped decryption, SOC2 path).
 3. MCP catalog presence across Claude Code / Cursor / Codex registries.
-4. Community adapters: Windsurf, Codeium, Zed AI (Cursor shipped).
-5. Cursor adapter v2 — parse Composer chat history from
-   workspaceStorage SQLite into conversations.
+4. Community adapters: Codeium, Zed AI (Cursor + Windsurf shipped).
+5. Cursor / Windsurf adapter v2 — parse chat history from SQLite.
+5. Cursor + Windsurf adapter v2 — parse chat history SQLite into
+   conversations.
 
 ## Claude Code Guidelines
 

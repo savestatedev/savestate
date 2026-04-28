@@ -35,6 +35,34 @@ export interface WriteGateOptions {
 
   /** Minimum confidence threshold to accept */
   minConfidence?: number;
+
+  /**
+   * Shadow mode: evaluate as normal but force `allowed: true` so writes are
+   * never blocked. The original decision and blockers are preserved on the
+   * result as `wouldHaveBeenAllowed` and `shadowBlockers`, and the optional
+   * `onShadowReject` callback is invoked for any decision that would have
+   * been a block. Use this for safe rollouts: deploy the rules, observe
+   * what they would have rejected on real traffic, then flip `shadow: false`.
+   */
+  shadow?: boolean;
+
+  /**
+   * Callback fired in shadow mode for any write the gate would have rejected.
+   * Defaults to a no-op so callers can opt into observation by passing one in.
+   */
+  onShadowReject?: (decision: ShadowDecision) => void;
+}
+
+/**
+ * Shape passed to `onShadowReject` and exposed on `WriteGateResult` when
+ * the gate is running in shadow mode.
+ */
+export interface ShadowDecision {
+  content: string;
+  source: string;
+  blockers: string[];
+  assignedState: TrustState;
+  latencyMs: number;
 }
 
 /**
@@ -46,16 +74,41 @@ export class WriteGate {
   private targetLatencyMs: number;
   private defaultScope: PromotionScope;
   private minConfidence: number;
+  private shadow: boolean;
+  private onShadowReject?: (decision: ShadowDecision) => void;
+  private shadowRejectionCount = 0;
 
   constructor(options: WriteGateOptions) {
     this.store = options.store;
     this.targetLatencyMs = options.targetLatencyMs ?? 50;
     this.defaultScope = options.defaultScope ?? 'semantic';
     this.minConfidence = options.minConfidence ?? 0;
+    this.shadow = options.shadow ?? false;
+    this.onShadowReject = options.onShadowReject;
+  }
+
+  /** Number of shadow-mode rejections observed since the gate was constructed. */
+  getShadowRejectionCount(): number {
+    return this.shadowRejectionCount;
+  }
+
+  /** Reset the shadow rejection counter (test helper). */
+  resetShadowRejectionCount(): void {
+    this.shadowRejectionCount = 0;
+  }
+
+  /** Whether the gate is currently in shadow (observe-only) mode. */
+  isShadow(): boolean {
+    return this.shadow;
   }
 
   /**
    * Evaluate a memory write request.
+   *
+   * In shadow mode the result is forced to `allowed: true` regardless of
+   * the underlying decision; the would-have-been-blockers are exposed via
+   * `shadowBlockers` and the `onShadowReject` callback is invoked so
+   * operators can observe what the rules would do on real traffic.
    */
   evaluate(request: {
     content: string;
@@ -70,39 +123,56 @@ export class WriteGate {
 
     // Check denylist
     const denyCheck = this.store.isDenylisted(request.content);
+    let denylistBlocker: string | null = null;
     if (denyCheck.denied) {
-      return {
-        allowed: false,
-        assignedState: 'rejected',
-        assignedScope: request.scope ?? this.defaultScope,
-        confidence: 0,
-        blockers: [`Denylisted: ${denyCheck.reason}`],
-        latencyMs: Date.now() - startTime,
-      };
+      denylistBlocker = `Denylisted: ${denyCheck.reason}`;
+      blockers.push(denylistBlocker);
     }
 
-    // Validate confidence
+    // Validate confidence (skipped if already denylisted)
     const confidence = request.confidence ?? 0.5;
-    if (confidence < this.minConfidence) {
+    if (!denylistBlocker && confidence < this.minConfidence) {
       blockers.push(`Confidence ${confidence} below threshold ${this.minConfidence}`);
     }
 
     // Determine scope
     const scope = request.scope ?? this.defaultScope;
 
-    // All valid writes start as candidate
-    const assignedState: TrustState = blockers.length > 0 ? 'rejected' : 'candidate';
+    const realAllowed = blockers.length === 0;
+    const realAssignedState: TrustState = denylistBlocker ? 'rejected' : (blockers.length > 0 ? 'rejected' : 'candidate');
 
     const latencyMs = Date.now() - startTime;
     if (latencyMs > this.targetLatencyMs) {
       console.warn(`WriteGate latency ${latencyMs}ms exceeds target ${this.targetLatencyMs}ms`);
     }
 
+    if (!realAllowed && this.shadow) {
+      this.shadowRejectionCount++;
+      if (this.onShadowReject) {
+        this.onShadowReject({
+          content: request.content,
+          source: request.source,
+          blockers: [...blockers],
+          assignedState: realAssignedState,
+          latencyMs,
+        });
+      }
+      return {
+        allowed: true,
+        assignedState: 'candidate',
+        assignedScope: scope,
+        confidence: denylistBlocker ? 0 : confidence,
+        blockers: [],
+        shadowBlockers: blockers,
+        latencyMs,
+      };
+    }
+
     return {
-      allowed: blockers.length === 0,
-      assignedState,
+      allowed: realAllowed,
+      assignedState: realAssignedState,
       assignedScope: scope,
-      confidence,
+      confidence: denylistBlocker ? 0 : confidence,
       blockers,
       latencyMs,
     };

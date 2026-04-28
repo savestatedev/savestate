@@ -230,6 +230,14 @@ export interface WriteGateResult {
   /** Reasons if blocked */
   blockers: string[];
 
+  /**
+   * Reasons the write would have been blocked if the gate were enforcing.
+   * Only populated when the gate is in shadow mode and the underlying
+   * decision was a block; in that case `allowed` is forced true and
+   * `blockers` is empty so callers don't see the block.
+   */
+  shadowBlockers?: string[];
+
   /** Processing latency in milliseconds */
   latencyMs: number;
 }
