@@ -308,6 +308,77 @@ Nobody is doing this comprehensively. The closest analogy is 1Password for passw
 - [ ] Blog post: "Your AI knows everything about you. What's your backup plan?"
 - [ ] Community adapters: Copilot, Poe, Character.ai, Ollama/LM Studio
 
+## Phase 5 — Memory Layer & Stickiness (April 28, 2026)
+
+The market has shifted: AI assistants treating memory as a first-class product
+(ChatGPT Memory, Claude Projects, Gemini Gems, MCP memory servers) means
+"backup" alone is commodity table stakes. Stickiness now comes from owning
+the cross-platform memory layer and surfacing the *value* of it back to users.
+This phase pivots from pure backup to "AI memory layer with portability".
+
+- [x] **Search across snapshots** — `savestate search <query>` decrypts on the
+      fly, scores by relevance, returns context snippets across memory,
+      identity, conversations, knowledge. Shipped April 28.
+- [x] **Stats command** — `savestate stats [--json]` surfaces total snapshots,
+      cadence, time covered, adapter mix, and top tags. Engagement loop:
+      users come back to see their own data. Shipped April 28.
+- [x] **Signal Fitness League (memory optimization engine)** — paired-inference
+      scoring of memory snippets so that low-fitness items are demoted/dropped
+      while rare-but-impactful items are protected. Lays the groundwork for
+      "memory that earns its place." Shipped April 28 (cherry-picked from PR #184).
+- [x] **Manifest-invariant content checksum** — fixed restore-time integrity
+      verification. Previous archive-hash semantics were unverifiable because
+      the manifest mutates between hash and final pack. Shipped April 28.
+- [ ] **Trust Kernel Phase 1** — state model + promotion pipeline (PR #183
+      draft). Candidate → stable → revoked transitions, write/trust/action
+      gates, denylist, audit trail. Required for enterprise / Team tier.
+- [ ] **Encrypted full-text search index** — current search decrypts every
+      snapshot on each query. Build a per-snapshot client-side search index
+      that ships alongside the SAF, encrypted with a separate key. Sub-second
+      search across hundreds of snapshots without bulk decrypt.
+- [ ] **MCP memory server adapter** — expose SaveState as an MCP server so any
+      MCP-compatible client (Claude Code, Cursor, etc.) can read/write
+      memories with audit + governance. Convert "backup" into an active
+      runtime tool; massive stickiness.
+- [ ] **Time Machine UI** — visual timeline view in the dashboard. Browse
+      memories by date, "rewind" to a prior identity state, diff between any
+      two points in time. Visceral hook that makes the value obvious.
+- [ ] **Memory portability score** — measure what fraction of source platform
+      state was successfully captured + restorable per platform. Public
+      compatibility matrix; drives ecosystem trust.
+- [ ] **Team / compliance tier**: shared snapshots with role-scoped
+      decryption, audit logs, SSO, data-residency selection (US / EU R2
+      buckets), DPA/SOC2 path. Drives ARPU.
+- [ ] **Community adapters**: Copilot, Poe, Character.ai, Ollama/LM Studio,
+      Cursor, Windsurf, Codeium, Zed AI.
+
+### Stickiness thesis (why pivot)
+
+1. **Backup is necessary but not engaging.** Users open backup tools when
+   something breaks. We need surface area in the *daily* workflow.
+2. **Memory is the moat.** Whoever owns the cross-platform memory layer owns
+   the relationship. Search + stats + fitness keep users in our surface.
+3. **The "1Password for AI identity" framing only works if we are the
+   default place users go to inspect, search, and reason about what their
+   AI knows.** That's why search/stats/fitness/UI ship before we chase
+   more adapters.
+4. **MCP integration converts us from cold storage to hot infrastructure.**
+   Once SaveState is wired into a user's daily Claude Code / Cursor / Codex
+   loop as a memory provider, churn drops to near zero.
+
+### Competitive notes (April 2026)
+
+- ChatGPT Memory has grown more capable but is still siloed; no portability,
+  no audit, no encryption boundary the user controls.
+- Claude Projects + Memory: similar siloing; export still manual.
+- Mem.ai, Heyday, Rewind: personal-knowledge memory, but none with
+  encrypted SAF-style portability across providers.
+- MCP memory servers (Anthropic + ecosystem): lots of momentum, but most
+  implementations are unencrypted and lack lifecycle/governance. SaveState
+  + Trust Kernel + Fitness ships the missing governance layer.
+- Letta / MemGPT: long-term memory in agents, but as runtime, not as
+  user-controlled portable artifact.
+
 ## Stripe Products (Live)
 
 | Tier | Product ID | Price ID | Monthly |
@@ -344,7 +415,7 @@ Stripe account: WithCandor (shared across DBH Ventures startups pending LLC appr
 ---
 
 *Created: January 27, 2026*
-*Last updated: January 27, 2026 (9:44 PM — Phase 3 complete, LAUNCHED 🚀)*
-*Status: LAUNCHED — Phase 3 complete, Phase 4 (growth) next*
-*Version: 0.2.1 (6 adapters, S3/R2 storage, Neon Postgres, CI/CD, Homebrew, Stripe billing, welcome emails)*
+*Last updated: April 28, 2026 — Phase 5 in progress (memory layer pivot)*
+*Status: LAUNCHED — Phase 4 shipped, Phase 5 (stickiness) underway*
+*Version: 0.9.0 (6 adapters, S3/R2 storage, Neon Postgres, CI/CD, Homebrew, Stripe billing, welcome emails, memory governance, search, stats, Signal Fitness League)*
 *Author: David Hurley / Steve (AI)*

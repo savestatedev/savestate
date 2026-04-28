@@ -273,6 +273,26 @@ export function computeChecksum(data: Buffer): string {
 }
 
 /**
+ * Compute a stable content checksum across an archive's file map,
+ * excluding the manifest itself so the value is invariant to manifest edits.
+ *
+ * Order is normalized by sorting paths so the digest is deterministic
+ * regardless of map insertion order.
+ */
+export function computeContentChecksum(files: Map<string, Buffer>): string {
+  const hash = createHash('sha256');
+  const paths = [...files.keys()].filter((p) => p !== 'manifest.json').sort();
+  for (const path of paths) {
+    const data = files.get(path)!;
+    hash.update(path);
+    hash.update('\0');
+    hash.update(data);
+    hash.update('\0');
+  }
+  return hash.digest('hex');
+}
+
+/**
  * Generate a snapshot ID from timestamp + random suffix.
  */
 export function generateSnapshotId(): string {

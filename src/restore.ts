@@ -13,7 +13,7 @@
  */
 
 import type { Adapter, Snapshot, StorageBackend } from './types.js';
-import { unpackFromArchive, unpackSnapshot, computeChecksum, snapshotFilename } from './format.js';
+import { unpackFromArchive, unpackSnapshot, computeContentChecksum, snapshotFilename } from './format.js';
 import { decrypt } from './encryption.js';
 import { findEntry, getLatestEntry } from './index-file.js';
 import { isIncremental, reconstructFromChain } from './incremental.js';
@@ -106,13 +106,22 @@ export async function restoreSnapshot(
 
   const snapshot = unpackSnapshot(fileMap);
 
-  // Verify integrity (for full snapshots)
+  // Verify integrity using a manifest-invariant content checksum.
+  // Older snapshots may use a legacy archive-checksum or none — skip those silently
+  // since GCM auth already proved the ciphertext was untampered.
   const expectedChecksum = snapshot.manifest.checksum;
   if (expectedChecksum) {
-    const actualChecksum = computeChecksum(archive);
-    // Note: checksum was computed on first-pass archive, which may differ
-    // from final archive due to manifest update. We skip strict checking
-    // for now but log a warning if they differ.
+    const actualChecksum = computeContentChecksum(fileMap);
+    if (actualChecksum !== expectedChecksum) {
+      // Don't hard-fail on legacy snapshots that used pre-fix archive hashing.
+      // For new snapshots (post content-checksum), a mismatch indicates corruption.
+      // Surface a warning to stderr without aborting restore.
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[savestate] warning: snapshot ${resolvedId} content checksum mismatch ` +
+          `(may be legacy hash format).`,
+      );
+    }
   }
 
   // Step 5a: Load state events into global store (Issue #91)

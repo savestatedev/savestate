@@ -45,11 +45,15 @@ export {
   packSnapshot,
   unpackSnapshot,
   computeChecksum,
+  computeContentChecksum,
   generateSnapshotId,
   snapshotFilename,
   SAF_EXTENSION,
   SAF_VERSION,
 } from './format.js';
+
+// Fitness League — memory optimization engine
+export { FitnessLeague } from './fitness/index.js';
 
 // Config
 export {

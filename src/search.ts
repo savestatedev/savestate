@@ -6,47 +6,155 @@
  */
 
 import type { SaveStateConfig, SearchResult } from './types.js';
+import type { SnapshotIndexEntry } from './index-file.js';
+import { loadIndex } from './index-file.js';
+import { resolveStorage } from './storage/index.js';
+import { decrypt } from './encryption.js';
+import { unpackFromArchive, unpackSnapshot } from './format.js';
+import { isIncremental, reconstructFromChain } from './incremental.js';
+
+type SearchType = 'memory' | 'conversation' | 'identity' | 'knowledge';
+
+const DEFAULT_LIMIT = 20;
+const CONTEXT_RADIUS = 60;
+
+export interface SearchOptions {
+  /** Only search specific snapshot IDs */
+  snapshots?: string[];
+  /** Only search specific content types */
+  types?: SearchType[];
+  /** Maximum number of results */
+  limit?: number;
+  /** Decryption passphrase (overrides SAVESTATE_PASSPHRASE) */
+  passphrase?: string;
+}
 
 /**
  * Search across all snapshots for matching content.
  *
  * Decrypts and searches through:
  * - Memory entries
- * - Conversation messages
+ * - Conversation messages (index titles)
  * - Identity/personality documents
- * - Knowledge base documents
- *
- * @param query - Search query string
- * @param config - SaveState configuration
- * @param options - Search options
- * @returns Matching results sorted by relevance
+ * - Knowledge base documents (metadata only)
  */
 export async function searchSnapshots(
   query: string,
   config: SaveStateConfig,
-  options?: {
-    /** Only search specific snapshot IDs */
-    snapshots?: string[];
-    /** Only search specific content types */
-    types?: ('memory' | 'conversation' | 'identity' | 'knowledge')[];
-    /** Maximum number of results */
-    limit?: number;
-  },
+  options?: SearchOptions,
 ): Promise<SearchResult[]> {
-  const _limit = options?.limit ?? 20;
+  if (!query || query.trim().length === 0) return [];
 
-  // TODO: Implementation plan:
-  // 1. List all snapshots (or filter to options.snapshots)
-  // 2. For each snapshot, decrypt and unpack
-  // 3. Search through content with text matching
-  // 4. Score results by relevance
-  // 5. Sort and return top N results
+  const limit = options?.limit ?? DEFAULT_LIMIT;
+  const types = options?.types;
+  const passphrase = options?.passphrase ?? process.env.SAVESTATE_PASSPHRASE;
+  if (!passphrase) {
+    throw new Error(
+      'No passphrase available. Set SAVESTATE_PASSPHRASE or pass options.passphrase.',
+    );
+  }
 
-  void query;
-  void config;
-  void options;
+  const index = await loadIndex();
+  const targets: SnapshotIndexEntry[] = options?.snapshots
+    ? index.snapshots.filter((s) => options.snapshots!.includes(s.id))
+    : index.snapshots;
 
-  return [];
+  if (targets.length === 0) return [];
+
+  const storage = resolveStorage(config);
+  const results: SearchResult[] = [];
+
+  for (const entry of targets) {
+    let fileMap;
+    try {
+      const encrypted = await storage.get(entry.filename);
+      const archive = await decrypt(encrypted, passphrase);
+      fileMap = await unpackFromArchive(archive);
+      if (isIncremental(fileMap)) {
+        fileMap = await reconstructFromChain(entry.id, storage, passphrase);
+      }
+    } catch {
+      // Skip snapshots we cannot decrypt or load — wrong passphrase, missing parents, etc.
+      continue;
+    }
+
+    const snapshot = unpackSnapshot(fileMap);
+    const includeMemory = !types || types.includes('memory');
+    const includeIdentity = !types || types.includes('identity');
+    const includeConversation = !types || types.includes('conversation');
+    const includeKnowledge = !types || types.includes('knowledge');
+
+    if (includeMemory) {
+      for (const mem of snapshot.memory.core) {
+        const score = scoreMatch(query, mem.content);
+        if (score > 0) {
+          results.push({
+            snapshotId: entry.id,
+            snapshotTimestamp: entry.timestamp,
+            type: 'memory',
+            content: mem.content,
+            context: extractContext(query, mem.content),
+            score,
+            path: `memory/core.json#${mem.id}`,
+          });
+        }
+      }
+    }
+
+    if (includeIdentity && snapshot.identity.personality) {
+      const score = scoreMatch(query, snapshot.identity.personality);
+      if (score > 0) {
+        results.push({
+          snapshotId: entry.id,
+          snapshotTimestamp: entry.timestamp,
+          type: 'identity',
+          content: snapshot.identity.personality,
+          context: extractContext(query, snapshot.identity.personality),
+          score,
+          path: 'identity/personality.md',
+        });
+      }
+    }
+
+    if (includeConversation) {
+      for (const conv of snapshot.conversations.conversations) {
+        const haystack = conv.title ?? '';
+        const score = scoreMatch(query, haystack);
+        if (score > 0) {
+          results.push({
+            snapshotId: entry.id,
+            snapshotTimestamp: entry.timestamp,
+            type: 'conversation',
+            content: haystack,
+            context: extractContext(query, haystack),
+            score,
+            path: conv.path,
+          });
+        }
+      }
+    }
+
+    if (includeKnowledge) {
+      for (const doc of snapshot.memory.knowledge) {
+        const haystack = doc.filename;
+        const score = scoreMatch(query, haystack);
+        if (score > 0) {
+          results.push({
+            snapshotId: entry.id,
+            snapshotTimestamp: entry.timestamp,
+            type: 'knowledge',
+            content: haystack,
+            context: undefined,
+            score,
+            path: doc.path,
+          });
+        }
+      }
+    }
+  }
+
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, limit);
 }
 
 /**
@@ -57,23 +165,36 @@ export function scoreMatch(query: string, content: string): number {
   const lowerQuery = query.toLowerCase();
   const lowerContent = content.toLowerCase();
 
-  if (!lowerContent.includes(lowerQuery)) return 0;
-
-  // Exact match gets highest score
-  if (lowerContent === lowerQuery) return 1;
-
-  // Score based on frequency and position
-  const words = lowerQuery.split(/\s+/);
-  let matchedWords = 0;
-  for (const word of words) {
-    if (lowerContent.includes(word)) matchedWords++;
+  if (!lowerContent.includes(lowerQuery)) {
+    // Allow partial word-level matches when full phrase is absent.
+    const words = lowerQuery.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return 0;
+    let matched = 0;
+    for (const word of words) if (lowerContent.includes(word)) matched++;
+    if (matched === 0) return 0;
+    return (matched / words.length) * 0.4;
   }
 
+  if (lowerContent === lowerQuery) return 1;
+
+  const words = lowerQuery.split(/\s+/).filter(Boolean);
+  let matchedWords = 0;
+  for (const word of words) if (lowerContent.includes(word)) matchedWords++;
   const wordScore = words.length > 0 ? matchedWords / words.length : 0;
 
-  // Earlier matches score higher
   const position = lowerContent.indexOf(lowerQuery);
-  const positionScore = Math.max(0, 1 - position / lowerContent.length);
+  const positionScore = Math.max(0, 1 - position / Math.max(lowerContent.length, 1));
 
   return wordScore * 0.7 + positionScore * 0.3;
+}
+
+function extractContext(query: string, content: string): string | undefined {
+  const lower = content.toLowerCase();
+  const idx = lower.indexOf(query.toLowerCase());
+  if (idx === -1) return undefined;
+  const start = Math.max(0, idx - CONTEXT_RADIUS);
+  const end = Math.min(content.length, idx + query.length + CONTEXT_RADIUS);
+  const prefix = start > 0 ? '…' : '';
+  const suffix = end < content.length ? '…' : '';
+  return `${prefix}${content.slice(start, end)}${suffix}`;
 }

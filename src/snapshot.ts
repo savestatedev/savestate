@@ -27,7 +27,7 @@ import {
   SAF_VERSION,
   packSnapshot,
   packToArchive,
-  computeChecksum,
+  computeContentChecksum,
   snapshotFilename,
 } from './format.js';
 import { encrypt } from './encryption.js';
@@ -189,12 +189,11 @@ export async function createSnapshot(
     archiveFileMap = packSnapshot(snapshot);
   }
 
-  // Step 9: Compute checksum and finalize
-  const firstArchive = packToArchive(archiveFileMap);
-  const checksum = computeChecksum(firstArchive);
-
+  // Step 9: Compute content checksum (manifest-invariant) and finalize.
+  // Hashing excludes manifest.json so the digest is stable when we re-pack
+  // with the updated manifest; this lets restore verify integrity.
+  const checksum = computeContentChecksum(archiveFileMap);
   snapshot.manifest.checksum = checksum;
-  snapshot.manifest.size = firstArchive.length;
 
   // Re-pack with updated manifest
   if (isIncremental && deltaResult && deltaManifest) {
@@ -204,6 +203,7 @@ export async function createSnapshot(
   }
 
   const finalArchive = packToArchive(archiveFileMap);
+  snapshot.manifest.size = finalArchive.length;
 
   // Step 10: Encrypt
   const encrypted = await encrypt(finalArchive, passphrase);

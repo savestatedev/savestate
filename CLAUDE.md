@@ -45,13 +45,16 @@ savestate/
     snapshot.ts         # Snapshot creation logic
     restore.ts          # Snapshot restoration logic
     incremental.ts      # Delta/incremental snapshot logic
-    commands/           # CLI command handlers (init, snapshot, restore, list, diff, etc.)
+    search.ts           # Cross-snapshot search (decrypt-on-the-fly, scored)
+    commands/           # CLI command handlers (init, snapshot, restore, list, diff, search, stats, etc.)
     adapters/           # Platform adapters (chatgpt, claude, gemini, openai, clawdbot, claude-code)
     storage/            # Storage backends (local, s3, cloud)
     integrity/          # Data integrity verification
     privacy/            # Privacy controls
     memory/             # Memory management
     migrate/            # Cross-platform migration
+    fitness/            # Signal Fitness League — memory optimization engine
+    trust-kernel/       # State model + promotion pipeline (gating new memories)
   api/                  # Vercel serverless functions
     webhook.ts          # Stripe webhook handler
     account.ts          # Account/API key validation
@@ -136,6 +139,44 @@ node dist/cli.js --help
 | CONCEPT.md | Product vision, roadmap, business model |
 
 ---
+
+## Current State (April 28, 2026)
+
+**Phase 5 in progress** — pivoting from "backup tool" to "AI memory layer with
+portability." Backup is commodity; the moat is owning the cross-platform
+memory layer and surfacing it back to users via search, stats, and runtime
+integrations (MCP). See `CONCEPT.md` Phase 5 for full thesis.
+
+Recently landed (April 28, 2026):
+- `savestate search <query>` — full implementation; decrypts snapshots on the
+  fly, scores by phrase + word + position, returns context snippets across
+  memory / identity / conversations / knowledge.
+- `savestate stats [--json]` — engagement loop: shows total snapshots, time
+  covered, cadence, adapter mix, top tags.
+- **Signal Fitness League** (`src/fitness/`) — paired-inference shadow
+  scoring of memory snippets so low-fitness items demote/drop while
+  rare-but-impactful items are protected. Foundation for "memory that earns
+  its place." Cherry-picked from PR #184; keeps tests green at 1185 passing.
+- **Manifest-invariant content checksum** — `computeContentChecksum` hashes
+  archive files excluding `manifest.json`, fixing a long-standing bug where
+  `restore` could not actually verify integrity (the manifest mutates after
+  the first hash). Old snapshots warn but do not fail.
+- Memory store tests: rebuilt `better-sqlite3` for current Node ABI (was
+  failing locally on Node 25 with NODE_MODULE_VERSION mismatch).
+
+Open PRs reviewed:
+- **#184** (Signal Fitness League) — module cherry-picked into main; PR
+  itself superseded.
+- **#185** (Looper template strip) — closed as regression: removed
+  structured fields from the bug template.
+- **#183** (Trust Kernel Phase 1, draft) — kept open; Phase 5 roadmap item.
+
+Next-up Phase 5 work (in priority order):
+1. Trust Kernel Phase 1 merge (PR #183 review-out-of-draft).
+2. Encrypted full-text search index (per-snapshot, separate-keyed).
+3. MCP memory server adapter (turn SaveState into hot infrastructure).
+4. Time Machine UI in the dashboard.
+5. Team / compliance tier (SSO, audit, data residency).
 
 ## Claude Code Guidelines
 

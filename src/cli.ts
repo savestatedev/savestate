@@ -87,6 +87,16 @@ program
   .option('--limit <n>', 'Maximum number of snapshots to show')
   .action(listCommand);
 
+// ─── savestate stats ─────────────────────────────────────────
+
+import { statsCommand } from './commands/stats.js';
+
+program
+  .command('stats')
+  .description('Show usage statistics about your snapshots')
+  .option('--json', 'Output as JSON')
+  .action(statsCommand);
+
 // ─── savestate diff ──────────────────────────────────────────
 
 program
