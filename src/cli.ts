@@ -313,6 +313,46 @@ program
   .option('-f, --force', 'Overwrite existing files')
   .action(cloudCommand);
 
+// ─── savestate team ──────────────────────────────────────────
+
+import {
+  teamStatusCommand,
+  teamMembersCommand,
+  teamInviteCommand,
+  teamAuditCommand,
+} from './commands/team.js';
+
+const teamCmd = program
+  .command('team')
+  .description('Team management (Team tier): members, invites, audit log');
+
+teamCmd
+  .command('status')
+  .description('Show your team membership info')
+  .option('--json', 'Output as JSON')
+  .action(teamStatusCommand);
+
+teamCmd
+  .command('members')
+  .description('List team members')
+  .option('--json', 'Output as JSON')
+  .action(teamMembersCommand);
+
+teamCmd
+  .command('invite <email>')
+  .description('Invite a member by email')
+  .option('-r, --role <role>', 'Role: admin, member, or viewer', 'member')
+  .option('--json', 'Output as JSON')
+  .action(teamInviteCommand);
+
+teamCmd
+  .command('audit')
+  .description('Stream the team audit log to stdout')
+  .option('--since <date>', 'Only entries after this date (ISO 8601)')
+  .option('--until <date>', 'Only entries before this date (ISO 8601)')
+  .option('--format <format>', 'Output format: csv or json', 'json')
+  .action(teamAuditCommand);
+
 // ─── savestate trace ─────────────────────────────────────────
 
 registerTraceCommands(program);

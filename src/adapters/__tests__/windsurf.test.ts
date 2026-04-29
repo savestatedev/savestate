@@ -208,4 +208,63 @@ describe('WindsurfAdapter', () => {
       }
     });
   });
+
+  describe('chat history (v2)', () => {
+    it('extracts conversations from a stub workspaceStorage state.vscdb', async () => {
+      const wsHash = join(homeDir, 'fake-ws', 'aaa111');
+      await mkdir(wsHash, { recursive: true });
+      const dbPath = join(wsHash, 'state.vscdb');
+
+      const Database = (await import('better-sqlite3')).default;
+      const db = new Database(dbPath);
+      db.exec('CREATE TABLE ItemTable (key TEXT PRIMARY KEY, value TEXT)');
+      db.prepare('INSERT INTO ItemTable VALUES (?, ?)').run(
+        'cascade.sessions',
+        JSON.stringify({
+          tabs: [
+            {
+              id: 'casc-a',
+              title: 'refactor pass',
+              messages: [
+                { role: 'user', content: 'refactor this file' },
+                { role: 'ai', content: 'rewriting...' },
+              ],
+            },
+            {
+              id: 'casc-b',
+              title: 'tests',
+              messages: [{ role: 'human', content: 'write tests' }],
+            },
+          ],
+        }),
+      );
+      db.close();
+
+      class TestWindsurf extends WindsurfAdapter {
+        protected getWorkspaceDbs(): string[] {
+          return [dbPath];
+        }
+      }
+
+      const adapter = new TestWindsurf(projectDir);
+      const snap = await adapter.extract();
+      expect(snap.conversations.total).toBe(2);
+      expect(snap.conversations.conversations.map((c) => c.title)).toEqual([
+        'refactor pass',
+        'tests',
+      ]);
+      expect(snap.conversations.conversations[0].messageCount).toBe(2);
+    });
+
+    it('returns 0 conversations when no DBs are present', async () => {
+      class TestWindsurf extends WindsurfAdapter {
+        protected getWorkspaceDbs(): string[] {
+          return [];
+        }
+      }
+      const adapter = new TestWindsurf(projectDir);
+      const snap = await adapter.extract();
+      expect(snap.conversations.total).toBe(0);
+    });
+  });
 });

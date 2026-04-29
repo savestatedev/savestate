@@ -277,17 +277,52 @@ Recently shipped (April 28, 2026, iteration 4):
   governance content section on landing + `memory-governance-the-missing-layer.html`
   blog post — landed by the docs/content agent in iteration 5.
 - 17 new tests this iteration (10 windsurf, 4 shadow, 3 denylist
-  mgmt). Total: **1266 passing**.
+  mgmt). Total at end of iteration 5: **1266 passing**.
 
-Next-up Phase 5 work (in priority order):
-1. Trust Kernel Phase 4 — eval harness + auto-rollback on drift.
-2. Team / compliance tier (SSO, audit logs, data-residency selection,
-   shared snapshots with role-scoped decryption, SOC2 path).
+Phase 6 kickoff (April 29, 2026, iteration 6):
+- **Team tier scaffolding** — first revenue-tier surface beyond Pro:
+  `api/team.ts` (create team, add/list/remove members),
+  `api/audit-export.ts` (CSV/JSON streaming with cursor pagination),
+  schema additions in `api/lib/db.ts` (`teams`, `team_members`,
+  `audit_log` tables + indexes + helper functions). Roles:
+  owner/admin/member/viewer. Every write appends to audit_log.
+  CLI: `savestate team status / members / invite / audit`.
+  Dashboard gets a Team section visible only when `account.tier === 'team'`.
+  Pricing page updated with the role list and a "Coming soon:
+  role-scoped decryption" disclaimer — that crypto redesign is
+  deliberately deferred to Phase 6.1.
+- **`@savestate/sdk` package** in `packages/savestate-sdk/` —
+  programmatic TypeScript client (`SaveStateClient` with `snapshot`,
+  `search`, `restore`, `list`, `stats`, `memory()`). Lean: no runtime
+  deps, just a peerDependency on `@savestate/cli`. README pitches the
+  Memory Layer Protocol thesis; `RFC-MLP.md` is the v0.1 spec stub.
+  Vitest config picks up `packages/**/*.test.ts`.
+- **Cursor + Windsurf adapter v2 — chat history**. New shared util
+  `src/adapters/_lib/vscdb.ts` reads `state.vscdb` SQLite from each
+  per-workspace hash dir (`readVscdbRows`, `listWorkspaceDbs`,
+  `coerceConversations`, `buildConversationsIndex`). Both adapters
+  now populate `snapshot.conversations` from their respective key
+  namespaces (Cursor: `composer.*`, `aiService.*`, `workbench.panel.aichat.*`;
+  Windsurf: `cascade.*`, `codeium.*`, plus the same VS Code base panel).
+  Read-only: we never write back into the live IDE's SQLite on
+  restore — that risk would corrupt user sessions. Test-override
+  hook (`getWorkspaceDbs`) makes the parsing path hermetic.
+- 37 new tests this iteration (12 vscdb util, 4 chat-history
+  adapter integration, 8 team CLI/api smoke, 13 SDK end-to-end).
+  Total: **1303 passing**.
+
+Next-up Phase 6 work (in priority order):
+1. **Phase 6.1: role-scoped decryption** — the cryptographic redesign
+   Team tier is currently stubbed without. Per-role key derivation
+   so admin/member/viewer see different subsets of an encrypted
+   snapshot.
+2. Trust Kernel Phase 4 — eval harness + auto-rollback on drift.
 3. MCP catalog presence across Claude Code / Cursor / Codex registries.
-4. Community adapters: Codeium, Zed AI (Cursor + Windsurf shipped).
-5. Cursor / Windsurf adapter v2 — parse chat history from SQLite.
-5. Cursor + Windsurf adapter v2 — parse chat history SQLite into
-   conversations.
+4. **Memory marketplace** — sharable / curated memory packs as a
+   community moat (`savestate import @savestate/pack-*`).
+5. SDK framework integrations — first-party LangChain / LlamaIndex /
+   Vercel AI SDK adapter packages under `packages/savestate-*`.
+6. Remaining community adapters: Codeium, Zed AI.
 
 ## Claude Code Guidelines
 

@@ -381,6 +381,54 @@ This phase pivots from pure backup to "AI memory layer with portability".
       Also shipped `savestate trust deny add|remove|list` for managing
       the denylist from the CLI without touching SQLite by hand. Eval
       harness + auto-rollback are still on the Phase 5 backlog.
+
+## Phase 6 — Memory Infrastructure (April 29, 2026 onward)
+
+The thesis: SaveState wins by becoming infrastructure other AI builders
+build *on*, not just another consumer product. Three pillars: **Team /
+compliance tier** (revenue), **public SDK + protocol** (reach), and
+**memory marketplace** (network effects).
+
+Phase 6 kickoff (April 29, 2026 — iteration 6):
+
+- [x] **Team tier scaffolding** — `teams`, `team_members`, `audit_log`
+      tables (Neon Postgres). New API endpoints (`api/team.ts`,
+      `api/audit-export.ts`) handle membership CRUD + CSV/JSON audit
+      export with cursor pagination. CLI subcommands
+      (`savestate team status / members / invite / audit`). Dashboard
+      gets a Team section visible only to Team-tier accounts. Roles:
+      owner / admin / member / viewer. **Role-scoped decryption is
+      deliberately deferred** to Phase 6.1 — snapshots still encrypt
+      with the user's passphrase only; we don't fake the crypto.
+- [x] **`@savestate/sdk` package** in `packages/savestate-sdk/` — the
+      programmatic memory-layer client. Re-exports the CLI engine as
+      `SaveStateClient` with `snapshot`, `search`, `restore`, `list`,
+      `stats`, `memory()`. README pitches the Memory Layer Protocol
+      thesis; `RFC-MLP.md` is the v0.1 spec stub for the interface
+      we want vendors to implement. Lean: zero runtime dependencies;
+      depends on `@savestate/cli` only as a peer.
+- [x] **Cursor + Windsurf adapter v2 (chat history)** — both adapters
+      now parse `state.vscdb` SQLite files in workspaceStorage and
+      surface chat sessions as `snapshot.conversations`. Shared util
+      `src/adapters/_lib/vscdb.ts` (`readVscdbRows`,
+      `listWorkspaceDbs`, `coerceConversations`,
+      `buildConversationsIndex`). Read-only by design — we never push
+      back into the IDE's live SQLite on restore.
+
+Next-up Phase 6 (priority order):
+- [ ] **Phase 6.1: role-scoped decryption** — per-role key derivation
+      so admin/member/viewer see different subsets of an encrypted
+      snapshot. The crypto wedge that makes Team tier unique.
+- [ ] **Trust Kernel Phase 4** — eval harness + auto-rollback on drift.
+- [ ] **Memory marketplace** — public + paid memory packs, signed by
+      authors. `savestate import @savestate/pack-*`. Network-effects
+      community moat.
+- [ ] **MCP catalog presence** across Claude Code / Cursor / Codex
+      registries (pure distribution lift).
+- [ ] **SDK framework integrations** — first-party
+      `@savestate/langchain`, `@savestate/llamaindex`,
+      `@savestate/vercel-ai` adapter packages.
+- [ ] **Remaining community adapters** — Codeium, Zed AI.
 - [x] **Encrypted full-text search index** (April 28, iteration 4) — every
       SAF now ships a `search/index.json` inverted-index file. Built
       automatically by `packSnapshot`, encrypted alongside the rest of

@@ -27,8 +27,16 @@ import type {
   ScriptEntry,
   ToolConfig,
   FileManifestEntry,
+  Conversation,
+  ConversationIndex,
 } from '../types.js';
 import { SAF_VERSION, generateSnapshotId } from '../format.js';
+import {
+  readVscdbRows,
+  listWorkspaceDbs,
+  macWorkspaceStorageRoot,
+  coerceConversations,
+} from './_lib/vscdb.js';
 
 /** Project metadata files to look for */
 const PROJECT_META_FILES = [
@@ -111,6 +119,7 @@ export class WindsurfAdapter implements Adapter {
     const scripts = await this.readLegacyRules();
     const projectMeta = await this.readProjectMeta();
     const fileManifest = await this.buildFileManifest();
+    const conversations = this.readChatHistory();
 
     const snapshotId = generateSnapshotId();
     const now = new Date().toISOString();
@@ -143,10 +152,7 @@ export class WindsurfAdapter implements Adapter {
         core: [],
         knowledge: [],
       },
-      conversations: {
-        total: 0,
-        conversations: [],
-      },
+      conversations,
       platform: await this.identify(),
       chain: {
         current: snapshotId,
@@ -202,6 +208,45 @@ export class WindsurfAdapter implements Adapter {
   }
 
   // ─── Private: Reading ─────────────────────────────────────
+
+  /**
+   * Walk every per-workspace `state.vscdb` under
+   * `~/Library/Application Support/Windsurf/User/workspaceStorage/<hash>/`
+   * and pull out chat sessions stored in cascade.* / codeium.* keys.
+   */
+  private readChatHistory(): ConversationIndex {
+    const conversations: Conversation[] = [];
+    const dbs = this.getWorkspaceDbs();
+
+    for (const dbPath of dbs) {
+      const rows = readVscdbRows(dbPath, [
+        'cascade.',
+        'codeium.',
+        'workbench.panel.aichat.',
+      ]);
+      for (const row of rows) {
+        conversations.push(...coerceConversations(row.value, `windsurf:${row.key}`));
+      }
+    }
+
+    return {
+      total: conversations.length,
+      conversations: conversations.map((c) => ({
+        id: c.id,
+        title: c.title,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        messageCount: c.messages.length,
+        path: `conversations/threads/${c.id}.json`,
+      })),
+    };
+  }
+
+  /** Test-override hook for the workspaceStorage path. */
+  protected getWorkspaceDbs(): string[] {
+    const root = macWorkspaceStorageRoot('Windsurf');
+    return root ? listWorkspaceDbs(root) : [];
+  }
 
   /**
    * Read global_rules.md — wrapped with a marker so restoreGlobalRules

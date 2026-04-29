@@ -26,8 +26,16 @@ import type {
   SkillEntry,
   ToolConfig,
   FileManifestEntry,
+  Conversation,
+  ConversationIndex,
 } from '../types.js';
 import { SAF_VERSION, generateSnapshotId } from '../format.js';
+import {
+  readVscdbRows,
+  listWorkspaceDbs,
+  macWorkspaceStorageRoot,
+  coerceConversations,
+} from './_lib/vscdb.js';
 
 /** Project metadata files to look for */
 const PROJECT_META_FILES = [
@@ -106,6 +114,7 @@ export class CursorAdapter implements Adapter {
     const skills = await this.readProjectRules();
     const projectMeta = await this.readProjectMeta();
     const fileManifest = await this.buildFileManifest();
+    const conversations = this.readChatHistory();
 
     const snapshotId = generateSnapshotId();
     const now = new Date().toISOString();
@@ -137,10 +146,7 @@ export class CursorAdapter implements Adapter {
         core: [],
         knowledge: [],
       },
-      conversations: {
-        total: 0,
-        conversations: [],
-      },
+      conversations,
       platform: await this.identify(),
       chain: {
         current: snapshotId,
@@ -193,6 +199,46 @@ export class CursorAdapter implements Adapter {
   }
 
   // ─── Private: Reading ─────────────────────────────────────
+
+  /**
+   * Walk every per-workspace `state.vscdb` under
+   * `~/Library/Application Support/Cursor/User/workspaceStorage/<hash>/`
+   * and pull out anything keyed under Cursor's chat namespaces. Read-only
+   * by design: we never write back into Cursor's live SQLite on restore.
+   */
+  private readChatHistory(): ConversationIndex {
+    const conversations: Conversation[] = [];
+    const dbs = this.getWorkspaceDbs();
+
+    for (const dbPath of dbs) {
+      const rows = readVscdbRows(dbPath, [
+        'composer.',
+        'aiService.',
+        'workbench.panel.aichat.',
+      ]);
+      for (const row of rows) {
+        conversations.push(...coerceConversations(row.value, `cursor:${row.key}`));
+      }
+    }
+
+    return {
+      total: conversations.length,
+      conversations: conversations.map((c) => ({
+        id: c.id,
+        title: c.title,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        messageCount: c.messages.length,
+        path: `conversations/threads/${c.id}.json`,
+      })),
+    };
+  }
+
+  /** Test-override hook for the workspaceStorage path. */
+  protected getWorkspaceDbs(): string[] {
+    const root = macWorkspaceStorageRoot('Cursor');
+    return root ? listWorkspaceDbs(root) : [];
+  }
 
   /**
    * Read composer-rules — global only for now.

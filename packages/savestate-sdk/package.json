@@ -1,0 +1,47 @@
+{
+  "name": "@savestate/sdk",
+  "version": "0.1.0",
+  "description": "Programmatic SaveState client. Snapshot, search, restore, and migrate AI memory across platforms — the same engine the @savestate/cli ships, exposed as a TypeScript library.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "keywords": [
+    "ai",
+    "memory",
+    "agent",
+    "mcp",
+    "savestate",
+    "sdk"
+  ],
+  "author": "DBH Ventures <hello@savestate.dev>",
+  "license": "MIT",
+  "homepage": "https://savestate.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/savestatedev/savestate.git",
+    "directory": "packages/savestate-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/savestatedev/savestate/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "RFC-MLP.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "@savestate/cli": ">=0.9.0"
+  }
+}

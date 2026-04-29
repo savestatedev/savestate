@@ -767,6 +767,67 @@ tr:hover td { background: rgba(3, 193, 223, 0.02); }
         <div class="timeline-legend" id="timeline-legend"></div>
       </div>
 
+      <!-- Team Section (Team tier only) -->
+      <div class="team-section" id="team-section" style="display: none;">
+        <div class="section-header">
+          <h2>Team</h2>
+          <button class="btn secondary sm" onclick="refreshTeam()">↻ Refresh</button>
+        </div>
+
+        <div class="stat-card" style="margin-bottom: 20px;">
+          <div class="label">Team</div>
+          <div class="value" id="team-name" style="font-size: 22px;">—</div>
+          <div style="margin-top: 8px; color: var(--text-muted); font-size: 13px;">
+            Owner: <span id="team-owner">—</span> · Your role: <span id="team-role" style="color: var(--blue); font-weight: 600;">—</span>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h2 style="font-size: 16px;">Members</h2>
+        </div>
+        <div class="table-card" style="margin-bottom: 28px;">
+          <div id="team-members-loading" class="loading">
+            <div class="spinner"></div>
+            Loading members...
+          </div>
+          <table id="team-members-table" style="display: none;">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Invited</th>
+              </tr>
+            </thead>
+            <tbody id="team-members-body"></tbody>
+          </table>
+        </div>
+
+        <div class="section-header">
+          <h2 style="font-size: 16px;">Audit Log Export</h2>
+        </div>
+        <div class="stat-card" style="margin-bottom: 20px;">
+          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+            Export the audit trail for your team. CSV is single-shot; JSON includes a <code style="background: var(--bg); padding: 2px 6px; border-radius: 4px; font-family: var(--mono); font-size: 12px;">next_cursor</code> for pagination beyond 10,000 rows.
+          </p>
+          <div style="display: flex; gap: 12px; align-items: end; flex-wrap: wrap;">
+            <div class="input-group" style="margin: 0; flex: 1; min-width: 160px;">
+              <label for="audit-since">Since</label>
+              <input type="date" id="audit-since" style="font-family: var(--font);">
+            </div>
+            <div class="input-group" style="margin: 0; flex: 1; min-width: 160px;">
+              <label for="audit-until">Until</label>
+              <input type="date" id="audit-until" style="font-family: var(--font);">
+            </div>
+            <button class="btn sm" onclick="downloadAudit('csv')">⬇ CSV</button>
+            <button class="btn secondary sm" onclick="downloadAudit('json')">⬇ JSON</button>
+          </div>
+          <p style="color: var(--text-dim); font-size: 12px; margin-top: 12px;">
+            Defaults to the last 30 days when no dates are set. Snapshots remain encrypted with each user's passphrase — role-scoped decryption is coming soon.
+          </p>
+        </div>
+      </div>
+
       <!-- Snapshots Table -->
       <div class="section-header">
         <h2>Cloud Snapshots</h2>
@@ -901,6 +962,133 @@ function showDashboard() {
 
   // Load snapshots
   loadSnapshots();
+
+  // Team section visible only on Team tier
+  if (account.tier === 'team') {
+    document.getElementById('team-section').style.display = 'block';
+    loadTeam();
+  } else {
+    document.getElementById('team-section').style.display = 'none';
+  }
+}
+
+async function loadTeam() {
+  const membersLoading = document.getElementById('team-members-loading');
+  const membersTable = document.getElementById('team-members-table');
+  const membersBody = document.getElementById('team-members-body');
+  membersLoading.style.display = 'flex';
+  membersTable.style.display = 'none';
+
+  try {
+    const teamRes = await fetch(`${API_BASE}/team`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    if (!teamRes.ok) {
+      // Account is on Team tier but hasn't created a team yet.
+      membersLoading.innerHTML = `
+        <div style="text-align:center;">
+          <p style="margin-bottom: 16px;">No team yet.</p>
+          <button class="btn sm" onclick="createTeam()">Create your team</button>
+        </div>`;
+      return;
+    }
+    const teamData = await teamRes.json();
+    document.getElementById('team-name').textContent = teamData.team.name;
+    document.getElementById('team-role').textContent = teamData.role;
+
+    const membersRes = await fetch(`${API_BASE}/team/members`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    const membersData = await membersRes.json();
+    const members = membersData.members || [];
+
+    // Find owner email for header
+    const owner = members.find(m => m.role === 'owner');
+    if (owner) document.getElementById('team-owner').textContent = owner.email;
+
+    membersBody.innerHTML = members.map(m => `
+      <tr>
+        <td>${escapeHtml(m.email)}</td>
+        <td><span style="color: var(--blue); font-family: var(--mono); font-size: 12px;">${escapeHtml(m.role)}</span></td>
+        <td>${m.acceptedAt ? '<span style="color: var(--success);">active</span>' : '<span style="color: var(--warning);">pending</span>'}</td>
+        <td class="snapshot-date">${formatDate(m.invitedAt)}</td>
+      </tr>
+    `).join('');
+
+    membersLoading.style.display = 'none';
+    membersTable.style.display = 'table';
+  } catch (err) {
+    membersLoading.innerHTML = `<span style="color: var(--error)">Failed to load team</span>`;
+  }
+}
+
+async function createTeam() {
+  const name = prompt('Team name:', `${account.email}'s Team`);
+  if (!name) return;
+  const res = await fetch(`${API_BASE}/team`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (res.ok) {
+    loadTeam();
+  } else {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error || 'Failed to create team');
+  }
+}
+
+async function refreshTeam() {
+  await loadTeam();
+}
+
+async function downloadAudit(format) {
+  // Resolve team id first
+  const teamRes = await fetch(`${API_BASE}/team`, {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  if (!teamRes.ok) {
+    alert('Could not resolve team');
+    return;
+  }
+  const { team } = await teamRes.json();
+
+  const sinceInput = document.getElementById('audit-since').value;
+  const untilInput = document.getElementById('audit-until').value;
+
+  let since = sinceInput;
+  if (!since) {
+    // Default to last 30 days
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    since = d.toISOString().slice(0, 10);
+  }
+
+  const params = new URLSearchParams({
+    team_id: team.id,
+    format,
+    since,
+  });
+  if (untilInput) params.set('until', untilInput);
+
+  const res = await fetch(`${API_BASE}/audit-export?${params.toString()}`, {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  if (!res.ok) {
+    alert('Audit export failed');
+    return;
+  }
+
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `audit-${team.id}-${Date.now()}.${format}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 async function loadSnapshots() {
