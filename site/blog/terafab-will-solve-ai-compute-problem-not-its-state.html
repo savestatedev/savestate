@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terafab Will Solve AI's Compute Problem, Not Its State - SaveState</title>
+<meta name="description" content="Tesla and SpaceX's Terafab points to abundant AI compute. That makes portable, reconstructable agent state the infrastructure advantage that matters next.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">August 11, 2026</div>
+      <h1>Terafab Will Solve AI's Compute Problem, Not Its State</h1>
+      <p class="subtitle">Tesla and SpaceX's Terafab points to abundant AI compute. That makes portable, reconstructable agent state the infrastructure advantage that matters next.</p>
+    </header>
+
+    <div class="article-content">
+      <h2>Terafab Makes the Infrastructure Race Concrete</h2>
+
+      <p>Tesla and SpaceX announced a planned $16.8 billion semiconductor facility in Grimes County, Texas. The project, called Terafab, is designed to combine advanced chip manufacturing, packaging, and testing in one vertically integrated site. The companies describe a facility spanning more than 100 million square feet, with an initial investment of $16.8 billion and at least 3,000 expected jobs. <a href="https://techcrunch.com/2026/08/06/tesla-and-spacex-will-invest-16-8b-to-start-building-terafab-chip-factory-in-texas/" target="_blank" rel="noopener">TechCrunch reports</a> that the announcement formalizes months of speculation about the project.</p>
+
+      <p>Terafab is still a plan. We should not claim that it will automatically make AI compute cheaper, faster, or easier to procure. Those outcomes depend on execution, yields, supply chains, and whether the facility reaches the scale its backers describe.</p>
+
+      <p>The strategic signal is already clear, though. AI infrastructure is moving toward tighter integration between silicon, packaging, memory, software, and deployment. Most coverage focuses on the compute advantage. The more important systems-design consequence is what happens when compute becomes easier to replace.</p>
+
+      <p>Terafab may solve more of AI's capacity problem. It will not solve AI's state problem.</p>
+
+      <h2>Compute Is Becoming the Movable Part</h2>
+
+      <p>For years, teams treated compute as the scarce, expensive layer and state as an implementation detail. That made sense when an agent lived on one machine, used one model provider, and had a small set of tools. Rebuilding it was inconvenient, but usually possible.</p>
+
+      <p>That architecture does not survive an environment where agents move frequently across accelerators, regions, runtimes, and vendors.</p>
+
+      <p>An agent's operational identity is not contained in its model weights or source code. It is distributed across the systems that make the agent useful and safe:</p>
+
+      <ul>
+        <li>Configuration files and runtime parameters</li>
+        <li>Tool registries, endpoints, and version constraints</li>
+        <li>Permission rules and approval policies</li>
+        <li>Working memory, durable memories, and references to external stores</li>
+        <li>Learned workflows, task-specific instructions, and routing logic</li>
+        <li>Credentials and secret references, without exposing the secret values</li>
+        <li>Queues, handoff metadata, and in-progress execution state</li>
+        <li>Deployment history, environment assumptions, and compatibility notes</li>
+      </ul>
+
+      <p>If you migrate an agent to a new runtime with the same model and repository but none of this context, you have not restored the agent. You have launched a similar process.</p>
+
+      <p>That distinction matters more as infrastructure becomes modular. A model can run on a new accelerator. A container can move to a different cluster. A provider can offer an equivalent API. The hard part is reconstructing the exact operating context that tells the agent what it is allowed to do, which tools it can trust, and how it has been configured to work.</p>
+
+      <p>This is the inverse of the usual infrastructure assumption. When compute is scarce, we optimize for utilization. When compute is replaceable, we need to optimize for continuity.</p>
+
+      <h2>State Portability Is a Systems Property</h2>
+
+      <p>Portability does not mean copying a directory from one machine to another. It means defining which parts of an agent's state are portable, which parts must be re-bound, and which parts should never be copied at all.</p>
+
+      <p>A useful state manifest might look something like this:</p>
+
+      <pre><code>{
+  "agent_id": "support-triage-07",
+  "runtime": "agent-runtime-3.4.1",
+  "model": "provider/model-version",
+  "tools": ["ticketing-v2", "crm-v4"],
+  "permissions_policy": "policy-sha256:...",
+  "memory_refs": ["memory-store://support/tenant-42"],
+  "config_digest": "sha256:...",
+  "deployment_id": "deploy-2026-08-11-1842",
+  "captured_at": "2026-08-11T18:42:00Z"
+}</code></pre>
+
+      <p>The values are less important than the contract. A manifest gives you a way to answer concrete questions during migration:</p>
+
+      <ul>
+        <li>Which model and runtime produced this behavior?</li>
+        <li>Which tools and versions were available?</li>
+        <li>Which permissions were active at the time?</li>
+        <li>Which memory stores need to be reachable?</li>
+        <li>Which configuration changed between deployments?</li>
+        <li>Can another environment reproduce the same operating assumptions?</li>
+      </ul>
+
+      <p>The manifest should reference secrets rather than embedding them. It should include hashes and version identifiers so that a restore process can detect drift. It should also record dependencies outside the agent directory, because operational state often fails at the edges: an expired OAuth binding, a missing tool schema, an incompatible memory index, or a policy that was edited without a corresponding deployment record.</p>
+
+      <p>This is where the argument extends beyond the <a href="/blog/your-ai-rollback-strategy-is-more-broken-than-you-think">AI rollback strategy we previously examined</a>. A rollback is only meaningful if the target state is portable. Otherwise, you are reverting code while leaving the agent's operating context behind.</p>
+
+      <h2>Design Around State Transitions, Not Calendar Backups</h2>
+
+      <p>The practical mistake is treating state capture as a periodic file-copying task. The important moments are state transitions.</p>
+
+      <p>Capture a coherent snapshot before events such as:</p>
+
+      <ul>
+        <li>Moving an agent to a new model provider or hardware pool</li>
+        <li>Granting a new tool or expanding permissions</li>
+        <li>Changing routing, memory, or policy configuration</li>
+        <li>Deploying a new runtime version</li>
+        <li>Handing work from one agent to another</li>
+        <li>Retiring an environment or consolidating infrastructure</li>
+      </ul>
+
+      <p>A snapshot taken every night may miss the permission change that happened ten minutes before a failed deployment. A transition-aware snapshot can preserve the exact relationship between configuration, permissions, tools, memory references, and deployment metadata.</p>
+
+      <p>The next step is restore testing. Do not validate state portability by checking that files exist. Restore into a clean environment and verify that the agent can:</p>
+
+      <ol>
+        <li>Load its configuration and identify its intended runtime.</li>
+        <li>Resolve its tool references and version requirements.</li>
+        <li>Apply the expected permission policy.</li>
+        <li>Reach its memory and external state stores.</li>
+        <li>Resume a representative task without inventing a new operating context.</li>
+      </ol>
+
+      <p>For high-impact agents, make this a compatibility test across more than one runtime or provider. The goal is not to make every agent identical everywhere. The goal is to know which state can move, what must be adapted, and where adaptation changes behavior.</p>
+
+      <h2>The Durable Asset Is Reconstructable Context</h2>
+
+      <p>More compute will create more opportunities to run agents, scale them horizontally, and move them between environments. It will also increase the pace of change. Teams will experiment with new accelerators, new model endpoints, new orchestration layers, and new deployment patterns.</p>
+
+      <p>That is good news for capacity. It raises the value of a different asset: a trustworthy record of how an agent operated.</p>
+
+      <p>Availability answers the question, "Can we run an agent?" Recoverability asks, "Can we resume the right agent with the right constraints?" Portability asks, "Can we do that when the underlying infrastructure changes?"</p>
+
+      <p>Terafab's significance is not limited to the chips it may produce. It represents a future where the hardware layer can change underneath an agent more often than the organization can manually document. In that world, source code and model access are necessary, but they are not sufficient. The durable advantage belongs to teams that can reconstruct operational context with enough precision to preserve behavior and control.</p>
+
+      <p>SaveState fits into that layer by capturing agent configuration and state as versioned snapshots, with adapters for platforms such as OpenClaw, Claude, OpenAI, Cursor, and Windsurf. The useful question is not whether you have a backup. It is whether you can restore the agent's operating identity somewhere new.</p>
+
+      <p>Start by defining your state manifest, then test a cross-runtime restore before your next infrastructure migration.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. Built for reliable AI infrastructure.</p>
+  </div>
+</footer>
+
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/terafab-will-solve-ai-compute-problem-not-its-state" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
+</body>
+</html>
