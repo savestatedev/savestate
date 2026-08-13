@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uniti's $12M Raise Needs a State Layer — SaveState</title>
+<meta name="description" content="Uniti's $12M raise highlights agentic AI's overlooked bottleneck: reconstructing decisions, permissions, workflows, and context when systems change.">
+<meta name="keywords" content="agentic AI, AI infrastructure, operational resilience, AI governance, enterprise AI">
+<meta property="og:title" content="Uniti's $12M Raise Needs a State Layer">
+<meta property="og:description" content="Uniti's $12M raise highlights agentic AI's overlooked bottleneck: reconstructing decisions, permissions, workflows, and context when systems change.">
+<meta property="og:type" content="article">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">August 13, 2026</div>
+      <h1>Uniti's $12M Raise Needs a State Layer</h1>
+      <p class="subtitle">Uniti's $12M raise highlights agentic AI's overlooked bottleneck: reconstructing decisions, permissions, workflows, and context when systems change.</p>
+    </header>
+
+    <div class="article-content">
+      <p>Uniti, an agentic AI layer for global real estate, raised $12 million in Series A funding led by Pathlight, according to <a href="https://www.businesswire.com/newsroom/subject/funding">Business Wire</a>. The obvious interpretation is that investors are funding another push toward more capable enterprise agents.</p>
+
+      <p>That interpretation misses the harder problem.</p>
+
+      <p>As agents move into leasing, underwriting, asset management, and operations, they will accumulate decisions, permissions, workflow changes, and business context faster than most teams can reconstruct them. The next bottleneck is not autonomy. It is operational state that can be inspected and reproduced when the agent changes its behavior.</p>
+
+      <h2>Funding is accelerating the state problem</h2>
+
+      <p>An agent deployed in a real estate workflow does more than generate text. It may classify incoming documents, request missing information, query a property database, route an approval, update a CRM, and recommend an action to a human operator.</p>
+
+      <p>Each step creates state.</p>
+
+      <p>Some of that state is obvious, such as configuration files, prompts, and model versions. The more consequential state is distributed across systems:</p>
+
+      <ul>
+        <li>Which instructions were active when the agent made a recommendation?</li>
+        <li>Which tools and data sources could it access?</li>
+        <li>What permissions had been granted at that moment?</li>
+        <li>Which documents did it retrieve, and which ranking or filtering rules selected them?</li>
+        <li>What policy thresholds influenced the result?</li>
+        <li>Which workflow version was running?</li>
+        <li>Which human approvals had already occurred?</li>
+        <li>What external systems changed after the agent acted?</li>
+      </ul>
+
+      <p>If we cannot answer those questions, we do not have a reproducible production system. We have a process that happened once and left behind fragments.</p>
+
+      <p>The Uniti round matters because it signals that enterprise investment is moving toward agents embedded in operational environments. That creates a larger surface area for state drift. A model update can alter classifications. A revised tool schema can change an action. A new property data feed can change the context. A permissions adjustment can expand the agent's effective authority without changing its code.</p>
+
+      <p>The agent may still be available and technically healthy. The organization may still be unable to explain why it behaved differently on Tuesday than it did on Monday.</p>
+
+      <h2>The mistake is treating state as configuration</h2>
+
+      <p>Most teams still define an agent's state too narrowly. They back up the repository, preserve a prompt template, and record the model name. Those are useful artifacts, but they do not describe the operational decision state.</p>
+
+      <p>Consider an underwriting agent that flags a commercial property for review. To reconstruct the result, we need more than the prompt and model. We need the source documents, their versions, the retrieval query, the policy rules, the confidence thresholds, the tool responses, and the identity of the systems that supplied them.</p>
+
+      <p>Without that chain, replay becomes guesswork. We can run the same prompt and receive a plausible answer, but plausibility is not reconstruction. A replay that produces a different recommendation without showing which input changed is not an audit trail. It is another execution.</p>
+
+      <p>This distinction also changes how we think about governance. Human oversight is often described as a person approving the final output. That is inadequate when the person cannot inspect the state that produced the output. Approval becomes ceremonial if the reviewer sees only a recommendation and not the permissions, evidence, and workflow conditions behind it.</p>
+
+      <p>A trustworthy agent needs a state record that makes its operating context legible.</p>
+
+      <h2>What reconstructable state should contain</h2>
+
+      <p>We should model agent state as a versioned execution envelope rather than a folder of files. At minimum, that envelope should capture:</p>
+
+      <pre><code>agent identity and adapter
+model and model configuration
+prompt and policy versions
+tool definitions and permission grants
+retrieved documents and source versions
+workflow step and pending transitions
+inputs, outputs, and tool responses
+human approvals and overrides
+external side effects and correlation IDs
+timestamps, hashes, and environment metadata</code></pre>
+
+      <p>The goal is not to store every token forever. The goal is to preserve enough evidence to answer three operational questions:</p>
+
+      <ol>
+        <li>What did the agent know?</li>
+        <li>What was it allowed to do?</li>
+        <li>What had it already changed?</li>
+      </ol>
+
+      <p>Those questions should remain answerable after a model upgrade, a workflow migration, a vendor change, or a long gap between executions.</p>
+
+      <p>For technical leaders, this suggests a more useful readiness test than asking whether an agent can complete a task autonomously. Ask whether a different team can reconstruct the agent's operating state six months later, with the original permissions and inputs clearly separated from the current environment.</p>
+
+      <p>If the answer is no, scaling the agent increases operational ambiguity faster than it increases capability.</p>
+
+      <h2>Revisit rollback as a state reconstruction problem</h2>
+
+      <p>Our earlier post, <a href="/blog/your-ai-rollback-strategy-is-more-broken-than-you-think">Your AI Rollback Strategy Is More Broken Than You Think</a>, argued that reverting code does not necessarily revert an agent's behavior. The next step is more specific: rollback should restore a trusted decision state, not simply an older software version.</p>
+
+      <p>Suppose an agent has processed thousands of lease inquiries and updated downstream records. Restoring an old container does not restore the knowledge boundaries, tool permissions, approvals, or pending workflow transitions that existed before a change. It may even create a second inconsistency by applying old logic to new records.</p>
+
+      <p>A state-aware rollback therefore needs boundaries. Which executions are eligible for replay? Which side effects must remain? Which records require human review? Which permissions should be reissued? Which external data versions are required?</p>
+
+      <p>This is why snapshots need semantic metadata. A snapshot named <code>pre-deploy-abc123</code> is useful for automation, but insufficient for operations unless it also identifies the agent, adapter, workflow, policy set, tool graph, and data references that define the execution context.</p>
+
+      <h2>What to do before expanding agent deployment</h2>
+
+      <p>Before approving another production agent, build a reconstruction test into the deployment process. Choose a real execution, remove access to the live environment, and ask an engineer who did not operate the system to reproduce the decision from the recorded state.</p>
+
+      <p>Measure the result:</p>
+
+      <ul>
+        <li>Can they identify every input that influenced the outcome?</li>
+        <li>Can they distinguish retrieved context from generated content?</li>
+        <li>Can they determine which permissions were active?</li>
+        <li>Can they reproduce the workflow path without triggering live side effects?</li>
+        <li>Can they explain any difference between the original and replayed result?</li>
+      </ul>
+
+      <p>Treat missing answers as infrastructure gaps, not documentation tasks.</p>
+
+      <p>Then set explicit retention and recovery objectives for agent state. A customer-support agent may need minutes of recovery point granularity. A property underwriting workflow may need immutable evidence for every material recommendation. A long-running research agent may need checkpointed memory and pending-task state so work can resume without silently repeating actions.</p>
+
+      <p>The correct design depends on the workflow, but the principle is stable: define what must be reconstructable before defining how much autonomy to grant.</p>
+
+      <h2>The strategic implication</h2>
+
+      <p>The Uniti funding round is a useful signal, but not because another agentic AI company raised capital. It shows that agents are moving closer to systems where decisions have financial, operational, and regulatory consequences.</p>
+
+      <p>That changes the infrastructure question. We are no longer asking only whether an agent can act. We are asking whether the organization can reproduce what it knew, what it changed, and what it was authorized to access at the moment it acted.</p>
+
+      <p>SaveState helps teams capture and restore that operational context across supported agent platforms, so state becomes an explicit production artifact instead of scattered evidence.</p>
+
+      <p>Before your next agent scales, run the reconstruction test. If you cannot recreate its operating state, you are not ready to trust its next decision.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. Built for reliable AI systems.</p>
+  </div>
+</footer>
+
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/unitis-12m-raise-needs-a-state-layer" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
+</body>
+</html>
