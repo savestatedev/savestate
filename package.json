@@ -1,7 +1,7 @@
 {
   "name": "@savestate/cli",
   "version": "0.9.0",
-  "description": "Your AI's memory. Yours. The portable, encrypted memory layer for ChatGPT, Claude, Gemini, and any agent — cross-platform search, MCP runtime, open archive format.",
+  "description": "Your AI's memory. Yours. The portable, encrypted memory layer for ChatGPT, Claude, Gemini, and any agent \u2014 cross-platform search, MCP runtime, open archive format.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -79,7 +79,9 @@
     },
     "@modelcontextprotocol/sdk": {
       "hono": "4.12.34",
-      "@hono/node-server": "1.19.17"
+      "@hono/node-server": "1.19.17",
+      "express-rate-limit": "8.6.2",
+      "ip-address": "10.5.0"
     }
   }
 }
