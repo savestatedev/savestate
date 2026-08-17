@@ -192,6 +192,9 @@ savestate migrate                     Migration wizard between platforms
   --to <platform>                    Target platform
   --list                             Show platform capabilities
   --dry-run                          Preview migration plan
+savestate import <file>               Import an encrypted agent container
+  --dry-run                          Preview without restoring
+  -p, --passphrase <pass>            Passphrase for decryption
 
 savestate trace list                  List Askable Echoes trace runs
   --json                             Output as JSON

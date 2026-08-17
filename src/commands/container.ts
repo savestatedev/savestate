@@ -169,9 +169,25 @@ export interface RestoreOptions {
   keyfile?: string;
   merge?: boolean;
   replace?: boolean;
+  dryRun?: boolean;
 }
 
-async function importState(options: RestoreOptions) {
+export interface ImportResult {
+  dryRun: boolean;
+  restored: boolean;
+  agentId: string;
+  mode: RestoreMode;
+  created: string;
+  components: string[];
+}
+
+function listRestoredComponents(parsedState: Record<string, unknown>): string[] {
+  return Object.keys(parsedState).filter(
+    (key) => key !== 'agentId' && key !== 'version' && key !== 'exportedAt',
+  );
+}
+
+export async function importState(options: RestoreOptions): Promise<ImportResult | undefined> {
   try {
     const { in: inFile, passphrase, keyfile } = options;
     
@@ -243,12 +259,33 @@ async function importState(options: RestoreOptions) {
       process.exit(1);
     }
     
-    // 3. Restore state
+    const parsedState = JSON.parse(decryptedState.toString()) as Record<string, unknown>;
+    const components = listRestoredComponents(parsedState);
+    const result: ImportResult = {
+      dryRun: !!options.dryRun,
+      restored: !options.dryRun,
+      agentId: manifest.agentId,
+      mode,
+      created: manifest.created,
+      components,
+    };
+
+    if (options.dryRun) {
+      console.log(`\nDRY RUN — no changes will be made`);
+      console.log(`  Agent: ${manifest.agentId}`);
+      console.log(`  Mode: ${mode}`);
+      console.log(`  Original export: ${manifest.created}`);
+      console.log(`  Components: ${components.join(', ') || 'none'}`);
+      console.log(`  This was a dry run. No agent state was restored.`);
+      return result;
+    }
+
     await restoreAgentState(manifest.agentId, decryptedState.toString(), mode);
 
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
     console.log(`  Original export: ${manifest.created}`);
+    return result;
   } catch (error: any) {
     console.error('Restore failed:', error.message);
     process.exit(1);
@@ -288,12 +325,14 @@ export function registerContainerCommands(program: Command) {
     .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase)')
     .option('--merge', 'Merge with existing state (default: replace)')
     .option('--replace', 'Replace existing state completely')
+    .option('--dry-run', 'Show what would be imported without restoring')
     .action((file, opts) => importState({
       in: file,
       passphrase: opts.passphrase,
       keyfile: opts.keyfile,
       merge: opts.merge,
       replace: opts.replace,
+      dryRun: opts.dryRun,
     }));
 
   const container = program
@@ -330,11 +369,13 @@ export function registerContainerCommands(program: Command) {
     .option('-k, --keyfile <path>', 'Keyfile for decryption')
     .option('--merge', 'Merge with existing state')
     .option('--replace', 'Replace existing state (default)')
+    .option('--dry-run', 'Show what would be imported without restoring')
     .action((opts) => importState({
       in: opts.in,
       passphrase: opts.passphrase,
       keyfile: opts.keyfile,
       merge: opts.merge,
       replace: opts.replace,
+      dryRun: opts.dryRun,
     }));
 }
