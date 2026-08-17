@@ -377,6 +377,18 @@ export function packToArchive(files: Map<string, Buffer>): Buffer {
   return gzipSync(tar);
 }
 
+function isSafeArchivePath(path: string): boolean {
+  if (!path || path.includes('\0')) {
+    return false;
+  }
+  const normalized = path.replace(/\\/g, '/');
+  if (normalized.startsWith('/') || /^[a-zA-Z]:/.test(normalized)) {
+    return false;
+  }
+  const parts = normalized.split('/');
+  return parts.every((part) => part !== '' && part !== '..');
+}
+
 /**
  * Unpack a tar.gz buffer into a file map.
  *
@@ -392,7 +404,7 @@ export async function unpackFromArchive(archive: Buffer): Promise<Map<string, Bu
       const chunks: Buffer[] = [];
       entry.on('data', (chunk: Buffer) => chunks.push(chunk));
       entry.on('end', () => {
-        if (entry.type === 'File') {
+        if (entry.type === 'File' && isSafeArchivePath(entry.path)) {
           files.set(entry.path, Buffer.concat(chunks));
         }
       });
