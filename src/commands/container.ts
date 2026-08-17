@@ -1,7 +1,18 @@
 import { Command } from 'commander';
 import { promises as fs } from 'fs';
+import { join, resolve } from 'node:path';
 import { encrypt, decrypt, KeySource } from '../container/crypto.js';
 import { createHash } from 'node:crypto';
+
+const TARGET_STATE_FILE = 'agent_state.json';
+
+async function writeTargetState(targetDir: string, state: string): Promise<string> {
+  const resolved = resolve(targetDir);
+  await fs.mkdir(resolved, { recursive: true });
+  const outFile = join(resolved, TARGET_STATE_FILE);
+  await fs.writeFile(outFile, state);
+  return outFile;
+}
 
 interface ComponentSelection {
   personality: boolean;
@@ -193,6 +204,7 @@ export interface RestoreOptions {
   merge?: boolean;
   replace?: boolean;
   dryRun?: boolean;
+  target?: string;
 }
 
 export interface ImportResult {
@@ -202,6 +214,7 @@ export interface ImportResult {
   mode: RestoreMode;
   created: string;
   components: string[];
+  target?: string;
 }
 
 function listRestoredComponents(parsedState: Record<string, unknown>): string[] {
@@ -282,7 +295,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       process.exit(1);
     }
     
-    const parsedState = JSON.parse(decryptedState.toString()) as Record<string, unknown>;
+    const stateText = decryptedState.toString();
+    const parsedState = JSON.parse(stateText) as Record<string, unknown>;
     const components = listRestoredComponents(parsedState);
     const result: ImportResult = {
       dryRun: !!options.dryRun,
@@ -303,11 +317,21 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       return result;
     }
 
-    await restoreAgentState(manifest.agentId, decryptedState.toString(), mode);
+    let targetPath: string | undefined;
+    if (options.target) {
+      targetPath = await writeTargetState(options.target, stateText);
+      result.target = targetPath;
+      console.log(`Wrote agent state to ${targetPath}`);
+    }
+
+    await restoreAgentState(manifest.agentId, stateText, mode);
 
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
     console.log(`  Original export: ${manifest.created}`);
+    if (targetPath) {
+      console.log(`  Target: ${targetPath}`);
+    }
     return result;
   } catch (error: any) {
     console.error('Restore failed:', error.message);
@@ -356,6 +380,7 @@ export function registerContainerCommands(program: Command) {
     .option('--merge', 'Merge with existing state (default: replace)')
     .option('--replace', 'Replace existing state completely')
     .option('--dry-run', 'Show what would be imported without restoring')
+    .option('--target <dir>', 'Write restored agent state to this directory')
     .action((file, opts) => importState({
       in: file,
       passphrase: opts.passphrase,
@@ -363,6 +388,7 @@ export function registerContainerCommands(program: Command) {
       merge: opts.merge,
       replace: opts.replace,
       dryRun: opts.dryRun,
+      target: opts.target,
     }));
 
   const container = program
@@ -407,6 +433,7 @@ export function registerContainerCommands(program: Command) {
     .option('--merge', 'Merge with existing state')
     .option('--replace', 'Replace existing state (default)')
     .option('--dry-run', 'Show what would be imported without restoring')
+    .option('--target <dir>', 'Write restored agent state to this directory')
     .action((opts) => importState({
       in: opts.in,
       passphrase: opts.passphrase,
@@ -414,5 +441,6 @@ export function registerContainerCommands(program: Command) {
       merge: opts.merge,
       replace: opts.replace,
       dryRun: opts.dryRun,
+      target: opts.target,
     }));
 }

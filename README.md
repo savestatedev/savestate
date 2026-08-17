@@ -199,6 +199,7 @@ savestate export                      Export an encrypted agent container
 savestate import <file>               Import an encrypted agent container
   --dry-run                          Preview without restoring
   -p, --passphrase <pass>            Passphrase for decryption
+  --target <dir>                     Write restored agent state to this directory
 
 savestate trace list                  List Askable Echoes trace runs
   --json                             Output as JSON
