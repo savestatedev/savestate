@@ -72,5 +72,10 @@
     "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.8.3",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "@vercel/node": {
+      "path-to-regexp": "6.3.0"
+    }
   }
 }
