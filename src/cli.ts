@@ -366,6 +366,7 @@ program
   .description('Verify integrity of a .savestate file')
   .option('-p, --passphrase <pass>', 'Passphrase for verification')
   .option('-k, --keyfile <path>', 'Keyfile for verification (alternative to passphrase)')
+  .option('--json', 'Output as JSON')
   .action(verifyCommand);
 
 // ─── savestate memory ────────────────────────────────────────
