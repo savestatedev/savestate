@@ -198,6 +198,19 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    Array.isArray(manifest.payloads) &&
+    manifest.payloads.some(
+      (entry: { name?: unknown }) => typeof entry?.name !== 'string' || entry.name.trim() === '',
+    )
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: missing payload name',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
