@@ -22,6 +22,7 @@ export interface VerifyResult {
     agentId: string;
     created: string;
     formatVersion: number;
+    description?: string;
   };
   components?: string[];
 }
@@ -64,6 +65,15 @@ function resolveKeyDerivation(manifest: { encryption?: { keyDerivation?: unknown
     return named;
   }
   return DEFAULT_VERIFY_KDF;
+}
+
+
+function optionalDescription(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const description = value.trim();
+  return description.length > 0 ? description : undefined;
 }
 
 const STATE_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
@@ -522,6 +532,8 @@ export async function verifyContainer(
     };
   }
 
+  const description = optionalDescription(manifest.description);
+
   return {
     status: 'valid',
     message: 'State file is valid and verified',
@@ -534,6 +546,7 @@ export async function verifyContainer(
       agentId: manifest.agentId,
       created: manifest.created,
       formatVersion: manifest.formatVersion,
+      ...(description ? { description } : {}),
     },
     components,
   };
@@ -561,6 +574,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         lines.push(`   Agent: ${result.manifest.agentId}`);
         lines.push(`   Created: ${result.manifest.created}`);
         lines.push(`   Format: v${result.manifest.formatVersion}`);
+        if (result.manifest.description) {
+          lines.push(`   Description: ${result.manifest.description}`);
+        }
       }
       lines.push(
         `   Components: ${result.components && result.components.length > 0 ? result.components.join(', ') : 'none'}`,
