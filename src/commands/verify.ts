@@ -561,6 +561,20 @@ export async function verifyContainer(
     };
   }
 
+  if (
+    'encryption' in manifest &&
+    manifest.encryption &&
+    typeof manifest.encryption === 'object' &&
+    !Array.isArray(manifest.encryption) &&
+    'algorithm' in manifest.encryption &&
+    typeof manifest.encryption.algorithm !== 'string'
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: encryption algorithm must be a string',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
