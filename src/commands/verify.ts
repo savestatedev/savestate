@@ -440,6 +440,18 @@ export async function verifyContainer(
     }
   }
 
+
+  if (
+    'created' in manifest &&
+    typeof manifest.created === 'string' &&
+    manifest.created.trim() === ''
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: created timestamp must not be empty',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
