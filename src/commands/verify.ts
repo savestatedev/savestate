@@ -312,6 +312,22 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    Array.isArray(manifest.payloads) &&
+    manifest.payloads.some(
+      (entry: { byteLength?: unknown }) =>
+        entry?.byteLength !== undefined &&
+        entry.byteLength !== null &&
+        typeof entry.byteLength !== 'number',
+    )
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: payload byte length must be a number',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
