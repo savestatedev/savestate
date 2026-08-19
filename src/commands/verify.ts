@@ -16,6 +16,7 @@ export interface VerifyResult {
   checksum?: string;
   payloadBytes?: number;
   contentType?: string;
+  encryptionAlgorithm?: string;
   manifest?: {
     agentId: string;
     created: string;
