@@ -193,6 +193,19 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    manifest !== null &&
+    typeof manifest === 'object' &&
+    !Array.isArray(manifest) &&
+    !('formatVersion' in manifest)
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: formatVersion is required',
+    };
+  }
+
   // Validate manifest structure
   if (!manifest.formatVersion || !manifest.agentId || !manifest.payloads) {
     return {
