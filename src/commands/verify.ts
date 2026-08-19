@@ -328,6 +328,14 @@ export async function verifyContainer(
     };
   }
 
+
+  if (!Array.isArray(manifest.payloads)) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: payloads must be an array',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
