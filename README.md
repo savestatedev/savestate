@@ -192,6 +192,10 @@ savestate migrate                     Migration wizard between platforms
   --to <platform>                    Target platform
   --list                             Show platform capabilities
   --dry-run                          Preview migration plan
+savestate export                      Export an encrypted agent container
+  -a, --agent <id>                   Agent ID to export
+  -o, --output <file>                Output file path
+  --force                            Overwrite an existing output file
 savestate import <file>               Import an encrypted agent container
   --dry-run                          Preview without restoring
   -p, --passphrase <pass>            Passphrase for decryption

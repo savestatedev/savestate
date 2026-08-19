@@ -89,9 +89,16 @@ export interface ExportOptions {
   includeMemory?: boolean;
   includeTools?: boolean;
   includePreferences?: boolean;
+  force?: boolean;
 }
 
-async function exportState(options: ExportOptions) {
+export interface ExportResult {
+  written: boolean;
+  out: string;
+  overwritten: boolean;
+}
+
+export async function exportState(options: ExportOptions): Promise<ExportResult> {
   try {
     const { agent, out, passphrase, keyfile } = options;
     
@@ -107,6 +114,20 @@ async function exportState(options: ExportOptions) {
         'Error: Cannot use both --passphrase and --keyfile. Choose one.',
       );
       process.exit(1);
+    }
+
+    let existed = false;
+    try {
+      await fs.access(out);
+      existed = true;
+    } catch {
+      existed = false;
+    }
+    if (existed && !options.force) {
+      console.error(
+        `Error: Output file already exists: ${out}. Use --force to overwrite.`,
+      );
+      return { written: false, out, overwritten: false };
     }
 
     const keySource: KeySource = keyfile ? { keyfile } : { passphrase };
@@ -157,9 +178,11 @@ async function exportState(options: ExportOptions) {
 
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
+    return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
     process.exit(1);
+    throw error;
   }
 }
 
@@ -305,16 +328,23 @@ export function registerContainerCommands(program: Command) {
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
-    .action((opts) => exportState({
-      agent: opts.agent,
-      out: opts.output,
-      passphrase: opts.passphrase,
-      keyfile: opts.keyfile,
-      includePersonality: opts.includePersonality,
-      includeMemory: opts.includeMemory,
-      includeTools: opts.includeTools,
-      includePreferences: opts.includePreferences,
-    }));
+    .option('--force', 'Overwrite an existing output file')
+    .action(async (opts) => {
+      const result = await exportState({
+        agent: opts.agent,
+        out: opts.output,
+        passphrase: opts.passphrase,
+        keyfile: opts.keyfile,
+        includePersonality: opts.includePersonality,
+        includeMemory: opts.includeMemory,
+        includeTools: opts.includeTools,
+        includePreferences: opts.includePreferences,
+        force: opts.force,
+      });
+      if (!result.written) {
+        process.exit(1);
+      }
+    });
 
   // Top-level import command (Issue #153)
   // Note: 'restore' is already used for snapshot restoration in cli.ts
@@ -350,16 +380,23 @@ export function registerContainerCommands(program: Command) {
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
-    .action((opts) => exportState({
-      agent: opts.agent,
-      out: opts.out,
-      passphrase: opts.passphrase,
-      keyfile: opts.keyfile,
-      includePersonality: opts.includePersonality,
-      includeMemory: opts.includeMemory,
-      includeTools: opts.includeTools,
-      includePreferences: opts.includePreferences,
-    }));
+    .option('--force', 'Overwrite an existing output file')
+    .action(async (opts) => {
+      const result = await exportState({
+        agent: opts.agent,
+        out: opts.out,
+        passphrase: opts.passphrase,
+        keyfile: opts.keyfile,
+        includePersonality: opts.includePersonality,
+        includeMemory: opts.includeMemory,
+        includeTools: opts.includeTools,
+        includePreferences: opts.includePreferences,
+        force: opts.force,
+      });
+      if (!result.written) {
+        process.exit(1);
+      }
+    });
 
   container
     .command('import')
