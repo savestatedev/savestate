@@ -561,6 +561,22 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    manifest.encryption &&
+    typeof manifest.encryption === 'object' &&
+    !Array.isArray(manifest.encryption) &&
+    'algorithm' in manifest.encryption &&
+    typeof manifest.encryption.algorithm === 'string' &&
+    manifest.encryption.algorithm.trim() !== '' &&
+    manifest.encryption.algorithm !== 'AES-256-GCM'
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: encryption algorithm is not supported',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
