@@ -15,11 +15,54 @@ async function writeTargetState(targetDir: string, state: string): Promise<strin
   return outFile;
 }
 
-interface ComponentSelection {
+export const INCLUDE_PATHS = ['personality', 'memory', 'tools', 'preferences'] as const;
+
+export type IncludePath = (typeof INCLUDE_PATHS)[number];
+
+export interface ComponentSelection {
   personality: boolean;
   memory: boolean;
   tools: boolean;
   preferences: boolean;
+}
+
+export function parseIncludePaths(raw?: string): { components: ComponentSelection } | { error: string } {
+  if (raw === undefined) {
+    return {
+      components: {
+        personality: true,
+        memory: true,
+        tools: true,
+        preferences: true,
+      },
+    };
+  }
+
+  const parts = raw
+    .split(',')
+    .map((part) => part.trim().toLowerCase())
+    .filter((part) => part.length > 0);
+
+  if (parts.length === 0) {
+    return { error: 'Error: --include requires at least one path.' };
+  }
+
+  const unknown = parts.filter((part) => !INCLUDE_PATHS.includes(part as IncludePath));
+  if (unknown.length > 0) {
+    return {
+      error: `Error: Unknown include path: ${unknown[0]}. Allowed: ${INCLUDE_PATHS.join(', ')}.`,
+    };
+  }
+
+  const selected = new Set(parts);
+  return {
+    components: {
+      personality: selected.has('personality'),
+      memory: selected.has('memory'),
+      tools: selected.has('tools'),
+      preferences: selected.has('preferences'),
+    },
+  };
 }
 
 // Placeholder for actual agent state loading
@@ -97,6 +140,7 @@ export interface ExportOptions {
   out: string;
   passphrase?: string;
   keyfile?: string;
+  include?: string;
   includePersonality?: boolean;
   includeMemory?: boolean;
   includeTools?: boolean;
@@ -153,15 +197,26 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
 
     const keySource = await resolveKeySource(passphrase, keyfile, { confirm: true });
 
-    // Determine which components to include (default: all)
-    const includeAll = !options.includePersonality && !options.includeMemory && 
-                       !options.includeTools && !options.includePreferences;
-    const components: ComponentSelection = {
-      personality: includeAll || !!options.includePersonality,
-      memory: includeAll || !!options.includeMemory,
-      tools: includeAll || !!options.includeTools,
-      preferences: includeAll || !!options.includePreferences,
-    };
+    let components: ComponentSelection;
+    if (options.include !== undefined) {
+      const parsed = parseIncludePaths(options.include);
+      if ('error' in parsed) {
+        console.error(parsed.error);
+        process.exit(1);
+      }
+      components = parsed.components;
+      const included = INCLUDE_PATHS.filter((path) => components[path]);
+      console.log(`Including paths: ${included.join(', ')}`);
+    } else {
+      const includeAll = !options.includePersonality && !options.includeMemory && 
+                         !options.includeTools && !options.includePreferences;
+      components = {
+        personality: includeAll || !!options.includePersonality,
+        memory: includeAll || !!options.includeMemory,
+        tools: includeAll || !!options.includeTools,
+        preferences: includeAll || !!options.includePreferences,
+      };
+    }
 
     reportContainerProgress(`Loading state for agent ${agent}`);
     const agentState = await getAgentState(agent, components);
@@ -345,11 +400,12 @@ export function registerContainerCommands(program: Command) {
   // Top-level export command (Issue #152)
   program
     .command('export')
-    .description('Export agent state to an encrypted .savestate file. Prints byte-size progress.')
+    .description('Export agent state to an encrypted .savestate file with optional path selection. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export')
     .option('-o, --output <file>', 'Output file path', 'agent.savestate')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
+    .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -361,6 +417,7 @@ export function registerContainerCommands(program: Command) {
         out: opts.output,
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
+        include: opts.include,
         includePersonality: opts.includePersonality,
         includeMemory: opts.includeMemory,
         includeTools: opts.includeTools,
@@ -399,11 +456,12 @@ export function registerContainerCommands(program: Command) {
 
   container
     .command('export')
-    .description('Export agent state to an encrypted file. Prints byte-size progress.')
+    .description('Export agent state to an encrypted file with optional path selection. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export')
     .requiredOption('-o, --out <file>', 'Output file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption')
+    .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -415,6 +473,7 @@ export function registerContainerCommands(program: Command) {
         out: opts.out,
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
+        include: opts.include,
         includePersonality: opts.includePersonality,
         includeMemory: opts.includeMemory,
         includeTools: opts.includeTools,

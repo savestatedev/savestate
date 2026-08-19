@@ -196,6 +196,7 @@ savestate export                      Export an encrypted agent container
   -a, --agent <id>                   Agent ID to export
   -o, --output <file>                Output file path
   --force                            Overwrite an existing output file
+  --include <paths>                  Only pack named state paths
   -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
                                      Prints load, encrypt, and write byte sizes
 savestate import <file>               Import an encrypted agent container
