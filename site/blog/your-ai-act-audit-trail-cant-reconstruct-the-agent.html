@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your AI Act Audit Trail Can't Reconstruct the Agent - SaveState</title>
+<meta name="description" content="Article 12 logs prove what an agent did. They do not restore memory, tools, or policy at time T. Oversight without reconstructability is a paper control.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">August 19, 2026</div>
+      <h1>Your AI Act Audit Trail Can't Reconstruct the Agent</h1>
+      <p class="subtitle">Article 12 logs prove what an agent did. They do not restore memory, tools, or policy at time T. Oversight without reconstructability is a paper control.</p>
+    </header>
+
+    <div class="article-content">
+      <p>Two weeks after 2 August 2026, the date most high-risk obligations in the EU AI Act started applying, the artifact showing up in our reviews is always the same: a "complete" LLM and tool-call log, labeled Article 12 record-keeping, with a human-approval checkbox taped on as Article 14.</p>
+
+      <p>That package will not reconstruct the agent you are accountable for.</p>
+
+      <p>If you cannot restore the agent to the minute of the incident, you cannot oversee it. That is an operational test, not a legal opinion. Article 12 asks you to keep automatic logs so operation can be verified later. Article 14 asks a human to understand, intervene, and stop the system. Neither one ships you the runtime. A transcript of what the model said and which tools it invoked is evidence of an event. It is not the event-producing system.</p>
+
+      <h2>Logging is not reconstructability</h2>
+
+      <p>Most AI Act explainers collapse three jobs into one word: logging.</p>
+
+      <ol>
+        <li><strong>Provenance.</strong> What tokens went in, what tools fired, what the model returned.</li>
+        <li><strong>Accountability.</strong> Who was supposed to be watching, and whether they had a kill switch.</li>
+        <li><strong>Reconstructability.</strong> Can you stand the same agent back up, with the same memory, tool grants, MCP servers, policy pack, and identity, as it existed at time T.</li>
+      </ol>
+
+      <p>Vendors sell you (1) and (2) as an audit trail. You need (3) the first time a high-risk agent books a vendor, mutates a ticket queue, or pushes a config you then have to explain to a market-surveillance authority, a customer, or your own board.</p>
+
+      <p>A complete LangSmith, Arize Phoenix, or OpenTelemetry gen-AI span can be perfect and still leave you blind. The span will show <code>tools.slack.post_message</code> at 14:03:12 UTC. It will not show that long-term memory absorbed a stale "always CC legal@" note from a RAG chunk deleted at 13:51. It will not show that MCP server <code>github-prod</code> was swapped for <code>github-staging</code> in session bootstrap. It will not show that the system-prompt hash in production no longer matches the prompt your oversight reviewer signed last Thursday.</p>
+
+      <p>You cannot oversee a system you cannot put back on the table.</p>
+
+      <p>This is a category error, not a missing field in the log schema. Agents are not stateless functions. They accumulate memory, credentials, tool allowlists, and server context. Those objects drift independently of the chat transcript. Treat the transcript as the system and you get a beautiful post-incident timeline plus an agent you cannot rewind.</p>
+
+      <p>We have already argued that <a href="/blog/why-backup-strategies-are-the-new-ai-imperative">backup strategies are now an AI operating requirement</a>, not a side quest. The Act made the reconstructability gap a regulated one. The same gap shows up when <a href="/blog/why-ignoring-ai-state-backups-could-cost-you-in-cybersecurity">state is the actual blast radius in a security event</a>. The failure mode here is different: you can pass an Article 12 checklist and still fail the only oversight test that matters.</p>
+
+      <h2>What Articles 12 and 14 demand of operators</h2>
+
+      <p>We are not lawyers. Read this as a platform person who has to run the thing.</p>
+
+      <p>Article 12, for high-risk systems, is automatic logging of events over the system's lifetime so you can verify operation, monitor, and investigate. Capture inputs, outputs, and the identity of the people involved. Do that. It is necessary. It is not sufficient.</p>
+
+      <p>Article 14 is the one teams pretend they have covered with a <code>human_in_the_loop: true</code> flag in workflow YAML. Oversight means a human can understand the system's output, override it, interrupt it, and keep that ability as the system changes. If the agent has mutated its own memory, rotated a tool grant, or loaded a different MCP context since the last review, your human is overseeing a ghost.</p>
+
+      <p>Article 15 sits next to both: accuracy, robustness, cybersecurity. You cannot claim robustness of a system whose operational state you cannot reproduce.</p>
+
+      <p>The compliance market's answer has been bigger logs. More spans. A SIEM parser for tool calls. A PDF that says "human oversight: enabled." That is checkbox work. It produces a file you can show. It does not produce an agent you can restore.</p>
+
+      <p>Here is the split we use in reviews:</p>
+
+      <ul>
+        <li><strong>What the model said / which tool ran</strong> answers what happened. It does not answer why the agent was in a position to do it.</li>
+        <li><strong>Approver identity + timestamp</strong> answers who clicked. It does not answer what they were actually looking at.</li>
+        <li><strong>Model name + temperature</strong> answers which weights. It does not answer which memory, tools, MCP, policy, or identity.</li>
+        <li><strong>"Kill switch exists"</strong> answers that you have a button. It does not answer whether you can put the pre-incident agent back.</li>
+      </ul>
+
+      <p>If that last column is empty in your stack, you do not have oversight. You have a diary.</p>
+
+      <p>Look at a typical event with no snapshot binding:</p>
+
+      <pre><code>{
+  "event": "tool.slack.post_message",
+  "ts": "2026-08-12T14:03:12Z",
+  "model": "claude-opus-4",
+  "span_id": "8f2a91c",
+  "snapshot_id": null
+}</code></pre>
+
+      <p><code>snapshot_id: null</code> is the whole problem. The log is complete. The agent is gone.</p>
+
+      <h2>The state that never lands in the log</h2>
+
+      <p>For an autonomous agent, the regulated asset is not the prompt. It is operational state at time T:</p>
+
+      <ul>
+        <li><strong>Memory.</strong> Vector stores, thread summaries, preferences, scratchpads, and any write-back the agent did to its own notes. This is why two identical prompts produce different actions a week apart.</li>
+        <li><strong>Tool permissions.</strong> Not the tool schema. The live grant: which Slack workspace, which GitHub org, whether <code>exec</code> was enabled, whether the calendar tool could create as well as read.</li>
+        <li><strong>MCP / server context.</strong> Which servers were mounted, which tokens they held, which resources they had enumerated. MCP makes this worse, because the agent's world can change when a server reconnects without a single line in your LLM log.</li>
+        <li><strong>Policy version.</strong> The system prompt, guardrail pack, allow/deny lists, and the git SHA (or the absence of one) of whatever you call "the policy."</li>
+        <li><strong>Identity.</strong> Service account, user-on-behalf-of, API key scope, tenant. Agents do not act as "the model." They act as a principal.</li>
+      </ul>
+
+      <p>None of that is reliably in a chat log. Some of it lives in a secrets manager, some in a Cursor, Claude, or OpenClaw config directory, some in a running process, some in a SaaS control plane you do not own. If you do not snapshot it under your control, you are betting that every vendor's retention policy matches your investigation window. That bet is how oversight becomes a paper control.</p>
+
+      <h2>Restore to the minute, or stop claiming oversight</h2>
+
+      <p>Stop asking "are we logging enough?" Ask: can we restore this agent to 14:03 UTC on the day it did the thing we now have to explain?</p>
+
+      <p>Run that test. Pick a production agent. Pick a timestamp from last week. Try to stand up the exact memory corpus at that minute, the tool grant set (including scopes since rotated), the MCP server list and advertised resources, the policy pack hashed at that minute, and the identity the agent was using. If any of those five is "we would reconstruct from logs and hope," you do not have Article 14 in any operational sense. You have a narrative.</p>
+
+      <p>Treat agent state as a versioned object, the same way you treat a database backup or a VM snapshot. Name it. Timestamp it. Store it somewhere you own. Snapshot before policy changes, before tool-grant changes, and on a clock; hourly is not crazy for agents that write memory continuously. Bind every high-risk action in the log to a snapshot ID. The log says what happened; the snapshot is the system that happened. Make restore a rehearsed path, not a wiki page. And do not confuse vendor traces (LangSmith, provider dashboards, CloudTrail for the Bedrock call) with customer-owned state. Those traces sample, expire, or legally belong to someone else.</p>
+
+      <p>You can do the snapshotting with tar and object storage if your agents are boring. Most are not. They span OpenClaw, Claude, Cursor, local MCP, and a pile of JSON that nobody wants to be on-call for. SaveState captures that pile (memory, config, adapter state) so you can restore to a named point instead of reconstructing from a transcript.</p>
+
+      <p>One sentence for the next steering committee: an audit trail that cannot boot the agent is not oversight. Prove you can restore to the minute, or stop claiming you can interrupt a system you can no longer instantiate.</p>
+
+      <div class="cta-box">
+        <h3>Restore the agent, not just the log</h3>
+        <p>SaveState snapshots agent memory, config, and adapter state so you can stand the system back up at time T.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn" target="_blank" rel="noopener">Get Started</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 SaveState</p>
+  </div>
+</footer>
+
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/your-ai-act-audit-trail-cant-reconstruct-the-agent" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
+</body>
+</html>
