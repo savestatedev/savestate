@@ -98,6 +98,17 @@ export async function verifyContainer(
     };
   }
 
+  if (
+    'agentId' in manifest &&
+    typeof manifest.agentId === 'string' &&
+    manifest.agentId.trim() === ''
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: agentId must not be empty',
+    };
+  }
+
   // Validate manifest structure
   if (!manifest.formatVersion || !manifest.agentId || !manifest.payloads) {
     return {
