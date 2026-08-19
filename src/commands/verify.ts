@@ -253,6 +253,18 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    typeof manifest.created === 'string' &&
+    manifest.created.trim() !== '' &&
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.test(manifest.created)
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: created timestamp must be ISO 8601',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
