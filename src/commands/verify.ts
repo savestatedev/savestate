@@ -13,12 +13,17 @@ export type VerifyStatus = 'valid' | 'corrupted' | 'wrong_password' | 'invalid_f
 export interface VerifyResult {
   status: VerifyStatus;
   message: string;
+  checksum?: string;
   manifest?: {
     agentId: string;
     created: string;
     formatVersion: number;
   };
   components?: string[];
+}
+
+export function formatVerifyChecksum(checksum: string): string {
+  return `   Checksum: ${checksum}`;
 }
 
 const STATE_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
@@ -210,6 +215,7 @@ export async function verifyContainer(
   return {
     status: 'valid',
     message: 'State file is valid and verified',
+    checksum: calculatedHash,
     manifest: {
       agentId: manifest.agentId,
       created: manifest.created,
@@ -245,6 +251,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       lines.push(
         `   Components: ${result.components && result.components.length > 0 ? result.components.join(', ') : 'none'}`,
       );
+      if (result.checksum) {
+        lines.push(formatVerifyChecksum(result.checksum));
+      }
       return lines.join('\n');
     }
     case 'wrong_password': {
