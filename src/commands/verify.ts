@@ -239,6 +239,20 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    Array.isArray(manifest.payloads) &&
+    manifest.payloads.some(
+      (entry: { sha256?: unknown }) =>
+        typeof entry?.sha256 !== 'string' || entry.sha256.trim() === '',
+    )
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: missing payload checksum',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
