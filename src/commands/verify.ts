@@ -208,6 +208,19 @@ export async function verifyContainer(
     };
   }
 
+  if (
+    Array.isArray(manifest.payloads) &&
+    manifest.payloads.some(
+      (entry: unknown) => entry === null || typeof entry !== 'object' || Array.isArray(entry),
+    )
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: each payload entry must be an object',
+    };
+  }
+
+
 
   if (
     Array.isArray(manifest.payloads) &&
