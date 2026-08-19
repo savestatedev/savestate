@@ -220,6 +220,20 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    manifest !== null &&
+    typeof manifest === 'object' &&
+    !Array.isArray(manifest) &&
+    typeof manifest.formatVersion === 'number' &&
+    !Number.isInteger(manifest.formatVersion)
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: formatVersion must be an integer',
+    };
+  }
+
   // Validate manifest structure
   if (!manifest.formatVersion || !manifest.agentId || !manifest.payloads) {
     return {
