@@ -204,6 +204,10 @@ savestate import <file>               Import an encrypted agent container
   -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
   --target <dir>                     Write restored agent state to this directory
                                      Prints read, decrypt, verify, and restore progress
+savestate verify <file>               Verify a .savestate file and list components
+  -p, --passphrase <pass>            Passphrase for verification
+  -k, --keyfile <path>               Keyfile for verification
+  --json                             Output as JSON
 
 savestate trace list                  List Askable Echoes trace runs
   --json                             Output as JSON
