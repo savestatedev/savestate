@@ -127,6 +127,12 @@ async function resolveKeySource(
   return { passphrase: await getPassphrase({ confirm: options?.confirm }) };
 }
 
+export function reportContainerProgress(phase: string, bytes?: number): string {
+  const message = bytes === undefined ? phase : `${phase} (${bytes} bytes)`;
+  console.log(message);
+  return message;
+}
+
 export async function exportState(options: ExportOptions): Promise<ExportResult> {
   try {
     const { agent, out, passphrase, keyfile } = options;
@@ -157,6 +163,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       preferences: includeAll || !!options.includePreferences,
     };
 
+    reportContainerProgress(`Loading state for agent ${agent}`);
     const agentState = await getAgentState(agent, components);
     const plaintext = Buffer.from(agentState);
 
@@ -175,6 +182,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     };
 
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    reportContainerProgress('Encrypting agent state', plaintext.length);
     const encryptedState = await encrypt(plaintext, keySource);
 
     // Magic header: 8 bytes "SAVESTAT" + 1 byte version + 7 bytes reserved = 16 bytes
@@ -191,6 +199,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       encryptedState,
     ]);
 
+    reportContainerProgress(`Writing ${out}`, finalBuffer.length);
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
     return { written: true, out, overwritten: existed };
@@ -244,6 +253,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     }
 
     const fileBuffer = await fs.readFile(inFile);
+    reportContainerProgress(`Reading ${inFile}`, fileBuffer.length);
 
     // 1. Read header and manifest
     const magic = fileBuffer.subarray(0, 8).toString('ascii');
@@ -264,6 +274,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
 
     // 2. Decrypt and verify
     const encryptedState = fileBuffer.subarray(manifestEnd);
+    reportContainerProgress('Decrypting agent state', encryptedState.length);
     let decryptedState: Buffer;
     try {
       decryptedState = await decrypt(encryptedState, keySource);
@@ -278,6 +289,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       process.exit(1);
     }
 
+    reportContainerProgress('Verifying integrity', decryptedState.length);
     const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
     if (calculatedHash !== payload.sha256) {
       console.error('Error: Integrity check failed. The file may be corrupted or tampered with.');
@@ -313,6 +325,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`Wrote agent state to ${targetPath}`);
     }
 
+    reportContainerProgress(`Restoring agent ${manifest.agentId}`);
     await restoreAgentState(manifest.agentId, stateText, mode);
 
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
@@ -332,7 +345,7 @@ export function registerContainerCommands(program: Command) {
   // Top-level export command (Issue #152)
   program
     .command('export')
-    .description('Export agent state to an encrypted .savestate file')
+    .description('Export agent state to an encrypted .savestate file. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export')
     .option('-o, --output <file>', 'Output file path', 'agent.savestate')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
@@ -363,7 +376,7 @@ export function registerContainerCommands(program: Command) {
   // Note: 'restore' is already used for snapshot restoration in cli.ts
   program
     .command('import <file>')
-    .description('Import agent state from an encrypted .savestate file')
+    .description('Import agent state from an encrypted .savestate file. Prints byte-size progress.')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase)')
     .option('--merge', 'Merge with existing state (default: replace)')
@@ -386,7 +399,7 @@ export function registerContainerCommands(program: Command) {
 
   container
     .command('export')
-    .description('Export agent state to an encrypted file.')
+    .description('Export agent state to an encrypted file. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export')
     .requiredOption('-o, --out <file>', 'Output file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
@@ -415,7 +428,7 @@ export function registerContainerCommands(program: Command) {
 
   container
     .command('import')
-    .description('Import agent state from an encrypted file.')
+    .description('Import agent state from an encrypted file. Prints byte-size progress.')
     .requiredOption('-i, --in <file>', 'Input file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption')
