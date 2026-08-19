@@ -75,6 +75,14 @@ export async function verifyContainer(
     };
   }
 
+  const reserved = fileBuffer.subarray(9, 16);
+  if (!reserved.every((byte) => byte === 0)) {
+    return {
+      status: 'invalid_format',
+      message: 'Reserved header bytes must be zero',
+    };
+  }
+
   // 3. Parse manifest
   let manifest: any;
   let manifestEnd: number;
