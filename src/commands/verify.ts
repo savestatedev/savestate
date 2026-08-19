@@ -17,6 +17,7 @@ export interface VerifyResult {
   payloadBytes?: number;
   contentType?: string;
   encryptionAlgorithm?: string;
+  keyDerivation?: string;
   manifest?: {
     agentId: string;
     created: string;
@@ -31,6 +32,38 @@ export function formatVerifyChecksum(checksum: string): string {
 
 export function formatVerifySize(payloadBytes: number): string {
   return `   Size: ${payloadBytes} bytes`;
+}
+
+export function formatVerifyContentType(contentType: string): string {
+  return `   Content-Type: ${contentType}`;
+}
+
+const DEFAULT_VERIFY_ENCRYPTION = 'AES-256-GCM';
+
+export function formatVerifyEncryption(algorithm: string): string {
+  return `   Encryption: ${algorithm}`;
+}
+
+function resolveEncryptionAlgorithm(manifest: { encryption?: { algorithm?: unknown } }): string {
+  const named = manifest.encryption?.algorithm;
+  if (typeof named === 'string' && named.trim().length > 0) {
+    return named;
+  }
+  return DEFAULT_VERIFY_ENCRYPTION;
+}
+
+const DEFAULT_VERIFY_KDF = 'Argon2id';
+
+export function formatVerifyKeyDerivation(kdf: string): string {
+  return `   Key derivation: ${kdf}`;
+}
+
+function resolveKeyDerivation(manifest: { encryption?: { keyDerivation?: unknown } }): string {
+  const named = manifest.encryption?.keyDerivation;
+  if (typeof named === 'string' && named.trim().length > 0) {
+    return named;
+  }
+  return DEFAULT_VERIFY_KDF;
 }
 
 const STATE_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
@@ -224,6 +257,9 @@ export async function verifyContainer(
     message: 'State file is valid and verified',
     checksum: calculatedHash,
     payloadBytes: decryptedState.length,
+    contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
+    encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
+    keyDerivation: resolveKeyDerivation(manifest),
     manifest: {
       agentId: manifest.agentId,
       created: manifest.created,
@@ -264,6 +300,15 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.payloadBytes !== undefined) {
         lines.push(formatVerifySize(result.payloadBytes));
+      }
+      if (result.contentType) {
+        lines.push(formatVerifyContentType(result.contentType));
+      }
+      if (result.encryptionAlgorithm) {
+        lines.push(formatVerifyEncryption(result.encryptionAlgorithm));
+      }
+      if (result.keyDerivation) {
+        lines.push(formatVerifyKeyDerivation(result.keyDerivation));
       }
       return lines.join('\n');
     }
