@@ -18,6 +18,19 @@ export interface VerifyResult {
     created: string;
     formatVersion: number;
   };
+  components?: string[];
+}
+
+const STATE_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
+
+export function listStateComponents(state: unknown): string[] {
+  if (!state || typeof state !== 'object' || Array.isArray(state)) {
+    return [];
+  }
+
+  return Object.keys(state as Record<string, unknown>)
+    .filter((key) => !STATE_METADATA_KEYS.has(key))
+    .sort();
 }
 
 /**
@@ -179,8 +192,9 @@ export async function verifyContainer(
   }
 
   // 6. Optionally validate JSON structure
+  let components: string[] = [];
   try {
-    JSON.parse(decryptedState.toString());
+    components = listStateComponents(JSON.parse(decryptedState.toString()));
   } catch {
     return {
       status: 'corrupted',
@@ -201,6 +215,7 @@ export async function verifyContainer(
       created: manifest.created,
       formatVersion: manifest.formatVersion,
     },
+    components,
   };
 }
 
@@ -227,6 +242,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         lines.push(`   Created: ${result.manifest.created}`);
         lines.push(`   Format: v${result.manifest.formatVersion}`);
       }
+      lines.push(
+        `   Components: ${result.components && result.components.length > 0 ? result.components.join(', ') : 'none'}`,
+      );
       return lines.join('\n');
     }
     case 'wrong_password': {

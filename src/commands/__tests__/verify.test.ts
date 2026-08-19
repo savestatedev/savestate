@@ -9,7 +9,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { createHash, randomBytes } from 'crypto';
 import { encrypt } from '../../container/crypto.js';
-import { verifyContainer, VerifyResult } from '../verify.js';
+import { listStateComponents, verifyContainer, VerifyResult } from '../verify.js';
 
 /**
  * Create a proper 16-byte magic header per spec
@@ -87,6 +87,36 @@ describe('verifyContainer', () => {
     expect(result.status).toBe('valid');
     expect(result.manifest).toBeDefined();
     expect(result.manifest?.agentId).toBe('test-agent');
+  });
+
+  it('lists named state components and skips metadata keys', () => {
+    expect(
+      listStateComponents({
+        agentId: 'fixture-agent',
+        version: 1,
+        exportedAt: '2026-08-18T03:00:00.000Z',
+        personality: { name: 'fixture-agent' },
+        memory: { facts: [] },
+      }),
+    ).toEqual(['memory', 'personality']);
+  });
+
+  it('lists packed components after a successful synthetic verify', async () => {
+    const filePath = join(testDir, 'components.savestate');
+    const passphrase = 'synthetic-passphrase';
+
+    await createValidContainer(filePath, passphrase, {
+      agentId: 'fixture-agent',
+      version: 1,
+      exportedAt: '2026-08-18T03:00:00.000Z',
+      memory: { facts: [] },
+      tools: { enabled: [] },
+    });
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('valid');
+    expect(result.components).toEqual(['memory', 'tools']);
   });
 
   it('should detect wrong password', async () => {
