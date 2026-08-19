@@ -26,24 +26,24 @@ describe('savestate verify payload content type', () => {
 
   async function writeContainer(
     fileName: string,
-    contentType: string | undefined,
+    contentType: unknown,
   ): Promise<string> {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
     const encryptedState = await encrypt(plaintext, { passphrase });
-    const payload: Record<string, unknown> = {
-      name: 'agent_state',
-      byteLength: plaintext.length,
-      sha256: createHash('sha256').update(plaintext).digest('hex'),
-    };
-    if (contentType !== undefined) {
-      payload.contentType = contentType;
-    }
+    const actualHash = createHash('sha256').update(plaintext).digest('hex');
     const manifest = {
       formatVersion: 1,
-      created: '2026-08-18T14:00:00.000Z',
+      created: '2026-08-19T00:01:00.000Z',
       agentId: 'demo-agent',
-      payloads: [payload],
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType,
+          byteLength: plaintext.length,
+          sha256: actualHash,
+        },
+      ],
     };
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
     const manifestLength = Buffer.alloc(4);
@@ -56,28 +56,28 @@ describe('savestate verify payload content type', () => {
     return filePath;
   }
 
-  it('rejects a container whose payload content type is missing', async () => {
-    const filePath = await writeContainer('missing-content-type.savestate', undefined);
+  it('rejects a container whose payload content type is a number', async () => {
+    const filePath = await writeContainer('payload-content-type-number.savestate', 123);
 
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
     expect(result.status).toBe('corrupted');
-    expect(result.message).toMatch(/content type/i);
+    expect(result.message).toMatch(/payload content type/i);
     expect(result.manifest).toBeUndefined();
   });
 
-  it('rejects a container whose payload content type is empty', async () => {
-    const filePath = await writeContainer('empty-content-type.savestate', '   ');
+  it('rejects a container whose payload content type is an object', async () => {
+    const filePath = await writeContainer('payload-content-type-object.savestate', { mime: 'application/json' });
 
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
     expect(result.status).toBe('corrupted');
-    expect(result.message).toMatch(/content type/i);
+    expect(result.message).toMatch(/payload content type/i);
     expect(result.manifest).toBeUndefined();
   });
 
-  it('still verifies a valid container with a payload content type', async () => {
-    const filePath = await writeContainer('valid-content-type.savestate', 'application/json');
+  it('still verifies a valid container with a string payload content type', async () => {
+    const filePath = await writeContainer('valid-payload-content-type.savestate', 'application/json');
 
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
@@ -85,12 +85,12 @@ describe('savestate verify payload content type', () => {
     expect(result.manifest?.agentId).toBe('demo-agent');
   });
 
-  it('does not treat a wrong passphrase as a content-type failure', async () => {
+  it('does not treat a wrong passphrase as a payload content type failure', async () => {
     const filePath = await writeContainer('wrong-pass.savestate', 'application/json');
 
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
 
     expect(result.status).toBe('wrong_password');
-    expect(result.message).not.toMatch(/content type/i);
+    expect(result.message).not.toMatch(/payload content type/i);
   });
 });
