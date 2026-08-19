@@ -14,6 +14,7 @@ export interface VerifyResult {
   status: VerifyStatus;
   message: string;
   checksum?: string;
+  payloadBytes?: number;
   manifest?: {
     agentId: string;
     created: string;
@@ -24,6 +25,10 @@ export interface VerifyResult {
 
 export function formatVerifyChecksum(checksum: string): string {
   return `   Checksum: ${checksum}`;
+}
+
+export function formatVerifySize(payloadBytes: number): string {
+  return `   Size: ${payloadBytes} bytes`;
 }
 
 const STATE_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
@@ -216,6 +221,7 @@ export async function verifyContainer(
     status: 'valid',
     message: 'State file is valid and verified',
     checksum: calculatedHash,
+    payloadBytes: decryptedState.length,
     manifest: {
       agentId: manifest.agentId,
       created: manifest.created,
@@ -253,6 +259,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       );
       if (result.checksum) {
         lines.push(formatVerifyChecksum(result.checksum));
+      }
+      if (result.payloadBytes !== undefined) {
+        lines.push(formatVerifySize(result.payloadBytes));
       }
       return lines.join('\n');
     }
