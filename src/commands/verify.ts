@@ -561,6 +561,19 @@ export async function verifyContainer(
     };
   }
 
+  if (Array.isArray(manifest.payloads)) {
+    const names = manifest.payloads.map((entry: { name?: unknown }) => entry?.name);
+    if (
+      names.every((name: unknown) => typeof name === 'string') &&
+      new Set(names).size !== names.length
+    ) {
+      return {
+        status: 'corrupted',
+        message: 'Invalid manifest: payload names must be unique',
+      };
+    }
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
