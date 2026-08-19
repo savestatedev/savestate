@@ -26,24 +26,24 @@ describe('savestate verify payload name', () => {
 
   async function writeContainer(
     fileName: string,
-    payloadName: string | undefined,
+    payloadName: unknown,
   ): Promise<string> {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
     const encryptedState = await encrypt(plaintext, { passphrase });
-    const payload: Record<string, unknown> = {
-      contentType: 'application/json',
-      byteLength: plaintext.length,
-      sha256: createHash('sha256').update(plaintext).digest('hex'),
-    };
-    if (payloadName !== undefined) {
-      payload.name = payloadName;
-    }
+    const actualHash = createHash('sha256').update(plaintext).digest('hex');
     const manifest = {
       formatVersion: 1,
-      created: '2026-08-18T13:00:00.000Z',
+      created: '2026-08-18T23:01:00.000Z',
       agentId: 'demo-agent',
-      payloads: [payload],
+      payloads: [
+        {
+          name: payloadName,
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: actualHash,
+        },
+      ],
     };
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
     const manifestLength = Buffer.alloc(4);
@@ -56,8 +56,8 @@ describe('savestate verify payload name', () => {
     return filePath;
   }
 
-  it('rejects a container whose payload name is missing', async () => {
-    const filePath = await writeContainer('missing-name.savestate', undefined);
+  it('rejects a container whose payload name is a number', async () => {
+    const filePath = await writeContainer('payload-name-number.savestate', 123);
 
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
@@ -66,8 +66,8 @@ describe('savestate verify payload name', () => {
     expect(result.manifest).toBeUndefined();
   });
 
-  it('rejects a container whose payload name is empty', async () => {
-    const filePath = await writeContainer('empty-name.savestate', '   ');
+  it('rejects a container whose payload name is an object', async () => {
+    const filePath = await writeContainer('payload-name-object.savestate', { id: 'agent_state' });
 
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
@@ -76,8 +76,8 @@ describe('savestate verify payload name', () => {
     expect(result.manifest).toBeUndefined();
   });
 
-  it('still verifies a valid container with a named payload', async () => {
-    const filePath = await writeContainer('valid-name.savestate', 'agent_state');
+  it('still verifies a valid container with a string payload name', async () => {
+    const filePath = await writeContainer('valid-payload-name.savestate', 'agent_state');
 
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
@@ -85,7 +85,7 @@ describe('savestate verify payload name', () => {
     expect(result.manifest?.agentId).toBe('demo-agent');
   });
 
-  it('does not treat a wrong passphrase as a payload-name failure', async () => {
+  it('does not treat a wrong passphrase as a payload name failure', async () => {
     const filePath = await writeContainer('wrong-pass.savestate', 'agent_state');
 
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
