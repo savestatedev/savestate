@@ -281,6 +281,22 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    Array.isArray(manifest.payloads) &&
+    manifest.payloads.some(
+      (entry: { byteLength?: unknown }) =>
+        typeof entry?.byteLength === 'number' &&
+        Number.isInteger(entry.byteLength) &&
+        entry.byteLength < 0,
+    )
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: payload byte length must be a non-negative integer',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
