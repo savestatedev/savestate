@@ -211,6 +211,20 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    Array.isArray(manifest.payloads) &&
+    manifest.payloads.some(
+      (entry: { contentType?: unknown }) =>
+        typeof entry?.contentType !== 'string' || entry.contentType.trim() === '',
+    )
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: missing payload content type',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
