@@ -404,6 +404,24 @@ export async function verifyContainer(
     }
   }
 
+
+  if (Array.isArray(manifest.payloads)) {
+    for (const entry of manifest.payloads) {
+      if (
+        entry &&
+        typeof entry === 'object' &&
+        'name' in entry &&
+        typeof entry.name === 'string' &&
+        entry.name.trim() === ''
+      ) {
+        return {
+          status: 'corrupted',
+          message: 'Invalid manifest: payload name must not be empty',
+        };
+      }
+    }
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
