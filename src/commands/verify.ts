@@ -386,6 +386,24 @@ export async function verifyContainer(
     }
   }
 
+
+  if (Array.isArray(manifest.payloads)) {
+    for (const entry of manifest.payloads) {
+      if (
+        entry &&
+        typeof entry === 'object' &&
+        'contentType' in entry &&
+        typeof entry.contentType === 'string' &&
+        entry.contentType.trim() === ''
+      ) {
+        return {
+          status: 'corrupted',
+          message: 'Invalid manifest: payload content type must not be empty',
+        };
+      }
+    }
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
