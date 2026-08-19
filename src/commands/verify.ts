@@ -452,6 +452,14 @@ export async function verifyContainer(
     };
   }
 
+
+  if ('created' in manifest && typeof manifest.created !== 'string') {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: created must be a string',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
