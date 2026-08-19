@@ -336,6 +336,14 @@ export async function verifyContainer(
     };
   }
 
+
+  if (manifest.formatVersion !== 1) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: formatVersion must be 1',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
