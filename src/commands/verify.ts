@@ -607,6 +607,16 @@ export async function verifyContainer(
     };
   }
 
+  if (
+    typeof payload.byteLength === 'number' &&
+    payload.byteLength !== decryptedState.length
+  ) {
+    return {
+      status: 'corrupted',
+      message: `Integrity check failed: payload byte length ${payload.byteLength} does not match`,
+    };
+  }
+
   // 6. Optionally validate JSON structure
   let components: string[] = [];
   try {
