@@ -561,6 +561,20 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    'encryption' in manifest &&
+    manifest.encryption !== null &&
+    typeof manifest.encryption === 'object' &&
+    !Array.isArray(manifest.encryption) &&
+    !('algorithm' in manifest.encryption)
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: missing encryption algorithm',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
