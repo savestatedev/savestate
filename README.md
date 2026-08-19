@@ -208,7 +208,7 @@ savestate verify <file>               Verify a .savestate file and list componen
   -p, --passphrase <pass>            Passphrase for verification
   -k, --keyfile <path>               Keyfile for verification
   --json                             Output as JSON
-                                     Prints payload checksum and size on success
+                                     Prints payload checksum, size, and content type on success
 
 savestate trace list                  List Askable Echoes trace runs
   --json                             Output as JSON
