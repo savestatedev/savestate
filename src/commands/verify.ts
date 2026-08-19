@@ -178,14 +178,55 @@ export async function verifyContainer(
   };
 }
 
-/**
- * CLI handler for verify command
- */
+export function verifyExitCode(status: VerifyStatus): number {
+  if (status === 'valid') {
+    return 0;
+  }
+  if (status === 'wrong_password') {
+    return 2;
+  }
+  return 1;
+}
+
+export function formatVerifyResult(result: VerifyResult, json: boolean): string {
+  if (json) {
+    return JSON.stringify(result, null, 2);
+  }
+
+  switch (result.status) {
+    case 'valid': {
+      const lines = ['✅ State file is valid'];
+      if (result.manifest) {
+        lines.push(`   Agent: ${result.manifest.agentId}`);
+        lines.push(`   Created: ${result.manifest.created}`);
+        lines.push(`   Format: v${result.manifest.formatVersion}`);
+      }
+      return lines.join('\n');
+    }
+    case 'wrong_password': {
+      const lines = ['⚠️  Wrong password (cannot decrypt)'];
+      if (result.manifest) {
+        lines.push(`   Agent: ${result.manifest.agentId}`);
+        lines.push(`   Created: ${result.manifest.created}`);
+      }
+      return lines.join('\n');
+    }
+    case 'invalid_format':
+      return `❌ Invalid format: ${result.message}`;
+    case 'corrupted': {
+      const lines = [`❌ File corrupted: ${result.message}`];
+      if (result.manifest) {
+        lines.push(`   Agent: ${result.manifest.agentId}`);
+      }
+      return lines.join('\n');
+    }
+  }
+}
+
 export async function verifyCommand(
   filePath: string,
-  options: { passphrase?: string; keyfile?: string }
+  options: { passphrase?: string; keyfile?: string; json?: boolean }
 ): Promise<void> {
-  // Validate key source
   const passphrase = options.passphrase || process.env.SAVESTATE_PASSPHRASE;
   const keyfile = options.keyfile;
 
@@ -205,38 +246,14 @@ export async function verifyCommand(
   const keySource: KeySource = keyfile ? { keyfile } : { passphrase };
 
   const result = await verifyContainer(filePath, keySource);
+  const output = formatVerifyResult(result, !!options.json);
+  const exitCode = verifyExitCode(result.status);
 
-  switch (result.status) {
-    case 'valid':
-      console.log('✅ State file is valid');
-      if (result.manifest) {
-        console.log(`   Agent: ${result.manifest.agentId}`);
-        console.log(`   Created: ${result.manifest.created}`);
-        console.log(`   Format: v${result.manifest.formatVersion}`);
-      }
-      process.exit(0);
-      break;
-
-    case 'wrong_password':
-      console.log('⚠️  Wrong password (cannot decrypt)');
-      if (result.manifest) {
-        console.log(`   Agent: ${result.manifest.agentId}`);
-        console.log(`   Created: ${result.manifest.created}`);
-      }
-      process.exit(2);
-      break;
-
-    case 'invalid_format':
-      console.error(`❌ Invalid format: ${result.message}`);
-      process.exit(1);
-      break;
-
-    case 'corrupted':
-      console.error(`❌ File corrupted: ${result.message}`);
-      if (result.manifest) {
-        console.log(`   Agent: ${result.manifest.agentId}`);
-      }
-      process.exit(1);
-      break;
+  if (options.json || result.status === 'valid' || result.status === 'wrong_password') {
+    console.log(output);
+  } else {
+    console.error(output);
   }
+
+  process.exit(exitCode);
 }
