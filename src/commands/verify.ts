@@ -561,6 +561,22 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    manifest.encryption &&
+    typeof manifest.encryption === 'object' &&
+    !Array.isArray(manifest.encryption) &&
+    'keyDerivation' in manifest.encryption &&
+    typeof manifest.encryption.keyDerivation === 'string' &&
+    manifest.encryption.keyDerivation.trim() !== '' &&
+    manifest.encryption.keyDerivation !== 'Argon2id'
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: key derivation is not supported',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
