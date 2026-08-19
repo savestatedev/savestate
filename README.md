@@ -196,9 +196,10 @@ savestate export                      Export an encrypted agent container
   -a, --agent <id>                   Agent ID to export
   -o, --output <file>                Output file path
   --force                            Overwrite an existing output file
+  -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
 savestate import <file>               Import an encrypted agent container
   --dry-run                          Preview without restoring
-  -p, --passphrase <pass>            Passphrase for decryption
+  -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
   --target <dir>                     Write restored agent state to this directory
 
 savestate trace list                  List Askable Echoes trace runs
