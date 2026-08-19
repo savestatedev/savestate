@@ -174,6 +174,14 @@ export async function verifyContainer(
     };
   }
 
+
+  if (manifest === null || typeof manifest !== 'object' || Array.isArray(manifest)) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: manifest must be an object',
+    };
+  }
+
   if (
     'agentId' in manifest &&
     typeof manifest.agentId === 'string' &&
