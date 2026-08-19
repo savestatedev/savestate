@@ -470,6 +470,14 @@ export async function verifyContainer(
     };
   }
 
+
+  if ('description' in manifest && typeof manifest.description !== 'string') {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: description must be a string',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
