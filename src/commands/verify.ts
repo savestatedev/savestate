@@ -478,6 +478,14 @@ export async function verifyContainer(
     };
   }
 
+
+  if ('description' in manifest && manifest.description === '') {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: description must not be empty',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
