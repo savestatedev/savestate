@@ -265,6 +265,22 @@ export async function verifyContainer(
     };
   }
 
+
+  if (
+    Array.isArray(manifest.payloads) &&
+    manifest.payloads.some(
+      (entry: { sha256?: unknown }) =>
+        typeof entry?.sha256 === 'string' &&
+        entry.sha256.trim() !== '' &&
+        !/^[0-9a-fA-F]{64}$/.test(entry.sha256),
+    )
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: payload checksum must be a hex SHA-256 digest',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
