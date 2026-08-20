@@ -331,6 +331,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
     }
 
+    if (passphrase !== undefined) {
+      if (typeof passphrase !== 'string' || passphrase.trim() === '') {
+        console.error(`Error: Passphrase must not be empty: ${JSON.stringify(passphrase)}.`);
+        return undefined;
+      }
+    }
+
     const keySource = await resolveKeySource(passphrase, keyfile);
 
     // Determine restore mode
