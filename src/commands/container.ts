@@ -311,6 +311,12 @@ function listRestoredComponents(parsedState: Record<string, unknown>): string[] 
 export async function importState(options: RestoreOptions): Promise<ImportResult | undefined> {
   try {
     const { in: inFile, passphrase, keyfile } = options;
+
+    if (typeof inFile !== 'string' || inFile.trim() === '') {
+      console.error(`Error: Input path must not be empty: ${JSON.stringify(inFile)}.`);
+      return undefined;
+    }
+
     const keySource = await resolveKeySource(passphrase, keyfile);
 
     // Determine restore mode
@@ -460,7 +466,7 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
     .action(async (file, opts) => {
-      await importState({
+      const result = await importState({
         in: file,
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
@@ -469,6 +475,9 @@ export function registerContainerCommands(program: Command) {
         dryRun: opts.dryRun,
         target: opts.target,
       });
+      if (!result) {
+        process.exit(1);
+      }
     });
 
   const container = program
@@ -519,7 +528,7 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
     .action(async (opts) => {
-      await importState({
+      const result = await importState({
         in: opts.in,
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
@@ -528,5 +537,8 @@ export function registerContainerCommands(program: Command) {
         dryRun: opts.dryRun,
         target: opts.target,
       });
+      if (!result) {
+        process.exit(1);
+      }
     });
 }

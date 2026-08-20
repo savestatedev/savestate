@@ -103,6 +103,7 @@ describe('savestate verify encryption algorithm', () => {
       agentId: 'demo-agent',
       encryption: {
         algorithm: 'AES-256-GCM',
+        keyDerivation: 'Argon2id',
       },
       payloads: [
         {
