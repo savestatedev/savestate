@@ -226,6 +226,10 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       formatVersion: 1,
       created: new Date().toISOString(),
       agentId: agent,
+      encryption: {
+        algorithm: 'AES-256-GCM',
+        keyDerivation: 'Argon2id',
+      },
       payloads: [
         {
           name: 'agent_state',
