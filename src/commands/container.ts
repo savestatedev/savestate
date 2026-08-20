@@ -182,6 +182,11 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
   try {
     const { agent, out, passphrase, keyfile, description } = options;
 
+    if (typeof agent !== 'string' || agent.trim() === '') {
+      console.error('Error: Agent id must not be empty.');
+      return { written: false, out, overwritten: false };
+    }
+
     let existed = false;
     try {
       await fs.access(out);
