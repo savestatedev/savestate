@@ -317,6 +317,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       return undefined;
     }
 
+    if (options.target !== undefined) {
+      if (typeof options.target !== 'string' || options.target.trim() === '') {
+        console.error(`Error: Target path must not be empty: ${JSON.stringify(options.target)}.`);
+        return undefined;
+      }
+    }
+
     const keySource = await resolveKeySource(passphrase, keyfile);
 
     // Determine restore mode
