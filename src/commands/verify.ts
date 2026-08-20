@@ -561,6 +561,19 @@ export async function verifyContainer(
     };
   }
 
+  if (
+    'encryption' in manifest &&
+    manifest.encryption !== null &&
+    typeof manifest.encryption === 'object' &&
+    !Array.isArray(manifest.encryption) &&
+    !('keyDerivation' in manifest.encryption)
+  ) {
+    return {
+      status: 'corrupted',
+      message: 'Invalid manifest: missing key derivation',
+    };
+  }
+
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     return {
