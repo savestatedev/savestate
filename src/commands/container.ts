@@ -199,6 +199,13 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       }
     }
 
+    if (keyfile !== undefined) {
+      if (typeof keyfile !== 'string' || keyfile.trim() === '') {
+        console.error(`Error: Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
+        return { written: false, out, overwritten: false };
+      }
+    }
+
     let existed = false;
     try {
       await fs.access(out);
