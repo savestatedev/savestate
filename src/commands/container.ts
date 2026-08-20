@@ -192,6 +192,13 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       return { written: false, out, overwritten: false };
     }
 
+    if (passphrase !== undefined) {
+      if (typeof passphrase !== 'string' || passphrase.trim() === '') {
+        console.error(`Error: Passphrase must not be empty: ${JSON.stringify(passphrase)}.`);
+        return { written: false, out, overwritten: false };
+      }
+    }
+
     let existed = false;
     try {
       await fs.access(out);
