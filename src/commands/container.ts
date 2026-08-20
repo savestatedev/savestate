@@ -146,6 +146,7 @@ export interface ExportOptions {
   includeTools?: boolean;
   includePreferences?: boolean;
   force?: boolean;
+  description?: string;
 }
 
 export interface ExportResult {
@@ -179,7 +180,7 @@ export function reportContainerProgress(phase: string, bytes?: number): string {
 
 export async function exportState(options: ExportOptions): Promise<ExportResult> {
   try {
-    const { agent, out, passphrase, keyfile } = options;
+    const { agent, out, passphrase, keyfile, description } = options;
 
     let existed = false;
     try {
@@ -222,10 +223,12 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     const agentState = await getAgentState(agent, components);
     const plaintext = Buffer.from(agentState);
 
+    const trimmedDescription = description?.trim();
     const manifest = {
       formatVersion: 1,
       created: new Date().toISOString(),
       agentId: agent,
+      ...(trimmedDescription ? { description: trimmedDescription } : {}),
       encryption: {
         algorithm: 'AES-256-GCM',
         keyDerivation: 'Argon2id',
@@ -415,6 +418,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
     .option('--force', 'Overwrite an existing output file')
+    .option('--description <text>', 'Optional human-readable description for the export')
     .action(async (opts) => {
       const result = await exportState({
         agent: opts.agent,
@@ -427,6 +431,7 @@ export function registerContainerCommands(program: Command) {
         includeTools: opts.includeTools,
         includePreferences: opts.includePreferences,
         force: opts.force,
+        description: opts.description,
       });
       if (!result.written) {
         process.exit(1);
@@ -444,15 +449,17 @@ export function registerContainerCommands(program: Command) {
     .option('--replace', 'Replace existing state completely')
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
-    .action((file, opts) => importState({
-      in: file,
-      passphrase: opts.passphrase,
-      keyfile: opts.keyfile,
-      merge: opts.merge,
-      replace: opts.replace,
-      dryRun: opts.dryRun,
-      target: opts.target,
-    }));
+    .action(async (file, opts) => {
+      await importState({
+        in: file,
+        passphrase: opts.passphrase,
+        keyfile: opts.keyfile,
+        merge: opts.merge,
+        replace: opts.replace,
+        dryRun: opts.dryRun,
+        target: opts.target,
+      });
+    });
 
   const container = program
     .command('container')
@@ -471,6 +478,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
     .option('--force', 'Overwrite an existing output file')
+    .option('--description <text>', 'Optional human-readable description for the export')
     .action(async (opts) => {
       const result = await exportState({
         agent: opts.agent,
@@ -483,6 +491,7 @@ export function registerContainerCommands(program: Command) {
         includeTools: opts.includeTools,
         includePreferences: opts.includePreferences,
         force: opts.force,
+        description: opts.description,
       });
       if (!result.written) {
         process.exit(1);
@@ -499,13 +508,15 @@ export function registerContainerCommands(program: Command) {
     .option('--replace', 'Replace existing state (default)')
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
-    .action((opts) => importState({
-      in: opts.in,
-      passphrase: opts.passphrase,
-      keyfile: opts.keyfile,
-      merge: opts.merge,
-      replace: opts.replace,
-      dryRun: opts.dryRun,
-      target: opts.target,
-    }));
+    .action(async (opts) => {
+      await importState({
+        in: opts.in,
+        passphrase: opts.passphrase,
+        keyfile: opts.keyfile,
+        merge: opts.merge,
+        replace: opts.replace,
+        dryRun: opts.dryRun,
+        target: opts.target,
+      });
+    });
 }
