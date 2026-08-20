@@ -187,6 +187,11 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       return { written: false, out, overwritten: false };
     }
 
+    if (typeof out !== 'string' || out.trim() === '') {
+      console.error(`Error: Output path must not be empty: ${JSON.stringify(out)}.`);
+      return { written: false, out, overwritten: false };
+    }
+
     let existed = false;
     try {
       await fs.access(out);
