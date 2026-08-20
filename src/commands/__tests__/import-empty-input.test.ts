@@ -1,0 +1,75 @@
+import { promises as fs } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { exportState, importState } from '../container.js';
+
+describe('savestate import empty input path', () => {
+  let testDir: string;
+
+  beforeAll(async () => {
+    testDir = join(tmpdir(), `savestate-import-empty-input-${Date.now()}`);
+    await fs.mkdir(testDir, { recursive: true });
+  });
+
+  afterAll(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('rejects an empty input path before reading a file', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const result = await importState({
+      in: '',
+      passphrase: 'synthetic-passphrase',
+    });
+
+    expect(result).toBeUndefined();
+    expect(error.mock.calls.flat().join('\n')).toMatch(/input path/i);
+    expect(log.mock.calls.flat().join('\n')).not.toContain('Successfully restored');
+    error.mockRestore();
+    log.mockRestore();
+  });
+
+  it('rejects a whitespace-only input path before reading a file', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const result = await importState({
+      in: '   ',
+      passphrase: 'synthetic-passphrase',
+    });
+
+    expect(result).toBeUndefined();
+    expect(error.mock.calls.flat().join('\n')).toMatch(/input path/i);
+    expect(log.mock.calls.flat().join('\n')).not.toContain('Successfully restored');
+    error.mockRestore();
+    log.mockRestore();
+  });
+
+  it('still imports a non-empty input path', async () => {
+    const filePath = join(testDir, 'valid-input.savestate');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const exported = await exportState({
+      agent: 'fixture-agent',
+      out: filePath,
+      passphrase: 'synthetic-passphrase',
+    });
+    expect(exported.written).toBe(true);
+
+    const result = await importState({
+      in: filePath,
+      passphrase: 'synthetic-passphrase',
+    });
+
+    expect(result).toMatchObject({
+      dryRun: false,
+      restored: true,
+      agentId: 'fixture-agent',
+    });
+    expect(log.mock.calls.flat().join('\n')).toContain('Successfully restored');
+    log.mockRestore();
+  });
+});
