@@ -68,13 +68,15 @@ export function parseIncludePaths(raw?: string): { components: ComponentSelectio
     };
   }
 
-  const parts = raw
-    .split(',')
-    .map((part) => part.trim().toLowerCase())
-    .filter((part) => part.length > 0);
+  const tokens = raw.split(',').map((part) => part.trim().toLowerCase());
+  const parts = tokens.filter((part) => part.length > 0);
 
   if (parts.length === 0) {
     return { error: 'Error: --include requires at least one path.' };
+  }
+
+  if (parts.length !== tokens.length) {
+    return { error: 'Error: --include path must not be empty.' };
   }
 
   const unknown = parts.filter((part) => !INCLUDE_PATHS.includes(part as IncludePath));
@@ -104,13 +106,15 @@ export function applyExcludePaths(
     return { components };
   }
 
-  const parts = raw
-    .split(',')
-    .map((part) => part.trim().toLowerCase())
-    .filter((part) => part.length > 0);
+  const tokens = raw.split(',').map((part) => part.trim().toLowerCase());
+  const parts = tokens.filter((part) => part.length > 0);
 
   if (parts.length === 0) {
     return { error: 'Error: --exclude requires at least one path.' };
+  }
+
+  if (parts.length !== tokens.length) {
+    return { error: 'Error: --exclude path must not be empty.' };
   }
 
   const unknown = parts.filter((part) => !INCLUDE_PATHS.includes(part as IncludePath));
