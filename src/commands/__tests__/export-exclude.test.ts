@@ -43,10 +43,10 @@ describe('savestate export --exclude', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(applyExcludePaths(
-      { personality: true, memory: true, tools: true, preferences: true },
+      { personality: true, memory: true, tools: true, preferences: true, conversation_history: true },
       'secrets',
     )).toEqual({
-      error: 'Error: Unknown exclude path: secrets. Allowed: personality, memory, tools, preferences.',
+      error: 'Error: Unknown exclude path: secrets. Allowed: personality, memory, tools, preferences, conversation_history.',
     });
 
     const result = await exportState({
@@ -78,11 +78,12 @@ describe('savestate export --exclude', () => {
 
     const state = await readExportedState(filePath, 'synthetic-passphrase');
     expect(result).toEqual({ written: true, out: filePath, overwritten: false });
-    expect(log.mock.calls.flat()).toContain('Including paths: memory, tools, preferences');
+    expect(log.mock.calls.flat()).toContain('Including paths: memory, tools, preferences, conversation_history');
     expect(state).not.toHaveProperty('personality');
     expect(state).toHaveProperty('memory');
     expect(state).toHaveProperty('tools');
     expect(state).toHaveProperty('preferences');
+    expect(state).toHaveProperty('conversation_history');
     log.mockRestore();
   });
 });

@@ -56,7 +56,7 @@ describe('savestate export manifest components', () => {
     const written = await fs.readFile(filePath);
     const manifest = readManifest(written);
 
-    expect(manifest.components).toEqual(['personality', 'memory', 'tools', 'preferences']);
+    expect(manifest.components).toEqual(['personality', 'memory', 'tools', 'preferences', 'conversation_history']);
     log.mockRestore();
   });
 });
