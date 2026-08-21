@@ -350,6 +350,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.error(`Error: Target path must not be empty: ${JSON.stringify(options.target)}.`);
         return undefined;
       }
+      try {
+        const targetStats = await fs.stat(options.target);
+        if (targetStats.isFile()) {
+          console.error(`Error: Target path is a file: ${options.target}`);
+          return undefined;
+        }
+      } catch {
+      }
     }
 
     if (passphrase !== undefined) {
