@@ -356,6 +356,12 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.error(`Error: Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
         return undefined;
       }
+      try {
+        await fs.access(keyfile);
+      } catch {
+        console.error(`Error: Keyfile not found: ${keyfile}`);
+        return undefined;
+      }
     }
 
     const keySource = await resolveKeySource(passphrase, keyfile);
