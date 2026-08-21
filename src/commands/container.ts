@@ -383,6 +383,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         return undefined;
       }
     } catch {
+      console.error(`Error: Input path not found: ${inFile}`);
+      return undefined;
     }
 
     const keySource = await resolveKeySource(passphrase, keyfile);
