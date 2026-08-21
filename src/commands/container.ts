@@ -365,7 +365,11 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         return undefined;
       }
       try {
-        await fs.access(keyfile);
+        const keyfileStats = await fs.stat(keyfile);
+        if (keyfileStats.isDirectory()) {
+          console.error(`Error: Keyfile is a directory: ${keyfile}`);
+          return undefined;
+        }
       } catch {
         console.error(`Error: Keyfile not found: ${keyfile}`);
         return undefined;
