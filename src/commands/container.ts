@@ -372,6 +372,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
           return undefined;
         }
       } catch {
+        try {
+          const parentStats = await fs.stat(dirname(options.target));
+          if (!parentStats.isDirectory()) {
+            console.error(`Error: Target directory is a file: ${dirname(options.target)}`);
+            return undefined;
+          }
+        } catch {
+        }
       }
     }
 
