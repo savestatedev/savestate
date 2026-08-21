@@ -345,6 +345,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
     }
 
+    if (keyfile !== undefined) {
+      if (typeof keyfile !== 'string' || keyfile.trim() === '') {
+        console.error(`Error: Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
+        return undefined;
+      }
+    }
+
     const keySource = await resolveKeySource(passphrase, keyfile);
 
     // Determine restore mode
