@@ -272,6 +272,8 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       };
     }
 
+    const includedComponents = INCLUDE_PATHS.filter((path) => components[path]);
+
     reportContainerProgress(`Loading state for agent ${agent}`);
     const agentState = await getAgentState(agent, components);
     const plaintext = Buffer.from(agentState);
@@ -286,6 +288,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         algorithm: 'AES-256-GCM',
         keyDerivation: 'Argon2id',
       },
+      components: includedComponents,
       payloads: [
         {
           name: 'agent_state',
