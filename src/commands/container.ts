@@ -324,9 +324,9 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     }
     components = excluded.components;
 
+    const includedComponents = INCLUDE_PATHS.filter((path) => components[path]);
     if (options.include !== undefined || options.exclude !== undefined) {
-      const included = INCLUDE_PATHS.filter((path) => components[path]);
-      console.log(`Including paths: ${included.join(', ')}`);
+      console.log(`Including paths: ${includedComponents.join(', ')}`);
     }
 
     reportContainerProgress(`Loading state for agent ${agent}`);
@@ -343,6 +343,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         algorithm: 'AES-256-GCM',
         keyDerivation: 'Argon2id',
       },
+      components: includedComponents,
       payloads: [
         {
           name: 'agent_state',
