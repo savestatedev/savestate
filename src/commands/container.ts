@@ -27,6 +27,34 @@ export interface ComponentSelection {
   conversation_history: boolean;
 }
 
+export function validateIncludedComponents(
+  value: unknown,
+): { components: IncludePath[] } | { error: string } {
+  if (!Array.isArray(value)) {
+    return { error: 'Error: components must be an array of known state paths.' };
+  }
+  if (value.length === 0) {
+    return { error: 'Error: components must include at least one path.' };
+  }
+
+  const seen = new Set<string>();
+  const components: IncludePath[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'string' || !INCLUDE_PATHS.includes(entry as IncludePath)) {
+      const label = typeof entry === 'string' ? entry : JSON.stringify(entry);
+      return {
+        error: `Error: Unknown component: ${label}. Allowed: ${INCLUDE_PATHS.join(', ')}.`,
+      };
+    }
+    if (seen.has(entry)) {
+      return { error: `Error: Duplicate component: ${entry}.` };
+    }
+    seen.add(entry);
+    components.push(entry);
+  }
+  return { components };
+}
+
 export function parseIncludePaths(raw?: string): { components: ComponentSelection } | { error: string } {
   if (raw === undefined) {
     return {
@@ -325,8 +353,13 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     components = excluded.components;
 
     const includedComponents = INCLUDE_PATHS.filter((path) => components[path]);
+    const validatedComponents = validateIncludedComponents(includedComponents);
+    if ('error' in validatedComponents) {
+      console.error(validatedComponents.error);
+      return { written: false, out, overwritten: false };
+    }
     if (options.include !== undefined || options.exclude !== undefined) {
-      console.log(`Including paths: ${includedComponents.join(', ')}`);
+      console.log(`Including paths: ${validatedComponents.components.join(', ')}`);
     }
 
     reportContainerProgress(`Loading state for agent ${agent}`);
@@ -343,7 +376,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         algorithm: 'AES-256-GCM',
         keyDerivation: 'Argon2id',
       },
-      components: includedComponents,
+      components: validatedComponents.components,
       payloads: [
         {
           name: 'agent_state',

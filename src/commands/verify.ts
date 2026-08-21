@@ -7,6 +7,7 @@
 import { promises as fs } from 'fs';
 import { createHash } from 'node:crypto';
 import { decrypt, KeySource } from '../container/crypto.js';
+import { validateIncludedComponents } from './container.js';
 
 export type VerifyStatus = 'valid' | 'corrupted' | 'wrong_password' | 'invalid_format';
 
@@ -335,6 +336,16 @@ export async function verifyContainer(
       status: 'corrupted',
       message: 'Invalid manifest: created timestamp must be ISO 8601',
     };
+  }
+
+  if ('components' in manifest) {
+    const validated = validateIncludedComponents(manifest.components);
+    if ('error' in validated) {
+      return {
+        status: 'corrupted',
+        message: `Invalid manifest: ${validated.error.replace(/^Error: /, '')}`,
+      };
+    }
   }
 
 
