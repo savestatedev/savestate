@@ -214,8 +214,12 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
 
     let existed = false;
     try {
-      await fs.access(out);
+      const outStats = await fs.stat(out);
       existed = true;
+      if (outStats.isDirectory()) {
+        console.error(`Error: Output path is a directory: ${out}`);
+        return { written: false, out, overwritten: false };
+      }
     } catch {
       existed = false;
     }
