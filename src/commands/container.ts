@@ -651,6 +651,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const manifestBuffer = fileBuffer.subarray(20, manifestEnd);
     const manifest = JSON.parse(manifestBuffer.toString());
 
+    if (manifest && typeof manifest === 'object' && 'components' in manifest) {
+      const validated = validateIncludedComponents(manifest.components);
+      if ('error' in validated) {
+        console.error(validated.error);
+        return undefined;
+      }
+    }
+
     // 2. Decrypt and verify
     const encryptedState = fileBuffer.subarray(manifestEnd);
     reportContainerProgress('Decrypting agent state', encryptedState.length);
