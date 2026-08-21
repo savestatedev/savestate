@@ -233,6 +233,15 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         return { written: false, out, overwritten: false };
       }
     }
+    try {
+      const parentStats = await fs.stat(dirname(out));
+      if (!parentStats.isDirectory()) {
+        console.error(`Error: Output directory is a file: ${dirname(out)}`);
+        return { written: false, out, overwritten: false };
+      }
+    } catch {
+      // Missing parent is reported by writeFile as ENOENT.
+    }
     if (existed && !options.force) {
       console.error(
         `Error: Output file already exists: ${out}. Use --force to overwrite.`,
