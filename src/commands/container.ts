@@ -142,6 +142,9 @@ export function applyExcludePaths(
 
   const next: ComponentSelection = { ...components };
   for (const part of parts) {
+    if (!components[part as IncludePath]) {
+      return { error: `Error: Exclude path not selected: ${part}.` };
+    }
     next[part as IncludePath] = false;
   }
 
@@ -555,25 +558,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       return undefined;
     }
 
-    if (options.include !== undefined) {
-      const parsed = parseIncludePaths(options.include);
-      if ('error' in parsed) {
-        console.error(parsed.error);
-        return undefined;
-      }
+    const included = parseIncludePaths(options.include);
+    if ('error' in included) {
+      console.error(included.error);
+      return undefined;
     }
 
     if (options.exclude !== undefined) {
-      const parsed = applyExcludePaths(
-        {
-          personality: true,
-          memory: true,
-          tools: true,
-          preferences: true,
-          conversation_history: true,
-        },
-        options.exclude,
-      );
+      const parsed = applyExcludePaths(included.components, options.exclude);
       if ('error' in parsed) {
         console.error(parsed.error);
         return undefined;
@@ -705,12 +697,12 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     
     let stateText = decryptedState.toString();
     let parsedState = JSON.parse(stateText) as Record<string, unknown>;
-    const included = applyImportInclude(parsedState, options.include);
-    if ('error' in included) {
-      console.error(included.error);
+    const imported = applyImportInclude(parsedState, options.include);
+    if ('error' in imported) {
+      console.error(imported.error);
       return undefined;
     }
-    const selected = applyImportExclude(included.state, options.exclude);
+    const selected = applyImportExclude(imported.state, options.exclude);
     if ('error' in selected) {
       console.error(selected.error);
       return undefined;
