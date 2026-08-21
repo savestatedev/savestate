@@ -121,6 +121,14 @@ export function applyExcludePaths(
     return { error: 'Error: --exclude requires at least one path.' };
   }
 
+  const seen = new Set<string>();
+  for (const part of parts) {
+    if (seen.has(part)) {
+      return { error: `Error: Duplicate exclude path: ${part}.` };
+    }
+    seen.add(part);
+  }
+
   const unknown = parts.filter((part) => !INCLUDE_PATHS.includes(part as IncludePath));
   if (unknown.length > 0) {
     return {
