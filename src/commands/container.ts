@@ -15,7 +15,7 @@ async function writeTargetState(targetDir: string, state: string): Promise<strin
   return outFile;
 }
 
-export const INCLUDE_PATHS = ['personality', 'memory', 'tools', 'preferences'] as const;
+export const INCLUDE_PATHS = ['personality', 'memory', 'tools', 'preferences', 'conversation_history'] as const;
 
 export type IncludePath = (typeof INCLUDE_PATHS)[number];
 
@@ -24,6 +24,7 @@ export interface ComponentSelection {
   memory: boolean;
   tools: boolean;
   preferences: boolean;
+  conversation_history: boolean;
 }
 
 export function parseIncludePaths(raw?: string): { components: ComponentSelection } | { error: string } {
@@ -34,6 +35,7 @@ export function parseIncludePaths(raw?: string): { components: ComponentSelectio
         memory: true,
         tools: true,
         preferences: true,
+        conversation_history: true,
       },
     };
   }
@@ -61,6 +63,7 @@ export function parseIncludePaths(raw?: string): { components: ComponentSelectio
       memory: selected.has('memory'),
       tools: selected.has('tools'),
       preferences: selected.has('preferences'),
+      conversation_history: selected.has('conversation_history'),
     },
   };
 }
@@ -105,6 +108,12 @@ async function getAgentState(agentId: string, components: ComponentSelection): P
       language: 'en',
       timezone: 'UTC',
       formatting: {},
+    };
+  }
+
+  if (components.conversation_history) {
+    state.conversation_history = {
+      threads: [],
     };
   }
   
@@ -269,6 +278,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         memory: includeAll || !!options.includeMemory,
         tools: includeAll || !!options.includeTools,
         preferences: includeAll || !!options.includePreferences,
+        conversation_history: includeAll,
       };
     }
 
@@ -529,7 +539,7 @@ export function registerContainerCommands(program: Command) {
     .option('-o, --output <file>', 'Output file path', 'agent.savestate')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
-    .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences)')
+    .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -592,7 +602,7 @@ export function registerContainerCommands(program: Command) {
     .requiredOption('-o, --out <file>', 'Output file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption')
-    .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences)')
+    .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
