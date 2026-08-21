@@ -132,6 +132,55 @@ export function applyExcludePaths(
   return { components: next };
 }
 
+const IMPORT_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
+
+export function applyImportExclude(
+  state: Record<string, unknown>,
+  raw?: string,
+): { state: Record<string, unknown>; components: string[] } | { error: string } {
+  if (raw === undefined) {
+    return {
+      state,
+      components: Object.keys(state).filter((key) => !IMPORT_METADATA_KEYS.has(key)),
+    };
+  }
+
+  const parsed = applyExcludePaths(
+    {
+      personality: true,
+      memory: true,
+      tools: true,
+      preferences: true,
+      conversation_history: true,
+    },
+    raw,
+  );
+  if ('error' in parsed) {
+    return parsed;
+  }
+
+  const next: Record<string, unknown> = {};
+  for (const key of IMPORT_METADATA_KEYS) {
+    if (key in state) {
+      next[key] = state[key];
+    }
+  }
+
+  const components: string[] = [];
+  for (const path of INCLUDE_PATHS) {
+    if (parsed.components[path] && path in state) {
+      next[path] = state[path];
+      components.push(path);
+    }
+  }
+
+  if (components.length === 0) {
+    return { error: 'Error: --exclude matched no remaining components in this archive.' };
+  }
+
+  return { state: next, components };
+}
+
 // Placeholder for actual agent state loading
 async function getAgentState(agentId: string, components: ComponentSelection): Promise<string> {
   console.log(`Loading state for agent: ${agentId}`);
@@ -424,6 +473,7 @@ export interface RestoreOptions {
   replace?: boolean;
   dryRun?: boolean;
   target?: string;
+  exclude?: string;
 }
 
 export interface ImportResult {
@@ -436,12 +486,6 @@ export interface ImportResult {
   target?: string;
 }
 
-function listRestoredComponents(parsedState: Record<string, unknown>): string[] {
-  return Object.keys(parsedState).filter(
-    (key) => key !== 'agentId' && key !== 'version' && key !== 'exportedAt',
-  );
-}
-
 export async function importState(options: RestoreOptions): Promise<ImportResult | undefined> {
   try {
     const { in: inFile, passphrase, keyfile } = options;
@@ -449,6 +493,23 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     if (typeof inFile !== 'string' || inFile.trim() === '') {
       console.error(`Error: Input path must not be empty: ${JSON.stringify(inFile)}.`);
       return undefined;
+    }
+
+    if (options.exclude !== undefined) {
+      const parsed = applyExcludePaths(
+        {
+          personality: true,
+          memory: true,
+          tools: true,
+          preferences: true,
+          conversation_history: true,
+        },
+        options.exclude,
+      );
+      if ('error' in parsed) {
+        console.error(parsed.error);
+        return undefined;
+      }
     }
 
     if (options.target !== undefined) {
@@ -566,9 +627,19 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       process.exit(1);
     }
     
-    const stateText = decryptedState.toString();
-    const parsedState = JSON.parse(stateText) as Record<string, unknown>;
-    const components = listRestoredComponents(parsedState);
+    let stateText = decryptedState.toString();
+    let parsedState = JSON.parse(stateText) as Record<string, unknown>;
+    const selected = applyImportExclude(parsedState, options.exclude);
+    if ('error' in selected) {
+      console.error(selected.error);
+      return undefined;
+    }
+    if (options.exclude !== undefined) {
+      parsedState = selected.state;
+      stateText = JSON.stringify(parsedState, null, 2);
+      console.log(`Including paths: ${selected.components.join(', ')}`);
+    }
+    const components = selected.components;
     const result: ImportResult = {
       dryRun: !!options.dryRun,
       restored: !options.dryRun,
@@ -655,6 +726,7 @@ export function registerContainerCommands(program: Command) {
     .description('Import agent state from an encrypted .savestate file. Prints byte-size progress.')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase)')
+    .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
     .option('--merge', 'Merge with existing state (default: replace)')
     .option('--replace', 'Replace existing state completely')
     .option('--dry-run', 'Show what would be imported without restoring')
@@ -668,6 +740,7 @@ export function registerContainerCommands(program: Command) {
         replace: opts.replace,
         dryRun: opts.dryRun,
         target: opts.target,
+        exclude: opts.exclude,
       });
       if (!result) {
         process.exit(1);
@@ -719,6 +792,7 @@ export function registerContainerCommands(program: Command) {
     .requiredOption('-i, --in <file>', 'Input file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption')
+    .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
     .option('--merge', 'Merge with existing state')
     .option('--replace', 'Replace existing state (default)')
     .option('--dry-run', 'Show what would be imported without restoring')
@@ -732,6 +806,7 @@ export function registerContainerCommands(program: Command) {
         replace: opts.replace,
         dryRun: opts.dryRun,
         target: opts.target,
+        exclude: opts.exclude,
       });
       if (!result) {
         process.exit(1);
