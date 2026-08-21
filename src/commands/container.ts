@@ -65,6 +65,42 @@ export function parseIncludePaths(raw?: string): { components: ComponentSelectio
   };
 }
 
+export function applyExcludePaths(
+  components: ComponentSelection,
+  raw?: string,
+): { components: ComponentSelection } | { error: string } {
+  if (raw === undefined) {
+    return { components };
+  }
+
+  const parts = raw
+    .split(',')
+    .map((part) => part.trim().toLowerCase())
+    .filter((part) => part.length > 0);
+
+  if (parts.length === 0) {
+    return { error: 'Error: --exclude requires at least one path.' };
+  }
+
+  const unknown = parts.filter((part) => !INCLUDE_PATHS.includes(part as IncludePath));
+  if (unknown.length > 0) {
+    return {
+      error: `Error: Unknown exclude path: ${unknown[0]}. Allowed: ${INCLUDE_PATHS.join(', ')}.`,
+    };
+  }
+
+  const next: ComponentSelection = { ...components };
+  for (const part of parts) {
+    next[part as IncludePath] = false;
+  }
+
+  if (!INCLUDE_PATHS.some((path) => next[path])) {
+    return { error: 'Error: --exclude cannot remove every component.' };
+  }
+
+  return { components: next };
+}
+
 // Placeholder for actual agent state loading
 async function getAgentState(agentId: string, components: ComponentSelection): Promise<string> {
   console.log(`Loading state for agent: ${agentId}`);
@@ -141,6 +177,7 @@ export interface ExportOptions {
   passphrase?: string;
   keyfile?: string;
   include?: string;
+  exclude?: string;
   includePersonality?: boolean;
   includeMemory?: boolean;
   includeTools?: boolean;
@@ -259,8 +296,6 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         process.exit(1);
       }
       components = parsed.components;
-      const included = INCLUDE_PATHS.filter((path) => components[path]);
-      console.log(`Including paths: ${included.join(', ')}`);
     } else {
       const includeAll = !options.includePersonality && !options.includeMemory && 
                          !options.includeTools && !options.includePreferences;
@@ -270,6 +305,18 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         tools: includeAll || !!options.includeTools,
         preferences: includeAll || !!options.includePreferences,
       };
+    }
+
+    const excluded = applyExcludePaths(components, options.exclude);
+    if ('error' in excluded) {
+      console.error(excluded.error);
+      return { written: false, out, overwritten: false };
+    }
+    components = excluded.components;
+
+    if (options.include !== undefined || options.exclude !== undefined) {
+      const included = INCLUDE_PATHS.filter((path) => components[path]);
+      console.log(`Including paths: ${included.join(', ')}`);
     }
 
     reportContainerProgress(`Loading state for agent ${agent}`);
@@ -530,6 +577,7 @@ export function registerContainerCommands(program: Command) {
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences)')
+    .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -543,6 +591,7 @@ export function registerContainerCommands(program: Command) {
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
         include: opts.include,
+        exclude: opts.exclude,
         includePersonality: opts.includePersonality,
         includeMemory: opts.includeMemory,
         includeTools: opts.includeTools,
@@ -593,6 +642,7 @@ export function registerContainerCommands(program: Command) {
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences)')
+    .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -606,6 +656,7 @@ export function registerContainerCommands(program: Command) {
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
         include: opts.include,
+        exclude: opts.exclude,
         includePersonality: opts.includePersonality,
         includeMemory: opts.includeMemory,
         includeTools: opts.includeTools,
