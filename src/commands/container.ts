@@ -204,6 +204,12 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         console.error(`Error: Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
         return { written: false, out, overwritten: false };
       }
+      try {
+        await fs.access(keyfile);
+      } catch {
+        console.error(`Error: Keyfile not found: ${keyfile}`);
+        return { written: false, out, overwritten: false };
+      }
     }
 
     let existed = false;
