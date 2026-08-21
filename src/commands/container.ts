@@ -183,14 +183,11 @@ export function applyImportInclude(
 
   const components: string[] = [];
   for (const path of selected) {
-    if (path in state) {
-      next[path] = state[path];
-      components.push(path);
+    if (!(path in state)) {
+      return { error: `Error: Include path not in archive: ${path}.` };
     }
-  }
-
-  if (components.length === 0) {
-    return { error: 'Error: --include matched no components in this archive.' };
+    next[path] = state[path];
+    components.push(path);
   }
 
   return { state: next, components };
@@ -668,6 +665,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if ('error' in validated) {
         console.error(validated.error);
         return undefined;
+      }
+      if (options.include !== undefined) {
+        for (const path of INCLUDE_PATHS) {
+          if (included.components[path] && !validated.components.includes(path)) {
+            console.error(`Error: Include path not in archive: ${path}.`);
+            return undefined;
+          }
+        }
       }
     }
 
