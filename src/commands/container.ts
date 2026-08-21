@@ -77,6 +77,14 @@ export function parseIncludePaths(raw?: string): { components: ComponentSelectio
     return { error: 'Error: --include requires at least one path.' };
   }
 
+  const seen = new Set<string>();
+  for (const part of parts) {
+    if (seen.has(part)) {
+      return { error: `Error: Duplicate include path: ${part}.` };
+    }
+    seen.add(part);
+  }
+
   const unknown = parts.filter((part) => !INCLUDE_PATHS.includes(part as IncludePath));
   if (unknown.length > 0) {
     return {
@@ -84,7 +92,7 @@ export function parseIncludePaths(raw?: string): { components: ComponentSelectio
     };
   }
 
-  const selected = new Set(parts);
+  const selected = seen;
   return {
     components: {
       personality: selected.has('personality'),
