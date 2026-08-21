@@ -364,6 +364,15 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
     }
 
+    try {
+      const inStats = await fs.stat(inFile);
+      if (inStats.isDirectory()) {
+        console.error(`Error: Input path is a directory: ${inFile}`);
+        return undefined;
+      }
+    } catch {
+    }
+
     const keySource = await resolveKeySource(passphrase, keyfile);
 
     // Determine restore mode
