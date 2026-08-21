@@ -205,7 +205,11 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         return { written: false, out, overwritten: false };
       }
       try {
-        await fs.access(keyfile);
+        const keyfileStats = await fs.stat(keyfile);
+        if (keyfileStats.isDirectory()) {
+          console.error(`Error: Keyfile is a directory: ${keyfile}`);
+          return { written: false, out, overwritten: false };
+        }
       } catch {
         console.error(`Error: Keyfile not found: ${keyfile}`);
         return { written: false, out, overwritten: false };
