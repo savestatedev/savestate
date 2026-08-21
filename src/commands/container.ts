@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { promises as fs } from 'fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { encrypt, decrypt, KeySource } from '../container/crypto.js';
 import { getPassphrase } from '../passphrase.js';
@@ -226,6 +226,15 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       }
     } catch {
       existed = false;
+    }
+    try {
+      const parentStats = await fs.stat(dirname(out));
+      if (!parentStats.isDirectory()) {
+        console.error(`Error: Output directory is a file: ${dirname(out)}`);
+        return { written: false, out, overwritten: false };
+      }
+    } catch {
+      // Missing parent is reported by writeFile as ENOENT.
     }
     if (existed && !options.force) {
       console.error(
