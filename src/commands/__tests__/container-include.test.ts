@@ -55,13 +55,14 @@ describe('savestate export --include', () => {
         memory: true,
         tools: false,
         preferences: false,
+        conversation_history: false,
       },
     });
   });
 
   it('rejects an unknown include path', () => {
     expect(parseIncludePaths('memory,secrets')).toEqual({
-      error: 'Error: Unknown include path: secrets. Allowed: personality, memory, tools, preferences.',
+      error: 'Error: Unknown include path: secrets. Allowed: personality, memory, tools, preferences, conversation_history.',
     });
   });
 
@@ -93,5 +94,6 @@ describe('savestate export --include', () => {
     expect(state).not.toHaveProperty('personality');
     expect(state).not.toHaveProperty('tools');
     expect(state).not.toHaveProperty('preferences');
+    expect(state).not.toHaveProperty('conversation_history');
   });
 });
