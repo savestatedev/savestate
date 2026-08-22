@@ -205,6 +205,22 @@ export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
 
+export function formatImportEncryption(algorithm: string): string {
+  return `  Encryption: ${algorithm}`;
+}
+
+function optionalImportEncryption(value: unknown): string | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const algorithm = (value as { algorithm?: unknown }).algorithm;
+  if (typeof algorithm !== 'string') {
+    return undefined;
+  }
+  const named = algorithm.trim();
+  return named.length > 0 ? named : undefined;
+}
+
 const IMPORT_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
 
 export function applyImportInclude(
@@ -609,6 +625,7 @@ export interface ImportResult {
   created: string;
   components: string[];
   excluded?: string[];
+  encryptionAlgorithm?: string;
   target?: string;
 }
 
@@ -840,6 +857,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
     }
     const components = selected.components;
+    const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
     const result: ImportResult = {
       dryRun: !!options.dryRun,
       restored: !options.dryRun,
@@ -848,6 +866,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       created: manifest.created,
       components,
       ...(excludedComponents ? { excluded: excludedComponents } : {}),
+      ...(encryptionAlgorithm ? { encryptionAlgorithm } : {}),
     };
 
     if (options.dryRun) {
@@ -856,6 +875,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`  Mode: ${mode}`);
       console.log(`  Original export: ${manifest.created}`);
       console.log(`  Components: ${components.join(', ') || 'none'}`);
+      if (encryptionAlgorithm) {
+        console.log(formatImportEncryption(encryptionAlgorithm));
+      }
       if (excludedComponents && excludedComponents.length > 0) {
         console.log(formatImportExcluded(excludedComponents));
       }
@@ -876,6 +898,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
     console.log(`  Original export: ${manifest.created}`);
+    if (encryptionAlgorithm) {
+      console.log(formatImportEncryption(encryptionAlgorithm));
+    }
     if (excludedComponents && excludedComponents.length > 0) {
       console.log(formatImportExcluded(excludedComponents));
     }
