@@ -237,6 +237,22 @@ function optionalImportEncryption(value: unknown): string | undefined {
   return named.length > 0 ? named : undefined;
 }
 
+export function formatImportKeyDerivation(kdf: string): string {
+  return `  Key derivation: ${kdf}`;
+}
+
+function optionalImportKeyDerivation(value: unknown): string | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const named = (value as { keyDerivation?: unknown }).keyDerivation;
+  if (typeof named !== 'string') {
+    return undefined;
+  }
+  const kdf = named.trim();
+  return kdf.length > 0 ? kdf : undefined;
+}
+
 const IMPORT_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
 
 export function applyImportInclude(
@@ -643,6 +659,7 @@ export interface ImportResult {
   excluded?: string[];
   description?: string;
   encryptionAlgorithm?: string;
+  keyDerivation?: string;
   target?: string;
 }
 
@@ -876,6 +893,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const components = selected.components;
     const description = optionalImportDescription(manifest.description);
     const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
+    const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
     const result: ImportResult = {
       dryRun: !!options.dryRun,
       restored: !options.dryRun,
@@ -886,6 +904,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       ...(excludedComponents ? { excluded: excludedComponents } : {}),
       ...(description ? { description } : {}),
       ...(encryptionAlgorithm ? { encryptionAlgorithm } : {}),
+      ...(keyDerivation ? { keyDerivation } : {}),
     };
 
     if (options.dryRun) {
@@ -899,6 +918,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(formatImportComponents(components));
       if (encryptionAlgorithm) {
         console.log(formatImportEncryption(encryptionAlgorithm));
+      }
+      if (keyDerivation) {
+        console.log(formatImportKeyDerivation(keyDerivation));
       }
       if (excludedComponents && excludedComponents.length > 0) {
         console.log(formatImportExcluded(excludedComponents));
@@ -926,6 +948,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     console.log(formatImportComponents(components));
     if (encryptionAlgorithm) {
       console.log(formatImportEncryption(encryptionAlgorithm));
+    }
+    if (keyDerivation) {
+      console.log(formatImportKeyDerivation(keyDerivation));
     }
     if (excludedComponents && excludedComponents.length > 0) {
       console.log(formatImportExcluded(excludedComponents));
