@@ -249,6 +249,10 @@ export function formatImportSize(payloadBytes: number): string {
   return `  Size: ${payloadBytes} bytes`;
 }
 
+export function formatExportSize(payloadBytes: number): string {
+  return `  Size: ${payloadBytes} bytes`;
+}
+
 export function formatImportContentType(contentType: string): string {
   return `  Content-Type: ${contentType}`;
 }
@@ -657,6 +661,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     reportContainerProgress(`Writing ${out}`, finalBuffer.length);
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
+    console.log(formatExportSize(plaintext.length));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
