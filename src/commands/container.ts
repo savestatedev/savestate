@@ -209,6 +209,18 @@ export function formatImportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
 
+export function formatImportDescription(description: string): string {
+  return `  Description: ${description}`;
+}
+
+function optionalImportDescription(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const description = value.trim();
+  return description.length > 0 ? description : undefined;
+}
+
 const IMPORT_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
 
 export function applyImportInclude(
@@ -613,6 +625,7 @@ export interface ImportResult {
   created: string;
   components: string[];
   excluded?: string[];
+  description?: string;
   target?: string;
 }
 
@@ -844,6 +857,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
     }
     const components = selected.components;
+    const description = optionalImportDescription(manifest.description);
     const result: ImportResult = {
       dryRun: !!options.dryRun,
       restored: !options.dryRun,
@@ -852,6 +866,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       created: manifest.created,
       components,
       ...(excludedComponents ? { excluded: excludedComponents } : {}),
+      ...(description ? { description } : {}),
     };
 
     if (options.dryRun) {
@@ -859,6 +874,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`  Agent: ${manifest.agentId}`);
       console.log(`  Mode: ${mode}`);
       console.log(`  Original export: ${manifest.created}`);
+      if (description) {
+        console.log(formatImportDescription(description));
+      }
       console.log(formatImportComponents(components));
       if (excludedComponents && excludedComponents.length > 0) {
         console.log(formatImportExcluded(excludedComponents));
@@ -880,6 +898,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
     console.log(`  Original export: ${manifest.created}`);
+    if (description) {
+      console.log(formatImportDescription(description));
+    }
     console.log(formatImportComponents(components));
     if (excludedComponents && excludedComponents.length > 0) {
       console.log(formatImportExcluded(excludedComponents));
