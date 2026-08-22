@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { encrypt } from '../../container/crypto.js';
-import { verifyContainer } from '../verify.js';
+import { missingPackedComponent, verifyContainer } from '../verify.js';
 
 function createMagicHeader(version = 1): Buffer {
   const header = Buffer.alloc(16);
@@ -13,11 +13,11 @@ function createMagicHeader(version = 1): Buffer {
   return header;
 }
 
-describe('savestate verify component schema', () => {
+describe('savestate verify packed component membership', () => {
   let testDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), 'savestate-verify-components-schema-'));
+    testDir = await mkdtemp(join(tmpdir(), 'savestate-verify-components-mismatch-'));
   });
 
   afterAll(async () => {
@@ -26,11 +26,16 @@ describe('savestate verify component schema', () => {
 
   async function writeContainer(fileName: string, components?: unknown): Promise<string> {
     const passphrase = 'synthetic-verify-pass';
-    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'], tools: { enabled: [] } }));
+    const plaintext = Buffer.from(JSON.stringify({
+      agentId: 'demo-agent',
+      version: 1,
+      exportedAt: '2026-08-22T02:00:00.000Z',
+      memory: { facts: ['synthetic'] },
+    }));
     const encryptedState = await encrypt(plaintext, { passphrase });
     const manifest: Record<string, unknown> = {
       formatVersion: 1,
-      created: '2026-08-18T20:54:00.000Z',
+      created: '2026-08-22T02:00:00.000Z',
       agentId: 'demo-agent',
       payloads: [
         {
@@ -55,24 +60,31 @@ describe('savestate verify component schema', () => {
     return filePath;
   }
 
-  it('rejects a container whose components list includes an unknown path', async () => {
-    const filePath = await writeContainer('unknown-component.savestate', ['memory', 'secrets']);
+  it('reports a listed component that is absent from packed state', () => {
+    expect(missingPackedComponent(['memory', 'personality'], ['memory'])).toBe('personality');
+    expect(missingPackedComponent(['memory'], ['memory'])).toBeUndefined();
+  });
+
+  it('rejects a container whose components list includes an unpacked path', async () => {
+    const filePath = await writeContainer('missing-packed.savestate', ['memory', 'personality']);
 
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
     expect(result.status).toBe('corrupted');
-    expect(result.message).toMatch(/unknown component/i);
+    expect(result.message).toBe('Invalid manifest: component not packed: personality');
     expect(result.manifest).toBeUndefined();
   });
 
-  it('accepts a container with known components and still verifies older files without them', async () => {
-    const withComponents = await writeContainer('known-components.savestate', ['memory', 'tools']);
-    const withoutComponents = await writeContainer('no-components.savestate');
+  it('accepts a matching components list and still verifies older files without them', async () => {
+    const matching = await writeContainer('matching-components.savestate', ['memory']);
+    const legacy = await writeContainer('no-components.savestate');
 
-    const valid = await verifyContainer(withComponents, { passphrase: 'synthetic-verify-pass' });
-    const legacy = await verifyContainer(withoutComponents, { passphrase: 'synthetic-verify-pass' });
+    const valid = await verifyContainer(matching, { passphrase: 'synthetic-verify-pass' });
+    const older = await verifyContainer(legacy, { passphrase: 'synthetic-verify-pass' });
 
     expect(valid.status).toBe('valid');
-    expect(legacy.status).toBe('valid');
+    expect(valid.components).toEqual(['memory']);
+    expect(older.status).toBe('valid');
+    expect(older.components).toEqual(['memory']);
   });
 });
