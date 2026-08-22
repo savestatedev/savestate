@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { encrypt } from '../../container/crypto.js';
-import { exportState, importState } from '../container.js';
+import { exportState, importState, missingPackedComponent } from '../container.js';
 
 function createMagicHeader(version = 1): Buffer {
   const header = Buffer.alloc(16);
@@ -13,11 +13,11 @@ function createMagicHeader(version = 1): Buffer {
   return header;
 }
 
-describe('savestate import component schema', () => {
+describe('savestate import packed component membership', () => {
   let testDir: string;
 
   beforeAll(async () => {
-    testDir = join(tmpdir(), `savestate-import-components-schema-${Date.now()}`);
+    testDir = join(tmpdir(), `savestate-import-component-packed-${Date.now()}`);
     await fs.mkdir(testDir, { recursive: true });
   });
 
@@ -30,12 +30,13 @@ describe('savestate import component schema', () => {
     const plaintext = Buffer.from(JSON.stringify({
       agentId: 'fixture-agent',
       version: 1,
+      exportedAt: '2026-08-22T09:00:00.000Z',
       memory: { facts: ['synthetic'] },
     }));
     const encryptedState = await encrypt(plaintext, { passphrase });
     const manifest: Record<string, unknown> = {
       formatVersion: 1,
-      created: '2026-08-21T17:10:00.000Z',
+      created: '2026-08-22T09:00:00.000Z',
       agentId: 'fixture-agent',
       payloads: [
         {
@@ -60,8 +61,13 @@ describe('savestate import component schema', () => {
     return filePath;
   }
 
-  it('rejects a container whose components list includes an unknown path', async () => {
-    const filePath = await writeContainer('unknown-component.savestate', ['memory', 'secrets']);
+  it('reports a listed component that is absent from packed state', () => {
+    expect(missingPackedComponent(['memory', 'personality'], ['memory'])).toBe('personality');
+    expect(missingPackedComponent(['memory'], ['memory'])).toBeUndefined();
+  });
+
+  it('rejects a container whose components list includes an unpacked path', async () => {
+    const filePath = await writeContainer('missing-packed.savestate', ['memory', 'personality']);
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
@@ -71,41 +77,24 @@ describe('savestate import component schema', () => {
     });
 
     expect(result).toBeUndefined();
-    expect(error.mock.calls.flat().join('\n')).toMatch(/unknown component/i);
+    expect(error.mock.calls.flat().join('\n')).toMatch(/component not packed: personality/i);
     expect(log.mock.calls.flat().join('\n')).not.toContain('Successfully restored');
     error.mockRestore();
     log.mockRestore();
   });
 
-  it('rejects an empty components list', async () => {
-    const filePath = await writeContainer('empty-components.savestate', []);
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  it('imports a matching components list and still accepts older files without them', async () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    const result = await importState({
-      in: filePath,
-      passphrase: 'synthetic-passphrase',
-    });
-
-    expect(result).toBeUndefined();
-    expect(error.mock.calls.flat().join('\n')).toMatch(/at least one path/i);
-    expect(log.mock.calls.flat().join('\n')).not.toContain('Successfully restored');
-    error.mockRestore();
-    log.mockRestore();
-  });
-
-  it('imports known components and still accepts older files without them', async () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-    const withComponents = await writeContainer('known-components.savestate', ['memory']);
-    const withoutComponents = await writeContainer('no-components.savestate');
+    const matching = await writeContainer('matching-components.savestate', ['memory']);
+    const legacy = await writeContainer('no-components.savestate');
     const exported = join(testDir, 'exported.savestate');
 
-    const known = await importState({
-      in: withComponents,
+    const valid = await importState({
+      in: matching,
       passphrase: 'synthetic-passphrase',
     });
-    const legacy = await importState({
-      in: withoutComponents,
+    const older = await importState({
+      in: legacy,
       passphrase: 'synthetic-passphrase',
     });
     const written = await exportState({
@@ -119,8 +108,8 @@ describe('savestate import component schema', () => {
       passphrase: 'synthetic-passphrase',
     });
 
-    expect(known).toMatchObject({ restored: true, agentId: 'fixture-agent' });
-    expect(legacy).toMatchObject({ restored: true, agentId: 'fixture-agent' });
+    expect(valid).toMatchObject({ restored: true, agentId: 'fixture-agent' });
+    expect(older).toMatchObject({ restored: true, agentId: 'fixture-agent' });
     expect(written.written).toBe(true);
     expect(fromExport).toMatchObject({ restored: true, agentId: 'fixture-agent' });
     log.mockRestore();
