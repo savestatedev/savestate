@@ -17,6 +17,7 @@ export interface VerifyResult {
   checksum?: string;
   payloadBytes?: number;
   contentType?: string;
+  payloadName?: string;
   encryptionAlgorithm?: string;
   keyDerivation?: string;
   manifest?: {
@@ -39,6 +40,10 @@ export function formatVerifySize(payloadBytes: number): string {
 
 export function formatVerifyContentType(contentType: string): string {
   return `   Content-Type: ${contentType}`;
+}
+
+export function formatVerifyPayloadName(name: string): string {
+  return `   Payload: ${name}`;
 }
 
 const DEFAULT_VERIFY_ENCRYPTION = 'AES-256-GCM';
@@ -737,6 +742,7 @@ export async function verifyContainer(
     checksum: calculatedHash,
     payloadBytes: decryptedState.length,
     contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
+    payloadName: typeof payload.name === 'string' && payload.name.trim() !== '' ? payload.name.trim() : undefined,
     encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
     keyDerivation: resolveKeyDerivation(manifest),
     manifest: {
@@ -790,6 +796,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.contentType) {
         lines.push(formatVerifyContentType(result.contentType));
+      }
+      if (result.payloadName) {
+        lines.push(formatVerifyPayloadName(result.payloadName));
       }
       if (result.encryptionAlgorithm) {
         lines.push(formatVerifyEncryption(result.encryptionAlgorithm));
