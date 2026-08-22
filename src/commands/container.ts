@@ -740,12 +740,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
     }
 
+    let excludedComponents: IncludePath[] | undefined;
     if (manifest && typeof manifest === 'object' && 'excluded' in manifest) {
       const validatedExcluded = validateExcludedComponents(manifest.excluded);
       if ('error' in validatedExcluded) {
         console.error(validatedExcluded.error);
         return undefined;
       }
+      excludedComponents = validatedExcluded.excluded;
     }
 
     // 2. Decrypt and verify
@@ -774,6 +776,15 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     
     let stateText = decryptedState.toString();
     let parsedState = JSON.parse(stateText) as Record<string, unknown>;
+    if (excludedComponents) {
+      const packedExclusion = excludedComponents.find((path) =>
+        Object.prototype.hasOwnProperty.call(parsedState, path),
+      );
+      if (packedExclusion) {
+        console.error(`Error: excluded path is packed: ${packedExclusion}`);
+        return undefined;
+      }
+    }
     const imported = applyImportInclude(parsedState, options.include);
     if ('error' in imported) {
       console.error(imported.error);
