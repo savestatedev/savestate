@@ -87,6 +87,7 @@ describe('savestate import --dry-run', () => {
       mode: 'replace',
       created: '2026-08-17T21:08:00.000Z',
       components: ['personality', 'memory'],
+      checksum: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
     expect(log.mock.calls.flat().join('\n')).toContain('DRY RUN');
     expect(log.mock.calls.flat().join('\n')).not.toContain('Replacing state');

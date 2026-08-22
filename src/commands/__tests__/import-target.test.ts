@@ -90,6 +90,7 @@ describe('savestate import --target', () => {
       mode: 'replace',
       created: '2026-08-17T23:03:00.000Z',
       components: ['personality', 'memory'],
+      checksum: expect.stringMatching(/^[a-f0-9]{64}$/),
       target: writtenPath,
     });
     expect(await fs.readFile(writtenPath, 'utf-8')).toBe(plaintext);
@@ -115,6 +116,7 @@ describe('savestate import --target', () => {
       mode: 'replace',
       created: '2026-08-17T23:03:00.000Z',
       components: ['personality', 'memory'],
+      checksum: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
     await expect(fs.stat(strayDir)).rejects.toMatchObject({ code: 'ENOENT' });
     expect(log.mock.calls.flat().join('\n')).toContain('Successfully restored');

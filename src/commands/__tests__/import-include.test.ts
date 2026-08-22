@@ -118,6 +118,7 @@ describe('savestate import --include', () => {
       mode: 'replace',
       created: '2026-08-21T15:00:00.000Z',
       components: ['memory'],
+      checksum: expect.stringMatching(/^[a-f0-9]{64}$/),
       target: writtenPath,
     });
     expect(log.mock.calls.flat()).toContain('Including paths: memory');
