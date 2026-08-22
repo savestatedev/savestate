@@ -103,6 +103,13 @@ export function packedExcludedPath(
   return excluded.find((path) => packed.includes(path));
 }
 
+export function unlistedPackedComponent(
+  listed: readonly string[],
+  packed: readonly string[],
+): string | undefined {
+  return packed.find((path) => !listed.includes(path));
+}
+
 /**
  * Verify a .savestate file's integrity and optionally its decryptability.
  *
@@ -677,6 +684,13 @@ export async function verifyContainer(
       return {
         status: 'corrupted',
         message: `Invalid manifest: component not packed: ${missing}`,
+      };
+    }
+    const extra = unlistedPackedComponent(manifest.components, components);
+    if (extra) {
+      return {
+        status: 'corrupted',
+        message: `Invalid manifest: packed path not listed: ${extra}`,
       };
     }
   }
