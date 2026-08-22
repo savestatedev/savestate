@@ -257,6 +257,18 @@ export function formatImportFormatVersion(formatVersion: number): string {
   return `  Format: v${formatVersion}`;
 }
 
+export function formatImportPayloadName(name: string): string {
+  return `  Payload: ${name}`;
+}
+
+function optionalImportPayloadName(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const name = value.trim();
+  return name.length > 0 ? name : undefined;
+}
+
 function optionalImportKeyDerivation(value: unknown): string | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -680,6 +692,7 @@ export interface ImportResult {
   payloadBytes?: number;
   contentType?: string;
   formatVersion?: number;
+  payloadName?: string;
   target?: string;
 }
 
@@ -922,6 +935,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
         ? manifest.formatVersion
         : undefined;
+    const payloadName = optionalImportPayloadName(payload.name);
     const result: ImportResult = {
       dryRun: !!options.dryRun,
       restored: !options.dryRun,
@@ -937,6 +951,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       payloadBytes: decryptedState.length,
       ...(contentType ? { contentType } : {}),
       ...(formatVersion !== undefined ? { formatVersion } : {}),
+      ...(payloadName ? { payloadName } : {}),
     };
 
     if (options.dryRun) {
@@ -965,6 +980,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
       console.log(formatImportChecksum(calculatedHash));
       console.log(formatImportSize(decryptedState.length));
+      if (payloadName) {
+        console.log(formatImportPayloadName(payloadName));
+      }
       console.log(`  This was a dry run. No agent state was restored.`);
       return result;
     }
@@ -1003,6 +1021,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     }
     console.log(formatImportChecksum(calculatedHash));
     console.log(formatImportSize(decryptedState.length));
+    if (payloadName) {
+      console.log(formatImportPayloadName(payloadName));
+    }
     if (targetPath) {
       console.log(`  Target: ${targetPath}`);
     }
