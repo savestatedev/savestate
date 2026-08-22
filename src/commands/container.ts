@@ -740,6 +740,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
     }
 
+    if (manifest && typeof manifest === 'object' && 'excluded' in manifest) {
+      const validatedExcluded = validateExcludedComponents(manifest.excluded);
+      if ('error' in validatedExcluded) {
+        console.error(validatedExcluded.error);
+        return undefined;
+      }
+    }
+
     // 2. Decrypt and verify
     const encryptedState = fileBuffer.subarray(manifestEnd);
     reportContainerProgress('Decrypting agent state', encryptedState.length);
