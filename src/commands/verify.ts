@@ -89,6 +89,13 @@ export function listStateComponents(state: unknown): string[] {
     .sort();
 }
 
+export function missingPackedComponent(
+  listed: readonly string[],
+  packed: readonly string[],
+): string | undefined {
+  return listed.find((path) => !packed.includes(path));
+}
+
 /**
  * Verify a .savestate file's integrity and optionally its decryptability.
  *
@@ -645,6 +652,16 @@ export async function verifyContainer(
         formatVersion: manifest.formatVersion,
       },
     };
+  }
+
+  if (Array.isArray(manifest.components)) {
+    const missing = missingPackedComponent(manifest.components, components);
+    if (missing) {
+      return {
+        status: 'corrupted',
+        message: `Invalid manifest: component not packed: ${missing}`,
+      };
+    }
   }
 
   const description = optionalDescription(manifest.description);
