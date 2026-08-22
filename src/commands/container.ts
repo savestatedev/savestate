@@ -155,6 +155,17 @@ export function applyExcludePaths(
   return { components: next };
 }
 
+export function listExcludedPaths(raw?: string): string[] {
+  if (raw === undefined) {
+    return [];
+  }
+
+  return raw
+    .split(',')
+    .map((part) => part.trim().toLowerCase())
+    .filter((part) => part.length > 0);
+}
+
 const IMPORT_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
 
 export function applyImportInclude(
@@ -469,6 +480,10 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     if (options.include !== undefined || options.exclude !== undefined) {
       console.log(`Including paths: ${validatedComponents.components.join(', ')}`);
     }
+    const excludedPaths = listExcludedPaths(options.exclude);
+    if (excludedPaths.length > 0) {
+      console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
+    }
 
     reportContainerProgress(`Loading state for agent ${agent}`);
     const agentState = await getAgentState(agent, components);
@@ -716,6 +731,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       parsedState = selected.state;
       stateText = JSON.stringify(parsedState, null, 2);
       console.log(`Including paths: ${selected.components.join(', ')}`);
+    }
+    const excludedPaths = listExcludedPaths(options.exclude);
+    if (excludedPaths.length > 0) {
+      console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
     }
     const components = selected.components;
     const result: ImportResult = {
