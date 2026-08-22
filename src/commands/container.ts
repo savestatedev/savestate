@@ -55,6 +55,13 @@ export function validateIncludedComponents(
   return { components };
 }
 
+export function missingPackedComponent(
+  listed: readonly string[],
+  packed: readonly string[],
+): string | undefined {
+  return listed.find((path) => !packed.includes(path));
+}
+
 export function validateExcludedComponents(
   value: unknown,
 ): { excluded: IncludePath[] } | { error: string } {
@@ -716,12 +723,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const manifestBuffer = fileBuffer.subarray(20, manifestEnd);
     const manifest = JSON.parse(manifestBuffer.toString());
 
+    let listedComponents: IncludePath[] | undefined;
     if (manifest && typeof manifest === 'object' && 'components' in manifest) {
       const validated = validateIncludedComponents(manifest.components);
       if ('error' in validated) {
         console.error(validated.error);
         return undefined;
       }
+      listedComponents = validated.components;
       if (options.include !== undefined) {
         for (const path of INCLUDE_PATHS) {
           if (included.components[path] && !validated.components.includes(path)) {
@@ -774,6 +783,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     
     let stateText = decryptedState.toString();
     let parsedState = JSON.parse(stateText) as Record<string, unknown>;
+    if (listedComponents) {
+      const packed = Object.keys(parsedState).filter((key) => !IMPORT_METADATA_KEYS.has(key));
+      const missing = missingPackedComponent(listedComponents, packed);
+      if (missing) {
+        console.error(`Error: component not packed: ${missing}`);
+        return undefined;
+      }
+    }
     const imported = applyImportInclude(parsedState, options.include);
     if ('error' in imported) {
       console.error(imported.error);
