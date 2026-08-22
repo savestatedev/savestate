@@ -716,12 +716,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const manifestBuffer = fileBuffer.subarray(20, manifestEnd);
     const manifest = JSON.parse(manifestBuffer.toString());
 
+    let listedComponents: IncludePath[] | undefined;
     if (manifest && typeof manifest === 'object' && 'components' in manifest) {
       const validated = validateIncludedComponents(manifest.components);
       if ('error' in validated) {
         console.error(validated.error);
         return undefined;
       }
+      listedComponents = validated.components;
       if (options.include !== undefined) {
         for (const path of INCLUDE_PATHS) {
           if (included.components[path] && !validated.components.includes(path)) {
@@ -774,6 +776,15 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     
     let stateText = decryptedState.toString();
     let parsedState = JSON.parse(stateText) as Record<string, unknown>;
+    if (listedComponents) {
+      const extra = Object.keys(parsedState)
+        .filter((key) => !IMPORT_METADATA_KEYS.has(key))
+        .find((path) => !listedComponents.includes(path as IncludePath));
+      if (extra) {
+        console.error(`Error: packed path not listed: ${extra}`);
+        return undefined;
+      }
+    }
     const imported = applyImportInclude(parsedState, options.include);
     if ('error' in imported) {
       console.error(imported.error);
