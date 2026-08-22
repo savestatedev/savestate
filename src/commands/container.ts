@@ -716,12 +716,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const manifestBuffer = fileBuffer.subarray(20, manifestEnd);
     const manifest = JSON.parse(manifestBuffer.toString());
 
+    let listedComponents: IncludePath[] | undefined;
     if (manifest && typeof manifest === 'object' && 'components' in manifest) {
       const validated = validateIncludedComponents(manifest.components);
       if ('error' in validated) {
         console.error(validated.error);
         return undefined;
       }
+      listedComponents = validated.components;
       if (options.include !== undefined) {
         for (const path of INCLUDE_PATHS) {
           if (included.components[path] && !validated.components.includes(path)) {
@@ -745,6 +747,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if ('error' in validatedExcluded) {
         console.error(validatedExcluded.error);
         return undefined;
+      }
+      if (listedComponents) {
+        const listed = listedComponents;
+        const overlap = validatedExcluded.excluded.find((path) => listed.includes(path));
+        if (overlap) {
+          console.error(`Error: excluded path is listed: ${overlap}`);
+          return undefined;
+        }
       }
     }
 
