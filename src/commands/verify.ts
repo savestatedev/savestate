@@ -96,6 +96,13 @@ export function missingPackedComponent(
   return listed.find((path) => !packed.includes(path));
 }
 
+export function overlappingExcludedComponent(
+  listed: readonly string[],
+  excluded: readonly string[],
+): string | undefined {
+  return excluded.find((path) => listed.includes(path));
+}
+
 /**
  * Verify a .savestate file's integrity and optionally its decryptability.
  *
@@ -361,6 +368,16 @@ export async function verifyContainer(
       return {
         status: 'corrupted',
         message: `Invalid manifest: ${validated.error.replace(/^Error: /, '')}`,
+      };
+    }
+  }
+
+  if (Array.isArray(manifest.components) && Array.isArray(manifest.excluded)) {
+    const overlap = overlappingExcludedComponent(manifest.components, manifest.excluded);
+    if (overlap) {
+      return {
+        status: 'corrupted',
+        message: `Invalid manifest: excluded path is listed: ${overlap}`,
       };
     }
   }
