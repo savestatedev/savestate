@@ -205,6 +205,10 @@ export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
 
+export function formatImportComponents(components: readonly string[]): string {
+  return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
+}
+
 const IMPORT_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
 
 export function applyImportInclude(
@@ -855,7 +859,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`  Agent: ${manifest.agentId}`);
       console.log(`  Mode: ${mode}`);
       console.log(`  Original export: ${manifest.created}`);
-      console.log(`  Components: ${components.join(', ') || 'none'}`);
+      console.log(formatImportComponents(components));
       if (excludedComponents && excludedComponents.length > 0) {
         console.log(formatImportExcluded(excludedComponents));
       }
@@ -876,6 +880,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
     console.log(`  Original export: ${manifest.created}`);
+    console.log(formatImportComponents(components));
     if (excludedComponents && excludedComponents.length > 0) {
       console.log(formatImportExcluded(excludedComponents));
     }
