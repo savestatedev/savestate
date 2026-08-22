@@ -201,6 +201,10 @@ export function listExcludedPaths(raw?: string): string[] {
     .filter((part) => part.length > 0);
 }
 
+export function formatImportExcluded(excluded: readonly string[]): string {
+  return `  Excluded: ${excluded.join(', ')}`;
+}
+
 const IMPORT_METADATA_KEYS = new Set(['agentId', 'version', 'exportedAt']);
 
 export function applyImportInclude(
@@ -604,6 +608,7 @@ export interface ImportResult {
   mode: RestoreMode;
   created: string;
   components: string[];
+  excluded?: string[];
   target?: string;
 }
 
@@ -842,6 +847,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       mode,
       created: manifest.created,
       components,
+      ...(excludedComponents ? { excluded: excludedComponents } : {}),
     };
 
     if (options.dryRun) {
@@ -850,6 +856,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`  Mode: ${mode}`);
       console.log(`  Original export: ${manifest.created}`);
       console.log(`  Components: ${components.join(', ') || 'none'}`);
+      if (excludedComponents && excludedComponents.length > 0) {
+        console.log(formatImportExcluded(excludedComponents));
+      }
       console.log(`  This was a dry run. No agent state was restored.`);
       return result;
     }
@@ -867,6 +876,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
     console.log(`  Original export: ${manifest.created}`);
+    if (excludedComponents && excludedComponents.length > 0) {
+      console.log(formatImportExcluded(excludedComponents));
+    }
     if (targetPath) {
       console.log(`  Target: ${targetPath}`);
     }
