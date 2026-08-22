@@ -485,6 +485,14 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         keyDerivation: 'Argon2id',
       },
       components: validatedComponents.components,
+      ...(options.exclude !== undefined
+        ? {
+            excluded: options.exclude
+              .split(',')
+              .map((part) => part.trim().toLowerCase())
+              .filter((part) => part.length > 0),
+          }
+        : {}),
       payloads: [
         {
           name: 'agent_state',
