@@ -245,6 +245,18 @@ export function formatImportChecksum(checksum: string): string {
   return `  Checksum: ${checksum}`;
 }
 
+export function formatImportPayloadName(name: string): string {
+  return `  Payload: ${name}`;
+}
+
+function optionalImportPayloadName(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const name = value.trim();
+  return name.length > 0 ? name : undefined;
+}
+
 function optionalImportKeyDerivation(value: unknown): string | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -665,6 +677,7 @@ export interface ImportResult {
   encryptionAlgorithm?: string;
   keyDerivation?: string;
   checksum?: string;
+  payloadName?: string;
   target?: string;
 }
 
@@ -899,6 +912,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const description = optionalImportDescription(manifest.description);
     const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
     const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
+    const payloadName = optionalImportPayloadName(payload.name);
     const result: ImportResult = {
       dryRun: !!options.dryRun,
       restored: !options.dryRun,
@@ -911,6 +925,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       ...(encryptionAlgorithm ? { encryptionAlgorithm } : {}),
       ...(keyDerivation ? { keyDerivation } : {}),
       checksum: calculatedHash,
+      ...(payloadName ? { payloadName } : {}),
     };
 
     if (options.dryRun) {
@@ -932,6 +947,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.log(formatImportExcluded(excludedComponents));
       }
       console.log(formatImportChecksum(calculatedHash));
+      if (payloadName) {
+        console.log(formatImportPayloadName(payloadName));
+      }
       console.log(`  This was a dry run. No agent state was restored.`);
       return result;
     }
@@ -963,6 +981,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(formatImportExcluded(excludedComponents));
     }
     console.log(formatImportChecksum(calculatedHash));
+    if (payloadName) {
+      console.log(formatImportPayloadName(payloadName));
+    }
     if (targetPath) {
       console.log(`  Target: ${targetPath}`);
     }
