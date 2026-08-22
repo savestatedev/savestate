@@ -786,6 +786,15 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     
     let stateText = decryptedState.toString();
     let parsedState = JSON.parse(stateText) as Record<string, unknown>;
+    if (listedComponents) {
+      const extra = Object.keys(parsedState)
+        .filter((key) => !IMPORT_METADATA_KEYS.has(key))
+        .find((path) => !listedComponents.includes(path as IncludePath));
+      if (extra) {
+        console.error(`Error: packed path not listed: ${extra}`);
+        return undefined;
+      }
+    }
     if (excludedComponents) {
       const packedExclusion = excludedComponents.find((path) =>
         Object.prototype.hasOwnProperty.call(parsedState, path),
