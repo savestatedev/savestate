@@ -245,6 +245,10 @@ export function formatImportChecksum(checksum: string): string {
   return `  Checksum: ${checksum}`;
 }
 
+export function formatExportChecksum(checksum: string): string {
+  return `  Checksum: ${checksum}`;
+}
+
 export function formatImportSize(payloadBytes: number): string {
   return `  Size: ${payloadBytes} bytes`;
 }
@@ -618,6 +622,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     const trimmedDescription = description?.trim();
     const formatVersion = 1;
     const payloadName = 'agent_state';
+    const payloadChecksum = createHash('sha256').update(plaintext).digest('hex');
     const manifest = {
       formatVersion,
       created: new Date().toISOString(),
@@ -641,7 +646,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
           name: payloadName,
           contentType: 'application/json',
           byteLength: plaintext.length,
-          sha256: createHash('sha256').update(plaintext).digest('hex'),
+          sha256: payloadChecksum,
         },
       ],
     };
@@ -668,6 +673,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
     console.log(formatExportFormatVersion(formatVersion));
+    console.log(formatExportChecksum(payloadChecksum));
     console.log(formatExportPayloadName(payloadName));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
