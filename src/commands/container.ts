@@ -253,6 +253,10 @@ export function formatImportContentType(contentType: string): string {
   return `  Content-Type: ${contentType}`;
 }
 
+export function formatImportFormatVersion(formatVersion: number): string {
+  return `  Format: v${formatVersion}`;
+}
+
 function optionalImportKeyDerivation(value: unknown): string | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -675,6 +679,7 @@ export interface ImportResult {
   checksum?: string;
   payloadBytes?: number;
   contentType?: string;
+  formatVersion?: number;
   target?: string;
 }
 
@@ -913,6 +918,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const description = optionalImportDescription(manifest.description);
     const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
     const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
+    const formatVersion =
+      typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
+        ? manifest.formatVersion
+        : undefined;
     const result: ImportResult = {
       dryRun: !!options.dryRun,
       restored: !options.dryRun,
@@ -927,6 +936,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       checksum: calculatedHash,
       payloadBytes: decryptedState.length,
       ...(contentType ? { contentType } : {}),
+      ...(formatVersion !== undefined ? { formatVersion } : {}),
     };
 
     if (options.dryRun) {
@@ -934,6 +944,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`  Agent: ${manifest.agentId}`);
       console.log(`  Mode: ${mode}`);
       console.log(`  Original export: ${manifest.created}`);
+      if (formatVersion !== undefined) {
+        console.log(formatImportFormatVersion(formatVersion));
+      }
       if (description) {
         console.log(formatImportDescription(description));
       }
@@ -969,6 +982,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
     console.log(`  Original export: ${manifest.created}`);
+    if (formatVersion !== undefined) {
+      console.log(formatImportFormatVersion(formatVersion));
+    }
     if (description) {
       console.log(formatImportDescription(description));
     }
