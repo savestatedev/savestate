@@ -227,6 +227,9 @@ export function applyImportExclude(
 
   const components: string[] = [];
   for (const path of INCLUDE_PATHS) {
+    if (!parsed.components[path] && !(path in state)) {
+      return { error: `Error: Exclude path not in archive: ${path}.` };
+    }
     if (parsed.components[path] && path in state) {
       next[path] = state[path];
       components.push(path);
@@ -561,12 +564,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       return undefined;
     }
 
+    let excluded = included.components;
     if (options.exclude !== undefined) {
       const parsed = applyExcludePaths(included.components, options.exclude);
       if ('error' in parsed) {
         console.error(parsed.error);
         return undefined;
       }
+      excluded = parsed.components;
     }
 
     if (options.target !== undefined) {
@@ -670,6 +675,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         for (const path of INCLUDE_PATHS) {
           if (included.components[path] && !validated.components.includes(path)) {
             console.error(`Error: Include path not in archive: ${path}.`);
+            return undefined;
+          }
+        }
+      }
+      if (options.exclude !== undefined) {
+        for (const path of INCLUDE_PATHS) {
+          if (!excluded[path] && !validated.components.includes(path)) {
+            console.error(`Error: Exclude path not in archive: ${path}.`);
             return undefined;
           }
         }
