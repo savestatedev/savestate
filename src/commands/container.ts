@@ -55,6 +55,34 @@ export function validateIncludedComponents(
   return { components };
 }
 
+export function validateExcludedComponents(
+  value: unknown,
+): { excluded: IncludePath[] } | { error: string } {
+  if (!Array.isArray(value)) {
+    return { error: 'Error: excluded must be an array of known state paths.' };
+  }
+  if (value.length === 0) {
+    return { error: 'Error: excluded must include at least one path.' };
+  }
+
+  const seen = new Set<string>();
+  const excluded: IncludePath[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'string' || !INCLUDE_PATHS.includes(entry as IncludePath)) {
+      const label = typeof entry === 'string' ? entry : JSON.stringify(entry);
+      return {
+        error: `Error: Unknown excluded path: ${label}. Allowed: ${INCLUDE_PATHS.join(', ')}.`,
+      };
+    }
+    if (seen.has(entry)) {
+      return { error: `Error: Duplicate excluded path: ${entry}.` };
+    }
+    seen.add(entry);
+    excluded.push(entry);
+  }
+  return { excluded };
+}
+
 export function parseIncludePaths(raw?: string): { components: ComponentSelection } | { error: string } {
   if (raw === undefined) {
     return {
