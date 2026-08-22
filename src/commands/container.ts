@@ -245,6 +245,10 @@ export function formatImportChecksum(checksum: string): string {
   return `  Checksum: ${checksum}`;
 }
 
+export function formatImportContentType(contentType: string): string {
+  return `  Content-Type: ${contentType}`;
+}
+
 function optionalImportKeyDerivation(value: unknown): string | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -665,6 +669,7 @@ export interface ImportResult {
   encryptionAlgorithm?: string;
   keyDerivation?: string;
   checksum?: string;
+  contentType?: string;
   target?: string;
 }
 
@@ -844,6 +849,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.error('Error: Invalid container - no agent state found.');
       process.exit(1);
     }
+    const contentType =
+      typeof payload.contentType === 'string' && payload.contentType.trim() !== ''
+        ? payload.contentType.trim()
+        : undefined;
 
     reportContainerProgress('Verifying integrity', decryptedState.length);
     const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
@@ -911,6 +920,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       ...(encryptionAlgorithm ? { encryptionAlgorithm } : {}),
       ...(keyDerivation ? { keyDerivation } : {}),
       checksum: calculatedHash,
+      ...(contentType ? { contentType } : {}),
     };
 
     if (options.dryRun) {
@@ -930,6 +940,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
       if (excludedComponents && excludedComponents.length > 0) {
         console.log(formatImportExcluded(excludedComponents));
+      }
+      if (contentType) {
+        console.log(formatImportContentType(contentType));
       }
       console.log(formatImportChecksum(calculatedHash));
       console.log(`  This was a dry run. No agent state was restored.`);
@@ -961,6 +974,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     }
     if (excludedComponents && excludedComponents.length > 0) {
       console.log(formatImportExcluded(excludedComponents));
+    }
+    if (contentType) {
+      console.log(formatImportContentType(contentType));
     }
     console.log(formatImportChecksum(calculatedHash));
     if (targetPath) {
