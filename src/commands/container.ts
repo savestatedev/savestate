@@ -265,6 +265,10 @@ export function formatImportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
 
+export function formatExportPayloadName(name: string): string {
+  return `  Payload: ${name}`;
+}
+
 function optionalImportPayloadName(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
@@ -613,6 +617,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
 
     const trimmedDescription = description?.trim();
     const formatVersion = 1;
+    const payloadName = 'agent_state';
     const manifest = {
       formatVersion,
       created: new Date().toISOString(),
@@ -633,7 +638,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         : {}),
       payloads: [
         {
-          name: 'agent_state',
+          name: payloadName,
           contentType: 'application/json',
           byteLength: plaintext.length,
           sha256: createHash('sha256').update(plaintext).digest('hex'),
@@ -663,6 +668,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
     console.log(formatExportFormatVersion(formatVersion));
+    console.log(formatExportPayloadName(payloadName));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
