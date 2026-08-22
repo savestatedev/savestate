@@ -257,6 +257,10 @@ export function formatImportFormatVersion(formatVersion: number): string {
   return `  Format: v${formatVersion}`;
 }
 
+export function formatExportFormatVersion(formatVersion: number): string {
+  return `  Format: v${formatVersion}`;
+}
+
 export function formatImportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
@@ -612,9 +616,10 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     const plaintext = Buffer.from(agentState);
 
     const trimmedDescription = description?.trim();
+    const formatVersion = 1;
     const payloadName = 'agent_state';
     const manifest = {
-      formatVersion: 1,
+      formatVersion,
       created: new Date().toISOString(),
       agentId: agent,
       ...(trimmedDescription ? { description: trimmedDescription } : {}),
@@ -662,6 +667,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     reportContainerProgress(`Writing ${out}`, finalBuffer.length);
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
+    console.log(formatExportFormatVersion(formatVersion));
     console.log(formatExportPayloadName(payloadName));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
