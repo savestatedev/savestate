@@ -253,6 +253,10 @@ export function formatImportContentType(contentType: string): string {
   return `  Content-Type: ${contentType}`;
 }
 
+export function formatExportContentType(contentType: string): string {
+  return `  Content-Type: ${contentType}`;
+}
+
 export function formatImportFormatVersion(formatVersion: number): string {
   return `  Format: v${formatVersion}`;
 }
@@ -635,6 +639,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         },
       ],
     };
+    const contentType = manifest.payloads[0].contentType;
 
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
     reportContainerProgress('Encrypting agent state', plaintext.length);
@@ -657,6 +662,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     reportContainerProgress(`Writing ${out}`, finalBuffer.length);
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
+    console.log(formatExportContentType(contentType));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
