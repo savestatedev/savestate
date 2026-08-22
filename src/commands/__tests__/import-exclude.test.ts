@@ -119,6 +119,7 @@ describe('savestate import --exclude', () => {
       created: '2026-08-21T16:00:00.000Z',
       components: ['memory', 'tools'],
       checksum: expect.stringMatching(/^[a-f0-9]{64}$/),
+      payloadBytes: expect.any(Number),
       target: writtenPath,
     });
     expect(log.mock.calls.flat()).toContain('Including paths: memory, tools');

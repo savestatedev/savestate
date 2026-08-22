@@ -245,6 +245,10 @@ export function formatImportChecksum(checksum: string): string {
   return `  Checksum: ${checksum}`;
 }
 
+export function formatImportSize(payloadBytes: number): string {
+  return `  Size: ${payloadBytes} bytes`;
+}
+
 function optionalImportKeyDerivation(value: unknown): string | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -665,6 +669,7 @@ export interface ImportResult {
   encryptionAlgorithm?: string;
   keyDerivation?: string;
   checksum?: string;
+  payloadBytes?: number;
   target?: string;
 }
 
@@ -911,6 +916,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       ...(encryptionAlgorithm ? { encryptionAlgorithm } : {}),
       ...(keyDerivation ? { keyDerivation } : {}),
       checksum: calculatedHash,
+      payloadBytes: decryptedState.length,
     };
 
     if (options.dryRun) {
@@ -932,6 +938,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.log(formatImportExcluded(excludedComponents));
       }
       console.log(formatImportChecksum(calculatedHash));
+      console.log(formatImportSize(decryptedState.length));
       console.log(`  This was a dry run. No agent state was restored.`);
       return result;
     }
@@ -963,6 +970,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(formatImportExcluded(excludedComponents));
     }
     console.log(formatImportChecksum(calculatedHash));
+    console.log(formatImportSize(decryptedState.length));
     if (targetPath) {
       console.log(`  Target: ${targetPath}`);
     }
