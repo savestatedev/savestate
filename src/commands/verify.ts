@@ -26,6 +26,7 @@ export interface VerifyResult {
     description?: string;
   };
   components?: string[];
+  excluded?: string[];
 }
 
 export function formatVerifyChecksum(checksum: string): string {
@@ -58,6 +59,10 @@ const DEFAULT_VERIFY_KDF = 'Argon2id';
 
 export function formatVerifyKeyDerivation(kdf: string): string {
   return `   Key derivation: ${kdf}`;
+}
+
+export function formatVerifyExcluded(excluded: readonly string[]): string {
+  return `   Excluded: ${excluded.join(', ')}`;
 }
 
 function resolveKeyDerivation(manifest: { encryption?: { keyDerivation?: unknown } }): string {
@@ -369,6 +374,7 @@ export async function verifyContainer(
     }
   }
 
+  let excluded: string[] | undefined;
   if ('excluded' in manifest) {
     const validated = validateExcludedComponents(manifest.excluded);
     if ('error' in validated) {
@@ -377,6 +383,7 @@ export async function verifyContainer(
         message: `Invalid manifest: ${validated.error.replace(/^Error: /, '')}`,
       };
     }
+    excluded = validated.excluded;
   }
 
 
@@ -722,6 +729,7 @@ export async function verifyContainer(
       ...(description ? { description } : {}),
     },
     components,
+    ...(excluded ? { excluded } : {}),
   };
 }
 
@@ -754,6 +762,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       lines.push(
         `   Components: ${result.components && result.components.length > 0 ? result.components.join(', ') : 'none'}`,
       );
+      if (result.excluded && result.excluded.length > 0) {
+        lines.push(formatVerifyExcluded(result.excluded));
+      }
       if (result.checksum) {
         lines.push(formatVerifyChecksum(result.checksum));
       }
