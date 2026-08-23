@@ -257,6 +257,10 @@ export function formatExportEncryption(algorithm: string): string {
   return `  Encryption: ${algorithm}`;
 }
 
+export function formatExportKeyDerivation(kdf: string): string {
+  return `  Key derivation: ${kdf}`;
+}
+
 export function formatImportSize(payloadBytes: number): string {
   return `  Size: ${payloadBytes} bytes`;
 }
@@ -636,6 +640,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     const payloadName = 'agent_state';
     const payloadChecksum = createHash('sha256').update(plaintext).digest('hex');
     const encryptionAlgorithm = 'AES-256-GCM';
+    const keyDerivation = 'Argon2id';
     const manifest = {
       formatVersion,
       created: new Date().toISOString(),
@@ -643,7 +648,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       ...(trimmedDescription ? { description: trimmedDescription } : {}),
       encryption: {
         algorithm: encryptionAlgorithm,
-        keyDerivation: 'Argon2id',
+        keyDerivation,
       },
       components: validatedComponents.components,
       ...(options.exclude !== undefined
@@ -693,6 +698,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     }
     console.log(formatExportComponents(validatedComponents.components));
     console.log(formatExportEncryption(encryptionAlgorithm));
+    console.log(formatExportKeyDerivation(keyDerivation));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
