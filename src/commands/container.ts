@@ -249,6 +249,10 @@ export function formatExportChecksum(checksum: string): string {
   return `  Checksum: ${checksum}`;
 }
 
+export function formatExportEncryption(algorithm: string): string {
+  return `  Encryption: ${algorithm}`;
+}
+
 export function formatImportSize(payloadBytes: number): string {
   return `  Size: ${payloadBytes} bytes`;
 }
@@ -623,13 +627,14 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     const formatVersion = 1;
     const payloadName = 'agent_state';
     const payloadChecksum = createHash('sha256').update(plaintext).digest('hex');
+    const encryptionAlgorithm = 'AES-256-GCM';
     const manifest = {
       formatVersion,
       created: new Date().toISOString(),
       agentId: agent,
       ...(trimmedDescription ? { description: trimmedDescription } : {}),
       encryption: {
-        algorithm: 'AES-256-GCM',
+        algorithm: encryptionAlgorithm,
         keyDerivation: 'Argon2id',
       },
       components: validatedComponents.components,
@@ -675,6 +680,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     console.log(formatExportFormatVersion(formatVersion));
     console.log(formatExportChecksum(payloadChecksum));
     console.log(formatExportPayloadName(payloadName));
+    console.log(formatExportEncryption(encryptionAlgorithm));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
