@@ -285,6 +285,10 @@ export function formatExportFormatVersion(formatVersion: number): string {
   return `  Format: v${formatVersion}`;
 }
 
+export function formatImportCreated(created: string): string {
+  return `  Created: ${created}`;
+}
+
 export function formatImportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
@@ -1012,7 +1016,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`\nDRY RUN — no changes will be made`);
       console.log(`  Agent: ${manifest.agentId}`);
       console.log(`  Mode: ${mode}`);
-      console.log(`  Original export: ${manifest.created}`);
+      console.log(formatImportCreated(manifest.created));
       if (formatVersion !== undefined) {
         console.log(formatImportFormatVersion(formatVersion));
       }
@@ -1053,7 +1057,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
 
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(`  Mode: ${mode}`);
-    console.log(`  Original export: ${manifest.created}`);
+    console.log(formatImportCreated(manifest.created));
     if (formatVersion !== undefined) {
       console.log(formatImportFormatVersion(formatVersion));
     }
