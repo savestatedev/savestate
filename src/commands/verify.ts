@@ -695,6 +695,7 @@ export async function verifyContainer(
         created: manifest.created,
         formatVersion: manifest.formatVersion,
       },
+      input: filePath,
     };
   }
 
@@ -838,6 +839,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       if (result.manifest) {
         lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(formatVerifyCreated(result.manifest.created));
+      }
+      if (result.input) {
+        lines.push(formatVerifyInput(result.input));
       }
       return lines.join('\n');
     }
