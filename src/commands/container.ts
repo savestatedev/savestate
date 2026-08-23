@@ -273,6 +273,10 @@ export function formatExportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
 
+export function formatExportComponents(components: readonly string[]): string {
+  return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
+}
+
 function optionalImportPayloadName(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
@@ -675,6 +679,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     console.log(formatExportFormatVersion(formatVersion));
     console.log(formatExportChecksum(payloadChecksum));
     console.log(formatExportPayloadName(payloadName));
+    console.log(formatExportComponents(validatedComponents.components));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
