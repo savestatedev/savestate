@@ -54,6 +54,10 @@ export function formatVerifyCreated(created: string): string {
   return `   Created: ${created}`;
 }
 
+export function formatVerifyFormatVersion(formatVersion: number): string {
+  return `   Format: v${formatVersion}`;
+}
+
 const DEFAULT_VERIFY_ENCRYPTION = 'AES-256-GCM';
 
 export function formatVerifyEncryption(algorithm: string): string {
@@ -785,7 +789,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       if (result.manifest) {
         lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(formatVerifyCreated(result.manifest.created));
-        lines.push(`   Format: v${result.manifest.formatVersion}`);
+        lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
         if (result.manifest.description) {
           lines.push(`   Description: ${result.manifest.description}`);
         }
