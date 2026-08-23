@@ -79,6 +79,73 @@ describe('savestate verify description output', () => {
     expect(formatVerifyResult(result, false)).toContain('   Description: Labeled verify fixture');
   });
 
+  it('prints the description when the file is corrupted', async () => {
+    const passphrase = 'synthetic-verify-pass';
+    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
+    const encryptedState = await encrypt(plaintext, { passphrase });
+    const manifest = {
+      formatVersion: 1,
+      created: '2026-08-23T14:00:00.000Z',
+      agentId: 'demo-agent',
+      description: 'Labeled verify fixture',
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: 'a'.repeat(64),
+        },
+      ],
+    };
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+    const filePath = join(testDir, 'checksum-mismatch.savestate');
+    await writeFile(
+      filePath,
+      Buffer.concat([createMagicHeader(), manifestLength, manifestBuffer, encryptedState]),
+    );
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('corrupted');
+    expect(result.manifest?.description).toBe('Labeled verify fixture');
+    expect(formatVerifyResult(result, false)).toContain('   Description: Labeled verify fixture');
+  });
+
+  it('omits a description line when the file is corrupted and the manifest has none', async () => {
+    const passphrase = 'synthetic-verify-pass';
+    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
+    const encryptedState = await encrypt(plaintext, { passphrase });
+    const manifest = {
+      formatVersion: 1,
+      created: '2026-08-23T14:00:00.000Z',
+      agentId: 'demo-agent',
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: 'a'.repeat(64),
+        },
+      ],
+    };
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+    const filePath = join(testDir, 'checksum-mismatch-unlabeled.savestate');
+    await writeFile(
+      filePath,
+      Buffer.concat([createMagicHeader(), manifestLength, manifestBuffer, encryptedState]),
+    );
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('corrupted');
+    expect(result.manifest?.description).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Description:');
+  });
+
   it('omits a description line when the passphrase is wrong and the manifest has none', async () => {
     const filePath = await writeContainer('wrong-pass-unlabeled.savestate');
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });

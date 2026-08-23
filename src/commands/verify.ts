@@ -704,6 +704,7 @@ export async function verifyContainer(
   // 5. Verify checksum
   const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
   if (calculatedHash !== payload.sha256) {
+    const description = optionalDescription(manifest.description);
     return {
       status: 'corrupted',
       message: 'Integrity check failed: checksum mismatch (file may be corrupted or tampered)',
@@ -711,6 +712,7 @@ export async function verifyContainer(
         agentId: manifest.agentId,
         created: manifest.created,
         formatVersion: manifest.formatVersion,
+        ...(description ? { description } : {}),
       },
     };
   }
@@ -720,6 +722,7 @@ export async function verifyContainer(
   try {
     components = listStateComponents(JSON.parse(decryptedState.toString()));
   } catch {
+    const description = optionalDescription(manifest.description);
     return {
       status: 'corrupted',
       message: 'Decrypted payload is not valid JSON',
@@ -727,6 +730,7 @@ export async function verifyContainer(
         agentId: manifest.agentId,
         created: manifest.created,
         formatVersion: manifest.formatVersion,
+        ...(description ? { description } : {}),
       },
     };
   }
@@ -859,6 +863,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(formatVerifyCreated(result.manifest.created));
         lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        if (result.manifest.description) {
+          lines.push(formatVerifyDescription(result.manifest.description));
+        }
       }
       return lines.join('\n');
     }
