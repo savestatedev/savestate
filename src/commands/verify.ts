@@ -687,6 +687,7 @@ export async function verifyContainer(
   try {
     decryptedState = await decrypt(encryptedState, keySource);
   } catch {
+    const description = optionalDescription(manifest.description);
     return {
       status: 'wrong_password',
       message: 'Decryption failed: incorrect passphrase or keyfile',
@@ -694,6 +695,7 @@ export async function verifyContainer(
         agentId: manifest.agentId,
         created: manifest.created,
         formatVersion: manifest.formatVersion,
+        ...(description ? { description } : {}),
       },
     };
   }
@@ -839,6 +841,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(formatVerifyCreated(result.manifest.created));
         lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        if (result.manifest.description) {
+          lines.push(formatVerifyDescription(result.manifest.description));
+        }
       }
       return lines.join('\n');
     }
