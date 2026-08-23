@@ -70,6 +70,24 @@ describe('savestate verify description output', () => {
     expect(formatVerifyResult(result, false)).toContain('   Description: Labeled verify fixture');
   });
 
+  it('prints the description when the passphrase is wrong', async () => {
+    const filePath = await writeContainer('wrong-pass.savestate', 'Labeled verify fixture');
+    const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
+
+    expect(result.status).toBe('wrong_password');
+    expect(result.manifest?.description).toBe('Labeled verify fixture');
+    expect(formatVerifyResult(result, false)).toContain('   Description: Labeled verify fixture');
+  });
+
+  it('omits a description line when the passphrase is wrong and the manifest has none', async () => {
+    const filePath = await writeContainer('wrong-pass-unlabeled.savestate');
+    const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
+
+    expect(result.status).toBe('wrong_password');
+    expect(result.manifest?.description).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Description:');
+  });
+
   it('omits a description line when the manifest has none or the file is invalid', async () => {
     const unlabeledPath = await writeContainer('unlabeled.savestate');
     const unlabeled = await verifyContainer(unlabeledPath, { passphrase: 'synthetic-verify-pass' });
