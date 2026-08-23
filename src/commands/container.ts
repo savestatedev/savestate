@@ -309,6 +309,10 @@ export function formatImportTarget(target: string): string {
   return `  Target: ${target}`;
 }
 
+export function formatImportInput(inFile: string): string {
+  return `  Input: ${inFile}`;
+}
+
 export function formatImportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
@@ -1075,6 +1079,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (payloadName) {
         console.log(formatImportPayloadName(payloadName));
       }
+      console.log(formatImportInput(inFile));
       if (options.target) {
         const previewTarget = join(resolve(options.target), TARGET_STATE_FILE);
         result.target = previewTarget;
@@ -1122,6 +1127,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     if (payloadName) {
       console.log(formatImportPayloadName(payloadName));
     }
+    console.log(formatImportInput(inFile));
     if (targetPath) {
       console.log(formatImportTarget(targetPath));
     }
