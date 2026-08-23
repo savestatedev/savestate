@@ -317,6 +317,10 @@ export function formatExportAgent(agentId: string): string {
   return `  Agent: ${agentId}`;
 }
 
+export function formatExportOutput(out: string): string {
+  return `  Output: ${out}`;
+}
+
 export function formatExportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
@@ -740,6 +744,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     if (excludedPaths.length > 0) {
       console.log(formatExportExcluded(excludedPaths));
     }
+    console.log(formatExportOutput(out));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
