@@ -96,6 +96,39 @@ describe('savestate verify input path', () => {
     expect(formatVerifyResult(result, false)).toContain(`   Input: ${filePath}`);
   });
 
+  it('prints the input path when the file is corrupted', async () => {
+    const passphrase = 'synthetic-verify-pass';
+    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
+    const encryptedState = await encrypt(plaintext, { passphrase });
+    const manifest = {
+      formatVersion: 1,
+      created: '2026-08-23T12:00:00.000Z',
+      agentId: 'demo-agent',
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: 'a'.repeat(64),
+        },
+      ],
+    };
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+    const filePath = join(testDir, 'checksum-mismatch.savestate');
+    await writeFile(
+      filePath,
+      Buffer.concat([createMagicHeader(), manifestLength, manifestBuffer, encryptedState]),
+    );
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('corrupted');
+    expect(result.input).toBe(filePath);
+    expect(formatVerifyResult(result, false)).toContain(`   Input: ${filePath}`);
+  });
+
   it('omits an input line when the file is not a SaveState container', async () => {
     const filePath = join(testDir, 'not-a-container.bin');
     await writeFile(filePath, Buffer.from('not-a-savestate-file'));
