@@ -46,6 +46,10 @@ export function formatVerifyPayloadName(name: string): string {
   return `   Payload: ${name}`;
 }
 
+export function formatVerifyAgent(agentId: string): string {
+  return `   Agent: ${agentId}`;
+}
+
 const DEFAULT_VERIFY_ENCRYPTION = 'AES-256-GCM';
 
 export function formatVerifyEncryption(algorithm: string): string {
@@ -775,7 +779,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
     case 'valid': {
       const lines = ['✅ State file is valid'];
       if (result.manifest) {
-        lines.push(`   Agent: ${result.manifest.agentId}`);
+        lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(`   Created: ${result.manifest.created}`);
         lines.push(`   Format: v${result.manifest.formatVersion}`);
         if (result.manifest.description) {
@@ -811,7 +815,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
     case 'wrong_password': {
       const lines = ['⚠️  Wrong password (cannot decrypt)'];
       if (result.manifest) {
-        lines.push(`   Agent: ${result.manifest.agentId}`);
+        lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(`   Created: ${result.manifest.created}`);
       }
       return lines.join('\n');
@@ -821,7 +825,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
     case 'corrupted': {
       const lines = [`❌ File corrupted: ${result.message}`];
       if (result.manifest) {
-        lines.push(`   Agent: ${result.manifest.agentId}`);
+        lines.push(formatVerifyAgent(result.manifest.agentId));
       }
       return lines.join('\n');
     }
