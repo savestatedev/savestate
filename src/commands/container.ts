@@ -205,6 +205,10 @@ export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
 
+export function formatExportExcluded(excluded: readonly string[]): string {
+  return `  Excluded: ${excluded.join(', ')}`;
+}
+
 export function formatImportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
@@ -704,6 +708,9 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     console.log(formatExportComponents(validatedComponents.components));
     console.log(formatExportEncryption(encryptionAlgorithm));
     console.log(formatExportKeyDerivation(keyDerivation));
+    if (excludedPaths.length > 0) {
+      console.log(formatExportExcluded(excludedPaths));
+    }
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
