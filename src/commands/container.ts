@@ -305,6 +305,10 @@ export function formatImportMode(mode: RestoreMode): string {
   return `  Mode: ${mode}`;
 }
 
+export function formatImportInput(inFile: string): string {
+  return `  Input: ${inFile}`;
+}
+
 export function formatImportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
@@ -1066,6 +1070,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (payloadName) {
         console.log(formatImportPayloadName(payloadName));
       }
+      console.log(formatImportInput(inFile));
       console.log(`  This was a dry run. No agent state was restored.`);
       return result;
     }
@@ -1108,6 +1113,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     if (payloadName) {
       console.log(formatImportPayloadName(payloadName));
     }
+    console.log(formatImportInput(inFile));
     if (targetPath) {
       console.log(`  Target: ${targetPath}`);
     }
