@@ -249,6 +249,10 @@ export function formatExportChecksum(checksum: string): string {
   return `  Checksum: ${checksum}`;
 }
 
+export function formatExportDescription(description: string): string {
+  return `  Description: ${description}`;
+}
+
 export function formatImportSize(payloadBytes: number): string {
   return `  Size: ${payloadBytes} bytes`;
 }
@@ -679,6 +683,9 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     console.log(formatExportFormatVersion(formatVersion));
     console.log(formatExportChecksum(payloadChecksum));
     console.log(formatExportPayloadName(payloadName));
+    if (trimmedDescription) {
+      console.log(formatExportDescription(trimmedDescription));
+    }
     console.log(formatExportComponents(validatedComponents.components));
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
