@@ -858,6 +858,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       if (result.manifest) {
         lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(formatVerifyCreated(result.manifest.created));
+        lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
       }
       return lines.join('\n');
     }
