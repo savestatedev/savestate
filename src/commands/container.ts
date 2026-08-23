@@ -285,6 +285,10 @@ export function formatExportFormatVersion(formatVersion: number): string {
   return `  Format: v${formatVersion}`;
 }
 
+export function formatExportCreated(created: string): string {
+  return `  Created: ${created}`;
+}
+
 export function formatImportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
@@ -645,13 +649,14 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
 
     const trimmedDescription = description?.trim();
     const formatVersion = 1;
+    const created = new Date().toISOString();
     const payloadName = 'agent_state';
     const payloadChecksum = createHash('sha256').update(plaintext).digest('hex');
     const encryptionAlgorithm = 'AES-256-GCM';
     const keyDerivation = 'Argon2id';
     const manifest = {
       formatVersion,
-      created: new Date().toISOString(),
+      created,
       agentId: agent,
       ...(trimmedDescription ? { description: trimmedDescription } : {}),
       encryption: {
@@ -699,6 +704,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
     console.log(formatExportFormatVersion(formatVersion));
+    console.log(formatExportCreated(created));
     console.log(formatExportChecksum(payloadChecksum));
     console.log(formatExportSize(plaintext.length));
     console.log(formatExportPayloadName(payloadName));
