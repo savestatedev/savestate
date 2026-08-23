@@ -293,6 +293,10 @@ export function formatExportPayloadName(name: string): string {
   return `  Payload: ${name}`;
 }
 
+export function formatExportAgent(agentId: string): string {
+  return `  Agent: ${agentId}`;
+}
+
 export function formatExportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
@@ -698,6 +702,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     reportContainerProgress(`Writing ${out}`, finalBuffer.length);
     await fs.writeFile(out, finalBuffer);
     console.log(`Successfully exported agent '${agent}' to ${out}`);
+    console.log(formatExportAgent(agent));
     console.log(formatExportFormatVersion(formatVersion));
     console.log(formatExportChecksum(payloadChecksum));
     console.log(formatExportSize(plaintext.length));
