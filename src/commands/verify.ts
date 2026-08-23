@@ -20,6 +20,7 @@ export interface VerifyResult {
   payloadName?: string;
   encryptionAlgorithm?: string;
   keyDerivation?: string;
+  input?: string;
   manifest?: {
     agentId: string;
     created: string;
@@ -52,6 +53,10 @@ export function formatVerifyAgent(agentId: string): string {
 
 export function formatVerifyCreated(created: string): string {
   return `   Created: ${created}`;
+}
+
+export function formatVerifyInput(input: string): string {
+  return `   Input: ${input}`;
 }
 
 const DEFAULT_VERIFY_ENCRYPTION = 'AES-256-GCM';
@@ -761,6 +766,7 @@ export async function verifyContainer(
     },
     components,
     ...(excluded ? { excluded } : {}),
+    input: filePath,
   };
 }
 
@@ -813,6 +819,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.keyDerivation) {
         lines.push(formatVerifyKeyDerivation(result.keyDerivation));
+      }
+      if (result.input) {
+        lines.push(formatVerifyInput(result.input));
       }
       return lines.join('\n');
     }
