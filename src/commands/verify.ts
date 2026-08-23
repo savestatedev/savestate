@@ -857,6 +857,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       const lines = [`❌ File corrupted: ${result.message}`];
       if (result.manifest) {
         lines.push(formatVerifyAgent(result.manifest.agentId));
+        lines.push(formatVerifyCreated(result.manifest.created));
       }
       return lines.join('\n');
     }
