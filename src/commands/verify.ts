@@ -712,6 +712,7 @@ export async function verifyContainer(
         created: manifest.created,
         formatVersion: manifest.formatVersion,
       },
+      keyDerivation: resolveKeyDerivation(manifest),
     };
   }
 
@@ -728,6 +729,7 @@ export async function verifyContainer(
         created: manifest.created,
         formatVersion: manifest.formatVersion,
       },
+      keyDerivation: resolveKeyDerivation(manifest),
     };
   }
 
@@ -859,6 +861,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         lines.push(formatVerifyAgent(result.manifest.agentId));
         lines.push(formatVerifyCreated(result.manifest.created));
         lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+      }
+      if (result.keyDerivation) {
+        lines.push(formatVerifyKeyDerivation(result.keyDerivation));
       }
       return lines.join('\n');
     }

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { encrypt } from '../../container/crypto.js';
-import { formatVerifyKeyDerivation, verifyContainer } from '../verify.js';
+import { formatVerifyKeyDerivation, formatVerifyResult, verifyContainer } from '../verify.js';
 
 function createMagicHeader(version = 1): Buffer {
   const header = Buffer.alloc(16);
@@ -126,6 +126,54 @@ describe('savestate verify key derivation', () => {
 
     expect(result.status).toBe('wrong_password');
     expect(result.keyDerivation).toBeUndefined();
+  });
+
+  it('prints the key derivation when the file is corrupted', async () => {
+    const passphrase = 'synthetic-verify-pass';
+    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
+    const encryptedState = await encrypt(plaintext, { passphrase });
+    const manifest = {
+      formatVersion: 1,
+      created: '2026-08-18T10:00:00.000Z',
+      agentId: 'demo-agent',
+      encryption: {
+        algorithm: 'AES-256-GCM',
+        keyDerivation: 'Argon2id',
+      },
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: 'a'.repeat(64),
+        },
+      ],
+    };
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+    const filePath = join(testDir, 'checksum-mismatch.savestate');
+    await writeFile(
+      filePath,
+      Buffer.concat([createMagicHeader(), manifestLength, manifestBuffer, encryptedState]),
+    );
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('corrupted');
+    expect(result.keyDerivation).toBe('Argon2id');
+    expect(formatVerifyResult(result, false)).toContain('   Key derivation: Argon2id');
+  });
+
+  it('omits a key derivation line when the file is not a SaveState container', async () => {
+    const filePath = join(testDir, 'not-a-container.bin');
+    await writeFile(filePath, Buffer.from('not-a-savestate-file'));
+
+    const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
+
+    expect(result.status).toBe('invalid_format');
+    expect(result.keyDerivation).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Key derivation:');
   });
 
   it('prints a Key derivation line for a known KDF', () => {
