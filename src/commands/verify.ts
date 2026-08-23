@@ -50,6 +50,10 @@ export function formatVerifyAgent(agentId: string): string {
   return `   Agent: ${agentId}`;
 }
 
+export function formatVerifyCreated(created: string): string {
+  return `   Created: ${created}`;
+}
+
 const DEFAULT_VERIFY_ENCRYPTION = 'AES-256-GCM';
 
 export function formatVerifyEncryption(algorithm: string): string {
@@ -780,7 +784,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       const lines = ['✅ State file is valid'];
       if (result.manifest) {
         lines.push(formatVerifyAgent(result.manifest.agentId));
-        lines.push(`   Created: ${result.manifest.created}`);
+        lines.push(formatVerifyCreated(result.manifest.created));
         lines.push(`   Format: v${result.manifest.formatVersion}`);
         if (result.manifest.description) {
           lines.push(`   Description: ${result.manifest.description}`);
@@ -816,7 +820,7 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       const lines = ['⚠️  Wrong password (cannot decrypt)'];
       if (result.manifest) {
         lines.push(formatVerifyAgent(result.manifest.agentId));
-        lines.push(`   Created: ${result.manifest.created}`);
+        lines.push(formatVerifyCreated(result.manifest.created));
       }
       return lines.join('\n');
     }
