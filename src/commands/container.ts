@@ -265,6 +265,10 @@ export function formatImportSize(payloadBytes: number): string {
   return `  Size: ${payloadBytes} bytes`;
 }
 
+export function formatExportSize(payloadBytes: number): string {
+  return `  Size: ${payloadBytes} bytes`;
+}
+
 export function formatImportContentType(contentType: string): string {
   return `  Content-Type: ${contentType}`;
 }
@@ -692,6 +696,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     console.log(`Successfully exported agent '${agent}' to ${out}`);
     console.log(formatExportFormatVersion(formatVersion));
     console.log(formatExportChecksum(payloadChecksum));
+    console.log(formatExportSize(plaintext.length));
     console.log(formatExportPayloadName(payloadName));
     if (trimmedDescription) {
       console.log(formatExportDescription(trimmedDescription));
