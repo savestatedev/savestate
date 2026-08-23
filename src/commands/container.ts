@@ -277,6 +277,10 @@ export function formatImportContentType(contentType: string): string {
   return `  Content-Type: ${contentType}`;
 }
 
+export function formatExportContentType(contentType: string): string {
+  return `  Content-Type: ${contentType}`;
+}
+
 export function formatImportFormatVersion(formatVersion: number): string {
   return `  Format: v${formatVersion}`;
 }
@@ -693,6 +697,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         },
       ],
     };
+    const contentType = manifest.payloads[0].contentType;
 
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
     reportContainerProgress('Encrypting agent state', plaintext.length);
@@ -721,6 +726,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     console.log(formatExportChecksum(payloadChecksum));
     console.log(formatExportSize(plaintext.length));
     console.log(formatExportPayloadName(payloadName));
+    console.log(formatExportContentType(contentType));
     if (trimmedDescription) {
       console.log(formatExportDescription(trimmedDescription));
     }
