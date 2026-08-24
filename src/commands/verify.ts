@@ -718,6 +718,7 @@ export async function verifyContainer(
       encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
       keyDerivation: resolveKeyDerivation(manifest),
       payloadName: typeof payload.name === 'string' && payload.name.trim() !== '' ? payload.name.trim() : undefined,
+      contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
     };
   }
 
@@ -740,6 +741,7 @@ export async function verifyContainer(
       encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
       keyDerivation: resolveKeyDerivation(manifest),
       payloadName: typeof payload.name === 'string' && payload.name.trim() !== '' ? payload.name.trim() : undefined,
+      contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
     };
   }
 
@@ -886,6 +888,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.payloadName) {
         lines.push(formatVerifyPayloadName(result.payloadName));
+      }
+      if (result.contentType) {
+        lines.push(formatVerifyContentType(result.contentType));
       }
       return lines.join('\n');
     }
