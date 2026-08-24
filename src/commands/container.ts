@@ -996,6 +996,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (agentId) {
         console.error(formatImportAgent(agentId));
       }
+      const formatVersion =
+        typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
+          ? manifest.formatVersion
+          : undefined;
+      if (formatVersion !== undefined) {
+        console.error(formatImportFormatVersion(formatVersion));
+      }
       const created = typeof manifest.created === 'string' ? manifest.created.trim() : '';
       if (created) {
         console.error(formatImportCreated(created));
