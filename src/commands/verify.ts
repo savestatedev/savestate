@@ -700,6 +700,7 @@ export async function verifyContainer(
       input: filePath,
       encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
       keyDerivation: resolveKeyDerivation(manifest),
+      payloadBytes: typeof payload.byteLength === 'number' ? payload.byteLength : undefined,
     };
   }
 
@@ -874,6 +875,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.keyDerivation) {
         lines.push(formatVerifyKeyDerivation(result.keyDerivation));
+      }
+      if (result.payloadBytes !== undefined) {
+        lines.push(formatVerifySize(result.payloadBytes));
       }
       return lines.join('\n');
     }
