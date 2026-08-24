@@ -698,6 +698,7 @@ export async function verifyContainer(
         ...(description ? { description } : {}),
       },
       input: filePath,
+      encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
     };
   }
 
@@ -866,6 +867,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.input) {
         lines.push(formatVerifyInput(result.input));
+      }
+      if (result.encryptionAlgorithm) {
+        lines.push(formatVerifyEncryption(result.encryptionAlgorithm));
       }
       return lines.join('\n');
     }

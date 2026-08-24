@@ -93,7 +93,7 @@ describe('savestate verify encryption algorithm', () => {
     expect(result.encryptionAlgorithm).toBe('AES-256-GCM');
   });
 
-  it('omits an encryption algorithm when the passphrase is wrong', async () => {
+  it('prints the encryption algorithm when the passphrase is wrong', async () => {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
     const encryptedState = await encrypt(plaintext, { passphrase });
@@ -126,7 +126,8 @@ describe('savestate verify encryption algorithm', () => {
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
 
     expect(result.status).toBe('wrong_password');
-    expect(result.encryptionAlgorithm).toBeUndefined();
+    expect(result.encryptionAlgorithm).toBe('AES-256-GCM');
+    expect(formatVerifyResult(result, false)).toContain('   Encryption: AES-256-GCM');
   });
 
   it('prints the encryption algorithm when the file is corrupted', async () => {
