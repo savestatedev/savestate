@@ -975,6 +975,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (created) {
         console.error(formatImportCreated(created));
       }
+      const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
+      if (encryptionAlgorithm) {
+        console.error(formatImportEncryption(encryptionAlgorithm));
+      }
       return undefined;
     }
     
