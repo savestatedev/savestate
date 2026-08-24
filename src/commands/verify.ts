@@ -91,6 +91,10 @@ export function formatVerifyExcluded(excluded: readonly string[]): string {
   return `   Excluded: ${excluded.join(', ')}`;
 }
 
+export function formatVerifyComponents(components: readonly string[]): string {
+  return `   Components: ${components.join(', ')}`;
+}
+
 function resolveKeyDerivation(manifest: { encryption?: { keyDerivation?: unknown } }): string {
   const named = manifest.encryption?.keyDerivation;
   if (typeof named === 'string' && named.trim().length > 0) {
@@ -397,6 +401,7 @@ export async function verifyContainer(
     };
   }
 
+  let listedComponents: string[] | undefined;
   if ('components' in manifest) {
     const validated = validateIncludedComponents(manifest.components);
     if ('error' in validated) {
@@ -405,6 +410,7 @@ export async function verifyContainer(
         message: `Invalid manifest: ${validated.error.replace(/^Error: /, '')}`,
       };
     }
+    listedComponents = validated.components;
   }
 
   let excluded: string[] | undefined;
@@ -704,6 +710,7 @@ export async function verifyContainer(
       contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
       payloadBytes: typeof payload.byteLength === 'number' ? payload.byteLength : undefined,
       checksum: typeof payload.sha256 === 'string' && payload.sha256.trim() !== '' ? payload.sha256 : undefined,
+      ...(listedComponents ? { components: listedComponents } : {}),
       ...(excluded ? { excluded } : {}),
     };
   }
@@ -870,6 +877,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         if (result.manifest.description) {
           lines.push(formatVerifyDescription(result.manifest.description));
         }
+      }
+      if (result.components && result.components.length > 0) {
+        lines.push(formatVerifyComponents(result.components));
       }
       if (result.excluded && result.excluded.length > 0) {
         lines.push(formatVerifyExcluded(result.excluded));
