@@ -58,7 +58,7 @@ describe('savestate verify payload name output', () => {
     expect(formatVerifyResult(result, false)).toContain('   Payload: agent_state');
   });
 
-  it('omits a payload name when the passphrase is wrong', async () => {
+  it('prints the payload name when the passphrase is wrong', async () => {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
     const encryptedState = await encrypt(plaintext, { passphrase });
@@ -87,8 +87,8 @@ describe('savestate verify payload name output', () => {
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
 
     expect(result.status).toBe('wrong_password');
-    expect(result.payloadName).toBeUndefined();
-    expect(formatVerifyResult(result, false)).not.toContain('Payload:');
+    expect(result.payloadName).toBe('agent_state');
+    expect(formatVerifyResult(result, false)).toContain('   Payload: agent_state');
   });
 
   it('prints the payload name when the file is corrupted', async () => {
