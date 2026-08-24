@@ -975,6 +975,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (created) {
         console.error(formatImportCreated(created));
       }
+      const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
+      if (keyDerivation) {
+        console.error(formatImportKeyDerivation(keyDerivation));
+      }
       return undefined;
     }
     
