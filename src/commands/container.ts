@@ -988,6 +988,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
     if (calculatedHash !== payload.sha256) {
       console.error('Error: Integrity check failed. The file may be corrupted or tampered with.');
+      const formatVersion =
+        typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
+          ? manifest.formatVersion
+          : undefined;
+      if (formatVersion !== undefined) {
+        console.error(formatImportFormatVersion(formatVersion));
+      }
       process.exit(1);
     }
     
