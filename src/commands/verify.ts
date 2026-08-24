@@ -704,6 +704,7 @@ export async function verifyContainer(
       contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
       payloadBytes: typeof payload.byteLength === 'number' ? payload.byteLength : undefined,
       checksum: typeof payload.sha256 === 'string' && payload.sha256.trim() !== '' ? payload.sha256 : undefined,
+      ...(excluded ? { excluded } : {}),
     };
   }
 
@@ -869,6 +870,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         if (result.manifest.description) {
           lines.push(formatVerifyDescription(result.manifest.description));
         }
+      }
+      if (result.excluded && result.excluded.length > 0) {
+        lines.push(formatVerifyExcluded(result.excluded));
       }
       if (result.input) {
         lines.push(formatVerifyInput(result.input));

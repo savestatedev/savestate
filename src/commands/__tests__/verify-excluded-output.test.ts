@@ -82,4 +82,33 @@ describe('savestate verify excluded output', () => {
     expect(formatVerifyResult(result, false)).not.toContain('Excluded:');
     expect(JSON.parse(formatVerifyResult(result, true)).excluded).toBeUndefined();
   });
+
+  it('prints excluded paths when the passphrase is wrong', async () => {
+    const filePath = await writeContainer('wrong-pass-excluded.savestate', ['personality']);
+    const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
+
+    expect(result.status).toBe('wrong_password');
+    expect(result.excluded).toEqual(['personality']);
+    expect(formatVerifyResult(result, false)).toContain('   Excluded: personality');
+  });
+
+  it('omits excluded when the passphrase is wrong and the archive has none', async () => {
+    const filePath = await writeContainer('wrong-pass-no-excluded.savestate');
+    const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
+
+    expect(result.status).toBe('wrong_password');
+    expect(result.excluded).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Excluded:');
+  });
+
+  it('omits an excluded line when the file is not a SaveState container', async () => {
+    const filePath = join(testDir, 'not-a-container.bin');
+    await writeFile(filePath, Buffer.from('not-a-savestate-file'));
+
+    const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
+
+    expect(result.status).toBe('invalid_format');
+    expect(result.excluded).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Excluded:');
+  });
 });
