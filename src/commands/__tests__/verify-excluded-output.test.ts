@@ -101,6 +101,73 @@ describe('savestate verify excluded output', () => {
     expect(formatVerifyResult(result, false)).not.toContain('Excluded:');
   });
 
+  it('prints excluded paths when the file is corrupted', async () => {
+    const passphrase = 'synthetic-verify-pass';
+    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'], tools: { enabled: [] } }));
+    const encryptedState = await encrypt(plaintext, { passphrase });
+    const manifest = {
+      formatVersion: 1,
+      created: '2026-08-24T08:00:00.000Z',
+      agentId: 'demo-agent',
+      excluded: ['personality'],
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: 'a'.repeat(64),
+        },
+      ],
+    };
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+    const filePath = join(testDir, 'corrupted-excluded.savestate');
+    await writeFile(
+      filePath,
+      Buffer.concat([createMagicHeader(1), manifestLength, manifestBuffer, encryptedState]),
+    );
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('corrupted');
+    expect(result.excluded).toEqual(['personality']);
+    expect(formatVerifyResult(result, false)).toContain('   Excluded: personality');
+  });
+
+  it('omits excluded when the file is corrupted and the archive has none', async () => {
+    const passphrase = 'synthetic-verify-pass';
+    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'], tools: { enabled: [] } }));
+    const encryptedState = await encrypt(plaintext, { passphrase });
+    const manifest = {
+      formatVersion: 1,
+      created: '2026-08-24T08:00:00.000Z',
+      agentId: 'demo-agent',
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: 'a'.repeat(64),
+        },
+      ],
+    };
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+    const filePath = join(testDir, 'corrupted-no-excluded.savestate');
+    await writeFile(
+      filePath,
+      Buffer.concat([createMagicHeader(1), manifestLength, manifestBuffer, encryptedState]),
+    );
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('corrupted');
+    expect(result.excluded).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Excluded:');
+  });
+
   it('omits an excluded line when the file is not a SaveState container', async () => {
     const filePath = join(testDir, 'not-a-container.bin');
     await writeFile(filePath, Buffer.from('not-a-savestate-file'));
