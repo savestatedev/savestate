@@ -57,7 +57,7 @@ describe('savestate verify size', () => {
     expect(formatVerifySize(result.payloadBytes!)).toBe(`   Size: ${plaintext.length} bytes`);
   });
 
-  it('omits a size when the passphrase is wrong', async () => {
+  it('prints the payload size when the passphrase is wrong', async () => {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
     const encryptedState = await encrypt(plaintext, { passphrase });
@@ -86,8 +86,8 @@ describe('savestate verify size', () => {
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
 
     expect(result.status).toBe('wrong_password');
-    expect(result.payloadBytes).toBeUndefined();
-    expect(formatVerifyResult(result, false)).not.toContain('Size:');
+    expect(result.payloadBytes).toBe(plaintext.length);
+    expect(formatVerifyResult(result, false)).toContain(`   Size: ${plaintext.length} bytes`);
   });
 
   it('prints the payload size when the file is corrupted', async () => {
