@@ -960,7 +960,11 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       decryptedState = await decrypt(encryptedState, keySource);
     } catch {
       console.error('Error: Decryption failed. The passphrase or keyfile may be incorrect.');
-      process.exit(1);
+      const agentId = typeof manifest.agentId === 'string' ? manifest.agentId.trim() : '';
+      if (agentId) {
+        console.error(formatImportAgent(agentId));
+      }
+      return undefined;
     }
     
     const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
