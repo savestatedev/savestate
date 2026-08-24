@@ -983,6 +983,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (encryptionAlgorithm) {
         console.error(formatImportEncryption(encryptionAlgorithm));
       }
+      const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
+      if (keyDerivation) {
+        console.error(formatImportKeyDerivation(keyDerivation));
+      }
       return undefined;
     }
     
