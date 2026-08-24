@@ -699,6 +699,7 @@ export async function verifyContainer(
       },
       input: filePath,
       encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
+      keyDerivation: resolveKeyDerivation(manifest),
     };
   }
 
@@ -870,6 +871,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.encryptionAlgorithm) {
         lines.push(formatVerifyEncryption(result.encryptionAlgorithm));
+      }
+      if (result.keyDerivation) {
+        lines.push(formatVerifyKeyDerivation(result.keyDerivation));
       }
       return lines.join('\n');
     }

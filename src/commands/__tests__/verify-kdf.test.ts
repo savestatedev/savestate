@@ -93,7 +93,7 @@ describe('savestate verify key derivation', () => {
     expect(result.keyDerivation).toBe('Argon2id');
   });
 
-  it('omits key derivation when the passphrase is wrong', async () => {
+  it('prints the key derivation when the passphrase is wrong', async () => {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
     const encryptedState = await encrypt(plaintext, { passphrase });
@@ -125,7 +125,8 @@ describe('savestate verify key derivation', () => {
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
 
     expect(result.status).toBe('wrong_password');
-    expect(result.keyDerivation).toBeUndefined();
+    expect(result.keyDerivation).toBe('Argon2id');
+    expect(formatVerifyResult(result, false)).toContain('   Key derivation: Argon2id');
   });
 
   it('prints the key derivation when the file is corrupted', async () => {
