@@ -91,6 +91,10 @@ export function formatVerifyExcluded(excluded: readonly string[]): string {
   return `   Excluded: ${excluded.join(', ')}`;
 }
 
+export function formatVerifyComponents(components: readonly string[]): string {
+  return `   Components: ${components.join(', ')}`;
+}
+
 function resolveKeyDerivation(manifest: { encryption?: { keyDerivation?: unknown } }): string {
   const named = manifest.encryption?.keyDerivation;
   if (typeof named === 'string' && named.trim().length > 0) {
@@ -712,6 +716,12 @@ export async function verifyContainer(
   const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
   if (calculatedHash !== payload.sha256) {
     const description = optionalDescription(manifest.description);
+    let components: string[] | undefined;
+    try {
+      components = listStateComponents(JSON.parse(decryptedState.toString()));
+    } catch {
+      components = undefined;
+    }
     return {
       status: 'corrupted',
       message: 'Integrity check failed: checksum mismatch (file may be corrupted or tampered)',
@@ -728,6 +738,7 @@ export async function verifyContainer(
       contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
       payloadBytes: decryptedState.length,
       checksum: calculatedHash,
+      ...(components && components.length > 0 ? { components } : {}),
     };
   }
 
@@ -908,6 +919,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
         if (result.manifest.description) {
           lines.push(formatVerifyDescription(result.manifest.description));
         }
+      }
+      if (result.components && result.components.length > 0) {
+        lines.push(formatVerifyComponents(result.components));
       }
       if (result.input) {
         lines.push(formatVerifyInput(result.input));
