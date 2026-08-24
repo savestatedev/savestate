@@ -58,9 +58,10 @@ describe('savestate verify checksum', () => {
     expect(formatVerifyChecksum(result.checksum!)).toBe(`   Checksum: ${expected}`);
   });
 
-  it('omits a checksum when the passphrase is wrong', async () => {
+  it('prints the payload checksum when the passphrase is wrong', async () => {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
+    const expected = createHash('sha256').update(plaintext).digest('hex');
     const encryptedState = await encrypt(plaintext, { passphrase });
     const manifest = {
       formatVersion: 1,
@@ -71,7 +72,7 @@ describe('savestate verify checksum', () => {
           name: 'agent_state',
           contentType: 'application/json',
           byteLength: plaintext.length,
-          sha256: createHash('sha256').update(plaintext).digest('hex'),
+          sha256: expected,
         },
       ],
     };
@@ -87,8 +88,8 @@ describe('savestate verify checksum', () => {
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
 
     expect(result.status).toBe('wrong_password');
-    expect(result.checksum).toBeUndefined();
-    expect(formatVerifyResult(result, false)).not.toContain('Checksum:');
+    expect(result.checksum).toBe(expected);
+    expect(formatVerifyResult(result, false)).toContain(`   Checksum: ${expected}`);
   });
 
   it('prints the payload checksum when the file is corrupted', async () => {
