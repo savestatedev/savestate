@@ -975,6 +975,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (created) {
         console.error(formatImportCreated(created));
       }
+      const description = optionalImportDescription(manifest.description);
+      if (description) {
+        console.error(formatImportDescription(description));
+      }
       return undefined;
     }
     
