@@ -700,6 +700,7 @@ export async function verifyContainer(
       input: filePath,
       encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
       keyDerivation: resolveKeyDerivation(manifest),
+      contentType: typeof payload.contentType === 'string' ? payload.contentType : undefined,
     };
   }
 
@@ -874,6 +875,9 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
       }
       if (result.keyDerivation) {
         lines.push(formatVerifyKeyDerivation(result.keyDerivation));
+      }
+      if (result.contentType) {
+        lines.push(formatVerifyContentType(result.contentType));
       }
       return lines.join('\n');
     }

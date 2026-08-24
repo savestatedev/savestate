@@ -57,7 +57,7 @@ describe('savestate verify content type', () => {
     expect(formatVerifyContentType(result.contentType!)).toBe('   Content-Type: application/json');
   });
 
-  it('omits a content type when the passphrase is wrong', async () => {
+  it('prints the payload content type when the passphrase is wrong', async () => {
     const passphrase = 'synthetic-verify-pass';
     const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
     const encryptedState = await encrypt(plaintext, { passphrase });
@@ -86,8 +86,8 @@ describe('savestate verify content type', () => {
     const result = await verifyContainer(filePath, { passphrase: 'wrong-pass' });
 
     expect(result.status).toBe('wrong_password');
-    expect(result.contentType).toBeUndefined();
-    expect(formatVerifyResult(result, false)).not.toContain('Content-Type:');
+    expect(result.contentType).toBe('application/json');
+    expect(formatVerifyResult(result, false)).toContain('   Content-Type: application/json');
   });
 
   it('prints the payload content type when the file is corrupted', async () => {
