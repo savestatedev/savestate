@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { encrypt } from '../../container/crypto.js';
-import { formatVerifyContentType, verifyContainer } from '../verify.js';
+import { formatVerifyContentType, formatVerifyResult, verifyContainer } from '../verify.js';
 
 function createMagicHeader(version = 1): Buffer {
   const header = Buffer.alloc(16);
@@ -87,6 +87,51 @@ describe('savestate verify content type', () => {
 
     expect(result.status).toBe('wrong_password');
     expect(result.contentType).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Content-Type:');
+  });
+
+  it('prints the payload content type when the file is corrupted', async () => {
+    const passphrase = 'synthetic-verify-pass';
+    const plaintext = Buffer.from(JSON.stringify({ memory: ['demo'] }));
+    const encryptedState = await encrypt(plaintext, { passphrase });
+    const manifest = {
+      formatVersion: 1,
+      created: '2026-08-23T23:00:00.000Z',
+      agentId: 'demo-agent',
+      payloads: [
+        {
+          name: 'agent_state',
+          contentType: 'application/json',
+          byteLength: plaintext.length,
+          sha256: 'a'.repeat(64),
+        },
+      ],
+    };
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestLength = Buffer.alloc(4);
+    manifestLength.writeUInt32LE(manifestBuffer.length, 0);
+    const filePath = join(testDir, 'checksum-mismatch.savestate');
+    await writeFile(
+      filePath,
+      Buffer.concat([createMagicHeader(), manifestLength, manifestBuffer, encryptedState]),
+    );
+
+    const result = await verifyContainer(filePath, { passphrase });
+
+    expect(result.status).toBe('corrupted');
+    expect(result.contentType).toBe('application/json');
+    expect(formatVerifyResult(result, false)).toContain('   Content-Type: application/json');
+  });
+
+  it('omits a content type line when the file is not a SaveState container', async () => {
+    const filePath = join(testDir, 'not-a-container.bin');
+    await writeFile(filePath, Buffer.from('not-a-savestate-file'));
+
+    const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
+
+    expect(result.status).toBe('invalid_format');
+    expect(result.contentType).toBeUndefined();
+    expect(formatVerifyResult(result, false)).not.toContain('Content-Type:');
   });
 
   it('prints a Content-Type line for a known type', () => {
