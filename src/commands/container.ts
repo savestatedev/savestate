@@ -1046,6 +1046,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
     if (!payload) {
       console.error('Error: Invalid container - no agent state found.');
+      console.error(formatImportMode(mode));
       process.exit(1);
     }
     const contentType =
