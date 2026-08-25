@@ -1038,6 +1038,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (keyDerivation) {
         console.error(formatImportKeyDerivation(keyDerivation));
       }
+      if (contentType) {
+        console.error(formatImportContentType(contentType));
+      }
       const payloadName = optionalImportPayloadName(payload.name);
       if (payloadName) {
         console.error(formatImportPayloadName(payloadName));
