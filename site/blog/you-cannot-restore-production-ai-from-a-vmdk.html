@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You Cannot Restore Production AI From a VMDK - SaveState</title>
+<meta name="description" content="A VMDK, AMI, or PVC snapshot brings back disks, not last week's runnable LLM. Private AI can be fully snapshotted and still unrestorable.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">August 25, 2026</div>
+      <h1>You Cannot Restore Production AI From a VMDK</h1>
+      <p class="subtitle">A VMDK, AMI, or PVC snapshot brings back disks, not last week's runnable LLM. Private AI can be fully snapshotted and still unrestorable.</p>
+    </header>
+
+    <div class="article-content">
+      <p>This week in Las Vegas, Broadcom's VMware Explore floor is selling you a complete private-AI stack: VMware Cloud Foundation, NVIDIA GPUs, Tanzu, and a backup appliance from Veeam, Rubrik, Commvault, or Cohesity on the same booth row. The sentence in every briefing is a 2010s sentence wearing 2026 clothes: snapshot the GPU node, snapshot the Tanzu cluster, and the AI estate is covered.</p>
+
+      <p>It is not.</p>
+
+      <p>A VMDK, an AMI, a PersistentVolumeClaim snapshot: those are image-level recoverability. They bring disks back. They do not bring back the runnable LLM application that was serving traffic last Tuesday. Sign the Q3 private-AI plus backup budget on that confusion and you own a 2026 contract that restores a virtual machine and cannot reconstruct the system.</p>
+
+      <h2>Two primitives vendors are collapsing</h2>
+
+      <p>"Backup" on the show floor now means three things at once: hypervisor snapshot, cluster snapshot, and "AI-ready DR." Those are not the same object. Split them or you will buy the wrong one.</p>
+
+      <p>Image-level recoverability is what vSphere snapshots, Veeam VM backups, Rubrik SLA domains, and CSI volume snapshots already do well. You get a point-in-time copy of block devices. The guest OS boots. The GPU driver loads. That is real work, and the hypervisor is fine at it.</p>
+
+      <p>Operational-state reconstructability is different. It is the ability to stand the same LLM application back up: system prompt and policy pack, retrieval-index version, tool and API bindings, safety settings, secrets layout, and the exact runtime config that produced last week's behavior.</p>
+
+      <p>You can have the first and none of the second. Private AI can be fully snapshotted at the infrastructure layer and still be impossible to stand back up as the same system.</p>
+
+      <p>We already argued this in <a href="/blog/why-backup-strategies-are-the-new-ai-imperative">Why Backup Strategies Are the New AI Imperative</a>. The Explore pitch is the counterfeit version of that argument. It uses the word "backup" for disks because disks are what those vendors already sell.</p>
+
+      <h2>What a VMDK actually contains</h2>
+
+      <p>A typical private-AI layout on VCF: a GPU-backed VM or Tanzu worker, vLLM or TensorRT-LLM serving from a PVC, a vector store on another volume, an inference gateway in front.</p>
+
+      <p>A hypervisor snapshot of that GPU node captures VMDK bytes, VMX hardware config (vCPU, vRAM, vGPU profile), and a crash-consistent or quiesced file-system image. Right artifact for host loss. Wrong artifact for the application.</p>
+
+      <p>It does not capture these as named, versioned, restorable units:</p>
+
+      <ul>
+        <li><code>system_prompt.md</code> and <code>policy_pack.yaml</code> loaded into the serving process (often a ConfigMap edited in place, or a prompt store outside the VM)</li>
+        <li>FAISS, Milvus, or pgvector collection version, plus the embedding-model hash that built it</li>
+        <li>Tool and API bindings: OpenAPI specs, allow-lists, which endpoint is prod this week</li>
+        <li>Safety settings: filter thresholds, groundedness checks, PII redaction, output schemas</li>
+        <li>Secrets layout: not the values, the map of env names, CSI secret-provider classes, and Secret objects</li>
+        <li>Runtime config: max model length, tensor parallel size, LoRA IDs, tokenizer revision, model SHA, NIM digest</li>
+      </ul>
+
+      <p>Restore that VMDK onto a new host and you get a machine, not last week's application. The index has moved. The prompt was hot-patched. The NIM tag floated. The vector-volume PVC sits at a different RPO than the serving VM, so the model was never evaluated against that index.</p>
+
+      <p>That is not a restore. That is a new system sharing some disk blocks with the old one.</p>
+
+      <h2>The RFP line that will lock you in</h2>
+
+      <p>Backup vendors will win the "do you have backup?" line this week because procurement already knows how to score it. SLA domain, immutable copy, 3-2-1, ransomware cleanroom: all real, all useful, all about VMs and PVCs.</p>
+
+      <p>Watch the language stretch. "AI-ready backup" means GPU VMs and Tanzu namespaces are in the job. "Application-consistent AI" means they quiesced the guest, which is consistent for the guest, not for the LLM application.</p>
+
+      <p>None of that is a lie about disks. It is a category error about the workload. SQL has a WAL and a documented restore sequence. An LLM application has a prompt pack, an index generation, a binding file, and a runtime flag set that never appear in the VMDK cut. Quiescing ext4 does not version <code>policy_pack.yaml</code>.</p>
+
+      <p>Ask one bake-off question and refuse to let it collapse into "we snapshot the cluster": can you restore a point-in-time, portable snapshot of the full AI operational state, independent of vSphere, Veeam, and the hypervisor, and prove it is the same system by replaying a golden query set?</p>
+
+      <p>If the answer is a VM powering on, score image-level recoverability. Do not score operational-state reconstructability.</p>
+
+      <h2>What to do before the Q3 markup hardens</h2>
+
+      <p>Keep VCF, NVIDIA, and the backup appliance. Hypervisor snapshots are the right tool for host loss, guest ransomware, and datacenter failover. Treat the LLM application as a second restore domain with its own artifacts and its own RPO.</p>
+
+      <p>Inventory operational state as named objects, not as "the VM":</p>
+
+      <ol>
+        <li><strong>Prompts and policy packs.</strong> Version <code>system_prompt.md</code>, <code>policy_pack.yaml</code>, and the safety-settings blob with a content hash. No prompt hash, no restore.</li>
+        <li><strong>Retrieval indexes.</strong> Collection name, build job ID, embedding model plus revision, chunking config, source corpus snapshot ID. A PVC of <code>milvus-data</code> without the build manifest is an orphan.</li>
+        <li><strong>Tool and API bindings.</strong> Allow-list, OpenAPI fingerprints, destination map. Bindings change with no VM change.</li>
+        <li><strong>Secrets layout.</strong> Schema only: env names, provider class, mount paths. Re-hydrate keys from the vault after restore.</li>
+        <li><strong>Runtime config.</strong> Model ID, tokenizer revision, NIM/vLLM/Triton digest (not the tag), tensor parallel size, context window, LoRA IDs.</li>
+        <li><strong>Golden query pack.</strong> Ten to fifty prompts with expected retrieval hits and policy outcomes. That is how you prove sameness.</li>
+      </ol>
+
+      <p>Schedule the operational-state snapshot on its own clock. A 24-hour VM RPO and a 5-minute index RPO are two backups. They will drift.</p>
+
+      <p>If the private-AI program exists so the model and corpus stay out of someone else's cloud, that still is not recoverability. We covered <a href="/blog/why-your-ai-needs-more-than-just-cloud-solutions">Why Your AI Needs More Than Just Cloud Solutions</a>; the dual is now true on-prem. Sovereignty of the VMDK is not sovereignty of the application.</p>
+
+      <h2>Do not let the floor redefine the word</h2>
+
+      <p>vSphere, VCF, NVIDIA NIMs, Tanzu, Veeam, Rubrik: keep them. The failure is definitional. If "backup" in the RFP means "the cluster came back," you will hit the gap the first time last week's prompt pack, index, and bindings are what you actually need.</p>
+
+      <p>SaveState exists to take that second primitive seriously: a point-in-time, portable snapshot of the full AI operational state, independent of the hypervisor and independent of whoever sold you the VM job. Keep the VMDK. Add the thing the VMDK cannot see.</p>
+
+      <p>Before you mark up the Q3 line, run one restore test that is not "the VM booted." Restore the prompt pack, the index version, the bindings, the safety settings, the secrets layout, and the runtime digest, then run the golden query pack. If you cannot name those artifacts, you do not have an AI backup. You have a disk.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 SaveState</p>
+  </div>
+</footer>
+
+<img src="https://api.looper.bot/api/track/blog/997085ef-e8dd-4eba-96c0-412aea549ab7/you-cannot-restore-production-ai-from-a-vmdk" alt="" width="1" height="1" style="position:absolute;left:-9999px;width:1px;height:1px;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" />
+</body>
+</html>
