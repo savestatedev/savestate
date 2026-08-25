@@ -1101,6 +1101,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (listedComponents) {
         console.error(formatImportComponents(listedComponents));
       }
+      if (excludedComponents) {
+        console.error(formatImportExcluded(excludedComponents));
+      }
       process.exit(1);
     }
     
