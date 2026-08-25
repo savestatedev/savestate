@@ -1065,6 +1065,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (contentType) {
         console.error(formatImportContentType(contentType));
       }
+      const checksum =
+        typeof payload.sha256 === 'string' && payload.sha256.trim() !== ''
+          ? payload.sha256.trim()
+          : undefined;
+      if (checksum) {
+        console.error(formatImportChecksum(checksum));
+      }
       const payloadBytes =
         typeof payload.byteLength === 'number' && Number.isInteger(payload.byteLength) && payload.byteLength >= 0
           ? payload.byteLength
