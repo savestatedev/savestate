@@ -1055,6 +1055,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (formatVersion !== undefined) {
         console.error(formatImportFormatVersion(formatVersion));
       }
+      const created = typeof manifest.created === 'string' ? manifest.created.trim() : '';
+      if (created) {
+        console.error(formatImportCreated(created));
+      }
       process.exit(1);
     }
     const contentType =
