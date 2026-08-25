@@ -1083,6 +1083,18 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (typedContentType) {
         console.error(formatImportContentType(typedContentType));
       }
+      const hashedPayload = Array.isArray(manifest.payloads)
+        ? manifest.payloads.find((p: { sha256?: unknown }) =>
+            typeof p?.sha256 === 'string' && p.sha256.trim() !== '',
+          )
+        : undefined;
+      const checksum =
+        hashedPayload && typeof hashedPayload.sha256 === 'string'
+          ? hashedPayload.sha256.trim()
+          : undefined;
+      if (checksum) {
+        console.error(formatImportChecksum(checksum));
+      }
       process.exit(1);
     }
     const contentType =
