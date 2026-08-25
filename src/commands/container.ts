@@ -1110,6 +1110,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (listedComponents) {
         console.error(formatImportComponents(listedComponents));
       }
+      console.error(formatImportInput(inFile));
       process.exit(1);
     }
     const contentType =
