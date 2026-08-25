@@ -987,6 +987,18 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (keyDerivation) {
         console.error(formatImportKeyDerivation(keyDerivation));
       }
+      const typedPayload = Array.isArray(manifest.payloads)
+        ? manifest.payloads.find((p: { contentType?: unknown }) =>
+            typeof p?.contentType === 'string' && p.contentType.trim() !== '',
+          )
+        : undefined;
+      const contentType =
+        typedPayload && typeof typedPayload.contentType === 'string'
+          ? typedPayload.contentType.trim()
+          : undefined;
+      if (contentType) {
+        console.error(formatImportContentType(contentType));
+      }
       const namedPayload = Array.isArray(manifest.payloads)
         ? manifest.payloads.find((p: { name?: unknown }) => optionalImportPayloadName(p?.name))
         : undefined;
