@@ -1033,6 +1033,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (listedComponents) {
         console.error(formatImportComponents(listedComponents));
       }
+      if (options.target) {
+        console.error(formatImportTarget(join(resolve(options.target), TARGET_STATE_FILE)));
+      }
       return undefined;
     }
     
