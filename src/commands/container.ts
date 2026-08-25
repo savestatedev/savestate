@@ -1048,6 +1048,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     if (!payload) {
       console.error('Error: Invalid container - no agent state found.');
       console.error(formatImportMode(mode));
+      const formatVersion =
+        typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
+          ? manifest.formatVersion
+          : undefined;
+      if (formatVersion !== undefined) {
+        console.error(formatImportFormatVersion(formatVersion));
+      }
       process.exit(1);
     }
     const contentType =
