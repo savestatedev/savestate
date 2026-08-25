@@ -1055,6 +1055,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (formatVersion !== undefined) {
         console.error(formatImportFormatVersion(formatVersion));
       }
+      const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
+      if (encryptionAlgorithm) {
+        console.error(formatImportEncryption(encryptionAlgorithm));
+      }
       process.exit(1);
     }
     const contentType =
