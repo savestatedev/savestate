@@ -1033,6 +1033,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (listedComponents) {
         console.error(formatImportComponents(listedComponents));
       }
+      console.error(formatImportInput(inFile));
       return undefined;
     }
     
