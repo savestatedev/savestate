@@ -1055,6 +1055,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (formatVersion !== undefined) {
         console.error(formatImportFormatVersion(formatVersion));
       }
+      const description = optionalImportDescription(manifest.description);
+      if (description) {
+        console.error(formatImportDescription(description));
+      }
       process.exit(1);
     }
     const contentType =
