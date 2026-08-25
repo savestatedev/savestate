@@ -1083,6 +1083,18 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (typedContentType) {
         console.error(formatImportContentType(typedContentType));
       }
+      const sizedPayload = Array.isArray(manifest.payloads)
+        ? manifest.payloads.find((p: { byteLength?: unknown }) =>
+            typeof p?.byteLength === 'number' && Number.isInteger(p.byteLength) && p.byteLength >= 0,
+          )
+        : undefined;
+      const payloadBytes =
+        sizedPayload && typeof sizedPayload.byteLength === 'number'
+          ? sizedPayload.byteLength
+          : undefined;
+      if (payloadBytes !== undefined) {
+        console.error(formatImportSize(payloadBytes));
+      }
       process.exit(1);
     }
     const contentType =
