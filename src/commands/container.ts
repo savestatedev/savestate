@@ -1107,6 +1107,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (payloadBytes !== undefined) {
         console.error(formatImportSize(payloadBytes));
       }
+      if (listedComponents) {
+        console.error(formatImportComponents(listedComponents));
+      }
       process.exit(1);
     }
     const contentType =
