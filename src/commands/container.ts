@@ -1098,6 +1098,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (payloadName) {
         console.error(formatImportPayloadName(payloadName));
       }
+      if (listedComponents) {
+        console.error(formatImportComponents(listedComponents));
+      }
       process.exit(1);
     }
     
