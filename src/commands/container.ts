@@ -1061,6 +1061,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (agentId) {
         console.error(formatImportAgent(agentId));
       }
+      console.error(formatImportMode(mode));
       const formatVersion =
         typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
           ? manifest.formatVersion
