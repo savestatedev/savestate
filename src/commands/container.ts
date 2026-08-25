@@ -1065,6 +1065,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (contentType) {
         console.error(formatImportContentType(contentType));
       }
+      const payloadBytes =
+        typeof payload.byteLength === 'number' && Number.isInteger(payload.byteLength) && payload.byteLength >= 0
+          ? payload.byteLength
+          : undefined;
+      if (payloadBytes !== undefined) {
+        console.error(formatImportSize(payloadBytes));
+      }
       const payloadName = optionalImportPayloadName(payload.name);
       if (payloadName) {
         console.error(formatImportPayloadName(payloadName));
