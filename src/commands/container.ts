@@ -1055,6 +1055,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (formatVersion !== undefined) {
         console.error(formatImportFormatVersion(formatVersion));
       }
+      const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
+      if (keyDerivation) {
+        console.error(formatImportKeyDerivation(keyDerivation));
+      }
       process.exit(1);
     }
     const contentType =
