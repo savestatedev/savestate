@@ -698,6 +698,7 @@ export async function verifyContainer(
       keyDerivation: resolveKeyDerivation(manifest),
       ...(payloadBytes !== undefined ? { payloadBytes } : {}),
       ...(checksum ? { checksum } : {}),
+      ...(listedComponents ? { components: listedComponents } : {}),
       ...(excluded ? { excluded } : {}),
       ...((agentId || created || formatVersion !== undefined || description) ? {
         manifest: {
