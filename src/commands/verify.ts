@@ -165,6 +165,19 @@ export async function verifyContainer(
   filePath: string,
   keySource: KeySource
 ): Promise<VerifyResult> {
+  if (keySource.keyfile) {
+    try {
+      await fs.stat(keySource.keyfile);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return {
+          status: 'invalid_format',
+          message: `Keyfile not found: ${keySource.keyfile}`,
+        };
+      }
+    }
+  }
+
   let fileBuffer: Buffer;
 
   // 1. Read file

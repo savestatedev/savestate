@@ -206,7 +206,7 @@ savestate import <file>               Import an encrypted agent container
                                      Prints read, decrypt, verify, and restore progress
 savestate verify <file>               Verify a .savestate file and list components
   -p, --passphrase <pass>            Passphrase for verification
-  -k, --keyfile <path>               Keyfile for verification
+  -k, --keyfile <path>               Keyfile for verification; missing path is rejected before decrypting
   --json                             Output as JSON
                                      Prints checksum, size, content type, encryption, and key derivation
                                      (including when the container has no agent_state payload)
