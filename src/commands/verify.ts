@@ -213,6 +213,18 @@ export async function verifyContainer(
     }
   }
 
+  try {
+    const inputStats = await fs.stat(filePath);
+    if (inputStats.isDirectory()) {
+      return {
+        status: 'invalid_format',
+        message: `Input path is a directory: ${filePath}`,
+      };
+    }
+  } catch {
+    // Missing files are reported when the container is read.
+  }
+
   let fileBuffer: Buffer;
 
   // 1. Read file
