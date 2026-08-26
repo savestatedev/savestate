@@ -198,6 +198,7 @@ savestate export                      Export an encrypted agent container
   --force                            Overwrite an existing output file
   --include <paths>                  Only pack named state paths
   -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
+  -k, --keyfile <path>               Keyfile instead of a passphrase; empty path, missing file, directory, or file with no contents is rejected before encrypting
                                      Prints load, encrypt, and write byte sizes
 savestate import <file>               Import an encrypted agent container
   --dry-run                          Preview without restoring

@@ -597,6 +597,11 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         console.error(`Error: Keyfile not found: ${keyfile}`);
         return { written: false, out, overwritten: false };
       }
+      const keyfileContents = await fs.readFile(keyfile);
+      if (keyfileContents.length === 0 || keyfileContents.toString('utf8').trim() === '') {
+        console.error(`Error: Keyfile has no contents: ${keyfile}`);
+        return { written: false, out, overwritten: false };
+      }
     }
 
     let existed = false;
