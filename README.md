@@ -202,6 +202,7 @@ savestate export                      Export an encrypted agent container
 savestate import <file>               Import an encrypted agent container
   --dry-run                          Preview without restoring
   -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
+  -k, --keyfile <path>               Keyfile instead of a passphrase; empty path, missing file, directory, or file with no contents is rejected before decrypting
   --target <dir>                     Write restored agent state to this directory
                                      Prints read, decrypt, verify, and restore progress
 savestate verify <file>               Verify a .savestate file and list components

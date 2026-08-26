@@ -862,6 +862,11 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.error(`Error: Keyfile not found: ${keyfile}`);
         return undefined;
       }
+      const keyfileContents = await fs.readFile(keyfile);
+      if (keyfileContents.length === 0 || keyfileContents.toString('utf8').trim() === '') {
+        console.error(`Error: Keyfile has no contents: ${keyfile}`);
+        return undefined;
+      }
     }
 
     try {
