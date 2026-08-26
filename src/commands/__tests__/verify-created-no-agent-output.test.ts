@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { encrypt } from '../../container/crypto.js';
-import { formatVerifyAgent, formatVerifyResult, verifyContainer } from '../verify.js';
+import { formatVerifyCreated, formatVerifyResult, verifyContainer } from '../verify.js';
 
 function createMagicHeader(version = 1): Buffer {
   const header = Buffer.alloc(16);
@@ -12,11 +12,11 @@ function createMagicHeader(version = 1): Buffer {
   return header;
 }
 
-describe('savestate verify agent no-agent output', () => {
+describe('savestate verify created no-agent output', () => {
   let testDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), 'savestate-verify-agent-no-agent-'));
+    testDir = await mkdtemp(join(tmpdir(), 'savestate-verify-created-no-agent-'));
   });
 
   afterAll(async () => {
@@ -57,22 +57,22 @@ describe('savestate verify agent no-agent output', () => {
     return filePath;
   }
 
-  it('formats the agent id on its own line', () => {
-    expect(formatVerifyAgent('fixture-agent')).toBe('   Agent: fixture-agent');
-    expect(formatVerifyAgent('fixture-agent')).not.toContain('Created:');
+  it('formats the created timestamp on its own line', () => {
+    expect(formatVerifyCreated('2026-08-26T00:00:00.000Z')).toBe('   Created: 2026-08-26T00:00:00.000Z');
+    expect(formatVerifyCreated('2026-08-26T00:00:00.000Z')).not.toContain('Agent:');
   });
 
-  it('prints the agent id when the container has no agent state', async () => {
-    const filePath = await writeContainer('no-agent-agent.savestate');
+  it('prints the created timestamp when the container has no agent state', async () => {
+    const filePath = await writeContainer('no-agent-created.savestate');
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
     expect(result.status).toBe('corrupted');
     expect(result.message).toContain('missing agent_state');
-    expect(result.manifest?.agentId).toBe('fixture-agent');
-    expect(formatVerifyResult(result, false)).toContain('   Agent: fixture-agent');
+    expect(result.manifest?.created).toBe('2026-08-26T00:00:00.000Z');
+    expect(formatVerifyResult(result, false)).toContain('   Created: 2026-08-26T00:00:00.000Z');
   });
 
-  it('omits an agent line when the file is not a SaveState container', async () => {
+  it('omits a created line when the file is not a SaveState container', async () => {
     const filePath = join(testDir, 'not-a-container.bin');
     await writeFile(filePath, Buffer.from('not-a-savestate-file'));
 
@@ -80,6 +80,6 @@ describe('savestate verify agent no-agent output', () => {
 
     expect(result.status).toBe('invalid_format');
     expect(result.manifest).toBeUndefined();
-    expect(formatVerifyResult(result, false)).not.toContain('Agent:');
+    expect(formatVerifyResult(result, false)).not.toContain('Created:');
   });
 });

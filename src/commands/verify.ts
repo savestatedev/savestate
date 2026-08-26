@@ -675,6 +675,7 @@ export async function verifyContainer(
     const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
     const agentId = typeof manifest.agentId === 'string' ? manifest.agentId.trim() : '';
+    const created = typeof manifest.created === 'string' ? manifest.created.trim() : '';
     const formatVersion = typeof manifest.formatVersion === 'number' ? manifest.formatVersion : undefined;
     const sizedPayload = Array.isArray(manifest.payloads)
       ? manifest.payloads.find((p: any) => p && typeof p.byteLength === 'number')
@@ -690,9 +691,10 @@ export async function verifyContainer(
       keyDerivation: resolveKeyDerivation(manifest),
       ...(payloadBytes !== undefined ? { payloadBytes } : {}),
       ...(excluded ? { excluded } : {}),
-      ...((agentId || formatVersion !== undefined) ? {
+      ...((agentId || created || formatVersion !== undefined) ? {
         manifest: {
           ...(agentId ? { agentId } : {}),
+          ...(created ? { created } : {}),
           ...(formatVersion !== undefined ? { formatVersion } : {}),
         },
       } : {}),
