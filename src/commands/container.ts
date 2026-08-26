@@ -1047,6 +1047,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
     if (!payload) {
       console.error('Error: Invalid container - no agent state found.');
+      const agentId = typeof manifest.agentId === 'string' ? manifest.agentId.trim() : '';
+      if (agentId) {
+        console.error(formatImportAgent(agentId));
+      }
       console.error(formatImportMode(mode));
       const formatVersion =
         typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
