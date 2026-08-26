@@ -257,7 +257,7 @@
 
     <!-- verify -->
     <h2 id="verify"><code>savestate verify</code></h2>
-    <p>Verify integrity of a <code>.savestate</code> container. Checks the magic header, manifest, checksum, and (when a key is provided) decryptability. Prints packed components and payload metadata.</p>
+    <p>Verify integrity of a <code>.savestate</code> container. Checks the magic header, manifest, checksum, and (when a key is provided) decryptability. Prints packed components and payload metadata. An empty or whitespace-only file path is rejected before reading.</p>
     <pre><code><span class="code-prompt">$</span> savestate verify &lt;file&gt; [options]</code></pre>
 
     <table>
