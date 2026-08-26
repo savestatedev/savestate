@@ -680,6 +680,7 @@ export async function verifyContainer(
       status: 'corrupted',
       message: 'Invalid manifest: missing agent_state payload or checksum',
       input: filePath,
+      encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
       ...(excluded ? { excluded } : {}),
       ...((agentId || formatVersion !== undefined) ? {
         manifest: {
