@@ -22,9 +22,9 @@ export interface VerifyResult {
   keyDerivation?: string;
   input?: string;
   manifest?: {
-    agentId: string;
-    created: string;
-    formatVersion: number;
+    agentId?: string;
+    created?: string;
+    formatVersion?: number;
     description?: string;
   };
   components?: string[];
@@ -674,9 +674,11 @@ export async function verifyContainer(
 
   const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
+    const formatVersion = typeof manifest.formatVersion === 'number' ? manifest.formatVersion : undefined;
     return {
       status: 'corrupted',
       message: 'Invalid manifest: missing agent_state payload or checksum',
+      ...(formatVersion !== undefined ? { manifest: { formatVersion } } : {}),
     };
   }
 
@@ -841,9 +843,15 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
     case 'valid': {
       const lines = ['✅ State file is valid'];
       if (result.manifest) {
-        lines.push(formatVerifyAgent(result.manifest.agentId));
-        lines.push(formatVerifyCreated(result.manifest.created));
-        lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        if (result.manifest.agentId) {
+          lines.push(formatVerifyAgent(result.manifest.agentId));
+        }
+        if (result.manifest.created) {
+          lines.push(formatVerifyCreated(result.manifest.created));
+        }
+        if (result.manifest.formatVersion !== undefined) {
+          lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        }
         if (result.manifest.description) {
           lines.push(formatVerifyDescription(result.manifest.description));
         }
@@ -880,9 +888,15 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
     case 'wrong_password': {
       const lines = ['⚠️  Wrong password (cannot decrypt)'];
       if (result.manifest) {
-        lines.push(formatVerifyAgent(result.manifest.agentId));
-        lines.push(formatVerifyCreated(result.manifest.created));
-        lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        if (result.manifest.agentId) {
+          lines.push(formatVerifyAgent(result.manifest.agentId));
+        }
+        if (result.manifest.created) {
+          lines.push(formatVerifyCreated(result.manifest.created));
+        }
+        if (result.manifest.formatVersion !== undefined) {
+          lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        }
         if (result.manifest.description) {
           lines.push(formatVerifyDescription(result.manifest.description));
         }
@@ -921,9 +935,15 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
     case 'corrupted': {
       const lines = [`❌ File corrupted: ${result.message}`];
       if (result.manifest) {
-        lines.push(formatVerifyAgent(result.manifest.agentId));
-        lines.push(formatVerifyCreated(result.manifest.created));
-        lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        if (result.manifest.agentId) {
+          lines.push(formatVerifyAgent(result.manifest.agentId));
+        }
+        if (result.manifest.created) {
+          lines.push(formatVerifyCreated(result.manifest.created));
+        }
+        if (result.manifest.formatVersion !== undefined) {
+          lines.push(formatVerifyFormatVersion(result.manifest.formatVersion));
+        }
         if (result.manifest.description) {
           lines.push(formatVerifyDescription(result.manifest.description));
         }
