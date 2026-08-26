@@ -189,6 +189,13 @@ export async function verifyContainer(
           message: `Keyfile is a directory: ${keySource.keyfile}`,
         };
       }
+      const keyfileContents = await fs.readFile(keySource.keyfile);
+      if (keyfileContents.length === 0 || keyfileContents.toString('utf8').trim() === '') {
+        return {
+          status: 'invalid_format',
+          message: `Keyfile has no contents: ${keySource.keyfile}`,
+        };
+      }
     } catch (err: any) {
       if (err.code === 'ENOENT') {
         return {
