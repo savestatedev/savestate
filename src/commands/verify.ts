@@ -165,6 +165,15 @@ export async function verifyContainer(
   filePath: string,
   keySource: KeySource
 ): Promise<VerifyResult> {
+  if (keySource.passphrase !== undefined) {
+    if (typeof keySource.passphrase !== 'string' || keySource.passphrase.trim() === '') {
+      return {
+        status: 'invalid_format',
+        message: `Passphrase must not be empty: ${JSON.stringify(keySource.passphrase)}.`,
+      };
+    }
+  }
+
   if (keySource.keyfile !== undefined) {
     if (typeof keySource.keyfile !== 'string' || keySource.keyfile.trim() === '') {
       return {
@@ -1045,6 +1054,11 @@ export async function verifyCommand(
   filePath: string,
   options: { passphrase?: string; keyfile?: string; json?: boolean }
 ): Promise<void> {
+  if (options.passphrase !== undefined && (typeof options.passphrase !== 'string' || options.passphrase.trim() === '')) {
+    console.error(`✗ Passphrase must not be empty: ${JSON.stringify(options.passphrase)}.`);
+    process.exit(1);
+  }
+
   const passphrase = options.passphrase || process.env.SAVESTATE_PASSPHRASE;
   const keyfile = options.keyfile;
 
