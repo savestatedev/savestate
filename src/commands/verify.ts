@@ -672,13 +672,19 @@ export async function verifyContainer(
     };
   }
 
-  const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
+    const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
   if (!payload || !payload.sha256) {
+    const agentId = typeof manifest.agentId === 'string' ? manifest.agentId.trim() : '';
     const formatVersion = typeof manifest.formatVersion === 'number' ? manifest.formatVersion : undefined;
     return {
       status: 'corrupted',
       message: 'Invalid manifest: missing agent_state payload or checksum',
-      ...(formatVersion !== undefined ? { manifest: { formatVersion } } : {}),
+      ...((agentId || formatVersion !== undefined) ? {
+        manifest: {
+          ...(agentId ? { agentId } : {}),
+          ...(formatVersion !== undefined ? { formatVersion } : {}),
+        },
+      } : {}),
     };
   }
 

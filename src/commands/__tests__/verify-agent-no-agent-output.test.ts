@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { encrypt } from '../../container/crypto.js';
-import { formatVerifyFormatVersion, formatVerifyResult, verifyContainer } from '../verify.js';
+import { formatVerifyAgent, formatVerifyResult, verifyContainer } from '../verify.js';
 
 function createMagicHeader(version = 1): Buffer {
   const header = Buffer.alloc(16);
@@ -12,11 +12,11 @@ function createMagicHeader(version = 1): Buffer {
   return header;
 }
 
-describe('savestate verify format version no-agent output', () => {
+describe('savestate verify agent no-agent output', () => {
   let testDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), 'savestate-verify-format-no-agent-'));
+    testDir = await mkdtemp(join(tmpdir(), 'savestate-verify-agent-no-agent-'));
   });
 
   afterAll(async () => {
@@ -57,22 +57,23 @@ describe('savestate verify format version no-agent output', () => {
     return filePath;
   }
 
-  it('formats the format version on its own line', () => {
-    expect(formatVerifyFormatVersion(1)).toBe('   Format: v1');
-    expect(formatVerifyFormatVersion(1)).not.toContain('Agent:');
+  it('formats the agent id on its own line', () => {
+    expect(formatVerifyAgent('fixture-agent')).toBe('   Agent: fixture-agent');
+    expect(formatVerifyAgent('fixture-agent')).not.toContain('Created:');
   });
 
-  it('prints the format version when the container has no agent state', async () => {
-    const filePath = await writeContainer('no-agent-format.savestate');
+  it('prints the agent id when the container has no agent state', async () => {
+    const filePath = await writeContainer('no-agent-agent.savestate');
     const result = await verifyContainer(filePath, { passphrase: 'synthetic-verify-pass' });
 
     expect(result.status).toBe('corrupted');
     expect(result.message).toContain('missing agent_state');
-    expect(result.manifest?.formatVersion).toBe(1);
-    expect(formatVerifyResult(result, false)).toContain('   Format: v1');
+    expect(result.manifest?.agentId).toBe('fixture-agent');
+    expect(formatVerifyResult(result, false)).toContain('   Agent: fixture-agent');
+    expect(formatVerifyResult(result, false)).not.toContain('Created:');
   });
 
-  it('omits a format line when the file is not a SaveState container', async () => {
+  it('omits an agent line when the file is not a SaveState container', async () => {
     const filePath = join(testDir, 'not-a-container.bin');
     await writeFile(filePath, Buffer.from('not-a-savestate-file'));
 
@@ -80,6 +81,6 @@ describe('savestate verify format version no-agent output', () => {
 
     expect(result.status).toBe('invalid_format');
     expect(result.manifest).toBeUndefined();
-    expect(formatVerifyResult(result, false)).not.toContain('Format:');
+    expect(formatVerifyResult(result, false)).not.toContain('Agent:');
   });
 });
