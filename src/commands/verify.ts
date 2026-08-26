@@ -165,6 +165,20 @@ export async function verifyContainer(
   filePath: string,
   keySource: KeySource
 ): Promise<VerifyResult> {
+  if (keySource.keyfile) {
+    try {
+      const keyfileStats = await fs.stat(keySource.keyfile);
+      if (keyfileStats.isDirectory()) {
+        return {
+          status: 'invalid_format',
+          message: `Keyfile is a directory: ${keySource.keyfile}`,
+        };
+      }
+    } catch {
+      void 0;
+    }
+  }
+
   let fileBuffer: Buffer;
 
   // 1. Read file
