@@ -689,6 +689,7 @@ export async function verifyContainer(
       encryptionAlgorithm: resolveEncryptionAlgorithm(manifest),
       keyDerivation: resolveKeyDerivation(manifest),
       ...(payloadBytes !== undefined ? { payloadBytes } : {}),
+      ...(listedComponents ? { components: listedComponents } : {}),
       ...(excluded ? { excluded } : {}),
       ...((agentId || formatVersion !== undefined) ? {
         manifest: {
