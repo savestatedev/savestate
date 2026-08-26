@@ -1047,6 +1047,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     const payload = manifest.payloads.find((p: any) => p.name === 'agent_state');
     if (!payload) {
       console.error('Error: Invalid container - no agent state found.');
+      const agentId = typeof manifest.agentId === 'string' ? manifest.agentId.trim() : '';
+      if (agentId) {
+        console.error(formatImportAgent(agentId));
+      }
       console.error(formatImportMode(mode));
       const formatVersion =
         typeof manifest.formatVersion === 'number' && Number.isFinite(manifest.formatVersion)
@@ -1083,12 +1087,46 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (typedContentType) {
         console.error(formatImportContentType(typedContentType));
       }
+      const hashedPayload = Array.isArray(manifest.payloads)
+        ? manifest.payloads.find((p: { sha256?: unknown }) =>
+            typeof p?.sha256 === 'string' && p.sha256.trim() !== '',
+          )
+        : undefined;
+      const checksum =
+        hashedPayload && typeof hashedPayload.sha256 === 'string'
+          ? hashedPayload.sha256.trim()
+          : undefined;
+      if (checksum) {
+        console.error(formatImportChecksum(checksum));
+      }
+      const sizedPayload = Array.isArray(manifest.payloads)
+        ? manifest.payloads.find((p: { byteLength?: unknown }) =>
+            typeof p?.byteLength === 'number' && Number.isInteger(p.byteLength) && p.byteLength >= 0,
+          )
+        : undefined;
+      const payloadBytes =
+        sizedPayload && typeof sizedPayload.byteLength === 'number'
+          ? sizedPayload.byteLength
+          : undefined;
+      if (payloadBytes !== undefined) {
+        console.error(formatImportSize(payloadBytes));
+      }
       const namedPayload = Array.isArray(manifest.payloads)
         ? manifest.payloads.find((p: { name?: unknown }) => optionalImportPayloadName(p?.name))
         : undefined;
       const payloadName = namedPayload ? optionalImportPayloadName(namedPayload.name) : undefined;
       if (payloadName) {
         console.error(formatImportPayloadName(payloadName));
+      }
+      if (listedComponents) {
+        console.error(formatImportComponents(listedComponents));
+      }
+      if (excludedComponents) {
+        console.error(formatImportExcluded(excludedComponents));
+      }
+      console.error(formatImportInput(inFile));
+      if (options.target) {
+        console.error(formatImportTarget(join(resolve(options.target), TARGET_STATE_FILE)));
       }
       process.exit(1);
     }
