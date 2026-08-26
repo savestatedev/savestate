@@ -677,6 +677,7 @@ export async function verifyContainer(
     return {
       status: 'corrupted',
       message: 'Invalid manifest: missing agent_state payload or checksum',
+      ...(excluded ? { excluded } : {}),
     };
   }
 
