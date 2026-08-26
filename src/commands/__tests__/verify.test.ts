@@ -139,7 +139,7 @@ describe('verifyContainer', () => {
     );
 
     expect(result.status).toBe('invalid_format');
-    expect(result.message).toContain('File not found');
+    expect(result.message).toContain('Input path not found');
   });
 
   it('should detect invalid magic header', async () => {
