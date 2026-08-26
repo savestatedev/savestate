@@ -77,7 +77,7 @@
 <main class="docs-main">
   <div class="docs-content">
     <h1>CLI Reference</h1>
-    <p class="subtitle">Eight commands. Full control over your AI backups.</p>
+    <p class="subtitle">Backup, restore, verify, and migrate your AI identity from the command line.</p>
 
     <pre><code><span class="code-prompt">$</span> savestate --help
 
@@ -90,6 +90,7 @@
   <span class="code-cmd">list</span>                    <span class="code-output">List all snapshots with metadata</span>
   <span class="code-cmd">diff</span> <span class="code-flag">&lt;a&gt; &lt;b&gt;</span>            <span class="code-output">Compare two snapshots side-by-side</span>
   <span class="code-cmd">search</span> <span class="code-flag">&lt;query&gt;</span>          <span class="code-output">Search across all snapshots</span>
+  <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -253,6 +254,31 @@
 <span class="code-output">gemini              Google Gemini         gemini            ✗</span></code></pre>
 
     <p>Detection is automatic based on the current directory and environment. See <a href="/docs/adapters.html">Platform Adapters</a> for details on what each adapter captures.</p>
+
+    <!-- verify -->
+    <h2 id="verify"><code>savestate verify</code></h2>
+    <p>Verify integrity of a <code>.savestate</code> container. Checks the magic header, manifest, checksum, and (when a key is provided) decryptability. Prints packed components and payload metadata.</p>
+    <pre><code><span class="code-prompt">$</span> savestate verify &lt;file&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase used to decrypt the container</td></tr>
+        <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the full verify result as JSON</td></tr>
+      </tbody>
+    </table>
+
+    <p>On a valid file, output includes agent id, created timestamp, format version, optional description, components, excluded paths, checksum, size, content type, payload name, encryption algorithm, and key derivation.</p>
+    <p>If the container decrypts but has no <code>agent_state</code> payload, verify still prints the metadata it can read from the manifest — including <code>Content-Type</code>, checksum, size, components, and encryption details — then reports the file as corrupted.</p>
+
+    <pre><code><span class="code-comment"># Verify with a passphrase</span>
+<span class="code-prompt">$</span> savestate verify agent.savestate --passphrase <span class="code-string">"secret"</span>
+
+<span class="code-comment"># Scriptable JSON result</span>
+<span class="code-prompt">$</span> savestate verify agent.savestate --keyfile ./key.bin --json</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">

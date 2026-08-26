@@ -209,6 +209,7 @@ savestate verify <file>               Verify a .savestate file and list componen
   -k, --keyfile <path>               Keyfile for verification
   --json                             Output as JSON
                                      Prints checksum, size, content type, encryption, and key derivation
+                                     (including when the container has no agent_state payload)
 
 savestate trace list                  List Askable Echoes trace runs
   --json                             Output as JSON
