@@ -1113,6 +1113,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (excludedComponents) {
         console.error(formatImportExcluded(excludedComponents));
       }
+      console.error(formatImportInput(inFile));
       process.exit(1);
     }
     const contentType =
