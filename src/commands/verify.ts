@@ -174,8 +174,13 @@ export async function verifyContainer(
           message: `Keyfile is a directory: ${keySource.keyfile}`,
         };
       }
-    } catch {
-      void 0;
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return {
+          status: 'invalid_format',
+          message: `Keyfile not found: ${keySource.keyfile}`,
+        };
+      }
     }
   }
 
