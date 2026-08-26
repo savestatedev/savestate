@@ -165,7 +165,13 @@ export async function verifyContainer(
   filePath: string,
   keySource: KeySource
 ): Promise<VerifyResult> {
-  if (keySource.keyfile) {
+  if (keySource.keyfile !== undefined) {
+    if (typeof keySource.keyfile !== 'string' || keySource.keyfile.trim() === '') {
+      return {
+        status: 'invalid_format',
+        message: `Keyfile must not be empty: ${JSON.stringify(keySource.keyfile)}.`,
+      };
+    }
     try {
       const keyfileStats = await fs.stat(keySource.keyfile);
       if (keyfileStats.isDirectory()) {
@@ -1041,6 +1047,11 @@ export async function verifyCommand(
 ): Promise<void> {
   const passphrase = options.passphrase || process.env.SAVESTATE_PASSPHRASE;
   const keyfile = options.keyfile;
+
+  if (keyfile !== undefined && (typeof keyfile !== 'string' || keyfile.trim() === '')) {
+    console.error(`✗ Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
+    process.exit(1);
+  }
 
   if (!passphrase && !keyfile) {
     console.error(
