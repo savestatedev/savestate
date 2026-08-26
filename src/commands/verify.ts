@@ -676,10 +676,17 @@ export async function verifyContainer(
   if (!payload || !payload.sha256) {
     const agentId = typeof manifest.agentId === 'string' ? manifest.agentId.trim() : '';
     const formatVersion = typeof manifest.formatVersion === 'number' ? manifest.formatVersion : undefined;
+    const sizedPayload = Array.isArray(manifest.payloads)
+      ? manifest.payloads.find((p: any) => p && typeof p.byteLength === 'number')
+      : undefined;
+    const payloadBytes = sizedPayload && typeof sizedPayload.byteLength === 'number'
+      ? sizedPayload.byteLength
+      : undefined;
     return {
       status: 'corrupted',
       message: 'Invalid manifest: missing agent_state payload or checksum',
       input: filePath,
+      ...(payloadBytes !== undefined ? { payloadBytes } : {}),
       ...(excluded ? { excluded } : {}),
       ...((agentId || formatVersion !== undefined) ? {
         manifest: {
