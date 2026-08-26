@@ -841,6 +841,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
             return undefined;
           }
         } catch {
+          console.error(`Error: Target directory not found: ${dirname(options.target)}`);
+          return undefined;
         }
       }
     }
