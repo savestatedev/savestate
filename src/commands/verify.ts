@@ -690,6 +690,12 @@ export async function verifyContainer(
     const checksum = typeof checksumPayload?.sha256 === 'string' && checksumPayload.sha256.trim() !== ''
       ? checksumPayload.sha256
       : undefined;
+    const typedPayload = Array.isArray(manifest.payloads)
+      ? manifest.payloads.find((p: any) => p && typeof p.contentType === 'string' && p.contentType.trim() !== '')
+      : undefined;
+    const contentType = typedPayload && typeof typedPayload.contentType === 'string'
+      ? typedPayload.contentType.trim()
+      : undefined;
     return {
       status: 'corrupted',
       message: 'Invalid manifest: missing agent_state payload or checksum',
@@ -699,6 +705,7 @@ export async function verifyContainer(
       ...(payloadBytes !== undefined ? { payloadBytes } : {}),
       ...(checksum ? { checksum } : {}),
       ...(listedComponents ? { components: listedComponents } : {}),
+      ...(contentType ? { contentType } : {}),
       ...(excluded ? { excluded } : {}),
       ...((agentId || created || formatVersion !== undefined || description) ? {
         manifest: {
