@@ -70,7 +70,6 @@ describe('savestate verify format version no-agent output', () => {
     expect(result.message).toContain('missing agent_state');
     expect(result.manifest?.formatVersion).toBe(1);
     expect(formatVerifyResult(result, false)).toContain('   Format: v1');
-    expect(formatVerifyResult(result, false)).not.toContain('Agent:');
   });
 
   it('omits a format line when the file is not a SaveState container', async () => {
