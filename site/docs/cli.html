@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, cloud, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,6 +100,7 @@
   <span class="code-cmd">schedule</span>                <span class="code-output">Configure automatic backup schedule (Pro/Team)</span>
   <span class="code-cmd">migrate</span>                 <span class="code-output">Migration wizard between platforms</span>
   <span class="code-cmd">trust</span>                   <span class="code-output">Inspect Trust Kernel state, audit trail, and denylist</span>
+  <span class="code-cmd">cloud</span>                   <span class="code-output">Cloud storage commands (Pro/Team)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -529,6 +530,34 @@
 
 <span class="code-comment"># List denylist entries</span>
 <span class="code-prompt">$</span> savestate trust deny list</code></pre>
+
+    <!-- cloud -->
+    <h2 id="cloud"><code>savestate cloud</code></h2>
+    <p>Push, pull, list, and delete encrypted snapshots in SaveState cloud storage. Requires Pro or Team and a logged-in API key (<code>savestate login</code>). Snapshots stay encrypted; the CLI uploads <code>.saf.enc</code> files through the API. Default push/pull is the latest snapshot unless you pass <code>--id</code> or <code>--all</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate cloud &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--id &lt;id&gt;</code></td><td>Specific snapshot ID (prefix match allowed)</td></tr>
+        <tr><td><code>--all</code></td><td>Process all snapshots instead of the latest</td></tr>
+        <tr><td><code>-f, --force</code></td><td>Overwrite existing local files on pull, or skip delete confirmation</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># List snapshots in cloud storage</span>
+<span class="code-prompt">$</span> savestate cloud list
+
+<span class="code-comment"># Push the latest local snapshot</span>
+<span class="code-prompt">$</span> savestate cloud push
+
+<span class="code-comment"># Pull a specific snapshot, overwriting the local file</span>
+<span class="code-prompt">$</span> savestate cloud pull --id ss-2026-01-26 --force
+
+<span class="code-comment"># Delete one cloud snapshot without the confirm prompt</span>
+<span class="code-prompt">$</span> savestate cloud delete --id ss-2026-01-26 --force</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">

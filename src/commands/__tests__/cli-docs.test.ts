@@ -99,7 +99,7 @@ describe('CLI docs', () => {
   });
 
   it('documents trust status, audit, and deny', () => {
-    const trustSection = docs.slice(docs.indexOf('id="trust"'));
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="cloud"'));
     expect(trustSection).toContain('status');
     expect(trustSection).toContain('audit');
     expect(trustSection).toContain('deny');
@@ -107,6 +107,25 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('--limit');
     expect(trustSection).toContain('--reason');
     expect(trustSection).toContain('WriteGate');
+  });
+
+  it('lists savestate cloud in the command overview', () => {
+    expect(docs).toContain('id="cloud"');
+    expect(docs).toContain('savestate cloud');
+  });
+
+  it('documents cloud push, pull, list, delete, and --force', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'));
+    expect(cloudSection).toContain('push');
+    expect(cloudSection).toContain('pull');
+    expect(cloudSection).toContain('list');
+    expect(cloudSection).toContain('delete');
+    expect(cloudSection).toContain('--id');
+    expect(cloudSection).toContain('--all');
+    expect(cloudSection).toContain('--force');
+    expect(cloudSection).toContain('Pro or Team');
+    expect(cloudSection).toContain('savestate login');
+    expect(cloudSection).toContain('.saf.enc');
   });
 
   it('lists savestate stats in the command overview', () => {
