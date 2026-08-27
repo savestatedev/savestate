@@ -529,6 +529,7 @@ export interface ExportOptions {
   includeTools?: boolean;
   includePreferences?: boolean;
   force?: boolean;
+  dryRun?: boolean;
   description?: string;
 }
 
@@ -536,6 +537,7 @@ export interface ExportResult {
   written: boolean;
   out: string;
   overwritten: boolean;
+  dryRun?: boolean;
 }
 
 async function resolveKeySource(
@@ -630,7 +632,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     } catch {
       // Missing parent is reported by writeFile as ENOENT.
     }
-    if (existed && !options.force) {
+    if (existed && !options.force && !options.dryRun) {
       console.error(
         `Error: Output file already exists: ${out}. Use --force to overwrite.`,
       );
@@ -738,9 +740,13 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       encryptedState,
     ]);
 
-    reportContainerProgress(`Writing ${out}`, finalBuffer.length);
-    await fs.writeFile(out, finalBuffer);
-    console.log(`Successfully exported agent '${agent}' to ${out}`);
+    if (options.dryRun) {
+      console.log(`\nDRY RUN — no changes will be made`);
+    } else {
+      reportContainerProgress(`Writing ${out}`, finalBuffer.length);
+      await fs.writeFile(out, finalBuffer);
+      console.log(`Successfully exported agent '${agent}' to ${out}`);
+    }
     console.log(formatExportAgent(agent));
     console.log(formatExportFormatVersion(formatVersion));
     console.log(formatExportCreated(created));
@@ -758,6 +764,9 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       console.log(formatExportExcluded(excludedPaths));
     }
     console.log(formatExportOutput(out));
+    if (options.dryRun) {
+      return { written: false, out, overwritten: false, dryRun: true };
+    }
     return { written: true, out, overwritten: existed };
   } catch (error: any) {
     console.error('Export failed:', error.message);
@@ -1401,6 +1410,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
     .option('--force', 'Overwrite an existing output file')
+    .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export')
     .action(async (opts) => {
       const result = await exportState({
@@ -1415,9 +1425,10 @@ export function registerContainerCommands(program: Command) {
         includeTools: opts.includeTools,
         includePreferences: opts.includePreferences,
         force: opts.force,
+        dryRun: opts.dryRun,
         description: opts.description,
       });
-      if (!result.written) {
+      if (!result.written && !result.dryRun) {
         process.exit(1);
       }
     });
@@ -1472,6 +1483,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
     .option('--force', 'Overwrite an existing output file')
+    .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export')
     .action(async (opts) => {
       const result = await exportState({
@@ -1486,9 +1498,10 @@ export function registerContainerCommands(program: Command) {
         includeTools: opts.includeTools,
         includePreferences: opts.includePreferences,
         force: opts.force,
+        dryRun: opts.dryRun,
         description: opts.description,
       });
-      if (!result.written) {
+      if (!result.written && !result.dryRun) {
         process.exit(1);
       }
     });

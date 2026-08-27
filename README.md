@@ -195,6 +195,7 @@ savestate migrate                     Migration wizard between platforms
 savestate export                      Export an encrypted agent container
   -a, --agent <id>                   Agent ID to export
   -o, --output <file>                Output file path
+  --dry-run                          Preview without writing
   --force                            Overwrite an existing output file
   --include <paths>                  Only pack named state paths
   -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
