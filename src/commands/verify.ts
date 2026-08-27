@@ -222,7 +222,10 @@ export async function verifyContainer(
       };
     }
   } catch {
-    // Missing files are reported when the container is read.
+    return {
+      status: 'invalid_format',
+      message: `Input path not found: ${filePath}`,
+    };
   }
 
   let fileBuffer: Buffer;
