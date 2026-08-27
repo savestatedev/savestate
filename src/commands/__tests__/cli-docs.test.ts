@@ -99,7 +99,7 @@ describe('CLI docs', () => {
   });
 
   it('documents trust status, audit, and deny', () => {
-    const trustSection = docs.slice(docs.indexOf('id="trust"'));
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="eval"'));
     expect(trustSection).toContain('status');
     expect(trustSection).toContain('audit');
     expect(trustSection).toContain('deny');
@@ -107,6 +107,23 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('--limit');
     expect(trustSection).toContain('--reason');
     expect(trustSection).toContain('WriteGate');
+  });
+
+  it('lists savestate eval in the command overview', () => {
+    expect(docs).toContain('id="eval"');
+    expect(docs).toContain('savestate eval');
+  });
+
+  it('documents eval quality, report, and --threshold', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'));
+    expect(evalSection).toContain('quality');
+    expect(evalSection).toContain('report');
+    expect(evalSection).toContain('--threshold');
+    expect(evalSection).toContain('--suite');
+    expect(evalSection).toContain('--verbose');
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('0.7');
+    expect(evalSection).toContain('.savestate/benchmarks/');
   });
 
   it('lists savestate stats in the command overview', () => {
