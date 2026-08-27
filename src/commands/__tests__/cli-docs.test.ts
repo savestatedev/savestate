@@ -34,4 +34,16 @@ describe('CLI docs', () => {
     const verifySection = docs.slice(docs.indexOf('id="verify"'));
     expect(verifySection).toContain('missing');
   });
+
+  it('lists savestate inspect in the command overview', () => {
+    expect(docs).toContain('id="inspect"');
+    expect(docs).toContain('savestate inspect');
+  });
+
+  it('documents inspect --json and latest without restoring', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    expect(inspectSection).toContain('--json');
+    expect(inspectSection).toContain('latest');
+    expect(inspectSection).toContain('without restoring');
+  });
 });
