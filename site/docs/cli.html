@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, diff, search, export, import, verify, prune, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, diff, search, export, import, verify, prune, antibodies, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,6 +95,7 @@
   <span class="code-cmd">import</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Import an encrypted agent container</span>
   <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
   <span class="code-cmd">prune</span>                   <span class="code-output">Drop old snapshots by retention policy (dry-run)</span>
+  <span class="code-cmd">antibodies</span>              <span class="code-output">Manage failure antibodies (list, add, preflight, stats)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -383,6 +384,43 @@
 
 <span class="code-comment"># Delete snapshots older than a cutoff</span>
 <span class="code-prompt">$</span> savestate prune --older-than 2026-01-01 --apply</code></pre>
+
+    <!-- antibodies -->
+    <h2 id="antibodies"><code>savestate antibodies</code></h2>
+    <p>Manage failure antibodies: reusable rules that match a tool, error, or path and suggest a safe action. Subcommands: <code>list</code>, <code>add</code>, <code>preflight</code>, <code>stats</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate antibodies &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--all</code></td><td>Include retired rules in <code>list</code></td></tr>
+        <tr><td><code>--tool &lt;name&gt;</code></td><td>Tool name for <code>add</code> / <code>preflight</code></td></tr>
+        <tr><td><code>--error-code &lt;code&gt;</code></td><td>Error code in the rule trigger or preflight context</td></tr>
+        <tr><td><code>--path-prefix &lt;prefix&gt;</code></td><td>Path prefix in the rule trigger</td></tr>
+        <tr><td><code>--path &lt;path&gt;</code></td><td>Path in preflight context</td></tr>
+        <tr><td><code>--tags &lt;tags&gt;</code></td><td>Comma-separated tags</td></tr>
+        <tr><td><code>--risk &lt;level&gt;</code></td><td>Risk level: low, medium, high, or critical</td></tr>
+        <tr><td><code>--safe-action &lt;type&gt;</code></td><td>Safe action for a manual rule</td></tr>
+        <tr><td><code>--confidence &lt;0..1&gt;</code></td><td>Rule confidence</td></tr>
+        <tr><td><code>--id &lt;id&gt;</code></td><td>Rule ID when adding manually</td></tr>
+        <tr><td><code>--semantic</code></td><td>Enable the semantic matcher stub on <code>preflight</code></td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># List active rules</span>
+<span class="code-prompt">$</span> savestate antibodies list
+
+<span class="code-comment"># Add a rule for a tool/error pair</span>
+<span class="code-prompt">$</span> savestate antibodies add --tool write --error-code EACCES --risk high --safe-action check_permissions
+
+<span class="code-comment"># Check whether a planned action matches a rule</span>
+<span class="code-prompt">$</span> savestate antibodies preflight --tool write --path ./secret.env --json
+
+<span class="code-comment"># Hit counts and overrides</span>
+<span class="code-prompt">$</span> savestate antibodies stats --json</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
