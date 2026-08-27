@@ -31,7 +31,21 @@ describe('CLI docs', () => {
   });
 
   it('documents verify rejecting a missing input path', () => {
-    const verifySection = docs.slice(docs.indexOf('id="verify"'));
+    const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
     expect(verifySection).toContain('missing');
+  });
+
+  it('lists savestate prune in the command overview', () => {
+    expect(docs).toContain('id="prune"');
+    expect(docs).toContain('savestate prune');
+  });
+
+  it('documents prune --keep-last, --older-than, and --apply dry-run default', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'));
+    expect(pruneSection).toContain('--keep-last');
+    expect(pruneSection).toContain('--older-than');
+    expect(pruneSection).toContain('--apply');
+    expect(pruneSection).toContain('--json');
+    expect(pruneSection).toContain('Dry-run is the default');
   });
 });

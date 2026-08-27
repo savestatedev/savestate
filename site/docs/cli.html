@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, diff, search, export, import, verify, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, diff, search, export, import, verify, prune, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,6 +93,7 @@
   <span class="code-cmd">export</span>                  <span class="code-output">Export an encrypted agent container</span>
   <span class="code-cmd">import</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Import an encrypted agent container</span>
   <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
+  <span class="code-cmd">prune</span>                   <span class="code-output">Drop old snapshots by retention policy (dry-run)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -336,6 +337,31 @@
 
 <span class="code-comment"># Scriptable JSON result</span>
 <span class="code-prompt">$</span> savestate verify agent.savestate --keyfile ./key.bin --json</code></pre>
+
+    <!-- prune -->
+    <h2 id="prune"><code>savestate prune</code></h2>
+    <p>Drop old snapshots according to a retention policy. Dry-run is the default: nothing is deleted unless <code>--apply</code> is set. Specify <code>--keep-last</code>, <code>--older-than</code>, or both.</p>
+    <pre><code><span class="code-prompt">$</span> savestate prune [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--keep-last &lt;n&gt;</code></td><td>Keep the N most recent snapshots</td></tr>
+        <tr><td><code>--older-than &lt;date&gt;</code></td><td>Drop snapshots older than this date (ISO 8601)</td></tr>
+        <tr><td><code>--apply</code></td><td>Actually delete. Without this flag, prune only prints the plan</td></tr>
+        <tr><td><code>--json</code></td><td>Output the plan as JSON</td></tr>
+      </tbody>
+    </table>
+
+    <p>The newest snapshot is never pruned. A snapshot that is the only one for its adapter is held back for chain safety.</p>
+
+    <pre><code><span class="code-comment"># Preview which snapshots would be dropped</span>
+<span class="code-prompt">$</span> savestate prune --keep-last 10
+
+<span class="code-comment"># Delete snapshots older than a cutoff</span>
+<span class="code-prompt">$</span> savestate prune --older-than 2026-01-01 --apply</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
