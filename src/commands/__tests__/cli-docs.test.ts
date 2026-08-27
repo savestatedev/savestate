@@ -55,7 +55,7 @@ describe('CLI docs', () => {
   });
 
   it('documents antibodies list, add, preflight, and stats', () => {
-    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'));
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="trust"'));
     expect(antibodiesSection).toContain('list');
     expect(antibodiesSection).toContain('add');
     expect(antibodiesSection).toContain('preflight');
@@ -63,6 +63,22 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('--json');
     expect(antibodiesSection).toContain('--tool');
     expect(antibodiesSection).toContain('--safe-action');
+  });
+
+  it('lists savestate trust in the command overview', () => {
+    expect(docs).toContain('id="trust"');
+    expect(docs).toContain('savestate trust');
+  });
+
+  it('documents trust status, audit, and deny', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'));
+    expect(trustSection).toContain('status');
+    expect(trustSection).toContain('audit');
+    expect(trustSection).toContain('deny');
+    expect(trustSection).toContain('--json');
+    expect(trustSection).toContain('--limit');
+    expect(trustSection).toContain('--reason');
+    expect(trustSection).toContain('WriteGate');
   });
 
   it('lists savestate stats in the command overview', () => {

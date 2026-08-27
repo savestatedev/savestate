@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, diff, search, export, import, verify, prune, antibodies, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, diff, search, export, import, verify, prune, antibodies, trust, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -96,6 +96,7 @@
   <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
   <span class="code-cmd">prune</span>                   <span class="code-output">Drop old snapshots by retention policy (dry-run)</span>
   <span class="code-cmd">antibodies</span>              <span class="code-output">Manage failure antibodies (list, add, preflight, stats)</span>
+  <span class="code-cmd">trust</span>                   <span class="code-output">Inspect Trust Kernel state, audit trail, and denylist</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -421,6 +422,35 @@
 
 <span class="code-comment"># Hit counts and overrides</span>
 <span class="code-prompt">$</span> savestate antibodies stats --json</code></pre>
+
+    <!-- trust -->
+    <h2 id="trust"><code>savestate trust</code></h2>
+    <p>Inspect Trust Kernel state, the promotion audit trail, and the WriteGate denylist. Subcommands: <code>status</code>, <code>audit</code>, and <code>deny</code> (<code>add</code>, <code>remove</code>, <code>list</code>). See the <a href="/docs/trust-kernel.html">Trust Kernel</a> docs for the state machine.</p>
+    <pre><code><span class="code-prompt">$</span> savestate trust &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Number of recent events for <code>audit</code> (default 50)</td></tr>
+        <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Why a pattern is denylisted on <code>deny add</code></td></tr>
+        <tr><td><code>-b, --by &lt;actor&gt;</code></td><td>Who is adding the denylist entry (defaults to <code>cli</code>)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Entries by state/scope and denylist size</span>
+<span class="code-prompt">$</span> savestate trust status
+
+<span class="code-comment"># Recent promotion and rejection events</span>
+<span class="code-prompt">$</span> savestate trust audit --limit 20 --json
+
+<span class="code-comment"># Block a pattern at the WriteGate</span>
+<span class="code-prompt">$</span> savestate trust deny add secret.env --reason "contains credentials"
+
+<span class="code-comment"># List denylist entries</span>
+<span class="code-prompt">$</span> savestate trust deny list</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
