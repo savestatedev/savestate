@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, eval, login, logout, context, memory, slo, acl, identity, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, eval, login, logout, context, memory, slo, acl, identity, trace, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -109,6 +109,7 @@
   <span class="code-cmd">slo</span>                     <span class="code-output">Memory freshness SLO monitoring (status, report, config)</span>
   <span class="code-cmd">acl</span>                     <span class="code-output">Manage active commitments (propose, verify, gate, list)</span>
   <span class="code-cmd">identity</span>                <span class="code-output">Manage agent identity (show, init, set, schema)</span>
+  <span class="code-cmd">trace</span>                   <span class="code-output">Inspect Askable Echoes trace runs (list, show, export)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -799,6 +800,34 @@
 
 <span class="code-comment"># Print the identity JSON schema</span>
 <span class="code-prompt">$</span> savestate identity schema --json</code></pre>
+
+    <!-- trace -->
+    <h2 id="trace"><code>savestate trace</code></h2>
+    <p>Inspect Askable Echoes trace runs: an append-only ledger of tool calls, results, checkpoints, and errors. Subcommands: <code>list</code>, <code>show</code>, and <code>export</code>. Requires <code>savestate init</code>. Runs are stored under <code>.savestate/traces</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate trace &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output as JSON on <code>list</code> and <code>show</code></td></tr>
+        <tr><td><code>--format &lt;format&gt;</code></td><td>Export format on <code>export</code> (only <code>jsonl</code> is supported)</td></tr>
+        <tr><td><code>--run &lt;id&gt;</code></td><td>Export only a specific run ID (default: all runs)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># List trace runs</span>
+<span class="code-prompt">$</span> savestate trace list
+
+<span class="code-comment"># Show events for one run</span>
+<span class="code-prompt">$</span> savestate trace show run-123 --json
+
+<span class="code-comment"># Export every run as JSONL</span>
+<span class="code-prompt">$</span> savestate trace export --format jsonl
+
+<span class="code-comment"># Export one run</span>
+<span class="code-prompt">$</span> savestate trace export --run run-123</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">

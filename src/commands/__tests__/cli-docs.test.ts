@@ -268,7 +268,7 @@ describe('CLI docs', () => {
   });
 
   it('documents identity show, init, set, and schema', () => {
-    const identitySection = docs.slice(docs.indexOf('id="identity"'));
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="trace"'));
     expect(identitySection).toContain('show');
     expect(identitySection).toContain('init');
     expect(identitySection).toContain('set');
@@ -277,6 +277,25 @@ describe('CLI docs', () => {
     expect(identitySection).toContain('.savestate/identity.json');
     expect(identitySection).toContain('metadata.');
     expect(identitySection).toContain('savestate init');
+  });
+
+  it('lists savestate trace in the command overview', () => {
+    expect(docs).toContain('id="trace"');
+    expect(docs).toContain('savestate trace');
+  });
+
+  it('documents trace list, show, and export', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'));
+    expect(traceSection).toContain('list');
+    expect(traceSection).toContain('show');
+    expect(traceSection).toContain('export');
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('--format');
+    expect(traceSection).toContain('--run');
+    expect(traceSection).toContain('jsonl');
+    expect(traceSection).toContain('.savestate/traces');
+    expect(traceSection).toContain('savestate init');
+    expect(traceSection).toContain('Askable Echoes');
   });
 
   it('lists savestate stats in the command overview', () => {
