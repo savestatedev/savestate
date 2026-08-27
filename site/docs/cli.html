@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, diff, search, export, import, verify, prune, antibodies, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, diff, search, export, import, verify, prune, antibodies, schedule, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -96,6 +96,7 @@
   <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
   <span class="code-cmd">prune</span>                   <span class="code-output">Drop old snapshots by retention policy (dry-run)</span>
   <span class="code-cmd">antibodies</span>              <span class="code-output">Manage failure antibodies (list, add, preflight, stats)</span>
+  <span class="code-cmd">schedule</span>                <span class="code-output">Configure automatic backup schedule (Pro/Team)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -421,6 +422,33 @@
 
 <span class="code-comment"># Hit counts and overrides</span>
 <span class="code-prompt">$</span> savestate antibodies stats --json</code></pre>
+
+    <!-- schedule -->
+    <h2 id="schedule"><code>savestate schedule</code></h2>
+    <p>Configure automatic backup schedule. Enabling a schedule requires Pro or Team and a logged-in API key. Status and disable work without a subscription. Uses launchd on macOS and systemd user timers on Linux. With no flags, prints the current status.</p>
+    <pre><code><span class="code-prompt">$</span> savestate schedule [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-e, --every &lt;interval&gt;</code></td><td>Backup interval (e.g., <code>1h</code>, <code>6h</code>, <code>12h</code>, <code>1d</code>). Requires Pro or Team</td></tr>
+        <tr><td><code>-d, --disable</code></td><td>Disable scheduled backups</td></tr>
+        <tr><td><code>-s, --status</code></td><td>Show schedule status (default when no other flag is set)</td></tr>
+      </tbody>
+    </table>
+
+    <p>Run <code>savestate login</code> first. The job runs <code>savestate snapshot --label auto</code> on the interval.</p>
+
+    <pre><code><span class="code-comment"># Show whether scheduled backups are enabled</span>
+<span class="code-prompt">$</span> savestate schedule
+
+<span class="code-comment"># Enable a 6-hour backup schedule</span>
+<span class="code-prompt">$</span> savestate schedule --every 6h
+
+<span class="code-comment"># Turn scheduled backups off</span>
+<span class="code-prompt">$</span> savestate schedule --disable</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">

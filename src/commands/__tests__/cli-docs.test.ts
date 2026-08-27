@@ -55,7 +55,7 @@ describe('CLI docs', () => {
   });
 
   it('documents antibodies list, add, preflight, and stats', () => {
-    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'));
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
     expect(antibodiesSection).toContain('list');
     expect(antibodiesSection).toContain('add');
     expect(antibodiesSection).toContain('preflight');
@@ -63,6 +63,20 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('--json');
     expect(antibodiesSection).toContain('--tool');
     expect(antibodiesSection).toContain('--safe-action');
+  });
+
+  it('lists savestate schedule in the command overview', () => {
+    expect(docs).toContain('id="schedule"');
+    expect(docs).toContain('savestate schedule');
+  });
+
+  it('documents schedule --every, --disable, and --status', () => {
+    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'));
+    expect(scheduleSection).toContain('--every');
+    expect(scheduleSection).toContain('--disable');
+    expect(scheduleSection).toContain('--status');
+    expect(scheduleSection).toContain('Pro or Team');
+    expect(scheduleSection).toContain('snapshot --label auto');
   });
 
   it('lists savestate stats in the command overview', () => {
