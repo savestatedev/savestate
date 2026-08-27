@@ -216,7 +216,7 @@ describe('CLI docs', () => {
   });
 
   it('documents slo status, report, and config', () => {
-    const sloSection = docs.slice(docs.indexOf('id="slo"'));
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
     expect(sloSection).toContain('status');
     expect(sloSection).toContain('report');
     expect(sloSection).toContain('config');
@@ -226,6 +226,30 @@ describe('CLI docs', () => {
     expect(sloSection).toContain('--json');
     expect(sloSection).toContain('enabled=true');
     expect(sloSection).toContain('freshness.max_age_hours');
+  });
+
+  it('lists savestate acl in the command overview', () => {
+    expect(docs).toContain('id="acl"');
+    expect(docs).toContain('savestate acl');
+  });
+
+  it('documents acl propose, verify, gate, and list', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'));
+    expect(aclSection).toContain('propose');
+    expect(aclSection).toContain('verify');
+    expect(aclSection).toContain('gate');
+    expect(aclSection).toContain('list');
+    expect(aclSection).toContain('--type');
+    expect(aclSection).toContain('--criticality');
+    expect(aclSection).toContain('--description');
+    expect(aclSection).toContain('--proposer');
+    expect(aclSection).toContain('--expires-in');
+    expect(aclSection).toContain('--id');
+    expect(aclSection).toContain('--verifier');
+    expect(aclSection).toContain('--approve');
+    expect(aclSection).toContain('--action');
+    expect(aclSection).toContain('customer_promise');
+    expect(aclSection).toContain('Active Commitment Layer');
   });
 
   it('lists savestate stats in the command overview', () => {

@@ -107,6 +107,7 @@
   <span class="code-cmd">context</span>                 <span class="code-output">Preflight context compilation for agent runs</span>
   <span class="code-cmd">memory</span>                  <span class="code-output">Manage multi-tier memory (L1/L2/L3) for long-running agents</span>
   <span class="code-cmd">slo</span>                     <span class="code-output">Memory freshness SLO monitoring (status, report, config)</span>
+  <span class="code-cmd">acl</span>                     <span class="code-output">Manage active commitments (propose, verify, gate, list)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -707,6 +708,40 @@
 <span class="code-comment"># Enable monitoring and raise max age</span>
 <span class="code-prompt">$</span> savestate slo config --set enabled=true
 <span class="code-prompt">$</span> savestate slo config --set freshness.max_age_hours=720</code></pre>
+
+    <!-- acl -->
+    <h2 id="acl"><code>savestate acl</code></h2>
+    <p>Manage Active Commitment Layer (ACL) commitments that gate high-impact agent actions. Subcommands: <code>propose</code>, <code>verify</code>, <code>gate</code>, and <code>list</code>. <code>propose</code> records a commitment with type, criticality, description, and proposer. <code>verify</code> approves or rejects a proposed commitment. <code>gate</code> checks whether an action type is allowed. <code>list</code> prints all commitments.</p>
+    <pre><code><span class="code-prompt">$</span> savestate acl &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-t, --type &lt;type&gt;</code></td><td>Commitment type for <code>propose</code>: <code>customer_promise</code>, <code>ticket_status_change</code>, <code>escalation_closure</code>, or <code>account_tool_write</code></td></tr>
+        <tr><td><code>-c, --criticality &lt;level&gt;</code></td><td>Criticality for <code>propose</code>: <code>c1</code>, <code>c2</code>, or <code>c3</code></td></tr>
+        <tr><td><code>-d, --description &lt;text&gt;</code></td><td>Description of the commitment for <code>propose</code></td></tr>
+        <tr><td><code>-p, --proposer &lt;id&gt;</code></td><td>ID of the proposing agent for <code>propose</code></td></tr>
+        <tr><td><code>-e, --expires-in &lt;minutes&gt;</code></td><td>Minutes until expiration on <code>propose</code></td></tr>
+        <tr><td><code>-i, --id &lt;id&gt;</code></td><td>Commitment ID for <code>verify</code></td></tr>
+        <tr><td><code>-v, --verifier &lt;id&gt;</code></td><td>ID of the verifier for <code>verify</code></td></tr>
+        <tr><td><code>-a, --approve</code></td><td>Approve the commitment on <code>verify</code> (default is reject)</td></tr>
+        <tr><td><code>-a, --action &lt;type&gt;</code></td><td>Action type to check on <code>gate</code> (same values as <code>--type</code>)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Propose a customer promise</span>
+<span class="code-prompt">$</span> savestate acl propose --type customer_promise --criticality c3 --description "Refund within 24h" --proposer agent-1
+
+<span class="code-comment"># Approve a proposed commitment</span>
+<span class="code-prompt">$</span> savestate acl verify --id &lt;commitment-id&gt; --verifier reviewer-1 --approve
+
+<span class="code-comment"># Check whether an action is allowed</span>
+<span class="code-prompt">$</span> savestate acl gate --action customer_promise
+
+<span class="code-comment"># List all commitments</span>
+<span class="code-prompt">$</span> savestate acl list</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
