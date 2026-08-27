@@ -776,6 +776,7 @@ export interface RestoreOptions {
   target?: string;
   include?: string;
   exclude?: string;
+  force?: boolean;
 }
 
 export interface ImportResult {
@@ -838,6 +839,19 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
           const parentStats = await fs.stat(dirname(options.target));
           if (!parentStats.isDirectory()) {
             console.error(`Error: Target directory is a file: ${dirname(options.target)}`);
+            return undefined;
+          }
+        } catch {
+        }
+      }
+      if (!options.dryRun) {
+        const targetFile = join(resolve(options.target), TARGET_STATE_FILE);
+        try {
+          const destStats = await fs.stat(targetFile);
+          if (destStats.isFile() && !options.force) {
+            console.error(
+              `Error: Target file already exists: ${targetFile}. Use --force to overwrite.`,
+            );
             return undefined;
           }
         } catch {
@@ -1419,6 +1433,7 @@ export function registerContainerCommands(program: Command) {
     .option('--replace', 'Replace existing state completely')
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
+    .option('--force', 'Overwrite an existing target file')
     .action(async (file, opts) => {
       const result = await importState({
         in: file,
@@ -1430,6 +1445,7 @@ export function registerContainerCommands(program: Command) {
         target: opts.target,
         include: opts.include,
         exclude: opts.exclude,
+        force: opts.force,
       });
       if (!result) {
         process.exit(1);
@@ -1487,6 +1503,7 @@ export function registerContainerCommands(program: Command) {
     .option('--replace', 'Replace existing state (default)')
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
+    .option('--force', 'Overwrite an existing target file')
     .action(async (opts) => {
       const result = await importState({
         in: opts.in,
@@ -1498,6 +1515,7 @@ export function registerContainerCommands(program: Command) {
         target: opts.target,
         include: opts.include,
         exclude: opts.exclude,
+        force: opts.force,
       });
       if (!result) {
         process.exit(1);
