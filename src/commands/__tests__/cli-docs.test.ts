@@ -160,9 +160,28 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('ss_live_');
     expect(loginSection).toContain('savestate.dev/account');
     expect(loginSection).toContain('savestate init');
-    const logoutSection = docs.slice(docs.indexOf('id="logout"'));
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="trace"'));
     expect(logoutSection).toContain('savestate logout');
     expect(logoutSection).toContain('saved cloud API key');
+  });
+
+  it('lists savestate trace in the command overview', () => {
+    expect(docs).toContain('id="trace"');
+    expect(docs).toContain('savestate trace');
+  });
+
+  it('documents trace list, show, and export', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'));
+    expect(traceSection).toContain('list');
+    expect(traceSection).toContain('show');
+    expect(traceSection).toContain('export');
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('--format');
+    expect(traceSection).toContain('--run');
+    expect(traceSection).toContain('jsonl');
+    expect(traceSection).toContain('.savestate/traces');
+    expect(traceSection).toContain('savestate init');
+    expect(traceSection).toContain('Askable Echoes');
   });
 
   it('lists savestate stats in the command overview', () => {
