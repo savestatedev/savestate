@@ -160,9 +160,33 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('ss_live_');
     expect(loginSection).toContain('savestate.dev/account');
     expect(loginSection).toContain('savestate init');
-    const logoutSection = docs.slice(docs.indexOf('id="logout"'));
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="memory"'));
     expect(logoutSection).toContain('savestate logout');
     expect(logoutSection).toContain('saved cloud API key');
+  });
+
+  it('lists savestate memory in the command overview', () => {
+    expect(docs).toContain('id="memory"');
+    expect(docs).toContain('savestate memory');
+  });
+
+  it('documents memory list, promote, expire, and log', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'));
+    expect(memorySection).toContain('list');
+    expect(memorySection).toContain('promote');
+    expect(memorySection).toContain('demote');
+    expect(memorySection).toContain('pin');
+    expect(memorySection).toContain('explain');
+    expect(memorySection).toContain('expire');
+    expect(memorySection).toContain('log');
+    expect(memorySection).toContain('--tier');
+    expect(memorySection).toContain('--snapshot');
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('--dry-run');
+    expect(memorySection).toContain('--reason');
+    expect(memorySection).toContain('--namespace');
+    expect(memorySection).toContain('L1/L2/L3');
+    expect(memorySection).toContain('savestate init');
   });
 
   it('lists savestate stats in the command overview', () => {
