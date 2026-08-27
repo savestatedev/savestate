@@ -171,7 +171,7 @@ describe('CLI docs', () => {
   });
 
   it('documents context compile, explain, validate, and config', () => {
-    const contextSection = docs.slice(docs.indexOf('id="context"'));
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
     expect(contextSection).toContain('compile');
     expect(contextSection).toContain('explain');
     expect(contextSection).toContain('validate');
@@ -184,6 +184,30 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('--json');
     expect(contextSection).toContain('4000');
     expect(contextSection).toContain('RunBrief');
+  });
+
+  it('lists savestate memory in the command overview', () => {
+    expect(docs).toContain('id="memory"');
+    expect(docs).toContain('savestate memory');
+  });
+
+  it('documents memory list, promote, expire, and log', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'));
+    expect(memorySection).toContain('list');
+    expect(memorySection).toContain('promote');
+    expect(memorySection).toContain('demote');
+    expect(memorySection).toContain('pin');
+    expect(memorySection).toContain('explain');
+    expect(memorySection).toContain('expire');
+    expect(memorySection).toContain('log');
+    expect(memorySection).toContain('--tier');
+    expect(memorySection).toContain('--snapshot');
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('--dry-run');
+    expect(memorySection).toContain('--reason');
+    expect(memorySection).toContain('--namespace');
+    expect(memorySection).toContain('L1/L2/L3');
+    expect(memorySection).toContain('savestate init');
   });
 
   it('lists savestate stats in the command overview', () => {
