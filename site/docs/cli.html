@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,6 +100,7 @@
   <span class="code-cmd">schedule</span>                <span class="code-output">Configure automatic backup schedule (Pro/Team)</span>
   <span class="code-cmd">migrate</span>                 <span class="code-output">Migration wizard between platforms</span>
   <span class="code-cmd">trust</span>                   <span class="code-output">Inspect Trust Kernel state, audit trail, and denylist</span>
+  <span class="code-cmd">team</span>                    <span class="code-output">Team management: members, invites, audit log (Team)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -529,6 +530,36 @@
 
 <span class="code-comment"># List denylist entries</span>
 <span class="code-prompt">$</span> savestate trust deny list</code></pre>
+
+    <!-- team -->
+    <h2 id="team"><code>savestate team</code></h2>
+    <p>Team management for the Team tier: membership, invites, and the audit log. Subcommands: <code>status</code>, <code>members</code>, <code>invite</code>, and <code>audit</code>. Requires <code>savestate login</code>. A 402 response means the account is not on Team — upgrade at <a href="https://savestate.dev/#pricing">savestate.dev/#pricing</a>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate team &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-r, --role &lt;role&gt;</code></td><td>Invite role: <code>admin</code>, <code>member</code>, or <code>viewer</code> (default <code>member</code>)</td></tr>
+        <tr><td><code>--json</code></td><td>Output as JSON for <code>status</code>, <code>members</code>, and <code>invite</code></td></tr>
+        <tr><td><code>--since &lt;date&gt;</code></td><td>Audit entries after this ISO 8601 date</td></tr>
+        <tr><td><code>--until &lt;date&gt;</code></td><td>Audit entries before this ISO 8601 date</td></tr>
+        <tr><td><code>--format &lt;format&gt;</code></td><td>Audit output: <code>csv</code> or <code>json</code> (default <code>json</code>)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Your team name, id, and role</span>
+<span class="code-prompt">$</span> savestate team status
+
+<span class="code-comment"># Members and pending invites</span>
+<span class="code-prompt">$</span> savestate team members --json
+
+<span class="code-comment"># Invite a viewer</span>
+<span class="code-prompt">$</span> savestate team invite user@example.com --role viewer
+
+<span class="code-comment"># Stream the audit log as CSV</span>
+<span class="code-prompt">$</span> savestate team audit --since 2026-01-01 --format csv</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">

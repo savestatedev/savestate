@@ -99,7 +99,7 @@ describe('CLI docs', () => {
   });
 
   it('documents trust status, audit, and deny', () => {
-    const trustSection = docs.slice(docs.indexOf('id="trust"'));
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
     expect(trustSection).toContain('status');
     expect(trustSection).toContain('audit');
     expect(trustSection).toContain('deny');
@@ -107,6 +107,27 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('--limit');
     expect(trustSection).toContain('--reason');
     expect(trustSection).toContain('WriteGate');
+  });
+
+  it('lists savestate team in the command overview', () => {
+    expect(docs).toContain('id="team"');
+    expect(docs).toContain('savestate team');
+  });
+
+  it('documents team status, members, invite, and audit', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'));
+    expect(teamSection).toContain('status');
+    expect(teamSection).toContain('members');
+    expect(teamSection).toContain('invite');
+    expect(teamSection).toContain('audit');
+    expect(teamSection).toContain('--role');
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('--since');
+    expect(teamSection).toContain('--until');
+    expect(teamSection).toContain('--format');
+    expect(teamSection).toContain('savestate login');
+    expect(teamSection).toContain('admin');
+    expect(teamSection).toContain('viewer');
   });
 
   it('lists savestate stats in the command overview', () => {
