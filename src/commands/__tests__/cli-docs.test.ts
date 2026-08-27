@@ -160,9 +160,30 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('ss_live_');
     expect(loginSection).toContain('savestate.dev/account');
     expect(loginSection).toContain('savestate init');
-    const logoutSection = docs.slice(docs.indexOf('id="logout"'));
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="context"'));
     expect(logoutSection).toContain('savestate logout');
     expect(logoutSection).toContain('saved cloud API key');
+  });
+
+  it('lists savestate context in the command overview', () => {
+    expect(docs).toContain('id="context"');
+    expect(docs).toContain('savestate context');
+  });
+
+  it('documents context compile, explain, validate, and config', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'));
+    expect(contextSection).toContain('compile');
+    expect(contextSection).toContain('explain');
+    expect(contextSection).toContain('validate');
+    expect(contextSection).toContain('config');
+    expect(contextSection).toContain('--agent');
+    expect(contextSection).toContain('--task');
+    expect(contextSection).toContain('--budget');
+    expect(contextSection).toContain('--file');
+    expect(contextSection).toContain('--weights');
+    expect(contextSection).toContain('--json');
+    expect(contextSection).toContain('4000');
+    expect(contextSection).toContain('RunBrief');
   });
 
   it('lists savestate stats in the command overview', () => {

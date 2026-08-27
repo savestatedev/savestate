@@ -104,6 +104,7 @@
   <span class="code-cmd">eval</span>                    <span class="code-output">Memory quality evaluation (quality, report)</span>
   <span class="code-cmd">login</span>                   <span class="code-output">Authenticate with SaveState cloud</span>
   <span class="code-cmd">logout</span>                  <span class="code-output">Remove the saved cloud API key</span>
+  <span class="code-cmd">context</span>                 <span class="code-output">Preflight context compilation for agent runs</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -614,6 +615,38 @@
     <h2 id="logout"><code>savestate logout</code></h2>
     <p>Remove the saved cloud API key from local config. Does not revoke the key on the server. Reports if you were not logged in.</p>
     <pre><code><span class="code-prompt">$</span> savestate logout</code></pre>
+
+    <!-- context -->
+    <h2 id="context"><code>savestate context</code></h2>
+    <p>Preflight context compilation for agent runs. Subcommands: <code>compile</code>, <code>explain</code>, <code>validate</code>, and <code>config</code>. <code>compile</code> builds a RunBrief for an agent and task within a token budget (default 4000). <code>explain</code> prints the inclusion trace for a compiled run. <code>validate</code> checks a RunBrief JSON file. <code>config</code> shows scoring weights and budget allocation.</p>
+    <pre><code><span class="code-prompt">$</span> savestate context &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-a, --agent &lt;id&gt;</code></td><td>Agent ID for <code>compile</code> (required)</td></tr>
+        <tr><td><code>-t, --task &lt;intent&gt;</code></td><td>Task intent for <code>compile</code> (required)</td></tr>
+        <tr><td><code>-b, --budget &lt;tokens&gt;</code></td><td>Token budget for <code>compile</code> (default 4000)</td></tr>
+        <tr><td><code>-f, --file &lt;path&gt;</code></td><td>Path to a RunBrief JSON file for <code>validate</code></td></tr>
+        <tr><td><code>--weights</code></td><td>Show scoring weights on <code>config</code></td></tr>
+        <tr><td><code>--budget</code></td><td>Show budget allocation on <code>config</code></td></tr>
+        <tr><td><code>--json</code></td><td>Output as JSON</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Compile a RunBrief</span>
+<span class="code-prompt">$</span> savestate context compile --agent my-agent --task "summarize inbox"
+
+<span class="code-comment"># Explain why candidates were included</span>
+<span class="code-prompt">$</span> savestate context explain run_abc123 --json
+
+<span class="code-comment"># Validate a saved brief</span>
+<span class="code-prompt">$</span> savestate context validate --file brief.json
+
+<span class="code-comment"># Show scoring weights and budget split</span>
+<span class="code-prompt">$</span> savestate context config --weights --budget</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
