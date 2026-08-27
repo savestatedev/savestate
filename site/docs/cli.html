@@ -271,10 +271,28 @@
 
     <!-- search -->
     <h2 id="search"><code>savestate search</code></h2>
-    <p>Search across all snapshots without restoring them. Find that conversation from months ago.</p>
-    <pre><code><span class="code-prompt">$</span> savestate search &lt;query&gt;</code></pre>
-    <p>Searches across memory entries, conversations, identity files, and knowledge documents. Returns results ranked by relevance with context snippets.</p>
-    <pre><code><span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span></code></pre>
+    <p>Search across all snapshots without restoring them. Find that conversation from months ago. Searches memory entries, conversations, identity files, and knowledge documents. Returns results ranked by relevance with context snippets. Requires <code>savestate init</code> and a passphrase.</p>
+    <pre><code><span class="code-prompt">$</span> savestate search &lt;query&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--type &lt;type&gt;</code></td><td>Filter by type: <code>memory</code>, <code>conversation</code>, <code>identity</code>, or <code>knowledge</code> (comma-separated)</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20)</td></tr>
+        <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Search every snapshot</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span>
+
+<span class="code-comment"># Conversations only, cap results</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --type conversation --limit 5
+
+<span class="code-comment"># One snapshot</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"system prompt"</span> --snapshot ss-2026-01-26T09-30-00-b7c1m4</code></pre>
 
     <!-- config -->
     <h2 id="config"><code>savestate config</code></h2>

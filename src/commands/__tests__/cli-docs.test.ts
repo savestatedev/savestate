@@ -276,4 +276,22 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('checksums');
     expect(doctorSection).toContain('incremental chains');
   });
+
+  it('lists savestate search in the command overview', () => {
+    expect(docs).toContain('id="search"');
+    expect(docs).toContain('savestate search');
+  });
+
+  it('documents search --type, --limit, and --snapshot', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('--type');
+    expect(searchSection).toContain('--limit');
+    expect(searchSection).toContain('--snapshot');
+    expect(searchSection).toContain('memory');
+    expect(searchSection).toContain('conversation');
+    expect(searchSection).toContain('identity');
+    expect(searchSection).toContain('knowledge');
+    expect(searchSection).toContain('20');
+    expect(searchSection).toContain('savestate init');
+  });
 });
