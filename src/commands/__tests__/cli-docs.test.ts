@@ -192,7 +192,7 @@ describe('CLI docs', () => {
   });
 
   it('documents memory list, promote, expire, and log', () => {
-    const memorySection = docs.slice(docs.indexOf('id="memory"'));
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('list');
     expect(memorySection).toContain('promote');
     expect(memorySection).toContain('demote');
@@ -208,6 +208,24 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--namespace');
     expect(memorySection).toContain('L1/L2/L3');
     expect(memorySection).toContain('savestate init');
+  });
+
+  it('lists savestate slo in the command overview', () => {
+    expect(docs).toContain('id="slo"');
+    expect(docs).toContain('savestate slo');
+  });
+
+  it('documents slo status, report, and config', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'));
+    expect(sloSection).toContain('status');
+    expect(sloSection).toContain('report');
+    expect(sloSection).toContain('config');
+    expect(sloSection).toContain('--namespace');
+    expect(sloSection).toContain('--period');
+    expect(sloSection).toContain('--set');
+    expect(sloSection).toContain('--json');
+    expect(sloSection).toContain('enabled=true');
+    expect(sloSection).toContain('freshness.max_age_hours');
   });
 
   it('lists savestate stats in the command overview', () => {

@@ -106,6 +106,7 @@
   <span class="code-cmd">logout</span>                  <span class="code-output">Remove the saved cloud API key</span>
   <span class="code-cmd">context</span>                 <span class="code-output">Preflight context compilation for agent runs</span>
   <span class="code-cmd">memory</span>                  <span class="code-output">Manage multi-tier memory (L1/L2/L3) for long-running agents</span>
+  <span class="code-cmd">slo</span>                     <span class="code-output">Memory freshness SLO monitoring (status, report, config)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -679,6 +680,33 @@
 
 <span class="code-comment"># Audit history for one memory</span>
 <span class="code-prompt">$</span> savestate memory log mem-123 --json</code></pre>
+
+    <!-- slo -->
+    <h2 id="slo"><code>savestate slo</code></h2>
+    <p>Memory freshness SLO monitoring. Subcommands: <code>status</code>, <code>report</code>, and <code>config</code>. <code>status</code> evaluates namespace compliance against freshness, relevance, recall, and cross-session targets. <code>report</code> prints a period summary (default 7 days). <code>config</code> shows or updates SLO thresholds. Enable monitoring with <code>savestate slo config --set enabled=true</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate slo &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-n, --namespace &lt;ns&gt;</code></td><td>Namespace (<code>org:app:agent[:user]</code>) for <code>status</code> (default <code>default:default:default</code>)</td></tr>
+        <tr><td><code>-p, --period &lt;duration&gt;</code></td><td>Report window for <code>report</code> (e.g. <code>7d</code>, <code>30d</code>; default 7 days)</td></tr>
+        <tr><td><code>--set &lt;key=value&gt;</code></td><td>Set a config value on <code>config</code> (e.g. <code>enabled=true</code>)</td></tr>
+        <tr><td><code>--json</code></td><td>Output as JSON</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Check compliance for a namespace</span>
+<span class="code-prompt">$</span> savestate slo status --namespace org:app:agent
+
+<span class="code-comment"># Period report as JSON</span>
+<span class="code-prompt">$</span> savestate slo report --period 7d --json
+
+<span class="code-comment"># Enable monitoring and raise max age</span>
+<span class="code-prompt">$</span> savestate slo config --set enabled=true
+<span class="code-prompt">$</span> savestate slo config --set freshness.max_age_hours=720</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
