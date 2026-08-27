@@ -115,8 +115,22 @@ describe('CLI docs', () => {
   });
 
   it('documents stats --json without decrypting archives', () => {
-    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="diff"'));
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
     expect(statsSection).toContain('--json');
     expect(statsSection).toContain('does not decrypt');
+  });
+
+  it('lists savestate doctor in the command overview', () => {
+    expect(docs).toContain('id="doctor"');
+    expect(docs).toContain('savestate doctor');
+  });
+
+  it('documents doctor --json, --adapter, and --limit', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="diff"'));
+    expect(doctorSection).toContain('--json');
+    expect(doctorSection).toContain('--adapter');
+    expect(doctorSection).toContain('--limit');
+    expect(doctorSection).toContain('checksums');
+    expect(doctorSection).toContain('incremental chains');
   });
 });

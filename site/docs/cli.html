@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,6 +89,7 @@
   <span class="code-cmd">restore</span> <span class="code-flag">[snapshot-id]</span>   <span class="code-output">Restore from snapshot (default: latest)</span>
   <span class="code-cmd">list</span>                    <span class="code-output">List all snapshots with metadata</span>
   <span class="code-cmd">stats</span>                   <span class="code-output">Show usage statistics about your snapshots</span>
+  <span class="code-cmd">doctor</span>                  <span class="code-output">Health-check snapshots: decrypt, unpack, verify chains</span>
   <span class="code-cmd">diff</span> <span class="code-flag">&lt;a&gt; &lt;b&gt;</span>            <span class="code-output">Compare two snapshots side-by-side</span>
   <span class="code-cmd">search</span> <span class="code-flag">&lt;query&gt;</span>          <span class="code-output">Search across all snapshots</span>
   <span class="code-cmd">export</span>                  <span class="code-output">Export an encrypted agent container</span>
@@ -225,6 +226,28 @@
 
 <span class="code-comment"># Machine-readable for scripts</span>
 <span class="code-prompt">$</span> savestate stats --json</code></pre>
+
+    <!-- doctor -->
+    <h2 id="doctor"><code>savestate doctor</code></h2>
+    <p>Health-check every snapshot in the index. Decrypts each archive, unpacks the manifest, verifies content checksums, and walks incremental chains end-to-end. Reports a per-snapshot status table and a summary. Exits non-zero if any snapshot is unhealthy, so it can be wired into cron.</p>
+    <pre><code><span class="code-prompt">$</span> savestate doctor [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output the diagnosis as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only check snapshots from this adapter</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Only check the N most recent snapshots</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Check every snapshot</span>
+<span class="code-prompt">$</span> savestate doctor
+
+<span class="code-comment"># Restrict to recent Claude Code snapshots</span>
+<span class="code-prompt">$</span> savestate doctor --adapter claude-code --limit 5 --json</code></pre>
 
     <!-- diff -->
     <h2 id="diff"><code>savestate diff</code></h2>
