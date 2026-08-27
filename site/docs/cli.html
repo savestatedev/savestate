@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, eval, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -101,6 +101,7 @@
   <span class="code-cmd">migrate</span>                 <span class="code-output">Migration wizard between platforms</span>
   <span class="code-cmd">trust</span>                   <span class="code-output">Inspect Trust Kernel state, audit trail, and denylist</span>
   <span class="code-cmd">team</span>                    <span class="code-output">Team management: members, invites, audit log (Team)</span>
+  <span class="code-cmd">eval</span>                    <span class="code-output">Memory quality evaluation (quality, report)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -560,6 +561,32 @@
 
 <span class="code-comment"># Stream the audit log as CSV</span>
 <span class="code-prompt">$</span> savestate team audit --since 2026-01-01 --format csv</code></pre>
+
+    <!-- eval -->
+    <h2 id="eval"><code>savestate eval</code></h2>
+    <p>Run memory quality benchmarks and print the last report. Subcommands: <code>quality</code> and <code>report</code>. Requires <code>savestate init</code>. Suites load from <code>.savestate/benchmarks/</code> (JSON files). Results are saved to <code>.savestate/eval-results.json</code>. Reports precision, recall, F1, stale-hit rate, constraint retention, and confidence.</p>
+    <pre><code><span class="code-prompt">$</span> savestate eval &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--threshold &lt;0..1&gt;</code></td><td>Confidence threshold for pass/fail on <code>quality</code> (default 0.7)</td></tr>
+        <tr><td><code>--suite &lt;name&gt;</code></td><td>Run only a specific benchmark suite</td></tr>
+        <tr><td><code>-v, --verbose</code></td><td>Show per-test metrics</td></tr>
+        <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Run every benchmark suite</span>
+<span class="code-prompt">$</span> savestate eval quality
+
+<span class="code-comment"># One suite, stricter threshold, JSON</span>
+<span class="code-prompt">$</span> savestate eval quality --suite recall --threshold 0.9 --json
+
+<span class="code-comment"># Last saved report with per-test metrics</span>
+<span class="code-prompt">$</span> savestate eval report --verbose</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">

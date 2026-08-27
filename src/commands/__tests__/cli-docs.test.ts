@@ -115,7 +115,7 @@ describe('CLI docs', () => {
   });
 
   it('documents team status, members, invite, and audit', () => {
-    const teamSection = docs.slice(docs.indexOf('id="team"'));
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('status');
     expect(teamSection).toContain('members');
     expect(teamSection).toContain('invite');
@@ -128,6 +128,23 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('savestate login');
     expect(teamSection).toContain('admin');
     expect(teamSection).toContain('viewer');
+  });
+
+  it('lists savestate eval in the command overview', () => {
+    expect(docs).toContain('id="eval"');
+    expect(docs).toContain('savestate eval');
+  });
+
+  it('documents eval quality, report, and --threshold', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'));
+    expect(evalSection).toContain('quality');
+    expect(evalSection).toContain('report');
+    expect(evalSection).toContain('--threshold');
+    expect(evalSection).toContain('--suite');
+    expect(evalSection).toContain('--verbose');
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('0.7');
+    expect(evalSection).toContain('.savestate/benchmarks/');
   });
 
   it('lists savestate stats in the command overview', () => {
