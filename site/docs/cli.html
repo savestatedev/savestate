@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, diff, search, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, diff, search, export, import, verify, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,6 +90,8 @@
   <span class="code-cmd">list</span>                    <span class="code-output">List all snapshots with metadata</span>
   <span class="code-cmd">diff</span> <span class="code-flag">&lt;a&gt; &lt;b&gt;</span>            <span class="code-output">Compare two snapshots side-by-side</span>
   <span class="code-cmd">search</span> <span class="code-flag">&lt;query&gt;</span>          <span class="code-output">Search across all snapshots</span>
+  <span class="code-cmd">export</span>                  <span class="code-output">Export an encrypted agent container</span>
+  <span class="code-cmd">import</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Import an encrypted agent container</span>
   <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
@@ -255,9 +257,64 @@
 
     <p>Detection is automatic based on the current directory and environment. See <a href="/docs/adapters.html">Platform Adapters</a> for details on what each adapter captures.</p>
 
+    <!-- export -->
+    <h2 id="export"><code>savestate export</code></h2>
+    <p>Export agent state to an encrypted <code>.savestate</code> container. Loads and encrypts the selected components, then writes the archive. A missing output directory is rejected before encrypting. An existing output file is refused unless <code>--force</code> is set.</p>
+    <pre><code><span class="code-prompt">$</span> savestate export -a &lt;id&gt; -o &lt;file&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-a, --agent &lt;id&gt;</code></td><td>Agent ID to export. An empty value is rejected before writing.</td></tr>
+        <tr><td><code>-o, --output &lt;file&gt;</code></td><td>Output file path (default: <code>agent.savestate</code>). A missing parent directory, directory path, or empty path is rejected before writing.</td></tr>
+        <tr><td><code>--dry-run</code></td><td>Encrypt and print export metadata without writing. An existing output file can still be previewed without <code>--force</code>.</td></tr>
+        <tr><td><code>--force</code></td><td>Overwrite an existing output file</td></tr>
+        <tr><td><code>--include &lt;paths&gt;</code></td><td>Only pack named state paths (<code>personality</code>, <code>memory</code>, <code>tools</code>, <code>preferences</code>, <code>conversation_history</code>)</td></tr>
+        <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths from the packed set</td></tr>
+        <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase for encryption, or <code>SAVESTATE_PASSPHRASE</code> / prompt. An empty value is rejected before encrypting.</td></tr>
+        <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. An empty path, missing file, directory, or file with no contents is rejected before encrypting.</td></tr>
+        <tr><td><code>--description &lt;text&gt;</code></td><td>Optional human-readable description stored in the manifest</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Preview without writing</span>
+<span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --dry-run
+
+<span class="code-comment"># Overwrite an existing archive</span>
+<span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --force</code></pre>
+
+    <!-- import -->
+    <h2 id="import"><code>savestate import</code></h2>
+    <p>Import agent state from an encrypted <code>.savestate</code> container. Decrypts, verifies, and restores. A missing input path is rejected before decrypting. A missing <code>--target</code> parent directory is rejected before restoring. An existing target file is refused unless <code>--force</code> is set.</p>
+    <pre><code><span class="code-prompt">$</span> savestate import &lt;file&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--dry-run</code></td><td>Decrypt and print import metadata without restoring. An existing target file can still be previewed without <code>--force</code>.</td></tr>
+        <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase for decryption, or <code>SAVESTATE_PASSPHRASE</code> / prompt. An empty value is rejected before decrypting.</td></tr>
+        <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. An empty path, missing file, directory, or file with no contents is rejected before decrypting.</td></tr>
+        <tr><td><code>--target &lt;dir&gt;</code></td><td>Write restored agent state to this directory. A missing parent directory is rejected before restoring.</td></tr>
+        <tr><td><code>--force</code></td><td>Overwrite an existing target file</td></tr>
+        <tr><td><code>--include &lt;paths&gt;</code></td><td>Only restore named state paths</td></tr>
+        <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths while restoring</td></tr>
+        <tr><td><code>--merge</code></td><td>Merge with existing state (default: replace)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Preview without restoring</span>
+<span class="code-prompt">$</span> savestate import agent.savestate --dry-run
+
+<span class="code-comment"># Restore into a directory, replacing an existing target file</span>
+<span class="code-prompt">$</span> savestate import agent.savestate --target ./restored --force</code></pre>
+
     <!-- verify -->
     <h2 id="verify"><code>savestate verify</code></h2>
-    <p>Verify integrity of a <code>.savestate</code> container. Checks the magic header, manifest, checksum, and (when a key is provided) decryptability. Prints packed components and payload metadata. An empty, whitespace-only, or directory file path is rejected before reading.</p>
+    <p>Verify integrity of a <code>.savestate</code> container. Checks the magic header, manifest, checksum, and (when a key is provided) decryptability. Prints packed components and payload metadata. An empty, whitespace-only, missing, or directory file path is rejected before reading.</p>
     <pre><code><span class="code-prompt">$</span> savestate verify &lt;file&gt; [options]</code></pre>
 
     <table>
