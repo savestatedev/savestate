@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, eval, login, logout, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, eval, login, logout, context, memory, slo, acl, identity, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,6 +108,7 @@
   <span class="code-cmd">memory</span>                  <span class="code-output">Manage multi-tier memory (L1/L2/L3) for long-running agents</span>
   <span class="code-cmd">slo</span>                     <span class="code-output">Memory freshness SLO monitoring (status, report, config)</span>
   <span class="code-cmd">acl</span>                     <span class="code-output">Manage active commitments (propose, verify, gate, list)</span>
+  <span class="code-cmd">identity</span>                <span class="code-output">Manage agent identity (show, init, set, schema)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -770,6 +771,34 @@
 
 <span class="code-comment"># List all commitments</span>
 <span class="code-prompt">$</span> savestate acl list</code></pre>
+
+    <!-- identity -->
+    <h2 id="identity"><code>savestate identity</code></h2>
+    <p>Manage the workspace agent identity document at <code>.savestate/identity.json</code>. Subcommands: <code>show</code>, <code>init</code>, <code>set</code>, and <code>schema</code>. <code>show</code> prints the current identity. <code>init &lt;name&gt;</code> creates one if missing. <code>set &lt;field&gt; &lt;value&gt;</code> updates a core field or <code>metadata.&lt;key&gt;</code>. <code>schema</code> prints the JSON schema. Requires <code>savestate init</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate identity &lt;subcommand&gt; [args...] [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output as JSON</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Create a local identity</span>
+<span class="code-prompt">$</span> savestate identity init MyAgent
+
+<span class="code-comment"># Show the current identity</span>
+<span class="code-prompt">$</span> savestate identity show
+
+<span class="code-comment"># Update a core field or nested metadata key</span>
+<span class="code-prompt">$</span> savestate identity set tone professional
+<span class="code-prompt">$</span> savestate identity set goals '["Help users"]'
+<span class="code-prompt">$</span> savestate identity set metadata.customKey "custom value"
+
+<span class="code-comment"># Print the identity JSON schema</span>
+<span class="code-prompt">$</span> savestate identity schema --json</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">

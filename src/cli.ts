@@ -14,6 +14,7 @@
  *   savestate config                  View/edit configuration
  *   savestate adapters                List available adapters
  *   savestate antibodies              Manage failure antibodies
+ *   savestate identity                Manage agent identity
  */
 
 import { Command } from 'commander';
@@ -28,6 +29,7 @@ import {
   adaptersCommand,
   antibodiesCommand,
   evalCommand,
+  identityCommand,
   registerContainerCommands,
   registerACLCommands,
 } from './commands/index.js';
@@ -391,6 +393,14 @@ registerMCPCommands(program);
 // ─── savestate context ─────────────────────────────────────
 
 registerContextCommands(program);
+
+// ─── savestate identity ────────────────────────────────────
+
+program
+  .command('identity <subcommand> [args...]')
+  .description('Manage agent identity (show, init, set, schema)')
+  .option('--json', 'Output as JSON')
+  .action(identityCommand);
 
 // ─── Parse & run ─────────────────────────────────────────────
 
