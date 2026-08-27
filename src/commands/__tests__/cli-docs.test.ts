@@ -285,7 +285,7 @@ describe('CLI docs', () => {
   });
 
   it('documents trace list, show, and export', () => {
-    const traceSection = docs.slice(docs.indexOf('id="trace"'));
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     expect(traceSection).toContain('list');
     expect(traceSection).toContain('show');
     expect(traceSection).toContain('export');
@@ -296,6 +296,35 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('.savestate/traces');
     expect(traceSection).toContain('savestate init');
     expect(traceSection).toContain('Askable Echoes');
+  });
+
+  it('registers savestate container on the CLI', () => {
+    expect(cli).toContain('registerContainerCommands');
+  });
+
+  it('lists savestate container in the command overview', () => {
+    expect(docs).toContain('id="container"');
+    expect(docs).toContain('savestate container');
+  });
+
+  it('documents container export and import', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(containerSection).toContain('export');
+    expect(containerSection).toContain('import');
+    expect(containerSection).toContain('--out');
+    expect(containerSection).toContain('--in');
+    expect(containerSection).toContain('--agent');
+    expect(containerSection).toContain('--dry-run');
+    expect(containerSection).toContain('--force');
+    expect(containerSection).toContain('--include');
+    expect(containerSection).toContain('--exclude');
+    expect(containerSection).toContain('--target');
+    expect(containerSection).toContain('--merge');
+    expect(containerSection).toContain('--replace');
+    expect(containerSection).toContain('--description');
+    expect(containerSection).toContain('conversation_history');
+    expect(containerSection).toContain('savestate export');
+    expect(containerSection).toContain('savestate import');
   });
 
   it('lists savestate stats in the command overview', () => {
