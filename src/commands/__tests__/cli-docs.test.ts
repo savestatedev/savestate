@@ -48,4 +48,15 @@ describe('CLI docs', () => {
     expect(pruneSection).toContain('--json');
     expect(pruneSection).toContain('Dry-run is the default');
   });
+
+  it('lists savestate stats in the command overview', () => {
+    expect(docs).toContain('id="stats"');
+    expect(docs).toContain('savestate stats');
+  });
+
+  it('documents stats --json without decrypting archives', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="diff"'));
+    expect(statsSection).toContain('--json');
+    expect(statsSection).toContain('does not decrypt');
+  });
 });
