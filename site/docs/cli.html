@@ -105,6 +105,7 @@
   <span class="code-cmd">eval</span>                    <span class="code-output">Memory quality evaluation (quality, report)</span>
   <span class="code-cmd">login</span>                   <span class="code-output">Authenticate with SaveState cloud</span>
   <span class="code-cmd">logout</span>                  <span class="code-output">Remove the saved cloud API key</span>
+  <span class="code-cmd">mcp</span>                     <span class="code-output">MCP server: serve, status, export, import</span>
   <span class="code-cmd">context</span>                 <span class="code-output">Preflight context compilation for agent runs</span>
   <span class="code-cmd">memory</span>                  <span class="code-output">Manage multi-tier memory (L1/L2/L3) for long-running agents</span>
   <span class="code-cmd">slo</span>                     <span class="code-output">Memory freshness SLO monitoring (status, report, config)</span>
@@ -667,6 +668,39 @@
     <h2 id="logout"><code>savestate logout</code></h2>
     <p>Remove the saved cloud API key from local config. Does not revoke the key on the server. Reports if you were not logged in.</p>
     <pre><code><span class="code-prompt">$</span> savestate logout</code></pre>
+
+    <!-- mcp -->
+    <h2 id="mcp"><code>savestate mcp</code></h2>
+    <p>MCP server commands for Claude Code, Cursor, Codex, and other MCP clients. Subcommands: <code>serve</code>, <code>status</code>, <code>export</code>, and <code>import</code>. Stdio is the default transport. Client JSON snippets are on the <a href="/docs/mcp.html">MCP Server</a> guide. <code>export</code> and <code>import</code> require <code>savestate init</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate mcp &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-p, --port &lt;port&gt;</code></td><td>HTTP port for <code>serve</code> (default 3333; HTTP mode is not implemented yet)</td></tr>
+        <tr><td><code>--stdio</code></td><td>Use stdio transport (default, recommended for MCP clients)</td></tr>
+        <tr><td><code>--no-stdio</code></td><td>Request HTTP transport instead of stdio (not implemented yet)</td></tr>
+        <tr><td><code>-a, --agent &lt;id&gt;</code></td><td>Agent ID for <code>export</code> (default <code>default</code>) or target agent for <code>import</code></td></tr>
+        <tr><td><code>-o, --output &lt;path&gt;</code></td><td>Passport output path for <code>export</code></td></tr>
+        <tr><td><code>--include-snapshots</code></td><td>Include snapshot metadata in the exported passport</td></tr>
+        <tr><td><code>-i, --input &lt;path&gt;</code></td><td>Passport file to import (required for <code>import</code>)</td></tr>
+        <tr><td><code>--merge</code></td><td>Merge imported memories with existing ones instead of replacing</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Start the MCP server (stdio)</span>
+<span class="code-prompt">$</span> savestate mcp serve
+
+<span class="code-comment"># Config, tools, and client snippet</span>
+<span class="code-prompt">$</span> savestate mcp status
+
+<span class="code-comment"># Export a memory passport</span>
+<span class="code-prompt">$</span> savestate mcp export --agent my-agent --include-snapshots
+
+<span class="code-comment"># Import a passport into another agent</span>
+<span class="code-prompt">$</span> savestate mcp import --input passport.json --agent other-agent --merge</code></pre>
 
     <!-- context -->
     <h2 id="context"><code>savestate context</code></h2>

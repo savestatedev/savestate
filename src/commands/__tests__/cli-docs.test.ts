@@ -165,9 +165,31 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('ss_live_');
     expect(loginSection).toContain('savestate.dev/account');
     expect(loginSection).toContain('savestate init');
-    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="context"'));
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="mcp"'));
     expect(logoutSection).toContain('savestate logout');
     expect(logoutSection).toContain('saved cloud API key');
+  });
+
+  it('lists savestate mcp in the command overview', () => {
+    expect(docs).toContain('id="mcp"');
+    expect(docs).toContain('savestate mcp');
+  });
+
+  it('documents mcp serve, status, export, and import', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('serve');
+    expect(mcpSection).toContain('status');
+    expect(mcpSection).toContain('export');
+    expect(mcpSection).toContain('import');
+    expect(mcpSection).toContain('--stdio');
+    expect(mcpSection).toContain('--port');
+    expect(mcpSection).toContain('--agent');
+    expect(mcpSection).toContain('--output');
+    expect(mcpSection).toContain('--input');
+    expect(mcpSection).toContain('--include-snapshots');
+    expect(mcpSection).toContain('--merge');
+    expect(mcpSection).toContain('savestate init');
+    expect(mcpSection).toContain('/docs/mcp.html');
   });
 
   it('lists savestate context in the command overview', () => {
