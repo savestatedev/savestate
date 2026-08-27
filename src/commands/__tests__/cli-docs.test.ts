@@ -8,6 +8,11 @@ const docs = readFileSync(
   'utf8',
 );
 
+const cli = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../../cli.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -216,7 +221,7 @@ describe('CLI docs', () => {
   });
 
   it('documents slo status, report, and config', () => {
-    const sloSection = docs.slice(docs.indexOf('id="slo"'));
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="identity"'));
     expect(sloSection).toContain('status');
     expect(sloSection).toContain('report');
     expect(sloSection).toContain('config');
@@ -226,6 +231,28 @@ describe('CLI docs', () => {
     expect(sloSection).toContain('--json');
     expect(sloSection).toContain('enabled=true');
     expect(sloSection).toContain('freshness.max_age_hours');
+  });
+
+  it('registers savestate identity on the CLI', () => {
+    expect(cli).toContain("command('identity <subcommand> [args...]')");
+    expect(cli).toContain('identityCommand');
+  });
+
+  it('lists savestate identity in the command overview', () => {
+    expect(docs).toContain('id="identity"');
+    expect(docs).toContain('savestate identity');
+  });
+
+  it('documents identity show, init, set, and schema', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'));
+    expect(identitySection).toContain('show');
+    expect(identitySection).toContain('init');
+    expect(identitySection).toContain('set');
+    expect(identitySection).toContain('schema');
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('.savestate/identity.json');
+    expect(identitySection).toContain('metadata.');
+    expect(identitySection).toContain('savestate init');
   });
 
   it('lists savestate stats in the command overview', () => {
