@@ -277,6 +277,24 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('incremental chains');
   });
 
+  it('lists savestate list in the command overview', () => {
+    expect(docs).toContain('id="list"');
+    expect(docs).toContain('savestate list');
+  });
+
+  it('documents list --since, --until, --adapter, and --tag', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    expect(listSection).toContain('--json');
+    expect(listSection).toContain('--limit');
+    expect(listSection).toContain('--since');
+    expect(listSection).toContain('--until');
+    expect(listSection).toContain('--adapter');
+    expect(listSection).toContain('--tag');
+    expect(listSection).toContain('50');
+    expect(listSection).toContain('ISO 8601');
+    expect(listSection).toContain('savestate init');
+  });
+
   it('lists savestate search in the command overview', () => {
     expect(docs).toContain('id="search"');
     expect(docs).toContain('savestate search');

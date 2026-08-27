@@ -199,7 +199,7 @@
 
     <!-- list -->
     <h2 id="list"><code>savestate list</code></h2>
-    <p>List all snapshots with metadata. Alias: <code>savestate ls</code>.</p>
+    <p>List all snapshots with metadata. Alias: <code>savestate ls</code>. Reads the snapshot index only — it does not decrypt archives. Requires <code>savestate init</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate list [options]</code></pre>
 
     <table>
@@ -208,12 +208,22 @@
       </thead>
       <tbody>
         <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of snapshots to show</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of snapshots to show (default 50)</td></tr>
+        <tr><td><code>--since &lt;date&gt;</code></td><td>Only snapshots taken after this date (ISO 8601, e.g. <code>2026-04-01</code>)</td></tr>
+        <tr><td><code>--until &lt;date&gt;</code></td><td>Only snapshots taken before this date (ISO 8601)</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only snapshots from this adapter (e.g. <code>claude-code</code>)</td></tr>
+        <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only snapshots tagged with this label</td></tr>
       </tbody>
     </table>
 
-    <pre><code><span class="code-prompt">$</span> savestate list --limit 5
-<span class="code-prompt">$</span> savestate ls --json | jq '.[0]'</code></pre>
+    <pre><code><span class="code-comment"># Recent snapshots</span>
+<span class="code-prompt">$</span> savestate list --limit 5
+
+<span class="code-comment"># Claude Code snapshots since April</span>
+<span class="code-prompt">$</span> savestate list --adapter claude-code --since 2026-04-01
+
+<span class="code-comment"># Tagged backups as JSON</span>
+<span class="code-prompt">$</span> savestate ls --tag weekly --json | jq '.[0]'</code></pre>
 
     <!-- stats -->
     <h2 id="stats"><code>savestate stats</code></h2>
