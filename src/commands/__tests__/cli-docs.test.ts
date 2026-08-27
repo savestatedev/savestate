@@ -85,12 +85,28 @@ describe('CLI docs', () => {
   });
 
   it('documents migrate --from, --to, --list, and --dry-run', () => {
-    const migrateSection = docs.slice(docs.indexOf('id="migrate"'));
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
     expect(migrateSection).toContain('--from');
     expect(migrateSection).toContain('--to');
     expect(migrateSection).toContain('--list');
     expect(migrateSection).toContain('--dry-run');
     expect(migrateSection).toContain('compatibility report');
+  });
+
+  it('lists savestate trust in the command overview', () => {
+    expect(docs).toContain('id="trust"');
+    expect(docs).toContain('savestate trust');
+  });
+
+  it('documents trust status, audit, and deny', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'));
+    expect(trustSection).toContain('status');
+    expect(trustSection).toContain('audit');
+    expect(trustSection).toContain('deny');
+    expect(trustSection).toContain('--json');
+    expect(trustSection).toContain('--limit');
+    expect(trustSection).toContain('--reason');
+    expect(trustSection).toContain('WriteGate');
   });
 
   it('lists savestate stats in the command overview', () => {
