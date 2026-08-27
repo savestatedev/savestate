@@ -71,12 +71,26 @@ describe('CLI docs', () => {
   });
 
   it('documents schedule --every, --disable, and --status', () => {
-    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'));
+    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'), docs.indexOf('id="migrate"'));
     expect(scheduleSection).toContain('--every');
     expect(scheduleSection).toContain('--disable');
     expect(scheduleSection).toContain('--status');
     expect(scheduleSection).toContain('Pro or Team');
     expect(scheduleSection).toContain('snapshot --label auto');
+  });
+
+  it('lists savestate migrate in the command overview', () => {
+    expect(docs).toContain('id="migrate"');
+    expect(docs).toContain('savestate migrate');
+  });
+
+  it('documents migrate --from, --to, --list, and --dry-run', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'));
+    expect(migrateSection).toContain('--from');
+    expect(migrateSection).toContain('--to');
+    expect(migrateSection).toContain('--list');
+    expect(migrateSection).toContain('--dry-run');
+    expect(migrateSection).toContain('compatibility report');
   });
 
   it('lists savestate stats in the command overview', () => {
