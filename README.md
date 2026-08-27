@@ -205,6 +205,7 @@ savestate import <file>               Import an encrypted agent container
   -p, --passphrase <pass>            Passphrase, or SAVESTATE_PASSPHRASE / prompt
   -k, --keyfile <path>               Keyfile instead of a passphrase; empty path, missing file, directory, or file with no contents is rejected before decrypting
   --target <dir>                     Write restored agent state to this directory; missing parent directory is rejected before restoring
+  --force                            Overwrite an existing target file
                                      Prints read, decrypt, verify, and restore progress
 savestate verify <file>               Verify a .savestate file and list components
   -p, --passphrase <pass>            Passphrase for verification
