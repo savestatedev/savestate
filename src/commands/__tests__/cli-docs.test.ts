@@ -55,7 +55,7 @@ describe('CLI docs', () => {
   });
 
   it('documents antibodies list, add, preflight, and stats', () => {
-    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'));
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="migrate"'));
     expect(antibodiesSection).toContain('list');
     expect(antibodiesSection).toContain('add');
     expect(antibodiesSection).toContain('preflight');
@@ -63,6 +63,20 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('--json');
     expect(antibodiesSection).toContain('--tool');
     expect(antibodiesSection).toContain('--safe-action');
+  });
+
+  it('lists savestate migrate in the command overview', () => {
+    expect(docs).toContain('id="migrate"');
+    expect(docs).toContain('savestate migrate');
+  });
+
+  it('documents migrate --from, --to, --list, and --dry-run', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'));
+    expect(migrateSection).toContain('--from');
+    expect(migrateSection).toContain('--to');
+    expect(migrateSection).toContain('--list');
+    expect(migrateSection).toContain('--dry-run');
+    expect(migrateSection).toContain('compatibility report');
   });
 
   it('lists savestate stats in the command overview', () => {

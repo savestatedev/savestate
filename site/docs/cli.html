@@ -96,6 +96,7 @@
   <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
   <span class="code-cmd">prune</span>                   <span class="code-output">Drop old snapshots by retention policy (dry-run)</span>
   <span class="code-cmd">antibodies</span>              <span class="code-output">Manage failure antibodies (list, add, preflight, stats)</span>
+  <span class="code-cmd">migrate</span>                 <span class="code-output">Migration wizard between platforms</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -421,6 +422,32 @@
 
 <span class="code-comment"># Hit counts and overrides</span>
 <span class="code-prompt">$</span> savestate antibodies stats --json</code></pre>
+
+    <!-- migrate -->
+    <h2 id="migrate"><code>savestate migrate</code></h2>
+    <p>Move AI identity between platforms (ChatGPT → Claude, Claude → Gemini, and so on). Requires <code>savestate init</code> first. With no flags, prompts for source and target. Source and target cannot be the same platform.</p>
+    <pre><code><span class="code-prompt">$</span> savestate migrate [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-f, --from &lt;platform&gt;</code></td><td>Source platform to migrate from</td></tr>
+        <tr><td><code>-t, --to &lt;platform&gt;</code></td><td>Target platform to migrate to</td></tr>
+        <tr><td><code>-l, --list</code></td><td>List available platforms and their capabilities</td></tr>
+        <tr><td><code>--dry-run</code></td><td>Show a compatibility report without making changes</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># List platforms the wizard can migrate between</span>
+<span class="code-prompt">$</span> savestate migrate --list
+
+<span class="code-comment"># Preview ChatGPT → Claude without writing anything</span>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --dry-run
+
+<span class="code-comment"># Run the migration</span>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
