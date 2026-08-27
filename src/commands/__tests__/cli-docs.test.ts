@@ -136,7 +136,7 @@ describe('CLI docs', () => {
   });
 
   it('documents eval quality, report, and --threshold', () => {
-    const evalSection = docs.slice(docs.indexOf('id="eval"'));
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
     expect(evalSection).toContain('quality');
     expect(evalSection).toContain('report');
     expect(evalSection).toContain('--threshold');
@@ -145,6 +145,24 @@ describe('CLI docs', () => {
     expect(evalSection).toContain('--json');
     expect(evalSection).toContain('0.7');
     expect(evalSection).toContain('.savestate/benchmarks/');
+  });
+
+  it('lists savestate login and logout in the command overview', () => {
+    expect(docs).toContain('id="login"');
+    expect(docs).toContain('id="logout"');
+    expect(docs).toContain('savestate login');
+    expect(docs).toContain('savestate logout');
+  });
+
+  it('documents login --key, ss_live_ keys, and logout removing the saved key', () => {
+    const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
+    expect(loginSection).toContain('--key');
+    expect(loginSection).toContain('ss_live_');
+    expect(loginSection).toContain('savestate.dev/account');
+    expect(loginSection).toContain('savestate init');
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'));
+    expect(logoutSection).toContain('savestate logout');
+    expect(logoutSection).toContain('saved cloud API key');
   });
 
   it('lists savestate stats in the command overview', () => {

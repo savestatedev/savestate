@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLI Reference — SaveState Docs</title>
-<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, eval, config, and adapters.">
+<meta name="description" content="Complete reference for all SaveState CLI commands: init, snapshot, restore, list, stats, doctor, diff, search, export, import, verify, prune, antibodies, schedule, migrate, trust, team, eval, login, logout, config, and adapters.">
 <link rel="icon" type="image/png" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,6 +102,8 @@
   <span class="code-cmd">trust</span>                   <span class="code-output">Inspect Trust Kernel state, audit trail, and denylist</span>
   <span class="code-cmd">team</span>                    <span class="code-output">Team management: members, invites, audit log (Team)</span>
   <span class="code-cmd">eval</span>                    <span class="code-output">Memory quality evaluation (quality, report)</span>
+  <span class="code-cmd">login</span>                   <span class="code-output">Authenticate with SaveState cloud</span>
+  <span class="code-cmd">logout</span>                  <span class="code-output">Remove the saved cloud API key</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
 
@@ -587,6 +589,31 @@
 
 <span class="code-comment"># Last saved report with per-test metrics</span>
 <span class="code-prompt">$</span> savestate eval report --verbose</code></pre>
+
+    <!-- login -->
+    <h2 id="login"><code>savestate login</code></h2>
+    <p>Authenticate with SaveState cloud. Requires <code>savestate init</code> first. Prompts for an API key unless you pass <code>--key</code>. Keys start with <code>ss_live_</code> — get yours at <a href="https://savestate.dev/account">savestate.dev/account</a>. The key is validated against the API and saved locally so cloud features (schedule, cloud push/pull, team) unlock.</p>
+    <pre><code><span class="code-prompt">$</span> savestate login [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-k, --key &lt;api-key&gt;</code></td><td>API key (or enter interactively)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Prompt for the key</span>
+<span class="code-prompt">$</span> savestate login
+
+<span class="code-comment"># Pass the key on the command line</span>
+<span class="code-prompt">$</span> savestate login --key ss_live_...</code></pre>
+
+    <!-- logout -->
+    <h2 id="logout"><code>savestate logout</code></h2>
+    <p>Remove the saved cloud API key from local config. Does not revoke the key on the server. Reports if you were not logged in.</p>
+    <pre><code><span class="code-prompt">$</span> savestate logout</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
