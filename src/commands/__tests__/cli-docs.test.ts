@@ -273,6 +273,17 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate init');
   });
 
+  it('documents memory edit --content, --importance, --actor, and rollback --version', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--content');
+    expect(memorySection).toContain('--importance');
+    expect(memorySection).toContain('--actor');
+    expect(memorySection).toContain('--version');
+    expect(memorySection).toContain('0-1');
+    expect(memorySection).toContain('cli-user');
+    expect(memorySection).toContain('rollback');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');
