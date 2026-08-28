@@ -13,12 +13,19 @@ interface SearchOptions {
   type?: string;
   limit?: string;
   snapshot?: string;
+  json?: boolean;
 }
 
 const VALID_TYPES = new Set(['memory', 'conversation', 'identity', 'knowledge']);
 
+export function formatSearchResultsJson(results: SearchResult[]): string {
+  return JSON.stringify(results, null, 2);
+}
+
 export async function searchCommand(query: string, options: SearchOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -40,14 +47,16 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
     process.exit(1);
   }
 
-  console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
-  if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
-  if (options.snapshot) console.log(chalk.dim(`   Snapshot: ${options.snapshot}`));
-  console.log();
+  if (!options.json) {
+    console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
+    if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
+    if (options.snapshot) console.log(chalk.dim(`   Snapshot: ${options.snapshot}`));
+    console.log();
+  }
 
   const passphrase = await getPassphrase();
 
-  const spinner = ora('Searching across snapshots...').start();
+  const spinner = options.json ? null : ora('Searching across snapshots...').start();
 
   try {
     const results = await searchSnapshots(query, config, {
@@ -57,7 +66,12 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
       passphrase,
     });
 
-    spinner.stop();
+    spinner?.stop();
+
+    if (options.json) {
+      console.log(formatSearchResultsJson(results));
+      return;
+    }
 
     if (results.length === 0) {
       console.log(chalk.dim('  No matches found.'));
@@ -72,7 +86,9 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
       printResult(r);
     }
   } catch (err) {
-    spinner.fail('Search failed');
+    if (spinner) {
+      spinner.fail('Search failed');
+    }
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }

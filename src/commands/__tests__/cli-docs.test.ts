@@ -491,11 +491,17 @@ describe('CLI docs', () => {
     expect(cli).toContain('--meta <entry...>');
   });
 
-  it('documents search --type, --limit, and --snapshot', () => {
+  it('registers --json on savestate search', () => {
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchBlock).toContain(".option('--json'");
+  });
+
+  it('documents search --type, --limit, --snapshot, and --json', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('--type');
     expect(searchSection).toContain('--limit');
     expect(searchSection).toContain('--snapshot');
+    expect(searchSection).toContain('--json');
     expect(searchSection).toContain('memory');
     expect(searchSection).toContain('conversation');
     expect(searchSection).toContain('identity');
