@@ -6,16 +6,39 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { getAdapterInfo } from '../adapters/registry.js';
 
-export async function adaptersCommand(): Promise<void> {
-  console.log();
-  console.log(chalk.bold('🔌 Available Adapters'));
-  console.log();
+export interface AdapterListEntry {
+  id: string;
+  name: string;
+  platform: string;
+  version: string;
+  detected: boolean;
+}
 
-  const spinner = ora('Scanning for adapters...').start();
+interface AdaptersOptions {
+  json?: boolean;
+}
+
+export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
+  return JSON.stringify(adapters, null, 2);
+}
+
+export async function adaptersCommand(options: AdaptersOptions = {}): Promise<void> {
+  if (!options.json) {
+    console.log();
+    console.log(chalk.bold('🔌 Available Adapters'));
+    console.log();
+  }
+
+  const spinner = options.json ? null : ora('Scanning for adapters...').start();
 
   try {
     const adapterInfos = await getAdapterInfo();
-    spinner.stop();
+    spinner?.stop();
+
+    if (options.json) {
+      console.log(formatAdaptersJson(adapterInfos));
+      return;
+    }
 
     if (adapterInfos.length === 0) {
       console.log(chalk.dim('  No adapters found.'));
@@ -47,7 +70,9 @@ export async function adaptersCommand(): Promise<void> {
     console.log();
 
   } catch (err) {
-    spinner.fail('Failed to list adapters');
+    if (spinner) {
+      spinner.fail('Failed to list adapters');
+    }
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }

@@ -510,6 +510,23 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('savestate init');
   });
 
+  it('registers --json on savestate adapters', () => {
+    const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
+    expect(adaptersBlock).toContain(".option('--json'");
+  });
+
+  it('lists savestate adapters in the command overview', () => {
+    expect(docs).toContain('id="adapters"');
+    expect(docs).toContain('savestate adapters');
+  });
+
+  it('documents adapters --json', () => {
+    const adaptersSection = docs.slice(docs.indexOf('id="adapters"'), docs.indexOf('id="export"'));
+    expect(adaptersSection).toContain('--json');
+    expect(adaptersSection).toContain('scripting');
+    expect(adaptersSection).toContain('/docs/adapters.html');
+  });
+
   it('registers --json on savestate diff', () => {
     const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
     expect(diffBlock).toContain(".option('--json'");

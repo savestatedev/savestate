@@ -215,6 +215,7 @@ program
 program
   .command('adapters')
   .description('List available platform adapters')
+  .option('--json', 'Output as JSON')
   .action(adaptersCommand);
 
 // ─── savestate antibodies ───────────────────────────────────

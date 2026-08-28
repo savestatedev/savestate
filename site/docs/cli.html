@@ -381,6 +381,17 @@
     <!-- adapters -->
     <h2 id="adapters"><code>savestate adapters</code></h2>
     <p>List all available platform adapters and their detection status.</p>
+    <pre><code><span class="code-prompt">$</span> savestate adapters [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output adapter records as JSON (useful for scripting)</td></tr>
+      </tbody>
+    </table>
+
     <pre><code><span class="code-prompt">$</span> savestate adapters
 <span class="code-output">ID                  NAME                  PLATFORM          DETECTED</span>
 <span class="code-output">clawdbot            Clawdbot              clawdbot          ✓</span>
@@ -388,7 +399,10 @@
 <span class="code-output">claude-web          Claude Web (claude.ai) claude-web        ✗</span>
 <span class="code-output">openai-assistants   OpenAI Assistants     openai-assistants  ✗</span>
 <span class="code-output">chatgpt             ChatGPT               chatgpt           ✗</span>
-<span class="code-output">gemini              Google Gemini         gemini            ✗</span></code></pre>
+<span class="code-output">gemini              Google Gemini         gemini            ✗</span>
+
+<span class="code-comment"># Scriptable JSON records</span>
+<span class="code-prompt">$</span> savestate adapters --json</code></pre>
 
     <p>Detection is automatic based on the current directory and environment. See <a href="/docs/adapters.html">Platform Adapters</a> for details on what each adapter captures.</p>
 
