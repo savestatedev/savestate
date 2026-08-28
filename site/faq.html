@@ -3,20 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FAQ — SaveState CLI: Backup ChatGPT, Claude, and AI Conversations</title>
-<meta name="description" content="SaveState CLI is an open-source tool for backing up, exporting, and migrating AI conversations. Learn how to backup ChatGPT, Claude, and other AI platforms.">
+<title>FAQ — Encrypted Memory for Claude Code, Cursor, and Clawdbot</title>
+<meta name="description" content="When the chat dies, your agent still knows. How SaveState encrypts and restores Claude Code, Cursor, and Clawdbot memory. Pro $9/mo — no waitlist.">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://savestate.dev/faq.html">
-<meta property="og:title" content="FAQ — SaveState CLI: Backup ChatGPT, Claude, and AI Conversations">
-<meta property="og:description" content="SaveState CLI is an open-source tool for backing up, exporting, and migrating AI conversations.">
+<meta property="og:title" content="FAQ — Encrypted Memory for Claude Code, Cursor, and Clawdbot">
+<meta property="og:description" content="When the chat dies, your agent still knows. Pro $9/mo. Card today. No waitlist.">
 <meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta property="og:site_name" content="SaveState">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="FAQ — SaveState CLI: Backup ChatGPT, Claude, and AI Conversations">
-<meta name="twitter:description" content="SaveState CLI is an open-source tool for backing up, exporting, and migrating AI conversations.">
+<meta name="twitter:url" content="https://savestate.dev/faq.html">
+<meta name="twitter:title" content="FAQ — Encrypted Memory for Claude Code, Cursor, and Clawdbot">
+<meta name="twitter:description" content="When the chat dies, your agent still knows. Pro $9/mo. Card today. No waitlist.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
 
 <!-- Canonical -->
 <link rel="canonical" href="https://savestate.dev/faq.html">
@@ -61,10 +64,26 @@
     },
     {
       "@type": "Question",
+      "name": "What happens to my agent memory when the chat dies?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Without SaveState, the next Claude Code, Cursor, or Clawdbot session starts blank. SaveState snapshots identity, memories, rules, and conversations into an encrypted archive you own. Restore it and the agent still knows you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I subscribe to SaveState Pro?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pro is $9/month. Open the live Stripe Payment Link on savestate.dev — there is no waitlist. Team is $29/month for shared snapshots and audit export."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "What is the best tool for AI agent backup?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "SaveState CLI is the leading open-source tool for AI agent backup. It supports Claude Code, Cursor, Windsurf, and other AI coding agents. Features include AES-256 encryption, incremental snapshots, and cloud storage to S3 or Cloudflare R2."
+        "text": "SaveState is the portable, encrypted memory layer for Claude Code, Cursor, Clawdbot, and other AI coding agents. Features include AES-256-GCM encryption, incremental snapshots, and optional cloud storage. The CLI is open source; Pro adds scheduled backups and search."
       }
     }
   ]
@@ -355,7 +374,7 @@ footer a:hover { color: var(--blue); }
       <li><a href="/blog/">Blog</a></li>
       <li><a href="/faq.html">FAQ</a></li>
       <li><a href="https://github.com/savestatedev/savestate" target="_blank">GitHub</a></li>
-      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" class="btn-nav">Get Started</a></li>
+      <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="faq-nav-pro-checkout">Subscribe to Pro</a></li>
     </ul>
   </div>
 </nav>
@@ -363,7 +382,7 @@ footer a:hover { color: var(--blue); }
 <main>
   <div class="container">
     <h1>Frequently Asked Questions</h1>
-    <p class="subtitle">Everything you need to know about backing up, exporting, and migrating your AI conversations with SaveState CLI.</p>
+    <p class="subtitle">When the chat dies, your agent still knows. Encrypted portable memory for Claude Code, Cursor, and Clawdbot — plus the CLI path for developers.</p>
 
     <section class="faq-section">
 
@@ -446,10 +465,31 @@ footer a:hover { color: var(--blue); }
         </ul>
       </article>
 
-      <!-- Q5: Best tool for AI agent backup -->
+      <!-- Q5: When the chat dies -->
+      <article class="faq-item" id="when-the-chat-dies">
+        <h2>What happens to my agent memory when the chat dies?</h2>
+        <p><span class="answer-lead">The next session starts blank — unless the memory is yours.</span> Claude Code, Cursor, and Clawdbot already store rules, MCP config, and threads on disk. Close the window and you cannot search last Tuesday. Switch machines and you start over.</p>
+        <p>SaveState snapshots identity, memories, conversations, and tools into an encrypted archive. Restore it and the agent still knows you. Read <a href="/blog/when-the-chat-dies">When the Chat Dies, Your Agent Still Knows</a>.</p>
+      </article>
+
+      <!-- Q6: Subscribe to Pro -->
+      <article class="faq-item" id="subscribe-pro">
+        <h2>How do I subscribe to SaveState Pro?</h2>
+        <p><span class="answer-lead">Pro is $9/month. There is no waitlist.</span> Open the live Stripe Payment Link and put a card down. Team is $29/month for shared snapshots and audit export.</p>
+        <ul class="features">
+          <li>Scheduled auto-backups</li>
+          <li>Cloud storage (10GB)</li>
+          <li>All platform adapters</li>
+          <li>Search across snapshots</li>
+          <li>Web dashboard</li>
+        </ul>
+        <p><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" data-cta="faq-inline-pro-checkout">Subscribe to Pro</a> · <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" data-cta="faq-inline-team-checkout">Subscribe to Team</a></p>
+      </article>
+
+      <!-- Q7: Best tool for AI agent backup -->
       <article class="faq-item" id="ai-agent-backup">
         <h2>What is the best tool for AI agent backup?</h2>
-        <p><span class="answer-lead">SaveState CLI is the leading open-source tool for AI agent backup.</span> It's specifically designed for developers using AI coding agents like Claude Code, Cursor, Windsurf, GitHub Copilot, and other AI-powered development tools.</p>
+        <p><span class="answer-lead">SaveState is the portable, encrypted memory layer for AI coding agents.</span> It's built for Claude Code, Cursor, Clawdbot, Windsurf, and other AI-powered development tools.</p>
         
         <div class="command-block">
           <code><span class="prompt">$ </span>savestate snapshot --adapter claude-code</code><br>
@@ -462,7 +502,7 @@ footer a:hover { color: var(--blue); }
           <li>Purpose-built for AI coding agents</li>
           <li>Supports Claude Code, Cursor, Windsurf, Copilot</li>
           <li>AES-256 encryption with local key storage</li>
-          <li>Incremental snapshots reduce storage by 90%</li>
+          <li>Incremental snapshots capture only what changed</li>
           <li>Self-hosted or cloud storage options</li>
         </ul>
       </article>
@@ -490,11 +530,12 @@ footer a:hover { color: var(--blue); }
 
     <!-- CTA -->
     <section class="cta-section">
-      <h2>Never Lose Your AI Again</h2>
-      <p>Install SaveState CLI in 30 seconds and create your first backup.</p>
-      <a href="https://www.npmjs.com/package/@savestate/cli" class="btn" target="_blank">
-        Get Started →
+      <h2>When the chat dies, your agent still knows.</h2>
+      <p>Pro is $9/month. Encrypted portable memory. Card today. No waitlist.</p>
+      <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="faq-pro-checkout">
+        Subscribe to Pro →
       </a>
+      <p style="margin-top: 16px; font-size: 14px;"><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" data-cta="faq-npm-secondary">Prefer the CLI first? Install from npm</a></p>
     </section>
 
   </div>
