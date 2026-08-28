@@ -15,6 +15,7 @@
  *   savestate adapters                List available adapters
  *   savestate antibodies              Manage failure antibodies
  *   savestate identity                Manage agent identity
+ *   savestate integrity               Memory Integrity Grid
  */
 
 import { Command } from 'commander';
@@ -35,6 +36,7 @@ import {
 } from './commands/index.js';
 import { loginCommand, logoutCommand } from './commands/login.js';
 import { registerTraceCommands } from './commands/trace.js';
+import { registerIntegrityCommands } from './commands/integrity.js';
 import { verifyCommand } from './commands/verify.js';
 
 // Get version from package.json
@@ -401,6 +403,10 @@ program
   .description('Manage agent identity (show, init, set, schema)')
   .option('--json', 'Output as JSON')
   .action(identityCommand);
+
+// ─── savestate integrity ───────────────────────────────────
+
+registerIntegrityCommands(program);
 
 // ─── Parse & run ─────────────────────────────────────────────
 

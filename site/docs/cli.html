@@ -110,6 +110,7 @@
   <span class="code-cmd">slo</span>                     <span class="code-output">Memory freshness SLO monitoring (status, report, config)</span>
   <span class="code-cmd">acl</span>                     <span class="code-output">Manage active commitments (propose, verify, gate, list)</span>
   <span class="code-cmd">identity</span>                <span class="code-output">Manage agent identity (show, init, set, schema)</span>
+  <span class="code-cmd">integrity</span>               <span class="code-output">Memory Integrity Grid (status, seed, incidents)</span>
   <span class="code-cmd">trace</span>                   <span class="code-output">Inspect Askable Echoes trace runs (list, show, export)</span>
   <span class="code-cmd">config</span>                  <span class="code-output">View or edit configuration</span>
   <span class="code-cmd">adapters</span>                <span class="code-output">List available platform adapters</span></code></pre>
@@ -806,6 +807,37 @@
 
 <span class="code-comment"># Print the identity JSON schema</span>
 <span class="code-prompt">$</span> savestate identity schema --json</code></pre>
+
+    <!-- integrity -->
+    <h2 id="integrity"><code>savestate integrity</code></h2>
+    <p>Memory Integrity Grid: detect and contain memory poisoning with honeyfact seeding, tripwire monitoring, and quarantine. Subcommands: <code>status</code>, <code>seed</code>, <code>rotate</code>, <code>incidents</code>, <code>incident</code>, <code>quarantine</code>, <code>release</code>, <code>config</code>, <code>test</code>, and <code>clear</code>. Requires <code>savestate init</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate integrity [subcommand] [args...] [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output as JSON</td></tr>
+        <tr><td><code>--tenant &lt;id&gt;</code></td><td>Tenant ID (default: <code>default</code>)</td></tr>
+        <tr><td><code>--count &lt;n&gt;</code></td><td>Number of honeyfacts to seed</td></tr>
+        <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status</td></tr>
+        <tr><td><code>--force</code></td><td>Required on <code>clear</code></td></tr>
+        <tr><td><code>--reason &lt;text&gt;</code></td><td>Reason for quarantine or release</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Show honeyfact, incident, and containment status</span>
+<span class="code-prompt">$</span> savestate integrity status
+
+<span class="code-comment"># Plant honeyfact memories</span>
+<span class="code-prompt">$</span> savestate integrity seed --count 10
+
+<span class="code-comment"># List detected incidents</span>
+<span class="code-prompt">$</span> savestate integrity incidents --json
+
+<span class="code-comment"># Quarantine a memory or agent</span>
+<span class="code-prompt">$</span> savestate integrity quarantine mem-123 --reason "tripwire hit"</code></pre>
 
     <!-- trace -->
     <h2 id="trace"><code>savestate trace</code></h2>

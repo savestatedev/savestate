@@ -268,7 +268,7 @@ describe('CLI docs', () => {
   });
 
   it('documents identity show, init, set, and schema', () => {
-    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="trace"'));
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     expect(identitySection).toContain('show');
     expect(identitySection).toContain('init');
     expect(identitySection).toContain('set');
@@ -277,6 +277,29 @@ describe('CLI docs', () => {
     expect(identitySection).toContain('.savestate/identity.json');
     expect(identitySection).toContain('metadata.');
     expect(identitySection).toContain('savestate init');
+  });
+
+  it('registers savestate integrity on the CLI', () => {
+    expect(cli).toContain('registerIntegrityCommands');
+  });
+
+  it('lists savestate integrity in the command overview', () => {
+    expect(docs).toContain('id="integrity"');
+    expect(docs).toContain('savestate integrity');
+  });
+
+  it('documents integrity status, seed, incidents, and quarantine', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('status');
+    expect(integritySection).toContain('seed');
+    expect(integritySection).toContain('incidents');
+    expect(integritySection).toContain('quarantine');
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('--tenant');
+    expect(integritySection).toContain('--count');
+    expect(integritySection).toContain('--force');
+    expect(integritySection).toContain('honeyfact');
+    expect(integritySection).toContain('savestate init');
   });
 
   it('lists savestate trace in the command overview', () => {
