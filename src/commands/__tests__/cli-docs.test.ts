@@ -273,6 +273,16 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate init');
   });
 
+  it('documents memory list --pinned, --limit, and promote --to', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--pinned');
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('--to');
+    expect(memorySection).toContain('20');
+    expect(memorySection).toContain('pinned memories');
+    expect(memorySection).toContain('Target tier');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');
