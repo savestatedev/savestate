@@ -94,6 +94,7 @@
   <span class="code-cmd">search</span> <span class="code-flag">&lt;query&gt;</span>          <span class="code-output">Search across all snapshots</span>
   <span class="code-cmd">export</span>                  <span class="code-output">Export an encrypted agent container</span>
   <span class="code-cmd">import</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Import an encrypted agent container</span>
+  <span class="code-cmd">container</span>               <span class="code-output">Manage encrypted agent state containers (export, import)</span>
   <span class="code-cmd">verify</span> <span class="code-flag">&lt;file&gt;</span>           <span class="code-output">Verify a .savestate container and list metadata</span>
   <span class="code-cmd">prune</span>                   <span class="code-output">Drop old snapshots by retention policy (dry-run)</span>
   <span class="code-cmd">antibodies</span>              <span class="code-output">Manage failure antibodies (list, add, preflight, stats)</span>
@@ -833,6 +834,38 @@
 
 <span class="code-comment"># Export one run</span>
 <span class="code-prompt">$</span> savestate trace export --run run-123</code></pre>
+
+    <!-- container -->
+    <h2 id="container"><code>savestate container</code></h2>
+    <p>Manage encrypted agent state containers. Subcommands: <code>export</code> and <code>import</code>. Same encryption, path selection, and dry-run behavior as the top-level <code>savestate export</code> / <code>savestate import</code> commands, with required <code>--out</code> / <code>--in</code> flags instead of optional <code>--output</code> or a positional file.</p>
+    <pre><code><span class="code-prompt">$</span> savestate container &lt;subcommand&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>-a, --agent &lt;id&gt;</code></td><td>Required on <code>export</code>. Agent ID to pack.</td></tr>
+        <tr><td><code>-o, --out &lt;file&gt;</code></td><td>Required on <code>export</code>. Output <code>.savestate</code> path.</td></tr>
+        <tr><td><code>-i, --in &lt;file&gt;</code></td><td>Required on <code>import</code>. Input <code>.savestate</code> path.</td></tr>
+        <tr><td><code>--dry-run</code></td><td>Preview without writing or restoring</td></tr>
+        <tr><td><code>--force</code></td><td>Overwrite an existing export file or import target file</td></tr>
+        <tr><td><code>--include &lt;paths&gt;</code></td><td>Only pack or restore named state paths (<code>personality</code>, <code>memory</code>, <code>tools</code>, <code>preferences</code>, <code>conversation_history</code>)</td></tr>
+        <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths</td></tr>
+        <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase, or <code>SAVESTATE_PASSPHRASE</code> / prompt</td></tr>
+        <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase</td></tr>
+        <tr><td><code>--description &lt;text&gt;</code></td><td>Optional manifest description on <code>export</code></td></tr>
+        <tr><td><code>--target &lt;dir&gt;</code></td><td>Write restored agent state to this directory on <code>import</code></td></tr>
+        <tr><td><code>--merge</code></td><td>Merge with existing state on <code>import</code> (default: replace)</td></tr>
+        <tr><td><code>--replace</code></td><td>Replace existing state on <code>import</code></td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Preview an export without writing</span>
+<span class="code-prompt">$</span> savestate container export -a my-agent -o agent.savestate --dry-run
+
+<span class="code-comment"># Restore into a directory, replacing an existing target file</span>
+<span class="code-prompt">$</span> savestate container import --in agent.savestate --target ./restored --force</code></pre>
 
     <!-- Page Nav -->
     <div class="page-nav">
