@@ -54,6 +54,8 @@ describe('public marketing checkout CTAs', () => {
   const cursor = loadHtml('site/cursor.html');
   const claudeCode = loadHtml('site/claude-code.html');
   const clawdbot = loadHtml('site/clawdbot.html');
+  const compareChrome = loadHtml('site/compare/vs-chrome-extensions.html');
+  const compareExport = loadHtml('site/compare/vs-manual-export.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -124,15 +126,28 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(clawdbot, 'clawdbot-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points compare page CTAs at the live Payment Links', () => {
+    expect(hrefForCta(compareChrome, 'compare-chrome-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(compareChrome, 'compare-chrome-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(compareChrome, 'compare-chrome-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(compareChrome, 'compare-chrome-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(compareChrome).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+    expect(hrefForCta(compareExport, 'compare-export-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(compareExport, 'compare-export-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(compareExport, 'compare-export-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(compareExport, 'compare-export-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(compareExport).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
