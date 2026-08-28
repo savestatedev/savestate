@@ -55,6 +55,10 @@ describe('homepage checkout CTAs', () => {
     expect(hrefForCta(homepage, 'hero-checkout')).toBe(stripe.products.pro.payment_link);
   });
 
+  it('points the hero Team CTA at the live Team Payment Link', () => {
+    expect(hrefForCta(homepage, 'hero-team-checkout')).toBe(stripe.products.team.payment_link);
+  });
+
   it('points Pro and Team plan CTAs at the live Payment Links', () => {
     expect(hrefForCta(homepage, 'pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(homepage, 'team-checkout')).toBe(stripe.products.team.payment_link);
@@ -91,6 +95,7 @@ describe('homepage checkout CTAs', () => {
   it('reaches live Stripe checkout for hero and plan Payment Links', async () => {
     const links = [
       hrefForCta(homepage, 'hero-checkout'),
+      hrefForCta(homepage, 'hero-team-checkout'),
       hrefForCta(homepage, 'pro-checkout'),
       hrefForCta(homepage, 'team-checkout'),
     ];
