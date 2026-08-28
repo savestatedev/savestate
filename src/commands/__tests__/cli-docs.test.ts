@@ -165,9 +165,28 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('ss_live_');
     expect(loginSection).toContain('savestate.dev/account');
     expect(loginSection).toContain('savestate init');
-    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="mcp"'));
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="cloud"'));
     expect(logoutSection).toContain('savestate logout');
     expect(logoutSection).toContain('saved cloud API key');
+  });
+
+  it('lists savestate cloud in the command overview', () => {
+    expect(docs).toContain('id="cloud"');
+    expect(docs).toContain('savestate cloud');
+  });
+
+  it('documents cloud push, pull, list, delete, and --force', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('push');
+    expect(cloudSection).toContain('pull');
+    expect(cloudSection).toContain('list');
+    expect(cloudSection).toContain('delete');
+    expect(cloudSection).toContain('--id');
+    expect(cloudSection).toContain('--all');
+    expect(cloudSection).toContain('--force');
+    expect(cloudSection).toContain('Pro or Team');
+    expect(cloudSection).toContain('savestate login');
+    expect(cloudSection).toContain('.saf.enc');
   });
 
   it('lists savestate mcp in the command overview', () => {
