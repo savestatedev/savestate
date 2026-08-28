@@ -570,6 +570,12 @@
         <tr><td><code>-t, --to &lt;platform&gt;</code></td><td>Target platform to migrate to</td></tr>
         <tr><td><code>-l, --list</code></td><td>List available platforms and their capabilities</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show a compatibility report without making changes</td></tr>
+        <tr><td><code>--review</code></td><td>Inspect items needing manual attention without migrating</td></tr>
+        <tr><td><code>--resume</code></td><td>Resume an interrupted migration</td></tr>
+        <tr><td><code>-i, --include &lt;types&gt;</code></td><td>Only migrate specific types: <code>instructions</code>, <code>memories</code>, <code>conversations</code>, <code>files</code>, <code>customBots</code> (comma-separated)</td></tr>
+        <tr><td><code>--force</code></td><td>Skip the confirmation prompt before writing</td></tr>
+        <tr><td><code>-v, --verbose</code></td><td>Show detailed progress</td></tr>
+        <tr><td><code>--no-color</code></td><td>Disable colorized output</td></tr>
       </tbody>
     </table>
 
@@ -578,6 +584,15 @@
 
 <span class="code-comment"># Preview ChatGPT → Claude without writing anything</span>
 <span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --dry-run
+
+<span class="code-comment"># Inspect items that need manual attention</span>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --review
+
+<span class="code-comment"># Memories only, skip confirmation</span>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --include memories --force
+
+<span class="code-comment"># Resume an interrupted migration</span>
+<span class="code-prompt">$</span> savestate migrate --resume
 
 <span class="code-comment"># Run the migration</span>
 <span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude</code></pre>
