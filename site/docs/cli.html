@@ -838,6 +838,10 @@
         <tr><td><code>-t, --to &lt;tier&gt;</code></td><td>Target tier on <code>promote</code> (default L1) and <code>demote</code> (default L3)</td></tr>
         <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Required reason on <code>delete</code>; optional on <code>edit</code></td></tr>
         <tr><td><code>-n, --namespace &lt;ns&gt;</code></td><td>Namespace (<code>org:app:agent[:user]</code>) for <code>explain</code> and <code>expire</code></td></tr>
+        <tr><td><code>-c, --content &lt;content&gt;</code></td><td>New content on <code>edit</code></td></tr>
+        <tr><td><code>-i, --importance &lt;n&gt;</code></td><td>New importance score (0-1) on <code>edit</code></td></tr>
+        <tr><td><code>--actor &lt;id&gt;</code></td><td>Actor ID for the audit trail on <code>edit</code>, <code>delete</code>, and <code>rollback</code> (default <code>cli-user</code>)</td></tr>
+        <tr><td><code>-v, --version &lt;n&gt;</code></td><td>Required version to restore on <code>rollback</code></td></tr>
       </tbody>
     </table>
 
@@ -849,6 +853,12 @@
 
 <span class="code-comment"># Promote a memory to faster access</span>
 <span class="code-prompt">$</span> savestate memory promote mem-123 --to L1
+
+<span class="code-comment"># Edit content and importance</span>
+<span class="code-prompt">$</span> savestate memory edit mem-123 --content "Updated preference" --importance 0.9 --reason "correction"
+
+<span class="code-comment"># Rollback to a previous version</span>
+<span class="code-prompt">$</span> savestate memory rollback mem-123 --version 2
 
 <span class="code-comment"># Preview TTL expiry without applying</span>
 <span class="code-prompt">$</span> savestate memory expire --namespace org:app:agent --dry-run
