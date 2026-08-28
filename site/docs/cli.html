@@ -337,6 +337,7 @@
         <tr><td><code>--type &lt;type&gt;</code></td><td>Filter by type: <code>memory</code>, <code>conversation</code>, <code>identity</code>, or <code>knowledge</code> (comma-separated)</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20)</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>
+        <tr><td><code>--json</code></td><td>Output ranked results as JSON (useful for scripting)</td></tr>
       </tbody>
     </table>
 
@@ -347,7 +348,10 @@
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --type conversation --limit 5
 
 <span class="code-comment"># One snapshot</span>
-<span class="code-prompt">$</span> savestate search <span class="code-string">"system prompt"</span> --snapshot ss-2026-01-26T09-30-00-b7c1m4</code></pre>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"system prompt"</span> --snapshot ss-2026-01-26T09-30-00-b7c1m4
+
+<span class="code-comment"># Scriptable JSON results</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --json</code></pre>
 
     <!-- config -->
     <h2 id="config"><code>savestate config</code></h2>

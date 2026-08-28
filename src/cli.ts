@@ -257,6 +257,7 @@ program
   .option('--type <type>', 'Filter by type (memory, conversation, identity)')
   .option('--limit <n>', 'Maximum results')
   .option('--snapshot <id>', 'Search within a specific snapshot')
+  .option('--json', 'Output as JSON')
   .action(searchCommand);
 
 // ─── savestate login ─────────────────────────────────────────
