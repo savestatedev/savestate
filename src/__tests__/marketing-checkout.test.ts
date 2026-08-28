@@ -59,6 +59,7 @@ describe('public marketing checkout CTAs', () => {
   const docsPricing = loadHtml('site/docs/pricing.html');
   const meet = loadHtml('site/meet/index.html');
   const vmdk = loadHtml('site/blog/you-cannot-restore-production-ai-from-a-vmdk.html');
+  const memoryBackup = loadHtml('site/blog/your-agents-memory-is-not-a-backup.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -171,15 +172,23 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(vmdk, 'vmdk-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the memory-is-not-a-backup post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(memoryBackup, 'memory-backup-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryBackup, 'memory-backup-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryBackup, 'memory-backup-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(memoryBackup, 'memory-backup-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(memoryBackup, 'memory-backup-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
