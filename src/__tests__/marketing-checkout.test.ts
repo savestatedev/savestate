@@ -58,6 +58,7 @@ describe('public marketing checkout CTAs', () => {
   const compareExport = loadHtml('site/compare/vs-manual-export.html');
   const docsPricing = loadHtml('site/docs/pricing.html');
   const meet = loadHtml('site/meet/index.html');
+  const vmdk = loadHtml('site/blog/you-cannot-restore-production-ai-from-a-vmdk.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -162,15 +163,23 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(meet, 'meet-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the VMDK post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(vmdk, 'vmdk-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(vmdk, 'vmdk-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(vmdk, 'vmdk-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(vmdk, 'vmdk-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(vmdk, 'vmdk-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
