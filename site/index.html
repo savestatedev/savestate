@@ -1164,6 +1164,25 @@ nav .container {
   margin-bottom: 40px;
 }
 
+.footer-cta .btn-group {
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.footer-fulfillment {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 auto 48px;
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+.footer-fulfillment code {
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
 .install-block {
   display: inline-flex;
   align-items: center;
@@ -2033,6 +2052,12 @@ nav .container {
         Works with any MCP-compatible client. <a href="/docs/mcp.html" style="color: var(--blue, #03C1DF); text-decoration: none;">Full MCP setup guide →</a>
       </p>
     </div>
+
+    <div class="btn-group">
+      <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn btn-primary" data-cta="footer-pro-checkout">Subscribe to Pro</a>
+      <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="btn btn-secondary" data-cta="footer-team-checkout">Subscribe to Team</a>
+    </div>
+    <p class="footer-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
 
     <div class="footer-links">
       <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener">

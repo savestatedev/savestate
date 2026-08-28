@@ -64,6 +64,16 @@ describe('homepage checkout CTAs', () => {
     expect(hrefForCta(homepage, 'nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
   });
 
+  it('points the Get Started footer CTAs at the live Payment Links', () => {
+    expect(hrefForCta(homepage, 'footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(homepage, 'footer-team-checkout')).toBe(stripe.products.team.payment_link);
+  });
+
+  it('tells a paying stranger how fulfillment works after checkout', () => {
+    expect(homepage).toMatch(/After you pay, your API key is emailed/);
+    expect(homepage).toMatch(/savestate login/);
+  });
+
   it('does not keep a Pro waitlist on the homepage', () => {
     expect(homepage).not.toMatch(/waitlist for Pro features/i);
     expect(homepage).not.toMatch(/Join Waitlist/i);
