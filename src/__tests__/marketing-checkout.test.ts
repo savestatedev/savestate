@@ -63,6 +63,7 @@ describe('public marketing checkout CTAs', () => {
   const durable = loadHtml('site/blog/your-agent-is-durable-you-cannot-restore-it.html');
   const aiact = loadHtml('site/blog/your-ai-act-audit-trail-cant-reconstruct-the-agent.html');
   const threat = loadHtml('site/blog/biggest-security-threat-to-your-ai.html');
+  const stateSecurity = loadHtml('site/blog/ai-state-management-security.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -207,15 +208,23 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(threat, 'threat-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the state-management-security post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(stateSecurity, 'state-security-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(stateSecurity, 'state-security-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(stateSecurity, 'state-security-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(stateSecurity, 'state-security-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(stateSecurity, 'state-security-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
