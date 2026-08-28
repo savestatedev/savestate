@@ -90,6 +90,8 @@ describe('homepage checkout CTAs', () => {
     expect(hrefForCta(dashboard, 'dashboard-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(dashboard, 'dashboard-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(dashboard).not.toMatch(/href="\/#pricing"[^>]*>\s*Subscribe/);
+    expect(dashboard).toMatch(/After you pay, your API key is emailed/);
+    expect(dashboard).toMatch(/savestate login/);
   });
 
   it('reaches live Stripe checkout for hero and plan Payment Links', async () => {
