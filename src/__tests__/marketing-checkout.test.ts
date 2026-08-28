@@ -54,6 +54,7 @@ describe('public marketing checkout CTAs', () => {
   const cursor = loadHtml('site/cursor.html');
   const claudeCode = loadHtml('site/claude-code.html');
   const clawdbot = loadHtml('site/clawdbot.html');
+  const docsPricing = loadHtml('site/docs/pricing.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -124,15 +125,24 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(clawdbot, 'clawdbot-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the docs pricing CTAs at the live Payment Links', () => {
+    expect(hrefForCta(docsPricing, 'docs-pricing-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsPricing, 'docs-pricing-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsPricing, 'docs-pricing-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(docsPricing, 'docs-pricing-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(docsPricing, 'docs-pricing-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(docsPricing, 'docs-pricing-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, docsPricing]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, docsPricing]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
