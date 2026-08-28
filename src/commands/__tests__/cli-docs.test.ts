@@ -346,6 +346,22 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate search');
   });
 
+  it('documents snapshot --tag and --meta state entries', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--tag');
+    expect(snapshotSection).toContain('--meta');
+    expect(snapshotSection).toContain('type:key=value');
+    expect(snapshotSection).toContain('key=value');
+    expect(snapshotSection).toContain('decision');
+    expect(snapshotSection).toContain('preference');
+    expect(snapshotSection).toContain('error');
+    expect(snapshotSection).toContain('api_response');
+    expect(snapshotSection).toContain('custom');
+    expect(snapshotSection).toContain('decision:api_provider=openai');
+    expect(cli).toContain('--tag <entry...>');
+    expect(cli).toContain('--meta <entry...>');
+  });
+
   it('documents search --type, --limit, and --snapshot', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('--type');
