@@ -68,6 +68,7 @@ describe('public marketing checkout CTAs', () => {
   const githubSecurity = loadHtml('site/blog/github-ai-security-state-management.html');
   const gymHack = loadHtml('site/blog/gym-hack-state-forensics-failure.html');
   const terafab = loadHtml('site/blog/terafab-will-solve-ai-compute-problem-not-its-state.html');
+  const vibeSafer = loadHtml('site/blog/cloudflare-made-vibe-coding-safer-not-recoverable.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -252,15 +253,23 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(terafab, 'terafab-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the vibe-coding-safer post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(vibeSafer, 'vibe-safer-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(vibeSafer, 'vibe-safer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(vibeSafer, 'vibe-safer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(vibeSafer, 'vibe-safer-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(vibeSafer, 'vibe-safer-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
