@@ -57,6 +57,7 @@ describe('public marketing checkout CTAs', () => {
   const compareChrome = loadHtml('site/compare/vs-chrome-extensions.html');
   const compareExport = loadHtml('site/compare/vs-manual-export.html');
   const docsPricing = loadHtml('site/docs/pricing.html');
+  const meet = loadHtml('site/meet/index.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -151,15 +152,25 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(docsPricing, 'docs-pricing-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the meet pitch CTAs at the live Payment Links', () => {
+    expect(hrefForCta(meet, 'meet-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(meet, 'meet-hero-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(meet, 'meet-cta-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(meet, 'meet-hero-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(meet, 'meet-cta-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(meet, 'meet-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(meet, 'meet-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
@@ -167,7 +178,7 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('ships SEO, Open Graph, and Twitter meta on the public surfaces', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet]) {
       expect(hasOg(html, 'og:title')).toBe(true);
       expect(hasOg(html, 'og:description')).toBe(true);
       expect(hasOg(html, 'og:image')).toBe(true);
