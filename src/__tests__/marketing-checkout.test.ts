@@ -88,10 +88,12 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(faq, 'faq-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
   });
 
-  it('points blog index primary CTAs at the live Pro Payment Link', () => {
+  it('points blog index primary CTAs at the live Payment Links', () => {
     expect(hrefForCta(blogIndex, 'blog-index-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(blogIndex, 'blog-index-sidebar-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(blogIndex, 'blog-index-sidebar-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(blogIndex, 'blog-index-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(blogIndex, 'blog-index-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
   it('points the Cursor buyer page CTAs at the live Payment Links', () => {
@@ -150,7 +152,7 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
