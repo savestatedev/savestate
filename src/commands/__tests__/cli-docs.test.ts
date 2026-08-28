@@ -273,6 +273,16 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate init');
   });
 
+  it('documents memory list --pinned, --limit, and promote --to', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--pinned');
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('--to');
+    expect(memorySection).toContain('20');
+    expect(memorySection).toContain('pinned memories');
+    expect(memorySection).toContain('Target tier');
+  });
+
   it('documents memory edit --content, --importance, --actor, and rollback --version', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--content');
@@ -369,6 +379,15 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('--force');
     expect(integritySection).toContain('honeyfact');
     expect(integritySection).toContain('savestate init');
+  });
+
+  it('documents integrity --user on quarantine and release', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--user');
+    expect(integritySection).toContain('quarantine');
+    expect(integritySection).toContain('release');
+    expect(integritySection).toContain('cli');
+    expect(integritySection).toContain('--user reviewer-1');
   });
 
   it('lists savestate trace in the command overview', () => {

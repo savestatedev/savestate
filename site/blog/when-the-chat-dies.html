@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>When the Chat Dies, Your Agent Still Knows — SaveState</title>
+<meta name="description" content="Encrypted portable memory for Claude Code, Cursor, and Clawdbot. When the chat dies, the agent still knows — if the memory is yours.">
+<meta name="keywords" content="Claude Code memory, Cursor memory, Clawdbot backup, encrypted AI memory, portable agent memory, SaveState Pro">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/blog/when-the-chat-dies">
+<meta property="og:title" content="When the Chat Dies, Your Agent Still Knows">
+<meta property="og:description" content="Encrypted portable memory for Claude Code, Cursor, and Clawdbot. When the chat dies, the agent still knows — if the memory is yours.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta property="og:site_name" content="SaveState">
+<meta property="article:published_time" content="2026-08-28">
+<meta property="article:author" content="SaveState">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://savestate.dev/blog/when-the-chat-dies">
+<meta name="twitter:title" content="When the Chat Dies, Your Agent Still Knows">
+<meta name="twitter:description" content="Encrypted portable memory for Claude Code, Cursor, and Clawdbot. When the chat dies, the agent still knows — if the memory is yours.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://savestate.dev/blog/when-the-chat-dies">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "When the Chat Dies, Your Agent Still Knows",
+  "description": "Encrypted portable memory for Claude Code, Cursor, and Clawdbot. When the chat dies, the agent still knows — if the memory is yours.",
+  "image": "https://savestate.dev/og-image.png",
+  "datePublished": "2026-08-28",
+  "dateModified": "2026-08-28",
+  "author": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://savestate.dev/logo.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://savestate.dev/blog/when-the-chat-dies"
+  }
+}
+</script>
+
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links { display: none; }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a { padding: 12px 0; font-size: 16px; }
+  .nav-links.show .btn-nav { margin-top: 8px; text-align: center; }
+}
+
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header { margin-bottom: 48px; }
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li { margin-bottom: 8px; }
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a { color: var(--blue); text-decoration: none; }
+.article-content a:hover { text-decoration: underline; }
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover { transform: translateY(-2px); text-decoration: none; }
+
+.cta-secondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="blog-nav-pro-checkout">Subscribe to Pro</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">August 28, 2026</div>
+      <h1>When the Chat Dies, Your Agent Still Knows</h1>
+      <p class="subtitle">Encrypted portable memory for Claude Code, Cursor, and Clawdbot.</p>
+    </header>
+
+    <div class="article-content">
+      <p>The session ended. Claude Code closed. Cursor crashed. Clawdbot restarted. The next chat starts blank — unless the memory is yours.</p>
+      <p>For one tool: <a href="/cursor">Cursor</a> · <a href="/claude-code">Claude Code</a> · <a href="/clawdbot">Clawdbot</a>.</p>
+
+      <p>That is the product. Not a backup pitch. A future you can buy today: <strong>the agent keeps its memory when the chat dies.</strong></p>
+
+      <div class="cta-box">
+        <h3>Pro is live. $9/month.</h3>
+        <p>Encrypted portable memory. Scheduled snapshots. Cloud storage you can search. Card today. No waitlist.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="blog-pro-checkout">Subscribe to Pro</a>
+        <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="blog-team-checkout">Team is $29/month</a>
+      </div>
+
+      <h2>The chat is not the memory</h2>
+      <p>Claude Code, Cursor, and Clawdbot already remember things. Rules files. MCP configs. Composer threads. Workspace SQLite. A soul.md. The problem is ownership.</p>
+      <p>That memory lives where the vendor put it. Close the window and you cannot search last Tuesday. Switch machines and you start over. The agent that knew your repo, your taste, your constraints — gone with the tab.</p>
+      <p>A transcript export is not a memory layer. A chat history is not a restore.</p>
+
+      <h2>What you actually keep</h2>
+      <p>SaveState snapshots the identity, not the window:</p>
+      <ul>
+        <li><strong>Claude Code</strong> — instructions, tools, project memory, conversation state.</li>
+        <li><strong>Cursor</strong> — MCP servers, rules, Composer history from workspace storage.</li>
+        <li><strong>Clawdbot</strong> — agent identity, memories, and the config the next process needs to be the same agent.</li>
+      </ul>
+      <p>Each snapshot is a <a href="/docs/format.html">SaveState Archive</a>, encrypted with AES-256-GCM before it leaves the machine. You hold the passphrase. We never see the keys.</p>
+      <p>Search it later. Restore it on another box. Move it across clients. The chat can die. The archive does not.</p>
+
+      <h2>Pro is the path a stranger can take</h2>
+      <p>The CLI is open source. That is the developer path. The product a stranger can buy today is <strong>SaveState Pro</strong> — $9/month:</p>
+      <ul>
+        <li>Scheduled auto-backups</li>
+        <li>Cloud storage (10GB)</li>
+        <li>All platform adapters</li>
+        <li>Search across snapshots</li>
+        <li>Web dashboard</li>
+        <li>Email alerts on backup failures</li>
+      </ul>
+      <p>Need shared snapshots and an audit log? <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01">Team is $29/month</a>.</p>
+      <p>There is no waitlist. The Payment Link is live.</p>
+
+      <div class="cta-box">
+        <h3>Keep the memory. Lose the chat.</h3>
+        <p>Subscribe to Pro. The agent that knew you this morning still knows you tomorrow.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="blog-footer-pro-checkout">Subscribe to Pro — $9/mo</a>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="blog-npm-secondary">Prefer the CLI first? Install from npm</a>
+      </div>
+
+      <h2>If you live in the terminal</h2>
+      <p>Pro does not replace the CLI. It sits on top of it. Developers who want the local path first:</p>
+      <pre><code>npm install -g @savestate/cli
+savestate init
+savestate snapshot</code></pre>
+      <p>Then subscribe when you want scheduled cloud snapshots and search you did not have to host.</p>
+
+      <hr>
+
+      <p><em>Questions? See the <a href="/faq.html">FAQ</a> or open an issue on <a href="https://github.com/savestatedev/savestate">GitHub</a>.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

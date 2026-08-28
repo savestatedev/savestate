@@ -830,9 +830,12 @@
       </thead>
       <tbody>
         <tr><td><code>-t, --tier &lt;tier&gt;</code></td><td>Filter <code>list</code> by tier (L1, L2, L3)</td></tr>
+        <tr><td><code>-p, --pinned</code></td><td>Show only pinned memories on <code>list</code></td></tr>
+        <tr><td><code>-l, --limit &lt;n&gt;</code></td><td>Maximum number of memories to show on <code>list</code> (default 20)</td></tr>
         <tr><td><code>-s, --snapshot &lt;id&gt;</code></td><td>Snapshot to inspect or modify (default: latest)</td></tr>
         <tr><td><code>--json</code></td><td>Output as JSON on <code>list</code>, <code>explain</code>, and <code>log</code></td></tr>
         <tr><td><code>--dry-run</code></td><td>Preview <code>apply-policies</code> and <code>expire</code> without writing</td></tr>
+        <tr><td><code>-t, --to &lt;tier&gt;</code></td><td>Target tier on <code>promote</code> (default L1) and <code>demote</code> (default L3)</td></tr>
         <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Required reason on <code>delete</code>; optional on <code>edit</code></td></tr>
         <tr><td><code>-n, --namespace &lt;ns&gt;</code></td><td>Namespace (<code>org:app:agent[:user]</code>) for <code>explain</code> and <code>expire</code></td></tr>
         <tr><td><code>-c, --content &lt;content&gt;</code></td><td>New content on <code>edit</code></td></tr>
@@ -844,6 +847,9 @@
 
     <pre><code><span class="code-comment"># List memories in L1</span>
 <span class="code-prompt">$</span> savestate memory list --tier L1
+
+<span class="code-comment"># Pinned memories only</span>
+<span class="code-prompt">$</span> savestate memory list --pinned --limit 5
 
 <span class="code-comment"># Promote a memory to faster access</span>
 <span class="code-prompt">$</span> savestate memory promote mem-123 --to L1
@@ -965,6 +971,7 @@
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status</td></tr>
         <tr><td><code>--force</code></td><td>Required on <code>clear</code></td></tr>
         <tr><td><code>--reason &lt;text&gt;</code></td><td>Reason for quarantine or release</td></tr>
+        <tr><td><code>--user &lt;id&gt;</code></td><td>Actor for <code>quarantine</code> and <code>release</code> (default <code>cli</code>)</td></tr>
       </tbody>
     </table>
 
@@ -978,7 +985,7 @@
 <span class="code-prompt">$</span> savestate integrity incidents --json
 
 <span class="code-comment"># Quarantine a memory or agent</span>
-<span class="code-prompt">$</span> savestate integrity quarantine mem-123 --reason "tripwire hit"</code></pre>
+<span class="code-prompt">$</span> savestate integrity quarantine mem-123 --reason "tripwire hit" --user reviewer-1</code></pre>
 
     <!-- trace -->
     <h2 id="trace"><code>savestate trace</code></h2>
