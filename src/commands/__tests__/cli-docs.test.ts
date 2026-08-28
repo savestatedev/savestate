@@ -98,6 +98,23 @@ describe('CLI docs', () => {
     expect(migrateSection).toContain('compatibility report');
   });
 
+  it('documents migrate --review, --resume, --include, --force, --verbose, and --no-color', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    expect(migrateSection).toContain('--review');
+    expect(migrateSection).toContain('--resume');
+    expect(migrateSection).toContain('--include');
+    expect(migrateSection).toContain('--force');
+    expect(migrateSection).toContain('--verbose');
+    expect(migrateSection).toContain('--no-color');
+    expect(migrateSection).toContain('instructions');
+    expect(migrateSection).toContain('memories');
+    expect(migrateSection).toContain('conversations');
+    expect(migrateSection).toContain('files');
+    expect(migrateSection).toContain('customBots');
+    expect(migrateSection).toContain('manual attention');
+    expect(migrateSection).toContain('interrupted');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
