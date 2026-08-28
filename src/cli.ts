@@ -198,6 +198,7 @@ program
 program
   .command('diff <a> <b>')
   .description('Compare two snapshots')
+  .option('--json', 'Output as JSON')
   .action(diffCommand);
 
 // ─── savestate config ────────────────────────────────────────

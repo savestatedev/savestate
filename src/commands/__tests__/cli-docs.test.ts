@@ -426,4 +426,23 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('20');
     expect(searchSection).toContain('savestate init');
   });
+
+  it('registers --json on savestate diff', () => {
+    const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
+    expect(diffBlock).toContain(".option('--json'");
+  });
+
+  it('lists savestate diff in the command overview', () => {
+    expect(docs).toContain('id="diff"');
+    expect(docs).toContain('savestate diff');
+  });
+
+  it('documents diff --json and that it decrypts both archives', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    expect(diffSection).toContain('--json');
+    expect(diffSection).toContain('identity');
+    expect(diffSection).toContain('savestate init');
+    expect(diffSection).toContain('passphrase');
+    expect(diffSection).toContain('Decrypts both archives');
+  });
 });
