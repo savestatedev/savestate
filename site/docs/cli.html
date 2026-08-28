@@ -271,15 +271,27 @@
 
     <!-- diff -->
     <h2 id="diff"><code>savestate diff</code></h2>
-    <p>Compare two snapshots and see what changed.</p>
-    <pre><code><span class="code-prompt">$</span> savestate diff &lt;snapshot-a&gt; &lt;snapshot-b&gt;</code></pre>
-    <p>Outputs a summary of added, removed, and modified content across identity, memory, conversations, and tools.</p>
+    <p>Compare two snapshots and see what changed across identity, memory, conversations, and tools. Requires <code>savestate init</code> and a passphrase. Decrypts both archives.</p>
+    <pre><code><span class="code-prompt">$</span> savestate diff &lt;snapshot-a&gt; &lt;snapshot-b&gt; [options]</code></pre>
 
-    <pre><code><span class="code-prompt">$</span> savestate diff ss-2026-01-25 ss-2026-01-27
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output the identity and state diff as JSON (useful for scripting)</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Human-readable summary</span>
+<span class="code-prompt">$</span> savestate diff ss-2026-01-25 ss-2026-01-27
 <span class="code-output">Changes between ss-2026-01-25 and ss-2026-01-27:</span>
   <span class="code-success">+ 3 files added</span>
   <span class="code-flag">~ 5 files modified</span>
-  <span class="code-output">- 1 file removed</span></code></pre>
+  <span class="code-output">- 1 file removed</span>
+
+<span class="code-comment"># Machine-readable identity and state diff</span>
+<span class="code-prompt">$</span> savestate diff ss-2026-01-25 ss-2026-01-27 --json</code></pre>
 
     <!-- search -->
     <h2 id="search"><code>savestate search</code></h2>
