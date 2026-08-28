@@ -499,6 +499,21 @@ nav .container {
   text-wrap: balance; /* Prevents awkward line breaks */
 }
 
+.hero-tools {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin: -20px auto 32px;
+  animation: fadeInUp 0.85s ease-out;
+}
+
+.hero-tools a {
+  color: var(--blue-light);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.hero-tools a:hover { color: var(--text); }
+
 .hero .btn-group {
   justify-content: center;
   animation: fadeInUp 0.9s ease-out;
@@ -1601,6 +1616,9 @@ nav .container {
     <p class="hero-subtitle">
       When the chat dies, your agent still knows.<br>
       Encrypted portable memory for Claude Code, Cursor, and Clawdbot — without giving up the keys.
+    </p>
+    <p class="hero-tools">
+      For <a href="/cursor">Cursor</a> · <a href="/claude-code">Claude Code</a> · <a href="/clawdbot">Clawdbot</a>
     </p>
     <div class="btn-group">
       <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn btn-primary" data-cta="hero-checkout">
