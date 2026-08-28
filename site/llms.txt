@@ -7,6 +7,12 @@ SaveState is built by David Hurley (https://dbhurley.com), founder of Plasmate L
 
 SaveState is an open-source CLI tool that backs up, restores, and migrates AI agent state across platforms. It captures conversations, memories, custom instructions, and configuration from ChatGPT, Claude, Claude Code, Gemini, and other AI platforms, encrypts everything with AES-256-GCM, and stores it locally or in the cloud.
 
+Dedicated buyer pages (not blog posts):
+
+- Cursor: https://savestate.dev/cursor
+- Claude Code: https://savestate.dev/claude-code
+- Clawdbot / OpenClaw: https://savestate.dev/clawdbot
+
 ## Key Capabilities
 
 - **Encrypted Backups**: AES-256-GCM encryption with scrypt key derivation. Your keys, your data.
@@ -69,6 +75,9 @@ savestate restore   # Restore from backup
 ## Links
 
 - Website: https://savestate.dev
+- Cursor: https://savestate.dev/cursor
+- Claude Code: https://savestate.dev/claude-code
+- Clawdbot: https://savestate.dev/clawdbot
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/
