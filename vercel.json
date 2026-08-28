@@ -15,7 +15,8 @@
     { "source": "/blog/savestate-architecture-deep-dive", "destination": "/blog/savestate-architecture-deep-dive.html" },
     { "source": "/blog/migrate-chatgpt-to-claude", "destination": "/blog/migrate-chatgpt-to-claude.html" },
     { "source": "/blog/why-ai-needs-backup", "destination": "/blog/why-ai-needs-backup.html" },
-    { "source": "/blog/building-custom-adapters", "destination": "/blog/building-custom-adapters.html" }
+    { "source": "/blog/building-custom-adapters", "destination": "/blog/building-custom-adapters.html" },
+    { "source": "/blog/memory-survives-the-chat", "destination": "/blog/memory-survives-the-chat.html" }
   ],
   "trailingSlash": false,
   "cleanUrls": true
