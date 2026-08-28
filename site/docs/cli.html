@@ -90,6 +90,7 @@
   <span class="code-cmd">list</span>                    <span class="code-output">List all snapshots with metadata</span>
   <span class="code-cmd">stats</span>                   <span class="code-output">Show usage statistics about your snapshots</span>
   <span class="code-cmd">doctor</span>                  <span class="code-output">Health-check snapshots: decrypt, unpack, verify chains</span>
+  <span class="code-cmd">inspect</span> <span class="code-flag">&lt;id&gt;</span>           <span class="code-output">Decrypt and summarize a snapshot without restoring</span>
   <span class="code-cmd">diff</span> <span class="code-flag">&lt;a&gt; &lt;b&gt;</span>            <span class="code-output">Compare two snapshots side-by-side</span>
   <span class="code-cmd">search</span> <span class="code-flag">&lt;query&gt;</span>          <span class="code-output">Search across all snapshots</span>
   <span class="code-cmd">export</span>                  <span class="code-output">Export an encrypted agent container</span>
@@ -276,6 +277,28 @@
 
 <span class="code-comment"># Restrict to recent Claude Code snapshots</span>
 <span class="code-prompt">$</span> savestate doctor --adapter claude-code --limit 5 --json</code></pre>
+
+    <!-- inspect -->
+    <h2 id="inspect"><code>savestate inspect</code></h2>
+    <p>Decrypt and summarize a snapshot without restoring it. Use this to browse history and confirm what a backup contains before running <code>savestate restore</code>. Requires <code>savestate init</code> and a passphrase.</p>
+    <pre><code><span class="code-prompt">$</span> savestate inspect &lt;snapshot-id&gt; [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Output the summary as JSON (useful for scripting)</td></tr>
+      </tbody>
+    </table>
+
+    <p>Pass <code>latest</code> to inspect the most recent snapshot. Output includes id, timestamp, platform, adapter, size, optional label/tags, and content counts (memories, conversations, knowledge, tools, skills, identity).</p>
+
+    <pre><code><span class="code-comment"># Summarize the latest snapshot</span>
+<span class="code-prompt">$</span> savestate inspect latest
+
+<span class="code-comment"># Scriptable JSON summary</span>
+<span class="code-prompt">$</span> savestate inspect ss-2026-01-26T09-30-00-b7c1m4 --json</code></pre>
 
     <!-- diff -->
     <h2 id="diff"><code>savestate diff</code></h2>

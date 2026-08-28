@@ -389,12 +389,31 @@ describe('CLI docs', () => {
   });
 
   it('documents doctor --json, --adapter, and --limit', () => {
-    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="diff"'));
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
     expect(doctorSection).toContain('--json');
     expect(doctorSection).toContain('--adapter');
     expect(doctorSection).toContain('--limit');
     expect(doctorSection).toContain('checksums');
     expect(doctorSection).toContain('incremental chains');
+  });
+
+  it('registers savestate inspect on the CLI', () => {
+    expect(cli).toContain("command('inspect <snapshot-id>')");
+    expect(cli).toContain(".option('--json'");
+  });
+
+  it('lists savestate inspect in the command overview', () => {
+    expect(docs).toContain('id="inspect"');
+    expect(docs).toContain('savestate inspect');
+  });
+
+  it('documents inspect --json and latest without restoring', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    expect(inspectSection).toContain('--json');
+    expect(inspectSection).toContain('latest');
+    expect(inspectSection).toContain('without restoring');
+    expect(inspectSection).toContain('savestate init');
+    expect(inspectSection).toContain('passphrase');
   });
 
   it('lists savestate list in the command overview', () => {
