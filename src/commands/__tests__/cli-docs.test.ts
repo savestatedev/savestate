@@ -370,6 +370,15 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('savestate init');
   });
 
+  it('documents integrity --user on quarantine and release', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--user');
+    expect(integritySection).toContain('quarantine');
+    expect(integritySection).toContain('release');
+    expect(integritySection).toContain('cli');
+    expect(integritySection).toContain('--user reviewer-1');
+  });
+
   it('lists savestate trace in the command overview', () => {
     expect(docs).toContain('id="trace"');
     expect(docs).toContain('savestate trace');

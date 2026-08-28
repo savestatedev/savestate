@@ -961,6 +961,7 @@
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status</td></tr>
         <tr><td><code>--force</code></td><td>Required on <code>clear</code></td></tr>
         <tr><td><code>--reason &lt;text&gt;</code></td><td>Reason for quarantine or release</td></tr>
+        <tr><td><code>--user &lt;id&gt;</code></td><td>Actor for <code>quarantine</code> and <code>release</code> (default <code>cli</code>)</td></tr>
       </tbody>
     </table>
 
@@ -974,7 +975,7 @@
 <span class="code-prompt">$</span> savestate integrity incidents --json
 
 <span class="code-comment"># Quarantine a memory or agent</span>
-<span class="code-prompt">$</span> savestate integrity quarantine mem-123 --reason "tripwire hit"</code></pre>
+<span class="code-prompt">$</span> savestate integrity quarantine mem-123 --reason "tripwire hit" --user reviewer-1</code></pre>
 
     <!-- trace -->
     <h2 id="trace"><code>savestate trace</code></h2>
