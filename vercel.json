@@ -15,6 +15,7 @@
     { "source": "/mcp", "destination": "/mcp.html" },
     { "source": "/agent-memory", "destination": "/agent-memory.html" },
     { "source": "/codex", "destination": "/codex.html" },
+    { "source": "/gemini", "destination": "/gemini.html" },
     { "source": "/blog", "destination": "/blog/index.html" },
     { "source": "/blog/when-the-chat-dies", "destination": "/blog/when-the-chat-dies.html" },
     { "source": "/blog/your-ai-knows-everything", "destination": "/blog/your-ai-knows-everything.html" },
