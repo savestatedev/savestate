@@ -74,6 +74,7 @@ describe('public marketing checkout CTAs', () => {
   const architecture = loadHtml('site/blog/savestate-architecture-deep-dive.html');
   const mcpGateway = loadHtml('site/blog/your-mcp-gateway-cant-restore-the-agent.html');
   const v070 = loadHtml('site/blog/savestate-v0.7.0-migration-wizard.html');
+  const v060 = loadHtml('site/blog/savestate-v0.6.0-release.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -306,15 +307,23 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(v070, 'v070-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the v0.6.0 release post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(v060, 'v060-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(v060, 'v060-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(v060, 'v060-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(v060, 'v060-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(v060, 'v060-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
