@@ -19,6 +19,7 @@
     { "source": "/chatgpt", "destination": "/chatgpt.html" },
     { "source": "/openai", "destination": "/openai.html" },
     { "source": "/claude", "destination": "/claude.html" },
+    { "source": "/windsurf", "destination": "/windsurf.html" },
     { "source": "/blog", "destination": "/blog/index.html" },
     { "source": "/blog/when-the-chat-dies", "destination": "/blog/when-the-chat-dies.html" },
     { "source": "/blog/your-ai-knows-everything", "destination": "/blog/your-ai-knows-everything.html" },
