@@ -80,6 +80,7 @@ describe('public marketing checkout CTAs', () => {
   const threadDies = loadHtml('site/when-the-thread-dies.html');
   const mcp = loadHtml('site/mcp.html');
   const agentMemory = loadHtml('site/agent-memory.html');
+  const codex = loadHtml('site/codex.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -369,15 +370,26 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(agentMemory, 'agent-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the Codex listing page CTAs at the live Payment Links', () => {
+    expect(hrefForCta(codex, 'codex-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(codex, 'codex-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(codex, 'codex-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(codex, 'codex-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(codex, 'codex-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(codex, 'codex-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(codex).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+    expect(hrefForCta(codex, 'codex-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory, codex]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory, codex]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
@@ -385,7 +397,7 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('ships SEO, Open Graph, and Twitter meta on the public surfaces', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies, mcp, agentMemory]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies, mcp, agentMemory, codex]) {
       expect(hasOg(html, 'og:title')).toBe(true);
       expect(hasOg(html, 'og:description')).toBe(true);
       expect(hasOg(html, 'og:image')).toBe(true);
@@ -445,9 +457,24 @@ describe('public marketing checkout CTAs', () => {
     expect(agentMemory).toContain('SaveState — agent memory that survives the chat');
   });
 
+  it('lists the Codex listing page on the live URL path', () => {
+    const vercel = loadHtml('vercel.json');
+    const llms = loadHtml('site/llms.txt');
+    expect(sitemap).toContain('https://savestate.dev/codex');
+    expect(homepage).toContain('href="/codex"');
+    expect(llms).toContain('https://savestate.dev/codex');
+    expect(vercel).toContain('"/codex"');
+    expect(vercel).toContain('"/codex.html"');
+    expect(codex).toContain('SaveState');
+    expect(codex).toContain('savestate.dev');
+    expect(codex).toContain(stripe.products.pro.payment_link);
+    expect(codex).toContain('When the Codex thread dies, the memory is yours');
+    expect(codex).toContain('codex mcp add savestate -- npx -y @savestate/cli mcp');
+  });
+
   it('leaves MeshGuard strings untouched', () => {
     const stripeConfig = loadHtml('stripe-config.json');
-    for (const html of [homepage, cursor, threadDies, mcp, agentMemory, stripeConfig]) {
+    for (const html of [homepage, cursor, threadDies, mcp, agentMemory, codex, stripeConfig]) {
       expect(html).not.toMatch(/MeshGuard/);
     }
   });

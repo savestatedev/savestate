@@ -15,6 +15,7 @@ Dedicated buyer pages (not blog posts):
 - When the thread dies: https://savestate.dev/when-the-thread-dies
 - SaveState MCP: https://savestate.dev/mcp
 - Agent memory: https://savestate.dev/agent-memory
+- Codex: https://savestate.dev/codex
 
 ## Key Capabilities
 
@@ -84,6 +85,7 @@ savestate restore   # Restore from backup
 - When the thread dies: https://savestate.dev/when-the-thread-dies
 - SaveState MCP: https://savestate.dev/mcp
 - Agent memory: https://savestate.dev/agent-memory
+- Codex: https://savestate.dev/codex
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/
