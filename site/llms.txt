@@ -18,6 +18,7 @@ Dedicated buyer pages (not blog posts):
 - Codex: https://savestate.dev/codex
 - Gemini: https://savestate.dev/gemini
 - ChatGPT: https://savestate.dev/chatgpt
+- OpenAI Assistants: https://savestate.dev/openai
 
 ## Key Capabilities
 
@@ -90,6 +91,7 @@ savestate restore   # Restore from backup
 - Codex: https://savestate.dev/codex
 - Gemini: https://savestate.dev/gemini
 - ChatGPT: https://savestate.dev/chatgpt
+- OpenAI Assistants: https://savestate.dev/openai
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/
