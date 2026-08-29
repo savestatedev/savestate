@@ -19,6 +19,7 @@ Dedicated buyer pages (not blog posts):
 - Gemini: https://savestate.dev/gemini
 - ChatGPT: https://savestate.dev/chatgpt
 - OpenAI Assistants: https://savestate.dev/openai
+- Claude (claude.ai): https://savestate.dev/claude
 
 ## Key Capabilities
 
@@ -92,6 +93,7 @@ savestate restore   # Restore from backup
 - Gemini: https://savestate.dev/gemini
 - ChatGPT: https://savestate.dev/chatgpt
 - OpenAI Assistants: https://savestate.dev/openai
+- Claude (claude.ai): https://savestate.dev/claude
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/
