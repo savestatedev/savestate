@@ -88,6 +88,7 @@ describe('public marketing checkout CTAs', () => {
   const openai = loadHtml('site/openai.html');
   const claude = loadHtml('site/claude.html');
   const windsurf = loadHtml('site/windsurf.html');
+  const howItWorks = loadHtml('site/blog/how-savestate-works.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -608,6 +609,15 @@ describe('public marketing checkout CTAs', () => {
     expect(claude).toContain(stripe.products.pro.payment_link);
     expect(claude).toContain('When the Claude thread dies, the memory is yours');
     expect(claude).toContain('savestate snapshot --adapter claude-web');
+  });
+
+  it('points the how-savestate-works post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(howItWorks, 'how-it-works-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(howItWorks, 'how-it-works-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(howItWorks, 'how-it-works-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(howItWorks, 'how-it-works-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(howItWorks, 'how-it-works-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(howItWorks).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
