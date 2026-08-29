@@ -310,6 +310,27 @@ article {
 
 .cta-box .btn:hover {
   transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.cta-secondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cta-fulfillment {
+  margin-top: 16px;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.cta-fulfillment code {
+  font-family: var(--mono);
+  font-size: 12px;
 }
 
 /* Footer */
@@ -358,7 +379,7 @@ footer a { color: var(--text-muted); }
       <li><a href="/blog">Blog</a></li>
       <li><a href="/faq.html">FAQ</a></li>
       <li><a href="/dashboard">Dashboard</a></li>
-      <li><a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" class="btn-nav">Get Started</a></li>
+      <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="mcp-gateway-nav-pro-checkout">Subscribe to Pro</a></li>
     </ul>
     <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -450,6 +471,15 @@ footer a { color: var(--text-muted); }
       <p>SaveState already treats the MCP binding as snapshottable state, not as an ambient connection you hope survives. If your bake-off needs a control, use a snapshot/restore path independent of whichever gateway wins.</p>
 
       <p>The protocol did its job. USB-C for agents is real. Do not let the metaphor convince you that interoperability across servers is reconstructability across time. Score the missing primitive now, or spend 2027 discovering that your portable agent only ports in one direction.</p>
+
+      <div class="cta-box">
+        <h3>Keep the bound agent, not just the gateway log.</h3>
+        <p>Pro is $9/month. Encrypted portable memory. Card today. No waitlist.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="mcp-gateway-pro-checkout">Subscribe to Pro — $9/mo</a>
+        <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="mcp-gateway-team-checkout">Team is $29/month</a>
+        <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="mcp-gateway-npm-secondary">Prefer the CLI first? Install from npm</a>
+      </div>
 
       <p>If you are writing the RFP this week, put the reconstructability question on page one. If the vendor cannot answer it with a drill, they are selling you a bus, not a platform.</p>
     </div>
