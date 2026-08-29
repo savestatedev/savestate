@@ -10,6 +10,7 @@ SaveState is an open-source CLI tool that backs up, restores, and migrates AI ag
 Dedicated buyer pages (not blog posts):
 
 - Cursor: https://savestate.dev/cursor
+- Windsurf: https://savestate.dev/windsurf
 - Claude Code: https://savestate.dev/claude-code
 - Clawdbot / OpenClaw: https://savestate.dev/clawdbot
 - When the thread dies: https://savestate.dev/when-the-thread-dies
@@ -84,6 +85,7 @@ savestate restore   # Restore from backup
 
 - Website: https://savestate.dev
 - Cursor: https://savestate.dev/cursor
+- Windsurf: https://savestate.dev/windsurf
 - Claude Code: https://savestate.dev/claude-code
 - Clawdbot: https://savestate.dev/clawdbot
 - When the thread dies: https://savestate.dev/when-the-thread-dies
