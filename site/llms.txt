@@ -16,6 +16,7 @@ Dedicated buyer pages (not blog posts):
 - SaveState MCP: https://savestate.dev/mcp
 - Agent memory: https://savestate.dev/agent-memory
 - Codex: https://savestate.dev/codex
+- Gemini: https://savestate.dev/gemini
 
 ## Key Capabilities
 
@@ -86,6 +87,7 @@ savestate restore   # Restore from backup
 - SaveState MCP: https://savestate.dev/mcp
 - Agent memory: https://savestate.dev/agent-memory
 - Codex: https://savestate.dev/codex
+- Gemini: https://savestate.dev/gemini
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/

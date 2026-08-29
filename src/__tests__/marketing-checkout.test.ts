@@ -83,6 +83,7 @@ describe('public marketing checkout CTAs', () => {
   const mcp = loadHtml('site/mcp.html');
   const agentMemory = loadHtml('site/agent-memory.html');
   const codex = loadHtml('site/codex.html');
+  const gemini = loadHtml('site/gemini.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -399,15 +400,26 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(codex, 'codex-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the Gemini listing page CTAs at the live Payment Links', () => {
+    expect(hrefForCta(gemini, 'gemini-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(gemini, 'gemini-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(gemini, 'gemini-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(gemini, 'gemini-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(gemini, 'gemini-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(gemini, 'gemini-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(gemini).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+    expect(hrefForCta(gemini, 'gemini-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex, gemini]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex, gemini]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
@@ -415,7 +427,7 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('ships SEO, Open Graph, and Twitter meta on the public surfaces', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies, mcp, agentMemory, codex]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies, mcp, agentMemory, codex, gemini]) {
       expect(hasOg(html, 'og:title')).toBe(true);
       expect(hasOg(html, 'og:description')).toBe(true);
       expect(hasOg(html, 'og:image')).toBe(true);
@@ -490,9 +502,24 @@ describe('public marketing checkout CTAs', () => {
     expect(codex).toContain('codex mcp add savestate -- npx -y @savestate/cli mcp');
   });
 
+  it('lists the Gemini listing page on the live URL path', () => {
+    const vercel = loadHtml('vercel.json');
+    const llms = loadHtml('site/llms.txt');
+    expect(sitemap).toContain('https://savestate.dev/gemini');
+    expect(homepage).toContain('href="/gemini"');
+    expect(llms).toContain('https://savestate.dev/gemini');
+    expect(vercel).toContain('"/gemini"');
+    expect(vercel).toContain('"/gemini.html"');
+    expect(gemini).toContain('SaveState');
+    expect(gemini).toContain('savestate.dev');
+    expect(gemini).toContain(stripe.products.pro.payment_link);
+    expect(gemini).toContain('When the Gemini thread dies, the memory is yours');
+    expect(gemini).toContain('savestate snapshot --adapter gemini');
+  });
+
   it('leaves MeshGuard strings untouched', () => {
     const stripeConfig = loadHtml('stripe-config.json');
-    for (const html of [homepage, cursor, threadDies, mcp, agentMemory, codex, stripeConfig]) {
+    for (const html of [homepage, cursor, threadDies, mcp, agentMemory, codex, gemini, stripeConfig]) {
       expect(html).not.toMatch(/MeshGuard/);
     }
   });
