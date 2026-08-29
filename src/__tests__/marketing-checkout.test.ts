@@ -84,6 +84,7 @@ describe('public marketing checkout CTAs', () => {
   const agentMemory = loadHtml('site/agent-memory.html');
   const codex = loadHtml('site/codex.html');
   const gemini = loadHtml('site/gemini.html');
+  const chatgpt = loadHtml('site/chatgpt.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -411,15 +412,26 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(gemini, 'gemini-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the ChatGPT listing page CTAs at the live Payment Links', () => {
+    expect(hrefForCta(chatgpt, 'chatgpt-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(chatgpt, 'chatgpt-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(chatgpt, 'chatgpt-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(chatgpt, 'chatgpt-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(chatgpt, 'chatgpt-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(chatgpt, 'chatgpt-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(chatgpt).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+    expect(hrefForCta(chatgpt, 'chatgpt-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex, gemini]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex, gemini, chatgpt]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex, gemini]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex, gemini, chatgpt]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
@@ -427,7 +439,7 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('ships SEO, Open Graph, and Twitter meta on the public surfaces', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies, mcp, agentMemory, codex, gemini]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies, mcp, agentMemory, codex, gemini, chatgpt]) {
       expect(hasOg(html, 'og:title')).toBe(true);
       expect(hasOg(html, 'og:description')).toBe(true);
       expect(hasOg(html, 'og:image')).toBe(true);
@@ -517,9 +529,24 @@ describe('public marketing checkout CTAs', () => {
     expect(gemini).toContain('savestate snapshot --adapter gemini');
   });
 
+  it('lists the ChatGPT listing page on the live URL path', () => {
+    const vercel = loadHtml('vercel.json');
+    const llms = loadHtml('site/llms.txt');
+    expect(sitemap).toContain('https://savestate.dev/chatgpt');
+    expect(homepage).toContain('href="/chatgpt"');
+    expect(llms).toContain('https://savestate.dev/chatgpt');
+    expect(vercel).toContain('"/chatgpt"');
+    expect(vercel).toContain('"/chatgpt.html"');
+    expect(chatgpt).toContain('SaveState');
+    expect(chatgpt).toContain('savestate.dev');
+    expect(chatgpt).toContain(stripe.products.pro.payment_link);
+    expect(chatgpt).toContain('When the ChatGPT thread dies, the memory is yours');
+    expect(chatgpt).toContain('savestate snapshot --adapter chatgpt');
+  });
+
   it('leaves MeshGuard strings untouched', () => {
     const stripeConfig = loadHtml('stripe-config.json');
-    for (const html of [homepage, cursor, threadDies, mcp, agentMemory, codex, gemini, stripeConfig]) {
+    for (const html of [homepage, cursor, threadDies, mcp, agentMemory, codex, gemini, chatgpt, stripeConfig]) {
       expect(html).not.toMatch(/MeshGuard/);
     }
   });
