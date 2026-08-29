@@ -77,6 +77,7 @@ describe('public marketing checkout CTAs', () => {
   const v060 = loadHtml('site/blog/savestate-v0.6.0-release.html');
   const vibeFast = loadHtml('site/blog/cloudflare-vibe-coding-fast-recovery-slow.html');
   const claudeMcp = loadHtml('site/blog/claude-code-mcp-integration.html');
+  const threadDies = loadHtml('site/when-the-thread-dies.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -333,15 +334,26 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(claudeMcp, 'claude-mcp-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the when-the-thread-dies buyer page CTAs at the live Payment Links', () => {
+    expect(hrefForCta(threadDies, 'thread-dies-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(threadDies, 'thread-dies-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(threadDies, 'thread-dies-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(threadDies, 'thread-dies-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(threadDies, 'thread-dies-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(threadDies, 'thread-dies-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(threadDies).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+    expect(hrefForCta(threadDies, 'thread-dies-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
@@ -349,7 +361,7 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('ships SEO, Open Graph, and Twitter meta on the public surfaces', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies]) {
       expect(hasOg(html, 'og:title')).toBe(true);
       expect(hasOg(html, 'og:description')).toBe(true);
       expect(hasOg(html, 'og:image')).toBe(true);
@@ -375,5 +387,14 @@ describe('public marketing checkout CTAs', () => {
     expect(homepage).toContain('href="/cursor"');
     expect(homepage).toContain('href="/claude-code"');
     expect(homepage).toContain('href="/clawdbot"');
+  });
+
+  it('lists the when-the-thread-dies buyer page on the live URL path', () => {
+    expect(sitemap).toContain('https://savestate.dev/when-the-thread-dies');
+    expect(homepage).toContain('href="/when-the-thread-dies"');
+    expect(post).toContain('href="/when-the-thread-dies"');
+    expect(threadDies).toMatch(/Claude Code/);
+    expect(threadDies).toMatch(/Cursor/);
+    expect(threadDies).toMatch(/Clawdbot/);
   });
 });

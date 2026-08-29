@@ -12,6 +12,7 @@ Dedicated buyer pages (not blog posts):
 - Cursor: https://savestate.dev/cursor
 - Claude Code: https://savestate.dev/claude-code
 - Clawdbot / OpenClaw: https://savestate.dev/clawdbot
+- When the thread dies: https://savestate.dev/when-the-thread-dies
 
 ## Key Capabilities
 
@@ -78,6 +79,7 @@ savestate restore   # Restore from backup
 - Cursor: https://savestate.dev/cursor
 - Claude Code: https://savestate.dev/claude-code
 - Clawdbot: https://savestate.dev/clawdbot
+- When the thread dies: https://savestate.dev/when-the-thread-dies
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/
