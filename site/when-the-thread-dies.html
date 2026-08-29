@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What You Lose When the Thread Dies — SaveState</title>
+<meta name="description" content="When a Claude Code session, Cursor Composer thread, or Clawdbot gateway dies, the next chat starts blank. Encrypted portable memory you can search and restore. Pro $9/mo.">
+<meta name="keywords" content="Claude Code memory, Cursor Composer backup, Clawdbot restore, encrypted AI memory, portable agent memory, SaveState Pro">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://savestate.dev/when-the-thread-dies">
+<meta property="og:title" content="What You Lose When the Thread Dies — SaveState">
+<meta property="og:description" content="The session ended. Composer crashed. The gateway restarted. Encrypted portable memory you can search and restore — if the memory is yours.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta property="og:site_name" content="SaveState">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://savestate.dev/when-the-thread-dies">
+<meta name="twitter:title" content="What You Lose When the Thread Dies — SaveState">
+<meta name="twitter:description" content="The session ended. Composer crashed. The gateway restarted. Encrypted portable memory you can search and restore — if the memory is yours.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://savestate.dev/when-the-thread-dies">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "What You Lose When the Thread Dies",
+  "url": "https://savestate.dev/when-the-thread-dies",
+  "description": "When a Claude Code session, Cursor Composer thread, or Clawdbot gateway dies, the next chat starts blank. Encrypted portable memory you can search and restore.",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "SaveState",
+    "url": "https://savestate.dev"
+  }
+}
+</script>
+
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links { display: none; }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a { padding: 12px 0; font-size: 16px; }
+  .nav-links.show .btn-nav { margin-top: 8px; text-align: center; }
+}
+
+.page {
+  padding-top: 140px;
+  padding-bottom: 80px;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.page h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+
+.lede {
+  font-size: 20px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+.page h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+}
+
+.page p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.page strong { color: var(--text); font-weight: 600; }
+
+.page ul {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.page li { margin-bottom: 8px; }
+
+.page code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.page a { color: var(--blue); text-decoration: none; }
+.page a:hover { text-decoration: underline; }
+
+.page hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.snap-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 28px;
+}
+
+.snap-list li {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.snap-list strong {
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.note {
+  border-left: 2px solid var(--blue-dim);
+  padding-left: 16px;
+  color: var(--text-dim);
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 40px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover { transform: translateY(-2px); text-decoration: none; }
+
+.cta-secondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cta-fulfillment {
+  margin-top: 16px;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.cta-fulfillment code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 24px 0 8px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+@media (max-width: 600px) {
+  .page h1 { font-size: 28px; }
+  .page h2 { font-size: 22px; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="thread-dies-nav-pro-checkout">Subscribe to Pro</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="container">
+    <p class="eyebrow">Memory survives the chat</p>
+    <h1>What you lose when the thread dies</h1>
+    <p class="lede">Claude Code closed. Composer crashed. The gateway restarted. The next thread starts blank — unless the memory is yours.</p>
+
+    <div class="cta-box">
+      <h3>Pro is live. $9/month.</h3>
+      <p>Encrypted archive. Search last Tuesday. Restore on the next box. Card today. No waitlist.</p>
+      <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="thread-dies-pro-checkout">Subscribe to Pro</a>
+      <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="thread-dies-team-checkout">Team is $29/month</a>
+      <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+    </div>
+
+    <h2>Claude Code — the session is gone</h2>
+    <p>Compaction ran. You closed the terminal. You cloned the repo on a new laptop. The thread that knew this week’s constraints is not in the new window.</p>
+    <p>What dies with the session: the working context, the <code>todos.md</code> you were mid-list on, the local <code>.claude/memory/</code> that never made it to the other machine. <code>CLAUDE.md</code> is still a file. The session is not.</p>
+    <p>A transcript is not a restore. The next session starts polite and empty.</p>
+
+    <h2>Cursor — Composer forgot you</h2>
+    <p>The tab is gone. Cursor crashed. You switched machines. The Composer thread that knew the refactor, the MCP stack, the rules you argued into place — gone with the window.</p>
+    <p>What dies with the thread: the conversation. <code>~/.cursor/mcp.json</code> and <code>.cursor/rules/*.mdc</code> may still sit on the old disk. The composer that used them does not come back with the next window.</p>
+    <p>A Composer export is not a restore. The chat is not the memory.</p>
+
+    <h2>Clawdbot — the gateway came back a stranger</h2>
+    <p>The process died. The gateway came back. Without the workspace, the next process has no soul, no memory, no skills, no routing.</p>
+    <p>What dies with the gateway: <code>SOUL.md</code>, <code>MEMORY.md</code>, the <code>skills/</code> that made it useful, the session JSONL under the agents directory. Restart is not restore. It answers like it just met you.</p>
+
+    <h2>The archive survives</h2>
+    <p>The future state is not a longer chat. It is an encrypted archive you search and restore.</p>
+    <ul class="snap-list">
+      <li><strong>Claude Code</strong> First-class. Full extract and restore of <code>CLAUDE.md</code>, project <code>.claude/</code>, and <code>~/.claude/</code>. We put the files back. We do not invent conversation replay Claude Code does not store as files.</li>
+      <li><strong>Cursor</strong> Community adapter. MCP servers, composer-rules, and project rules restore. Composer history is extracted into the archive so you can search it. Restore never writes back into Cursor’s live SQLite.</li>
+      <li><strong>Clawdbot</strong> First-party. <code>SOUL.md</code>, <code>MEMORY.md</code>, skills, gateway config, and sessions — extract and restore. Credentials stay out unless you opt in.</li>
+    </ul>
+    <p class="note">Each snapshot is a <a href="/docs/format.html">SaveState Archive</a>, encrypted with AES-256-GCM before it leaves the machine. You hold the passphrase. We never see the keys.</p>
+
+    <h2>Pro is the path a stranger can take</h2>
+    <p>The CLI is open source. The product you can buy today is <strong>SaveState Pro</strong> — $9/month:</p>
+    <ul>
+      <li>Scheduled auto-backups</li>
+      <li>Cloud storage (10GB)</li>
+      <li>All platform adapters</li>
+      <li>Search across snapshots</li>
+      <li>Web dashboard</li>
+      <li>Email alerts on backup failures</li>
+    </ul>
+    <p>Need shared snapshots and an audit log? Team is $29/month.</p>
+
+    <p class="tool-row">
+      For one tool: <a href="/claude-code">Claude Code</a> · <a href="/cursor">Cursor</a> · <a href="/clawdbot">Clawdbot</a> · <a href="/blog/when-the-chat-dies">When the chat dies</a>
+    </p>
+
+    <div class="cta-box">
+      <h3>Keep the memory. Lose the thread.</h3>
+      <p>Subscribe to Pro. The agent that knew you this morning still knows you after the chat dies.</p>
+      <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="thread-dies-footer-pro-checkout">Subscribe to Pro — $9/mo</a>
+      <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="thread-dies-footer-team-checkout">Team is $29/month</a>
+      <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+      <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="thread-dies-npm-secondary">Prefer the CLI first? Install from npm</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>
