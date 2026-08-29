@@ -78,6 +78,8 @@ describe('public marketing checkout CTAs', () => {
   const vibeFast = loadHtml('site/blog/cloudflare-vibe-coding-fast-recovery-slow.html');
   const claudeMcp = loadHtml('site/blog/claude-code-mcp-integration.html');
   const threadDies = loadHtml('site/when-the-thread-dies.html');
+  const mcp = loadHtml('site/mcp.html');
+  const agentMemory = loadHtml('site/agent-memory.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -345,15 +347,37 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(threadDies, 'thread-dies-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the MCP listing page CTAs at the live Payment Links', () => {
+    expect(hrefForCta(mcp, 'mcp-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(mcp, 'mcp-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(mcp, 'mcp-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(mcp, 'mcp-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(mcp, 'mcp-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(mcp, 'mcp-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(mcp).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+    expect(hrefForCta(mcp, 'mcp-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the agent-memory listing page CTAs at the live Payment Links', () => {
+    expect(hrefForCta(agentMemory, 'agent-memory-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(agentMemory, 'agent-memory-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(agentMemory, 'agent-memory-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(agentMemory, 'agent-memory-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(agentMemory, 'agent-memory-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(agentMemory, 'agent-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(agentMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+    expect(hrefForCta(agentMemory, 'agent-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
@@ -361,7 +385,7 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('ships SEO, Open Graph, and Twitter meta on the public surfaces', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, meet, threadDies, mcp, agentMemory]) {
       expect(hasOg(html, 'og:title')).toBe(true);
       expect(hasOg(html, 'og:description')).toBe(true);
       expect(hasOg(html, 'og:image')).toBe(true);
@@ -396,5 +420,35 @@ describe('public marketing checkout CTAs', () => {
     expect(threadDies).toMatch(/Claude Code/);
     expect(threadDies).toMatch(/Cursor/);
     expect(threadDies).toMatch(/Clawdbot/);
+  });
+
+  it('lists the MCP and agent-memory pages on live URL paths', () => {
+    const vercel = loadHtml('vercel.json');
+    const llms = loadHtml('site/llms.txt');
+    expect(sitemap).toContain('https://savestate.dev/mcp');
+    expect(sitemap).toContain('https://savestate.dev/agent-memory');
+    expect(homepage).toContain('href="/mcp"');
+    expect(homepage).toContain('href="/agent-memory"');
+    expect(llms).toContain('https://savestate.dev/mcp');
+    expect(llms).toContain('https://savestate.dev/agent-memory');
+    expect(vercel).toContain('"/mcp"');
+    expect(vercel).toContain('"/mcp.html"');
+    expect(vercel).toContain('"/agent-memory"');
+    expect(vercel).toContain('"/agent-memory.html"');
+    expect(mcp).toContain('SaveState');
+    expect(mcp).toContain('savestate.dev');
+    expect(mcp).toContain(stripe.products.pro.payment_link);
+    expect(mcp).toContain('SaveState MCP — encrypted portable memory for agents');
+    expect(agentMemory).toContain('SaveState');
+    expect(agentMemory).toContain('savestate.dev');
+    expect(agentMemory).toContain(stripe.products.pro.payment_link);
+    expect(agentMemory).toContain('SaveState — agent memory that survives the chat');
+  });
+
+  it('leaves MeshGuard strings untouched', () => {
+    const stripeConfig = loadHtml('stripe-config.json');
+    for (const html of [homepage, cursor, threadDies, mcp, agentMemory, stripeConfig]) {
+      expect(html).not.toMatch(/MeshGuard/);
+    }
   });
 });
