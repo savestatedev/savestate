@@ -77,6 +77,8 @@ describe('public marketing checkout CTAs', () => {
   const v060 = loadHtml('site/blog/savestate-v0.6.0-release.html');
   const vibeFast = loadHtml('site/blog/cloudflare-vibe-coding-fast-recovery-slow.html');
   const claudeMcp = loadHtml('site/blog/claude-code-mcp-integration.html');
+  const v090 = loadHtml('site/blog/savestate-v0.9.0-memory-that-heals-itself.html');
+  const governance = loadHtml('site/blog/v0.9.0-memory-governance.html');
   const threadDies = loadHtml('site/when-the-thread-dies.html');
   const mcp = loadHtml('site/mcp.html');
   const agentMemory = loadHtml('site/agent-memory.html');
@@ -337,6 +339,22 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(claudeMcp, 'claude-mcp-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
+  it('points the v0.9.0 memory-that-heals-itself post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(v090, 'v090-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(v090, 'v090-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(v090, 'v090-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(v090, 'v090-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(v090, 'v090-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the v0.9.0 memory-governance post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(governance, 'governance-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(governance, 'governance-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(governance, 'governance-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(governance, 'governance-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(governance, 'governance-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
   it('points the when-the-thread-dies buyer page CTAs at the live Payment Links', () => {
     expect(hrefForCta(threadDies, 'thread-dies-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(threadDies, 'thread-dies-pro-checkout')).toBe(stripe.products.pro.payment_link);
@@ -382,14 +400,14 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory, codex]) {
+    for (const html of [post, faq, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, blogIndex, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex]) {
       expect(html).toMatch(/After you pay, your API key is emailed/);
       expect(html).toMatch(/savestate login/);
     }
   });
 
   it('does not keep a waitlist on the marketing pages', () => {
-    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, threadDies, mcp, agentMemory, codex]) {
+    for (const html of [post, faq, blogIndex, homepage, cursor, claudeCode, clawdbot, compareChrome, compareExport, docsPricing, meet, vmdk, memoryBackup, durable, aiact, threat, stateSecurity, blindSpot, githubSecurity, gymHack, terafab, vibeSafer, v080, greatMigration, architecture, mcpGateway, v070, v060, vibeFast, claudeMcp, v090, governance, threadDies, mcp, agentMemory, codex]) {
       expect(html).not.toMatch(/Join Waitlist/i);
       expect(html).not.toMatch(/waitlist for Pro features/i);
       expect(html).not.toMatch(/id="lead-form"/);
