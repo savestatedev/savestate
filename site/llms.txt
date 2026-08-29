@@ -17,6 +17,7 @@ Dedicated buyer pages (not blog posts):
 - Agent memory: https://savestate.dev/agent-memory
 - Codex: https://savestate.dev/codex
 - Gemini: https://savestate.dev/gemini
+- ChatGPT: https://savestate.dev/chatgpt
 
 ## Key Capabilities
 
@@ -88,6 +89,7 @@ savestate restore   # Restore from backup
 - Agent memory: https://savestate.dev/agent-memory
 - Codex: https://savestate.dev/codex
 - Gemini: https://savestate.dev/gemini
+- ChatGPT: https://savestate.dev/chatgpt
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/
