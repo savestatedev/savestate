@@ -5,9 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SaveState v0.9.0: Memory Governance Your Agents Actually Need</title>
   <meta name="description" content="SaveState v0.9.0 introduces memory lifecycle controls, explainability, and privacy-first features for AI agents.">
+  <style>
+    .btn-nav { display: inline-block; background: #03C1DF; color: #06060c; padding: 8px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+    .cta-box { background: #0d0d18; border: 1px solid #1e293b; border-radius: 12px; padding: 32px; margin: 48px 0; text-align: center; }
+    .cta-box h3 { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
+    .cta-box p { color: #94a3b8; margin-bottom: 24px; }
+    .cta-box .btn { display: inline-block; background: #03C1DF; color: #06060c; padding: 14px 28px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+    .cta-secondary { display: block; margin-top: 16px; font-size: 13px; color: #64748b; }
+    .cta-fulfillment { margin-top: 16px; margin-bottom: 0; font-size: 13px; color: #64748b; line-height: 1.7; }
+    .cta-fulfillment code { font-size: 12px; }
+    nav { padding: 16px 0; }
+    nav ul { list-style: none; display: flex; gap: 16px; padding: 0; margin: 0; align-items: center; flex-wrap: wrap; }
+    nav a { color: inherit; text-decoration: none; }
+  </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
 </head>
 <body>
+  <nav>
+    <ul>
+      <li><a href="/">SaveState</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="governance-nav-pro-checkout">Subscribe to Pro</a></li>
+    </ul>
+  </nav>
   <article>
     <header>
       <h1>SaveState v0.9.0: Memory Governance Your Agents Actually Need</h1>
@@ -85,6 +107,15 @@ console.log(result.explanation);
     <p>Full release notes and migration guide at <a href="https://savestate.dev/changelog">savestate.dev/changelog</a>.</p>
 
     <p>Your agents have memories worth protecting. SaveState makes sure they're governed, explainable, and production-ready.</p>
+
+    <div class="cta-box">
+      <h3>Govern the memory your agents already have.</h3>
+      <p>Pro is $9/month. Encrypted portable memory. Card today. No waitlist.</p>
+      <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="governance-pro-checkout">Subscribe to Pro — $9/mo</a>
+      <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="governance-team-checkout">Team is $29/month</a>
+      <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+      <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="governance-npm-secondary">Prefer the CLI first? Install from npm</a>
+    </div>
 
   </article>
 </body>
