@@ -13,6 +13,8 @@ Dedicated buyer pages (not blog posts):
 - Claude Code: https://savestate.dev/claude-code
 - Clawdbot / OpenClaw: https://savestate.dev/clawdbot
 - When the thread dies: https://savestate.dev/when-the-thread-dies
+- SaveState MCP: https://savestate.dev/mcp
+- Agent memory: https://savestate.dev/agent-memory
 
 ## Key Capabilities
 
@@ -80,6 +82,8 @@ savestate restore   # Restore from backup
 - Claude Code: https://savestate.dev/claude-code
 - Clawdbot: https://savestate.dev/clawdbot
 - When the thread dies: https://savestate.dev/when-the-thread-dies
+- SaveState MCP: https://savestate.dev/mcp
+- Agent memory: https://savestate.dev/agent-memory
 - GitHub: https://github.com/savestatedev/savestate
 - npm: https://www.npmjs.com/package/@savestate/cli
 - Documentation: https://savestate.dev/docs/
