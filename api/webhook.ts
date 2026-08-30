@@ -6,23 +6,33 @@
  *
  * Events handled:
  * - checkout.session.completed → Create account + send API key
+ *   (and, for agent claims, attach the secret to GET /v1/keys/claims/:id)
  * - customer.subscription.updated → Update tier/status
  * - customer.subscription.deleted → Downgrade to free
  * - invoice.payment_failed → Mark as past_due
+ *
+ * Fulfillment is ONLY via this signed webhook. success_url must not mint keys.
+ * Idempotent on Stripe checkout session.id.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import Stripe from 'stripe';
-import { initDb, createAccount, updateSubscriptionStatus, getAccountByStripeCustomer } from './lib/db.js';
+import type Stripe from 'stripe';
+import {
+  initDb,
+  createAccount,
+  updateSubscriptionStatus,
+  isCheckoutSessionProcessed,
+  markCheckoutSessionProcessed,
+  markKeyClaimProcessing,
+  issueKeyClaim,
+} from './lib/db.js';
 import { sendEmail, welcomeEmailHtml } from './lib/email.js';
+import { CLAIM_TTL_MS } from './lib/pro-checkout.js';
+import { getStripe } from './lib/stripe-client.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
-/** Map Stripe price IDs to SaveState tiers */
+/** Map existing live Payment Link price IDs to tiers. Agent checkouts use price_data and fall through to pro. */
 const PRICE_TO_TIER: Record<string, 'pro' | 'team'> = {
   'price_1SuN4PEJ7b5sfPTDks7Q6SHO': 'pro',   // $9/mo
   'price_1SuN4PEJ7b5sfPTDmE9uHVM6': 'team',  // $29/mo
@@ -33,26 +43,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Verify Stripe signature
   const sig = req.headers['stripe-signature'] as string;
   let event: Stripe.Event;
 
   try {
     const body = await getRawBody(req);
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    event = getStripe().webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return res.status(400).json({ error: 'Invalid signature' });
   }
 
-  // Initialize DB
   await initDb();
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutCompleted(session);
+        await fulfillCheckoutSession(session);
         break;
       }
 
@@ -92,26 +100,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 // ─── Event Handlers ──────────────────────────────────────────
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+/**
+ * Mint a Pro/Team secret after a signed checkout.session.completed.
+ * Idempotent on session.id. Never creates a Free-tier cloud key.
+ */
+export async function fulfillCheckoutSession(session: Stripe.Checkout.Session): Promise<void> {
+  if (await isCheckoutSessionProcessed(session.id)) {
+    console.log(`Checkout session already processed: ${session.id}`);
+    return;
+  }
+
+  await markKeyClaimProcessing(session.id);
+
   const customerId = typeof session.customer === 'string'
     ? session.customer
     : session.customer?.id;
   const subscriptionId = typeof session.subscription === 'string'
     ? session.subscription
     : session.subscription?.id;
-  const email = session.customer_details?.email || session.customer_email;
+  const email =
+    session.customer_details?.email ||
+    session.customer_email ||
+    agentFallbackEmail(session);
 
   if (!customerId || !subscriptionId || !email) {
     console.error('Missing required checkout data:', { customerId, subscriptionId, email });
     return;
   }
 
-  // Get subscription to determine tier from price
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const priceId = subscription.items.data[0]?.price.id;
-  const tier = PRICE_TO_TIER[priceId] || 'pro';
+  const tier = await resolvePaidTier(session, subscriptionId);
 
-  // Create or upgrade account
   const account = await createAccount({
     email,
     name: session.customer_details?.name || undefined,
@@ -120,9 +138,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     stripeSubscriptionId: subscriptionId,
   });
 
+  await issueKeyClaim({
+    sessionId: session.id,
+    claimId: session.metadata?.claim_id,
+    apiKey: account.api_key,
+    accountId: account.id,
+    expiresAt: new Date(Date.now() + CLAIM_TTL_MS),
+  });
+
+  await markCheckoutSessionProcessed(session.id, account.id);
+
   console.log(`Account created/upgraded: ${email} → ${tier} (API key: ${account.api_key.slice(0, 12)}...)`);
 
-  // Send welcome email with API key
   try {
     await sendEmail({
       to: email,
@@ -136,9 +163,36 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
     console.log(`Welcome email sent to ${email}`);
   } catch (emailErr) {
-    // Don't fail the webhook if email fails — account is still created
     console.error(`Failed to send welcome email to ${email}:`, emailErr);
   }
+}
+
+async function resolvePaidTier(
+  session: Stripe.Checkout.Session,
+  subscriptionId: string,
+): Promise<'pro' | 'team'> {
+  if (session.metadata?.product === 'team') return 'team';
+  if (session.metadata?.source === 'agent_v1_keys') return 'pro';
+
+  try {
+    const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
+    const priceId = subscription.items.data[0]?.price.id;
+    const fromPrice = priceId ? PRICE_TO_TIER[priceId] : undefined;
+    if (fromPrice) return fromPrice;
+
+    const amount = subscription.items.data[0]?.price.unit_amount;
+    if (amount === 2900) return 'team';
+  } catch (err) {
+    console.error('Failed to retrieve subscription for tier:', err);
+  }
+
+  return 'pro';
+}
+
+function agentFallbackEmail(session: Stripe.Checkout.Session): string | undefined {
+  const claimId = session.metadata?.claim_id;
+  if (!claimId) return undefined;
+  return `agent-claim-${claimId}@users.savestate.dev`;
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -148,7 +202,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const priceId = subscription.items.data[0]?.price.id;
   const tier = PRICE_TO_TIER[priceId];
-  const status = subscription.status; // active, past_due, canceled, etc.
+  const status = subscription.status;
 
   await updateSubscriptionStatus(customerId, status, tier);
   console.log(`Subscription updated: ${customerId} → ${status} (${tier || 'unchanged'})`);
@@ -163,11 +217,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log(`Subscription canceled: ${customerId}`);
 }
 
-// ─── Helpers ─────────────────────────────────────────────────
-
-/**
- * Read raw request body for Stripe signature verification.
- */
 function getRawBody(req: VercelRequest): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = '';

@@ -1,0 +1,25 @@
+{
+  "name": "dev.savestate/mcp",
+  "command": "npx -y @savestate/cli mcp",
+  "transport": "stdio",
+  "tools": [
+    { "name": "savestate_snapshot", "description": "Create an encrypted snapshot of current AI agent state" },
+    { "name": "savestate_restore", "description": "Restore AI agent state from a snapshot" },
+    { "name": "savestate_list", "description": "List available snapshots" },
+    { "name": "savestate_status", "description": "Check SaveState initialization and adapter status" },
+    { "name": "savestate_memory_store", "description": "Store a memory entry" },
+    { "name": "savestate_memory_search", "description": "Search live memories" },
+    { "name": "savestate_memory_delete", "description": "Delete a memory by ID" },
+    { "name": "savestate_search_snapshots", "description": "Full-text search across encrypted snapshots" },
+    { "name": "savestate_stats", "description": "Aggregate snapshot statistics" },
+    { "name": "add_memories", "description": "OpenMemory-compatible memory store" },
+    { "name": "search_memory", "description": "OpenMemory-compatible memory search" },
+    { "name": "list_memories", "description": "OpenMemory-compatible memory list" },
+    { "name": "delete_memory", "description": "OpenMemory-compatible memory delete" },
+    { "name": "delete_all_memories", "description": "OpenMemory-compatible clear all memories" }
+  ],
+  "resources": [
+    { "uri": "savestate://snapshots", "name": "Snapshots" },
+    { "uri": "savestate://memories", "name": "Memories" }
+  ]
+}

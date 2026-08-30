@@ -1,0 +1,70 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "dev.savestate/mcp",
+  "title": "SaveState",
+  "description": "Encrypted portable agent memory: snapshot, search, restore across clients.",
+  "version": "0.9.0",
+  "websiteUrl": "https://savestate.dev/mcp",
+  "repository": {
+    "url": "https://github.com/savestatedev/savestate",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@savestate/cli",
+      "version": "0.9.0",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "runtimeHint": "npx",
+      "transport": { "type": "stdio" },
+      "packageArguments": [
+        { "type": "positional", "value": "mcp" }
+      ],
+      "runtimeArguments": [
+        { "type": "positional", "value": "-y" }
+      ]
+    }
+  ],
+  "mcpServers": {
+    "savestate": {
+      "command": "npx",
+      "args": ["-y", "@savestate/cli", "mcp"]
+    }
+  },
+  "auth": {
+    "type": "local_optional_passphrase",
+    "env": "SAVESTATE_MCP_PASSPHRASE",
+    "cloud": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization",
+      "scheme": "Bearer",
+      "format": "ss_live_...",
+      "unauthorized": 401,
+      "payment_required": 402
+    }
+  },
+  "keys": {
+    "create": "https://savestate.dev/v1/keys",
+    "method": "POST",
+    "body": {},
+    "unpaid_status": 402,
+    "required_fields": ["pay_url", "claim_url"]
+  },
+  "pay_url": "https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00",
+  "human_pay_url": "https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00",
+  "openapi": "https://savestate.dev/openapi.json",
+  "agents": "https://savestate.dev/agents.md",
+  "llms": "https://savestate.dev/llms.txt",
+  "_meta": {
+    "dev.savestate/product": {
+      "name": "SaveState Pro",
+      "amount_cents": 900,
+      "interval": "month",
+      "pay_url": "https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00",
+      "agent_checkout": "POST /v1/keys",
+      "claim": "GET /v1/keys/claims/:id",
+      "local_cli_free": true
+    }
+  }
+}

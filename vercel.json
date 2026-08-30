@@ -7,6 +7,8 @@
     { "source": "/login", "destination": "/dashboard", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/v1/keys", "destination": "/api/v1/keys" },
+    { "source": "/v1/keys/claims/:id", "destination": "/api/v1/keys/claims/:id" },
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/cursor", "destination": "/cursor.html" },
     { "source": "/claude-code", "destination": "/claude-code.html" },
@@ -31,5 +33,45 @@
     { "source": "/blog/building-custom-adapters", "destination": "/blog/building-custom-adapters.html" }
   ],
   "trailingSlash": false,
-  "cleanUrls": true
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/.well-known/mcp.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=300" }
+      ]
+    },
+    {
+      "source": "/openapi.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=300" }
+      ]
+    },
+    {
+      "source": "/mcp.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=300" }
+      ]
+    },
+    {
+      "source": "/llms.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/agents.md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
 }
