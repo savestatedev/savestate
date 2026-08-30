@@ -95,6 +95,7 @@ describe('public marketing checkout CTAs', () => {
   const docsMcp = loadHtml('site/docs/mcp.html');
   const docsCli = loadHtml('site/docs/cli.html');
   const docsIndex = loadHtml('site/docs/index.html');
+  const docsAdapters = loadHtml('site/docs/adapters.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -675,6 +676,14 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(docsIndex, 'docs-index-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsIndex, 'docs-index-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(docsIndex, 'docs-index-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the adapters docs CTAs at the live Payment Links', () => {
+    expect(hrefForCta(docsAdapters, 'docs-adapters-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsAdapters, 'docs-adapters-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsAdapters, 'docs-adapters-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(docsAdapters, 'docs-adapters-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(docsAdapters, 'docs-adapters-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
