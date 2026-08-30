@@ -1,10 +1,10 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "dev.savestate/memory",
   "title": "SaveState Memory",
   "description": "Encrypted portable agent memory: snapshot, search, restore across clients.",
   "version": "0.9.0",
-  "websiteUrl": "https://savestate.dev/agents.md",
+  "websiteUrl": "https://savestate.dev/llms.txt",
   "repository": {
     "url": "https://github.com/savestatedev/savestate",
     "source": "github"
@@ -22,13 +22,38 @@
       ],
       "runtimeArguments": [
         { "type": "positional", "value": "-y" }
+      ],
+      "environmentVariables": [
+        {
+          "name": "SAVESTATE_MCP_PASSPHRASE",
+          "description": "Optional local passphrase for encrypted memory. Not a cloud API key.",
+          "isRequired": false,
+          "isSecret": true
+        }
       ]
     }
   ],
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://savestate.dev/api/mcp"
+      "url": "https://savestate.dev/api/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer ss_live_… from POST /v1/keys then GET claim_url. Local stdio needs no key.",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "llms": "https://savestate.dev/llms.txt",
+      "agents": "https://savestate.dev/agents.md",
+      "keys": "https://savestate.dev/v1/keys",
+      "stdio": "npx -y @savestate/cli mcp",
+      "docs_html": "https://savestate.dev/mcp"
+    }
+  }
 }

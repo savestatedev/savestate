@@ -1,17 +1,22 @@
 /**
- * Hosted MCP — https://savestate.dev/api/mcp
+ * Hosted Streamable HTTP MCP — https://savestate.dev/api/mcp
  *
- * GET is discovery (no checkout). POST is a small JSON-RPC surface.
- * Missing/bad Bearer → 401. Token issuance is POST /v1/keys (402 + claim),
- * not an OAuth authorize URL and not MPP.
+ * /mcp is HTML docs. The live full-capability path is stdio:
+ *   npx -y @savestate/cli mcp
+ *
+ * This endpoint is the registry remotes[] Streamable HTTP target.
+ * POST JSON-RPC (application/json). GET SSE is not offered (405).
+ * Missing/bad Bearer → 401. Token issuance is POST /v1/keys (402 + claim).
  */
 
+import { randomUUID } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAccountByApiKey, initDb } from './lib/db.js';
 import { parseJsonBody, setCors } from './lib/http.js';
 
 const SERVER_NAME = 'dev.savestate/memory';
 const PROTOCOL_VERSION = '2025-03-26';
+const STDIO = 'npx -y @savestate/cli mcp';
 
 const TOOLS = [
   {
@@ -33,8 +38,40 @@ const TOOLS = [
   },
 ];
 
+function acceptHeader(req: VercelRequest): string {
+  return String(req.headers.accept ?? '');
+}
+
+function wantsGetSse(req: VercelRequest): boolean {
+  const accept = acceptHeader(req);
+  return (
+    accept.includes('text/event-stream') &&
+    !accept.includes('application/json') &&
+    !accept.includes('*/*')
+  );
+}
+
+function isJsonRpcNotification(body: Record<string, unknown>): boolean {
+  const method = typeof body.method === 'string' ? body.method : '';
+  if (!method) return false;
+  if (method.startsWith('notifications/')) return true;
+  return body.id === undefined || body.id === null;
+}
+
+function applyStreamableHeaders(res: VercelResponse, sessionId?: string): void {
+  res.setHeader('MCP-Protocol-Version', PROTOCOL_VERSION);
+  if (sessionId) {
+    res.setHeader('Mcp-Session-Id', sessionId);
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setCors(res, 'GET, POST, OPTIONS');
+  setCors(res, 'GET, POST, DELETE, OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Authorization, Content-Type, Accept, Mcp-Session-Id, MCP-Protocol-Version, Last-Event-ID',
+  );
+  res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id, MCP-Protocol-Version');
   res.setHeader(
     'WWW-Authenticate',
     'Bearer realm="savestate", resource_metadata="https://savestate.dev/.well-known/oauth-protected-resource"',
@@ -44,11 +81,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
+  if (req.method === 'DELETE') {
+    applyStreamableHeaders(res);
+    return res.status(405).json({
+      error: 'session_not_stateful',
+      hint: 'This remote is stateless. Local stdio: ' + STDIO,
+    });
+  }
+
   if (req.method === 'GET') {
+    if (wantsGetSse(req)) {
+      applyStreamableHeaders(res);
+      res.setHeader('Allow', 'GET, POST, DELETE, OPTIONS');
+      return res.status(405).json({
+        error: 'sse_not_offered',
+        hint: 'POST JSON-RPC with Accept: application/json. Local stdio: ' + STDIO,
+      });
+    }
     return res.status(200).json({
       name: SERVER_NAME,
       title: 'SaveState Memory',
       transport: 'streamable-http',
+      stdio: STDIO,
+      docs: 'https://savestate.dev/mcp',
       agents: 'https://savestate.dev/agents.md',
       llms: 'https://savestate.dev/llms.txt',
       server_json: 'https://savestate.dev/server.json',
@@ -99,7 +154,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const method = typeof body.method === 'string' ? body.method : '';
   const id = body.id ?? null;
 
+  if (isJsonRpcNotification(body)) {
+    applyStreamableHeaders(res);
+    return res.status(202).end();
+  }
+
   if (method === 'initialize') {
+    const sessionId = randomUUID();
+    applyStreamableHeaders(res, sessionId);
     return res.status(200).json({
       jsonrpc: '2.0',
       id,
@@ -107,12 +169,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {} },
         serverInfo: { name: SERVER_NAME, version: '0.9.0' },
-        instructions: 'Read https://savestate.dev/agents.md. Local snapshot/restore uses npx -y @savestate/cli mcp.',
+        instructions:
+          'Required floor: https://savestate.dev/llms.txt. Live local path: ' +
+          STDIO +
+          '. /mcp is HTML docs.',
       },
     });
   }
 
   if (method === 'tools/list' || method === 'tools.list') {
+    applyStreamableHeaders(res);
     return res.status(200).json({
       jsonrpc: '2.0',
       id,
@@ -121,10 +187,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (method === 'ping') {
+    applyStreamableHeaders(res);
     return res.status(200).json({ jsonrpc: '2.0', id, result: {} });
   }
 
   if (method === 'tools/call' || method === 'tools.call') {
+    applyStreamableHeaders(res);
     const params = (body.params ?? {}) as { name?: string };
     if (params.name === 'savestate_status') {
       return res.status(200).json({
@@ -151,17 +219,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         content: [
           {
             type: 'text',
-            text: 'Use local stdio MCP (npx -y @savestate/cli mcp) for snapshot, restore, and decrypt-on-the-fly search.',
+            text: 'Use local stdio MCP (' + STDIO + ') for snapshot, restore, and decrypt-on-the-fly search.',
           },
         ],
       },
     });
   }
 
-  if (method === 'notifications/initialized') {
-    return res.status(202).end();
-  }
-
+  applyStreamableHeaders(res);
   return res.status(200).json({
     jsonrpc: '2.0',
     id,

@@ -16,11 +16,19 @@ npm install -g @savestate/cli
 
 Local snapshot/search/MCP (`npx -y @savestate/cli mcp`) is free. No API key. Do not mint a Free-tier cloud key.
 
-## Hosted MCP
+## MCP
 
-`https://savestate.dev/api/mcp`
-JSON-RPC over POST. Registry name: `dev.savestate/memory`. Packet: https://savestate.dev/server.json
-Bearer required. Missing/bad key → 401.
+`/mcp` is HTML docs only. Live local path (full tools, no API key):
+
+```
+npx -y @savestate/cli mcp
+```
+
+Official registry packet (stdio package + Streamable HTTP remote): https://savestate.dev/server.json
+Name: `dev.savestate/memory`. Ownership: `mcpName` in `@savestate/cli` package.json.
+
+Hosted Streamable HTTP remote: `https://savestate.dev/api/mcp`
+POST JSON-RPC. Bearer required. Missing/bad key → 401. GET SSE is not offered (405).
 
 ## Auth
 

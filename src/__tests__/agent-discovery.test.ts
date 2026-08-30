@@ -24,13 +24,48 @@ function parseJson(rel: string): Record<string, unknown> {
 }
 
 describe('agent discovery files', () => {
-  it('publishes server.json as dev.savestate/memory', () => {
+  it('publishes server.json for official registry stdio package + streamable-http remote', () => {
     const packet = parseJson('site/server.json');
-    const root = parseJson('server.json');
+    const rootPacket = parseJson('server.json');
+    expect(packet).toEqual(rootPacket);
+    expect(packet.$schema).toBe(
+      'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json',
+    );
     expect(packet.name).toBe('dev.savestate/memory');
-    expect(root.name).toBe('dev.savestate/memory');
-    expect(packet.websiteUrl).toBe('https://savestate.dev/agents.md');
-    expect(JSON.stringify(packet.remotes)).toContain('https://savestate.dev/api/mcp');
+    expect((packet.description as string).length).toBeLessThanOrEqual(100);
+    expect(packet.websiteUrl).toBe('https://savestate.dev/llms.txt');
+    const pkg = (
+      packet.packages as Array<{
+        identifier: string;
+        transport: { type: string };
+        packageArguments: Array<{ value: string }>;
+        runtimeHint: string;
+      }>
+    )[0];
+    expect(pkg.identifier).toBe('@savestate/cli');
+    expect(pkg.transport.type).toBe('stdio');
+    expect(pkg.runtimeHint).toBe('npx');
+    expect(pkg.packageArguments.map((a) => a.value)).toContain('mcp');
+    const remotes = packet.remotes as Array<{
+      type: string;
+      url: string;
+      headers: Array<{ name: string; isRequired: boolean }>;
+    }>;
+    expect(remotes[0].type).toBe('streamable-http');
+    expect(remotes[0].url).toBe('https://savestate.dev/api/mcp');
+    expect(remotes[0].headers[0].name).toBe('Authorization');
+    expect(remotes[0].headers[0].isRequired).toBe(true);
+    const meta = packet._meta as {
+      'io.modelcontextprotocol.registry/publisher-provided': { llms: string; stdio: string };
+    };
+    expect(meta['io.modelcontextprotocol.registry/publisher-provided'].llms).toBe(
+      'https://savestate.dev/llms.txt',
+    );
+    expect(meta['io.modelcontextprotocol.registry/publisher-provided'].stdio).toBe(
+      'npx -y @savestate/cli mcp',
+    );
+    const npm = parseJson('package.json');
+    expect(npm.mcpName).toBe(packet.name);
   });
 
   it('keeps the leftover well-known card renamed to memory, not as the primary', () => {
@@ -158,6 +193,8 @@ describe('agent discovery files', () => {
   it('makes /mcp HTML a well-linked agent card with command + Payment Link', () => {
     const html = read('site/mcp.html');
     expect(html).toContain('npx -y @savestate/cli mcp');
+    expect(html).toContain('HTML docs only');
+    expect(html).toContain('/llms.txt');
     expect(html).toContain(PRO);
     expect(html).toContain('/agents.md');
     expect(html).toContain('/api/mcp');
