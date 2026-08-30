@@ -187,12 +187,13 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('points the docs pricing CTAs at the live Payment Links', () => {
+    expect(hrefForCta(docsPricing, 'docs-pricing-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(docsPricing, 'docs-pricing-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(docsPricing, 'docs-pricing-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(docsPricing, 'docs-pricing-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsPricing, 'docs-pricing-footer-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsPricing, 'docs-pricing-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
-    expect(hrefForCta(docsPricing, 'docs-pricing-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(hrefForCta(docsPricing, 'docs-pricing-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
   it('points the meet pitch CTAs at the live Payment Links', () => {
