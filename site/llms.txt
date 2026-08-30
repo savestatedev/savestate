@@ -1,88 +1,80 @@
-# SaveState — encrypted portable agent memory
+# SaveState
 
-> Capability: snapshot, search, restore, and serve encrypted agent memory across Claude Code, Cursor, Codex, and Clawdbot. Local CLI is free. Cloud Pro is $9/month.
+> Encrypted portable agent memory. Local CLI is free. Cloud Pro is $9/mo. After pay, claim the key yourself — do not wait for email.
 
-SaveState is built by David Hurley (https://dbhurley.com).
+This file is the required floor: capability, install, MCP URL, auth, pay URL, 402+claim. Longer playbook: https://savestate.dev/agents.md
 
-**Start here:** https://savestate.dev/agents.md
+## Capability
 
-## Install (local CLI — free, no cloud key)
+Snapshot, search, restore, and migrate AI memory you own. AES-256-GCM, user-held keys. Adapters: ChatGPT, Claude, Claude Code, Gemini, OpenAI, Cursor, Windsurf, Clawdbot.
+
+## Install
 
 ```bash
 npm install -g @savestate/cli
-savestate init
-savestate snapshot
 ```
 
-The local CLI never needs a cloud API key. Do not mint a Free-tier cloud key.
+Local snapshot/search/MCP (`npx -y @savestate/cli mcp`) is free. No API key. Do not mint a Free-tier cloud key.
 
-## MCP
+## Hosted MCP
 
-Prefer `/agents.md` + hosted MCP over `/.well-known/mcp.json` (path churn).
-
-- Playbook: https://savestate.dev/agents.md
-- Hosted MCP: https://savestate.dev/api/mcp
-- Registry name: `dev.savestate/memory`
-- Registry packet: https://savestate.dev/server.json
-- OpenAPI: https://savestate.dev/openapi.json
-- Local command: `npx -y @savestate/cli mcp` (stdio)
-- Agent card (HTML): https://savestate.dev/mcp
-- Leftover card: https://savestate.dev/.well-known/mcp.json
-
-```json
-{
-  "mcpServers": {
-    "savestate": {
-      "command": "npx",
-      "args": ["-y", "@savestate/cli", "mcp"]
-    }
-  }
-}
-```
+`https://savestate.dev/api/mcp`
+JSON-RPC over POST. Registry name: `dev.savestate/memory`. Packet: https://savestate.dev/server.json
+Bearer required. Missing/bad key → 401.
 
 ## Auth
 
-- Hosted MCP: `Authorization: Bearer ss_live_...`
-- Token from card checkout + claim — not OAuth authorize, not MPP
-- 401 = bad or missing key
-- 402 = unpaid — `POST /v1/keys` body always includes `pay_url` and `claim_url`
-- Local MCP: optional `SAVESTATE_MCP_PASSPHRASE` in the local process
+`Authorization: Bearer ss_live_…`
+401 = bad or missing key. 402 = unpaid.
 
-## Pay (agents — this is the product)
+## Pay
 
-Agents cannot read email. Do not wait for a welcome message.
+Machine checkout (required for agents):
 
-1. `POST https://savestate.dev/v1/keys` with `{}`
-2. HTTP 402 JSON: `pay_url` (Stripe Checkout) + `claim_url`
-3. Complete `pay_url` (Pro $9/mo, unit_amount=900, recurring month)
-4. Poll `GET {claim_url}` until 200 `{ "api_key": "ss_live_..." }` (once)
-5. Claim states: unpaid 402 · processing 202 · issued 200 once · already claimed 409 · expired 410
-6. Fulfillment is only the signed `checkout.session.completed` webhook. `success_url` does not mint keys.
+```http
+POST https://savestate.dev/v1/keys
+Content-Type: application/json
 
-Human secondary (same Pro, email delivery extra): https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00
+{}
+```
+
+Always HTTP 402. Body always includes `pay_url` and `claim_url`.
+Human Payment Link (secondary): https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00
 Team $29/mo: https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01
-No waitlist. Card today.
 
-## Dedicated buyer pages
+## 402 + claim
 
-- Cursor: https://savestate.dev/cursor
-- Windsurf: https://savestate.dev/windsurf
-- Claude Code: https://savestate.dev/claude-code
-- Clawdbot / OpenClaw: https://savestate.dev/clawdbot
-- When the thread dies: https://savestate.dev/when-the-thread-dies
-- SaveState MCP: https://savestate.dev/mcp
-- Agent memory: https://savestate.dev/agent-memory
-- Codex: https://savestate.dev/codex
-- Gemini: https://savestate.dev/gemini
-- ChatGPT: https://savestate.dev/chatgpt
-- OpenAI Assistants: https://savestate.dev/openai
-- Claude (claude.ai): https://savestate.dev/claude
+1. POST `/v1/keys` → 402 `{ pay_url, claim_url }`
+2. Open `pay_url` (Stripe Checkout, $9/mo Pro)
+3. Poll `claim_url`
+   - unpaid → 402
+   - processing → 202
+   - issued → 200 once `{ api_key }` — store it
+   - claimed → 409
+   - expired → 410
+4. `Authorization: Bearer <api_key>`
 
-## Links
+Email is extra. Do not wait for inbox.
 
-- Website: https://savestate.dev
-- GitHub: https://github.com/savestatedev/savestate
-- npm: https://www.npmjs.com/package/@savestate/cli
-- Docs: https://savestate.dev/docs/
-- Blog: https://savestate.dev/blog
-- Contact: hello@savestate.dev
+## Buyer pages
+
+https://savestate.dev/cursor
+https://savestate.dev/windsurf
+https://savestate.dev/claude-code
+https://savestate.dev/clawdbot
+https://savestate.dev/when-the-thread-dies
+https://savestate.dev/mcp
+https://savestate.dev/agent-memory
+https://savestate.dev/codex
+https://savestate.dev/gemini
+https://savestate.dev/chatgpt
+https://savestate.dev/openai
+https://savestate.dev/claude
+https://savestate.dev/pricing
+
+## Specs
+
+https://savestate.dev/openapi.json
+https://savestate.dev/.well-known/oauth-protected-resource
+https://github.com/savestatedev/savestate
+https://www.npmjs.com/package/@savestate/cli

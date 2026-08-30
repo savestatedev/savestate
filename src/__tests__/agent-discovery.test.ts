@@ -76,10 +76,12 @@ describe('agent discovery files', () => {
     }
   });
 
-  it('tightens llms.txt to capability, install, MCP, auth, pay, claim', () => {
+  it('keeps llms.txt as the required floor: capability, install, MCP, auth, pay, 402+claim', () => {
     const llms = read('site/llms.txt');
     expect(llms.trimStart().startsWith('#')).toBe(true);
     expect(llms).not.toMatch(/<!DOCTYPE html>/i);
+    expect(llms).toMatch(/required floor/i);
+    expect(llms).not.toMatch(/^\*\*Start here:\*\* https:\/\/savestate\.dev\/agents\.md/m);
     expect(llms).toMatch(/Capability/i);
     expect(llms).toContain('npm install -g @savestate/cli');
     expect(llms).toContain('https://savestate.dev/agents.md');
@@ -90,9 +92,13 @@ describe('agent discovery files', () => {
     expect(llms).toContain('POST https://savestate.dev/v1/keys');
     expect(llms).toContain(PRO);
     expect(llms).toContain(TEAM);
+    expect(llms).toContain('pay_url');
     expect(llms).toContain('claim_url');
     expect(llms).toContain('401');
     expect(llms).toContain('402');
+    expect(llms).toContain('202');
+    expect(llms).toContain('409');
+    expect(llms).toContain('410');
     expect(llms).toContain('https://savestate.dev/mcp');
     expect(llms).toContain('https://savestate.dev/agent-memory');
     expect(llms).toContain('https://savestate.dev/codex');
@@ -101,10 +107,17 @@ describe('agent discovery files', () => {
     expect(llms).toContain('https://savestate.dev/openai');
     expect(llms).toContain('https://savestate.dev/claude\n');
     expect(llms).toContain('https://savestate.dev/windsurf\n');
+    const sitemap = read('site/sitemap.xml');
+    expect(sitemap).toContain('<loc>https://savestate.dev/llms.txt</loc>');
+    const robots = read('site/robots.txt');
+    expect(robots).toMatch(/\/llms\.txt — required floor/);
+    expect(robots).toContain('SOM-Endpoint: https://savestate.dev/llms.txt');
   });
 
-  it('ships /agents.md as the primary playbook (hosted MCP + claim, not well-known)', () => {
+  it('ships /agents.md as the longer playbook and names llms.txt as the required floor', () => {
     const agents = read('site/agents.md');
+    expect(agents).toContain('https://savestate.dev/llms.txt');
+    expect(agents).toMatch(/required floor/i);
     expect(agents).toContain('POST https://savestate.dev/v1/keys');
     expect(agents).toContain('pay_url');
     expect(agents).toContain('claim_url');
