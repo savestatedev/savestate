@@ -93,6 +93,7 @@ describe('public marketing checkout CTAs', () => {
   const memoryMoat = loadHtml('site/blog/memory-is-the-new-moat.html');
   const durableFinePrint = loadHtml('site/blog/durable-agents-arent-durable-read-the-fine-print.html');
   const docsMcp = loadHtml('site/docs/mcp.html');
+  const docsCli = loadHtml('site/docs/cli.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -657,6 +658,14 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(docsMcp, 'docs-mcp-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsMcp, 'docs-mcp-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(docsMcp, 'docs-mcp-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the CLI docs CTAs at the live Payment Links', () => {
+    expect(hrefForCta(docsCli, 'docs-cli-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsCli, 'docs-cli-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsCli, 'docs-cli-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(docsCli, 'docs-cli-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(docsCli, 'docs-cli-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
