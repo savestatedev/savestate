@@ -98,6 +98,7 @@ describe('public marketing checkout CTAs', () => {
   const docsAdapters = loadHtml('site/docs/adapters.html');
   const docsStorage = loadHtml('site/docs/storage.html');
   const docsEncryption = loadHtml('site/docs/encryption.html');
+  const docsTrustKernel = loadHtml('site/docs/trust-kernel.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -702,6 +703,14 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(docsEncryption, 'docs-encryption-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsEncryption, 'docs-encryption-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(docsEncryption, 'docs-encryption-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the Trust Kernel docs CTAs at the live Payment Links', () => {
+    expect(hrefForCta(docsTrustKernel, 'docs-trust-kernel-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsTrustKernel, 'docs-trust-kernel-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsTrustKernel, 'docs-trust-kernel-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(docsTrustKernel, 'docs-trust-kernel-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(docsTrustKernel, 'docs-trust-kernel-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
