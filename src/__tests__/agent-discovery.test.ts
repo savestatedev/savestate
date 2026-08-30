@@ -65,7 +65,8 @@ describe('agent discovery files', () => {
       'npx -y @savestate/cli mcp',
     );
     const npm = parseJson('package.json');
-    expect(npm.mcpName).toBe(packet.name);
+    expect(npm.mcpName).toBe('io.github.savestatedev/cli');
+    expect(npm.version).toBe('0.9.1');
   });
 
   it('keeps the leftover well-known card renamed to memory, not as the primary', () => {
