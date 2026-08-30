@@ -14,3 +14,11 @@ SOM-Freshness: 3600
 SOM-Token-Budget: 15000
 SOM-Attribution: required
 SOM-Contact: hello@savestate.dev
+
+# Agent discovery (JSON/text — not homepage HTML)
+# /.well-known/mcp.json — MCP server card
+# /mcp.json — same card
+# /openapi.json — HTTP API + 402 schema
+# /agents.md — pay-and-claim playbook
+# POST /v1/keys → 402 pay_url + claim_url
+# GET /v1/keys/claims/:id → one-time api_key

@@ -103,6 +103,37 @@ export async function initDb(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_audit_log_team_created
       ON audit_log(team_id, created_at DESC)
   `;
+
+  // ─── Agent key-claim tables ────────────────────────────────
+  // Agents cannot read the welcome-email inbox. Claims let them
+  // collect a Pro key once after checkout.session.completed.
+  await sql`
+    CREATE TABLE IF NOT EXISTS key_claims (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      stripe_session_id TEXT UNIQUE NOT NULL,
+      stripe_session_url TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'unpaid'
+        CHECK (status IN ('unpaid', 'processing', 'issued', 'claimed', 'expired')),
+      api_key TEXT,
+      account_id UUID,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL,
+      claimed_at TIMESTAMPTZ
+    )
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_key_claims_session
+      ON key_claims(stripe_session_id)
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS processed_checkout_sessions (
+      stripe_session_id TEXT PRIMARY KEY,
+      account_id UUID,
+      processed_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
 }
 
 // ─── Account Operations ──────────────────────────────────────
@@ -515,4 +546,146 @@ export async function queryAuditLog(params: {
     LIMIT ${params.limit}
   `;
   return result as unknown as AuditLogEntry[];
+}
+
+// ─── Agent key claims ─────────────────────────────────────────
+
+export type KeyClaimStatus = 'unpaid' | 'processing' | 'issued' | 'claimed' | 'expired';
+
+export interface KeyClaim {
+  id: string;
+  stripe_session_id: string;
+  stripe_session_url: string;
+  status: KeyClaimStatus;
+  api_key: string | null;
+  account_id: string | null;
+  created_at: string;
+  expires_at: string;
+  claimed_at: string | null;
+}
+
+export async function createKeyClaim(params: {
+  id: string;
+  stripeSessionId: string;
+  stripeSessionUrl: string;
+  expiresAt: Date;
+}): Promise<KeyClaim> {
+  const sql = getDb();
+  const expiresAt = params.expiresAt.toISOString();
+  const result = await sql`
+    INSERT INTO key_claims (id, stripe_session_id, stripe_session_url, status, expires_at)
+    VALUES (
+      ${params.id}::uuid,
+      ${params.stripeSessionId},
+      ${params.stripeSessionUrl},
+      'unpaid',
+      ${expiresAt}::timestamptz
+    )
+    RETURNING *
+  `;
+  return result[0] as unknown as KeyClaim;
+}
+
+export async function getKeyClaim(claimId: string): Promise<KeyClaim | null> {
+  const sql = getDb();
+  const result = await sql`
+    SELECT * FROM key_claims WHERE id = ${claimId}::uuid
+  `;
+  return result.length > 0 ? (result[0] as unknown as KeyClaim) : null;
+}
+
+export async function getKeyClaimBySessionId(sessionId: string): Promise<KeyClaim | null> {
+  const sql = getDb();
+  const result = await sql`
+    SELECT * FROM key_claims WHERE stripe_session_id = ${sessionId}
+  `;
+  return result.length > 0 ? (result[0] as unknown as KeyClaim) : null;
+}
+
+export async function markKeyClaimProcessing(sessionId: string): Promise<void> {
+  const sql = getDb();
+  await sql`
+    UPDATE key_claims SET status = 'processing'
+    WHERE stripe_session_id = ${sessionId} AND status = 'unpaid'
+  `;
+}
+
+export async function issueKeyClaim(params: {
+  sessionId: string;
+  claimId?: string;
+  apiKey: string;
+  accountId: string;
+  expiresAt: Date;
+}): Promise<KeyClaim | null> {
+  const sql = getDb();
+  const expiresAt = params.expiresAt.toISOString();
+  const result = params.claimId
+    ? await sql`
+        UPDATE key_claims SET
+          status = 'issued',
+          api_key = ${params.apiKey},
+          account_id = ${params.accountId}::uuid,
+          expires_at = ${expiresAt}::timestamptz
+        WHERE id = ${params.claimId}::uuid
+          AND status IN ('unpaid', 'processing')
+        RETURNING *
+      `
+    : await sql`
+        UPDATE key_claims SET
+          status = 'issued',
+          api_key = ${params.apiKey},
+          account_id = ${params.accountId}::uuid,
+          expires_at = ${expiresAt}::timestamptz
+        WHERE stripe_session_id = ${params.sessionId}
+          AND status IN ('unpaid', 'processing')
+        RETURNING *
+      `;
+  return result.length > 0 ? (result[0] as unknown as KeyClaim) : null;
+}
+
+/**
+ * Return the minted key exactly once. Concurrent callers: only one wins.
+ * The secret is wiped after the winning row is returned.
+ */
+export async function consumeKeyClaim(claimId: string): Promise<string | null> {
+  const sql = getDb();
+  const result = await sql`
+    UPDATE key_claims SET
+      status = 'claimed',
+      claimed_at = NOW()
+    WHERE id = ${claimId}::uuid AND status = 'issued'
+    RETURNING api_key
+  `;
+  if (result.length === 0) return null;
+  const apiKey = (result[0] as { api_key: string | null }).api_key;
+  await sql`
+    UPDATE key_claims SET api_key = NULL WHERE id = ${claimId}::uuid
+  `;
+  return apiKey;
+}
+
+export async function isCheckoutSessionProcessed(sessionId: string): Promise<boolean> {
+  const sql = getDb();
+  const result = await sql`
+    SELECT 1 FROM processed_checkout_sessions WHERE stripe_session_id = ${sessionId}
+  `;
+  return result.length > 0;
+}
+
+/**
+ * Record that a Stripe Checkout session has been fulfilled.
+ * Returns true if this caller won the insert (first fulfillment).
+ */
+export async function markCheckoutSessionProcessed(
+  sessionId: string,
+  accountId: string,
+): Promise<boolean> {
+  const sql = getDb();
+  const result = await sql`
+    INSERT INTO processed_checkout_sessions (stripe_session_id, account_id)
+    VALUES (${sessionId}, ${accountId}::uuid)
+    ON CONFLICT (stripe_session_id) DO NOTHING
+    RETURNING stripe_session_id
+  `;
+  return result.length > 0;
 }

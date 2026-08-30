@@ -1,0 +1,210 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SaveState Agent API",
+    "version": "0.9.0",
+    "description": "Cloud key issuance and account API for SaveState. Local CLI is free and does not use these endpoints. Agents: POST /v1/keys (empty body ok) → 402 with pay_url + claim_url. Poll GET /v1/keys/claims/{id} until 200 returns api_key once. 401 = bad key. 402 = unpaid. MCP server is local stdio: npx -y @savestate/cli mcp. Human secondary Payment Link: https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00"
+  },
+  "servers": [
+    { "url": "https://savestate.dev" }
+  ],
+  "tags": [
+    { "name": "keys", "description": "Agent self-serve Pro checkout and one-time key claim" },
+    { "name": "account", "description": "Authenticated account lookup" },
+    { "name": "mcp", "description": "Local stdio MCP server (not HTTP)" }
+  ],
+  "paths": {
+    "/v1/keys": {
+      "post": {
+        "tags": ["keys"],
+        "operationId": "createKeyCheckout",
+        "summary": "Start Pro checkout. Always 402 until paid.",
+        "description": "Empty JSON object is valid. Creates a Stripe Checkout Session with price_data (SaveState Pro, unit_amount=900, recurring month). Does not mint a key. Returns 402 with pay_url and claim_url.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Optional. Stripe Checkout collects email if omitted."
+                  }
+                }
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "402": {
+            "description": "Payment required. Complete pay_url, then poll claim_url.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentRequired" }
+              }
+            }
+          },
+          "405": { "description": "Method not allowed" },
+          "503": { "description": "Checkout unavailable" }
+        }
+      }
+    },
+    "/v1/keys/claims/{id}": {
+      "get": {
+        "tags": ["keys"],
+        "operationId": "claimKey",
+        "summary": "Poll a claim. 200 returns api_key once.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Issued. api_key is returned once.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssuedKey" }
+              }
+            }
+          },
+          "202": {
+            "description": "Paid; webhook is still minting.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Processing" }
+              }
+            }
+          },
+          "402": {
+            "description": "Unpaid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentRequired" }
+              }
+            }
+          },
+          "404": { "description": "Unknown claim" },
+          "409": {
+            "description": "Already claimed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AlreadyClaimed" }
+              }
+            }
+          },
+          "410": {
+            "description": "Claim expired",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Expired" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account": {
+      "get": {
+        "tags": ["account"],
+        "operationId": "getAccount",
+        "summary": "Validate a cloud API key",
+        "security": [{ "apiKey": [] }],
+        "responses": {
+          "200": { "description": "Account for a valid ss_live_ key" },
+          "401": { "description": "Bad or missing key" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Bearer ss_live_... Cloud Pro/Team only. 401 = bad key. 402 = unpaid (use POST /v1/keys)."
+      }
+    },
+    "schemas": {
+      "PaymentRequired": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["pay_url", "claim_url"],
+        "properties": {
+          "error": { "type": "string", "examples": ["payment_required"] },
+          "pay_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Stripe Checkout URL created in POST /v1/keys"
+          },
+          "claim_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "GET this URL to retrieve the api_key once after payment"
+          },
+          "human_pay_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Existing live Payment Link. Human secondary."
+          }
+        }
+      },
+      "IssuedKey": {
+        "type": "object",
+        "required": ["api_key"],
+        "properties": {
+          "api_key": { "type": "string", "pattern": "^ss_live_" },
+          "claimed": { "type": "boolean" }
+        }
+      },
+      "Processing": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "const": "processing" },
+          "claim_url": { "type": "string", "format": "uri" }
+        }
+      },
+      "AlreadyClaimed": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "const": "already_claimed" }
+        }
+      },
+      "Expired": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "const": "claim_expired" }
+        }
+      }
+    }
+  },
+  "x-mcp": {
+    "command": "npx -y @savestate/cli mcp",
+    "transport": "stdio",
+    "tools": [
+      "savestate_snapshot",
+      "savestate_restore",
+      "savestate_list",
+      "savestate_status",
+      "savestate_memory_store",
+      "savestate_memory_search",
+      "savestate_memory_delete",
+      "savestate_search_snapshots",
+      "savestate_stats",
+      "add_memories",
+      "search_memory",
+      "list_memories",
+      "delete_memory",
+      "delete_all_memories"
+    ],
+    "resources": ["savestate://snapshots", "savestate://memories"]
+  }
+}
