@@ -91,6 +91,7 @@ describe('public marketing checkout CTAs', () => {
   const howItWorks = loadHtml('site/blog/how-savestate-works.html');
   const migrate = loadHtml('site/blog/migrate-chatgpt-to-claude.html');
   const memoryMoat = loadHtml('site/blog/memory-is-the-new-moat.html');
+  const backupPlan = loadHtml('site/blog/why-ai-needs-backup.html');
   const durableFinePrint = loadHtml('site/blog/durable-agents-arent-durable-read-the-fine-print.html');
   const docsMcp = loadHtml('site/docs/mcp.html');
   const docsCli = loadHtml('site/docs/cli.html');
@@ -648,6 +649,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(memoryMoat, 'memory-moat-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(memoryMoat, 'memory-moat-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(memoryMoat).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the why-ai-needs-backup post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(backupPlan, 'backup-plan-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(backupPlan, 'backup-plan-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(backupPlan, 'backup-plan-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(backupPlan, 'backup-plan-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(backupPlan, 'backup-plan-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(backupPlan).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('points the durable-agents-arent-durable post CTAs at the live Payment Links', () => {
