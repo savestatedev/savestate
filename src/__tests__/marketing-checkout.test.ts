@@ -109,6 +109,7 @@ describe('public marketing checkout CTAs', () => {
   const hiddenCrisis = loadHtml('site/blog/hidden-crisis-agentic-coding.html');
   const observationalMemory = loadHtml('site/blog/observational-memory-ai-agents.html');
   const wrongProblem = loadHtml('site/blog/cloudflares-agent-memory-solves-the-wrong-problem.html');
+  const unitis = loadHtml('site/blog/unitis-12m-raise-needs-a-state-layer.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -810,6 +811,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(wrongProblem, 'wrong-problem-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(wrongProblem, 'wrong-problem-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(wrongProblem).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the unitis-12m post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(unitis, 'unitis-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(unitis, 'unitis-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(unitis, 'unitis-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(unitis, 'unitis-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(unitis, 'unitis-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(unitis).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
