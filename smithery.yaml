@@ -1,0 +1,21 @@
+# Smithery listing metadata for SaveState Memory (dev.savestate/memory).
+# Official Smithery publish still needs a human account. This file is in-repo prep.
+# https://smithery.ai/docs/build/project-config/smithery-yaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      passphrase:
+        type: string
+        description: Optional local SAVESTATE_MCP_PASSPHRASE. Not a cloud API key. Local CLI is free.
+  commandFunction: |-
+    (config) => ({
+      command: 'npx',
+      args: ['-y', '@savestate/cli', 'mcp'],
+      env: config.passphrase
+        ? { SAVESTATE_MCP_PASSPHRASE: config.passphrase }
+        : {}
+    })
+  exampleConfig: {}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "savestate-memory": {
+      "command": "npx",
+      "args": ["-y", "@savestate/cli", "mcp"]
+    }
+  }
+}

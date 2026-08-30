@@ -1,0 +1,34 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "dev.savestate/memory",
+  "title": "SaveState Memory",
+  "description": "Encrypted portable agent memory: snapshot, search, restore across clients.",
+  "version": "0.9.0",
+  "websiteUrl": "https://savestate.dev/agents.md",
+  "repository": {
+    "url": "https://github.com/savestatedev/savestate",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@savestate/cli",
+      "version": "0.9.0",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "runtimeHint": "npx",
+      "transport": { "type": "stdio" },
+      "packageArguments": [
+        { "type": "positional", "value": "mcp" }
+      ],
+      "runtimeArguments": [
+        { "type": "positional", "value": "-y" }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://savestate.dev/api/mcp"
+    }
+  ]
+}

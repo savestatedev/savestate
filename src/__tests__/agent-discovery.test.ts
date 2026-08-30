@@ -24,17 +24,24 @@ function parseJson(rel: string): Record<string, unknown> {
 }
 
 describe('agent discovery files', () => {
-  it('serves a real MCP server card at /.well-known/mcp.json', () => {
+  it('publishes server.json as dev.savestate/memory', () => {
+    const packet = parseJson('site/server.json');
+    const root = parseJson('server.json');
+    expect(packet.name).toBe('dev.savestate/memory');
+    expect(root.name).toBe('dev.savestate/memory');
+    expect(packet.websiteUrl).toBe('https://savestate.dev/agents.md');
+    expect(JSON.stringify(packet.remotes)).toContain('https://savestate.dev/api/mcp');
+  });
+
+  it('keeps the leftover well-known card renamed to memory, not as the primary', () => {
     const card = parseJson('site/.well-known/mcp.json');
-    expect(card.name).toBe('dev.savestate/mcp');
+    expect(card.name).toBe('dev.savestate/memory');
     expect(card.pay_url).toBe(PRO);
-    expect(JSON.stringify(card)).toContain('npx');
-    expect(JSON.stringify(card)).toContain('@savestate/cli');
-    expect(JSON.stringify(card)).toContain('/v1/keys');
+    expect(card.websiteUrl).toBe('https://savestate.dev/agents.md');
     expect(card).not.toHaveProperty('glama');
   });
 
-  it('serves the same card at /mcp.json', () => {
+  it('serves the same leftover card at /mcp.json', () => {
     const wellKnown = parseJson('site/.well-known/mcp.json');
     const mcp = parseJson('site/mcp.json');
     expect(mcp.pay_url).toBe(PRO);
@@ -75,7 +82,9 @@ describe('agent discovery files', () => {
     expect(llms).not.toMatch(/<!DOCTYPE html>/i);
     expect(llms).toMatch(/Capability/i);
     expect(llms).toContain('npm install -g @savestate/cli');
-    expect(llms).toContain('https://savestate.dev/.well-known/mcp.json');
+    expect(llms).toContain('https://savestate.dev/agents.md');
+    expect(llms).toContain('https://savestate.dev/api/mcp');
+    expect(llms).toContain('dev.savestate/memory');
     expect(llms).toContain('npx -y @savestate/cli mcp');
     expect(llms).toMatch(/Auth/i);
     expect(llms).toContain('POST https://savestate.dev/v1/keys');
@@ -94,21 +103,51 @@ describe('agent discovery files', () => {
     expect(llms).toContain('https://savestate.dev/windsurf\n');
   });
 
-  it('ships /agents.md as the pay-and-claim playbook', () => {
+  it('ships /agents.md as the primary playbook (hosted MCP + claim, not well-known)', () => {
     const agents = read('site/agents.md');
     expect(agents).toContain('POST https://savestate.dev/v1/keys');
     expect(agents).toContain('pay_url');
     expect(agents).toContain('claim_url');
     expect(agents).toContain(PRO);
+    expect(agents).toContain('https://savestate.dev/api/mcp');
+    expect(agents).toContain('dev.savestate/memory');
     expect(agents).toContain('npx -y @savestate/cli mcp');
+    expect(agents).toMatch(/OAuth authorization-code is not shipped|not an OAuth authorize/i);
+    expect(agents).toMatch(/MPP/);
+    expect(agents).not.toMatch(/cursor\.com\/marketplace|glama\.ai\/mcp|pulsemcp\.com/i);
     expect(agents).not.toMatch(/<!DOCTYPE html>/i);
+  });
+
+  it('preps Cursor / Claude / ChatGPT plugin packets without a fake listing URL', () => {
+    const cursor = parseJson('plugins/savestate-memory/.cursor-plugin/plugin.json');
+    const claude = parseJson('plugins/savestate-memory/.claude-plugin/plugin.json');
+    const chatgpt = parseJson('plugins/savestate-memory/.codex-plugin/plugin.json');
+    const portable = parseJson('plugins/savestate-memory/plugin.json');
+    expect(cursor.name).toBe('savestate-memory');
+    expect(claude.name).toBe('savestate-memory');
+    expect(chatgpt.name).toBe('savestate-memory');
+    expect(portable.name).toBe('savestate-memory');
+    const readme = read('plugins/savestate-memory/README.md');
+    expect(readme).toMatch(/David Hurley/);
+    expect(readme).toMatch(/listing URL/i);
+    expect(readme).not.toMatch(/https:\/\/cursor\.com\/marketplace/);
+    expect(readme).not.toMatch(/https:\/\/glama\.ai/);
+    expect(readme).not.toMatch(/pulsemcp/i);
+  });
+
+  it('includes Smithery listing metadata and skips Glama/PulseMCP packets', () => {
+    const smithery = read('smithery.yaml');
+    expect(smithery).toContain('@savestate/cli');
+    expect(smithery).toContain('stdio');
+    expect(smithery).not.toMatch(/pulsemcp|Glama-score/i);
   });
 
   it('makes /mcp HTML a well-linked agent card with command + Payment Link', () => {
     const html = read('site/mcp.html');
     expect(html).toContain('npx -y @savestate/cli mcp');
     expect(html).toContain(PRO);
-    expect(html).toContain('/.well-known/mcp.json');
+    expect(html).toContain('/agents.md');
+    expect(html).toContain('/api/mcp');
     expect(html).toContain('POST https://savestate.dev/v1/keys');
     expect(html).toContain('href="https://www.npmjs.com/package/@savestate/cli"');
   });
@@ -125,10 +164,14 @@ describe('agent discovery files', () => {
   it('does not invent Glama scores, waitlists, or ignoreBuildErrors', () => {
     const files = [
       'site/.well-known/mcp.json',
+      'site/server.json',
       'site/openapi.json',
       'site/llms.txt',
       'site/agents.md',
       'api/v1/keys.ts',
+      'api/mcp.ts',
+      'smithery.yaml',
+      'plugins/savestate-memory/README.md',
     ];
     for (const file of files) {
       const text = read(file);

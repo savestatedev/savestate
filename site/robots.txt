@@ -16,9 +16,10 @@ SOM-Attribution: required
 SOM-Contact: hello@savestate.dev
 
 # Agent discovery (JSON/text — not homepage HTML)
-# /.well-known/mcp.json — MCP server card
-# /mcp.json — same card
+# /agents.md — start here (hosted MCP + claim URL)
+# /server.json — registry name dev.savestate/memory
+# /api/mcp — hosted MCP (Bearer)
 # /openapi.json — HTTP API + 402 schema
-# /agents.md — pay-and-claim playbook
 # POST /v1/keys → 402 pay_url + claim_url
 # GET /v1/keys/claims/:id → one-time api_key
+# /.well-known/mcp.json — leftover card (path churn)

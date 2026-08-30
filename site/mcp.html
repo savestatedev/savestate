@@ -24,10 +24,10 @@
 
 <!-- Canonical -->
 <link rel="canonical" href="https://savestate.dev/mcp">
-<link rel="alternate" type="application/json" href="/.well-known/mcp.json" title="MCP server card">
-<link rel="alternate" type="application/json" href="/mcp.json" title="MCP server card">
-<link rel="alternate" type="application/json" href="/openapi.json" title="OpenAPI">
 <link rel="alternate" type="text/markdown" href="/agents.md" title="Agent playbook">
+<link rel="alternate" type="application/json" href="/server.json" title="MCP registry server.json">
+<link rel="alternate" type="application/json" href="/openapi.json" title="OpenAPI">
+<link rel="alternate" type="application/json" href="/mcp.json" title="MCP server card">
 <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
 
 <script type="application/ld+json">
@@ -442,7 +442,8 @@ footer a { color: var(--text-muted); }
       <li><strong>Encryption</strong> AES-256-GCM, scrypt KDF. You hold the passphrase</li>
       <li><strong>Format</strong> Open SaveState Archive (SAF). No vendor lock-in</li>
       <li><strong>Price</strong> Pro $9/mo · Team $29/mo. CLI is open source</li>
-      <li><strong>Agent card</strong> <a href="/.well-known/mcp.json"><code>/.well-known/mcp.json</code></a> · <a href="/openapi.json"><code>/openapi.json</code></a> · <a href="/agents.md"><code>/agents.md</code></a></li>
+      <li><strong>Agent playbook</strong> <a href="/agents.md"><code>/agents.md</code></a> · hosted MCP <a href="/api/mcp"><code>/api/mcp</code></a> · registry <a href="/server.json"><code>dev.savestate/memory</code></a></li>
+      <li><strong>Also</strong> <a href="/openapi.json"><code>/openapi.json</code></a> · leftover card <a href="/.well-known/mcp.json"><code>/.well-known/mcp.json</code></a></li>
     </ul>
 
     <h2>For agents — pay and claim (not email)</h2>
