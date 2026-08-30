@@ -92,6 +92,7 @@ describe('public marketing checkout CTAs', () => {
   const migrate = loadHtml('site/blog/migrate-chatgpt-to-claude.html');
   const memoryMoat = loadHtml('site/blog/memory-is-the-new-moat.html');
   const durableFinePrint = loadHtml('site/blog/durable-agents-arent-durable-read-the-fine-print.html');
+  const docsMcp = loadHtml('site/docs/mcp.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -648,6 +649,14 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(durableFinePrint, 'durable-fine-print-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(durableFinePrint, 'durable-fine-print-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(durableFinePrint).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the MCP docs CTAs at the live Payment Links', () => {
+    expect(hrefForCta(docsMcp, 'docs-mcp-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsMcp, 'docs-mcp-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsMcp, 'docs-mcp-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(docsMcp, 'docs-mcp-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(docsMcp, 'docs-mcp-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
