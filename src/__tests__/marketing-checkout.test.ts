@@ -105,6 +105,7 @@ describe('public marketing checkout CTAs', () => {
   const knowsEverything = loadHtml('site/blog/your-ai-knows-everything.html');
   const contextRot = loadHtml('site/blog/context-rot-killing-your-ai-agent.html');
   const agenticWorkflows = loadHtml('site/blog/agentic-workflows-need-backups.html');
+  const memoryCrisis = loadHtml('site/blog/the-great-ai-memory-crisis.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -770,6 +771,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(agenticWorkflows, 'agentic-workflows-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(agenticWorkflows, 'agentic-workflows-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(agenticWorkflows).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the great-ai-memory-crisis post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(memoryCrisis, 'memory-crisis-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryCrisis, 'memory-crisis-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryCrisis, 'memory-crisis-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(memoryCrisis, 'memory-crisis-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(memoryCrisis, 'memory-crisis-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(memoryCrisis).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
