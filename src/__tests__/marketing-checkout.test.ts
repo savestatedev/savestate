@@ -108,6 +108,7 @@ describe('public marketing checkout CTAs', () => {
   const memoryCrisis = loadHtml('site/blog/the-great-ai-memory-crisis.html');
   const hiddenCrisis = loadHtml('site/blog/hidden-crisis-agentic-coding.html');
   const observationalMemory = loadHtml('site/blog/observational-memory-ai-agents.html');
+  const wrongProblem = loadHtml('site/blog/cloudflares-agent-memory-solves-the-wrong-problem.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -800,6 +801,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(observationalMemory, 'observational-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(observationalMemory, 'observational-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(observationalMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the cloudflare-wrong-problem post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(wrongProblem, 'wrong-problem-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wrongProblem, 'wrong-problem-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wrongProblem, 'wrong-problem-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(wrongProblem, 'wrong-problem-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(wrongProblem, 'wrong-problem-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(wrongProblem).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
