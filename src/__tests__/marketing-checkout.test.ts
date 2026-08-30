@@ -90,6 +90,7 @@ describe('public marketing checkout CTAs', () => {
   const windsurf = loadHtml('site/windsurf.html');
   const howItWorks = loadHtml('site/blog/how-savestate-works.html');
   const migrate = loadHtml('site/blog/migrate-chatgpt-to-claude.html');
+  const memoryMoat = loadHtml('site/blog/memory-is-the-new-moat.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -628,6 +629,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(migrate, 'migrate-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(migrate, 'migrate-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(migrate).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the memory-is-the-new-moat post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(memoryMoat, 'memory-moat-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryMoat, 'memory-moat-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryMoat, 'memory-moat-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(memoryMoat, 'memory-moat-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(memoryMoat, 'memory-moat-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(memoryMoat).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
