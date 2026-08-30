@@ -100,6 +100,7 @@ describe('public marketing checkout CTAs', () => {
   const docsEncryption = loadHtml('site/docs/encryption.html');
   const docsTrustKernel = loadHtml('site/docs/trust-kernel.html');
   const docsFormat = loadHtml('site/docs/format.html');
+  const docsIncremental = loadHtml('site/docs/incremental.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -720,6 +721,14 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(docsFormat, 'docs-format-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsFormat, 'docs-format-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(docsFormat, 'docs-format-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the incremental docs CTAs at the live Payment Links', () => {
+    expect(hrefForCta(docsIncremental, 'docs-incremental-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsIncremental, 'docs-incremental-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(docsIncremental, 'docs-incremental-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(docsIncremental, 'docs-incremental-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(docsIncremental, 'docs-incremental-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
