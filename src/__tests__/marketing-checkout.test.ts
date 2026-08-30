@@ -102,6 +102,7 @@ describe('public marketing checkout CTAs', () => {
   const docsTrustKernel = loadHtml('site/docs/trust-kernel.html');
   const docsFormat = loadHtml('site/docs/format.html');
   const docsIncremental = loadHtml('site/docs/incremental.html');
+  const knowsEverything = loadHtml('site/blog/your-ai-knows-everything.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -740,6 +741,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(docsIncremental, 'docs-incremental-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsIncremental, 'docs-incremental-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(docsIncremental, 'docs-incremental-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the your-ai-knows-everything post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(knowsEverything, 'knows-everything-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(knowsEverything, 'knows-everything-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(knowsEverything, 'knows-everything-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(knowsEverything, 'knows-everything-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(knowsEverything, 'knows-everything-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(knowsEverything).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
