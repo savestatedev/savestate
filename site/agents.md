@@ -1,6 +1,8 @@
 # SaveState — agent onboarding
 
-Read this file first. Encrypted portable memory for Claude Code, Cursor, Codex, and Clawdbot.
+Required floor (capability, install, MCP, auth, pay, 402+claim): https://savestate.dev/llms.txt
+
+This file is the longer playbook. Encrypted portable memory for Claude Code, Cursor, Codex, and Clawdbot.
 
 Local CLI is free. Cloud Pro is a card subscription ($9/mo). Agents cannot read email — use the claim URL. Do not wait for OAuth authorization-code or agent-native recurring MPP.
 
@@ -10,12 +12,13 @@ Snapshot, search, and restore encrypted agent memory. Local MCP on stdio. Hosted
 
 ## Preferred connect
 
-1. This playbook: https://savestate.dev/agents.md
-2. Hosted MCP: `https://savestate.dev/api/mcp` (streamable-http). Send `Authorization: Bearer ss_live_...`.
-3. Bearer token comes from **card checkout + claim**, not an OAuth authorize URL and not MPP. Missing or bad key → **401**. Unpaid checkout → **402** with `pay_url` + `claim_url` on `POST /v1/keys`.
-4. Registry name (if you publish `server.json`): `dev.savestate/memory`
-5. Registry packet: https://savestate.dev/server.json
-6. OpenAPI: https://savestate.dev/openapi.json
+1. Required floor: https://savestate.dev/llms.txt — self-contained capability, install, hosted MCP URL, auth, pay URL, 402+claim. Do not skip it.
+2. This playbook: https://savestate.dev/agents.md
+3. Hosted MCP: `https://savestate.dev/api/mcp` (streamable-http). Send `Authorization: Bearer ss_live_...`.
+4. Bearer token comes from **card checkout + claim**, not an OAuth authorize URL and not MPP. Missing or bad key → **401**. Unpaid checkout → **402** with `pay_url` + `claim_url` on `POST /v1/keys`.
+5. Registry name (if you publish `server.json`): `dev.savestate/memory`
+6. Registry packet: https://savestate.dev/server.json
+7. OpenAPI: https://savestate.dev/openapi.json
 
 `/.well-known/mcp.json` is a leftover card. Prefer this file + hosted MCP. MCP well-known paths have been churning.
 

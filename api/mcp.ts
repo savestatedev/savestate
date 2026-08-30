@@ -50,6 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       title: 'SaveState Memory',
       transport: 'streamable-http',
       agents: 'https://savestate.dev/agents.md',
+      llms: 'https://savestate.dev/llms.txt',
       server_json: 'https://savestate.dev/server.json',
       keys: 'https://savestate.dev/v1/keys',
       auth: {
@@ -73,7 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!auth?.startsWith('Bearer ')) {
     return res.status(401).json({
       error: 'missing_api_key',
-      hint: 'POST https://savestate.dev/v1/keys then poll claim_url. Read https://savestate.dev/agents.md',
+      hint: 'POST https://savestate.dev/v1/keys then poll claim_url. Floor: https://savestate.dev/llms.txt',
     });
   }
 

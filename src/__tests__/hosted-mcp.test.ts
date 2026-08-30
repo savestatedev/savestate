@@ -60,10 +60,11 @@ describe('hosted MCP /api/mcp', () => {
     const res = mockRes();
     await handler(mockReq({ method: 'GET' }), res);
     expect(res.statusCode).toBe(200);
-    const body = res.body as { name: string; keys: string; agents: string };
+    const body = res.body as { name: string; keys: string; agents: string; llms: string };
     expect(body.name).toBe('dev.savestate/memory');
     expect(body.keys).toBe('https://savestate.dev/v1/keys');
     expect(body.agents).toBe('https://savestate.dev/agents.md');
+    expect(body.llms).toBe('https://savestate.dev/llms.txt');
   });
 
   it('POST without a key is 401, not a minted Free key', async () => {
