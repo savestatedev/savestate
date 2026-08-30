@@ -1,0 +1,19 @@
+{
+  "name": "savestate",
+  "owner": {
+    "name": "David Hurley",
+    "email": "hello@savestate.dev"
+  },
+  "metadata": {
+    "description": "SaveState in-repo plugin catalog. Official Cursor marketplace submit needs David's account. No listing URL."
+  },
+  "plugins": [
+    {
+      "name": "savestate-memory",
+      "source": "./plugins/savestate-memory",
+      "description": "Encrypted portable agent memory via SaveState MCP",
+      "version": "0.9.0",
+      "homepage": "https://savestate.dev/agents.md"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "savestate",
+  "owner": {
+    "name": "David Hurley",
+    "email": "hello@savestate.dev"
+  },
+  "plugins": [
+    {
+      "name": "savestate-memory",
+      "source": {
+        "path": "./plugins/savestate-memory"
+      },
+      "description": "Encrypted portable agent memory via SaveState MCP"
+    }
+  ]
+}

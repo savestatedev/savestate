@@ -1,14 +1,25 @@
 # SaveState — agent onboarding
 
-Encrypted portable memory for Claude Code, Cursor, Codex, and Clawdbot.
+Read this file first. Encrypted portable memory for Claude Code, Cursor, Codex, and Clawdbot.
 
-Local CLI is free. A cloud API key is Pro only ($9/mo). This file is the pay-and-connect path. Email is extra, not delivery.
+Local CLI is free. Cloud Pro is a card subscription ($9/mo). Agents cannot read email — use the claim URL. Do not wait for OAuth authorization-code or agent-native recurring MPP.
 
-## 1. Capability
+## Capability
 
-Snapshot, search, and restore encrypted agent memory. MCP server on stdio. Cloud storage and scheduled backups require Pro.
+Snapshot, search, and restore encrypted agent memory. Local MCP on stdio. Hosted MCP at `/api/mcp` for cloud-keyed clients. Scheduled backups and cloud storage require Pro.
 
-## 2. Install (free, no cloud key)
+## Preferred connect
+
+1. This playbook: https://savestate.dev/agents.md
+2. Hosted MCP: `https://savestate.dev/api/mcp` (streamable-http). Send `Authorization: Bearer ss_live_...`.
+3. Bearer token comes from **card checkout + claim**, not an OAuth authorize URL and not MPP. Missing or bad key → **401**. Unpaid checkout → **402** with `pay_url` + `claim_url` on `POST /v1/keys`.
+4. Registry name (if you publish `server.json`): `dev.savestate/memory`
+5. Registry packet: https://savestate.dev/server.json
+6. OpenAPI: https://savestate.dev/openapi.json
+
+`/.well-known/mcp.json` is a leftover card. Prefer this file + hosted MCP. MCP well-known paths have been churning.
+
+## Install (local CLI — free, no cloud key)
 
 ```bash
 npm install -g @savestate/cli
@@ -17,7 +28,7 @@ savestate init
 
 Do not call `/v1/keys` for Free. The local CLI does not need `ss_live_`.
 
-## 3. Connect MCP
+Local stdio MCP (works without Pro):
 
 ```json
 {
@@ -32,12 +43,11 @@ Do not call `/v1/keys` for Free. The local CLI does not need `ss_live_`.
 
 Claude Code: `~/.claude/settings.json`. Cursor: `~/.cursor/mcp.json`. Codex: `codex mcp add savestate -- npx -y @savestate/cli mcp`.
 
-Server card: https://savestate.dev/.well-known/mcp.json
-OpenAPI: https://savestate.dev/openapi.json
+In-repo plugin packets (prep only — official marketplace submit needs David Hurley's account; there is no listing URL yet): `plugins/savestate-memory/`.
 
-## 4. Pay and claim a cloud key (agents)
+## Pay and claim a cloud key (agents)
 
-You cannot read the inbox SaveState emails after checkout. Use the claim URL.
+You cannot read the inbox SaveState emails after checkout. Use the claim URL. Pay is a card subscription. Do not block on agent-native recurring MPP.
 
 ```http
 POST https://savestate.dev/v1/keys
@@ -56,28 +66,33 @@ Response is **HTTP 402**:
 }
 ```
 
-1. Open or complete `pay_url` (SaveState Pro, $9/month).
+1. Complete `pay_url` (SaveState Pro, $9/month).
 2. Poll `GET {claim_url}`.
-   - `402` unpaid — pay is not done
-   - `202` processing — paid; webhook is minting
-   - `200` `{ "api_key": "ss_live_..." }` — store it; this is once
+   - `402` unpaid
+   - `202` processing — webhook is minting
+   - `200` `{ "api_key": "ss_live_..." }` — once
    - `409` already claimed
    - `410` expired
-3. Use `Authorization: Bearer ss_live_...` on cloud APIs.
-4. `401` means a bad key. `402` means unpaid.
+3. Call hosted MCP with `Authorization: Bearer ss_live_...`.
+4. `401` = bad or missing key. `402` = unpaid.
 
-Fulfillment is only the signed Stripe `checkout.session.completed` webhook. Do not treat `success_url` as issuance.
+Fulfillment is only the signed Stripe `checkout.session.completed` webhook. `success_url` does not mint keys.
 
-## 5. Human secondary
+## Human secondary
 
-Same Pro, if a human is present: https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00
+Same Pro: https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00
 
 Team ($29/mo): https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01
 
-After a human Payment Link, email still sends the key. Agents should still use POST `/v1/keys` + claim.
+Email still sends the key after a human Payment Link. Agents should use POST `/v1/keys` + claim.
 
-## 6. Auth reminder
+## Auth
 
-- 401 = bad or missing key
-- 402 = unpaid (`pay_url` + `claim_url` required)
-- Local MCP passphrase stays in-process (`SAVESTATE_MCP_PASSPHRASE`)
+- Hosted MCP and cloud APIs: `Authorization: Bearer ss_live_...`
+- Token issuance: POST `/v1/keys` → pay → claim. Not OAuth authorization-code. Not MPP.
+- Local MCP passphrase: `SAVESTATE_MCP_PASSPHRASE` in-process only
+- Protected-resource metadata: https://savestate.dev/.well-known/oauth-protected-resource
+
+## Smithery
+
+In-repo listing metadata: `smithery.yaml` at the repo root. No Glama or PulseMCP packets.

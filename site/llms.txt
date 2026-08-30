@@ -4,6 +4,8 @@
 
 SaveState is built by David Hurley (https://dbhurley.com).
 
+**Start here:** https://savestate.dev/agents.md
+
 ## Install (local CLI — free, no cloud key)
 
 ```bash
@@ -16,13 +18,16 @@ The local CLI never needs a cloud API key. Do not mint a Free-tier cloud key.
 
 ## MCP
 
-- Card: https://savestate.dev/.well-known/mcp.json
-- Agent card (HTML): https://savestate.dev/mcp
-- Card (JSON): https://savestate.dev/mcp.json
-- Tools + HTTP API: https://savestate.dev/openapi.json
+Prefer `/agents.md` + hosted MCP over `/.well-known/mcp.json` (path churn).
+
 - Playbook: https://savestate.dev/agents.md
-- Command: `npx -y @savestate/cli mcp`
-- Transport: stdio
+- Hosted MCP: https://savestate.dev/api/mcp
+- Registry name: `dev.savestate/memory`
+- Registry packet: https://savestate.dev/server.json
+- OpenAPI: https://savestate.dev/openapi.json
+- Local command: `npx -y @savestate/cli mcp` (stdio)
+- Agent card (HTML): https://savestate.dev/mcp
+- Leftover card: https://savestate.dev/.well-known/mcp.json
 
 ```json
 {
@@ -37,10 +42,11 @@ The local CLI never needs a cloud API key. Do not mint a Free-tier cloud key.
 
 ## Auth
 
-- Cloud API: `Authorization: Bearer ss_live_...`
+- Hosted MCP: `Authorization: Bearer ss_live_...`
+- Token from card checkout + claim — not OAuth authorize, not MPP
 - 401 = bad or missing key
-- 402 = unpaid — body always includes `pay_url` and `claim_url`
-- Local MCP: optional `SAVESTATE_MCP_PASSPHRASE` in the local process. Passphrases never leave the machine.
+- 402 = unpaid — `POST /v1/keys` body always includes `pay_url` and `claim_url`
+- Local MCP: optional `SAVESTATE_MCP_PASSPHRASE` in the local process
 
 ## Pay (agents — this is the product)
 

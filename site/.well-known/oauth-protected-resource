@@ -1,0 +1,6 @@
+{
+  "resource": "https://savestate.dev/api/mcp",
+  "bearer_methods_supported": ["header"],
+  "resource_documentation": "https://savestate.dev/agents.md",
+  "scopes_supported": ["savestate.memory"]
+}

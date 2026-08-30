@@ -1,10 +1,10 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-  "name": "dev.savestate/mcp",
-  "title": "SaveState",
+  "name": "dev.savestate/memory",
+  "title": "SaveState Memory",
   "description": "Encrypted portable agent memory: snapshot, search, restore across clients.",
   "version": "0.9.0",
-  "websiteUrl": "https://savestate.dev/mcp",
+  "websiteUrl": "https://savestate.dev/agents.md",
   "repository": {
     "url": "https://github.com/savestatedev/savestate",
     "source": "github"

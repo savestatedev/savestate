@@ -3,7 +3,7 @@
   "info": {
     "title": "SaveState Agent API",
     "version": "0.9.0",
-    "description": "Cloud key issuance and account API for SaveState. Local CLI is free and does not use these endpoints. Agents: POST /v1/keys (empty body ok) → 402 with pay_url + claim_url. Poll GET /v1/keys/claims/{id} until 200 returns api_key once. 401 = bad key. 402 = unpaid. MCP server is local stdio: npx -y @savestate/cli mcp. Human secondary Payment Link: https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00"
+    "description": "Cloud key issuance and account API for SaveState. Start at https://savestate.dev/agents.md. Local CLI is free. Agents: POST /v1/keys (empty body ok) → 402 with pay_url + claim_url. Poll GET /v1/keys/claims/{id} until 200 returns api_key once. 401 = bad key. 402 = unpaid. Hosted MCP: https://savestate.dev/api/mcp (Bearer). Registry name: dev.savestate/memory. Local stdio: npx -y @savestate/cli mcp. Human secondary Payment Link: https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00"
   },
   "servers": [
     { "url": "https://savestate.dev" }
@@ -11,7 +11,7 @@
   "tags": [
     { "name": "keys", "description": "Agent self-serve Pro checkout and one-time key claim" },
     { "name": "account", "description": "Authenticated account lookup" },
-    { "name": "mcp", "description": "Local stdio MCP server (not HTTP)" }
+    { "name": "mcp", "description": "Hosted MCP at /api/mcp (Bearer) plus local stdio" }
   ],
   "paths": {
     "/v1/keys": {
@@ -111,6 +111,26 @@
         }
       }
     },
+    "/api/mcp": {
+      "get": {
+        "tags": ["mcp"],
+        "operationId": "hostedMcpDiscovery",
+        "summary": "Hosted MCP discovery. No checkout.",
+        "responses": {
+          "200": { "description": "Server name, auth, and tool list" }
+        }
+      },
+      "post": {
+        "tags": ["mcp"],
+        "operationId": "hostedMcpRpc",
+        "summary": "JSON-RPC MCP. Bearer required. 401 if missing or bad key.",
+        "security": [{ "apiKey": [] }],
+        "responses": {
+          "200": { "description": "initialize / tools/list / ping" },
+          "401": { "description": "Bad or missing key. Get a token via POST /v1/keys." }
+        }
+      }
+    },
     "/api/account": {
       "get": {
         "tags": ["account"],
@@ -187,8 +207,11 @@
     }
   },
   "x-mcp": {
+    "name": "dev.savestate/memory",
     "command": "npx -y @savestate/cli mcp",
     "transport": "stdio",
+    "hosted": "https://savestate.dev/api/mcp",
+    "agents": "https://savestate.dev/agents.md",
     "tools": [
       "savestate_snapshot",
       "savestate_restore",
