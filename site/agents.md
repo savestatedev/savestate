@@ -12,15 +12,15 @@ Snapshot, search, and restore encrypted agent memory. Local MCP on stdio. Hosted
 
 ## Preferred connect
 
-1. Required floor: https://savestate.dev/llms.txt — self-contained capability, install, hosted MCP URL, auth, pay URL, 402+claim. Do not skip it.
+1. Required floor: https://savestate.dev/llms.txt — self-contained capability, install, MCP, auth, pay URL, 402+claim. Do not skip it.
 2. This playbook: https://savestate.dev/agents.md
-3. Hosted MCP: `https://savestate.dev/api/mcp` (streamable-http). Send `Authorization: Bearer ss_live_...`.
-4. Bearer token comes from **card checkout + claim**, not an OAuth authorize URL and not MPP. Missing or bad key → **401**. Unpaid checkout → **402** with `pay_url` + `claim_url` on `POST /v1/keys`.
-5. Registry name (if you publish `server.json`): `dev.savestate/memory`
-6. Registry packet: https://savestate.dev/server.json
+3. Live local MCP (full tools, no cloud key): `npx -y @savestate/cli mcp` (stdio). `/mcp` is HTML docs only.
+4. Official registry packet: https://savestate.dev/server.json — name `dev.savestate/memory`. Publishes the stdio npm package. `mcpName` in `@savestate/cli` package.json.
+5. Hosted Streamable HTTP remote: `https://savestate.dev/api/mcp`. Send `Authorization: Bearer ss_live_...`. GET SSE is not offered (405).
+6. Bearer token comes from **card checkout + claim**, not an OAuth authorize URL and not MPP. Missing or bad key → **401**. Unpaid checkout → **402** with `pay_url` + `claim_url` on `POST /v1/keys`.
 7. OpenAPI: https://savestate.dev/openapi.json
 
-`/.well-known/mcp.json` is a leftover card. Prefer this file + hosted MCP. MCP well-known paths have been churning.
+`/.well-known/mcp.json` is a leftover card. Prefer `llms.txt` + `server.json`. MCP well-known paths have been churning.
 
 ## Install (local CLI — free, no cloud key)
 

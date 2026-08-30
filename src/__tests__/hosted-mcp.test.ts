@@ -28,7 +28,11 @@ function mockReq(partial: Partial<VercelRequest>): VercelRequest {
   } as VercelRequest;
 }
 
-function mockRes(): VercelResponse & { statusCode: number; body: unknown } {
+function mockRes(): VercelResponse & {
+  statusCode: number;
+  body: unknown;
+  headers: Record<string, string>;
+} {
   const out = {
     statusCode: 200,
     body: undefined as unknown,
@@ -48,7 +52,11 @@ function mockRes(): VercelResponse & { statusCode: number; body: unknown } {
       return out;
     },
   };
-  return out as unknown as VercelResponse & { statusCode: number; body: unknown };
+  return out as unknown as VercelResponse & {
+    statusCode: number;
+    body: unknown;
+    headers: Record<string, string>;
+  };
 }
 
 describe('hosted MCP /api/mcp', () => {
@@ -60,11 +68,37 @@ describe('hosted MCP /api/mcp', () => {
     const res = mockRes();
     await handler(mockReq({ method: 'GET' }), res);
     expect(res.statusCode).toBe(200);
-    const body = res.body as { name: string; keys: string; agents: string; llms: string };
+    const body = res.body as {
+      name: string;
+      keys: string;
+      agents: string;
+      llms: string;
+      stdio: string;
+      docs: string;
+      transport: string;
+    };
     expect(body.name).toBe('dev.savestate/memory');
     expect(body.keys).toBe('https://savestate.dev/v1/keys');
     expect(body.agents).toBe('https://savestate.dev/agents.md');
     expect(body.llms).toBe('https://savestate.dev/llms.txt');
+    expect(body.stdio).toBe('npx -y @savestate/cli mcp');
+    expect(body.docs).toBe('https://savestate.dev/mcp');
+    expect(body.transport).toBe('streamable-http');
+  });
+
+  it('GET with SSE-only Accept is 405 (no long-lived stream on Vercel)', async () => {
+    const res = mockRes();
+    await handler(
+      mockReq({ method: 'GET', headers: { host: 'savestate.dev', accept: 'text/event-stream' } }),
+      res,
+    );
+    expect(res.statusCode).toBe(405);
+  });
+
+  it('DELETE is 405 because the remote is stateless', async () => {
+    const res = mockRes();
+    await handler(mockReq({ method: 'DELETE' }), res);
+    expect(res.statusCode).toBe(405);
   });
 
   it('POST without a key is 401, not a minted Free key', async () => {
@@ -100,5 +134,19 @@ describe('hosted MCP /api/mcp', () => {
     expect(res.statusCode).toBe(200);
     const body = res.body as { result: { serverInfo: { name: string } } };
     expect(body.result.serverInfo.name).toBe('dev.savestate/memory');
+    expect(res.headers['Mcp-Session-Id']).toMatch(/^[0-9a-f-]{36}$/i);
+  });
+
+  it('POST notifications/initialized is 202 with no body', async () => {
+    const res = mockRes();
+    await handler(
+      mockReq({
+        method: 'POST',
+        headers: { authorization: 'Bearer ss_live_GOOD' },
+        body: { jsonrpc: '2.0', method: 'notifications/initialized' },
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(202);
   });
 });
