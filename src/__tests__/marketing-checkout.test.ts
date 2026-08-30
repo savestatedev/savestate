@@ -101,6 +101,7 @@ describe('public marketing checkout CTAs', () => {
   const docsTrustKernel = loadHtml('site/docs/trust-kernel.html');
   const docsFormat = loadHtml('site/docs/format.html');
   const docsIncremental = loadHtml('site/docs/incremental.html');
+  const contextRot = loadHtml('site/blog/context-rot-killing-your-ai-agent.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -729,6 +730,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(docsIncremental, 'docs-incremental-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(docsIncremental, 'docs-incremental-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(docsIncremental, 'docs-incremental-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+  });
+
+  it('points the context-rot post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(contextRot, 'context-rot-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(contextRot, 'context-rot-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(contextRot, 'context-rot-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(contextRot, 'context-rot-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(contextRot, 'context-rot-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(contextRot).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
