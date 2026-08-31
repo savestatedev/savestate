@@ -115,6 +115,7 @@ describe('public marketing checkout CTAs', () => {
   const autoMode = loadHtml('site/blog/claude-code-auto-mode-changes-what-teams-must-back-up.html');
   const spof = loadHtml('site/blog/your-ai-infrastructure-has-a-single-point-of-failure-youre-not-monitoring.html');
   const oneClick = loadHtml('site/blog/one-click-two-years-gone.html');
+  const poisoning = loadHtml('site/blog/memory-poisoning-87-percent.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -869,6 +870,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(oneClick, 'one-click-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(oneClick).not.toMatch(/Try SaveState free/);
     expect(oneClick).not.toMatch(/class="btn"[^>]*savestate\.dev"|href="https:\/\/savestate\.dev"[^>]*class="btn"/);
+  });
+
+  it('points the memory-poisoning post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(poisoning, 'poisoning-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(poisoning, 'poisoning-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(poisoning, 'poisoning-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(poisoning, 'poisoning-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(poisoning, 'poisoning-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(poisoning).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
