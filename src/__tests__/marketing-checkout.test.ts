@@ -118,6 +118,7 @@ describe('public marketing checkout CTAs', () => {
   const poisoning = loadHtml('site/blog/memory-poisoning-87-percent.html');
   const mcpServers = loadHtml('site/blog/mcp-memory-servers-ai-context-infrastructure.html');
   const githubMisses = loadHtml('site/blog/github-ai-security-misses-agent-state-risk.html');
+  const customAdapters = loadHtml('site/blog/building-custom-adapters.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -899,6 +900,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(githubMisses, 'github-misses-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(githubMisses, 'github-misses-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(githubMisses).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the building-custom-adapters post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(customAdapters, 'custom-adapters-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(customAdapters, 'custom-adapters-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(customAdapters, 'custom-adapters-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(customAdapters, 'custom-adapters-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(customAdapters, 'custom-adapters-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(customAdapters).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
