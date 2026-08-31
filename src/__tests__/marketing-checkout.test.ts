@@ -113,6 +113,7 @@ describe('public marketing checkout CTAs', () => {
   const context200k = loadHtml('site/blog/200k-context-windows-creating-200k-ways-to-fail.html');
   const missingLayer = loadHtml('site/blog/memory-governance-the-missing-layer.html');
   const autoMode = loadHtml('site/blog/claude-code-auto-mode-changes-what-teams-must-back-up.html');
+  const poisoning = loadHtml('site/blog/memory-poisoning-87-percent.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -850,6 +851,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(autoMode, 'auto-mode-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(autoMode, 'auto-mode-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(autoMode).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the memory-poisoning post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(poisoning, 'poisoning-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(poisoning, 'poisoning-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(poisoning, 'poisoning-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(poisoning, 'poisoning-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(poisoning, 'poisoning-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(poisoning).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
