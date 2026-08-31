@@ -128,6 +128,7 @@ describe('public marketing checkout CTAs', () => {
   const governanceRisk = loadHtml('site/blog/ai-governance-is-missing-the-biggest-risk-of-all.html');
   const clawhub = loadHtml('site/blog/savestate-now-on-clawhub.html');
   const backupStrategies = loadHtml('site/blog/ai-backup-strategies.html');
+  const memoryRollbacks = loadHtml('site/blog/ai-memory-management-lessons-from-recent-rollbacks.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -999,6 +1000,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(backupStrategies, 'backup-strategies-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(backupStrategies, 'backup-strategies-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(backupStrategies).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the memory-rollbacks post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(memoryRollbacks, 'memory-rollbacks-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryRollbacks, 'memory-rollbacks-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryRollbacks, 'memory-rollbacks-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(memoryRollbacks, 'memory-rollbacks-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(memoryRollbacks, 'memory-rollbacks-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(memoryRollbacks).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
