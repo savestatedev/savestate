@@ -118,6 +118,7 @@ describe('public marketing checkout CTAs', () => {
   const poisoning = loadHtml('site/blog/memory-poisoning-87-percent.html');
   const mcpServers = loadHtml('site/blog/mcp-memory-servers-ai-context-infrastructure.html');
   const githubMisses = loadHtml('site/blog/github-ai-security-misses-agent-state-risk.html');
+  const dilemma = loadHtml('site/blog/ai-memory-management-dilemma.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -899,6 +900,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(githubMisses, 'github-misses-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(githubMisses, 'github-misses-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(githubMisses).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI memory-management dilemma post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(dilemma, 'dilemma-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(dilemma, 'dilemma-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(dilemma, 'dilemma-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(dilemma, 'dilemma-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(dilemma, 'dilemma-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(dilemma).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
