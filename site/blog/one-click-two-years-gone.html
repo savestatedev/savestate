@@ -11,6 +11,12 @@
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://savestate.dev/blog/one-click-two-years-gone">
   <link rel="canonical" href="https://savestate.dev/blog/one-click-two-years-gone">
+  <style>
+    .cta-box { margin: 32px 0 0; }
+    .cta-box .btn { display: inline-block; margin-top: 8px; }
+    .cta-secondary { display: block; margin-top: 16px; font-size: 13px; }
+    .cta-fulfillment { margin-top: 16px; margin-bottom: 0; font-size: 13px; line-height: 1.7; }
+  </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
 </head>
 <body>
@@ -74,7 +80,14 @@ savestate restore "before-settings-change"</code></pre>
 
     <p>The AI memory boom is real, and it's making your agent's context more valuable than ever. Don't let one click erase years of work.</p>
 
-    <p><strong><a href="https://savestate.dev">Try SaveState free</a></strong> and protect what your AI has learned about you.</p>
+    <div class="cta-box">
+      <h3>Own the memory, not just the model.</h3>
+      <p>Pro is $9/month. Encrypted portable memory. Card today. No waitlist.</p>
+      <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="one-click-pro-checkout">Subscribe to Pro — $9/mo</a>
+      <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="one-click-team-checkout">Team is $29/month</a>
+      <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+      <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="one-click-npm-secondary">Prefer the CLI first? Install from npm</a>
+    </div>
 
   </article>
 </body>
