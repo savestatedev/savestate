@@ -126,6 +126,7 @@ describe('public marketing checkout CTAs', () => {
   const backupImperative = loadHtml('site/blog/why-backup-strategies-are-the-new-ai-imperative.html');
   const rollback = loadHtml('site/blog/your-ai-rollback-strategy-is-more-broken-than-you-think.html');
   const governanceRisk = loadHtml('site/blog/ai-governance-is-missing-the-biggest-risk-of-all.html');
+  const clawhub = loadHtml('site/blog/savestate-now-on-clawhub.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -979,6 +980,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(governanceRisk, 'governance-risk-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(governanceRisk, 'governance-risk-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(governanceRisk).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the ClawHub post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(clawhub, 'clawhub-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(clawhub, 'clawhub-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(clawhub, 'clawhub-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(clawhub, 'clawhub-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(clawhub, 'clawhub-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(clawhub).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
