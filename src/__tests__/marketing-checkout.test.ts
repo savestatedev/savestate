@@ -130,6 +130,7 @@ describe('public marketing checkout CTAs', () => {
   const backupStrategies = loadHtml('site/blog/ai-backup-strategies.html');
   const poisoningRisk = loadHtml('site/blog/memory-poisoning-ai-agent-security-risk.html');
   const outages = loadHtml('site/blog/ai-backup-strategies-lessons-recent-outages.html');
+  const robustMemory = loadHtml('site/blog/robust-memory-management-ai-agents.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1019,6 +1020,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(outages, 'outages-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(outages, 'outages-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(outages).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the robust-memory-management post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(robustMemory, 'robust-memory-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(robustMemory, 'robust-memory-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(robustMemory, 'robust-memory-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(robustMemory, 'robust-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(robustMemory, 'robust-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(robustMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
