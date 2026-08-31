@@ -111,6 +111,7 @@ describe('public marketing checkout CTAs', () => {
   const wrongProblem = loadHtml('site/blog/cloudflares-agent-memory-solves-the-wrong-problem.html');
   const unitis = loadHtml('site/blog/unitis-12m-raise-needs-a-state-layer.html');
   const context200k = loadHtml('site/blog/200k-context-windows-creating-200k-ways-to-fail.html');
+  const missingLayer = loadHtml('site/blog/memory-governance-the-missing-layer.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -830,6 +831,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(context200k, 'context-200k-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(context200k, 'context-200k-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(context200k).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the memory-governance missing-layer post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(missingLayer, 'missing-layer-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(missingLayer, 'missing-layer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(missingLayer, 'missing-layer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(missingLayer, 'missing-layer-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(missingLayer, 'missing-layer-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(missingLayer).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
