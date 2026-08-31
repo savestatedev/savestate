@@ -114,6 +114,7 @@ describe('public marketing checkout CTAs', () => {
   const missingLayer = loadHtml('site/blog/memory-governance-the-missing-layer.html');
   const autoMode = loadHtml('site/blog/claude-code-auto-mode-changes-what-teams-must-back-up.html');
   const spof = loadHtml('site/blog/your-ai-infrastructure-has-a-single-point-of-failure-youre-not-monitoring.html');
+  const oneClick = loadHtml('site/blog/one-click-two-years-gone.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -860,6 +861,14 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(spof, 'spof-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(spof, 'spof-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(spof).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the one-click-two-years-gone post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(oneClick, 'one-click-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(oneClick, 'one-click-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(oneClick, 'one-click-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(oneClick).not.toMatch(/Try SaveState free/);
+    expect(oneClick).not.toMatch(/class="btn"[^>]*savestate\.dev"|href="https:\/\/savestate\.dev"[^>]*class="btn"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
