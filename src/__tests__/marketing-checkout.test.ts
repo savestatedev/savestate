@@ -113,6 +113,7 @@ describe('public marketing checkout CTAs', () => {
   const context200k = loadHtml('site/blog/200k-context-windows-creating-200k-ways-to-fail.html');
   const missingLayer = loadHtml('site/blog/memory-governance-the-missing-layer.html');
   const autoMode = loadHtml('site/blog/claude-code-auto-mode-changes-what-teams-must-back-up.html');
+  const mcpServers = loadHtml('site/blog/mcp-memory-servers-ai-context-infrastructure.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -850,6 +851,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(autoMode, 'auto-mode-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(autoMode, 'auto-mode-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(autoMode).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the MCP memory-servers post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(mcpServers, 'mcp-servers-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(mcpServers, 'mcp-servers-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(mcpServers, 'mcp-servers-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(mcpServers, 'mcp-servers-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(mcpServers, 'mcp-servers-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(mcpServers).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
