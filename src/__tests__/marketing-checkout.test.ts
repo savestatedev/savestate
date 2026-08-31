@@ -131,6 +131,7 @@ describe('public marketing checkout CTAs', () => {
   const poisoningRisk = loadHtml('site/blog/memory-poisoning-ai-agent-security-risk.html');
   const outages = loadHtml('site/blog/ai-backup-strategies-lessons-recent-outages.html');
   const robustMemory = loadHtml('site/blog/robust-memory-management-ai-agents.html');
+  const hrGap = loadHtml('site/blog/ai-agents-as-employees-hr-gap.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1029,6 +1030,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(robustMemory, 'robust-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(robustMemory, 'robust-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(robustMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI agents-as-employees HR-gap post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(hrGap, 'hr-gap-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(hrGap, 'hr-gap-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(hrGap, 'hr-gap-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(hrGap, 'hr-gap-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(hrGap, 'hr-gap-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(hrGap).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
