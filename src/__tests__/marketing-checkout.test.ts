@@ -123,6 +123,7 @@ describe('public marketing checkout CTAs', () => {
   const dilemma = loadHtml('site/blog/ai-memory-management-dilemma.html');
   const needBackups = loadHtml('site/blog/why-ai-agents-need-memory-backups-now.html');
   const customAdapters = loadHtml('site/blog/building-custom-adapters.html');
+  const governanceRisk = loadHtml('site/blog/ai-governance-is-missing-the-biggest-risk-of-all.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -949,6 +950,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(needBackups, 'need-backups-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(needBackups, 'need-backups-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(needBackups).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI governance missing-risk post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(governanceRisk, 'governance-risk-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(governanceRisk, 'governance-risk-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(governanceRisk, 'governance-risk-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(governanceRisk, 'governance-risk-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(governanceRisk, 'governance-risk-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(governanceRisk).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
