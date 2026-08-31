@@ -118,6 +118,7 @@ describe('public marketing checkout CTAs', () => {
   const poisoning = loadHtml('site/blog/memory-poisoning-87-percent.html');
   const mcpServers = loadHtml('site/blog/mcp-memory-servers-ai-context-infrastructure.html');
   const githubMisses = loadHtml('site/blog/github-ai-security-misses-agent-state-risk.html');
+  const wakeUp = loadHtml('site/blog/agent-security-wake-up-call.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -899,6 +900,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(githubMisses, 'github-misses-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(githubMisses, 'github-misses-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(githubMisses).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the agent security wake-up-call post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(wakeUp, 'wake-up-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wakeUp, 'wake-up-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wakeUp, 'wake-up-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(wakeUp, 'wake-up-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(wakeUp, 'wake-up-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(wakeUp).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
