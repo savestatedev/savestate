@@ -121,6 +121,7 @@ describe('public marketing checkout CTAs', () => {
   const amnesia = loadHtml('site/blog/cloudflare-vibe-coding-recovery-operational-amnesia.html');
   const wakeUp = loadHtml('site/blog/agent-security-wake-up-call.html');
   const dilemma = loadHtml('site/blog/ai-memory-management-dilemma.html');
+  const needBackups = loadHtml('site/blog/why-ai-agents-need-memory-backups-now.html');
   const customAdapters = loadHtml('site/blog/building-custom-adapters.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
@@ -939,6 +940,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(customAdapters, 'custom-adapters-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(customAdapters, 'custom-adapters-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(customAdapters).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the why-ai-agents-need-memory-backups-now post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(needBackups, 'need-backups-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(needBackups, 'need-backups-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(needBackups, 'need-backups-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(needBackups, 'need-backups-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(needBackups, 'need-backups-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(needBackups).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
