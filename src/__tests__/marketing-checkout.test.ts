@@ -137,6 +137,7 @@ describe('public marketing checkout CTAs', () => {
   const monitoringStack = loadHtml('site/blog/monitoring-stack-cant-handle-non-deterministic-ai.html');
   const memoryEngineering = loadHtml('site/blog/memory-engineering-disaster-recovery.html');
   const cloudSolutions = loadHtml('site/blog/why-your-ai-needs-more-than-just-cloud-solutions.html');
+  const databaseProblem = loadHtml('site/blog/cloudflare-agent-memory-database-problem.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1089,6 +1090,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(cloudSolutions, 'cloud-solutions-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(cloudSolutions, 'cloud-solutions-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(cloudSolutions).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the Cloudflare agent-memory database-problem post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(databaseProblem, 'database-problem-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(databaseProblem, 'database-problem-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(databaseProblem, 'database-problem-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(databaseProblem, 'database-problem-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(databaseProblem, 'database-problem-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(databaseProblem).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
