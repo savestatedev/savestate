@@ -158,6 +158,7 @@ describe('public marketing checkout CTAs', () => {
   const openaiApiMemory = loadHtml('site/blog/openai-api-changes-memory-management.html');
   const openaiSecurity = loadHtml('site/blog/openai-security-features-ai-state-management.html');
   const googleSecurity = loadHtml('site/blog/google-ai-security-features-state-management-risks.html');
+  const wakeUpOutages = loadHtml('site/blog/ai-memory-management-wake-up-call-outages.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1299,6 +1300,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(googleSecurity, 'google-security-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(googleSecurity, 'google-security-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(googleSecurity).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the memory-management outages wake-up post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(wakeUpOutages, 'wake-up-outages-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wakeUpOutages, 'wake-up-outages-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wakeUpOutages, 'wake-up-outages-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(wakeUpOutages, 'wake-up-outages-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(wakeUpOutages, 'wake-up-outages-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(wakeUpOutages).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
