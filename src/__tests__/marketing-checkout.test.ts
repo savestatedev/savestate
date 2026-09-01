@@ -144,6 +144,7 @@ describe('public marketing checkout CTAs', () => {
   const operationsProblem = loadHtml('site/blog/cloudflares-agent-memory-creates-operations-problem.html');
   const governanceReliability = loadHtml('site/blog/memory-governance-ai-reliability.html');
   const qaProcess = loadHtml('site/blog/testing-ai-agents-is-breaking-your-qa-process.html');
+  const memoryComplexity = loadHtml('site/blog/ai-agent-memory-management-complexity.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1159,6 +1160,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(qaProcess, 'qa-process-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(qaProcess, 'qa-process-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(qaProcess).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI agent memory-management complexity post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(memoryComplexity, 'memory-complexity-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryComplexity, 'memory-complexity-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryComplexity, 'memory-complexity-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(memoryComplexity, 'memory-complexity-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(memoryComplexity, 'memory-complexity-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(memoryComplexity).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
