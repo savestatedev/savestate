@@ -149,6 +149,7 @@ describe('public marketing checkout CTAs', () => {
   const cicdPipeline = loadHtml('site/blog/your-cicd-pipeline-wasnt-built-for-ai-generated-code.html');
   const visualBuilders = loadHtml('site/blog/visual-ai-agent-builders-creating-operational-debt.html');
   const productionBreak = loadHtml('site/blog/your-ai-agents-will-break-in-production.html');
+  const incidentResponse = loadHtml('site/blog/your-ai-incident-response-plan-is-already-obsolete.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1209,6 +1210,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(productionBreak, 'production-break-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(productionBreak, 'production-break-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(productionBreak).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the incident-response-plan post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(incidentResponse, 'incident-response-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(incidentResponse, 'incident-response-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(incidentResponse, 'incident-response-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(incidentResponse, 'incident-response-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(incidentResponse, 'incident-response-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(incidentResponse).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
