@@ -140,6 +140,7 @@ describe('public marketing checkout CTAs', () => {
   const databaseProblem = loadHtml('site/blog/cloudflare-agent-memory-database-problem.html');
   const openaiMemoryBackup = loadHtml('site/blog/ai-memory-backup-strategies.html');
   const heroesStability = loadHtml('site/blog/ai-agent-backups-heroes-of-stability.html');
+  const storageNotState = loadHtml('site/blog/cloudflare-agent-memory-solves-storage-not-state-management.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1119,6 +1120,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(heroesStability, 'heroes-stability-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(heroesStability, 'heroes-stability-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(heroesStability).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the Cloudflare Agent Memory storage-not-state post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(storageNotState, 'storage-not-state-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(storageNotState, 'storage-not-state-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(storageNotState, 'storage-not-state-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(storageNotState, 'storage-not-state-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(storageNotState, 'storage-not-state-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(storageNotState).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
