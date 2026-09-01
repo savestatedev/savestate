@@ -155,6 +155,7 @@ describe('public marketing checkout CTAs', () => {
   const deploymentRisks = loadHtml('site/blog/ai-deployment-risks-lessons.html');
   const openaiApiChanges = loadHtml('site/blog/openai-api-changes-impact-ai-agents.html');
   const openaiMemoryChanges = loadHtml('site/blog/openai-memory-changes-impact-developers.html');
+  const openaiApiMemory = loadHtml('site/blog/openai-api-changes-memory-management.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1269,6 +1270,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(openaiMemoryChanges, 'openai-memory-changes-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(openaiMemoryChanges, 'openai-memory-changes-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(openaiMemoryChanges).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the OpenAI API memory-management post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(openaiApiMemory, 'openai-api-memory-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(openaiApiMemory, 'openai-api-memory-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(openaiApiMemory, 'openai-api-memory-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(openaiApiMemory, 'openai-api-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(openaiApiMemory, 'openai-api-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(openaiApiMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
