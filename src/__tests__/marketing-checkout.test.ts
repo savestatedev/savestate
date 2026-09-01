@@ -157,6 +157,7 @@ describe('public marketing checkout CTAs', () => {
   const openaiMemoryChanges = loadHtml('site/blog/openai-memory-changes-impact-developers.html');
   const openaiApiMemory = loadHtml('site/blog/openai-api-changes-memory-management.html');
   const openaiSecurity = loadHtml('site/blog/openai-security-features-ai-state-management.html');
+  const googleSecurity = loadHtml('site/blog/google-ai-security-features-state-management-risks.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1289,6 +1290,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(openaiSecurity, 'openai-security-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(openaiSecurity, 'openai-security-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(openaiSecurity).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the Google AI security-features post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(googleSecurity, 'google-security-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(googleSecurity, 'google-security-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(googleSecurity, 'google-security-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(googleSecurity, 'google-security-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(googleSecurity, 'google-security-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(googleSecurity).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
