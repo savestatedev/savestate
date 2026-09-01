@@ -134,6 +134,7 @@ describe('public marketing checkout CTAs', () => {
   const hrGap = loadHtml('site/blog/ai-agents-as-employees-hr-gap.html');
   const memoryRollbacks = loadHtml('site/blog/ai-memory-management-lessons-from-recent-rollbacks.html');
   const agentBackup = loadHtml('site/blog/ai-agent-memory-backup-strategy.html');
+  const cloudSolutions = loadHtml('site/blog/why-your-ai-needs-more-than-just-cloud-solutions.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1059,6 +1060,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(agentBackup, 'agent-backup-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(agentBackup, 'agent-backup-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(agentBackup).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the more-than-just-cloud-solutions post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(cloudSolutions, 'cloud-solutions-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(cloudSolutions, 'cloud-solutions-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(cloudSolutions, 'cloud-solutions-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(cloudSolutions, 'cloud-solutions-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(cloudSolutions, 'cloud-solutions-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(cloudSolutions).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
