@@ -134,6 +134,7 @@ describe('public marketing checkout CTAs', () => {
   const hrGap = loadHtml('site/blog/ai-agents-as-employees-hr-gap.html');
   const memoryRollbacks = loadHtml('site/blog/ai-memory-management-lessons-from-recent-rollbacks.html');
   const agentBackup = loadHtml('site/blog/ai-agent-memory-backup-strategy.html');
+  const heroesStability = loadHtml('site/blog/ai-agent-backups-heroes-of-stability.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1059,6 +1060,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(agentBackup, 'agent-backup-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(agentBackup, 'agent-backup-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(agentBackup).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI agent backups heroes-of-stability post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(heroesStability, 'heroes-stability-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(heroesStability, 'heroes-stability-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(heroesStability, 'heroes-stability-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(heroesStability, 'heroes-stability-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(heroesStability, 'heroes-stability-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(heroesStability).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
