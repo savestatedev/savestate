@@ -135,6 +135,7 @@ describe('public marketing checkout CTAs', () => {
   const memoryRollbacks = loadHtml('site/blog/ai-memory-management-lessons-from-recent-rollbacks.html');
   const agentBackup = loadHtml('site/blog/ai-agent-memory-backup-strategy.html');
   const monitoringStack = loadHtml('site/blog/monitoring-stack-cant-handle-non-deterministic-ai.html');
+  const memoryEngineering = loadHtml('site/blog/memory-engineering-disaster-recovery.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1069,6 +1070,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(monitoringStack, 'monitoring-stack-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(monitoringStack, 'monitoring-stack-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(monitoringStack).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the memory-engineering disaster-recovery post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(memoryEngineering, 'memory-engineering-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryEngineering, 'memory-engineering-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryEngineering, 'memory-engineering-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(memoryEngineering, 'memory-engineering-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(memoryEngineering, 'memory-engineering-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(memoryEngineering).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
