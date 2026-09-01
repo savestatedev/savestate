@@ -151,6 +151,7 @@ describe('public marketing checkout CTAs', () => {
   const productionBreak = loadHtml('site/blog/your-ai-agents-will-break-in-production.html');
   const incidentResponse = loadHtml('site/blog/your-ai-incident-response-plan-is-already-obsolete.html');
   const cicdSecrets = loadHtml('site/blog/cicd-pipeline-wasnt-built-for-ai-secrets.html');
+  const openaiApiChanges = loadHtml('site/blog/openai-api-changes-impact-ai-agents.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1229,6 +1230,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(cicdSecrets, 'cicd-secrets-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(cicdSecrets, 'cicd-secrets-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(cicdSecrets).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the OpenAI API-changes post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(openaiApiChanges, 'openai-api-changes-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(openaiApiChanges, 'openai-api-changes-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(openaiApiChanges, 'openai-api-changes-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(openaiApiChanges, 'openai-api-changes-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(openaiApiChanges, 'openai-api-changes-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(openaiApiChanges).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
