@@ -143,6 +143,7 @@ describe('public marketing checkout CTAs', () => {
   const storageNotState = loadHtml('site/blog/cloudflare-agent-memory-solves-storage-not-state-management.html');
   const operationsProblem = loadHtml('site/blog/cloudflares-agent-memory-creates-operations-problem.html');
   const governanceReliability = loadHtml('site/blog/memory-governance-ai-reliability.html');
+  const qaProcess = loadHtml('site/blog/testing-ai-agents-is-breaking-your-qa-process.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1149,6 +1150,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(governanceReliability, 'governance-reliability-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(governanceReliability, 'governance-reliability-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(governanceReliability).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the testing-ai-agents QA-process post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(qaProcess, 'qa-process-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(qaProcess, 'qa-process-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(qaProcess, 'qa-process-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(qaProcess, 'qa-process-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(qaProcess, 'qa-process-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(qaProcess).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
