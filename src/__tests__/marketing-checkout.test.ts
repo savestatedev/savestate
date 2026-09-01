@@ -151,6 +151,7 @@ describe('public marketing checkout CTAs', () => {
   const productionBreak = loadHtml('site/blog/your-ai-agents-will-break-in-production.html');
   const incidentResponse = loadHtml('site/blog/your-ai-incident-response-plan-is-already-obsolete.html');
   const cicdSecrets = loadHtml('site/blog/cicd-pipeline-wasnt-built-for-ai-secrets.html');
+  const deploymentPipeline = loadHtml('site/blog/ai-deployment-pipeline-new-attack-vector.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1229,6 +1230,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(cicdSecrets, 'cicd-secrets-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(cicdSecrets, 'cicd-secrets-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(cicdSecrets).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI deployment-pipeline attack-vector post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(deploymentPipeline, 'deployment-pipeline-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(deploymentPipeline, 'deployment-pipeline-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(deploymentPipeline, 'deployment-pipeline-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(deploymentPipeline, 'deployment-pipeline-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(deploymentPipeline, 'deployment-pipeline-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(deploymentPipeline).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
