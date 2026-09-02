@@ -168,6 +168,7 @@ describe('public marketing checkout CTAs', () => {
   const hiddenVulnerabilities = loadHtml('site/blog/hidden-vulnerabilities-ai-state-management.html');
   const costOfNeglecting = loadHtml('site/blog/cost-of-neglecting-ai-memory-backups.html');
   const costOfIgnoring = loadHtml('site/blog/cost-of-ignoring-ai-state-management.html');
+  const ignoringBackups = loadHtml('site/blog/why-ignoring-ai-state-backups-could-cost-you-in-cybersecurity.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1399,6 +1400,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(costOfIgnoring, 'cost-of-ignoring-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(costOfIgnoring, 'cost-of-ignoring-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(costOfIgnoring).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the ignoring-ai-state-backups cybersecurity post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(ignoringBackups, 'ignoring-backups-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(ignoringBackups, 'ignoring-backups-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(ignoringBackups, 'ignoring-backups-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(ignoringBackups, 'ignoring-backups-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(ignoringBackups, 'ignoring-backups-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(ignoringBackups).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
