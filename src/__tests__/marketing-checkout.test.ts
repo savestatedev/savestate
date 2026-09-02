@@ -186,6 +186,7 @@ describe('public marketing checkout CTAs', () => {
   const alignCisa = loadHtml('site/blog/align-ai-state-management-cisa-guidelines.html');
   const aiCisaGuidelines = loadHtml('site/blog/ai-state-management-cisa-guidelines.html');
   const githubActionsUpdate = loadHtml('site/blog/github-actions-update-ai-state-management.html');
+  const hardwareRenaissance = loadHtml('site/blog/hardware-renaissance-ai-state-management.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1579,6 +1580,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(githubActionsUpdate, 'github-actions-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(githubActionsUpdate, 'github-actions-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(githubActionsUpdate).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the hardware-renaissance post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(hardwareRenaissance, 'hardware-renaissance-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(hardwareRenaissance, 'hardware-renaissance-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(hardwareRenaissance, 'hardware-renaissance-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(hardwareRenaissance, 'hardware-renaissance-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(hardwareRenaissance, 'hardware-renaissance-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(hardwareRenaissance).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
