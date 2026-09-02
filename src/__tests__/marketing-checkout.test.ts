@@ -171,6 +171,7 @@ describe('public marketing checkout CTAs', () => {
   const ignoringBackups = loadHtml('site/blog/why-ignoring-ai-state-backups-could-cost-you-in-cybersecurity.html');
   const hiddenRisks = loadHtml('site/blog/hidden-risks-managed-ai-memory-solutions.html');
   const impactOfMemory = loadHtml('site/blog/impact-of-memory-on-ai-performance.html');
+  const savestatePivot = loadHtml('site/blog/from-backup-tool-to-memory-layer-the-savestate-pivot.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1429,6 +1430,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(impactOfMemory, 'impact-of-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(impactOfMemory, 'impact-of-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(impactOfMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the savestate-pivot post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(savestatePivot, 'savestate-pivot-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(savestatePivot, 'savestate-pivot-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(savestatePivot, 'savestate-pivot-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(savestatePivot, 'savestate-pivot-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(savestatePivot, 'savestate-pivot-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(savestatePivot).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
