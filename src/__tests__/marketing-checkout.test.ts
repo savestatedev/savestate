@@ -185,6 +185,7 @@ describe('public marketing checkout CTAs', () => {
   const regulatoryCompliance = loadHtml('site/blog/regulatory-compliance-ai-state-management.html');
   const alignCisa = loadHtml('site/blog/align-ai-state-management-cisa-guidelines.html');
   const aiCisaGuidelines = loadHtml('site/blog/ai-state-management-cisa-guidelines.html');
+  const risingHardware = loadHtml('site/blog/rising-hardware-prices-ai-state-management.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1569,6 +1570,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(aiCisaGuidelines, 'ai-cisa-guidelines-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(aiCisaGuidelines, 'ai-cisa-guidelines-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(aiCisaGuidelines).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the rising-hardware-prices post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(risingHardware, 'rising-hardware-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(risingHardware, 'rising-hardware-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(risingHardware, 'rising-hardware-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(risingHardware, 'rising-hardware-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(risingHardware, 'rising-hardware-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(risingHardware).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
