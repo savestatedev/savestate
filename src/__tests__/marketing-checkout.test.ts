@@ -163,6 +163,7 @@ describe('public marketing checkout CTAs', () => {
   const openaiSafety = loadHtml('site/blog/openai-safety-features-state-management-gap.html');
   const securityHiddenRisks = loadHtml('site/blog/ai-security-features-hidden-risks.html');
   const cybersecurityWeakLink = loadHtml('site/blog/ai-state-management-cybersecurity-weak-link.html');
+  const transparency = loadHtml('site/blog/ai-state-management-transparency.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1349,6 +1350,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(cybersecurityWeakLink, 'cybersecurity-weak-link-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(cybersecurityWeakLink, 'cybersecurity-weak-link-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(cybersecurityWeakLink).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI state-management transparency post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(transparency, 'transparency-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(transparency, 'transparency-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(transparency, 'transparency-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(transparency, 'transparency-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(transparency, 'transparency-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(transparency).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
