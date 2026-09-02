@@ -176,6 +176,7 @@ describe('public marketing checkout CTAs', () => {
   const recentUpsets = loadHtml('site/blog/recent-upsets-ai-state-management.html');
   const cisaGuidelines = loadHtml('site/blog/cisa-guidelines-ai-state-management.html');
   const defenseRegulations = loadHtml('site/blog/state-management-ai-defense-regulations.html');
+  const safetyRegulations = loadHtml('site/blog/ai-state-management-safety-regulations.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1479,6 +1480,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(defenseRegulations, 'defense-regulations-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(defenseRegulations, 'defense-regulations-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(defenseRegulations).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the AI safety-regulations post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(safetyRegulations, 'safety-regulations-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(safetyRegulations, 'safety-regulations-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(safetyRegulations, 'safety-regulations-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(safetyRegulations, 'safety-regulations-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(safetyRegulations, 'safety-regulations-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(safetyRegulations).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
