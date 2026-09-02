@@ -181,6 +181,7 @@ describe('public marketing checkout CTAs', () => {
   const cisaNewGuidelines = loadHtml('site/blog/cisa-new-guidelines-ai-state-management.html');
   const cisaElevating = loadHtml('site/blog/cisa-guidelines-elevating-ai-state-management.html');
   const aiRegulations = loadHtml('site/blog/state-management-ai-regulations.html');
+  const beyondSafety = loadHtml('site/blog/beyond-safety-state-management-ai.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1529,6 +1530,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(aiRegulations, 'ai-regulations-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(aiRegulations, 'ai-regulations-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(aiRegulations).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the beyond-safety post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(beyondSafety, 'beyond-safety-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(beyondSafety, 'beyond-safety-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(beyondSafety, 'beyond-safety-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(beyondSafety, 'beyond-safety-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(beyondSafety, 'beyond-safety-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(beyondSafety).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
