@@ -171,6 +171,7 @@ describe('public marketing checkout CTAs', () => {
   const ignoringBackups = loadHtml('site/blog/why-ignoring-ai-state-backups-could-cost-you-in-cybersecurity.html');
   const hiddenRisks = loadHtml('site/blog/hidden-risks-managed-ai-memory-solutions.html');
   const impactOfMemory = loadHtml('site/blog/impact-of-memory-on-ai-performance.html');
+  const cisaGuidelines = loadHtml('site/blog/cisa-guidelines-ai-state-management.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1429,6 +1430,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(impactOfMemory, 'impact-of-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(impactOfMemory, 'impact-of-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(impactOfMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the CISA guidelines post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(cisaGuidelines, 'cisa-guidelines-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(cisaGuidelines, 'cisa-guidelines-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(cisaGuidelines, 'cisa-guidelines-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(cisaGuidelines, 'cisa-guidelines-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(cisaGuidelines, 'cisa-guidelines-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(cisaGuidelines).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
