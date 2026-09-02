@@ -183,6 +183,7 @@ describe('public marketing checkout CTAs', () => {
   const aiRegulations = loadHtml('site/blog/state-management-ai-regulations.html');
   const beyondSafety = loadHtml('site/blog/beyond-safety-state-management-ai.html');
   const regulatoryCompliance = loadHtml('site/blog/regulatory-compliance-ai-state-management.html');
+  const alignCisa = loadHtml('site/blog/align-ai-state-management-cisa-guidelines.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1549,6 +1550,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(regulatoryCompliance, 'regulatory-compliance-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(regulatoryCompliance, 'regulatory-compliance-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(regulatoryCompliance).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the CISA-align guidelines post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(alignCisa, 'align-cisa-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(alignCisa, 'align-cisa-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(alignCisa, 'align-cisa-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(alignCisa, 'align-cisa-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(alignCisa, 'align-cisa-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(alignCisa).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
