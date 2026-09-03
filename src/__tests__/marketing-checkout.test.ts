@@ -1802,6 +1802,8 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(aiEvolution, 'ai-evolution-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(aiEvolution, 'ai-evolution-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(aiEvolution).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
   it('points the agent-security-incidents post CTAs at the live Payment Links', () => {
     expect(hrefForCta(agentSecurityIncidents, 'agent-security-incidents-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(agentSecurityIncidents, 'agent-security-incidents-pro-checkout')).toBe(stripe.products.pro.payment_link);
@@ -1809,6 +1811,8 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(agentSecurityIncidents, 'agent-security-incidents-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(agentSecurityIncidents, 'agent-security-incidents-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(agentSecurityIncidents).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
   it('points the security-scrutiny post CTAs at the live Payment Links', () => {
     expect(hrefForCta(securityScrutiny, 'security-scrutiny-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(securityScrutiny, 'security-scrutiny-pro-checkout')).toBe(stripe.products.pro.payment_link);
@@ -1816,6 +1820,8 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(securityScrutiny, 'security-scrutiny-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(securityScrutiny, 'security-scrutiny-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(securityScrutiny).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
   it('points the backup-strategies-critical post CTAs at the live Payment Links', () => {
     expect(hrefForCta(backupStrategiesCritical, 'backup-strategies-critical-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(backupStrategiesCritical, 'backup-strategies-critical-pro-checkout')).toBe(stripe.products.pro.payment_link);
