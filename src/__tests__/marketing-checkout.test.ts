@@ -218,6 +218,8 @@ describe('public marketing checkout CTAs', () => {
   const infrastructureDebt = loadHtml('site/blog/ai-deployment-pipeline-infrastructure-debt.html');
   const backupLessons = loadHtml('site/blog/backup-strategies-ai-lessons-failures.html');
   const rampocalypse = loadHtml('site/blog/rampocalypse-reveals-ai-agents-are-memory-vampires.html');
+  const v070Legacy = loadHtml('site/blog/v0-7-0-migration-wizard.html');
+  const wizardArchitecture = loadHtml('site/blog/migration-wizard-architecture.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1899,6 +1901,24 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(rampocalypse, 'rampocalypse-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(rampocalypse, 'rampocalypse-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(rampocalypse).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the v070-legacy post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(v070Legacy, 'v070-legacy-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(v070Legacy, 'v070-legacy-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(v070Legacy, 'v070-legacy-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(v070Legacy, 'v070-legacy-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(v070Legacy, 'v070-legacy-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(v070Legacy).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the wizard-architecture post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(wizardArchitecture, 'wizard-architecture-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wizardArchitecture, 'wizard-architecture-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(wizardArchitecture, 'wizard-architecture-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(wizardArchitecture, 'wizard-architecture-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(wizardArchitecture, 'wizard-architecture-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(wizardArchitecture).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
