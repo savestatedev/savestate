@@ -105,6 +105,28 @@ nav .nav-links a {
 
 nav .nav-links a:hover { color: var(--blue); }
 
+nav .nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.cta-secondary {
+  display: block;
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.cta-fulfillment {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
 main { padding: 120px 0 80px; }
 
 article { margin-bottom: 48px; }
@@ -251,6 +273,7 @@ footer {
       <li><a href="/">Home</a></li>
       <li><a href="/blog/">Blog</a></li>
       <li><a href="https://savestate.dev/docs">Docs</a></li>
+      <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="hidden-cost-nav-pro-checkout">Subscribe to Pro</a></li>
     </ul>
   </div>
 </nav>
@@ -322,9 +345,12 @@ footer {
       <p>Third-party solutions are emerging. The key is finding one that automatically snapshots your session before compaction happens, so you can restore to any previous state with one click.</p>
 
       <div class="cta">
-        <h3>Stop Losing Context</h3>
-        <p>SaveState automatically backs up your AI agent sessions before context loss happens. Restore hours of work in seconds.</p>
-        <a href="https://savestate.dev" class="btn">Get Started Free</a>
+        <h3>Own the memory, not just the model.</h3>
+        <p>Pro is $9/month. Encrypted portable memory. Card today. No waitlist.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="hidden-cost-pro-checkout">Subscribe to Pro — $9/mo</a>
+        <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="hidden-cost-team-checkout">Team is $29/month</a>
+        <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="hidden-cost-npm-secondary">Prefer the CLI first? Install from npm</a>
       </div>
 
       <h2>What You Can Do Today</h2>

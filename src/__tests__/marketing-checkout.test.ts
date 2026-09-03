@@ -202,6 +202,7 @@ describe('public marketing checkout CTAs', () => {
   const lessonsFailures = loadHtml('site/blog/ai-agent-state-management-lessons-failures.html');
   const adversarialAttack = loadHtml('site/blog/is-your-ai-ready-for-the-next-adversarial-attack.html');
   const persistentMemory = loadHtml('site/blog/persistent-memory-ai-strategy.html');
+  const hiddenCost = loadHtml('site/blog/hidden-cost-ai-context-loss.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1739,6 +1740,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(persistentMemory, 'persistent-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(persistentMemory, 'persistent-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(persistentMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the hidden-cost post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(hiddenCost, 'hidden-cost-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(hiddenCost, 'hidden-cost-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(hiddenCost, 'hidden-cost-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(hiddenCost, 'hidden-cost-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(hiddenCost, 'hidden-cost-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(hiddenCost).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
