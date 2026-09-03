@@ -199,6 +199,7 @@ describe('public marketing checkout CTAs', () => {
   const newStandard = loadHtml('site/blog/the-new-standard-in-ai-memory.html');
   const agentMemoryCrisis = loadHtml('site/blog/agent-memory-crisis-2026.html');
   const aiAmnesia = loadHtml('site/blog/ai-amnesia-agent-memory.html');
+  const persistentMemory = loadHtml('site/blog/persistent-memory-ai-strategy.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1709,6 +1710,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(aiAmnesia, 'ai-amnesia-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(aiAmnesia, 'ai-amnesia-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(aiAmnesia).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the persistent-memory post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(persistentMemory, 'persistent-memory-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(persistentMemory, 'persistent-memory-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(persistentMemory, 'persistent-memory-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(persistentMemory, 'persistent-memory-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(persistentMemory, 'persistent-memory-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(persistentMemory).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
