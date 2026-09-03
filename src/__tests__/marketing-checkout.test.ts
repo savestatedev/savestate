@@ -213,6 +213,7 @@ describe('public marketing checkout CTAs', () => {
   const backupStrategiesCritical = loadHtml('site/blog/ai-backup-strategies-critical.html');
   const securityRisks = loadHtml('site/blog/ai-security-risks-backup-strategy.html');
   const agentSecurityCicd = loadHtml('site/blog/ai-agent-security-cicd-pipeline.html');
+  const reassessGoogleIo = loadHtml('site/blog/reassessing-ai-state-management-google-io-2026.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1849,6 +1850,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(agentSecurityCicd, 'agent-security-cicd-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(agentSecurityCicd, 'agent-security-cicd-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(agentSecurityCicd).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the reassess-google-io post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(reassessGoogleIo, 'reassess-google-io-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(reassessGoogleIo, 'reassess-google-io-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(reassessGoogleIo, 'reassess-google-io-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(reassessGoogleIo, 'reassess-google-io-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(reassessGoogleIo, 'reassess-google-io-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(reassessGoogleIo).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
