@@ -217,6 +217,7 @@ describe('public marketing checkout CTAs', () => {
   const reassessGoogleIo = loadHtml('site/blog/reassessing-ai-state-management-google-io-2026.html');
   const infrastructureDebt = loadHtml('site/blog/ai-deployment-pipeline-infrastructure-debt.html');
   const backupLessons = loadHtml('site/blog/backup-strategies-ai-lessons-failures.html');
+  const rampocalypse = loadHtml('site/blog/rampocalypse-reveals-ai-agents-are-memory-vampires.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1889,6 +1890,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(backupLessons, 'backup-lessons-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(backupLessons, 'backup-lessons-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(backupLessons).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the rampocalypse post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(rampocalypse, 'rampocalypse-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(rampocalypse, 'rampocalypse-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(rampocalypse, 'rampocalypse-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(rampocalypse, 'rampocalypse-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(rampocalypse, 'rampocalypse-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(rampocalypse).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
