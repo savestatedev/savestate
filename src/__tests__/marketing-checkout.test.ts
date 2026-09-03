@@ -205,6 +205,7 @@ describe('public marketing checkout CTAs', () => {
   const hiddenCost = loadHtml('site/blog/hidden-cost-ai-context-loss.html');
   const ramShortage = loadHtml('site/blog/ram-shortage-hidden-risks-ai-infrastructure.html');
   const transformStrategy = loadHtml('site/blog/transform-your-ai-strategy-with-advanced-memory-solutions.html');
+  const stateManagementRise = loadHtml('site/blog/ai-state-management-rise.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1769,6 +1770,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(transformStrategy, 'transform-strategy-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(transformStrategy, 'transform-strategy-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(transformStrategy).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the state-management-rise post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(stateManagementRise, 'state-management-rise-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(stateManagementRise, 'state-management-rise-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(stateManagementRise, 'state-management-rise-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(stateManagementRise, 'state-management-rise-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(stateManagementRise, 'state-management-rise-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(stateManagementRise).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
