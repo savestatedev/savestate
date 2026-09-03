@@ -189,6 +189,7 @@ describe('public marketing checkout CTAs', () => {
   const hardwareRenaissance = loadHtml('site/blog/hardware-renaissance-ai-state-management.html');
   const risingHardware = loadHtml('site/blog/rising-hardware-prices-ai-state-management.html');
   const hardwareInvestments = loadHtml('site/blog/hardware-investments-ai-state-management.html');
+  const evolve = loadHtml('site/blog/ai-state-management-evolve.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1609,6 +1610,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(hardwareInvestments, 'hardware-investments-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(hardwareInvestments, 'hardware-investments-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(hardwareInvestments).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the evolve post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(evolve, 'evolve-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(evolve, 'evolve-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(evolve, 'evolve-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(evolve, 'evolve-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(evolve, 'evolve-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(evolve).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
