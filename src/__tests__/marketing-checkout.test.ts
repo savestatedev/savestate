@@ -195,6 +195,7 @@ describe('public marketing checkout CTAs', () => {
   const evolve = loadHtml('site/blog/ai-state-management-evolve.html');
   const continuousDeployment = loadHtml('site/blog/ai-memory-continuous-deployment.html');
   const evolvingStrategy = loadHtml('site/blog/evolving-your-state-management-strategy-for-ai-agents.html');
+  const newStandard = loadHtml('site/blog/the-new-standard-in-ai-memory.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1669,6 +1670,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(evolvingStrategy, 'evolving-strategy-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(evolvingStrategy, 'evolving-strategy-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(evolvingStrategy).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the new-standard post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(newStandard, 'new-standard-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(newStandard, 'new-standard-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(newStandard, 'new-standard-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(newStandard, 'new-standard-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(newStandard, 'new-standard-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(newStandard).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
