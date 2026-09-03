@@ -205,6 +205,7 @@ describe('public marketing checkout CTAs', () => {
   const hiddenCost = loadHtml('site/blog/hidden-cost-ai-context-loss.html');
   const ramShortage = loadHtml('site/blog/ram-shortage-hidden-risks-ai-infrastructure.html');
   const transformStrategy = loadHtml('site/blog/transform-your-ai-strategy-with-advanced-memory-solutions.html');
+  const securityScrutiny = loadHtml('site/blog/ai-state-management-security-scrutiny.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1769,6 +1770,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(transformStrategy, 'transform-strategy-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(transformStrategy, 'transform-strategy-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(transformStrategy).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the security-scrutiny post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(securityScrutiny, 'security-scrutiny-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(securityScrutiny, 'security-scrutiny-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(securityScrutiny, 'security-scrutiny-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(securityScrutiny, 'security-scrutiny-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(securityScrutiny, 'security-scrutiny-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(securityScrutiny).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
