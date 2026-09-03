@@ -199,6 +199,7 @@ describe('public marketing checkout CTAs', () => {
   const newStandard = loadHtml('site/blog/the-new-standard-in-ai-memory.html');
   const agentMemoryCrisis = loadHtml('site/blog/agent-memory-crisis-2026.html');
   const aiAmnesia = loadHtml('site/blog/ai-amnesia-agent-memory.html');
+  const lessonsFailures = loadHtml('site/blog/ai-agent-state-management-lessons-failures.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1709,6 +1710,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(aiAmnesia, 'ai-amnesia-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(aiAmnesia, 'ai-amnesia-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(aiAmnesia).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the lessons-failures post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(lessonsFailures, 'lessons-failures-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(lessonsFailures, 'lessons-failures-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(lessonsFailures, 'lessons-failures-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(lessonsFailures, 'lessons-failures-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(lessonsFailures, 'lessons-failures-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(lessonsFailures).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
