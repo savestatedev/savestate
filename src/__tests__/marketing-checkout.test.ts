@@ -192,6 +192,7 @@ describe('public marketing checkout CTAs', () => {
   const ciCd = loadHtml('site/blog/ai-state-management-ci-cd.html');
   const azureUpgrade = loadHtml('site/blog/microsoft-azure-ai-upgrade-state-management.html');
   const funding2026 = loadHtml('site/blog/ai-state-management-funding-2026.html');
+  const evolve = loadHtml('site/blog/ai-state-management-evolve.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1639,6 +1640,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(funding2026, 'funding-2026-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(funding2026, 'funding-2026-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(funding2026).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the evolve post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(evolve, 'evolve-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(evolve, 'evolve-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(evolve, 'evolve-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(evolve, 'evolve-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(evolve, 'evolve-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(evolve).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
