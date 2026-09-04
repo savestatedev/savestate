@@ -969,9 +969,12 @@ describe('public marketing checkout CTAs', () => {
   });
 
   it('points the one-click-two-years-gone post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(oneClick, 'one-click-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(oneClick, 'one-click-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(oneClick, 'one-click-team-checkout')).toBe(stripe.products.team.payment_link);
     expect(hrefForCta(oneClick, 'one-click-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(oneClick, 'one-click-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(oneClick).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
     expect(oneClick).not.toMatch(/Try SaveState free/);
     expect(oneClick).not.toMatch(/class="btn"[^>]*savestate\.dev"|href="https:\/\/savestate\.dev"[^>]*class="btn"/);
   });
