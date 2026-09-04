@@ -13,6 +13,11 @@ const cli = readFileSync(
   'utf8',
 );
 
+const mcp = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../mcp.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -288,6 +293,18 @@ describe('CLI docs', () => {
     expect(mcpSection).toContain('--merge');
     expect(mcpSection).toContain('savestate init');
     expect(mcpSection).toContain('/docs/mcp.html');
+  });
+
+  it('registers --json on savestate mcp status', () => {
+    const statusBlock = mcp.slice(mcp.indexOf("command('status')"), mcp.indexOf("command('export')"));
+    expect(statusBlock).toContain(".option('--json'");
+  });
+
+  it('documents mcp --json', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--json');
+    expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain('savestate mcp status --json');
   });
 
   it('lists savestate context in the command overview', () => {

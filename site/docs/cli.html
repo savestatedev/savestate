@@ -816,6 +816,7 @@
         <tr><td><code>--include-snapshots</code></td><td>Include snapshot metadata in the exported passport</td></tr>
         <tr><td><code>-i, --input &lt;path&gt;</code></td><td>Passport file to import (required for <code>import</code>)</td></tr>
         <tr><td><code>--merge</code></td><td>Merge imported memories with existing ones instead of replacing</td></tr>
+        <tr><td><code>--json</code></td><td>Emit MCP status as JSON on <code>status</code>. Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -824,6 +825,9 @@
 
 <span class="code-comment"># Config, tools, and client snippet</span>
 <span class="code-prompt">$</span> savestate mcp status
+
+<span class="code-comment"># Scriptable MCP status</span>
+<span class="code-prompt">$</span> savestate mcp status --json
 
 <span class="code-comment"># Export a memory passport</span>
 <span class="code-prompt">$</span> savestate mcp export --agent my-agent --include-snapshots
