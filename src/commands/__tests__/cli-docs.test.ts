@@ -626,6 +626,18 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('savestate init');
   });
 
+  it('registers --json on savestate config', () => {
+    const configBlock = cli.slice(cli.indexOf("command('config')"), cli.indexOf("command('adapters')"));
+    expect(configBlock).toContain(".option('--json'");
+  });
+
+  it('documents config --json', () => {
+    const configSection = docs.slice(docs.indexOf('id="config"'), docs.indexOf('id="adapters"'));
+    expect(configSection).toContain('--json');
+    expect(configSection).toContain('scripting');
+    expect(configSection).toContain('savestate config --json');
+  });
+
   it('registers --json on savestate adapters', () => {
     const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
     expect(adaptersBlock).toContain(".option('--json'");
