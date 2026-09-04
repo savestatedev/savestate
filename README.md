@@ -192,6 +192,7 @@ savestate migrate                     Migration wizard between platforms
   --from <platform>                  Source platform
   --to <platform>                    Target platform
   --list                             Show platform capabilities
+  --json                             Output the --list catalog as JSON
   --dry-run                          Preview migration plan
 savestate export                      Export an encrypted agent container
   -a, --agent <id>                   Agent ID to export

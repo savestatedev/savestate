@@ -55,6 +55,39 @@ export interface MigrateCommandOptions {
   noColor?: boolean;
   force?: boolean;
   verbose?: boolean;
+  json?: boolean;
+}
+
+export interface MigratePlatformJson {
+  id: string;
+  name: string;
+  instructionLimit: number;
+  hasMemory: boolean;
+  memoryLimit: number | null;
+  hasFiles: boolean;
+  fileSizeLimit: number | null;
+  hasProjects: boolean;
+  hasConversations: boolean;
+  hasCustomBots: boolean;
+}
+
+export function listMigratePlatforms(): MigratePlatformJson[] {
+  return Object.values(PLATFORM_CAPABILITIES).map((cap) => ({
+    id: cap.id,
+    name: cap.name,
+    instructionLimit: cap.instructionLimit,
+    hasMemory: cap.hasMemory,
+    memoryLimit: cap.memoryLimit ?? null,
+    hasFiles: cap.hasFiles,
+    fileSizeLimit: cap.fileSizeLimit ?? null,
+    hasProjects: cap.hasProjects,
+    hasConversations: cap.hasConversations,
+    hasCustomBots: cap.hasCustomBots,
+  }));
+}
+
+export function formatMigrateListJson(): string {
+  return JSON.stringify(listMigratePlatforms(), null, 2);
 }
 
 // ─── Main Command ────────────────────────────────────────────
@@ -66,13 +99,19 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     chalk.level = 0;
   }
 
-  // Show header
-  showHeader();
-
   // Handle --list: show available platforms
   if (options.list) {
+    if (options.json) {
+      console.log(formatMigrateListJson());
+      return;
+    }
+    showHeader();
     showPlatforms();
     return;
+  }
+
+  if (!options.json) {
+    showHeader();
   }
 
   // Handle --resume: resume interrupted migrations
