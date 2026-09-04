@@ -222,6 +222,7 @@ describe('public marketing checkout CTAs', () => {
   const wizardArchitecture = loadHtml('site/blog/migration-wizard-architecture.html');
   const memoryCrisis2026 = loadHtml('site/blog/ai-memory-crisis-2026.html');
   const amnesiaCrisis = loadHtml('site/blog/ai-agent-amnesia-crisis.html');
+  const backupGap = loadHtml('site/blog/memory-vs-backup-gap.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1939,6 +1940,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(amnesiaCrisis, 'amnesia-crisis-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(amnesiaCrisis, 'amnesia-crisis-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(amnesiaCrisis).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the backup-gap post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(backupGap, 'backup-gap-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(backupGap, 'backup-gap-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(backupGap, 'backup-gap-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(backupGap, 'backup-gap-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(backupGap, 'backup-gap-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(backupGap).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
