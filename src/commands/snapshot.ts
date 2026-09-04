@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
 import { detectAdapter, getAdapter } from '../adapters/registry.js';
-import { createSnapshot } from '../snapshot.js';
+import { createSnapshot, type CreateSnapshotResult } from '../snapshot.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { getPassphrase } from '../passphrase.js';
 import { parseTagString, parseMetaString } from '../state-events/types.js';
@@ -22,10 +22,47 @@ interface SnapshotOptions {
   tag?: string[];
   /** Additional metadata for state entries (key=value) - Issue #91 */
   meta?: string[];
+  json?: boolean;
+}
+
+export function formatSnapshotResultJson(
+  result: CreateSnapshotResult,
+  extra?: { adapter?: string; storage?: string; stateEventCount?: number },
+): string {
+  return JSON.stringify(
+    {
+      snapshotId: result.snapshot.manifest.id,
+      timestamp: result.snapshot.manifest.timestamp,
+      platform: result.snapshot.manifest.platform,
+      adapter: extra?.adapter ?? result.snapshot.manifest.adapter,
+      label: result.snapshot.manifest.label ?? null,
+      incremental: result.incremental,
+      parent: result.snapshot.manifest.parent ?? null,
+      fileCount: result.fileCount,
+      archiveSize: result.archiveSize,
+      encryptedSize: result.encryptedSize,
+      storage: extra?.storage ?? null,
+      stateEventCount: extra?.stateEventCount ?? 0,
+      delta: result.delta
+        ? {
+            added: result.delta.added,
+            modified: result.delta.modified,
+            removed: result.delta.removed,
+            unchanged: result.delta.unchanged,
+            bytesSaved: result.delta.bytesSaved,
+            chainDepth: result.delta.chainDepth,
+          }
+        : null,
+    },
+    null,
+    2,
+  );
 }
 
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -96,14 +133,14 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
             metadata: { ...globalMeta, ...parsed.metadata },
           });
           stateEventCount++;
-        } else {
+        } else if (!options.json) {
           console.log(chalk.yellow(`  ⚠ Invalid state entry format: ${tagStr}`));
           console.log(chalk.dim('    Expected: type:key=value (e.g., decision:api_provider=openai)'));
         }
       }
     }
 
-    const spinner = ora(`Extracting state via ${adapter.name} adapter...`).start();
+    const spinner = options.json ? null : ora(`Extracting state via ${adapter.name} adapter...`).start();
 
     const result = await createSnapshot(adapter, storage, passphrase, {
       label: options.label,
@@ -112,8 +149,19 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
       stateEvents: stateEventCount > 0 ? stateEventStore : undefined,
     });
 
+    if (options.json) {
+      console.log(
+        formatSnapshotResultJson(result, {
+          adapter: adapter.name,
+          storage: config.storage.type,
+          stateEventCount,
+        }),
+      );
+      return;
+    }
+
     const typeLabel = result.incremental ? 'Incremental snapshot' : 'Full snapshot';
-    spinner.succeed(`${typeLabel} created!`);
+    spinner?.succeed(`${typeLabel} created!`);
     console.log();
     console.log(`  ${chalk.dim('ID:')}         ${chalk.cyan(result.snapshot.manifest.id)}`);
     console.log(`  ${chalk.dim('Adapter:')}    ${adapter.name}`);
