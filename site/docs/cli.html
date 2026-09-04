@@ -783,11 +783,15 @@
         <tr><td><code>--id &lt;id&gt;</code></td><td>Specific snapshot ID (prefix match allowed)</td></tr>
         <tr><td><code>--all</code></td><td>Process all snapshots instead of the latest</td></tr>
         <tr><td><code>-f, --force</code></td><td>Overwrite existing local files on pull, or skip delete confirmation</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the cloud list as JSON. Skips the spinner. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
     <pre><code><span class="code-comment"># List snapshots in cloud storage</span>
 <span class="code-prompt">$</span> savestate cloud list
+
+<span class="code-comment"># Scriptable cloud inventory</span>
+<span class="code-prompt">$</span> savestate cloud list --json
 
 <span class="code-comment"># Push the latest local snapshot</span>
 <span class="code-prompt">$</span> savestate cloud push

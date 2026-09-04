@@ -268,6 +268,18 @@ describe('CLI docs', () => {
     expect(cloudSection).toContain('.saf.enc');
   });
 
+  it('registers --json on savestate cloud', () => {
+    const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team')"));
+    expect(cloudBlock).toContain(".option('--json'");
+  });
+
+  it('documents cloud --json', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain('savestate cloud list --json');
+  });
+
   it('lists savestate mcp in the command overview', () => {
     expect(docs).toContain('id="mcp"');
     expect(docs).toContain('savestate mcp');

@@ -24,6 +24,33 @@ interface CloudOptions {
   id?: string;
   all?: boolean;
   force?: boolean;
+  json?: boolean;
+}
+
+export interface CloudSnapshotJson {
+  id: string;
+  size: number;
+  createdAt: string;
+}
+
+export interface CloudListResult {
+  tier: string;
+  cloudStorageUsed: number;
+  cloudStorageLimit: number;
+  snapshots: CloudSnapshotJson[];
+}
+
+export function formatCloudListJson(result: CloudListResult): string {
+  return JSON.stringify(
+    {
+      tier: result.tier,
+      cloudStorageUsed: result.cloudStorageUsed,
+      cloudStorageLimit: result.cloudStorageLimit,
+      snapshots: result.snapshots,
+    },
+    null,
+    2,
+  );
 }
 
 interface SubscriptionStatus {
@@ -367,23 +394,38 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
 /**
  * List cloud snapshots
  */
-export async function cloudListCommand(): Promise<void> {
-  console.log();
+export async function cloudListCommand(options: CloudOptions = {}): Promise<void> {
+  if (!options.json) {
+    console.log();
+  }
 
-  // Verify subscription
-  const spinner = ora('Verifying subscription...').start();
+  const spinner = options.json ? null : ora('Verifying subscription...').start();
   const sub = await verifySubscription();
 
   if (!sub.valid) {
-    spinner.fail('Subscription required');
+    spinner?.fail('Subscription required');
     console.log();
     console.log(chalk.red(`  ${sub.error}`));
     process.exit(1);
   }
 
-  spinner.text = 'Fetching cloud snapshots...';
+  if (spinner) {
+    spinner.text = 'Fetching cloud snapshots...';
+  }
   const snapshots = await listCloudSnapshots();
-  spinner.stop();
+  spinner?.stop();
+
+  if (options.json) {
+    console.log(
+      formatCloudListJson({
+        tier: sub.tier ?? 'unknown',
+        cloudStorageUsed: sub.cloudStorageUsed ?? 0,
+        cloudStorageLimit: sub.cloudStorageLimit ?? 0,
+        snapshots,
+      }),
+    );
+    return;
+  }
 
   console.log(chalk.blue(`Cloud Storage (${sub.tier})`));
   
@@ -508,7 +550,7 @@ export async function cloudCommand(subcommand: string, options: CloudOptions): P
       await cloudPullCommand(options);
       break;
     case 'list':
-      await cloudListCommand();
+      await cloudListCommand(options);
       break;
     case 'delete':
       await cloudDeleteCommand(options);
