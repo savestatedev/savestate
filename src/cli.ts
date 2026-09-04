@@ -55,6 +55,7 @@ program
 program
   .command('init')
   .description('Initialize SaveState in the current directory')
+  .option('--json', 'Output as JSON')
   .action(initCommand);
 
 // ─── savestate snapshot ──────────────────────────────────────

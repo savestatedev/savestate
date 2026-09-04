@@ -122,13 +122,22 @@
     <!-- init -->
     <h2 id="init"><code>savestate init</code></h2>
     <p>Initialize SaveState in the current directory. Creates a <code>.savestate/</code> directory containing your encryption configuration and storage settings.</p>
-    <pre><code><span class="code-prompt">$</span> savestate init</code></pre>
+    <pre><code><span class="code-prompt">$</span> savestate init [options]</code></pre>
     <p>This command:</p>
     <ul>
       <li>Prompts for a passphrase (used to derive your encryption key via scrypt)</li>
       <li>Creates <code>.savestate/config.json</code> with default local storage</li>
       <li>Sets up the snapshot index file</li>
     </ul>
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Emit init status as JSON. Skips the spinner and passphrase prompt. Useful for scripting.</td></tr>
+      </tbody>
+    </table>
+    <pre><code><span class="code-prompt">$</span> savestate init --json</code></pre>
     <div class="callout callout-tip">
       <span class="callout-label">💡</span> You can also use global config at <code>~/.savestate/config.json</code> — local project config takes priority.
     </div>

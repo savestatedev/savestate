@@ -214,6 +214,18 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate logout');
   });
 
+  it('registers --json on savestate init', () => {
+    const initBlock = cli.slice(cli.indexOf("command('init')"), cli.indexOf("command('snapshot')"));
+    expect(initBlock).toContain(".option('--json'");
+  });
+
+  it('documents init --json', () => {
+    const initSection = docs.slice(docs.indexOf('id="init"'), docs.indexOf('id="snapshot"'));
+    expect(initSection).toContain('--json');
+    expect(initSection).toContain('scripting');
+    expect(initSection).toContain('savestate init --json');
+  });
+
   it('registers --json on savestate login', () => {
     const loginBlock = cli.slice(cli.indexOf("command('login')"), cli.indexOf("command('logout')"));
     expect(loginBlock).toContain(".option('--json'");
