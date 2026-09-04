@@ -478,6 +478,21 @@ describe('CLI docs', () => {
     expect(identitySection).toContain('savestate init');
   });
 
+  it('registers --json on savestate identity', () => {
+    const identityBlock = cli.slice(
+      cli.indexOf("command('identity <subcommand> [args...]')"),
+      cli.indexOf('program.parse()'),
+    );
+    expect(identityBlock).toContain(".option('--json'");
+  });
+
+  it('documents identity --json', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('savestate identity show --json');
+  });
+
   it('registers savestate integrity on the CLI', () => {
     expect(cli).toContain('registerIntegrityCommands');
   });

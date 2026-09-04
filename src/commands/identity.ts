@@ -18,10 +18,60 @@ import {
   getIdentityVersion,
 } from '../identity/store.js';
 import { getJsonSchema, CORE_IDENTITY_FIELDS } from '../identity/schema.js';
-import type { AgentIdentity } from '../identity/schema.js';
+import type { AgentIdentity, ToolReference } from '../identity/schema.js';
 
 interface IdentityOptions {
   json?: boolean;
+}
+
+export interface IdentityToolJson {
+  name: string;
+  description: string | null;
+  enabled: boolean | null;
+}
+
+export interface IdentityJson {
+  name: string;
+  version: string;
+  schemaVersion: string;
+  goals: string[];
+  tone: string | null;
+  constraints: string[];
+  tools: IdentityToolJson[];
+  persona: string | null;
+  instructions: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  metadata: Record<string, unknown>;
+}
+
+function toToolJson(tool: ToolReference): IdentityToolJson {
+  return {
+    name: tool.name,
+    description: tool.description ?? null,
+    enabled: tool.enabled ?? null,
+  };
+}
+
+function toIdentityJson(identity: AgentIdentity): IdentityJson {
+  return {
+    name: identity.name,
+    version: identity.version,
+    schemaVersion: identity.schemaVersion,
+    goals: identity.goals,
+    tone: identity.tone ?? null,
+    constraints: identity.constraints,
+    tools: identity.tools.map(toToolJson),
+    persona: identity.persona ?? null,
+    instructions: identity.instructions ?? null,
+    createdAt: identity.createdAt ?? null,
+    updatedAt: identity.updatedAt ?? null,
+    metadata: identity.metadata ?? {},
+  };
+}
+
+export function formatIdentityJson(identity: AgentIdentity): string {
+  return JSON.stringify(toIdentityJson(identity), null, 2);
 }
 
 export async function identityCommand(
@@ -29,7 +79,9 @@ export async function identityCommand(
   args: string[],
   options?: IdentityOptions,
 ): Promise<void> {
-  console.log();
+  if (!options?.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -65,28 +117,33 @@ export async function identityCommand(
  * Display the current identity.
  */
 async function showIdentity(options?: IdentityOptions): Promise<void> {
-  const spinner = ora('Loading identity...').start();
+  const spinner = options?.json ? null : ora('Loading identity...').start();
 
   try {
     const result = await loadLocalIdentity();
 
     if (!result) {
-      spinner.warn('No identity found');
+      if (options?.json) {
+        console.log(JSON.stringify({ found: false }, null, 2));
+        return;
+      }
+      spinner?.warn('No identity found');
       console.log();
       console.log(chalk.dim('  Initialize with: savestate identity init <name>'));
       console.log();
       return;
     }
 
-    spinner.succeed('Identity loaded');
-    console.log();
+    spinner?.succeed('Identity loaded');
 
     const { identity } = result;
 
     if (options?.json) {
-      console.log(JSON.stringify(identity, null, 2));
+      console.log(formatIdentityJson(identity));
       return;
     }
+
+    console.log();
 
     // Human-readable display
     const version = getIdentityVersion(identity);
@@ -156,7 +213,7 @@ async function showIdentity(options?: IdentityOptions): Promise<void> {
     console.log(chalk.dim(`  Hash: ${version.contentHash}`));
     console.log();
   } catch (err) {
-    spinner.fail('Failed to load identity');
+    spinner?.fail('Failed to load identity');
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }
@@ -173,13 +230,16 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions)
     process.exit(1);
   }
 
-  const spinner = ora('Initializing identity...').start();
+  const spinner = options?.json ? null : ora('Initializing identity...').start();
 
   try {
-    // Check if identity already exists
     const existing = await loadLocalIdentity();
     if (existing) {
-      spinner.warn('Identity already exists');
+      if (options?.json) {
+        console.log(formatIdentityJson(existing.identity));
+        return;
+      }
+      spinner?.warn('Identity already exists');
       console.log();
       console.log(chalk.dim('  Current identity:'), existing.identity.name);
       console.log(chalk.dim('  To update, use:'), 'savestate identity set <field> <value>');
@@ -189,13 +249,14 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions)
 
     const { identity, path } = await initializeIdentity(name);
 
-    spinner.succeed('Identity initialized');
-    console.log();
+    spinner?.succeed('Identity initialized');
 
     if (options?.json) {
-      console.log(JSON.stringify(identity, null, 2));
+      console.log(formatIdentityJson(identity));
       return;
     }
+
+    console.log();
 
     console.log(`  ${chalk.dim('Name:')}     ${identity.name}`);
     console.log(`  ${chalk.dim('Version:')}  ${identity.version}`);
@@ -206,7 +267,7 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions)
     console.log(chalk.dim('  Add constraint:  savestate identity set constraints \'["Constraint 1"]\''));
     console.log();
   } catch (err) {
-    spinner.fail('Failed to initialize identity');
+    spinner?.fail('Failed to initialize identity');
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }
@@ -242,18 +303,19 @@ async function setIdentityField(
     process.exit(1);
   }
 
-  const spinner = ora(`Setting ${field}...`).start();
+  const spinner = options?.json ? null : ora(`Setting ${field}...`).start();
 
   try {
     const updated = await updateIdentityField(field, value);
 
-    spinner.succeed(`Updated ${field}`);
-    console.log();
+    spinner?.succeed(`Updated ${field}`);
 
     if (options?.json) {
-      console.log(JSON.stringify(updated, null, 2));
+      console.log(formatIdentityJson(updated));
       return;
     }
+
+    console.log();
 
     // Show what changed
     const displayValue = (updated as Record<string, unknown>)[field];
@@ -262,7 +324,7 @@ async function setIdentityField(
     console.log(`  ${chalk.dim('Version:')}  ${updated.version}`);
     console.log();
   } catch (err) {
-    spinner.fail(`Failed to set ${field}`);
+    spinner?.fail(`Failed to set ${field}`);
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }
