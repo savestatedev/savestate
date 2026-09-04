@@ -28,6 +28,13 @@ describe('CLI docs', () => {
     expect(exportSection).toContain('without writing');
   });
 
+  it('documents export --json', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    expect(exportSection).toContain('--json');
+    expect(exportSection).toContain('Encrypts the archive');
+    expect(exportSection).toContain('savestate export -a my-agent -o agent.savestate --json --dry-run');
+  });
+
   it('documents import --target, --force, and missing parent rejection', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--target');

@@ -434,6 +434,7 @@
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase for encryption, or <code>SAVESTATE_PASSPHRASE</code> / prompt. An empty value is rejected before encrypting.</td></tr>
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. An empty path, missing file, directory, or file with no contents is rejected before encrypting.</td></tr>
         <tr><td><code>--description &lt;text&gt;</code></td><td>Optional human-readable description stored in the manifest</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the export result as JSON. Encrypts the archive. Skips progress output.</td></tr>
       </tbody>
     </table>
 
@@ -441,7 +442,10 @@
 <span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --dry-run
 
 <span class="code-comment"># Overwrite an existing archive</span>
-<span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --force</code></pre>
+<span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --force
+
+<span class="code-comment"># Scriptable export metadata</span>
+<span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --json --dry-run</code></pre>
 
     <!-- import -->
     <h2 id="import"><code>savestate import</code></h2>

@@ -333,6 +333,48 @@ export function formatExportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
 
+export function formatExportResultJson(result: {
+  agent: string;
+  formatVersion: number;
+  created: string;
+  checksum: string;
+  size: number;
+  payloadName: string;
+  contentType: string;
+  description?: string | null;
+  components: readonly string[];
+  encryption: string;
+  keyDerivation: string;
+  excluded?: readonly string[];
+  output: string;
+  written: boolean;
+  overwritten: boolean;
+  dryRun: boolean;
+}): string {
+  return JSON.stringify(
+    {
+      agent: result.agent,
+      formatVersion: result.formatVersion,
+      created: result.created,
+      checksum: result.checksum,
+      size: result.size,
+      payloadName: result.payloadName,
+      contentType: result.contentType,
+      description: result.description ?? null,
+      components: result.components,
+      encryption: result.encryption,
+      keyDerivation: result.keyDerivation,
+      excluded: result.excluded && result.excluded.length > 0 ? result.excluded : null,
+      output: result.output,
+      written: result.written,
+      overwritten: result.overwritten,
+      dryRun: result.dryRun,
+    },
+    null,
+    2,
+  );
+}
+
 function optionalImportPayloadName(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
@@ -442,10 +484,12 @@ export function applyImportExclude(
 }
 
 // Placeholder for actual agent state loading
-async function getAgentState(agentId: string, components: ComponentSelection): Promise<string> {
-  console.log(`Loading state for agent: ${agentId}`);
-  const enabledComponents = Object.entries(components).filter(([,v]) => v).map(([k]) => k);
-  console.log(`Components: ${enabledComponents.join(', ') || 'all'}`);
+async function getAgentState(agentId: string, components: ComponentSelection, options?: { silent?: boolean }): Promise<string> {
+  if (!options?.silent) {
+    console.log(`Loading state for agent: ${agentId}`);
+    const enabledComponents = Object.entries(components).filter(([,v]) => v).map(([k]) => k);
+    console.log(`Components: ${enabledComponents.join(', ') || 'all'}`);
+  }
   
   const state: Record<string, any> = {
     agentId,
@@ -531,6 +575,7 @@ export interface ExportOptions {
   force?: boolean;
   dryRun?: boolean;
   description?: string;
+  json?: boolean;
 }
 
 export interface ExportResult {
@@ -674,16 +719,18 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       console.error(validatedComponents.error);
       return { written: false, out, overwritten: false };
     }
-    if (options.include !== undefined || options.exclude !== undefined) {
+    if (!options.json && (options.include !== undefined || options.exclude !== undefined)) {
       console.log(`Including paths: ${validatedComponents.components.join(', ')}`);
     }
     const excludedPaths = listExcludedPaths(options.exclude);
-    if (excludedPaths.length > 0) {
+    if (!options.json && excludedPaths.length > 0) {
       console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
     }
 
-    reportContainerProgress(`Loading state for agent ${agent}`);
-    const agentState = await getAgentState(agent, components);
+    if (!options.json) {
+      reportContainerProgress(`Loading state for agent ${agent}`);
+    }
+    const agentState = await getAgentState(agent, components, { silent: !!options.json });
     const plaintext = Buffer.from(agentState);
 
     const trimmedDescription = description?.trim();
@@ -723,7 +770,9 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     const contentType = manifest.payloads[0].contentType;
 
     const manifestBuffer = Buffer.from(JSON.stringify(manifest));
-    reportContainerProgress('Encrypting agent state', plaintext.length);
+    if (!options.json) {
+      reportContainerProgress('Encrypting agent state', plaintext.length);
+    }
     const encryptedState = await encrypt(plaintext, keySource);
 
     // Magic header: 8 bytes "SAVESTAT" + 1 byte version + 7 bytes reserved = 16 bytes
@@ -741,29 +790,58 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     ]);
 
     if (options.dryRun) {
-      console.log(`\nDRY RUN — no changes will be made`);
+      if (!options.json) {
+        console.log(`\nDRY RUN — no changes will be made`);
+      }
     } else {
-      reportContainerProgress(`Writing ${out}`, finalBuffer.length);
+      if (!options.json) {
+        reportContainerProgress(`Writing ${out}`, finalBuffer.length);
+      }
       await fs.writeFile(out, finalBuffer);
-      console.log(`Successfully exported agent '${agent}' to ${out}`);
+      if (!options.json) {
+        console.log(`Successfully exported agent '${agent}' to ${out}`);
+      }
     }
-    console.log(formatExportAgent(agent));
-    console.log(formatExportFormatVersion(formatVersion));
-    console.log(formatExportCreated(created));
-    console.log(formatExportChecksum(payloadChecksum));
-    console.log(formatExportSize(plaintext.length));
-    console.log(formatExportPayloadName(payloadName));
-    console.log(formatExportContentType(contentType));
-    if (trimmedDescription) {
-      console.log(formatExportDescription(trimmedDescription));
+    if (options.json) {
+      console.log(
+        formatExportResultJson({
+          agent,
+          formatVersion,
+          created,
+          checksum: payloadChecksum,
+          size: plaintext.length,
+          payloadName,
+          contentType,
+          description: trimmedDescription ?? null,
+          components: validatedComponents.components,
+          encryption: encryptionAlgorithm,
+          keyDerivation,
+          excluded: excludedPaths,
+          output: out,
+          written: !options.dryRun,
+          overwritten: existed && !options.dryRun,
+          dryRun: !!options.dryRun,
+        }),
+      );
+    } else {
+      console.log(formatExportAgent(agent));
+      console.log(formatExportFormatVersion(formatVersion));
+      console.log(formatExportCreated(created));
+      console.log(formatExportChecksum(payloadChecksum));
+      console.log(formatExportSize(plaintext.length));
+      console.log(formatExportPayloadName(payloadName));
+      console.log(formatExportContentType(contentType));
+      if (trimmedDescription) {
+        console.log(formatExportDescription(trimmedDescription));
+      }
+      console.log(formatExportComponents(validatedComponents.components));
+      console.log(formatExportEncryption(encryptionAlgorithm));
+      console.log(formatExportKeyDerivation(keyDerivation));
+      if (excludedPaths.length > 0) {
+        console.log(formatExportExcluded(excludedPaths));
+      }
+      console.log(formatExportOutput(out));
     }
-    console.log(formatExportComponents(validatedComponents.components));
-    console.log(formatExportEncryption(encryptionAlgorithm));
-    console.log(formatExportKeyDerivation(keyDerivation));
-    if (excludedPaths.length > 0) {
-      console.log(formatExportExcluded(excludedPaths));
-    }
-    console.log(formatExportOutput(out));
     if (options.dryRun) {
       return { written: false, out, overwritten: false, dryRun: true };
     }
@@ -1412,6 +1490,7 @@ export function registerContainerCommands(program: Command) {
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export')
+    .option('--json', 'Output as JSON')
     .action(async (opts) => {
       const result = await exportState({
         agent: opts.agent,
@@ -1427,6 +1506,7 @@ export function registerContainerCommands(program: Command) {
         force: opts.force,
         dryRun: opts.dryRun,
         description: opts.description,
+        json: opts.json,
       });
       if (!result.written && !result.dryRun) {
         process.exit(1);
@@ -1485,6 +1565,7 @@ export function registerContainerCommands(program: Command) {
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export')
+    .option('--json', 'Output as JSON')
     .action(async (opts) => {
       const result = await exportState({
         agent: opts.agent,
@@ -1500,6 +1581,7 @@ export function registerContainerCommands(program: Command) {
         force: opts.force,
         dryRun: opts.dryRun,
         description: opts.description,
+        json: opts.json,
       });
       if (!result.written && !result.dryRun) {
         process.exit(1);
