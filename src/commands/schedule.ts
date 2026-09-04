@@ -19,6 +19,33 @@ interface ScheduleOptions {
   every?: string;
   disable?: boolean;
   status?: boolean;
+  json?: boolean;
+}
+
+export interface ScheduleStatus {
+  enabled: boolean;
+  running: boolean;
+  supported: boolean;
+  platform: string;
+  intervalHours: number | null;
+  job: string;
+  path: string | null;
+}
+
+export function formatScheduleStatusJson(status: ScheduleStatus): string {
+  return JSON.stringify(
+    {
+      enabled: status.enabled,
+      running: status.running,
+      supported: status.supported,
+      platform: status.platform,
+      intervalHours: status.intervalHours,
+      job: status.job,
+      path: status.path,
+    },
+    null,
+    2,
+  );
 }
 
 const LABEL = 'dev.savestate.autobackup';
@@ -58,7 +85,9 @@ async function verifySubscription(): Promise<{ valid: boolean; tier?: string; er
 }
 
 export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -67,7 +96,7 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
 
   // Status check - allowed for everyone
   if (options.status || (!options.every && !options.disable)) {
-    await showStatus();
+    await showStatus(options.json);
     return;
   }
 
@@ -101,81 +130,127 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
   }
 }
 
-async function showStatus(): Promise<void> {
+function getScheduleStatus(): ScheduleStatus {
   const os = platform();
+  const base: ScheduleStatus = {
+    enabled: false,
+    running: false,
+    supported: true,
+    platform: os,
+    intervalHours: null,
+    job: LABEL,
+    path: null,
+  };
 
   if (os === 'darwin') {
-    // macOS - check launchd
     const plistPath = join(homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
-
+    base.path = plistPath;
     if (!existsSync(plistPath)) {
-      console.log(chalk.yellow('⏸  Scheduled backups: disabled'));
-      console.log();
-      console.log(chalk.dim('  Enable with: savestate schedule --every 6h'));
-      console.log();
-      return;
+      return base;
     }
 
     try {
-      const status = execSync(`launchctl list | grep ${LABEL}`, { encoding: 'utf-8' }).trim();
-      if (status) {
+      const listed = execSync(`launchctl list | grep ${LABEL}`, { encoding: 'utf-8' }).trim();
+      if (listed) {
         const plist = readFileSync(plistPath, 'utf-8');
         const intervalMatch = plist.match(/<key>StartInterval<\/key>\s*<integer>(\d+)<\/integer>/);
         const interval = intervalMatch ? parseInt(intervalMatch[1]) : 0;
-        const hours = Math.round(interval / 3600);
-
-        console.log(chalk.green(`✓ Scheduled backups: enabled`));
-        console.log();
-        console.log(`  ${chalk.dim('Interval:')}  every ${hours}h`);
-        console.log(`  ${chalk.dim('Job:')}       ${LABEL}`);
-        console.log(`  ${chalk.dim('Plist:')}     ${plistPath}`);
-        console.log();
-        console.log(chalk.dim('  View logs: tail -f ~/Library/Logs/savestate-autobackup.log'));
-        console.log(chalk.dim('  Disable:   savestate schedule --disable'));
-        console.log();
+        return {
+          ...base,
+          enabled: true,
+          running: true,
+          intervalHours: Math.round(interval / 3600),
+        };
       }
     } catch {
-      console.log(chalk.yellow('⏸  Scheduled backups: configured but not running'));
-      console.log(chalk.dim(`   Try: launchctl load ${plistPath}`));
-      console.log();
+      return { ...base, enabled: true, running: false };
     }
+
+    return { ...base, enabled: true, running: false };
+  }
+
+  if (os === 'linux') {
+    const timerPath = join(homedir(), '.config', 'systemd', 'user', `${LABEL}.timer`);
+    base.path = timerPath;
+    if (!existsSync(timerPath)) {
+      return base;
+    }
+
+    try {
+      const listed = execSync(`systemctl --user is-active ${LABEL}.timer 2>/dev/null || true`, { encoding: 'utf-8' }).trim();
+      if (listed === 'active') {
+        return { ...base, enabled: true, running: true };
+      }
+      return { ...base, enabled: true, running: false };
+    } catch {
+      return { ...base, enabled: true, running: false };
+    }
+  }
+
+  return { ...base, supported: false };
+}
+
+async function showStatus(asJson?: boolean): Promise<void> {
+  const status = getScheduleStatus();
+  if (asJson) {
+    console.log(formatScheduleStatusJson(status));
+    return;
+  }
+
+  const os = status.platform;
+
+  if (!status.supported) {
+    console.log(chalk.yellow(`⚠ Scheduled backups not supported on ${os}`));
+    console.log(chalk.dim('  Use cron manually: */360 * * * * savestate snapshot'));
+    console.log();
+    return;
+  }
+
+  if (!status.enabled) {
+    console.log(chalk.yellow('⏸  Scheduled backups: disabled'));
+    console.log();
+    console.log(chalk.dim('  Enable with: savestate schedule --every 6h'));
+    console.log();
+    return;
+  }
+
+  if (os === 'darwin' && status.running) {
+    console.log(chalk.green(`✓ Scheduled backups: enabled`));
+    console.log();
+    console.log(`  ${chalk.dim('Interval:')}  every ${status.intervalHours}h`);
+    console.log(`  ${chalk.dim('Job:')}       ${status.job}`);
+    console.log(`  ${chalk.dim('Plist:')}     ${status.path}`);
+    console.log();
+    console.log(chalk.dim('  View logs: tail -f ~/Library/Logs/savestate-autobackup.log'));
+    console.log(chalk.dim('  Disable:   savestate schedule --disable'));
+    console.log();
+    return;
+  }
+
+  if (os === 'linux' && status.running) {
+    console.log(chalk.green(`✓ Scheduled backups: enabled`));
+    console.log();
+    console.log(`  ${chalk.dim('Timer:')} ${status.job}.timer`);
+    console.log(chalk.dim('  View: systemctl --user status ' + LABEL + '.timer'));
+    console.log(chalk.dim('  Logs: journalctl --user -u ' + LABEL));
+    console.log();
+    return;
+  }
+
+  if (os === 'darwin') {
+    console.log(chalk.yellow('⏸  Scheduled backups: configured but not running'));
+    console.log(chalk.dim(`   Try: launchctl load ${status.path}`));
+    console.log();
     return;
   }
 
   if (os === 'linux') {
-    // Linux - check systemd timer
-    const timerPath = join(homedir(), '.config', 'systemd', 'user', `${LABEL}.timer`);
-
-    if (!existsSync(timerPath)) {
-      console.log(chalk.yellow('⏸  Scheduled backups: disabled'));
-      console.log();
-      console.log(chalk.dim('  Enable with: savestate schedule --every 6h'));
-      console.log();
-      return;
-    }
-
-    try {
-      const status = execSync(`systemctl --user is-active ${LABEL}.timer 2>/dev/null || true`, { encoding: 'utf-8' }).trim();
-      if (status === 'active') {
-        console.log(chalk.green(`✓ Scheduled backups: enabled`));
-        console.log();
-        console.log(`  ${chalk.dim('Timer:')} ${LABEL}.timer`);
-        console.log(chalk.dim('  View: systemctl --user status ' + LABEL + '.timer'));
-        console.log(chalk.dim('  Logs: journalctl --user -u ' + LABEL));
-        console.log();
-      } else {
-        console.log(chalk.yellow('⏸  Scheduled backups: configured but not running'));
-        console.log();
-      }
-    } catch {
-      console.log(chalk.yellow('⏸  Scheduled backups: unknown status'));
-      console.log();
-    }
+    console.log(chalk.yellow('⏸  Scheduled backups: configured but not running'));
+    console.log();
     return;
   }
 
-  console.log(chalk.yellow(`⚠ Scheduled backups not supported on ${os}`));
-  console.log(chalk.dim('  Use cron manually: */360 * * * * savestate snapshot'));
+  console.log(chalk.yellow('⏸  Scheduled backups: unknown status'));
   console.log();
 }
 

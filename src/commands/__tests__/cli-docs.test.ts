@@ -98,6 +98,18 @@ describe('CLI docs', () => {
     expect(scheduleSection).toContain('snapshot --label auto');
   });
 
+  it('registers --json on savestate schedule', () => {
+    const scheduleBlock = cli.slice(cli.indexOf("command('schedule')"), cli.indexOf("command('migrate')"));
+    expect(scheduleBlock).toContain(".option('--json'");
+  });
+
+  it('documents schedule --json', () => {
+    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'), docs.indexOf('id="migrate"'));
+    expect(scheduleSection).toContain('--json');
+    expect(scheduleSection).toContain('scripting');
+    expect(scheduleSection).toContain('savestate schedule --json');
+  });
+
   it('lists savestate migrate in the command overview', () => {
     expect(docs).toContain('id="migrate"');
     expect(docs).toContain('savestate migrate');
