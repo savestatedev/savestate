@@ -187,6 +187,7 @@
         <tr><td><code>--to &lt;platform&gt;</code></td><td>Restore to a different platform (cross-platform migration)</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show what would be restored without making any changes</td></tr>
         <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the restore result as JSON. Decrypts the archive. Skips the spinner.</td></tr>
       </tbody>
     </table>
 
@@ -204,7 +205,10 @@
 <span class="code-prompt">$</span> savestate restore latest --include memory
 
 <span class="code-comment"># Preview without changing anything</span>
-<span class="code-prompt">$</span> savestate restore latest --dry-run</code></pre>
+<span class="code-prompt">$</span> savestate restore latest --dry-run
+
+<span class="code-comment"># Scriptable JSON result</span>
+<span class="code-prompt">$</span> savestate restore latest --json --dry-run</code></pre>
 
     <div class="callout callout-info">
       <span class="callout-label">ℹ️</span> Existing files are backed up with a <code>.bak</code> extension before being overwritten.

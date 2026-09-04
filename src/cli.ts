@@ -79,6 +79,7 @@ program
   .option('--to <platform>', 'Restore to a different platform')
   .option('--dry-run', 'Show what would be restored without making changes')
   .option('--include <categories>', 'Only restore specific categories (identity,memory,conversations)')
+  .option('--json', 'Output as JSON')
   .action(restoreCommand);
 
 // ─── savestate list ──────────────────────────────────────────

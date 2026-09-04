@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
-import { restoreSnapshot } from '../restore.js';
+import { restoreSnapshot, type RestoreResult } from '../restore.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { detectAdapter, getAdapter } from '../adapters/registry.js';
 import { getPassphrase } from '../passphrase.js';
@@ -14,10 +14,32 @@ interface RestoreOptions {
   to?: string;
   dryRun?: boolean;
   include?: string;
+  json?: boolean;
+}
+
+export function formatRestoreResultJson(result: RestoreResult, extra?: { dryRun?: boolean }): string {
+  return JSON.stringify(
+    {
+      snapshotId: result.snapshotId,
+      timestamp: result.timestamp,
+      platform: result.platform,
+      adapter: result.adapter,
+      label: result.label ?? null,
+      memoryCount: result.memoryCount,
+      conversationCount: result.conversationCount,
+      hasIdentity: result.hasIdentity,
+      stateEventCount: result.stateEventCount,
+      dryRun: extra?.dryRun ?? false,
+    },
+    null,
+    2,
+  );
 }
 
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -27,16 +49,17 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
   const resolvedId = snapshotId ?? 'latest';
   const config = await loadConfig();
 
-  console.log(chalk.bold(`🔄 Restoring from snapshot: ${chalk.cyan(resolvedId)}`));
-  console.log();
-
-  if (options.dryRun) {
-    console.log(chalk.yellow('  ▸ DRY RUN — no changes will be made'));
+  if (!options.json) {
+    console.log(chalk.bold(`🔄 Restoring from snapshot: ${chalk.cyan(resolvedId)}`));
     console.log();
+
+    if (options.dryRun) {
+      console.log(chalk.yellow('  ▸ DRY RUN — no changes will be made'));
+      console.log();
+    }
   }
 
   try {
-    // Resolve adapter
     let adapter;
     if (options.to) {
       adapter = getAdapter(options.to);
@@ -55,13 +78,9 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
       process.exit(1);
     }
 
-    // Get passphrase
     const passphrase = await getPassphrase();
-
-    // Resolve storage
     const storage = resolveStorage(config);
-
-    const spinner = ora('Retrieving and decrypting snapshot...').start();
+    const spinner = options.json ? null : ora('Retrieving and decrypting snapshot...').start();
 
     const include = options.include
       ? (options.include.split(',').map((s) => s.trim()) as ('identity' | 'memory' | 'conversations')[])
@@ -72,7 +91,12 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
       dryRun: options.dryRun,
     });
 
-    spinner.succeed('Restore complete!');
+    if (options.json) {
+      console.log(formatRestoreResultJson(result, { dryRun: options.dryRun }));
+      return;
+    }
+
+    spinner?.succeed('Restore complete!');
     console.log();
     console.log(`  ${chalk.dim('Snapshot:')}      ${chalk.cyan(result.snapshotId)}`);
     console.log(`  ${chalk.dim('Timestamp:')}     ${result.timestamp}`);
