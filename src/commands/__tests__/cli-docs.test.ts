@@ -23,6 +23,11 @@ const acl = readFileSync(
   'utf8',
 );
 
+const integrity = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../integrity.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -523,6 +528,18 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('release');
     expect(integritySection).toContain('cli');
     expect(integritySection).toContain('--user reviewer-1');
+  });
+
+  it('registers --json on savestate integrity', () => {
+    const integrityBlock = integrity.slice(integrity.indexOf("command('integrity [subcommand] [args...]')"));
+    expect(integrityBlock).toContain(".option('--json'");
+  });
+
+  it('documents integrity --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity incidents --json');
   });
 
   it('lists savestate trace in the command overview', () => {
