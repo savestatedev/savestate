@@ -1,70 +1,445 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your AI Agent Has Amnesia (And It's About to Forget Everything Again)</title>
-  <meta name="description" content="AI coding tools have a serious memory problem. Claude Code, Cursor, and Windsurf silently lose context. Here's why the industry is finally paying attention.">
-  <meta name="author" content="SaveState">
-  <meta property="og:title" content="Your AI Agent Has Amnesia (And It's About to Forget Everything Again)">
-  <meta property="og:description" content="AI coding tools have a serious memory problem. The industry is finally paying attention.">
-  <meta property="og:type" content="article">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; max-width: 720px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
-    h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 0.5rem; }
-    h2 { margin-top: 2rem; color: #333; }
-    .meta { color: #666; margin-bottom: 2rem; }
-    pre { background: #1e1e1e; color: #d4d4d4; padding: 1.5rem; border-radius: 8px; overflow-x: auto; }
-    code { font-family: 'SF Mono', Monaco, monospace; font-size: 0.9rem; }
-    .cta { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-top: 2rem; text-align: center; }
-    .cta code { background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 4px; }
-    a { color: #667eea; }
-    blockquote { border-left: 4px solid #667eea; margin-left: 0; padding-left: 1.5rem; color: #555; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your AI Agent Has Amnesia (And It's About to Forget Everything Again) | SaveState Blog</title>
+<meta name="description" content="AI coding tools have a serious memory problem. Claude Code, Cursor, and Windsurf silently lose context. Here's why the industry is finally paying attention.">
+<meta property="og:title" content="Your AI Agent Has Amnesia (And It's About to Forget Everything Again)">
+<meta property="og:description" content="AI coding tools have a serious memory problem. The industry is finally paying attention.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/blog/ai-agent-amnesia-crisis">
+<link rel="canonical" href="https://savestate.dev/blog/ai-agent-amnesia-crisis">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  
+  .nav-links.show a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  
+  .nav-links.show .btn-nav {
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* Article */
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height:  1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Content */
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li {
+  margin-bottom: 8px;
+}
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+
+/* Table */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-code);
+}
+
+.article-content td {
+  color: var(--text-muted);
+}
+
+/* CTA Box */
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
 <script defer src="https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1"></script>
 </head>
 <body>
-  <article>
-    <h1>Your AI Agent Has Amnesia (And It's About to Forget Everything Again)</h1>
-    <p class="meta">February 23, 2026 · 4 min read</p>
 
-    <p>A post hit the DEV.to front page last week that made developers cringe in recognition. A developer lost four hours of careful authentication refactoring to Claude Code's silent context compaction. No warning. No save point. Just gone.</p>
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="amnesia-crisis-nav-pro-checkout">Subscribe to Pro</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
 
-    <p>Meanwhile, Qodo shipped their 2.1 release targeting what their CEO calls the "Memento problem." You know, like the movie where the guy wakes up every day with no memory of yesterday.</p>
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
 
-    <p>Sound familiar? It should. Every AI coding agent you use has the same problem.</p>
+    <header class="article-header">
+      <div class="date">February 23, 2026</div>
+      <h1>Your AI Agent Has Amnesia (And It's About to Forget Everything Again)</h1>
+    </header>
 
-    <h2>The Silent Killer in Your Terminal</h2>
+    <div class="article-content">
+      <p>A post hit the DEV.to front page last week that made developers cringe in recognition. A developer lost four hours of careful authentication refactoring to Claude Code's silent context compaction. No warning. No save point. Just gone.</p>
 
-    <p>Claude Code, Cursor, Windsurf: they all do it. When context gets too long, they quietly compact or truncate. Those nuanced architectural decisions you spent an hour explaining? The careful reasoning about why you chose that specific authentication pattern? Silently evicted to make room for your next prompt.</p>
+      <p>Meanwhile, Qodo shipped their 2.1 release targeting what their CEO calls the "Memento problem." You know, like the movie where the guy wakes up every day with no memory of yesterday.</p>
 
-    <p>The worst part? You don't know it happened until you ask a follow-up question and get a response that ignores everything you established.</p>
+      <p>Sound familiar? It should. Every AI coding agent you use has the same problem.</p>
 
-    <h2>The Memento Problem</h2>
+      <h2>The Silent Killer in Your Terminal</h2>
+      <p>Claude Code, Cursor, Windsurf: they all do it. When context gets too long, they quietly compact or truncate. Those nuanced architectural decisions you spent an hour explaining? The careful reasoning about why you chose that specific authentication pattern? Silently evicted to make room for your next prompt.</p>
+      <p>The worst part? You don't know it happened until you ask a follow-up question and get a response that ignores everything you established.</p>
 
-    <p>Every session, your AI agent wakes up with amnesia. The workarounds are everywhere: CLAUDE.md files, agents.md conventions, .context folders stuffed with markdown brain dumps. Developers are building their own memory systems with session JSONL snapshots and elaborate folder structures.</p>
+      <h2>The Memento Problem</h2>
+      <p>Every session, your AI agent wakes up with amnesia. The workarounds are everywhere: CLAUDE.md files, agents.md conventions, .context folders stuffed with markdown brain dumps. Developers are building their own memory systems with session JSONL snapshots and elaborate folder structures.</p>
+      <p>A recent Medium post proposed a ".context convention" for AI memory. The fact that developers are standardizing DIY solutions tells you everything about how real this pain is.</p>
 
-    <p>A recent Medium post proposed a ".context convention" for AI memory. The fact that developers are standardizing DIY solutions tells you everything about how real this pain is.</p>
+      <h2>The Industry Finally Admits the Problem</h2>
+      <p>Qodo 2.1 explicitly targets persistent agent memory. LangMem SDK launched to give agents long-term recall. Mantra is building memory infrastructure. VentureBeat called it "solving the amnesia problem."</p>
+      <p>This is becoming a recognized category. The question is: who solves it, and how?</p>
 
-    <h2>The Industry Finally Admits the Problem</h2>
+      <h2>It's Not Just Coding Agents</h2>
+      <p>Here's what everyone misses: this isn't a Claude Code problem. It's an AI problem.</p>
+      <p>Your ChatGPT conversations? At risk. Your Claude.ai projects with carefully built context? Vulnerable. OpenAI Assistants with custom instructions you've refined over months? One API change away from gone. That Gemini session where you finally got it to understand your codebase? Hope you didn't need that tomorrow.</p>
+      <p>Every AI interaction you value is living on borrowed time.</p>
 
-    <p>Qodo 2.1 explicitly targets persistent agent memory. LangMem SDK launched to give agents long-term recall. Mantra is building memory infrastructure. VentureBeat called it "solving the amnesia problem."</p>
+      <h2>Time Machine for AI State</h2>
+      <p>SaveState takes a different approach. Instead of building memory into one tool, we backup the state itself. Think Time Machine, but for AI.</p>
 
-    <p>This is becoming a recognized category. The question is: who solves it, and how?</p>
-
-    <h2>It's Not Just Coding Agents</h2>
-
-    <p>Here's what everyone misses: this isn't a Claude Code problem. It's an AI problem.</p>
-
-    <p>Your ChatGPT conversations? At risk. Your Claude.ai projects with carefully built context? Vulnerable. OpenAI Assistants with custom instructions you've refined over months? One API change away from gone. That Gemini session where you finally got it to understand your codebase? Hope you didn't need that tomorrow.</p>
-
-    <p>Every AI interaction you value is living on borrowed time.</p>
-
-    <h2>Time Machine for AI State</h2>
-
-    <p>SaveState takes a different approach. Instead of building memory into one tool, we backup the state itself. Think Time Machine, but for AI.</p>
-
-<pre><code># Snapshot your Claude Code session
+      <pre><code># Snapshot your Claude Code session
 savestate snapshot claude-code ./my-project
 
 # List your snapshots
@@ -73,17 +448,26 @@ savestate list
 # Restore to yesterday's context
 savestate restore claude-code --snapshot 2026-02-22
 
-# Encrypted, versioned, yours
-</code></pre>
+# Encrypted, versioned, yours</code></pre>
 
-    <p>Not just coding agents. Claude.ai threads. ChatGPT conversations. OpenAI Assistants. All of it, encrypted and versioned. Because your AI context is an asset, and assets deserve backup.</p>
+      <p>Not just coding agents. Claude.ai threads. ChatGPT conversations. OpenAI Assistants. All of it, encrypted and versioned. Because your AI context is an asset, and assets deserve backup.</p>
 
-    <div class="cta">
-      <h3>Stop Losing Your AI's Memory</h3>
-      <p>SaveState backs up and restores AI context across all your tools. One command. Encrypted. Versioned.</p>
-      <p><code>npm install -g @savestate/cli</code></p>
-      <p><a href="https://savestate.dev" style="color: white;">Learn more at savestate.dev</a></p>
+      <p>SaveState snapshots encrypted agent memory so silent context compaction is not the end of the agent's context.</p>
+
+      <div class="cta-box">
+        <h3>Own the memory, not just the model.</h3>
+        <p>Pro is $9/month. Encrypted portable memory. Card today. No waitlist.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="amnesia-crisis-pro-checkout">Subscribe to Pro — $9/mo</a>
+        <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="cta-secondary" data-cta="amnesia-crisis-team-checkout">Team is $29/month</a>
+        <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="amnesia-crisis-npm-secondary">Prefer the CLI first? Install from npm</a>
+      </div>
     </div>
-  </article>
+  </div>
+</article>
+
+  <footer>
+    <p>SaveState - Time Machine for AI Agents</p>
+  </footer>
 </body>
 </html>
