@@ -325,6 +325,7 @@ program
   .option('--id <id>', 'Specific snapshot ID')
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')
+  .option('--json', 'Output as JSON')
   .action(cloudCommand);
 
 // ─── savestate team ──────────────────────────────────────────
