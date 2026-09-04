@@ -11,6 +11,25 @@ interface ConfigOptions {
   json?: boolean;
 }
 
+export function formatConfigJson(config: SaveStateConfig): string {
+  return JSON.stringify(
+    {
+      version: config.version,
+      storage: config.storage,
+      adapters: config.adapters,
+      ...(config.encryption !== undefined ? { encryption: config.encryption } : {}),
+      ...(config.defaultAdapter !== undefined ? { defaultAdapter: config.defaultAdapter } : {}),
+      ...(config.schedule !== undefined ? { schedule: config.schedule } : {}),
+      ...(config.retention !== undefined ? { retention: config.retention } : {}),
+      ...(config.memory !== undefined ? { memory: config.memory } : {}),
+      ...(config.mcp !== undefined ? { mcp: config.mcp } : {}),
+      ...(config.integrity !== undefined ? { integrity: config.integrity } : {}),
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * Set a deeply nested property on an object using dot-notation path.
  * Auto-creates intermediate objects as needed.
@@ -40,7 +59,9 @@ function setNestedValue(obj: Record<string, unknown>, path: string, rawValue: st
 }
 
 export async function configCommand(options: ConfigOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -72,7 +93,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
   }
 
   if (options.json) {
-    console.log(JSON.stringify(config, null, 2));
+    console.log(formatConfigJson(config));
     return;
   }
 

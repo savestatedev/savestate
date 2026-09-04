@@ -383,7 +383,7 @@
       </thead>
       <tbody>
         <tr><td><code>--set &lt;key=value&gt;</code></td><td>Set a configuration value (e.g., <code>storage.type=s3</code>)</td></tr>
-        <tr><td><code>--json</code></td><td>Output current config as JSON</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the current config as JSON. Omits the saved cloud API key. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -393,7 +393,7 @@
 <span class="code-comment"># Set storage to S3</span>
 <span class="code-prompt">$</span> savestate config --set <span class="code-string">"storage.type=s3"</span>
 
-<span class="code-comment"># Export config as JSON</span>
+<span class="code-comment"># Scriptable config (API key omitted)</span>
 <span class="code-prompt">$</span> savestate config --json</code></pre>
 
     <!-- adapters -->
