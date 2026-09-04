@@ -1030,7 +1030,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Output as JSON</td></tr>
+        <tr><td><code>--json</code></td><td>Emit incident records as JSON on <code>incidents</code> and <code>incident</code>. Omits event match context. Skips the banner. Useful for scripting.</td></tr>
         <tr><td><code>--tenant &lt;id&gt;</code></td><td>Tenant ID (default: <code>default</code>)</td></tr>
         <tr><td><code>--count &lt;n&gt;</code></td><td>Number of honeyfacts to seed</td></tr>
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status</td></tr>
@@ -1047,6 +1047,9 @@
 <span class="code-prompt">$</span> savestate integrity seed --count 10
 
 <span class="code-comment"># List detected incidents</span>
+<span class="code-prompt">$</span> savestate integrity incidents
+
+<span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate integrity incidents --json
 
 <span class="code-comment"># Quarantine a memory or agent</span>

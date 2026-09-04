@@ -41,15 +41,50 @@ interface IntegrityOptions {
   user?: string;
 }
 
-/**
- * Main integrity command handler.
- */
+export interface IntegrityIncidentJson {
+  id: string;
+  createdAt: string;
+  severity: string;
+  type: string;
+  status: string;
+  tenantId: string;
+  updatedAt: string;
+  eventCount: number;
+  resolutionNotes: string | null;
+  resolvedBy: string | null;
+}
+
+function toIncidentJson(incident: IntegrityIncident): IntegrityIncidentJson {
+  return {
+    id: incident.id,
+    createdAt: incident.created_at,
+    severity: incident.severity,
+    type: incident.type,
+    status: incident.status,
+    tenantId: incident.tenant_id,
+    updatedAt: incident.updated_at,
+    eventCount: incident.events.length,
+    resolutionNotes: incident.resolution_notes ?? null,
+    resolvedBy: incident.resolved_by ?? null,
+  };
+}
+
+export function formatIntegrityIncidentJson(incident: IntegrityIncident): string {
+  return JSON.stringify(toIncidentJson(incident), null, 2);
+}
+
+export function formatIntegrityIncidentsJson(incidents: IntegrityIncident[]): string {
+  return JSON.stringify(incidents.map(toIncidentJson), null, 2);
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
   options: IntegrityOptions,
 ): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -232,7 +267,7 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const incidents = await getIncidents(tenant_id, status);
 
   if (options.json) {
-    console.log(JSON.stringify(incidents, null, 2));
+    console.log(formatIntegrityIncidentsJson(incidents));
     return;
   }
 
@@ -293,7 +328,7 @@ async function incidentDetailCommand(id: string, options: IntegrityOptions): Pro
   }
 
   if (options.json) {
-    console.log(JSON.stringify(incident, null, 2));
+    console.log(formatIntegrityIncidentJson(incident));
     return;
   }
 
