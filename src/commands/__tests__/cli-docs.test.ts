@@ -23,6 +23,11 @@ const acl = readFileSync(
   'utf8',
 );
 
+const container = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../container.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -556,6 +561,18 @@ describe('CLI docs', () => {
     expect(containerSection).toContain('conversation_history');
     expect(containerSection).toContain('savestate export');
     expect(containerSection).toContain('savestate import');
+  });
+
+  it('registers --json on savestate container', () => {
+    const containerBlock = container.slice(container.indexOf(".command('container')"));
+    expect(containerBlock).toContain(".option('--json'");
+  });
+
+  it('documents container --json', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(containerSection).toContain('--json');
+    expect(containerSection).toContain('scripting');
+    expect(containerSection).toContain('savestate container export -a my-agent -o agent.savestate --json --dry-run');
   });
 
   it('lists savestate stats in the command overview', () => {

@@ -1103,6 +1103,7 @@
         <tr><td><code>--target &lt;dir&gt;</code></td><td>Write restored agent state to this directory on <code>import</code></td></tr>
         <tr><td><code>--merge</code></td><td>Merge with existing state on <code>import</code> (default: replace)</td></tr>
         <tr><td><code>--replace</code></td><td>Replace existing state on <code>import</code></td></tr>
+        <tr><td><code>--json</code></td><td>Emit export or import results as JSON. Encrypts on <code>export</code>, decrypts on <code>import</code>. Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -1110,7 +1111,10 @@
 <span class="code-prompt">$</span> savestate container export -a my-agent -o agent.savestate --dry-run
 
 <span class="code-comment"># Restore into a directory, replacing an existing target file</span>
-<span class="code-prompt">$</span> savestate container import --in agent.savestate --target ./restored --force</code></pre>
+<span class="code-prompt">$</span> savestate container import --in agent.savestate --target ./restored --force
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate container export -a my-agent -o agent.savestate --json --dry-run</code></pre>
 
     <h2 id="pro">Subscribe</h2>
     <p>Pro is $9/month. Encrypted portable memory you can snapshot, restore, search, and migrate from the CLI. Card today. No waitlist.</p>
