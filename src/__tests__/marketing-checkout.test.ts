@@ -224,6 +224,7 @@ describe('public marketing checkout CTAs', () => {
   const amnesiaCrisis = loadHtml('site/blog/ai-agent-amnesia-crisis.html');
   const backupGap = loadHtml('site/blog/memory-vs-backup-gap.html');
   const federalGuidelines = loadHtml('site/blog/align-ai-state-management-federal-guidelines.html');
+  const dashboard = loadHtml('site/dashboard.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1962,6 +1963,14 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(federalGuidelines, 'federal-guidelines-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(federalGuidelines, 'federal-guidelines-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(federalGuidelines).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the dashboard CTAs at the live Payment Links', () => {
+    expect(hrefForCta(dashboard, 'dashboard-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(dashboard, 'dashboard-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(dashboard, 'dashboard-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(dashboard, 'dashboard-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(dashboard).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
