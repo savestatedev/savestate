@@ -277,6 +277,7 @@ program
 program
   .command('logout')
   .description('Remove saved API key')
+  .option('--json', 'Output as JSON')
   .action(logoutCommand);
 
 // ─── savestate schedule ──────────────────────────────────────

@@ -226,6 +226,18 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('savestate login --key ss_live_... --json');
   });
 
+  it('registers --json on savestate logout', () => {
+    const logoutBlock = cli.slice(cli.indexOf("command('logout')"), cli.indexOf("command('schedule')"));
+    expect(logoutBlock).toContain(".option('--json'");
+  });
+
+  it('documents logout --json', () => {
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="cloud"'));
+    expect(logoutSection).toContain('--json');
+    expect(logoutSection).toContain('scripting');
+    expect(logoutSection).toContain('savestate logout --json');
+  });
+
   it('documents login --key, ss_live_ keys, and logout removing the saved key', () => {
     const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
     expect(loginSection).toContain('--key');

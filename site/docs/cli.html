@@ -753,7 +753,22 @@
     <!-- logout -->
     <h2 id="logout"><code>savestate logout</code></h2>
     <p>Remove the saved cloud API key from local config. Does not revoke the key on the server. Reports if you were not logged in.</p>
-    <pre><code><span class="code-prompt">$</span> savestate logout</code></pre>
+    <pre><code><span class="code-prompt">$</span> savestate logout [options]</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Emit logout status as JSON. Skips progress output. Useful for scripting.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="code-comment"># Remove the saved cloud API key</span>
+<span class="code-prompt">$</span> savestate logout
+
+<span class="code-comment"># Scriptable logout status</span>
+<span class="code-prompt">$</span> savestate logout --json</code></pre>
 
     <!-- cloud -->
     <h2 id="cloud"><code>savestate cloud</code></h2>

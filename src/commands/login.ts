@@ -135,11 +135,33 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
   }
 }
 
+interface LogoutOptions {
+  json?: boolean;
+}
+
+export interface LogoutResult {
+  loggedOut: boolean;
+  hadKey: boolean;
+}
+
+export function formatLogoutResultJson(result: LogoutResult): string {
+  return JSON.stringify(
+    {
+      loggedOut: result.loggedOut,
+      hadKey: result.hadKey,
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * savestate logout — Remove API key
  */
-export async function logoutCommand(): Promise<void> {
-  console.log();
+export async function logoutCommand(options: LogoutOptions = {}): Promise<void> {
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized.'));
@@ -153,6 +175,11 @@ export async function logoutCommand(): Promise<void> {
   delete extConfig.apiKey;
   delete extConfig.account;
   await saveConfig(config);
+
+  if (options.json) {
+    console.log(formatLogoutResultJson({ loggedOut: true, hadKey }));
+    return;
+  }
 
   if (hadKey) {
     console.log(chalk.green('  ✓ Logged out. API key removed.'));
