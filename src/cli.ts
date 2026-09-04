@@ -305,6 +305,7 @@ program
   .option('--resume', 'Resume an interrupted migration')
   .option('-i, --include <types>', 'Only migrate specific types (instructions,memories,conversations,files,customBots)')
   .option('-l, --list', 'List available platforms and their capabilities')
+  .option('--json', 'Output as JSON')
   .option('--no-color', 'Disable colorized output')
   .option('--force', 'Skip confirmation prompts')
   .option('-v, --verbose', 'Show detailed progress')

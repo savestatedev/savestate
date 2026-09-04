@@ -601,6 +601,7 @@
         <tr><td><code>-f, --from &lt;platform&gt;</code></td><td>Source platform to migrate from</td></tr>
         <tr><td><code>-t, --to &lt;platform&gt;</code></td><td>Target platform to migrate to</td></tr>
         <tr><td><code>-l, --list</code></td><td>List available platforms and their capabilities</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the platform catalog as JSON with <code>--list</code>. Skips the wizard banner. Useful for scripting.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show a compatibility report without making changes</td></tr>
         <tr><td><code>--review</code></td><td>Inspect items needing manual attention without migrating</td></tr>
         <tr><td><code>--resume</code></td><td>Resume an interrupted migration</td></tr>
@@ -611,8 +612,11 @@
       </tbody>
     </table>
 
-    <pre><code><span class="code-comment"># List platforms the wizard can migrate between</span>
+    <pre><code>        <span class="code-comment"># List platforms the wizard can migrate between</span>
 <span class="code-prompt">$</span> savestate migrate --list
+
+<span class="code-comment"># Scriptable platform catalog</span>
+<span class="code-prompt">$</span> savestate migrate --list --json
 
 <span class="code-comment"># Preview ChatGPT → Claude without writing anything</span>
 <span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --dry-run

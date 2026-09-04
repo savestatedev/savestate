@@ -105,6 +105,18 @@ describe('CLI docs', () => {
     expect(migrateSection).toContain('compatibility report');
   });
 
+  it('registers --json on savestate migrate', () => {
+    const migrateBlock = cli.slice(cli.indexOf("command('migrate')"), cli.indexOf("command('cloud'"));
+    expect(migrateBlock).toContain(".option('--json'");
+  });
+
+  it('documents migrate --json', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    expect(migrateSection).toContain('--json');
+    expect(migrateSection).toContain('scripting');
+    expect(migrateSection).toContain('savestate migrate --list --json');
+  });
+
   it('documents migrate --review, --resume, --include, --force, --verbose, and --no-color', () => {
     const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
     expect(migrateSection).toContain('--review');
