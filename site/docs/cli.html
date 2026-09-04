@@ -574,6 +574,7 @@
         <tr><td><code>-e, --every &lt;interval&gt;</code></td><td>Backup interval (e.g., <code>1h</code>, <code>6h</code>, <code>12h</code>, <code>1d</code>). Requires Pro or Team</td></tr>
         <tr><td><code>-d, --disable</code></td><td>Disable scheduled backups</td></tr>
         <tr><td><code>-s, --status</code></td><td>Show schedule status (default when no other flag is set)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit schedule status as JSON. Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -581,6 +582,9 @@
 
     <pre><code><span class="code-comment"># Show whether scheduled backups are enabled</span>
 <span class="code-prompt">$</span> savestate schedule
+
+<span class="code-comment"># Scriptable schedule status</span>
+<span class="code-prompt">$</span> savestate schedule --json
 
 <span class="code-comment"># Enable a 6-hour backup schedule</span>
 <span class="code-prompt">$</span> savestate schedule --every 6h

@@ -187,6 +187,7 @@ savestate schedule                    Configure auto-backups (Pro/Team)
   --every <interval>                 Backup interval (1h, 6h, 12h, 1d)
   --disable                          Disable scheduled backups
   --status                           Show schedule status
+  --json                             Output as JSON
 savestate migrate                     Migration wizard between platforms
   --from <platform>                  Source platform
   --to <platform>                    Target platform
