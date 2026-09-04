@@ -120,11 +120,80 @@ async function mcpServeCommand(options: MCPServeOptions): Promise<void> {
 
 // ─── MCP Status Command ──────────────────────────────────────
 
-async function mcpStatusCommand(): Promise<void> {
+const MCP_TOOLS = [
+  'savestate_snapshot',
+  'savestate_restore',
+  'savestate_list',
+  'savestate_status',
+  'savestate_memory_store',
+  'savestate_memory_search',
+  'savestate_memory_delete',
+];
+
+const MCP_RESOURCES = ['savestate://snapshots', 'savestate://memories'];
+
+export interface McpStatus {
+  initialized: boolean;
+  enabled: boolean;
+  port: number;
+  auth: string;
+  tools: string[];
+  resources: string[];
+}
+
+export function formatMcpStatusJson(status: McpStatus): string {
+  return JSON.stringify(
+    {
+      initialized: status.initialized,
+      enabled: status.enabled,
+      port: status.port,
+      auth: status.auth,
+      tools: status.tools,
+      resources: status.resources,
+    },
+    null,
+    2,
+  );
+}
+
+interface MCPStatusOptions {
+  json?: boolean;
+}
+
+async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
+  const initialized = isInitialized();
+  let configured = false;
+  let enabled = false;
+  let port = 3333;
+  let auth = 'none';
+
+  if (initialized) {
+    const config = await loadConfig();
+    if (config.mcp) {
+      configured = true;
+      enabled = config.mcp.enabled;
+      port = config.mcp.port;
+      auth = config.mcp.auth.type;
+    }
+  }
+
+  const status: McpStatus = {
+    initialized,
+    enabled,
+    port,
+    auth,
+    tools: [...MCP_TOOLS],
+    resources: [...MCP_RESOURCES],
+  };
+
+  if (options.json) {
+    console.log(formatMcpStatusJson(status));
+    return;
+  }
+
   console.log(chalk.cyan('\nMCP Server Status\n'));
 
-  // Check if SaveState is initialized
-  if (!isInitialized()) {
+  if (!initialized) {
     console.log(chalk.yellow('SaveState: Not initialized'));
     console.log(chalk.gray('Run `savestate init` to set up SaveState.'));
     return;
@@ -132,14 +201,11 @@ async function mcpStatusCommand(): Promise<void> {
 
   console.log(chalk.green('SaveState: Initialized'));
 
-  // Load config and show MCP settings
-  const config = await loadConfig();
-
   console.log('\nMCP Configuration:');
-  if (config.mcp) {
-    console.log(`  Enabled: ${config.mcp.enabled ? chalk.green('Yes') : chalk.gray('No')}`);
-    console.log(`  Port: ${chalk.cyan(config.mcp.port)}`);
-    console.log(`  Auth: ${chalk.cyan(config.mcp.auth.type)}`);
+  if (configured) {
+    console.log(`  Enabled: ${enabled ? chalk.green('Yes') : chalk.gray('No')}`);
+    console.log(`  Port: ${chalk.cyan(port)}`);
+    console.log(`  Auth: ${chalk.cyan(auth)}`);
   } else {
     console.log(chalk.gray('  Not configured (using defaults)'));
     console.log(`  Enabled: ${chalk.gray('No')}`);
@@ -147,27 +213,16 @@ async function mcpStatusCommand(): Promise<void> {
     console.log(`  Auth: ${chalk.cyan('none')}`);
   }
 
-  // Show available tools
   console.log('\nAvailable MCP Tools:');
-  const tools = [
-    'savestate_snapshot',
-    'savestate_restore',
-    'savestate_list',
-    'savestate_status',
-    'savestate_memory_store',
-    'savestate_memory_search',
-    'savestate_memory_delete',
-  ];
-  for (const tool of tools) {
+  for (const tool of MCP_TOOLS) {
     console.log(chalk.gray(`  - ${tool}`));
   }
 
-  // Show available resources
   console.log('\nAvailable MCP Resources:');
-  console.log(chalk.gray('  - savestate://snapshots'));
-  console.log(chalk.gray('  - savestate://memories'));
+  for (const resource of MCP_RESOURCES) {
+    console.log(chalk.gray(`  - ${resource}`));
+  }
 
-  // Show usage instructions
   console.log('\n' + chalk.cyan('Usage:'));
   console.log(chalk.gray('  To start the MCP server: savestate mcp serve'));
   console.log(chalk.gray('  To configure in Claude Code:'));
@@ -378,6 +433,7 @@ export function registerMCPCommands(program: Command): void {
   mcp
     .command('status')
     .description('Check MCP server configuration and available tools')
+    .option('--json', 'Output as JSON')
     .action(mcpStatusCommand);
 
   // savestate mcp export
