@@ -69,6 +69,7 @@ program
   .option('--full', 'Force a full snapshot (skip incremental)')
   .option('--tag <entry...>', 'Record structured state entry (type:key=value)')
   .option('--meta <entry...>', 'Additional metadata for state entries (key=value)')
+  .option('--json', 'Output as JSON')
   .action(snapshotCommand);
 
 // ─── savestate restore ───────────────────────────────────────

@@ -505,6 +505,18 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate search');
   });
 
+  it('registers --json on savestate snapshot', () => {
+    const snapshotBlock = cli.slice(cli.indexOf("command('snapshot')"), cli.indexOf("command('restore"));
+    expect(snapshotBlock).toContain(".option('--json'");
+  });
+
+  it('documents snapshot --json', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--json');
+    expect(snapshotSection).toContain('Encrypts the archive');
+    expect(snapshotSection).toContain('savestate snapshot --json --full');
+  });
+
   it('documents snapshot --tag and --meta state entries', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--tag');
