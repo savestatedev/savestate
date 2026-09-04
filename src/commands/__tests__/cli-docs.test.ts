@@ -42,6 +42,13 @@ describe('CLI docs', () => {
     expect(importSection).toContain('missing parent directory');
   });
 
+  it('documents import --json', () => {
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    expect(importSection).toContain('--json');
+    expect(importSection).toContain('Decrypts the archive');
+    expect(importSection).toContain('savestate import agent.savestate --json --dry-run');
+  });
+
   it('documents verify rejecting a missing input path', () => {
     const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
     expect(verifySection).toContain('missing');

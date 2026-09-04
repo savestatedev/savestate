@@ -465,6 +465,7 @@
         <tr><td><code>--include &lt;paths&gt;</code></td><td>Only restore named state paths</td></tr>
         <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths while restoring</td></tr>
         <tr><td><code>--merge</code></td><td>Merge with existing state (default: replace)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the import result as JSON. Decrypts the archive. Skips progress output.</td></tr>
       </tbody>
     </table>
 
@@ -472,7 +473,10 @@
 <span class="code-prompt">$</span> savestate import agent.savestate --dry-run
 
 <span class="code-comment"># Restore into a directory, replacing an existing target file</span>
-<span class="code-prompt">$</span> savestate import agent.savestate --target ./restored --force</code></pre>
+<span class="code-prompt">$</span> savestate import agent.savestate --target ./restored --force
+
+<span class="code-comment"># Scriptable import metadata</span>
+<span class="code-prompt">$</span> savestate import agent.savestate --json --dry-run</code></pre>
 
     <!-- verify -->
     <h2 id="verify"><code>savestate verify</code></h2>

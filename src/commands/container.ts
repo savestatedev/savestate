@@ -375,6 +375,50 @@ export function formatExportResultJson(result: {
   );
 }
 
+export function formatImportResultJson(result: {
+  agent: string;
+  formatVersion?: number | null;
+  created: string;
+  checksum: string;
+  size: number;
+  payloadName?: string | null;
+  contentType?: string | null;
+  description?: string | null;
+  components: readonly string[];
+  encryption?: string | null;
+  keyDerivation?: string | null;
+  excluded?: readonly string[];
+  input: string;
+  target?: string | null;
+  mode: RestoreMode;
+  restored: boolean;
+  dryRun: boolean;
+}): string {
+  return JSON.stringify(
+    {
+      agent: result.agent,
+      formatVersion: result.formatVersion ?? null,
+      created: result.created,
+      checksum: result.checksum,
+      size: result.size,
+      payloadName: result.payloadName ?? null,
+      contentType: result.contentType ?? null,
+      description: result.description ?? null,
+      components: result.components,
+      encryption: result.encryption ?? null,
+      keyDerivation: result.keyDerivation ?? null,
+      excluded: result.excluded && result.excluded.length > 0 ? result.excluded : null,
+      input: result.input,
+      target: result.target ?? null,
+      mode: result.mode,
+      restored: result.restored,
+      dryRun: result.dryRun,
+    },
+    null,
+    2,
+  );
+}
+
 function optionalImportPayloadName(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
@@ -543,22 +587,23 @@ export type RestoreMode = 'replace' | 'merge';
 async function restoreAgentState(
   agentId: string, 
   state: string, 
-  mode: RestoreMode = 'replace'
+  mode: RestoreMode = 'replace',
+  options?: { silent?: boolean },
 ): Promise<void> {
   const parsedState = JSON.parse(state);
-  
-  if (mode === 'merge') {
-    console.log(`Merging state into existing agent: ${agentId}`);
-    // In a real implementation, this would merge with existing state
-    console.log('  - Keeping existing data, adding new entries');
-  } else {
-    console.log(`Replacing state for agent: ${agentId}`);
-    // In a real implementation, this would replace existing state
-    console.log('  - Overwriting all existing data');
+
+  if (!options?.silent) {
+    if (mode === 'merge') {
+      console.log(`Merging state into existing agent: ${agentId}`);
+      console.log('  - Keeping existing data, adding new entries');
+    } else {
+      console.log(`Replacing state for agent: ${agentId}`);
+      console.log('  - Overwriting all existing data');
+    }
+
+    console.log(`Restored state version: ${parsedState.version}`);
+    console.log(`Components restored: ${Object.keys(parsedState).filter(k => k !== 'agentId' && k !== 'version' && k !== 'exportedAt').join(', ')}`);
   }
-  
-  console.log(`Restored state version: ${parsedState.version}`);
-  console.log(`Components restored: ${Object.keys(parsedState).filter(k => k !== 'agentId' && k !== 'version' && k !== 'exportedAt').join(', ')}`);
 }
 
 export interface ExportOptions {
@@ -864,6 +909,7 @@ export interface RestoreOptions {
   include?: string;
   exclude?: string;
   force?: boolean;
+  json?: boolean;
 }
 
 export interface ImportResult {
@@ -1002,7 +1048,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     }
 
     const fileBuffer = await fs.readFile(inFile);
-    reportContainerProgress(`Reading ${inFile}`, fileBuffer.length);
+    if (!options.json) {
+      reportContainerProgress(`Reading ${inFile}`, fileBuffer.length);
+    }
 
     // 1. Read header and manifest
     const magic = fileBuffer.subarray(0, 8).toString('ascii');
@@ -1067,7 +1115,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
 
     // 2. Decrypt and verify
     const encryptedState = fileBuffer.subarray(manifestEnd);
-    reportContainerProgress('Decrypting agent state', encryptedState.length);
+    if (!options.json) {
+      reportContainerProgress('Decrypting agent state', encryptedState.length);
+    }
     let decryptedState: Buffer;
     try {
       decryptedState = await decrypt(encryptedState, keySource);
@@ -1248,7 +1298,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         ? payload.contentType.trim()
         : undefined;
 
-    reportContainerProgress('Verifying integrity', decryptedState.length);
+    if (!options.json) {
+      reportContainerProgress('Verifying integrity', decryptedState.length);
+    }
     const calculatedHash = createHash('sha256').update(decryptedState).digest('hex');
     if (calculatedHash !== payload.sha256) {
       console.error('Error: Integrity check failed. The file may be corrupted or tampered with.');
@@ -1351,10 +1403,12 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     if (options.include !== undefined || options.exclude !== undefined) {
       parsedState = selected.state;
       stateText = JSON.stringify(parsedState, null, 2);
-      console.log(`Including paths: ${selected.components.join(', ')}`);
+      if (!options.json) {
+        console.log(`Including paths: ${selected.components.join(', ')}`);
+      }
     }
     const excludedPaths = listExcludedPaths(options.exclude);
-    if (excludedPaths.length > 0) {
+    if (!options.json && excludedPaths.length > 0) {
       console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
     }
     const components = selected.components;
@@ -1384,7 +1438,41 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       ...(payloadName ? { payloadName } : {}),
     };
 
+    const emitImportResult = () => {
+      if (options.json) {
+        console.log(
+          formatImportResultJson({
+            agent: manifest.agentId,
+            formatVersion,
+            created: manifest.created,
+            checksum: calculatedHash,
+            size: decryptedState.length,
+            payloadName,
+            contentType,
+            description,
+            components,
+            encryption: encryptionAlgorithm,
+            keyDerivation,
+            excluded: excludedComponents,
+            input: inFile,
+            target: result.target,
+            mode,
+            restored: result.restored,
+            dryRun: result.dryRun,
+          }),
+        );
+        return true;
+      }
+      return false;
+    };
+
     if (options.dryRun) {
+      if (options.target) {
+        result.target = join(resolve(options.target), TARGET_STATE_FILE);
+      }
+      if (emitImportResult()) {
+        return result;
+      }
       console.log(`\nDRY RUN — no changes will be made`);
       console.log(formatImportAgent(manifest.agentId));
       console.log(formatImportMode(mode));
@@ -1414,10 +1502,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.log(formatImportPayloadName(payloadName));
       }
       console.log(formatImportInput(inFile));
-      if (options.target) {
-        const previewTarget = join(resolve(options.target), TARGET_STATE_FILE);
-        result.target = previewTarget;
-        console.log(formatImportTarget(previewTarget));
+      if (result.target) {
+        console.log(formatImportTarget(result.target));
       }
       console.log(`  This was a dry run. No agent state was restored.`);
       return result;
@@ -1427,11 +1513,19 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     if (options.target) {
       targetPath = await writeTargetState(options.target, stateText);
       result.target = targetPath;
-      console.log(`Wrote agent state to ${targetPath}`);
+      if (!options.json) {
+        console.log(`Wrote agent state to ${targetPath}`);
+      }
     }
 
-    reportContainerProgress(`Restoring agent ${manifest.agentId}`);
-    await restoreAgentState(manifest.agentId, stateText, mode);
+    if (!options.json) {
+      reportContainerProgress(`Restoring agent ${manifest.agentId}`);
+    }
+    await restoreAgentState(manifest.agentId, stateText, mode, { silent: !!options.json });
+
+    if (emitImportResult()) {
+      return result;
+    }
 
     console.log(`\n✓ Successfully restored agent '${manifest.agentId}' from ${inFile}`);
     console.log(formatImportAgent(manifest.agentId));
@@ -1527,6 +1621,7 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
     .option('--force', 'Overwrite an existing target file')
+    .option('--json', 'Output as JSON')
     .action(async (file, opts) => {
       const result = await importState({
         in: file,
@@ -1539,6 +1634,7 @@ export function registerContainerCommands(program: Command) {
         include: opts.include,
         exclude: opts.exclude,
         force: opts.force,
+        json: opts.json,
       });
       if (!result) {
         process.exit(1);
@@ -1601,6 +1697,7 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory')
     .option('--force', 'Overwrite an existing target file')
+    .option('--json', 'Output as JSON')
     .action(async (opts) => {
       const result = await importState({
         in: opts.in,
@@ -1613,6 +1710,7 @@ export function registerContainerCommands(program: Command) {
         include: opts.include,
         exclude: opts.exclude,
         force: opts.force,
+        json: opts.json,
       });
       if (!result) {
         process.exit(1);
