@@ -5,7 +5,12 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { isInitialized } from '../config.js';
-import { TraceStore, type TraceExportFormat } from '../trace/index.js';
+import {
+  TraceStore,
+  type TraceEvent,
+  type TraceExportFormat,
+  type TraceRunIndexEntry,
+} from '../trace/index.js';
 
 interface TraceListOptions {
   json?: boolean;
@@ -18,6 +23,52 @@ interface TraceShowOptions {
 interface TraceExportOptions {
   format?: TraceExportFormat;
   run?: string;
+}
+
+export interface TraceRunJson {
+  runId: string;
+  adapter: string;
+  eventCount: number;
+  startedAt: string;
+  updatedAt: string;
+  tags: string[];
+}
+
+export interface TraceEventJson {
+  timestamp: string;
+  runId: string;
+  adapter: string;
+  eventType: string;
+  tags: string[];
+}
+
+function toRunJson(run: TraceRunIndexEntry): TraceRunJson {
+  return {
+    runId: run.run_id,
+    adapter: run.adapter,
+    eventCount: run.event_count,
+    startedAt: run.started_at,
+    updatedAt: run.updated_at,
+    tags: run.tags ?? [],
+  };
+}
+
+function toEventJson(event: TraceEvent): TraceEventJson {
+  return {
+    timestamp: event.timestamp,
+    runId: event.run_id,
+    adapter: event.adapter,
+    eventType: event.event_type,
+    tags: event.tags ?? [],
+  };
+}
+
+export function formatTraceRunsJson(runs: TraceRunIndexEntry[]): string {
+  return JSON.stringify(runs.map(toRunJson), null, 2);
+}
+
+export function formatTraceEventsJson(events: TraceEvent[]): string {
+  return JSON.stringify(events.map(toEventJson), null, 2);
 }
 
 export function registerTraceCommands(program: Command): void {
@@ -46,7 +97,9 @@ export function registerTraceCommands(program: Command): void {
 }
 
 export async function traceListCommand(options: TraceListOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -57,7 +110,7 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
   const runs = await store.listRuns();
 
   if (options.json) {
-    console.log(JSON.stringify(runs, null, 2));
+    console.log(formatTraceRunsJson(runs));
     return;
   }
 
@@ -99,7 +152,9 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
 }
 
 export async function traceShowCommand(runId: string, options: TraceShowOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -116,7 +171,7 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
   }
 
   if (options.json) {
-    console.log(JSON.stringify(events, null, 2));
+    console.log(formatTraceEventsJson(events));
     return;
   }
 

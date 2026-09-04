@@ -28,6 +28,11 @@ const integrity = readFileSync(
   'utf8',
 );
 
+const trace = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../trace.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -559,6 +564,18 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('.savestate/traces');
     expect(traceSection).toContain('savestate init');
     expect(traceSection).toContain('Askable Echoes');
+  });
+
+  it('registers --json on savestate trace list', () => {
+    const listBlock = trace.slice(trace.indexOf("command('list')"), trace.indexOf("command('show"));
+    expect(listBlock).toContain(".option('--json'");
+  });
+
+  it('documents trace --json', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain('savestate trace list --json');
   });
 
   it('registers savestate container on the CLI', () => {
