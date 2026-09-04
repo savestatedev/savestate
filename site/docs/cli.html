@@ -725,6 +725,7 @@
       </thead>
       <tbody>
         <tr><td><code>-k, --key &lt;api-key&gt;</code></td><td>API key (or enter interactively)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the login result as JSON. Skips the spinner. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -732,7 +733,10 @@
 <span class="code-prompt">$</span> savestate login
 
 <span class="code-comment"># Pass the key on the command line</span>
-<span class="code-prompt">$</span> savestate login --key ss_live_...</code></pre>
+<span class="code-prompt">$</span> savestate login --key ss_live_...
+
+<span class="code-comment"># Scriptable login</span>
+<span class="code-prompt">$</span> savestate login --key ss_live_... --json</code></pre>
 
     <!-- logout -->
     <h2 id="logout"><code>savestate logout</code></h2>
