@@ -973,6 +973,7 @@
         <tr><td><code>-v, --verifier &lt;id&gt;</code></td><td>ID of the verifier for <code>verify</code></td></tr>
         <tr><td><code>-a, --approve</code></td><td>Approve the commitment on <code>verify</code> (default is reject)</td></tr>
         <tr><td><code>-a, --action &lt;type&gt;</code></td><td>Action type to check on <code>gate</code> (same values as <code>--type</code>)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit commitments or gate status as JSON. Omits the audit trail. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -986,7 +987,10 @@
 <span class="code-prompt">$</span> savestate acl gate --action customer_promise
 
 <span class="code-comment"># List all commitments</span>
-<span class="code-prompt">$</span> savestate acl list</code></pre>
+<span class="code-prompt">$</span> savestate acl list
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate acl list --json</code></pre>
 
     <!-- identity -->
     <h2 id="identity"><code>savestate identity</code></h2>

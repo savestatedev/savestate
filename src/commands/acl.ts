@@ -1,5 +1,61 @@
 import { Command } from 'commander';
-import { proposeCommitment, verifyCommitment, gateAction, listCommitments } from '../acl/index.js';
+import {
+  proposeCommitment,
+  verifyCommitment,
+  gateAction,
+  listCommitments,
+  type Commitment,
+} from '../acl/index.js';
+
+export interface AclCommitmentJson {
+  id: string;
+  type: string;
+  criticality: string;
+  state: string;
+  description: string;
+  proposer: string;
+  verifier: string | null;
+  expiresAt: string | null;
+}
+
+export interface AclGateResult {
+  allowed: boolean;
+  action: string;
+  reason: string | null;
+}
+
+function toCommitmentJson(commitment: Commitment): AclCommitmentJson {
+  return {
+    id: commitment.id,
+    type: commitment.type,
+    criticality: commitment.criticality,
+    state: commitment.state,
+    description: commitment.description,
+    proposer: commitment.proposer,
+    verifier: commitment.verifier ?? null,
+    expiresAt: commitment.expiresAt ?? null,
+  };
+}
+
+export function formatAclCommitmentJson(commitment: Commitment): string {
+  return JSON.stringify(toCommitmentJson(commitment), null, 2);
+}
+
+export function formatAclListJson(commitments: Commitment[]): string {
+  return JSON.stringify(commitments.map(toCommitmentJson), null, 2);
+}
+
+export function formatAclGateJson(result: AclGateResult): string {
+  return JSON.stringify(
+    {
+      allowed: result.allowed,
+      action: result.action,
+      reason: result.reason,
+    },
+    null,
+    2,
+  );
+}
 
 async function aclPropose(options: {
   type: string;
@@ -7,11 +63,12 @@ async function aclPropose(options: {
   description: string;
   proposer: string;
   expiresIn?: string;
+  json?: boolean;
 }) {
   try {
     let expiresAt: string | undefined;
     if (options.expiresIn) {
-      const ms = parseInt(options.expiresIn) * 1000; // minutes to ms
+      const ms = parseInt(options.expiresIn) * 1000;
       expiresAt = new Date(Date.now() + ms).toISOString();
     }
 
@@ -23,6 +80,11 @@ async function aclPropose(options: {
       expiresAt,
     });
 
+    if (options.json) {
+      console.log(formatAclCommitmentJson(commitment));
+      return;
+    }
+
     console.log(`Commitment proposed: ${commitment.id}`);
     console.log(`State: ${commitment.state}`);
     console.log(`Criticality: ${commitment.criticality}`);
@@ -33,12 +95,16 @@ async function aclPropose(options: {
   }
 }
 
-async function aclVerify(options: { id: string; verifier: string; approve: boolean }) {
+async function aclVerify(options: { id: string; verifier: string; approve: boolean; json?: boolean }) {
   try {
     const commitment = verifyCommitment(options.id, options.verifier, options.approve);
     if (!commitment) {
       console.error('Commitment not found:', options.id);
       process.exit(1);
+    }
+    if (options.json) {
+      console.log(formatAclCommitmentJson(commitment));
+      return;
     }
     console.log(`Commitment ${options.id} is now: ${commitment.state}`);
     console.log(`Verified by: ${commitment.verifier}`);
@@ -48,9 +114,19 @@ async function aclVerify(options: { id: string; verifier: string; approve: boole
   }
 }
 
-async function aclGate(options: { action: string }) {
+async function aclGate(options: { action: string; json?: boolean }) {
   try {
     const result = gateAction(options.action as any);
+    if (options.json) {
+      console.log(
+        formatAclGateJson({
+          allowed: result.allowed,
+          action: options.action,
+          reason: result.reason ?? null,
+        }),
+      );
+      process.exit(result.allowed ? 0 : 1);
+    }
     if (result.allowed) {
       console.log(`✅ Action '${options.action}' is ALLOWED`);
       process.exit(0);
@@ -65,9 +141,13 @@ async function aclGate(options: { action: string }) {
   }
 }
 
-async function aclList() {
+async function aclList(options: { json?: boolean } = {}) {
   try {
     const commitments = listCommitments();
+    if (options.json) {
+      console.log(formatAclListJson(commitments));
+      return;
+    }
     if (commitments.length === 0) {
       console.log('No commitments found.');
       return;
@@ -99,6 +179,7 @@ export function registerACLCommands(program: Command) {
     .requiredOption('-d, --description <text>', 'Description of the commitment')
     .requiredOption('-p, --proposer <id>', 'ID of the proposing agent')
     .option('-e, --expires-in <minutes>', 'Minutes until expiration')
+    .option('--json', 'Output as JSON')
     .action(aclPropose);
 
   acl
@@ -107,16 +188,19 @@ export function registerACLCommands(program: Command) {
     .requiredOption('-i, --id <id>', 'Commitment ID')
     .requiredOption('-v, --verifier <id>', 'ID of the verifier')
     .option('-a, --approve', 'Approve the commitment (default is reject)', false)
+    .option('--json', 'Output as JSON')
     .action(aclVerify);
 
   acl
     .command('gate')
     .description('Check if an action is allowed based on active commitments.')
     .requiredOption('-a, --action <type>', 'Action type to check')
+    .option('--json', 'Output as JSON')
     .action(aclGate);
 
   acl
     .command('list')
     .description('List all commitments.')
+    .option('--json', 'Output as JSON')
     .action(aclList);
 }

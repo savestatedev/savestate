@@ -18,6 +18,11 @@ const mcp = readFileSync(
   'utf8',
 );
 
+const acl = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../acl.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -437,6 +442,18 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('--action');
     expect(aclSection).toContain('customer_promise');
     expect(aclSection).toContain('Active Commitment Layer');
+  });
+
+  it('registers --json on savestate acl list', () => {
+    const listBlock = acl.slice(acl.indexOf("command('list')"));
+    expect(listBlock).toContain(".option('--json'");
+  });
+
+  it('documents acl --json', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--json');
+    expect(aclSection).toContain('scripting');
+    expect(aclSection).toContain('savestate acl list --json');
   });
 
   it('registers savestate identity on the CLI', () => {
