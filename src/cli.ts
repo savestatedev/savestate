@@ -269,6 +269,7 @@ program
   .command('login')
   .description('Authenticate with SaveState cloud')
   .option('-k, --key <api-key>', 'API key (or enter interactively)')
+  .option('--json', 'Output as JSON')
   .action(loginCommand);
 
 // ─── savestate logout ────────────────────────────────────────

@@ -214,6 +214,18 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate logout');
   });
 
+  it('registers --json on savestate login', () => {
+    const loginBlock = cli.slice(cli.indexOf("command('login')"), cli.indexOf("command('logout')"));
+    expect(loginBlock).toContain(".option('--json'");
+  });
+
+  it('documents login --json', () => {
+    const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
+    expect(loginSection).toContain('--json');
+    expect(loginSection).toContain('scripting');
+    expect(loginSection).toContain('savestate login --key ss_live_... --json');
+  });
+
   it('documents login --key, ss_live_ keys, and logout removing the saved key', () => {
     const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
     expect(loginSection).toContain('--key');

@@ -10,10 +10,35 @@ const API_BASE = 'https://savestate.dev/api';
 
 interface LoginOptions {
   key?: string;
+  json?: boolean;
+}
+
+export interface LoginResult {
+  authenticated: boolean;
+  email: string;
+  tier: string;
+  features: number;
+  storageLimit: number;
+}
+
+export function formatLoginResultJson(result: LoginResult): string {
+  return JSON.stringify(
+    {
+      authenticated: result.authenticated,
+      email: result.email,
+      tier: result.tier,
+      features: result.features,
+      storageLimit: result.storageLimit,
+    },
+    null,
+    2,
+  );
 }
 
 export async function loginCommand(options: LoginOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -45,8 +70,7 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
     process.exit(1);
   }
 
-  // Validate the key against the API
-  const spinner = ora('Validating API key...').start();
+  const spinner = options.json ? null : ora('Validating API key...').start();
 
   try {
     const res = await fetch(`${API_BASE}/account`, {
@@ -54,7 +78,7 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
     });
 
     if (!res.ok) {
-      spinner.fail('Invalid API key');
+      spinner?.fail('Invalid API key');
       const body = await res.json().catch(() => ({}));
       console.log(chalk.red(`  ${(body as { error?: string }).error || 'Authentication failed'}`));
       console.log();
@@ -68,9 +92,7 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
       storage: { limit: number };
     };
 
-    // Save to config
     const config = await loadConfig();
-    // Extend config with cloud auth fields
     const extConfig = config as unknown as Record<string, unknown>;
     extConfig.apiKey = apiKey;
     extConfig.account = {
@@ -79,7 +101,20 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
     };
     await saveConfig(config);
 
-    spinner.succeed('Authenticated!');
+    if (options.json) {
+      console.log(
+        formatLoginResultJson({
+          authenticated: true,
+          email: account.email,
+          tier: account.tier,
+          features: account.features?.length ?? 0,
+          storageLimit: account.storage?.limit ?? 0,
+        }),
+      );
+      return;
+    }
+
+    spinner?.succeed('Authenticated!');
     console.log();
     console.log(`  ${chalk.dim('Account:')}  ${chalk.cyan(account.email)}`);
     console.log(`  ${chalk.dim('Tier:')}     ${chalk.green(account.tier.toUpperCase())}`);
@@ -92,7 +127,7 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
     console.log();
 
   } catch (err) {
-    spinner.fail('Connection failed');
+    spinner?.fail('Connection failed');
     console.log(chalk.red(`  Could not reach ${API_BASE}`));
     console.log(chalk.dim('  Check your internet connection and try again.'));
     console.log();
