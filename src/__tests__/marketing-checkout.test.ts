@@ -220,6 +220,7 @@ describe('public marketing checkout CTAs', () => {
   const rampocalypse = loadHtml('site/blog/rampocalypse-reveals-ai-agents-are-memory-vampires.html');
   const v070Legacy = loadHtml('site/blog/v0-7-0-migration-wizard.html');
   const wizardArchitecture = loadHtml('site/blog/migration-wizard-architecture.html');
+  const memoryCrisis2026 = loadHtml('site/blog/ai-memory-crisis-2026.html');
 
   it('uses the configured Pro and Team payment links (no invented prices)', () => {
     expect(stripe.products.pro.amount_cents).toBe(900);
@@ -1919,6 +1920,15 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(wizardArchitecture, 'wizard-architecture-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(hrefForCta(wizardArchitecture, 'wizard-architecture-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
     expect(wizardArchitecture).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
+  });
+
+  it('points the memory-crisis-2026 post CTAs at the live Payment Links', () => {
+    expect(hrefForCta(memoryCrisis2026, 'memory-crisis-2026-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryCrisis2026, 'memory-crisis-2026-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(memoryCrisis2026, 'memory-crisis-2026-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(memoryCrisis2026, 'memory-crisis-2026-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(hrefForCta(memoryCrisis2026, 'memory-crisis-2026-nav-pro-checkout')).not.toMatch(/npmjs\.com/);
+    expect(memoryCrisis2026).not.toMatch(/class="btn-nav"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn-nav"/);
   });
 
   it('lists the Windsurf listing page on the live URL path', () => {
