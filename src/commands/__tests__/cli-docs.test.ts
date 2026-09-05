@@ -661,6 +661,18 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('incremental chains');
   });
 
+  it('registers --json on savestate doctor', () => {
+    const doctorBlock = cli.slice(cli.indexOf("command('doctor')"), cli.indexOf("command('inspect <snapshot-id>')"));
+    expect(doctorBlock).toContain(".option('--json'");
+  });
+
+  it('documents doctor --json', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    expect(doctorSection).toContain('--json');
+    expect(doctorSection).toContain('scripting');
+    expect(doctorSection).toContain('savestate doctor --json');
+  });
+
   it('registers savestate inspect on the CLI', () => {
     expect(cli).toContain("command('inspect <snapshot-id>')");
     expect(cli).toContain(".option('--json'");

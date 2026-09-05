@@ -36,8 +36,29 @@ export interface SnapshotDiagnosis {
   warnings: string[];
 }
 
+export interface DoctorJson {
+  total: number;
+  healthy: number;
+  unhealthy: number;
+  results: SnapshotDiagnosis[];
+}
+
+export function formatDoctorJson(results: SnapshotDiagnosis[]): string {
+  const healthy = results.filter((r) => r.ok).length;
+  const unhealthy = results.length - healthy;
+  const record: DoctorJson = {
+    total: results.length,
+    healthy,
+    unhealthy,
+    results,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -60,7 +81,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
 
   if (targets.length === 0) {
     if (options.json) {
-      console.log(JSON.stringify({ total: 0, healthy: 0, unhealthy: 0, results: [] }, null, 2));
+      console.log(formatDoctorJson([]));
       return;
     }
     console.log(
@@ -89,15 +110,13 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
 
   spinner?.stop();
 
-  const healthy = results.filter((r) => r.ok).length;
-  const unhealthy = results.length - healthy;
-
   if (options.json) {
-    console.log(
-      JSON.stringify({ total: results.length, healthy, unhealthy, results }, null, 2),
-    );
+    console.log(formatDoctorJson(results));
     return;
   }
+
+  const healthy = results.filter((r) => r.ok).length;
+  const unhealthy = results.length - healthy;
 
   console.log(chalk.bold(`🩺 SaveState Doctor`));
   console.log(chalk.dim(`   Storage: ${config.storage.type}`));
