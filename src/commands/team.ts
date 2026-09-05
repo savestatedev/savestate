@@ -5,7 +5,7 @@
  *   savestate team status                     Show your team membership
  *   savestate team members                    List team members
  *   savestate team invite <email> [--role R]  Invite a member by email
- *   savestate team audit [--since] [--format] Stream the audit log
+ *   savestate team audit [--since] [--format] [--json] Stream the audit log
  */
 
 import chalk from 'chalk';
@@ -155,7 +155,7 @@ export async function teamInviteCommand(email: string, options: TeamCommandOptio
 }
 
 export async function teamAuditCommand(options: TeamCommandOptions = {}): Promise<void> {
-  const format = (options.format || 'json').toLowerCase();
+  const format = (options.json ? 'json' : (options.format || 'json')).toLowerCase();
   if (format !== 'json' && format !== 'csv') {
     console.log(chalk.red("✗ --format must be 'csv' or 'json'"));
     process.exit(1);
@@ -200,7 +200,7 @@ export async function teamCommand(subcommand: string, arg: string | undefined, o
       console.log('  savestate team status');
       console.log('  savestate team members');
       console.log('  savestate team invite <email> [--role admin|member|viewer]');
-      console.log('  savestate team audit [--since DATE] [--format csv|json]');
+      console.log('  savestate team audit [--since DATE] [--format csv|json] [--json]');
       process.exit(1);
   }
 }
