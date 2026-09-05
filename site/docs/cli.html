@@ -310,7 +310,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Output the summary as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the snapshot summary as JSON. Decrypts the archive. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -318,6 +318,9 @@
 
     <pre><code><span class="code-comment"># Summarize the latest snapshot</span>
 <span class="code-prompt">$</span> savestate inspect latest
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate inspect latest --json
 
 <span class="code-comment"># Scriptable JSON summary</span>
 <span class="code-prompt">$</span> savestate inspect ss-2026-01-26T09-30-00-b7c1m4 --json</code></pre>

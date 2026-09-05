@@ -19,8 +19,35 @@ interface InspectOptions {
   json?: boolean;
 }
 
+export interface InspectJson {
+  id: string;
+  timestamp: string;
+  platform: string;
+  adapter: string;
+  label: string | null;
+  tags: string[];
+  sizeBytes: number;
+  parent: string | null;
+  counts: {
+    memories: number;
+    conversations: number;
+    knowledge: number;
+    tools: number;
+    skills: number;
+    stateEvents: number;
+  };
+  hasIdentity: boolean;
+  chainAncestors: number;
+}
+
+export function formatInspectJson(summary: InspectJson): string {
+  return JSON.stringify(summary, null, 2);
+}
+
 export async function inspectCommand(snapshotId: string, options: InspectOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -71,7 +98,7 @@ export async function inspectCommand(snapshotId: string, options: InspectOptions
   }
   const snapshot = unpackSnapshot(fileMap);
 
-  const summary = {
+  const summary: InspectJson = {
     id: snapshot.manifest.id,
     timestamp: snapshot.manifest.timestamp,
     platform: snapshot.manifest.platform,
@@ -93,7 +120,7 @@ export async function inspectCommand(snapshotId: string, options: InspectOptions
   };
 
   if (options.json) {
-    console.log(JSON.stringify(summary, null, 2));
+    console.log(formatInspectJson(summary));
     return;
   }
 

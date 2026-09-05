@@ -666,6 +666,11 @@ describe('CLI docs', () => {
     expect(cli).toContain(".option('--json'");
   });
 
+  it('registers --json on savestate inspect', () => {
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectBlock).toContain(".option('--json'");
+  });
+
   it('lists savestate inspect in the command overview', () => {
     expect(docs).toContain('id="inspect"');
     expect(docs).toContain('savestate inspect');
@@ -678,6 +683,13 @@ describe('CLI docs', () => {
     expect(inspectSection).toContain('without restoring');
     expect(inspectSection).toContain('savestate init');
     expect(inspectSection).toContain('passphrase');
+  });
+
+  it('documents inspect --json', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    expect(inspectSection).toContain('--json');
+    expect(inspectSection).toContain('scripting');
+    expect(inspectSection).toContain('savestate inspect latest --json');
   });
 
   it('lists savestate list in the command overview', () => {
