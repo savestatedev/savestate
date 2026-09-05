@@ -286,6 +286,18 @@ describe('CLI docs', () => {
     expect(evalSection).toContain('.savestate/benchmarks/');
   });
 
+  it('registers --json on savestate eval', () => {
+    const evalBlock = cli.slice(cli.indexOf("command('eval <subcommand>')"), cli.indexOf("command('search <query>')"));
+    expect(evalBlock).toContain(".option('--json'");
+  });
+
+  it('documents eval --json', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('scripting');
+    expect(evalSection).toContain('savestate eval report --json');
+  });
+
   it('lists savestate login and logout in the command overview', () => {
     expect(docs).toContain('id="login"');
     expect(docs).toContain('id="logout"');

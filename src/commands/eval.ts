@@ -17,8 +17,57 @@ interface EvalOptions {
 
 const RESULTS_FILE = 'eval-results.json';
 
+export interface EvalJson {
+  suites: Array<{
+    name: string;
+    timestamp: string;
+    durationMs: number;
+    passed: number;
+    total: number;
+    passRate: number;
+    precision: number;
+    recall: number;
+    f1Score: number;
+    staleHitRate: number;
+    constraintRetention: number;
+    confidence: number;
+  }>;
+  suiteCount: number;
+  passed: number;
+  total: number;
+  passRate: number;
+}
+
+export function formatEvalJson(results: BenchmarkResult[]): string {
+  const passed = results.reduce((sum, r) => sum + r.passed, 0);
+  const total = results.reduce((sum, r) => sum + r.total, 0);
+  const payload: EvalJson = {
+    suites: results.map((r) => ({
+      name: r.suiteName,
+      timestamp: r.timestamp,
+      durationMs: r.durationMs,
+      passed: r.passed,
+      total: r.total,
+      passRate: r.passRate,
+      precision: r.aggregateMetrics.precision,
+      recall: r.aggregateMetrics.recall,
+      f1Score: r.aggregateMetrics.f1Score,
+      staleHitRate: r.aggregateMetrics.staleHitRate,
+      constraintRetention: r.aggregateMetrics.constraintRetention,
+      confidence: r.aggregateMetrics.confidence,
+    })),
+    suiteCount: results.length,
+    passed,
+    total,
+    passRate: total > 0 ? passed / total : 0,
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
 export async function evalCommand(subcommand: string, options: EvalOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('SaveState not initialized. Run `savestate init` first.'));
@@ -42,14 +91,20 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
   const threshold = parseThreshold(options.threshold);
   const benchmark = new QualityBenchmark({ confidenceThreshold: threshold });
 
-  console.log(chalk.bold('Memory Quality Evaluation'));
-  console.log(chalk.dim(`  Confidence threshold: ${(threshold * 100).toFixed(0)}%`));
-  console.log();
+  if (!options.json) {
+    console.log(chalk.bold('Memory Quality Evaluation'));
+    console.log(chalk.dim(`  Confidence threshold: ${(threshold * 100).toFixed(0)}%`));
+    console.log();
+  }
 
   // Load benchmark suites
   const suites = await benchmark.loadDefaultSuites();
 
   if (suites.length === 0) {
+    if (options.json) {
+      console.log(formatEvalJson([]));
+      return;
+    }
     console.log(chalk.yellow('  No benchmark suites found.'));
     console.log(chalk.dim('  Add benchmark JSON files to .savestate/benchmarks/'));
     console.log();
@@ -62,14 +117,20 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
     : suites;
 
   if (suitesToRun.length === 0) {
+    if (options.json) {
+      console.log(formatEvalJson([]));
+      return;
+    }
     console.log(chalk.red(`  Suite not found: ${options.suite}`));
     console.log(chalk.dim(`  Available: ${suites.map((s) => s.name).join(', ')}`));
     console.log();
     return;
   }
 
-  console.log(chalk.dim(`  Running ${suitesToRun.length} suite(s)...`));
-  console.log();
+  if (!options.json) {
+    console.log(chalk.dim(`  Running ${suitesToRun.length} suite(s)...`));
+    console.log();
+  }
 
   // Mock retrieval function for demo/testing
   // In production, this would connect to the actual memory retrieval system
@@ -79,7 +140,9 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
   for (const suite of suitesToRun) {
     const result = await benchmark.runSuite(suite, mockRetrievalFn);
     results.push(result);
-    printSuiteResult(result, options.verbose);
+    if (!options.json) {
+      printSuiteResult(result, options.verbose);
+    }
   }
 
   // Save results
@@ -87,7 +150,7 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
   await benchmark.saveResults(resultsPath);
 
   if (options.json) {
-    console.log(JSON.stringify(results, null, 2));
+    console.log(formatEvalJson(results));
     return;
   }
 
@@ -99,6 +162,10 @@ async function showReport(options: EvalOptions): Promise<void> {
   const resultsPath = join(localConfigDir(), RESULTS_FILE);
 
   if (!existsSync(resultsPath)) {
+    if (options.json) {
+      console.log(formatEvalJson([]));
+      return;
+    }
     console.log(chalk.yellow('  No evaluation results found.'));
     console.log(chalk.dim('  Run `savestate eval quality` first.'));
     console.log();
@@ -109,7 +176,7 @@ async function showReport(options: EvalOptions): Promise<void> {
   const results = await benchmark.loadResults(resultsPath);
 
   if (options.json) {
-    console.log(JSON.stringify(results, null, 2));
+    console.log(formatEvalJson(results));
     return;
   }
 
