@@ -30,8 +30,53 @@ export interface PrunePlan {
   reasons: Record<string, string>;
 }
 
+export interface PruneSnapshotJson {
+  id: string;
+  timestamp: string;
+  platform: string;
+  adapter: string;
+  filename: string;
+  size: number;
+}
+
+export interface PruneJson {
+  dryRun: boolean;
+  keepCount: number;
+  dropCount: number;
+  keep: PruneSnapshotJson[];
+  drop: PruneSnapshotJson[];
+  keptForChainSafety: PruneSnapshotJson[];
+  reasons: Record<string, string>;
+}
+
+function toPruneSnapshot(snapshot: SnapshotIndexEntry): PruneSnapshotJson {
+  return {
+    id: snapshot.id,
+    timestamp: snapshot.timestamp,
+    platform: snapshot.platform,
+    adapter: snapshot.adapter,
+    filename: snapshot.filename,
+    size: snapshot.size,
+  };
+}
+
+export function formatPruneJson(plan: PrunePlan, dryRun: boolean): string {
+  const record: PruneJson = {
+    dryRun,
+    keepCount: plan.keep.length,
+    dropCount: plan.drop.length,
+    keep: plan.keep.map(toPruneSnapshot),
+    drop: plan.drop.map(toPruneSnapshot),
+    keptForChainSafety: plan.kept_for_chain_safety.map(toPruneSnapshot),
+    reasons: plan.reasons,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function pruneCommand(options: PruneOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -54,7 +99,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
   });
 
   if (options.json) {
-    console.log(JSON.stringify(plan, null, 2));
+    console.log(formatPruneJson(plan, !options.apply));
     if (!options.apply) return;
   } else {
     printPlan(plan);

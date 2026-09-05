@@ -93,6 +93,18 @@ describe('CLI docs', () => {
     expect(pruneSection).toContain('Dry-run is the default');
   });
 
+  it('registers --json on savestate prune', () => {
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneBlock).toContain(".option('--json'");
+  });
+
+  it('documents prune --json', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    expect(pruneSection).toContain('--json');
+    expect(pruneSection).toContain('scripting');
+    expect(pruneSection).toContain('savestate prune --keep-last 10 --json');
+  });
+
   it('lists savestate antibodies in the command overview', () => {
     expect(docs).toContain('id="antibodies"');
     expect(docs).toContain('savestate antibodies');

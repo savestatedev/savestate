@@ -534,7 +534,7 @@
         <tr><td><code>--keep-last &lt;n&gt;</code></td><td>Keep the N most recent snapshots</td></tr>
         <tr><td><code>--older-than &lt;date&gt;</code></td><td>Drop snapshots older than this date (ISO 8601)</td></tr>
         <tr><td><code>--apply</code></td><td>Actually delete. Without this flag, prune only prints the plan</td></tr>
-        <tr><td><code>--json</code></td><td>Output the plan as JSON</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the prune plan as JSON. Useful for scripting. Dry-run is the default unless <code>--apply</code> is set.</td></tr>
       </tbody>
     </table>
 
@@ -544,7 +544,10 @@
 <span class="code-prompt">$</span> savestate prune --keep-last 10
 
 <span class="code-comment"># Delete snapshots older than a cutoff</span>
-<span class="code-prompt">$</span> savestate prune --older-than 2026-01-01 --apply</code></pre>
+<span class="code-prompt">$</span> savestate prune --older-than 2026-01-01 --apply
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate prune --keep-last 10 --json</code></pre>
 
     <!-- antibodies -->
     <h2 id="antibodies"><code>savestate antibodies</code></h2>
