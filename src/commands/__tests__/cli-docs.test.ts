@@ -686,6 +686,18 @@ describe('CLI docs', () => {
     expect(listSection).toContain('savestate init');
   });
 
+  it('registers --json on savestate list', () => {
+    const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
+    expect(listBlock).toContain(".option('--json'");
+  });
+
+  it('documents list --json', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    expect(listSection).toContain('--json');
+    expect(listSection).toContain('scripting');
+    expect(listSection).toContain('savestate list --json');
+  });
+
   it('lists savestate search in the command overview', () => {
     expect(docs).toContain('id="search"');
     expect(docs).toContain('savestate search');

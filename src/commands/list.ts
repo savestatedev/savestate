@@ -4,7 +4,7 @@
 
 import chalk from 'chalk';
 import { isInitialized, loadConfig } from '../config.js';
-import { loadIndex } from '../index-file.js';
+import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 
 interface ListOptions {
   json?: boolean;
@@ -15,8 +15,38 @@ interface ListOptions {
   tag?: string;
 }
 
+export interface ListSnapshotJson {
+  id: string;
+  timestamp: string;
+  platform: string;
+  adapter: string;
+  label: string | null;
+  tags: string[];
+  filename: string;
+  size: number;
+}
+
+export function formatListJson(snapshots: SnapshotIndexEntry[], limit = 50): string {
+  const records: ListSnapshotJson[] = [...snapshots]
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, limit)
+    .map((snapshot) => ({
+      id: snapshot.id,
+      timestamp: snapshot.timestamp,
+      platform: snapshot.platform,
+      adapter: snapshot.adapter,
+      label: snapshot.label ?? null,
+      tags: snapshot.tags ?? [],
+      filename: snapshot.filename,
+      size: snapshot.size,
+    }));
+  return JSON.stringify(records, null, 2);
+}
+
 export async function listCommand(options: ListOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -30,8 +60,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const filtered = applyListFilters(index.snapshots, options);
 
   if (options.json) {
-    const output = filtered.slice(0, limit);
-    console.log(JSON.stringify(output, null, 2));
+    console.log(formatListJson(filtered, limit));
     return;
   }
 
@@ -103,8 +132,6 @@ export async function listCommand(options: ListOptions): Promise<void> {
   }
   console.log();
 }
-
-import type { SnapshotIndexEntry } from '../index-file.js';
 
 export function applyListFilters(
   snapshots: SnapshotIndexEntry[],
