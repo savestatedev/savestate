@@ -14,8 +14,8 @@ import { decrypt } from '../encryption.js';
 import { unpackFromArchive, unpackSnapshot, snapshotFilename } from '../format.js';
 import { isIncremental, reconstructFromChain } from '../incremental.js';
 import { loadIdentityFromArchive } from '../identity/store.js';
-import { diffIdentity, formatIdentityDiff } from '../diff/semantic.js';
-import { diffStateEvents, formatStateEventDiff } from '../diff/state-events.js';
+import { diffIdentity, formatIdentityDiff, type IdentityDiff } from '../diff/semantic.js';
+import { diffStateEvents, formatStateEventDiff, type StateEventChange, type StateEventDiff } from '../diff/state-events.js';
 import type { Snapshot } from '../types.js';
 import type { AgentIdentity } from '../identity/schema.js';
 
@@ -23,23 +23,69 @@ interface DiffOptions {
   json?: boolean;
 }
 
+export interface DiffJson {
+  snapshotA: string;
+  snapshotB: string;
+  identity: {
+    hasChanges: boolean;
+    changes: IdentityDiff['changes'];
+    summary: IdentityDiff['summary'];
+    versionChange: IdentityDiff['versionChange'];
+  };
+  state: {
+    hasChanges: boolean;
+    byType: Record<string, StateEventChange[]>;
+    summary: StateEventDiff['summary'];
+    memoryTierChanges: StateEventDiff['memoryTierChanges'];
+  };
+}
+
+export function formatDiffJson(
+  snapshotA: string,
+  snapshotB: string,
+  identityDiff: IdentityDiff,
+  stateDiff: StateEventDiff,
+): string {
+  const record: DiffJson = {
+    snapshotA,
+    snapshotB,
+    identity: {
+      hasChanges: identityDiff.hasChanges,
+      changes: identityDiff.changes,
+      summary: identityDiff.summary,
+      versionChange: identityDiff.versionChange,
+    },
+    state: {
+      hasChanges: stateDiff.hasChanges,
+      byType: Object.fromEntries(stateDiff.byType),
+      summary: stateDiff.summary,
+      memoryTierChanges: stateDiff.memoryTierChanges,
+    },
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function diffCommand(
   snapshotA: string,
   snapshotB: string,
   options?: DiffOptions,
 ): Promise<void> {
-  console.log();
+  if (!options?.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
 
-  console.log(chalk.bold('Comparing snapshots'));
-  console.log(`   ${chalk.cyan(snapshotA)} ↔ ${chalk.cyan(snapshotB)}`);
-  console.log();
+  if (!options?.json) {
+    console.log(chalk.bold('Comparing snapshots'));
+    console.log(`   ${chalk.cyan(snapshotA)} ↔ ${chalk.cyan(snapshotB)}`);
+    console.log();
+  }
 
-  const spinner = ora('Loading and decrypting snapshots...').start();
+  const spinner = options?.json ? null : ora('Loading and decrypting snapshots...').start();
 
   try {
     const config = await loadConfig();
@@ -47,53 +93,33 @@ export async function diffCommand(
     const passphrase = await getPassphrase();
 
     // Load both snapshots
-    spinner.text = `Loading snapshot ${snapshotA}...`;
+    if (spinner) spinner.text = `Loading snapshot ${snapshotA}...`;
     const { snapshot: snapA, identity: identityA } = await loadSnapshotWithIdentity(
       snapshotA,
       storage,
       passphrase,
     );
 
-    spinner.text = `Loading snapshot ${snapshotB}...`;
+    if (spinner) spinner.text = `Loading snapshot ${snapshotB}...`;
     const { snapshot: snapB, identity: identityB } = await loadSnapshotWithIdentity(
       snapshotB,
       storage,
       passphrase,
     );
 
-    spinner.text = 'Computing semantic diff...';
+    if (spinner) spinner.text = 'Computing semantic diff...';
 
     // Compute diffs
     const identityDiff = diffIdentity(identityA, identityB);
     const stateDiff = diffStateEvents(snapA, snapB);
 
-    spinner.succeed('Diff complete');
-    console.log();
+    spinner?.succeed('Diff complete');
+    if (!options?.json) {
+      console.log();
+    }
 
     if (options?.json) {
-      // JSON output mode
-      console.log(
-        JSON.stringify(
-          {
-            snapshotA: snapshotA,
-            snapshotB: snapshotB,
-            identity: {
-              hasChanges: identityDiff.hasChanges,
-              changes: identityDiff.changes,
-              summary: identityDiff.summary,
-              versionChange: identityDiff.versionChange,
-            },
-            state: {
-              hasChanges: stateDiff.hasChanges,
-              byType: Object.fromEntries(stateDiff.byType),
-              summary: stateDiff.summary,
-              memoryTierChanges: stateDiff.memoryTierChanges,
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      console.log(formatDiffJson(snapshotA, snapshotB, identityDiff, stateDiff));
       return;
     }
 
@@ -206,7 +232,7 @@ export async function diffCommand(
     );
     console.log();
   } catch (err) {
-    spinner.fail('Diff failed');
+    spinner?.fail('Diff failed');
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }
