@@ -635,6 +635,18 @@ describe('CLI docs', () => {
     expect(statsSection).toContain('does not decrypt');
   });
 
+  it('registers --json on savestate stats', () => {
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsBlock).toContain(".option('--json'");
+  });
+
+  it('documents stats --json', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    expect(statsSection).toContain('--json');
+    expect(statsSection).toContain('scripting');
+    expect(statsSection).toContain('savestate stats --json');
+  });
+
   it('lists savestate doctor in the command overview', () => {
     expect(docs).toContain('id="doctor"');
     expect(docs).toContain('savestate doctor');

@@ -14,8 +14,46 @@ interface StatsOptions {
   json?: boolean;
 }
 
+export interface StatsJson {
+  total: number;
+  totalBytes: number;
+  avgBytes: number;
+  maxBytes: number;
+  first: string | null;
+  latest: string | null;
+  spanDays: number | null;
+  cadenceHours: number | null;
+  byAdapter: Record<string, number>;
+  byPlatform: Record<string, number>;
+  tagCount: number;
+  topTags: Array<{ tag: string; count: number }>;
+  storage: { type: string };
+}
+
+export function formatStatsJson(snapshots: SnapshotIndexEntry[], storageType: string): string {
+  const stats = computeStats(snapshots);
+  const record: StatsJson = {
+    total: stats.total,
+    totalBytes: stats.totalBytes,
+    avgBytes: stats.avgBytes,
+    maxBytes: stats.maxBytes,
+    first: stats.first,
+    latest: stats.latest,
+    spanDays: stats.spanDays,
+    cadenceHours: stats.cadenceHours,
+    byAdapter: stats.byAdapter,
+    byPlatform: stats.byPlatform,
+    tagCount: stats.tagCount,
+    topTags: stats.topTags.map(([tag, count]) => ({ tag, count })),
+    storage: { type: storageType },
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function statsCommand(options: StatsOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -24,21 +62,13 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
 
   const config = await loadConfig();
   const index = await loadIndex();
-  const stats = computeStats(index.snapshots);
 
   if (options.json) {
-    console.log(
-      JSON.stringify(
-        {
-          ...stats,
-          storage: { type: config.storage.type },
-        },
-        null,
-        2,
-      ),
-    );
+    console.log(formatStatsJson(index.snapshots, config.storage.type));
     return;
   }
+
+  const stats = computeStats(index.snapshots);
 
   console.log(chalk.bold('📊 SaveState Stats'));
   console.log(chalk.dim(`   Storage: ${config.storage.type}`));
