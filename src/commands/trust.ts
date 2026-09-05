@@ -12,7 +12,7 @@
 
 import chalk from 'chalk';
 import { TrustStore } from '../trust-kernel/store.js';
-import type { TransitionEvent, TrustMetrics } from '../trust-kernel/types.js';
+import type { PromotionScope, TransitionEvent, TrustMetrics, TrustState } from '../trust-kernel/types.js';
 
 interface TrustOptions {
   json?: boolean;
@@ -29,12 +29,53 @@ interface DenyListOptions {
   json?: boolean;
 }
 
+const EMPTY_ENTRIES_BY_STATE: Record<TrustState, number> = {
+  candidate: 0,
+  stable: 0,
+  rejected: 0,
+  quarantined: 0,
+  revoked: 0,
+};
+
+const EMPTY_ENTRIES_BY_SCOPE: Record<PromotionScope, number> = {
+  semantic: 0,
+  procedural: 0,
+  episodic: 0,
+};
+
+export interface TrustJson {
+  entriesByState: Record<TrustState, number>;
+  entriesByScope: Record<PromotionScope, number>;
+  promotionsLastHour: number;
+  rejectionsLastHour: number;
+  denylistSize: number;
+  avgPromotionLatencyMs: number;
+  writeGateP95Ms: number;
+  actionGateP95Ms: number;
+  criticalBreaches: number;
+}
+
+export function formatTrustJson(metrics: TrustMetrics): string {
+  const record: TrustJson = {
+    entriesByState: { ...EMPTY_ENTRIES_BY_STATE, ...metrics.entriesByState },
+    entriesByScope: { ...EMPTY_ENTRIES_BY_SCOPE, ...metrics.entriesByScope },
+    promotionsLastHour: metrics.promotionsLastHour,
+    rejectionsLastHour: metrics.rejectionsLastHour,
+    denylistSize: metrics.denylistSize,
+    avgPromotionLatencyMs: metrics.avgPromotionLatencyMs,
+    writeGateP95Ms: metrics.writeGateP95Ms,
+    actionGateP95Ms: metrics.actionGateP95Ms,
+    criticalBreaches: metrics.criticalBreaches,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function trustStatusCommand(options: TrustOptions): Promise<void> {
   const store = new TrustStore();
   const metrics = store.getMetrics();
 
   if (options.json) {
-    console.log(JSON.stringify(metrics, null, 2));
+    console.log(formatTrustJson(metrics));
     store.close();
     return;
   }
