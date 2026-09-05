@@ -559,7 +559,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit antibody list, preflight, and stats as JSON. Useful for scripting.</td></tr>
         <tr><td><code>--all</code></td><td>Include retired rules in <code>list</code></td></tr>
         <tr><td><code>--tool &lt;name&gt;</code></td><td>Tool name for <code>add</code> / <code>preflight</code></td></tr>
         <tr><td><code>--error-code &lt;code&gt;</code></td><td>Error code in the rule trigger or preflight context</td></tr>
@@ -576,6 +576,9 @@
 
     <pre><code><span class="code-comment"># List active rules</span>
 <span class="code-prompt">$</span> savestate antibodies list
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate antibodies list --json
 
 <span class="code-comment"># Add a rule for a tool/error pair</span>
 <span class="code-prompt">$</span> savestate antibodies add --tool write --error-code EACCES --risk high --safe-action check_permissions

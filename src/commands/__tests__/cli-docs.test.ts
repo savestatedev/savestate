@@ -121,6 +121,21 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('--safe-action');
   });
 
+  it('registers --json on savestate antibodies', () => {
+    const antibodiesBlock = cli.slice(
+      cli.indexOf("command('antibodies <subcommand>')"),
+      cli.indexOf("command('eval <subcommand>')"),
+    );
+    expect(antibodiesBlock).toContain(".option('--json'");
+  });
+
+  it('documents antibodies --json', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--json');
+    expect(antibodiesSection).toContain('scripting');
+    expect(antibodiesSection).toContain('savestate antibodies list --json');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');
