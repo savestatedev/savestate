@@ -821,4 +821,11 @@ describe('CLI docs', () => {
     expect(diffSection).toContain('passphrase');
     expect(diffSection).toContain('Decrypts both archives');
   });
+
+  it('documents diff --json', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    expect(diffSection).toContain('--json');
+    expect(diffSection).toContain('scripting');
+    expect(diffSection).toContain('savestate diff ss-2026-01-25 ss-2026-01-27 --json');
+  });
 });
