@@ -233,6 +233,22 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('WriteGate');
   });
 
+  it('registers --json on savestate trust status', () => {
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const statusBlock = trustBlock.slice(
+      trustBlock.indexOf("command('status')"),
+      trustBlock.indexOf("command('audit')"),
+    );
+    expect(statusBlock).toContain(".option('--json'");
+  });
+
+  it('documents trust --json', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--json');
+    expect(trustSection).toContain('scripting');
+    expect(trustSection).toContain('savestate trust status --json');
+  });
+
   it('lists savestate team in the command overview', () => {
     expect(docs).toContain('id="team"');
     expect(docs).toContain('savestate team');
