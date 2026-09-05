@@ -288,7 +288,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Output the diagnosis as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit per-snapshot diagnosis as JSON. Decrypts archives. Useful for scripting.</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only check snapshots from this adapter</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Only check the N most recent snapshots</td></tr>
       </tbody>
@@ -296,6 +296,9 @@
 
     <pre><code><span class="code-comment"># Check every snapshot</span>
 <span class="code-prompt">$</span> savestate doctor
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate doctor --json
 
 <span class="code-comment"># Restrict to recent Claude Code snapshots</span>
 <span class="code-prompt">$</span> savestate doctor --adapter claude-code --limit 5 --json</code></pre>
