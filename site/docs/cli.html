@@ -693,7 +693,7 @@
       </thead>
       <tbody>
         <tr><td><code>-r, --role &lt;role&gt;</code></td><td>Invite role: <code>admin</code>, <code>member</code>, or <code>viewer</code> (default <code>member</code>)</td></tr>
-        <tr><td><code>--json</code></td><td>Output as JSON for <code>status</code>, <code>members</code>, and <code>invite</code></td></tr>
+        <tr><td><code>--json</code></td><td>Emit team status, members, invite, or audit as JSON. Useful for scripting.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Audit entries after this ISO 8601 date</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Audit entries before this ISO 8601 date</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Audit output: <code>csv</code> or <code>json</code> (default <code>json</code>)</td></tr>
@@ -710,7 +710,10 @@
 <span class="code-prompt">$</span> savestate team invite user@example.com --role viewer
 
 <span class="code-comment"># Stream the audit log as CSV</span>
-<span class="code-prompt">$</span> savestate team audit --since 2026-01-01 --format csv</code></pre>
+<span class="code-prompt">$</span> savestate team audit --since 2026-01-01 --format csv
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate team audit --json</code></pre>
 
     <!-- eval -->
     <h2 id="eval"><code>savestate eval</code></h2>

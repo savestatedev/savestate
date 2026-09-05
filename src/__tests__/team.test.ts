@@ -227,6 +227,26 @@ describe('savestate team audit', () => {
     expect(writeSpy).toHaveBeenCalled();
   });
 
+  it('uses format=json when --json is set even if --format is csv', async () => {
+    let callIndex = 0;
+    const { fn, calls } = makeFetchMock(() => {
+      if (callIndex++ === 0) {
+        return jsonResponse({
+          team: { id: 't-8', name: 'Acme', createdAt: '2026-04-01T00:00:00Z' },
+          role: 'owner',
+        });
+      }
+      return jsonResponse({ team_id: 't-8', count: 0, next_cursor: null, entries: [] });
+    });
+    global.fetch = fn as unknown as typeof fetch;
+
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await teamAuditCommand({ json: true, format: 'csv' });
+
+    expect(calls[1].url).toContain('format=json');
+    expect(calls[1].url).not.toContain('format=csv');
+  });
+
   it('streams CSV body to stdout when --format=csv', async () => {
     let callIndex = 0;
     const { fn } = makeFetchMock(() => {

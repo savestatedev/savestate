@@ -366,6 +366,7 @@ teamCmd
   .option('--since <date>', 'Only entries after this date (ISO 8601)')
   .option('--until <date>', 'Only entries before this date (ISO 8601)')
   .option('--format <format>', 'Output format: csv or json', 'json')
+  .option('--json', 'Output as JSON')
   .action(teamAuditCommand);
 
 // ─── savestate trace ─────────────────────────────────────────
