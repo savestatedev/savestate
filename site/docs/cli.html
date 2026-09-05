@@ -737,7 +737,7 @@
         <tr><td><code>--threshold &lt;0..1&gt;</code></td><td>Confidence threshold for pass/fail on <code>quality</code> (default 0.7)</td></tr>
         <tr><td><code>--suite &lt;name&gt;</code></td><td>Run only a specific benchmark suite</td></tr>
         <tr><td><code>-v, --verbose</code></td><td>Show per-test metrics</td></tr>
-        <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit quality and report results as JSON. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -748,7 +748,10 @@
 <span class="code-prompt">$</span> savestate eval quality --suite recall --threshold 0.9 --json
 
 <span class="code-comment"># Last saved report with per-test metrics</span>
-<span class="code-prompt">$</span> savestate eval report --verbose</code></pre>
+<span class="code-prompt">$</span> savestate eval report --verbose
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate eval report --json</code></pre>
 
     <!-- login -->
     <h2 id="login"><code>savestate login</code></h2>
