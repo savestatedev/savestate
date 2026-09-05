@@ -79,6 +79,18 @@ describe('CLI docs', () => {
     expect(verifySection).toContain('missing');
   });
 
+  it('registers --json on savestate verify', () => {
+    const verifyBlock = cli.slice(cli.indexOf("command('verify <file>')"), cli.indexOf('registerMemoryCommands'));
+    expect(verifyBlock).toContain(".option('--json'");
+  });
+
+  it('documents verify --json', () => {
+    const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
+    expect(verifySection).toContain('--json');
+    expect(verifySection).toContain('scripting');
+    expect(verifySection).toContain('savestate verify agent.savestate --json');
+  });
+
   it('lists savestate prune in the command overview', () => {
     expect(docs).toContain('id="prune"');
     expect(docs).toContain('savestate prune');
