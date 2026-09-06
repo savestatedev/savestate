@@ -708,7 +708,7 @@
       </thead>
       <tbody>
         <tr><td><code>-r, --role &lt;role&gt;</code></td><td>Invite role: <code>admin</code>, <code>member</code>, or <code>viewer</code> (default <code>member</code>)</td></tr>
-        <tr><td><code>--json</code></td><td>Emit team status, members, invite, or audit as JSON. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit team status as JSON (id, name, and role). Also used for members, invite, and audit. Useful for scripting.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Audit entries after this ISO 8601 date</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Audit entries before this ISO 8601 date</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Audit output: <code>csv</code> or <code>json</code> (default <code>json</code>)</td></tr>
@@ -716,7 +716,7 @@
     </table>
 
     <pre><code><span class="code-comment"># Your team name, id, and role</span>
-<span class="code-prompt">$</span> savestate team status
+<span class="code-prompt">$</span> savestate team status --json
 
 <span class="code-comment"># Members and pending invites</span>
 <span class="code-prompt">$</span> savestate team members --json

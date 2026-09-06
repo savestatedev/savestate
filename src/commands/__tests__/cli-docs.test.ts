@@ -285,6 +285,22 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('viewer');
   });
 
+  it('registers --json on savestate team status', () => {
+    const statusBlock = cli.slice(
+      cli.indexOf("Show your team membership info"),
+      cli.indexOf("List team members"),
+    );
+    expect(statusBlock).toContain(".option('--json'");
+  });
+
+  it('documents team status --json', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('id, name, and role');
+    expect(teamSection).toContain('savestate team status --json');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("Stream the team audit log to stdout"),

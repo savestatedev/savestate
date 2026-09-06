@@ -22,6 +22,26 @@ export interface TeamCommandOptions {
   json?: boolean;
 }
 
+export interface TeamStatusJson {
+  id: string;
+  name: string;
+  role: string;
+  createdAt: string;
+}
+
+export function formatTeamStatusJson(status: TeamStatusJson): string {
+  return JSON.stringify(
+    {
+      id: status.id,
+      name: status.name,
+      role: status.role,
+      createdAt: status.createdAt,
+    },
+    null,
+    2,
+  );
+}
+
 interface CallResult {
   ok: boolean;
   status: number;
@@ -91,7 +111,14 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
 
   const data = result.body as { team: { id: string; name: string; createdAt: string }; role: string };
   if (options.json) {
-    console.log(JSON.stringify(data, null, 2));
+    console.log(
+      formatTeamStatusJson({
+        id: data.team.id,
+        name: data.team.name,
+        role: data.role,
+        createdAt: data.team.createdAt,
+      }),
+    );
     return;
   }
 
