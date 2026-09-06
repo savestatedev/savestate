@@ -118,6 +118,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('pin <memory-id>')
     .description('Pin a memory (prevents automatic demotion)')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
+    .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
         const config = await loadConfig();
@@ -126,6 +127,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await pinMemoryCommand(storage, passphrase, memoryId, {
           snapshotId: options.snapshot,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);
@@ -138,6 +140,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('unpin <memory-id>')
     .description('Unpin a memory (allows automatic demotion)')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
+    .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
         const config = await loadConfig();
@@ -146,6 +149,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await unpinMemoryCommand(storage, passphrase, memoryId, {
           snapshotId: options.snapshot,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);
