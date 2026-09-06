@@ -430,6 +430,14 @@ describe('CLI docs', () => {
     expect(cloudSection).toContain('savestate cloud list --json');
   });
 
+  it('documents cloud push --json', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain('uploaded count');
+    expect(cloudSection).toContain('savestate cloud push --json');
+  });
+
   it('lists savestate mcp in the command overview', () => {
     expect(docs).toContain('id="mcp"');
     expect(docs).toContain('savestate mcp');
