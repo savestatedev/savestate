@@ -76,6 +76,10 @@ savestate memory apply-policies --dry-run
 
 # Apply changes
 savestate memory apply-policies
+
+# JSON (from/to tiers)
+savestate memory apply-policies --json
+savestate memory apply-policies --json --dry-run
 ```
 
 ### View Configuration

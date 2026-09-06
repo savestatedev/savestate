@@ -323,6 +323,39 @@ export interface TierChange {
   reason: 'age' | 'access' | 'overflow' | 'manual';
 }
 
+export interface MemoryApplyPoliciesChangeJson {
+  id: string;
+  from: MemoryTier;
+  to: MemoryTier;
+  reason: TierChange['reason'];
+}
+
+export interface MemoryApplyPoliciesJson {
+  dryRun: boolean;
+  applied: boolean;
+  changeCount: number;
+  changes: MemoryApplyPoliciesChangeJson[];
+}
+
+export function formatMemoryApplyPoliciesJson(
+  changes: TierChange[],
+  options?: { dryRun?: boolean },
+): string {
+  const dryRun = options?.dryRun ?? false;
+  const record: MemoryApplyPoliciesJson = {
+    dryRun,
+    applied: !dryRun && changes.length > 0,
+    changeCount: changes.length,
+    changes: changes.map((change) => ({
+      id: change.entryId,
+      from: change.from,
+      to: change.to,
+      reason: change.reason,
+    })),
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 function getNextLowerTier(tier: MemoryTier): MemoryTier | null {
   const order: MemoryTier[] = ['L1', 'L2', 'L3'];
   const index = order.indexOf(tier);
@@ -604,12 +637,23 @@ export async function applyPoliciesCommand(
   options?: {
     snapshotId?: string;
     dryRun?: boolean;
+    format?: 'pretty' | 'json';
   },
 ): Promise<void> {
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options?.snapshotId);
   const config = snapshot.memory.tierConfig ?? DEFAULT_TIER_CONFIG;
 
   const { updated, changes } = applyTierPolicies(snapshot.memory.core, config);
+  const dryRun = options?.dryRun ?? false;
+
+  if (options?.format === 'json') {
+    if (!dryRun && changes.length > 0) {
+      snapshot.memory.core = updated;
+      await saveSnapshot(storage, passphrase, snapshot, filename);
+    }
+    console.log(formatMemoryApplyPoliciesJson(changes, { dryRun }));
+    return;
+  }
 
   if (changes.length === 0) {
     console.log('No tier changes needed based on current policies.');
