@@ -182,6 +182,30 @@ export function formatMcpImportJson(result: McpImportJson): string {
   );
 }
 
+export interface McpExportJson {
+  agent: string;
+  output: string;
+  memories: number;
+  snapshots: number;
+  includeSnapshots: boolean;
+  written: boolean;
+}
+
+export function formatMcpExportJson(result: McpExportJson): string {
+  return JSON.stringify(
+    {
+      agent: result.agent,
+      output: result.output,
+      memories: result.memories,
+      snapshots: result.snapshots,
+      includeSnapshots: result.includeSnapshots,
+      written: result.written,
+    },
+    null,
+    2,
+  );
+}
+
 interface MCPStatusOptions {
   json?: boolean;
 }
@@ -269,14 +293,15 @@ interface MCPExportOptions {
   agent?: string;
   output?: string;
   includeSnapshots?: boolean;
+  json?: boolean;
 }
 
 async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
-  const spinner = ora('Exporting memory passport...').start();
+  const spinner = options.json ? null : ora('Exporting memory passport...').start();
 
   try {
     if (!isInitialized()) {
-      spinner.fail('SaveState not initialized');
+      spinner?.fail('SaveState not initialized');
       console.error(chalk.red('Run `savestate init` first.'));
       process.exit(1);
     }
@@ -300,7 +325,7 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
     const memories: PassportMemory[] = [];
 
     // Get snapshots
-    spinner.text = 'Loading snapshots...';
+    if (spinner) spinner.text = 'Loading snapshots...';
     const index = await loadIndex();
     const snapshots: PassportSnapshot[] = index.snapshots
       .filter((s) => !options.agent || s.platform.includes(agentId) || s.id.includes(agentId))
@@ -332,10 +357,22 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
     };
 
     // Write to file
-    spinner.text = 'Writing passport file...';
+    if (spinner) spinner.text = 'Writing passport file...';
     await writeFile(outputPath, JSON.stringify(passport, null, 2), 'utf-8');
 
-    spinner.succeed('Memory passport exported successfully!');
+    if (options.json) {
+      console.log(formatMcpExportJson({
+        agent: agentId,
+        output: outputPath,
+        memories: memories.length,
+        snapshots: snapshots.length,
+        includeSnapshots: options.includeSnapshots ?? false,
+        written: true,
+      }));
+      return;
+    }
+
+    spinner?.succeed('Memory passport exported successfully!');
     console.log('');
     console.log(`Output: ${chalk.cyan(outputPath)}`);
     console.log(`Agent: ${chalk.cyan(agentId)}`);
@@ -344,7 +381,7 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
     console.log('');
     console.log(chalk.gray('Import this passport with: savestate mcp import --input ' + outputPath));
   } catch (err) {
-    spinner.fail('Export failed');
+    spinner?.fail('Export failed');
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }
@@ -483,6 +520,7 @@ export function registerMCPCommands(program: Command): void {
     .option('-a, --agent <id>', 'Agent ID to export (default: "default")')
     .option('-o, --output <path>', 'Output file path (default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
+    .option('--json', 'Output as JSON')
     .action(mcpExportCommand);
 
   // savestate mcp import
