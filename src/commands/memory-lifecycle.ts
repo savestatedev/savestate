@@ -54,6 +54,31 @@ export function formatMemoryLogJson(memoryId: string, log: ProvenanceEntry[]): s
   );
 }
 
+export interface MemoryEditJson {
+  id: string;
+  version: number;
+  content: string;
+  tags: string[];
+  importance: number;
+}
+
+export function formatMemoryEditJson(memory: {
+  memory_id: string;
+  version: number;
+  content: string;
+  tags: string[];
+  importance: number;
+}): string {
+  const record: MemoryEditJson = {
+    id: memory.memory_id,
+    version: memory.version,
+    content: memory.content,
+    tags: [...memory.tags],
+    importance: memory.importance,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -118,6 +143,7 @@ export async function editMemoryCommand(
     importance?: number;
     actorId: string;
     reason?: string;
+    format?: 'pretty' | 'json';
   }
 ): Promise<void> {
   // For this implementation, we'll use a simplified checkpoint storage
@@ -141,6 +167,11 @@ export async function editMemoryCommand(
       options.actorId,
       options.reason
     );
+
+    if (options.format === 'json') {
+      console.log(formatMemoryEditJson(updated));
+      return;
+    }
 
     console.log(`\nMemory edited successfully.`);
     console.log(`  ID:      ${updated.memory_id}`);
