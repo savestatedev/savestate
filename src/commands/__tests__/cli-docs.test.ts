@@ -441,11 +441,24 @@ describe('CLI docs', () => {
     expect(statusBlock).toContain(".option('--json'");
   });
 
+  it('registers --json on savestate mcp export', () => {
+    const exportBlock = mcp.slice(mcp.indexOf("command('export')"), mcp.indexOf("command('import')"));
+    expect(exportBlock).toContain(".option('--json'");
+  });
+
   it('documents mcp --json', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     expect(mcpSection).toContain('--json');
     expect(mcpSection).toContain('scripting');
     expect(mcpSection).toContain('savestate mcp status --json');
+  });
+
+  it('documents mcp export --json', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--json');
+    expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain('memory/snapshot counts');
+    expect(mcpSection).toContain('savestate mcp export --agent my-agent --json');
   });
 
   it('lists savestate context in the command overview', () => {
