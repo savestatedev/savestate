@@ -553,6 +553,19 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory list --json');
   });
 
+  it('registers --json on savestate memory config', () => {
+    const configBlock = memoryCli.slice(memoryCli.indexOf("command('config')"), memoryCli.indexOf("command('explain"));
+    expect(configBlock).toContain(".option('--json'");
+  });
+
+  it('documents memory config --json', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('tier limits and policy names');
+    expect(memorySection).toContain('savestate memory config --json');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');

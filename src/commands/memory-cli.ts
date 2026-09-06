@@ -176,6 +176,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('config')
     .description('Show tier configuration')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
+    .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
         const config = await loadConfig();
@@ -184,6 +185,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await showTierConfig(storage, passphrase, {
           snapshotId: options.snapshot,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);

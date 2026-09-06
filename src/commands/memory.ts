@@ -15,6 +15,7 @@ import type {
   MemoryEntry,
   MemoryTier,
   MemoryTierConfig,
+  MemoryTierPolicy,
   StorageBackend,
 } from '../types.js';
 import { findEntry, getLatestEntry, updateEntry } from '../index-file.js';
@@ -555,18 +556,66 @@ export async function applyPoliciesCommand(
   }
 }
 
-/**
- * Show tier configuration.
- */
+export interface MemoryConfigJson {
+  version: string;
+  defaultTier: MemoryTier;
+  l1MaxItems: number | null;
+  l1MaxAge: string | null;
+  l1IncludeInContext: boolean;
+  l2MaxItems: number | null;
+  l2MaxAge: string | null;
+  l2IncludeInContext: boolean;
+  l3MaxItems: number | null;
+  l3MaxAge: string | null;
+  l3IncludeInContext: boolean;
+  policies: Array<{
+    name: string;
+    trigger: MemoryTierPolicy['trigger'];
+    from: MemoryTier;
+    to: MemoryTier;
+    threshold: string | number | null;
+  }>;
+}
+
+export function formatMemoryConfigJson(config: MemoryTierConfig): string {
+  const record: MemoryConfigJson = {
+    version: config.version,
+    defaultTier: config.defaultTier,
+    l1MaxItems: config.tiers.L1.maxItems ?? null,
+    l1MaxAge: config.tiers.L1.maxAge ?? null,
+    l1IncludeInContext: config.tiers.L1.includeInContext,
+    l2MaxItems: config.tiers.L2.maxItems ?? null,
+    l2MaxAge: config.tiers.L2.maxAge ?? null,
+    l2IncludeInContext: config.tiers.L2.includeInContext,
+    l3MaxItems: config.tiers.L3.maxItems ?? null,
+    l3MaxAge: config.tiers.L3.maxAge ?? null,
+    l3IncludeInContext: config.tiers.L3.includeInContext,
+    policies: (config.policies ?? []).map((policy) => ({
+      name: policy.name,
+      trigger: policy.trigger,
+      from: policy.from,
+      to: policy.to,
+      threshold: policy.threshold ?? null,
+    })),
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function showTierConfig(
   storage: StorageBackend,
   passphrase: string,
   options?: {
     snapshotId?: string;
+    format?: 'pretty' | 'json';
   },
 ): Promise<void> {
   const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
   const config = snapshot.memory.tierConfig ?? DEFAULT_TIER_CONFIG;
+
+  if (options?.format === 'json') {
+    console.log(formatMemoryConfigJson(config));
+    return;
+  }
 
   console.log('\nMemory Tier Configuration:\n');
   console.log(JSON.stringify(config, null, 2));
