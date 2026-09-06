@@ -71,6 +71,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Promote a memory to a higher tier (faster access)')
     .option('-t, --to <tier>', 'Target tier (L1 or L2)', 'L1')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
+    .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
         const config = await loadConfig();
@@ -80,6 +81,7 @@ export function registerMemoryCommands(program: Command): void {
         await promoteMemoryCommand(storage, passphrase, memoryId, {
           to: options.to as MemoryTier,
           snapshotId: options.snapshot,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);
