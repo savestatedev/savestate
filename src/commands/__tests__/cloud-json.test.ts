@@ -3,9 +3,11 @@ import {
   formatCloudListJson,
   formatCloudPushJson,
   formatCloudPullJson,
+  formatCloudDeleteJson,
   type CloudListResult,
   type CloudPushResult,
   type CloudPullResult,
+  type CloudDeleteResult,
 } from '../cloud.js';
 
 const result: CloudListResult = {
@@ -119,6 +121,42 @@ describe('savestate cloud pull --json', () => {
     expect(parsed.pulled).toBe(0);
     expect(parsed.failed).toBe(0);
     expect(parsed.skipped).toBe(0);
+    expect(parsed.all).toBe(true);
+    expect(parsed.snapshots).toEqual([]);
+  });
+});
+
+const deleteResult: CloudDeleteResult = {
+  deleted: 1,
+  failed: 1,
+  all: false,
+  snapshots: [
+    { id: 'ss-2026-01-26', deleted: true },
+    { id: 'ss-2026-01-25', deleted: false },
+  ],
+};
+
+describe('savestate cloud delete --json', () => {
+  it('prints delete summary as JSON', () => {
+    const parsed = JSON.parse(formatCloudDeleteJson(deleteResult)) as CloudDeleteResult & { apiKey?: string };
+    expect(parsed.deleted).toBe(1);
+    expect(parsed.failed).toBe(1);
+    expect(parsed.all).toBe(false);
+    expect(parsed.snapshots).toEqual(deleteResult.snapshots);
+    expect(parsed.apiKey).toBeUndefined();
+  });
+
+  it('records an empty delete', () => {
+    const parsed = JSON.parse(
+      formatCloudDeleteJson({
+        deleted: 0,
+        failed: 0,
+        all: true,
+        snapshots: [],
+      }),
+    ) as CloudDeleteResult;
+    expect(parsed.deleted).toBe(0);
+    expect(parsed.failed).toBe(0);
     expect(parsed.all).toBe(true);
     expect(parsed.snapshots).toEqual([]);
   });

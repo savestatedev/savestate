@@ -589,6 +589,7 @@ describe('CLI docs', () => {
     expect(cloudSection).toContain('scripting');
     expect(cloudSection).toContain('savestate cloud list --json');
     expect(cloudSection).toContain('savestate cloud pull --json');
+    expect(cloudSection).toContain('savestate cloud delete --id ss-2026-01-26 --json');
   });
 
   it('documents cloud push --json', () => {

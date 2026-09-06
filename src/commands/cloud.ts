@@ -78,6 +78,31 @@ export function formatCloudPushJson(result: CloudPushResult): string {
   );
 }
 
+export interface CloudDeleteSnapshotJson {
+  id: string;
+  deleted: boolean;
+}
+
+export interface CloudDeleteResult {
+  deleted: number;
+  failed: number;
+  all: boolean;
+  snapshots: CloudDeleteSnapshotJson[];
+}
+
+export function formatCloudDeleteJson(result: CloudDeleteResult): string {
+  return JSON.stringify(
+    {
+      deleted: result.deleted,
+      failed: result.failed,
+      all: result.all,
+      snapshots: result.snapshots,
+    },
+    null,
+    2,
+  );
+}
+
 export interface CloudPushMissingJson {
   found: false;
   id: string;
@@ -635,7 +660,9 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
  * Delete cloud snapshots
  */
 export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!options.id && !options.all) {
     console.log(chalk.red('✗ Specify --id <snapshot> or --all to delete'));
@@ -643,21 +670,27 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
   }
 
   // Verify subscription
-  const spinner = ora('Verifying subscription...').start();
+  const spinner = options.json ? null : ora('Verifying subscription...').start();
   const sub = await verifySubscription();
 
   if (!sub.valid) {
-    spinner.fail('Subscription required');
+    spinner?.fail('Subscription required');
     console.log();
     console.log(chalk.red(`  ${sub.error}`));
     process.exit(1);
   }
 
-  spinner.text = 'Fetching cloud snapshots...';
+  if (spinner) {
+    spinner.text = 'Fetching cloud snapshots...';
+  }
   const cloudSnapshots = await listCloudSnapshots();
-  spinner.stop();
+  spinner?.stop();
 
   if (cloudSnapshots.length === 0) {
+    if (options.json) {
+      console.log(formatCloudDeleteJson({ deleted: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
+      return;
+    }
     console.log(chalk.yellow('No snapshots in cloud storage.'));
     process.exit(0);
   }
@@ -672,8 +705,8 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
     }
   }
 
-  // Confirm deletion
-  if (!options.force) {
+  // Confirm deletion (JSON mode is non-interactive)
+  if (!options.force && !options.json) {
     const readline = await import('node:readline');
     const rl = readline.createInterface({
       input: process.stdin,
@@ -693,20 +726,39 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
     }
   }
 
-  console.log();
-  console.log(chalk.blue(`Deleting ${toDelete.length} snapshot(s)...`));
-  console.log();
+  if (!options.json) {
+    console.log();
+    console.log(chalk.blue(`Deleting ${toDelete.length} snapshot(s)...`));
+    console.log();
+  }
 
+  const snapshots: CloudDeleteSnapshotJson[] = [];
   let success = 0;
+  let failed = 0;
   for (const snap of toDelete) {
-    const delSpinner = ora(`  Deleting ${snap.id.slice(0, 8)}...`).start();
+    const delSpinner = options.json
+      ? null
+      : ora(`  Deleting ${snap.id.slice(0, 8)}...`).start();
     const ok = await deleteFromCloud(snap.id);
     if (ok) {
-      delSpinner.succeed(`  ${snap.id.slice(0, 8)} — deleted`);
+      delSpinner?.succeed(`  ${snap.id.slice(0, 8)} — deleted`);
+      snapshots.push({ id: snap.id, deleted: true });
       success++;
     } else {
-      delSpinner.fail(`  ${snap.id.slice(0, 8)} — failed`);
+      delSpinner?.fail(`  ${snap.id.slice(0, 8)} — failed`);
+      snapshots.push({ id: snap.id, deleted: false });
+      failed++;
     }
+  }
+
+  if (options.json) {
+    console.log(formatCloudDeleteJson({
+      deleted: success,
+      failed,
+      all: Boolean(options.all),
+      snapshots,
+    }));
+    return;
   }
 
   console.log();
