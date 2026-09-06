@@ -853,7 +853,7 @@
         <tr><td><code>--include-snapshots</code></td><td>Include snapshot metadata in the exported passport</td></tr>
         <tr><td><code>-i, --input &lt;path&gt;</code></td><td>Passport file to import (required for <code>import</code>)</td></tr>
         <tr><td><code>--merge</code></td><td>Merge imported memories with existing ones instead of replacing</td></tr>
-        <tr><td><code>--json</code></td><td>Emit MCP status as JSON on <code>status</code>. Skips progress output. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit MCP status as JSON on <code>status</code>, or import summary (input path, source/target agents, memory/snapshot counts) on <code>import</code>. Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -870,7 +870,10 @@
 <span class="code-prompt">$</span> savestate mcp export --agent my-agent --include-snapshots
 
 <span class="code-comment"># Import a passport into another agent</span>
-<span class="code-prompt">$</span> savestate mcp import --input passport.json --agent other-agent --merge</code></pre>
+<span class="code-prompt">$</span> savestate mcp import --input passport.json --agent other-agent --merge
+
+<span class="code-comment"># Scriptable import summary</span>
+<span class="code-prompt">$</span> savestate mcp import --input passport.json --json</code></pre>
 
     <!-- context -->
     <h2 id="context"><code>savestate context</code></h2>
