@@ -21,6 +21,7 @@ import {
   evaluateNamespaceCompliance,
   type SLOConfig,
   type SLOComplianceStatus,
+  type SLOReport,
 } from '../slo/index.js';
 import { KnowledgeLane } from '../checkpoint/memory.js';
 import { InMemoryCheckpointStorage } from '../checkpoint/storage/memory.js';
@@ -37,6 +38,89 @@ function parseNamespace(ns: string): Namespace {
     agent_id: parts[2] ?? 'default',
     user_id: parts[3],
   };
+}
+
+export interface SloStatusJson {
+  enabled: boolean;
+  namespace: string;
+  compliant: boolean;
+  evaluatedAt: string;
+  freshness: number;
+  relevance: number;
+  recall: number;
+  crossSession: number;
+  failures: number;
+  violations: number;
+}
+
+export interface SloConfigJson {
+  enabled: boolean;
+  alertThresholdPercent: number;
+  evaluationIntervalMinutes: number;
+  freshness: {
+    maxAgeHours: number;
+    relevanceThreshold: number;
+    recallTargetPercent: number;
+  };
+}
+
+export interface SloReportJson {
+  reportId: string;
+  periodStart: string;
+  periodEnd: string;
+  totalQueries: number;
+  freshQueries: number;
+  relevantQueries: number;
+  successfulRecalls: number;
+  totalFailures: number;
+  avgStalenessScore: number;
+  namespaces: number;
+}
+
+export function formatSloStatusJson(compliance: SLOComplianceStatus): string {
+  const record: SloStatusJson = {
+    enabled: compliance.slo_config.enabled,
+    namespace: compliance.namespace_key,
+    compliant: compliance.is_compliant,
+    evaluatedAt: compliance.evaluated_at,
+    freshness: compliance.freshness_compliance_percent,
+    relevance: compliance.relevance_compliance_percent,
+    recall: compliance.recall_compliance_percent,
+    crossSession: compliance.cross_session_success_percent,
+    failures: compliance.failure_count,
+    violations: compliance.violations.length,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
+export function formatSloConfigJson(config: SLOConfig): string {
+  const record: SloConfigJson = {
+    enabled: config.enabled,
+    alertThresholdPercent: config.alert_threshold_percent,
+    evaluationIntervalMinutes: config.evaluation_interval_minutes,
+    freshness: {
+      maxAgeHours: config.freshness.max_age_hours,
+      relevanceThreshold: config.freshness.relevance_threshold,
+      recallTargetPercent: config.freshness.recall_target_percent,
+    },
+  };
+  return JSON.stringify(record, null, 2);
+}
+
+export function formatSloReportJson(report: SLOReport): string {
+  const record: SloReportJson = {
+    reportId: report.report_id,
+    periodStart: report.period_start,
+    periodEnd: report.period_end,
+    totalQueries: report.total_queries,
+    freshQueries: report.fresh_queries,
+    relevantQueries: report.relevant_queries,
+    successfulRecalls: report.successful_recalls,
+    totalFailures: report.total_failures,
+    avgStalenessScore: report.avg_staleness_score,
+    namespaces: report.namespace_compliance.length,
+  };
+  return JSON.stringify(record, null, 2);
 }
 
 /**
@@ -105,7 +189,7 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
   );
 
   if (options.json) {
-    console.log(JSON.stringify(compliance, null, 2));
+    console.log(formatSloStatusJson(compliance));
     return;
   }
 
@@ -173,7 +257,7 @@ async function sloReport(options: { period?: string; json?: boolean }): Promise<
   );
 
   if (options.json) {
-    console.log(JSON.stringify(report, null, 2));
+    console.log(formatSloReportJson(report));
     return;
   }
 
@@ -225,7 +309,7 @@ async function sloConfig(options: { set?: string; json?: boolean }): Promise<voi
   }
 
   if (options.json) {
-    console.log(JSON.stringify(config, null, 2));
+    console.log(formatSloConfigJson(config));
     return;
   }
 

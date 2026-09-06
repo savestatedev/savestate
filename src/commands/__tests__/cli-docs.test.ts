@@ -43,6 +43,11 @@ const context = readFileSync(
   'utf8',
 );
 
+const slo = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../slo.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -547,6 +552,18 @@ describe('CLI docs', () => {
     expect(sloSection).toContain('--json');
     expect(sloSection).toContain('enabled=true');
     expect(sloSection).toContain('freshness.max_age_hours');
+  });
+
+  it('registers --json on savestate slo', () => {
+    const sloBlock = slo.slice(slo.indexOf("command('slo"));
+    expect(sloBlock).toContain(".option('--json'");
+  });
+
+  it('documents slo --json', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--json');
+    expect(sloSection).toContain('scripting');
+    expect(sloSection).toContain('savestate slo status --json');
   });
 
   it('lists savestate acl in the command overview', () => {
