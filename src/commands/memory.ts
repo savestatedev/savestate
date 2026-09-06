@@ -739,6 +739,34 @@ export async function showTierConfig(
   console.log(JSON.stringify(config, null, 2));
 }
 
+export interface MemoryExplainResultJson {
+  id: string;
+  score: number;
+  summary: string;
+}
+
+export interface MemoryExplainJson {
+  query: string;
+  shown: number;
+  results: MemoryExplainResultJson[];
+}
+
+export function formatMemoryExplainJson(
+  query: string,
+  results: Array<{ id: string; score: number; summary: string }>,
+): string {
+  const record: MemoryExplainJson = {
+    query,
+    shown: results.length,
+    results: results.map((result) => ({
+      id: result.id,
+      score: result.score,
+      summary: result.summary,
+    })),
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 /**
  * Explain why memories were retrieved for a query.
  * Shows detailed breakdown of scores and policy decisions.
@@ -865,13 +893,14 @@ export async function explainMemoryCommand(
     .slice(0, options?.limit ?? 5);
 
   if (options?.format === 'json') {
-    const output = scored.map((r) => ({
-      memory_id: r.entry.id,
-      content: r.entry.content.slice(0, 200),
-      score: r.finalScore,
-      explanation: r.explanation,
-    }));
-    console.log(JSON.stringify(output, null, 2));
+    console.log(formatMemoryExplainJson(
+      query,
+      scored.map((r) => ({
+        id: r.entry.id,
+        score: r.finalScore,
+        summary: r.explanation.summary,
+      })),
+    ));
     return;
   }
 
