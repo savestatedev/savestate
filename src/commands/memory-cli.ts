@@ -93,6 +93,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Demote a memory to a lower tier (archival)')
     .option('-t, --to <tier>', 'Target tier (L2 or L3)', 'L3')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
+    .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
         const config = await loadConfig();
@@ -102,6 +103,7 @@ export function registerMemoryCommands(program: Command): void {
         await demoteMemoryCommand(storage, passphrase, memoryId, {
           to: options.to as MemoryTier,
           snapshotId: options.snapshot,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);

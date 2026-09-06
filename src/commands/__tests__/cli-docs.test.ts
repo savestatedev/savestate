@@ -566,6 +566,19 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory config --json');
   });
 
+  it('registers --json on savestate memory demote', () => {
+    const demoteBlock = memoryCli.slice(memoryCli.indexOf("command('demote"), memoryCli.indexOf("command('pin"));
+    expect(demoteBlock).toContain(".option('--json'");
+  });
+
+  it('documents memory demote --json', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('from/to tiers');
+    expect(memorySection).toContain('savestate memory demote mem-123 --to L3 --json');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');

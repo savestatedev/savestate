@@ -430,6 +430,17 @@ export async function promoteMemoryCommand(
 /**
  * Demote a memory to a lower tier.
  */
+export interface MemoryDemoteJson {
+  id: string;
+  from: MemoryTier;
+  to: MemoryTier;
+}
+
+export function formatMemoryDemoteJson(id: string, from: MemoryTier, to: MemoryTier): string {
+  const record: MemoryDemoteJson = { id, from, to };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function demoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -437,6 +448,7 @@ export async function demoteMemoryCommand(
   options: {
     to?: MemoryTier;
     snapshotId?: string;
+    format?: 'pretty' | 'json';
   },
 ): Promise<void> {
   const targetTier = options.to ?? 'L3';
@@ -455,6 +467,11 @@ export async function demoteMemoryCommand(
 
   // Save updated snapshot
   await saveSnapshot(storage, passphrase, snapshot, filename);
+
+  if (options.format === 'json') {
+    console.log(formatMemoryDemoteJson(memoryId, currentTier, targetTier));
+    return;
+  }
 
   console.log(`✓ Demoted memory ${memoryId} from ${currentTier} to ${targetTier}`);
 }
