@@ -54,6 +54,18 @@ export function formatMemoryLogJson(memoryId: string, log: ProvenanceEntry[]): s
   );
 }
 
+export interface MemoryDeleteJson {
+  id: string;
+  deleted: true;
+  reason: string;
+  actorId: string;
+}
+
+export function formatMemoryDeleteJson(id: string, reason: string, actorId: string): string {
+  const record: MemoryDeleteJson = { id, deleted: true, reason, actorId };
+  return JSON.stringify(record, null, 2);
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -169,6 +181,7 @@ export async function deleteMemoryCommand(
   options: {
     actorId: string;
     reason: string;
+    format?: 'pretty' | 'json';
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -176,6 +189,11 @@ export async function deleteMemoryCommand(
 
   try {
     await knowledgeLane.deleteMemory(memoryId, options.actorId, options.reason);
+
+    if (options.format === 'json') {
+      console.log(formatMemoryDeleteJson(memoryId, options.reason, options.actorId));
+      return;
+    }
 
     console.log(`\nMemory deleted (soft delete).`);
     console.log(`  ID:     ${memoryId}`);
