@@ -240,6 +240,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-i, --importance <n>', 'New importance score (0-1)')
     .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
     .option('-r, --reason <reason>', 'Reason for the edit')
+    .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
         const config = await loadConfig();
@@ -252,6 +253,7 @@ export function registerMemoryCommands(program: Command): void {
           importance: options.importance ? parseFloat(options.importance) : undefined,
           actorId: options.actor,
           reason: options.reason,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);

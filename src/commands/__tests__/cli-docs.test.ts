@@ -631,6 +631,19 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory apply-policies --json');
   });
 
+  it('registers --json on savestate memory edit', () => {
+    const editBlock = memoryCli.slice(memoryCli.indexOf("command('edit"), memoryCli.indexOf("command('delete"));
+    expect(editBlock).toContain(".option('--json'");
+  });
+
+  it('documents memory edit --json', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('edited version');
+    expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --importance 0.9 --reason "correction" --json');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');
