@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatCloudListJson, type CloudListResult } from '../cloud.js';
+import {
+  formatCloudListJson,
+  formatCloudPullJson,
+  type CloudListResult,
+  type CloudPullResult,
+} from '../cloud.js';
 
 const result: CloudListResult = {
   tier: 'pro',
@@ -36,6 +41,47 @@ describe('savestate cloud --json', () => {
     expect(parsed.tier).toBe('team');
     expect(parsed.cloudStorageUsed).toBe(0);
     expect(parsed.cloudStorageLimit).toBe(0);
+    expect(parsed.snapshots).toEqual([]);
+  });
+});
+
+const pullResult: CloudPullResult = {
+  pulled: 1,
+  failed: 1,
+  skipped: 1,
+  all: false,
+  snapshots: [
+    { id: 'ss-2026-01-26', downloaded: true, skipped: false },
+    { id: 'ss-2026-01-25', downloaded: false, skipped: true },
+    { id: 'ss-2026-01-24', downloaded: false, skipped: false },
+  ],
+};
+
+describe('savestate cloud pull --json', () => {
+  it('prints pull summary as JSON', () => {
+    const parsed = JSON.parse(formatCloudPullJson(pullResult)) as CloudPullResult & { apiKey?: string };
+    expect(parsed.pulled).toBe(1);
+    expect(parsed.failed).toBe(1);
+    expect(parsed.skipped).toBe(1);
+    expect(parsed.all).toBe(false);
+    expect(parsed.snapshots).toEqual(pullResult.snapshots);
+    expect(parsed.apiKey).toBeUndefined();
+  });
+
+  it('records an empty pull', () => {
+    const parsed = JSON.parse(
+      formatCloudPullJson({
+        pulled: 0,
+        failed: 0,
+        skipped: 0,
+        all: true,
+        snapshots: [],
+      }),
+    ) as CloudPullResult;
+    expect(parsed.pulled).toBe(0);
+    expect(parsed.failed).toBe(0);
+    expect(parsed.skipped).toBe(0);
+    expect(parsed.all).toBe(true);
     expect(parsed.snapshots).toEqual([]);
   });
 });

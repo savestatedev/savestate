@@ -412,6 +412,7 @@ describe('CLI docs', () => {
     expect(cloudSection).toContain('--json');
     expect(cloudSection).toContain('scripting');
     expect(cloudSection).toContain('savestate cloud list --json');
+    expect(cloudSection).toContain('savestate cloud pull --json');
   });
 
   it('lists savestate mcp in the command overview', () => {
