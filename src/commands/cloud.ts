@@ -53,6 +53,31 @@ export function formatCloudListJson(result: CloudListResult): string {
   );
 }
 
+export interface CloudPushSnapshotJson {
+  id: string;
+  uploaded: boolean;
+}
+
+export interface CloudPushResult {
+  pushed: number;
+  failed: number;
+  all: boolean;
+  snapshots: CloudPushSnapshotJson[];
+}
+
+export function formatCloudPushJson(result: CloudPushResult): string {
+  return JSON.stringify(
+    {
+      pushed: result.pushed,
+      failed: result.failed,
+      all: result.all,
+      snapshots: result.snapshots,
+    },
+    null,
+    2,
+  );
+}
+
 interface SubscriptionStatus {
   valid: boolean;
   tier?: string;
@@ -203,7 +228,9 @@ async function listCloudSnapshots(): Promise<Array<{ id: string; size: number; c
  * Push local snapshots to cloud
  */
 export async function cloudPushCommand(options: CloudOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -211,11 +238,11 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   }
 
   // Verify subscription
-  const spinner = ora('Verifying subscription...').start();
+  const spinner = options.json ? null : ora('Verifying subscription...').start();
   const sub = await verifySubscription();
 
   if (!sub.valid) {
-    spinner.fail('Subscription required');
+    spinner?.fail('Subscription required');
     console.log();
     console.log(chalk.red(`  ${sub.error}`));
     if (sub.tier === 'free') {
@@ -225,21 +252,27 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     process.exit(1);
   }
 
-  spinner.succeed(`Subscription verified (${sub.tier})`);
+  spinner?.succeed(`Subscription verified (${sub.tier})`);
 
   // Show storage usage
-  if (sub.cloudStorageLimit) {
+  if (!options.json && sub.cloudStorageLimit) {
     const usedMB = Math.round((sub.cloudStorageUsed || 0) / 1024 / 1024);
     const limitMB = Math.round(sub.cloudStorageLimit / 1024 / 1024);
     console.log(chalk.dim(`  Cloud storage: ${usedMB} MB / ${limitMB} MB`));
   }
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   // Get local snapshots
   const index = await loadIndex();
   const entries = index.snapshots || [];
 
   if (entries.length === 0) {
+    if (options.json) {
+      console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
+      return;
+    }
     console.log(chalk.yellow('No local snapshots to push.'));
     console.log(chalk.dim('  Run `savestate snapshot` to create one.'));
     process.exit(0);
@@ -258,10 +291,13 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     toPush = [entries[entries.length - 1]];
   }
 
-  console.log(chalk.blue(`Pushing ${toPush.length} snapshot(s) to cloud...`));
-  console.log();
+  if (!options.json) {
+    console.log(chalk.blue(`Pushing ${toPush.length} snapshot(s) to cloud...`));
+    console.log();
+  }
 
   const snapshotsDir = getSnapshotsDir();
+  const snapshots: CloudPushSnapshotJson[] = [];
   let success = 0;
   let failed = 0;
 
@@ -269,13 +305,18 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     const filePath = join(snapshotsDir, `${entry.id}.saf.enc`);
     
     if (!existsSync(filePath)) {
-      console.log(chalk.yellow(`  ⚠ ${entry.id.slice(0, 8)} — file not found, skipping`));
+      if (!options.json) {
+        console.log(chalk.yellow(`  ⚠ ${entry.id.slice(0, 8)} — file not found, skipping`));
+      }
+      snapshots.push({ id: entry.id, uploaded: false });
       failed++;
       continue;
     }
 
     const stat = statSync(filePath);
-    const uploadSpinner = ora(`  Uploading ${entry.id.slice(0, 8)}... (${Math.round(stat.size / 1024)} KB)`).start();
+    const uploadSpinner = options.json
+      ? null
+      : ora(`  Uploading ${entry.id.slice(0, 8)}... (${Math.round(stat.size / 1024)} KB)`).start();
 
     try {
       // Read and upload the file through the proxy API
@@ -283,17 +324,30 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
       const result = await uploadToCloud(entry.id, fileBuffer);
 
       if (!result.success) {
-        uploadSpinner.fail(`  ${entry.id.slice(0, 8)} — ${result.error || 'upload failed'}`);
+        uploadSpinner?.fail(`  ${entry.id.slice(0, 8)} — ${result.error || 'upload failed'}`);
+        snapshots.push({ id: entry.id, uploaded: false });
         failed++;
         continue;
       }
 
-      uploadSpinner.succeed(`  ${entry.id.slice(0, 8)} — uploaded`);
+      uploadSpinner?.succeed(`  ${entry.id.slice(0, 8)} — uploaded`);
+      snapshots.push({ id: entry.id, uploaded: true });
       success++;
     } catch (err) {
-      uploadSpinner.fail(`  ${entry.id.slice(0, 8)} — ${err instanceof Error ? err.message : 'failed'}`);
+      uploadSpinner?.fail(`  ${entry.id.slice(0, 8)} — ${err instanceof Error ? err.message : 'failed'}`);
+      snapshots.push({ id: entry.id, uploaded: false });
       failed++;
     }
+  }
+
+  if (options.json) {
+    console.log(formatCloudPushJson({
+      pushed: success,
+      failed,
+      all: Boolean(options.all),
+      snapshots,
+    }));
+    return;
   }
 
   console.log();

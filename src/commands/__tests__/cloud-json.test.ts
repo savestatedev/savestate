@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatCloudListJson, type CloudListResult } from '../cloud.js';
+import {
+  formatCloudListJson,
+  formatCloudPushJson,
+  type CloudListResult,
+  type CloudPushResult,
+} from '../cloud.js';
 
 const result: CloudListResult = {
   tier: 'pro',
@@ -36,6 +41,42 @@ describe('savestate cloud --json', () => {
     expect(parsed.tier).toBe('team');
     expect(parsed.cloudStorageUsed).toBe(0);
     expect(parsed.cloudStorageLimit).toBe(0);
+    expect(parsed.snapshots).toEqual([]);
+  });
+});
+
+const pushResult: CloudPushResult = {
+  pushed: 1,
+  failed: 1,
+  all: false,
+  snapshots: [
+    { id: 'ss-2026-01-26', uploaded: true },
+    { id: 'ss-2026-01-25', uploaded: false },
+  ],
+};
+
+describe('savestate cloud push --json', () => {
+  it('prints push summary as JSON', () => {
+    const parsed = JSON.parse(formatCloudPushJson(pushResult)) as CloudPushResult & { apiKey?: string };
+    expect(parsed.pushed).toBe(1);
+    expect(parsed.failed).toBe(1);
+    expect(parsed.all).toBe(false);
+    expect(parsed.snapshots).toEqual(pushResult.snapshots);
+    expect(parsed.apiKey).toBeUndefined();
+  });
+
+  it('records an empty push', () => {
+    const parsed = JSON.parse(
+      formatCloudPushJson({
+        pushed: 0,
+        failed: 0,
+        all: true,
+        snapshots: [],
+      }),
+    ) as CloudPushResult;
+    expect(parsed.pushed).toBe(0);
+    expect(parsed.failed).toBe(0);
+    expect(parsed.all).toBe(true);
     expect(parsed.snapshots).toEqual([]);
   });
 });
