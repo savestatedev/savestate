@@ -38,6 +38,11 @@ const container = readFileSync(
   'utf8',
 );
 
+const context = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../context.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -452,6 +457,18 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('--json');
     expect(contextSection).toContain('4000');
     expect(contextSection).toContain('RunBrief');
+  });
+
+  it('registers --json on savestate context compile', () => {
+    const compileBlock = context.slice(context.indexOf("command('compile')"), context.indexOf("command('explain"));
+    expect(compileBlock).toContain(".option('--json'");
+  });
+
+  it('documents context --json', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('--json');
+    expect(contextSection).toContain('scripting');
+    expect(contextSection).toContain('savestate context compile --agent my-agent --task "summarize inbox" --json');
   });
 
   it('lists savestate memory in the command overview', () => {

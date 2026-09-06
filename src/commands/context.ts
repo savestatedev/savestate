@@ -4,8 +4,62 @@
  */
 
 import { Command } from 'commander';
-import { ContextCompiler, CompileRequest } from '../context/index.js';
+import {
+  ContextCompiler,
+  CompileRequest,
+  DEFAULT_BUDGET_ALLOCATION,
+  DEFAULT_SCORING_WEIGHTS,
+  type BudgetAllocation,
+  type RunBrief,
+  type ScoringWeights,
+} from '../context/index.js';
 import { Candidate } from '../context/scorer.js';
+
+export interface ContextCompileJson {
+  runId: string;
+  compiledAt: string;
+  tokenCount: number;
+  budgetRemaining: number;
+  mustKnowFacts: number;
+  activeState: number;
+  openLoops: number;
+  constraints: number;
+  recentDecisions: number;
+  conflicts: number;
+  unknowns: number;
+  citations: number;
+}
+
+export interface ContextConfigJson {
+  weights: ScoringWeights;
+  budget: BudgetAllocation;
+}
+
+export function formatContextCompileJson(brief: RunBrief): string {
+  const record: ContextCompileJson = {
+    runId: brief.run_id,
+    compiledAt: brief.compiled_at,
+    tokenCount: brief.token_count,
+    budgetRemaining: brief.budget_remaining,
+    mustKnowFacts: brief.must_know_facts.length,
+    activeState: Object.keys(brief.active_state).length,
+    openLoops: brief.open_loops.length,
+    constraints: brief.constraints.length,
+    recentDecisions: brief.recent_decisions.length,
+    conflicts: brief.conflicts.length,
+    unknowns: brief.unknowns.length,
+    citations: brief.citations.length,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
+export function formatContextConfigJson(): string {
+  const record: ContextConfigJson = {
+    weights: DEFAULT_SCORING_WEIGHTS,
+    budget: DEFAULT_BUDGET_ALLOCATION,
+  };
+  return JSON.stringify(record, null, 2);
+}
 
 export function registerContextCommands(program: Command): void {
   const context = program
@@ -32,32 +86,35 @@ export function registerContextCommands(program: Command): void {
       // TODO: Load actual candidates from memory store
       // For now, use empty candidates
       const candidates: Candidate[] = [];
-      
-      console.log(`Compiling context for agent "${options.agent}"...`);
-      console.log(`Task: ${options.task}`);
-      console.log(`Budget: ${options.budget} tokens`);
-      console.log('');
-      
-      const result = await compiler.compile(request, candidates);
-      
-      if (options.json) {
-        console.log(JSON.stringify(result.brief, null, 2));
-      } else {
-        console.log('📋 RunBrief Compiled');
-        console.log(`   Run ID: ${result.brief.run_id}`);
-        console.log(`   Compiled: ${result.brief.compiled_at}`);
-        console.log(`   Token Count: ${result.brief.token_count}`);
-        console.log(`   Budget Remaining: ${result.brief.budget_remaining}`);
+
+      if (!options.json) {
+        console.log(`Compiling context for agent "${options.agent}"...`);
+        console.log(`Task: ${options.task}`);
+        console.log(`Budget: ${options.budget} tokens`);
         console.log('');
-        console.log('📊 Sections:');
-        console.log(`   Must-Know Facts: ${result.brief.must_know_facts.length}`);
-        console.log(`   Active State: ${Object.keys(result.brief.active_state).length} entities`);
-        console.log(`   Open Loops: ${result.brief.open_loops.length}`);
-        console.log(`   Constraints: ${result.brief.constraints.length}`);
-        console.log(`   Recent Decisions: ${result.brief.recent_decisions.length}`);
-        console.log(`   Conflicts: ${result.brief.conflicts.length}`);
-        console.log(`   Citations: ${result.brief.citations.length}`);
       }
+
+      const result = await compiler.compile(request, candidates);
+
+      if (options.json) {
+        console.log(formatContextCompileJson(result.brief));
+        return;
+      }
+
+      console.log('📋 RunBrief Compiled');
+      console.log(`   Run ID: ${result.brief.run_id}`);
+      console.log(`   Compiled: ${result.brief.compiled_at}`);
+      console.log(`   Token Count: ${result.brief.token_count}`);
+      console.log(`   Budget Remaining: ${result.brief.budget_remaining}`);
+      console.log('');
+      console.log('📊 Sections:');
+      console.log(`   Must-Know Facts: ${result.brief.must_know_facts.length}`);
+      console.log(`   Active State: ${Object.keys(result.brief.active_state).length} entities`);
+      console.log(`   Open Loops: ${result.brief.open_loops.length}`);
+      console.log(`   Constraints: ${result.brief.constraints.length}`);
+      console.log(`   Recent Decisions: ${result.brief.recent_decisions.length}`);
+      console.log(`   Conflicts: ${result.brief.conflicts.length}`);
+      console.log(`   Citations: ${result.brief.citations.length}`);
     });
 
   // Explain command
@@ -120,13 +177,8 @@ export function registerContextCommands(program: Command): void {
     .option('--budget', 'Show budget allocation')
     .option('--json', 'Output as JSON')
     .action((options) => {
-      const { DEFAULT_SCORING_WEIGHTS, DEFAULT_BUDGET_ALLOCATION } = require('../context/types.js');
-      
       if (options.json) {
-        console.log(JSON.stringify({
-          weights: DEFAULT_SCORING_WEIGHTS,
-          budget: DEFAULT_BUDGET_ALLOCATION,
-        }, null, 2));
+        console.log(formatContextConfigJson());
         return;
       }
       
