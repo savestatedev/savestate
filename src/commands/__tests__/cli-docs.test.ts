@@ -464,11 +464,18 @@ describe('CLI docs', () => {
     expect(compileBlock).toContain(".option('--json'");
   });
 
+  it('registers --json on savestate context explain', () => {
+    const explainBlock = context.slice(context.indexOf("command('explain"), context.indexOf("command('validate"));
+    expect(explainBlock).toContain(".option('--json'");
+  });
+
   it('documents context --json', () => {
     const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
     expect(contextSection).toContain('--json');
     expect(contextSection).toContain('scripting');
+    expect(contextSection).toContain('score breakdowns');
     expect(contextSection).toContain('savestate context compile --agent my-agent --task "summarize inbox" --json');
+    expect(contextSection).toContain('savestate context explain run_abc123 --json');
   });
 
   it('lists savestate memory in the command overview', () => {

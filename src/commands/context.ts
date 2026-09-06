@@ -10,6 +10,7 @@ import {
   DEFAULT_BUDGET_ALLOCATION,
   DEFAULT_SCORING_WEIGHTS,
   type BudgetAllocation,
+  type ExplanationTrace,
   type RunBrief,
   type ScoringWeights,
 } from '../context/index.js';
@@ -35,6 +36,35 @@ export interface ContextConfigJson {
   budget: BudgetAllocation;
 }
 
+export interface ContextExplainCandidateJson {
+  id: string;
+  included: boolean;
+  score: number;
+  reason: string;
+}
+
+export interface ContextExplainJson {
+  runId: string;
+  compiledAt: string;
+  totalCandidates: number;
+  included: number;
+  excluded: number;
+  budget: {
+    mustKnowFacts: number;
+    constraints: number;
+    openLoops: number;
+    activeState: number;
+    recentDecisions: number;
+    conflicts: number;
+    unknowns: number;
+    citations: number;
+  };
+  shown: number;
+  candidates: ContextExplainCandidateJson[];
+}
+
+const EXPLAIN_CANDIDATE_LIMIT = 10;
+
 export function formatContextCompileJson(brief: RunBrief): string {
   const record: ContextCompileJson = {
     runId: brief.run_id,
@@ -57,6 +87,35 @@ export function formatContextConfigJson(): string {
   const record: ContextConfigJson = {
     weights: DEFAULT_SCORING_WEIGHTS,
     budget: DEFAULT_BUDGET_ALLOCATION,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
+export function formatContextExplainJson(explanation: ExplanationTrace): string {
+  const candidates = explanation.candidates.slice(0, EXPLAIN_CANDIDATE_LIMIT).map((candidate) => ({
+    id: candidate.candidate_id,
+    included: candidate.included,
+    score: candidate.score,
+    reason: candidate.reason,
+  }));
+  const record: ContextExplainJson = {
+    runId: explanation.run_id,
+    compiledAt: explanation.compiled_at,
+    totalCandidates: explanation.total_candidates,
+    included: explanation.included_count,
+    excluded: explanation.excluded_count,
+    budget: {
+      mustKnowFacts: explanation.budget_allocation.must_know_facts,
+      constraints: explanation.budget_allocation.constraints,
+      openLoops: explanation.budget_allocation.open_loops,
+      activeState: explanation.budget_allocation.active_state,
+      recentDecisions: explanation.budget_allocation.recent_decisions,
+      conflicts: explanation.budget_allocation.conflicts,
+      unknowns: explanation.budget_allocation.unknowns,
+      citations: explanation.budget_allocation.citations,
+    },
+    shown: candidates.length,
+    candidates,
   };
   return JSON.stringify(record, null, 2);
 }
@@ -132,26 +191,27 @@ export function registerContextCommands(program: Command): void {
       }
       
       if (options.json) {
-        console.log(JSON.stringify(explanation, null, 2));
-      } else {
-        console.log('📝 Explanation Trace');
-        console.log(`   Run ID: ${explanation.run_id}`);
-        console.log(`   Compiled: ${explanation.compiled_at}`);
-        console.log(`   Total Candidates: ${explanation.total_candidates}`);
-        console.log(`   Included: ${explanation.included_count}`);
-        console.log(`   Excluded: ${explanation.excluded_count}`);
-        console.log('');
-        console.log('📊 Budget Allocation:');
-        for (const [section, tokens] of Object.entries(explanation.budget_allocation)) {
-          console.log(`   ${section}: ${tokens} tokens`);
-        }
-        console.log('');
-        console.log('🔍 Top Candidates:');
-        for (const c of explanation.candidates.slice(0, 10)) {
-          const status = c.included ? '✅' : '❌';
-          console.log(`   ${status} ${c.candidate_id} (score: ${c.score.toFixed(3)})`);
-          console.log(`      ${c.reason}`);
-        }
+        console.log(formatContextExplainJson(explanation));
+        return;
+      }
+
+      console.log('📝 Explanation Trace');
+      console.log(`   Run ID: ${explanation.run_id}`);
+      console.log(`   Compiled: ${explanation.compiled_at}`);
+      console.log(`   Total Candidates: ${explanation.total_candidates}`);
+      console.log(`   Included: ${explanation.included_count}`);
+      console.log(`   Excluded: ${explanation.excluded_count}`);
+      console.log('');
+      console.log('📊 Budget Allocation:');
+      for (const [section, tokens] of Object.entries(explanation.budget_allocation)) {
+        console.log(`   ${section}: ${tokens} tokens`);
+      }
+      console.log('');
+      console.log('🔍 Top Candidates:');
+      for (const c of explanation.candidates.slice(0, 10)) {
+        const status = c.included ? '✅' : '❌';
+        console.log(`   ${status} ${c.candidate_id} (score: ${c.score.toFixed(3)})`);
+        console.log(`      ${c.reason}`);
       }
     });
 
