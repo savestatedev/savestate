@@ -670,6 +670,19 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory rollback mem-123 --version 2 --json');
   });
 
+  it('registers --json on savestate memory expire', () => {
+    const expireBlock = memoryCli.slice(memoryCli.indexOf("command('expire')"), memoryCli.indexOf("command('log"));
+    expect(expireBlock).toContain(".option('--json'");
+  });
+
+  it('documents memory expire --json', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('expired count');
+    expect(memorySection).toContain('savestate memory expire --namespace org:app:agent --json');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');

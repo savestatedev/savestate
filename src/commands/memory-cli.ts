@@ -316,6 +316,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Expire memories based on TTL policy')
     .requiredOption('-n, --namespace <ns>', 'Namespace (format: org:app:agent[:user])')
     .option('--dry-run', 'Show what would be expired without applying')
+    .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
         const config = await loadConfig();
@@ -325,6 +326,7 @@ export function registerMemoryCommands(program: Command): void {
         await expireMemoriesCommand(storage, passphrase, {
           namespace: options.namespace,
           dryRun: options.dryRun,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);

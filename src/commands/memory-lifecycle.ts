@@ -109,6 +109,30 @@ export function formatMemoryRollbackJson(
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryExpireJson {
+  dryRun: boolean;
+  applied: boolean;
+  namespace: string;
+  expiredCount: number;
+  expiredIds: string[];
+}
+
+export function formatMemoryExpireJson(
+  namespace: string,
+  expiredIds: string[],
+  options?: { dryRun?: boolean },
+): string {
+  const dryRun = options?.dryRun ?? false;
+  const record: MemoryExpireJson = {
+    dryRun,
+    applied: !dryRun && expiredIds.length > 0,
+    namespace,
+    expiredCount: expiredIds.length,
+    expiredIds: [...expiredIds],
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -306,6 +330,7 @@ export async function expireMemoriesCommand(
   options: {
     namespace: string;
     dryRun?: boolean;
+    format?: 'pretty' | 'json';
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -334,6 +359,15 @@ export async function expireMemoriesCommand(
       return false;
     });
 
+    if (options.format === 'json') {
+      console.log(formatMemoryExpireJson(
+        options.namespace,
+        expirableMemories.map((mem) => mem.memory_id),
+        { dryRun: true },
+      ));
+      return;
+    }
+
     console.log(`\nDry run: Would expire ${expirableMemories.length} memories:\n`);
     for (const mem of expirableMemories) {
       console.log(`  ${mem.memory_id} - ${mem.content.slice(0, 40)}...`);
@@ -343,6 +377,11 @@ export async function expireMemoriesCommand(
 
   try {
     const result = await knowledgeLane.expireMemories(namespace);
+
+    if (options.format === 'json') {
+      console.log(formatMemoryExpireJson(options.namespace, result.expired_ids));
+      return;
+    }
 
     console.log(`\nExpiration complete.`);
     console.log(`  Namespace:      ${options.namespace}`);
