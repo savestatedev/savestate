@@ -16,6 +16,44 @@ import { KnowledgeLane } from '../checkpoint/memory.js';
 import { InMemoryCheckpointStorage } from '../checkpoint/storage/memory.js';
 import type { ProvenanceEntry, Namespace } from '../checkpoint/types.js';
 
+export interface MemoryLogEventJson {
+  action: string;
+  actorId: string;
+  timestamp: string;
+  reason: string | null;
+  version: number | null;
+  checkpointId: string | null;
+  mergedFrom: string[];
+}
+
+export interface MemoryLogJson {
+  memoryId: string;
+  events: MemoryLogEventJson[];
+}
+
+function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
+  return {
+    action: entry.action,
+    actorId: entry.actor_id ?? 'unknown',
+    timestamp: entry.timestamp,
+    reason: entry.reason ?? null,
+    version: entry.version ?? null,
+    checkpointId: entry.checkpoint_id ?? null,
+    mergedFrom: entry.merged_from ?? [],
+  };
+}
+
+export function formatMemoryLogJson(memoryId: string, log: ProvenanceEntry[]): string {
+  return JSON.stringify(
+    {
+      memoryId,
+      events: log.map(toLogEventJson),
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -260,14 +298,14 @@ export async function memoryLogCommand(
   try {
     const log = await knowledgeLane.memoryAuditLog(memoryId);
 
-    if (log.length === 0) {
-      console.log(`\nNo audit log found for memory ${memoryId}`);
-      console.log(`(Memory may not exist or has no recorded history)`);
+    if (options?.format === 'json') {
+      console.log(formatMemoryLogJson(memoryId, log));
       return;
     }
 
-    if (options?.format === 'json') {
-      console.log(JSON.stringify(log, null, 2));
+    if (log.length === 0) {
+      console.log(`\nNo audit log found for memory ${memoryId}`);
+      console.log(`(Memory may not exist or has no recorded history)`);
       return;
     }
 

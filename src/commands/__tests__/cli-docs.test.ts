@@ -516,6 +516,14 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('rollback');
   });
 
+  it('documents memory log --json', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('Omits previous content');
+    expect(memorySection).toContain('savestate memory log mem-123 --json');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');
