@@ -888,7 +888,7 @@
         <tr><td><code>-f, --file &lt;path&gt;</code></td><td>Path to a RunBrief JSON file for <code>validate</code></td></tr>
         <tr><td><code>--weights</code></td><td>Show scoring weights on <code>config</code></td></tr>
         <tr><td><code>--budget</code></td><td>Show budget allocation on <code>config</code></td></tr>
-        <tr><td><code>--json</code></td><td>Emit compile, explain, and config results as JSON. Skips progress output. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit compile, explain, and config results as JSON. Explain omits score breakdowns. Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -906,6 +906,7 @@
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate context compile --agent my-agent --task "summarize inbox" --json
+<span class="code-prompt">$</span> savestate context explain run_abc123 --json
 <span class="code-prompt">$</span> savestate context config --json</code></pre>
 
     <!-- memory -->
