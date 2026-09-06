@@ -268,6 +268,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Delete a memory (soft delete with audit trail)')
     .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
     .requiredOption('-r, --reason <reason>', 'Reason for deletion (required)')
+    .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
         const config = await loadConfig();
@@ -277,6 +278,7 @@ export function registerMemoryCommands(program: Command): void {
         await deleteMemoryCommand(storage, passphrase, memoryId, {
           actorId: options.actor,
           reason: options.reason,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);
