@@ -58,6 +58,9 @@ savestate memory pin <memory-id>
 
 # Unpin a memory
 savestate memory unpin <memory-id>
+
+# Unpin as JSON (pinned status)
+savestate memory unpin <memory-id> --json
 ```
 
 ### Apply Policies

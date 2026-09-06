@@ -493,12 +493,23 @@ export async function pinMemoryCommand(
 /**
  * Unpin a memory.
  */
+export interface MemoryUnpinJson {
+  id: string;
+  pinned: false;
+}
+
+export function formatMemoryUnpinJson(id: string): string {
+  const record: MemoryUnpinJson = { id, pinned: false };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function unpinMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
   memoryId: string,
   options?: {
     snapshotId?: string;
+    format?: 'pretty' | 'json';
   },
 ): Promise<void> {
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options?.snapshotId);
@@ -510,6 +521,10 @@ export async function unpinMemoryCommand(
 
   const entry = snapshot.memory.core[entryIndex];
   if (!entry.pinned) {
+    if (options?.format === 'json') {
+      console.log(formatMemoryUnpinJson(memoryId));
+      return;
+    }
     console.log(`Memory ${memoryId} is not pinned.`);
     return;
   }
@@ -517,6 +532,11 @@ export async function unpinMemoryCommand(
   snapshot.memory.core[entryIndex] = unpinMemory(entry);
 
   await saveSnapshot(storage, passphrase, snapshot, filename);
+
+  if (options?.format === 'json') {
+    console.log(formatMemoryUnpinJson(memoryId));
+    return;
+  }
 
   console.log(`✓ Unpinned memory ${memoryId}`);
 }
