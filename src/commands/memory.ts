@@ -462,12 +462,23 @@ export async function demoteMemoryCommand(
 /**
  * Pin a memory (prevents automatic demotion).
  */
+export interface MemoryPinJson {
+  id: string;
+  pinned: true;
+}
+
+export function formatMemoryPinJson(id: string): string {
+  const record: MemoryPinJson = { id, pinned: true };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function pinMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
   memoryId: string,
   options?: {
     snapshotId?: string;
+    format?: 'pretty' | 'json';
   },
 ): Promise<void> {
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options?.snapshotId);
@@ -479,6 +490,10 @@ export async function pinMemoryCommand(
 
   const entry = snapshot.memory.core[entryIndex];
   if (entry.pinned) {
+    if (options?.format === 'json') {
+      console.log(formatMemoryPinJson(memoryId));
+      return;
+    }
     console.log(`Memory ${memoryId} is already pinned.`);
     return;
   }
@@ -486,6 +501,11 @@ export async function pinMemoryCommand(
   snapshot.memory.core[entryIndex] = pinMemory(entry);
 
   await saveSnapshot(storage, passphrase, snapshot, filename);
+
+  if (options?.format === 'json') {
+    console.log(formatMemoryPinJson(memoryId));
+    return;
+  }
 
   console.log(`✓ Pinned memory ${memoryId}`);
 }

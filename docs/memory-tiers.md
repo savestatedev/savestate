@@ -56,6 +56,9 @@ Pinned memories are never automatically demoted:
 # Pin a memory
 savestate memory pin <memory-id>
 
+# JSON output
+savestate memory pin <memory-id> --json
+
 # Unpin a memory
 savestate memory unpin <memory-id>
 ```
