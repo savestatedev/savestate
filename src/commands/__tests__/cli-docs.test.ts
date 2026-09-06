@@ -301,6 +301,22 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('savestate team status --json');
   });
 
+  it('registers --json on savestate team members', () => {
+    const membersBlock = cli.slice(
+      cli.indexOf("List team members"),
+      cli.indexOf("Invite a member by email"),
+    );
+    expect(membersBlock).toContain(".option('--json'");
+  });
+
+  it('documents team members --json', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('email, role, and invite timestamps');
+    expect(teamSection).toContain('savestate team members --json');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("Stream the team audit log to stdout"),

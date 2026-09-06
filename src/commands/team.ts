@@ -42,6 +42,34 @@ export function formatTeamStatusJson(status: TeamStatusJson): string {
   );
 }
 
+export interface TeamMemberJson {
+  email: string;
+  role: string;
+  acceptedAt: string | null;
+  invitedAt: string;
+}
+
+export interface TeamMembersJson {
+  name: string;
+  members: TeamMemberJson[];
+}
+
+export function formatTeamMembersJson(result: TeamMembersJson): string {
+  return JSON.stringify(
+    {
+      name: result.name,
+      members: result.members.map((member) => ({
+        email: member.email,
+        role: member.role,
+        acceptedAt: member.acceptedAt,
+        invitedAt: member.invitedAt,
+      })),
+    },
+    null,
+    2,
+  );
+}
+
 interface CallResult {
   ok: boolean;
   status: number;
@@ -140,7 +168,17 @@ export async function teamMembersCommand(options: TeamCommandOptions = {}): Prom
   };
 
   if (options.json) {
-    console.log(JSON.stringify(data, null, 2));
+    console.log(
+      formatTeamMembersJson({
+        name: data.team.name,
+        members: data.members.map((member) => ({
+          email: member.email,
+          role: member.role,
+          acceptedAt: member.acceptedAt,
+          invitedAt: member.invitedAt,
+        })),
+      }),
+    );
     return;
   }
 
