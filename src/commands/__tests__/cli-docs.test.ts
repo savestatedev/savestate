@@ -441,11 +441,24 @@ describe('CLI docs', () => {
     expect(statusBlock).toContain(".option('--json'");
   });
 
+  it('registers --json on savestate mcp import', () => {
+    const importBlock = mcp.slice(mcp.indexOf("command('import')"));
+    expect(importBlock).toContain(".option('--json'");
+  });
+
   it('documents mcp --json', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     expect(mcpSection).toContain('--json');
     expect(mcpSection).toContain('scripting');
     expect(mcpSection).toContain('savestate mcp status --json');
+  });
+
+  it('documents mcp import --json', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--json');
+    expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain('memory/snapshot counts');
+    expect(mcpSection).toContain('savestate mcp import --input passport.json --json');
   });
 
   it('lists savestate context in the command overview', () => {

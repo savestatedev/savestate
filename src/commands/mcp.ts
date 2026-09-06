@@ -156,6 +156,32 @@ export function formatMcpStatusJson(status: McpStatus): string {
   );
 }
 
+export interface McpImportJson {
+  input: string;
+  sourceAgent: string;
+  targetAgent: string;
+  importedMemories: number;
+  totalMemories: number;
+  snapshots: number;
+  merge: boolean;
+}
+
+export function formatMcpImportJson(result: McpImportJson): string {
+  return JSON.stringify(
+    {
+      input: result.input,
+      sourceAgent: result.sourceAgent,
+      targetAgent: result.targetAgent,
+      importedMemories: result.importedMemories,
+      totalMemories: result.totalMemories,
+      snapshots: result.snapshots,
+      merge: result.merge,
+    },
+    null,
+    2,
+  );
+}
+
 interface MCPStatusOptions {
   json?: boolean;
 }
@@ -330,14 +356,15 @@ interface MCPImportOptions {
   input: string;
   agent?: string;
   merge?: boolean;
+  json?: boolean;
 }
 
 async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
-  const spinner = ora('Importing memory passport...').start();
+  const spinner = options.json ? null : ora('Importing memory passport...').start();
 
   try {
     if (!isInitialized()) {
-      spinner.fail('SaveState not initialized');
+      spinner?.fail('SaveState not initialized');
       console.error(chalk.red('Run `savestate init` first.'));
       process.exit(1);
     }
@@ -345,19 +372,19 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     const inputPath = options.input;
 
     if (!existsSync(inputPath)) {
-      spinner.fail('Passport file not found');
+      spinner?.fail('Passport file not found');
       console.error(chalk.red(`File not found: ${inputPath}`));
       process.exit(1);
     }
 
     // Read passport file
-    spinner.text = 'Reading passport file...';
+    if (spinner) spinner.text = 'Reading passport file...';
     const passportData = await readFile(inputPath, 'utf-8');
     const passport: MemoryPassport = JSON.parse(passportData);
 
     // Validate passport format
     if (!passport.version || !passport.memories || !passport.snapshots) {
-      spinner.fail('Invalid passport format');
+      spinner?.fail('Invalid passport format');
       console.error(chalk.red('The file does not appear to be a valid memory passport.'));
       process.exit(1);
     }
@@ -372,7 +399,7 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     };
 
     // Import memories
-    spinner.text = 'Importing memories...';
+    if (spinner) spinner.text = 'Importing memories...';
     const storage = new InMemoryCheckpointStorage();
     const lane = new KnowledgeLane(storage);
 
@@ -397,7 +424,20 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
       }
     }
 
-    spinner.succeed('Memory passport imported successfully!');
+    if (options.json) {
+      console.log(formatMcpImportJson({
+        input: inputPath,
+        sourceAgent: passport.source_agent.id,
+        targetAgent,
+        importedMemories,
+        totalMemories: passport.memories.length,
+        snapshots: passport.snapshots.length,
+        merge: options.merge ?? false,
+      }));
+      return;
+    }
+
+    spinner?.succeed('Memory passport imported successfully!');
     console.log('');
     console.log(`Source: ${chalk.cyan(inputPath)}`);
     console.log(`Original agent: ${chalk.cyan(passport.source_agent.id)}`);
@@ -407,7 +447,7 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     console.log('');
     console.log(chalk.gray('Note: Snapshot data must be transferred separately using savestate restore.'));
   } catch (err) {
-    spinner.fail('Import failed');
+    spinner?.fail('Import failed');
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);
   }
@@ -452,5 +492,6 @@ export function registerMCPCommands(program: Command): void {
     .requiredOption('-i, --input <path>', 'Passport file to import')
     .option('-a, --agent <id>', 'Target agent ID (default: source agent ID)')
     .option('--merge', 'Merge with existing memories instead of replacing')
+    .option('--json', 'Output as JSON')
     .action(mcpImportCommand);
 }
