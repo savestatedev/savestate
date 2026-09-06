@@ -398,6 +398,17 @@ export async function listMemories(
 /**
  * Promote a memory to a higher tier.
  */
+export interface MemoryPromoteJson {
+  id: string;
+  from: MemoryTier;
+  to: MemoryTier;
+}
+
+export function formatMemoryPromoteJson(id: string, from: MemoryTier, to: MemoryTier): string {
+  const record: MemoryPromoteJson = { id, from, to };
+  return JSON.stringify(record, null, 2);
+}
+
 export async function promoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -405,6 +416,7 @@ export async function promoteMemoryCommand(
   options: {
     to?: MemoryTier;
     snapshotId?: string;
+    format?: 'pretty' | 'json';
   },
 ): Promise<void> {
   const targetTier = options.to ?? 'L1';
@@ -423,6 +435,11 @@ export async function promoteMemoryCommand(
 
   // Save updated snapshot
   await saveSnapshot(storage, passphrase, snapshot, filename);
+
+  if (options.format === 'json') {
+    console.log(formatMemoryPromoteJson(memoryId, currentTier, targetTier));
+    return;
+  }
 
   console.log(`✓ Promoted memory ${memoryId} from ${currentTier} to ${targetTier}`);
 }
