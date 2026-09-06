@@ -163,6 +163,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Apply automatic tier policies (age-based demotion, etc.)')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--dry-run', 'Show what would change without applying')
+    .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
         const config = await loadConfig();
@@ -172,6 +173,7 @@ export function registerMemoryCommands(program: Command): void {
         await applyPoliciesCommand(storage, passphrase, {
           snapshotId: options.snapshot,
           dryRun: options.dryRun,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);
