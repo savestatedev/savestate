@@ -54,6 +54,24 @@ export function formatMemoryLogJson(memoryId: string, log: ProvenanceEntry[]): s
   );
 }
 
+export interface MemoryRollbackJson {
+  id: string;
+  rolledBack: true;
+  toVersion: number;
+  version: number;
+  actorId: string;
+}
+
+export function formatMemoryRollbackJson(
+  id: string,
+  toVersion: number,
+  version: number,
+  actorId: string,
+): string {
+  const record: MemoryRollbackJson = { id, rolledBack: true, toVersion, version, actorId };
+  return JSON.stringify(record, null, 2);
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -197,6 +215,7 @@ export async function rollbackMemoryCommand(
   options: {
     version: number;
     actorId: string;
+    format?: 'pretty' | 'json';
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -208,6 +227,16 @@ export async function rollbackMemoryCommand(
       options.version,
       options.actorId
     );
+
+    if (options.format === 'json') {
+      console.log(formatMemoryRollbackJson(
+        restored.memory_id,
+        options.version,
+        restored.version,
+        options.actorId,
+      ));
+      return;
+    }
 
     console.log(`\nMemory rolled back successfully.`);
     console.log(`  ID:              ${restored.memory_id}`);

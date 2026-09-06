@@ -286,6 +286,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Rollback a memory to a previous version')
     .requiredOption('-v, --version <n>', 'Version number to rollback to')
     .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
+    .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
         const config = await loadConfig();
@@ -295,6 +296,7 @@ export function registerMemoryCommands(program: Command): void {
         await rollbackMemoryCommand(storage, passphrase, memoryId, {
           version: parseInt(options.version, 10),
           actorId: options.actor,
+          format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);
