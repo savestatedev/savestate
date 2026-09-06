@@ -78,6 +78,34 @@ export function formatCloudPushJson(result: CloudPushResult): string {
   );
 }
 
+export interface CloudPullSnapshotJson {
+  id: string;
+  downloaded: boolean;
+  skipped: boolean;
+}
+
+export interface CloudPullResult {
+  pulled: number;
+  failed: number;
+  skipped: number;
+  all: boolean;
+  snapshots: CloudPullSnapshotJson[];
+}
+
+export function formatCloudPullJson(result: CloudPullResult): string {
+  return JSON.stringify(
+    {
+      pulled: result.pulled,
+      failed: result.failed,
+      skipped: result.skipped,
+      all: result.all,
+      snapshots: result.snapshots,
+    },
+    null,
+    2,
+  );
+}
+
 interface SubscriptionStatus {
   valid: boolean;
   tier?: string;
@@ -363,7 +391,9 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
  * Pull snapshots from cloud
  */
 export async function cloudPullCommand(options: CloudOptions): Promise<void> {
-  console.log();
+  if (!options.json) {
+    console.log();
+  }
 
   if (!isInitialized()) {
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -371,25 +401,31 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
   }
 
   // Verify subscription
-  const spinner = ora('Verifying subscription...').start();
+  const spinner = options.json ? null : ora('Verifying subscription...').start();
   const sub = await verifySubscription();
 
   if (!sub.valid) {
-    spinner.fail('Subscription required');
+    spinner?.fail('Subscription required');
     console.log();
     console.log(chalk.red(`  ${sub.error}`));
     process.exit(1);
   }
 
-  spinner.succeed(`Subscription verified (${sub.tier})`);
-  console.log();
+  spinner?.succeed(`Subscription verified (${sub.tier})`);
+  if (!options.json) {
+    console.log();
+  }
 
   // Get cloud snapshots
-  const listSpinner = ora('Fetching cloud snapshots...').start();
+  const listSpinner = options.json ? null : ora('Fetching cloud snapshots...').start();
   const cloudSnapshots = await listCloudSnapshots();
-  listSpinner.stop();
+  listSpinner?.stop();
 
   if (cloudSnapshots.length === 0) {
+    if (options.json) {
+      console.log(formatCloudPullJson({ pulled: 0, failed: 0, skipped: 0, all: Boolean(options.all), snapshots: [] }));
+      return;
+    }
     console.log(chalk.yellow('No snapshots in cloud storage.'));
     console.log(chalk.dim('  Run `savestate cloud push` to upload snapshots.'));
     process.exit(0);
@@ -407,26 +443,39 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
     toPull = [cloudSnapshots[cloudSnapshots.length - 1]];
   }
 
-  console.log(chalk.blue(`Pulling ${toPull.length} snapshot(s) from cloud...`));
-  console.log();
+  if (!options.json) {
+    console.log(chalk.blue(`Pulling ${toPull.length} snapshot(s) from cloud...`));
+    console.log();
+  }
 
   const snapshotsDir = getSnapshotsDir();
+  const snapshots: CloudPullSnapshotJson[] = [];
   let success = 0;
+  let failed = 0;
+  let skipped = 0;
 
   for (const snap of toPull) {
     const filePath = join(snapshotsDir, `${snap.id}.saf.enc`);
     
     if (existsSync(filePath) && !options.force) {
-      console.log(chalk.dim(`  ⏭ ${snap.id.slice(0, 8)} — already exists locally`));
+      if (!options.json) {
+        console.log(chalk.dim(`  ⏭ ${snap.id.slice(0, 8)} — already exists locally`));
+      }
+      snapshots.push({ id: snap.id, downloaded: false, skipped: true });
+      skipped++;
       continue;
     }
 
-    const dlSpinner = ora(`  Downloading ${snap.id.slice(0, 8)}...`).start();
+    const dlSpinner = options.json
+      ? null
+      : ora(`  Downloading ${snap.id.slice(0, 8)}...`).start();
 
     try {
       const data = await downloadFromCloud(snap.id);
       if (!data) {
-        dlSpinner.fail(`  ${snap.id.slice(0, 8)} — download failed`);
+        dlSpinner?.fail(`  ${snap.id.slice(0, 8)} — download failed`);
+        snapshots.push({ id: snap.id, downloaded: false, skipped: false });
+        failed++;
         continue;
       }
 
@@ -434,11 +483,25 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
       fileStream.write(data);
       fileStream.end();
 
-      dlSpinner.succeed(`  ${snap.id.slice(0, 8)} — downloaded`);
+      dlSpinner?.succeed(`  ${snap.id.slice(0, 8)} — downloaded`);
+      snapshots.push({ id: snap.id, downloaded: true, skipped: false });
       success++;
     } catch (err) {
-      dlSpinner.fail(`  ${snap.id.slice(0, 8)} — ${err instanceof Error ? err.message : 'failed'}`);
+      dlSpinner?.fail(`  ${snap.id.slice(0, 8)} — ${err instanceof Error ? err.message : 'failed'}`);
+      snapshots.push({ id: snap.id, downloaded: false, skipped: false });
+      failed++;
     }
+  }
+
+  if (options.json) {
+    console.log(formatCloudPullJson({
+      pulled: success,
+      failed,
+      skipped,
+      all: Boolean(options.all),
+      snapshots,
+    }));
+    return;
   }
 
   console.log();

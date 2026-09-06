@@ -816,7 +816,7 @@
         <tr><td><code>--id &lt;id&gt;</code></td><td>Specific snapshot ID (prefix match allowed)</td></tr>
         <tr><td><code>--all</code></td><td>Process all snapshots instead of the latest</td></tr>
         <tr><td><code>-f, --force</code></td><td>Overwrite existing local files on pull, or skip delete confirmation</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the cloud list as JSON, or a push summary (uploaded count and snapshot ids) on <code>push</code>. Skips the spinner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the cloud list as JSON, a push summary (uploaded count and snapshot ids) on <code>push</code>, or pull results on <code>pull</code>. Skips the spinner. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -834,6 +834,9 @@
 
 <span class="code-comment"># Pull a specific snapshot, overwriting the local file</span>
 <span class="code-prompt">$</span> savestate cloud pull --id ss-2026-01-26 --force
+
+<span class="code-comment"># Scriptable pull summary</span>
+<span class="code-prompt">$</span> savestate cloud pull --json
 
 <span class="code-comment"># Delete one cloud snapshot without the confirm prompt</span>
 <span class="code-prompt">$</span> savestate cloud delete --id ss-2026-01-26 --force</code></pre>
