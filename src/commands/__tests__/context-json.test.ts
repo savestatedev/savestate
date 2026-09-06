@@ -4,9 +4,11 @@ import {
   formatContextCompileJson,
   formatContextConfigJson,
   formatContextExplainJson,
+  formatContextValidateJson,
   type ContextCompileJson,
   type ContextConfigJson,
   type ContextExplainJson,
+  type ContextValidateJson,
 } from '../context.js';
 
 function candidate(partial: Partial<ExplanationTrace['candidates'][number]> = {}): ExplanationTrace['candidates'][number] {
@@ -207,5 +209,52 @@ describe('savestate context --json', () => {
     expect(many.candidates).toHaveLength(10);
     expect(many.candidates[0].id).toBe('c1');
     expect(many.candidates[9].id).toBe('c10');
+  });
+
+  it('prints validate coverage as JSON', () => {
+    const parsed = JSON.parse(
+      formatContextValidateJson('brief.json', {
+        valid: true,
+        errors: [],
+        warnings: ['No must_know_facts included'],
+        coverage: {
+          constraints_covered: 2,
+          constraints_total: 2,
+          required_facts_present: false,
+        },
+      }),
+    ) as ContextValidateJson;
+    expect(parsed).toEqual({
+      file: 'brief.json',
+      valid: true,
+      errors: [],
+      warnings: ['No must_know_facts included'],
+      coverage: {
+        constraintsCovered: 2,
+        constraintsTotal: 2,
+        requiredFactsPresent: false,
+      },
+    });
+  });
+
+  it('records an invalid brief with errors', () => {
+    const parsed = JSON.parse(
+      formatContextValidateJson('broken.json', {
+        valid: false,
+        errors: ['Missing run_id', 'Budget exceeded'],
+        warnings: [],
+        coverage: {
+          constraints_covered: 0,
+          constraints_total: 0,
+          required_facts_present: false,
+        },
+      }),
+    ) as ContextValidateJson;
+    expect(parsed.file).toBe('broken.json');
+    expect(parsed.valid).toBe(false);
+    expect(parsed.errors).toEqual(['Missing run_id', 'Budget exceeded']);
+    expect(parsed.warnings).toEqual([]);
+    expect(parsed.coverage.constraintsCovered).toBe(0);
+    expect(parsed.coverage.requiredFactsPresent).toBe(false);
   });
 });

@@ -505,6 +505,11 @@ describe('CLI docs', () => {
     expect(explainBlock).toContain(".option('--json'");
   });
 
+  it('registers --json on savestate context validate', () => {
+    const validateBlock = context.slice(context.indexOf("command('validate')"), context.indexOf("command('config')"));
+    expect(validateBlock).toContain(".option('--json'");
+  });
+
   it('documents context --json', () => {
     const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
     expect(contextSection).toContain('--json');
@@ -512,6 +517,14 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('score breakdowns');
     expect(contextSection).toContain('savestate context compile --agent my-agent --task "summarize inbox" --json');
     expect(contextSection).toContain('savestate context explain run_abc123 --json');
+  });
+
+  it('documents context validate --json', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('--json');
+    expect(contextSection).toContain('scripting');
+    expect(contextSection).toContain('valid flag');
+    expect(contextSection).toContain('savestate context validate --file brief.json --json');
   });
 
   it('lists savestate memory in the command overview', () => {

@@ -3,6 +3,7 @@
  * Issue #54: compile, explain, validate commands
  */
 
+import { existsSync, readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import {
   ContextCompiler,
@@ -13,6 +14,7 @@ import {
   type ExplanationTrace,
   type RunBrief,
   type ScoringWeights,
+  type ValidationResult,
 } from '../context/index.js';
 import { Candidate } from '../context/scorer.js';
 
@@ -63,6 +65,18 @@ export interface ContextExplainJson {
   candidates: ContextExplainCandidateJson[];
 }
 
+export interface ContextValidateJson {
+  file: string;
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  coverage: {
+    constraintsCovered: number;
+    constraintsTotal: number;
+    requiredFactsPresent: boolean;
+  };
+}
+
 const EXPLAIN_CANDIDATE_LIMIT = 10;
 
 export function formatContextCompileJson(brief: RunBrief): string {
@@ -87,6 +101,24 @@ export function formatContextConfigJson(): string {
   const record: ContextConfigJson = {
     weights: DEFAULT_SCORING_WEIGHTS,
     budget: DEFAULT_BUDGET_ALLOCATION,
+  };
+  return JSON.stringify(record, null, 2);
+}
+
+export function formatContextValidateJson(
+  file: string,
+  result: ValidationResult,
+): string {
+  const record: ContextValidateJson = {
+    file,
+    valid: result.valid,
+    errors: [...result.errors],
+    warnings: [...result.warnings],
+    coverage: {
+      constraintsCovered: result.coverage.constraints_covered,
+      constraintsTotal: result.coverage.constraints_total,
+      requiredFactsPresent: result.coverage.required_facts_present,
+    },
   };
   return JSON.stringify(record, null, 2);
 }
@@ -222,11 +254,53 @@ export function registerContextCommands(program: Command): void {
     .option('-f, --file <path>', 'Path to RunBrief JSON file')
     .option('--json', 'Output as JSON')
     .action((options) => {
+      const filePath = options.file as string | undefined;
+      if (!filePath) {
+        console.error('Validation requires a RunBrief file (--file)');
+        console.error('Usage: savestate context validate --file brief.json');
+        process.exit(1);
+      }
+
+      if (!existsSync(filePath)) {
+        console.error(`File not found: ${filePath}`);
+        process.exit(1);
+      }
+
+      let brief: RunBrief;
+      try {
+        brief = JSON.parse(readFileSync(filePath, 'utf-8')) as RunBrief;
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : String(err));
+        process.exit(1);
+      }
+
       const compiler = new ContextCompiler();
-      
-      // TODO: Load RunBrief from file
-      console.log('Validation requires a RunBrief file (--file)');
-      console.log('Usage: savestate context validate --file brief.json');
+      const result = compiler.validate(brief);
+
+      if (options.json) {
+        console.log(formatContextValidateJson(filePath, result));
+        if (!result.valid) process.exit(1);
+        return;
+      }
+
+      console.log(result.valid ? 'Valid RunBrief' : 'Invalid RunBrief');
+      console.log(`File: ${filePath}`);
+      if (result.errors.length > 0) {
+        console.log('Errors:');
+        for (const error of result.errors) {
+          console.log(`  ${error}`);
+        }
+      }
+      if (result.warnings.length > 0) {
+        console.log('Warnings:');
+        for (const warning of result.warnings) {
+          console.log(`  ${warning}`);
+        }
+      }
+      console.log(
+        `Coverage: constraints ${result.coverage.constraints_covered}/${result.coverage.constraints_total}, required facts ${result.coverage.required_facts_present ? 'present' : 'missing'}`,
+      );
+      if (!result.valid) process.exit(1);
     });
 
   // Config command
