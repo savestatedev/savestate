@@ -48,6 +48,11 @@ const slo = readFileSync(
   'utf8',
 );
 
+const memoryCli = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../memory-cli.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -534,6 +539,18 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('Omits previous content');
     expect(memorySection).toContain('savestate memory log mem-123 --json');
+  });
+
+  it('registers --json on savestate memory list', () => {
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(listBlock).toContain(".option('--json'");
+  });
+
+  it('documents memory --json', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('savestate memory list --json');
   });
 
   it('lists savestate slo in the command overview', () => {

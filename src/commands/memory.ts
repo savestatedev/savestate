@@ -126,6 +126,41 @@ export function countByTier(memories: MemoryEntry[]): Record<MemoryTier, number>
   return counts;
 }
 
+export interface MemoryListEntryJson {
+  id: string;
+  tier: MemoryTier;
+  pinned: boolean;
+  source: string;
+  createdAt: string;
+  content: string;
+}
+
+export interface MemoryListJson {
+  total: number;
+  shown: number;
+  byTier: Record<MemoryTier, number>;
+  pinned: number;
+  entries: MemoryListEntryJson[];
+}
+
+export function formatMemoryListJson(all: MemoryEntry[], shown: MemoryEntry[]): string {
+  const record: MemoryListJson = {
+    total: all.length,
+    shown: shown.length,
+    byTier: countByTier(all),
+    pinned: all.filter((entry) => !!entry.pinned).length,
+    entries: shown.map((entry) => ({
+      id: entry.id,
+      tier: getEffectiveTier(entry),
+      pinned: !!entry.pinned,
+      source: entry.source,
+      createdAt: entry.createdAt,
+      content: entry.content,
+    })),
+  };
+  return JSON.stringify(record, null, 2);
+}
+
 /**
  * Promote a memory entry to a higher tier.
  */
@@ -331,7 +366,7 @@ export async function listMemories(
   }
 
   if (options?.format === 'json') {
-    console.log(JSON.stringify(entries, null, 2));
+    console.log(formatMemoryListJson(normalized.core, entries));
     return;
   }
 
