@@ -714,7 +714,7 @@
       </thead>
       <tbody>
         <tr><td><code>-r, --role &lt;role&gt;</code></td><td>Invite role: <code>admin</code>, <code>member</code>, or <code>viewer</code> (default <code>member</code>)</td></tr>
-        <tr><td><code>--json</code></td><td>Emit team status as JSON (id, name, and role), members as JSON (email, role, and invite timestamps), or invite as JSON (invited email, role, and invite timestamps). Also used for audit. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit team status as JSON (id, name, and role), members as JSON (email, role, and invite timestamps), invite as JSON (invited email, role, and invite timestamps), or audit as JSON (id, action, actor, resource, and timestamp). Omits event metadata. Useful for scripting.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Audit entries after this ISO 8601 date</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Audit entries before this ISO 8601 date</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Audit output: <code>csv</code> or <code>json</code> (default <code>json</code>)</td></tr>
@@ -1111,7 +1111,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit incident records as JSON on <code>incidents</code> and <code>incident</code> (omits event match context). Status output is a stable summary (enabled, policy, honeyfact counts, incident counts, and containment counts). Omits extra fields. Skips the banner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit a rotation summary as JSON on <code>rotate</code> (rotated, valid, created/retired counts, tenant, TTL, rotatedAt; omits honeyfact contents). Emit a seed summary as JSON on <code>seed</code> (count, tenant, TTL, seededAt; omits honeyfact contents). Emit a quarantine summary as JSON on <code>quarantine</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a release summary as JSON on <code>release</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a config summary as JSON on <code>config</code> (enabled, honeyfact count/TTL, tripwire threshold/fuzzy, containment policy/auto-escalate; omits nested objects). Emit a clear summary as JSON on <code>clear</code> (cleared count, tenant; omits honeyfact contents). Emit incident records as JSON on <code>incidents</code> and <code>incident</code> (omits event match context). Status output is a stable summary (enabled, policy, honeyfact counts, incident counts, and containment counts). Omits extra fields. Skips the banner. Useful for scripting.</td></tr>
         <tr><td><code>--tenant &lt;id&gt;</code></td><td>Tenant ID (default: <code>default</code>)</td></tr>
         <tr><td><code>--count &lt;n&gt;</code></td><td>Number of honeyfacts to seed</td></tr>
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status</td></tr>
@@ -1132,7 +1132,13 @@
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate integrity status --json
+<span class="code-prompt">$</span> savestate integrity rotate --json
+<span class="code-prompt">$</span> savestate integrity seed --count 10 --json
+<span class="code-prompt">$</span> savestate integrity quarantine mem-123 --json
+<span class="code-prompt">$</span> savestate integrity release mem-123 --json
+<span class="code-prompt">$</span> savestate integrity clear --force --json
 <span class="code-prompt">$</span> savestate integrity incidents --json
+<span class="code-prompt">$</span> savestate integrity config --json
 
 <span class="code-comment"># Quarantine a memory or agent</span>
 <span class="code-prompt">$</span> savestate integrity quarantine mem-123 --reason "tripwire hit" --user reviewer-1</code></pre>

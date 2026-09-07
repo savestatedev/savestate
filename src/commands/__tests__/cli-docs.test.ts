@@ -409,6 +409,7 @@ describe('CLI docs', () => {
     const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('--json');
     expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('id, action, actor, resource, and timestamp');
     expect(teamSection).toContain('savestate team audit --json');
   });
 
@@ -1009,6 +1010,56 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('scripting');
     expect(integritySection).toContain('enabled, policy, honeyfact counts, incident counts, and containment counts');
     expect(integritySection).toContain('savestate integrity status --json');
+    expect(integrity).toContain('export function formatIntegrityStatusJson');
+  });
+
+  it('documents integrity rotate --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity rotate --json');
+    expect(integrity).toContain('export function formatIntegrityRotateJson');
+  });
+
+  it('documents integrity seed --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity seed --count 10 --json');
+    expect(integrity).toContain('export function formatIntegritySeedJson');
+  });
+
+  it('documents integrity quarantine --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity quarantine mem-123 --json');
+    expect(integrity).toContain('export function formatIntegrityQuarantineJson');
+  });
+
+  it('documents integrity release --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity release mem-123 --json');
+    expect(integrity).toContain('export function formatIntegrityReleaseJson');
+  });
+
+  it('documents integrity clear --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity clear --force --json');
+    expect(integrity).toContain('export function formatIntegrityClearJson');
+  });
+
+  it('documents integrity config --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('honeyfact count/TTL');
+    expect(integritySection).toContain('savestate integrity config --json');
+    expect(integrity).toContain('export function formatIntegrityConfigJson');
   });
 
   it('lists savestate trace in the command overview', () => {

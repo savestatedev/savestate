@@ -133,6 +133,150 @@ export function formatIntegrityStatusJson(result: IntegrityStatusJson): string {
   );
 }
 
+export interface IntegrityRotateJson {
+  rotated: number;
+  valid: number;
+  createdCount: number;
+  retiredCount: number;
+  tenantId: string;
+  ttlDays: number;
+  rotatedAt: string;
+}
+
+export function formatIntegrityRotateJson(result: IntegrityRotateJson): string {
+  return JSON.stringify(
+    {
+      rotated: result.rotated,
+      valid: result.valid,
+      createdCount: result.createdCount,
+      retiredCount: result.retiredCount,
+      tenantId: result.tenantId,
+      ttlDays: result.ttlDays,
+      rotatedAt: result.rotatedAt,
+    },
+    null,
+    2,
+  );
+}
+
+export interface IntegritySeedJson {
+  count: number;
+  tenantId: string;
+  ttlDays: number;
+  seededAt: string;
+}
+
+export function formatIntegritySeedJson(result: IntegritySeedJson): string {
+  return JSON.stringify(
+    {
+      count: result.count,
+      tenantId: result.tenantId,
+      ttlDays: result.ttlDays,
+      seededAt: result.seededAt,
+    },
+    null,
+    2,
+  );
+}
+
+export interface IntegrityQuarantineJson {
+  success: boolean;
+  requiresApproval: boolean;
+  targetId: string;
+  targetType: string;
+  action: string;
+  reason: string;
+  eventId: string;
+  error: string | null;
+}
+
+export function formatIntegrityQuarantineJson(result: IntegrityQuarantineJson): string {
+  return JSON.stringify(
+    {
+      success: result.success,
+      requiresApproval: result.requiresApproval,
+      targetId: result.targetId,
+      targetType: result.targetType,
+      action: result.action,
+      reason: result.reason,
+      eventId: result.eventId,
+      error: result.error,
+    },
+    null,
+    2,
+  );
+}
+
+export interface IntegrityReleaseJson {
+  success: boolean;
+  requiresApproval: boolean;
+  targetId: string;
+  targetType: string;
+  action: string;
+  reason: string;
+  eventId: string;
+  error: string | null;
+}
+
+export function formatIntegrityReleaseJson(result: IntegrityReleaseJson): string {
+  return JSON.stringify(
+    {
+      success: result.success,
+      requiresApproval: result.requiresApproval,
+      targetId: result.targetId,
+      targetType: result.targetType,
+      action: result.action,
+      reason: result.reason,
+      eventId: result.eventId,
+      error: result.error,
+    },
+    null,
+    2,
+  );
+}
+
+export interface IntegrityClearJson {
+  cleared: number;
+  tenantId: string;
+}
+
+export function formatIntegrityClearJson(result: IntegrityClearJson): string {
+  return JSON.stringify(
+    {
+      cleared: result.cleared,
+      tenantId: result.tenantId,
+    },
+    null,
+    2,
+  );
+}
+
+export interface IntegrityConfigJson {
+  enabled: boolean;
+  honeyfactCount: number;
+  honeyfactTtlDays: number;
+  tripwireThreshold: number;
+  tripwireFuzzyEnabled: boolean;
+  containmentPolicy: string;
+  containmentAutoEscalate: boolean;
+}
+
+export function formatIntegrityConfigJson(result: IntegrityConfigJson): string {
+  return JSON.stringify(
+    {
+      enabled: result.enabled,
+      honeyfactCount: result.honeyfactCount,
+      honeyfactTtlDays: result.honeyfactTtlDays,
+      tripwireThreshold: result.tripwireThreshold,
+      tripwireFuzzyEnabled: result.tripwireFuzzyEnabled,
+      containmentPolicy: result.containmentPolicy,
+      containmentAutoEscalate: result.containmentAutoEscalate,
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -270,7 +414,9 @@ async function seedCommand(options: IntegrityOptions): Promise<void> {
   const count = options.count ? parseInt(options.count, 10) : (config.integrity?.honeyfact.count ?? 10);
   const ttl_days = config.integrity?.honeyfact.ttl_days ?? 7;
 
-  console.log(chalk.dim(`  Seeding ${count} honeyfacts for tenant: ${tenant_id}`));
+  if (!options.json) {
+    console.log(chalk.dim(`  Seeding ${count} honeyfacts for tenant: ${tenant_id}`));
+  }
 
   const result = await seedHoneyfacts('integrity', count, {
     tenant_id,
@@ -278,7 +424,14 @@ async function seedCommand(options: IntegrityOptions): Promise<void> {
   });
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegritySeedJson({
+        count: result.count,
+        tenantId: result.tenant_id,
+        ttlDays: ttl_days,
+        seededAt: result.seeded_at,
+      }),
+    );
     return;
   }
 
@@ -315,7 +468,17 @@ async function rotateCommand(options: IntegrityOptions): Promise<void> {
   });
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegrityRotateJson({
+        rotated: result.rotated,
+        valid: result.valid,
+        createdCount: result.created.length,
+        retiredCount: result.retired.length,
+        tenantId: tenant_id,
+        ttlDays: ttl_days,
+        rotatedAt: result.rotated_at,
+      }),
+    );
     return;
   }
 
@@ -472,7 +635,18 @@ async function quarantineCommand(id: string, options: IntegrityOptions): Promise
   }
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegrityQuarantineJson({
+        success: result.success,
+        requiresApproval: result.requires_approval,
+        targetId: result.event.target_id,
+        targetType: result.event.target_type,
+        action: result.event.action,
+        reason: result.event.reason,
+        eventId: result.event.id,
+        error: result.error ?? null,
+      }),
+    );
     return;
   }
 
@@ -521,7 +695,18 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
     if (approval) {
       const result = await controller.dismissApproval(id, options.user ?? 'cli', reason);
       if (options.json) {
-        console.log(JSON.stringify(result, null, 2));
+        console.log(
+          formatIntegrityReleaseJson({
+            success: result.success,
+            requiresApproval: result.requires_approval,
+            targetId: result.event.target_id,
+            targetType: result.event.target_type,
+            action: result.event.action,
+            reason: result.event.reason,
+            eventId: result.event.id,
+            error: result.error ?? null,
+          }),
+        );
         return;
       }
       console.log(chalk.green(`✓ Approval dismissed: ${id}`));
@@ -541,7 +726,18 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
   }
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegrityReleaseJson({
+        success: result.success,
+        requiresApproval: result.requires_approval,
+        targetId: result.event.target_id,
+        targetType: result.event.target_type,
+        action: result.event.action,
+        reason: result.event.reason,
+        eventId: result.event.id,
+        error: result.error ?? null,
+      }),
+    );
     return;
   }
 
@@ -564,7 +760,17 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
   if (!setting) {
     // Show current config
     if (options.json) {
-      console.log(JSON.stringify(config.integrity, null, 2));
+      console.log(
+        formatIntegrityConfigJson({
+          enabled: config.integrity?.enabled ?? false,
+          honeyfactCount: config.integrity?.honeyfact.count ?? 10,
+          honeyfactTtlDays: config.integrity?.honeyfact.ttl_days ?? 7,
+          tripwireThreshold: config.integrity?.tripwire.threshold ?? 0.8,
+          tripwireFuzzyEnabled: config.integrity?.tripwire.fuzzy_enabled ?? true,
+          containmentPolicy: config.integrity?.containment.policy ?? 'approve',
+          containmentAutoEscalate: config.integrity?.containment.auto_escalate_critical ?? true,
+        }),
+      );
       return;
     }
 
@@ -700,6 +906,17 @@ async function clearCommand(options: IntegrityOptions): Promise<void> {
   }
 
   const count = await clearHoneyfacts(tenant_id);
+
+  if (options.json) {
+    console.log(
+      formatIntegrityClearJson({
+        cleared: count,
+        tenantId: tenant_id,
+      }),
+    );
+    return;
+  }
+
   console.log(chalk.green(`✓ Cleared ${count} honeyfacts for tenant: ${tenant_id}`));
   console.log();
 }
