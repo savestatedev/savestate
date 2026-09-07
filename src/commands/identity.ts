@@ -74,6 +74,26 @@ export function formatIdentityJson(identity: AgentIdentity): string {
   return JSON.stringify(toIdentityJson(identity), null, 2);
 }
 
+export interface IdentityShowMissingJson {
+  found: false;
+  name: null;
+  version: null;
+  schemaVersion: null;
+}
+
+export function formatIdentityShowMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      name: null,
+      version: null,
+      schemaVersion: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IdentitySchemaPropertyJson {
   name: string;
   type: string;
@@ -177,7 +197,7 @@ async function showIdentity(options?: IdentityOptions): Promise<void> {
 
     if (!result) {
       if (options?.json) {
-        console.log(JSON.stringify({ found: false }, null, 2));
+        console.log(formatIdentityShowMissingJson());
         return;
       }
       spinner?.warn('No identity found');
