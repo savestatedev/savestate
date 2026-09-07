@@ -1080,7 +1080,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit identity as JSON on <code>show</code>, <code>init</code>, and <code>set</code>. Omits tool config. Skips the spinner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit a set summary as JSON on <code>set</code> (updated, field, name, version; omits tool config). Emit identity as JSON on <code>show</code> and <code>init</code> (omits tool config). Skips the spinner. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -1099,7 +1099,8 @@
 <span class="code-prompt">$</span> savestate identity schema --json
 
 <span class="code-comment"># Scripting</span>
-<span class="code-prompt">$</span> savestate identity show --json</code></pre>
+<span class="code-prompt">$</span> savestate identity show --json
+<span class="code-prompt">$</span> savestate identity set tone professional --json</code></pre>
 
     <!-- integrity -->
     <h2 id="integrity"><code>savestate integrity</code></h2>

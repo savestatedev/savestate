@@ -74,6 +74,26 @@ export function formatIdentityJson(identity: AgentIdentity): string {
   return JSON.stringify(toIdentityJson(identity), null, 2);
 }
 
+export interface IdentitySetJson {
+  updated: boolean;
+  field: string;
+  name: string;
+  version: string;
+}
+
+export function formatIdentitySetJson(result: IdentitySetJson): string {
+  return JSON.stringify(
+    {
+      updated: result.updated,
+      field: result.field,
+      name: result.name,
+      version: result.version,
+    },
+    null,
+    2,
+  );
+}
+
 export async function identityCommand(
   subcommand: string,
   args: string[],
@@ -311,7 +331,14 @@ async function setIdentityField(
     spinner?.succeed(`Updated ${field}`);
 
     if (options?.json) {
-      console.log(formatIdentityJson(updated));
+      console.log(
+        formatIdentitySetJson({
+          updated: true,
+          field,
+          name: updated.name,
+          version: updated.version,
+        }),
+      );
       return;
     }
 

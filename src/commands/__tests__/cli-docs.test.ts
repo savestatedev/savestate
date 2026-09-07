@@ -53,6 +53,11 @@ const memoryCli = readFileSync(
   'utf8',
 );
 
+const identity = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../identity.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -958,6 +963,16 @@ describe('CLI docs', () => {
     expect(identitySection).toContain('--json');
     expect(identitySection).toContain('scripting');
     expect(identitySection).toContain('savestate identity show --json');
+  });
+
+  it('documents identity set --json', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('updated, field, name, version');
+    expect(identitySection).toContain('omits tool config');
+    expect(identitySection).toContain('savestate identity set tone professional --json');
+    expect(identity).toContain('export function formatIdentitySetJson');
   });
 
   it('registers savestate integrity on the CLI', () => {
