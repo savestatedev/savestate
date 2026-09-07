@@ -58,6 +58,11 @@ const memoryCli = readFileSync(
   'utf8',
 );
 
+const evalSource = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../eval.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -447,6 +452,15 @@ describe('CLI docs', () => {
     expect(evalSection).toContain('--json');
     expect(evalSection).toContain('scripting');
     expect(evalSection).toContain('savestate eval report --json');
+  });
+
+  it('documents eval report --json when missing', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('scripting');
+    expect(evalSection).toContain('found, suiteCount, passed, total, passRate');
+    expect(evalSection).toContain('savestate eval report --json');
+    expect(evalSource).toContain('export function formatEvalReportMissingJson');
   });
 
   it('lists savestate login and logout in the command overview', () => {
