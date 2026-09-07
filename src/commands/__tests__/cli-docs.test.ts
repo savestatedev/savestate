@@ -229,6 +229,8 @@ describe('CLI docs', () => {
     expect(migrateSection).toContain('--json');
     expect(migrateSection).toContain('scripting');
     expect(migrateSection).toContain('savestate migrate --list --json');
+    expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --dry-run --json');
+    expect(migrateSection).toContain('omits source refs');
   });
 
   it('documents migrate --review, --resume, --include, --force, --verbose, and --no-color', () => {

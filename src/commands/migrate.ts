@@ -90,6 +90,58 @@ export function formatMigrateListJson(): string {
   return JSON.stringify(listMigratePlatforms(), null, 2);
 }
 
+export interface MigrateDryRunItemJson {
+  type: string;
+  name: string;
+  status: string;
+  reason: string;
+  action: string | null;
+}
+
+export interface MigrateDryRunSummaryJson {
+  perfect: number;
+  adapted: number;
+  incompatible: number;
+  total: number;
+}
+
+export interface MigrateDryRunJson {
+  source: string;
+  target: string;
+  generatedAt: string;
+  feasibility: string;
+  summary: MigrateDryRunSummaryJson;
+  items: MigrateDryRunItemJson[];
+  recommendations: string[];
+}
+
+export function formatMigrateDryRunJson(report: CompatibilityReport): string {
+  return JSON.stringify(
+    {
+      source: report.source,
+      target: report.target,
+      generatedAt: report.generatedAt,
+      feasibility: report.feasibility,
+      summary: {
+        perfect: report.summary.perfect,
+        adapted: report.summary.adapted,
+        incompatible: report.summary.incompatible,
+        total: report.summary.total,
+      },
+      items: report.items.map((item) => ({
+        type: item.type,
+        name: item.name,
+        status: item.status,
+        reason: item.reason,
+        action: item.action ?? null,
+      })),
+      recommendations: [...report.recommendations],
+    },
+    null,
+    2,
+  );
+}
+
 // ─── Main Command ────────────────────────────────────────────
 
 export async function migrateCommand(options: MigrateCommandOptions): Promise<void> {
@@ -198,7 +250,9 @@ async function handleDryRun(
   target: Platform,
   options: MigrateCommandOptions,
 ): Promise<void> {
-  const progress = new ProgressDisplay({ noColor: options.noColor, verbose: options.verbose });
+  const progress = options.json
+    ? null
+    : new ProgressDisplay({ noColor: options.noColor, verbose: options.verbose });
 
   try {
     // Create orchestrator
@@ -211,22 +265,27 @@ async function handleDryRun(
     const handler = setupSignalHandler({ orchestrator, showResumeHint: false });
     handler.setOrchestrator(orchestrator);
 
-    // Subscribe to events
-    orchestrator.on(progress.handleEvent);
+    if (progress) {
+      orchestrator.on(progress.handleEvent);
+      progress.startPhase('extracting', 'Analyzing source platform...');
+    }
 
-    // Run analysis
-    progress.startPhase('extracting', 'Analyzing source platform...');
     const report = await orchestrator.analyze();
-    progress.completePhase('extracting', 'Analysis complete');
+    progress?.completePhase('extracting', 'Analysis complete');
 
-    // Show compatibility report
+    if (options.json) {
+      console.log(formatMigrateDryRunJson(report));
+      await orchestrator.cleanup();
+      cleanupSignalHandler();
+      return;
+    }
+
     showCompatibilityReport(report, { noColor: options.noColor });
 
-    // Cleanup
     await orchestrator.cleanup();
     cleanupSignalHandler();
   } catch (err) {
-    progress.stop();
+    progress?.stop();
     error(err instanceof Error ? err.message : String(err));
     process.exit(1);
   }
