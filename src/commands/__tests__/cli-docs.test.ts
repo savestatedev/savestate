@@ -264,6 +264,20 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('savestate trust status --json');
   });
 
+  it('registers --json on savestate trust deny list', () => {
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const listBlock = trustBlock.slice(trustBlock.lastIndexOf("command('list')"));
+    expect(listBlock).toContain(".option('--json'");
+  });
+
+  it('documents trust deny list --json', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--json');
+    expect(trustSection).toContain('scripting');
+    expect(trustSection).toContain('pattern, reason, actor, and epoch');
+    expect(trustSection).toContain('savestate trust deny list --json');
+  });
+
   it('registers --json on savestate trust audit', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const auditBlock = trustBlock.slice(
