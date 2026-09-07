@@ -1004,6 +1004,14 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('savestate integrity incidents --json');
   });
 
+  it('documents integrity rotate --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity rotate --json');
+    expect(integrity).toContain('export function formatIntegrityRotateJson');
+  });
+
   it('lists savestate trace in the command overview', () => {
     expect(docs).toContain('id="trace"');
     expect(docs).toContain('savestate trace');
