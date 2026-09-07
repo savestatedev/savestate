@@ -1087,6 +1087,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityTestJson');
   });
 
+  it('documents integrity incident --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, id, status, eventCount');
+    expect(integritySection).toContain('savestate integrity incident inc-123 --json');
+    expect(integrity).toContain('export function formatIntegrityIncidentMissingJson');
+  });
+
   it('lists savestate trace in the command overview', () => {
     expect(docs).toContain('id="trace"');
     expect(docs).toContain('savestate trace');

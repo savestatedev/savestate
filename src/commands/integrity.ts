@@ -73,6 +73,26 @@ export function formatIntegrityIncidentJson(incident: IntegrityIncident): string
   return JSON.stringify(toIncidentJson(incident), null, 2);
 }
 
+export interface IntegrityIncidentMissingJson {
+  found: false;
+  id: string;
+  status: null;
+  eventCount: 0;
+}
+
+export function formatIntegrityIncidentMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      status: null,
+      eventCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export function formatIntegrityIncidentsJson(incidents: IntegrityIncident[]): string {
   return JSON.stringify(incidents.map(toIncidentJson), null, 2);
 }
@@ -595,6 +615,10 @@ async function incidentDetailCommand(id: string, options: IntegrityOptions): Pro
   const incident = await getIncident(id);
 
   if (!incident) {
+    if (options.json) {
+      console.log(formatIntegrityIncidentMissingJson(id));
+      return;
+    }
     console.log(chalk.red(`✗ Incident not found: ${id}`));
     process.exit(1);
   }
