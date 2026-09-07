@@ -264,6 +264,23 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('savestate trust status --json');
   });
 
+  it('registers --json on savestate trust audit', () => {
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const auditBlock = trustBlock.slice(
+      trustBlock.indexOf("command('audit')"),
+      trustBlock.indexOf("command('deny')"),
+    );
+    expect(auditBlock).toContain(".option('--json'");
+  });
+
+  it('documents trust audit --json', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--json');
+    expect(trustSection).toContain('scripting');
+    expect(trustSection).toContain('entry id, states, actor, and reason');
+    expect(trustSection).toContain('savestate trust audit --json');
+  });
+
   it('lists savestate team in the command overview', () => {
     expect(docs).toContain('id="team"');
     expect(docs).toContain('savestate team');

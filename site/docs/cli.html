@@ -678,7 +678,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Output as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--json</code></td><td>Emit Trust Kernel metrics as JSON on <code>status</code>, or audit events as JSON (entry id, states, actor, and reason) on <code>audit</code>. Omits event metadata. Useful for scripting.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Number of recent events for <code>audit</code> (default 50)</td></tr>
         <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Why a pattern is denylisted on <code>deny add</code></td></tr>
         <tr><td><code>-b, --by &lt;actor&gt;</code></td><td>Who is adding the denylist entry (defaults to <code>cli</code>)</td></tr>
@@ -690,6 +690,9 @@
 
 <span class="code-comment"># Recent promotion and rejection events</span>
 <span class="code-prompt">$</span> savestate trust audit --limit 20 --json
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate trust audit --json
 
 <span class="code-comment"># Block a pattern at the WriteGate</span>
 <span class="code-prompt">$</span> savestate trust deny add secret.env --reason "contains credentials"
