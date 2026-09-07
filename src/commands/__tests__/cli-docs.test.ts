@@ -1028,6 +1028,14 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityQuarantineJson');
   });
 
+  it('documents integrity release --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity release mem-123 --json');
+    expect(integrity).toContain('export function formatIntegrityReleaseJson');
+  });
+
   it('lists savestate trace in the command overview', () => {
     expect(docs).toContain('id="trace"');
     expect(docs).toContain('savestate trace');

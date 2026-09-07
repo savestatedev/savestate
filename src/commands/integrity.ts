@@ -151,6 +151,34 @@ export function formatIntegrityQuarantineJson(result: IntegrityQuarantineJson): 
   );
 }
 
+export interface IntegrityReleaseJson {
+  success: boolean;
+  requiresApproval: boolean;
+  targetId: string;
+  targetType: string;
+  action: string;
+  reason: string;
+  eventId: string;
+  error: string | null;
+}
+
+export function formatIntegrityReleaseJson(result: IntegrityReleaseJson): string {
+  return JSON.stringify(
+    {
+      success: result.success,
+      requiresApproval: result.requiresApproval,
+      targetId: result.targetId,
+      targetType: result.targetType,
+      action: result.action,
+      reason: result.reason,
+      eventId: result.eventId,
+      error: result.error,
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -552,7 +580,18 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
     if (approval) {
       const result = await controller.dismissApproval(id, options.user ?? 'cli', reason);
       if (options.json) {
-        console.log(JSON.stringify(result, null, 2));
+        console.log(
+          formatIntegrityReleaseJson({
+            success: result.success,
+            requiresApproval: result.requires_approval,
+            targetId: result.event.target_id,
+            targetType: result.event.target_type,
+            action: result.event.action,
+            reason: result.event.reason,
+            eventId: result.event.id,
+            error: result.error ?? null,
+          }),
+        );
         return;
       }
       console.log(chalk.green(`✓ Approval dismissed: ${id}`));
@@ -572,7 +611,18 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
   }
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegrityReleaseJson({
+        success: result.success,
+        requiresApproval: result.requires_approval,
+        targetId: result.event.target_id,
+        targetType: result.event.target_type,
+        action: result.event.action,
+        reason: result.event.reason,
+        eventId: result.event.id,
+        error: result.error ?? null,
+      }),
+    );
     return;
   }
 
