@@ -990,6 +990,15 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function formatIdentitySchemaJson');
   });
 
+  it('documents identity show --json when missing', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('found, name, version, schemaVersion');
+    expect(identitySection).toContain('savestate identity show --json');
+    expect(identity).toContain('export function formatIdentityShowMissingJson');
+  });
+
   it('registers savestate integrity on the CLI', () => {
     expect(cli).toContain('registerIntegrityCommands');
   });
