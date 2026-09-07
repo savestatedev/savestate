@@ -44,6 +44,28 @@ export function formatInspectJson(summary: InspectJson): string {
   return JSON.stringify(summary, null, 2);
 }
 
+export interface InspectMissingJson {
+  found: false;
+  id: string;
+  timestamp: null;
+  platform: null;
+  hasIdentity: false;
+}
+
+export function formatInspectMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      timestamp: null,
+      platform: null,
+      hasIdentity: false,
+    },
+    null,
+    2,
+  );
+}
+
 export async function inspectCommand(snapshotId: string, options: InspectOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -63,6 +85,10 @@ export async function inspectCommand(snapshotId: string, options: InspectOptions
   if (snapshotId === 'latest') {
     const latest = await getLatestEntry();
     if (!latest) {
+      if (options.json) {
+        console.log(formatInspectMissingJson('latest'));
+        return;
+      }
       console.log(chalk.red('✗ No snapshots found.'));
       process.exit(1);
     }
@@ -79,6 +105,10 @@ export async function inspectCommand(snapshotId: string, options: InspectOptions
   try {
     encrypted = await storage.get(filename);
   } catch (err) {
+    if (options.json) {
+      console.log(formatInspectMissingJson(resolvedId));
+      return;
+    }
     console.log(chalk.red(`✗ Snapshot not found: ${filename}`));
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
