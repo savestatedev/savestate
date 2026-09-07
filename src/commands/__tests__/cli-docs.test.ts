@@ -163,6 +163,14 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('savestate antibodies list --json');
   });
 
+  it('documents antibodies stats --json', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--json');
+    expect(antibodiesSection).toContain('scripting');
+    expect(antibodiesSection).toContain('counts plus per-rule hits and overrides');
+    expect(antibodiesSection).toContain('savestate antibodies stats --json');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');

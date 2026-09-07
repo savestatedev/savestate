@@ -7,6 +7,7 @@ import { isInitialized } from '../config.js';
 import { AntibodyEngine, AntibodyStore, deriveRuleId } from '../antibodies/index.js';
 import type {
   AntibodyRule,
+  Intervention,
   PreflightContext,
   RiskLevel,
   SafeActionType,
@@ -35,6 +36,48 @@ const SAFE_ACTION_TYPES: SafeActionType[] = [
   'run_read_only_probe',
   'confirm_with_user',
 ];
+
+export interface AntibodiesStatsRuleJson {
+  id: string;
+  risk: RiskLevel;
+  intervention: Intervention;
+  active: boolean;
+  confidence: number;
+  hits: number;
+  overrides: number;
+}
+
+export interface AntibodiesStatsJson {
+  totalRules: number;
+  activeRules: number;
+  retiredRules: number;
+  totalHits: number;
+  totalOverrides: number;
+  rules: AntibodiesStatsRuleJson[];
+}
+
+export function formatAntibodiesStatsJson(stats: AntibodiesStatsJson): string {
+  return JSON.stringify(
+    {
+      totalRules: stats.totalRules,
+      activeRules: stats.activeRules,
+      retiredRules: stats.retiredRules,
+      totalHits: stats.totalHits,
+      totalOverrides: stats.totalOverrides,
+      rules: stats.rules.map((rule) => ({
+        id: rule.id,
+        risk: rule.risk,
+        intervention: rule.intervention,
+        active: rule.active,
+        confidence: rule.confidence,
+        hits: rule.hits,
+        overrides: rule.overrides,
+      })),
+    },
+    null,
+    2,
+  );
+}
 
 export async function antibodiesCommand(subcommand: string, options: AntibodiesOptions): Promise<void> {
   console.log();
@@ -185,7 +228,24 @@ async function showStats(store: AntibodyStore, options: AntibodiesOptions): Prom
   const stats = await store.stats();
 
   if (options.json) {
-    console.log(JSON.stringify(stats, null, 2));
+    console.log(
+      formatAntibodiesStatsJson({
+        totalRules: stats.total_rules,
+        activeRules: stats.active_rules,
+        retiredRules: stats.retired_rules,
+        totalHits: stats.total_hits,
+        totalOverrides: stats.total_overrides,
+        rules: stats.rules.map((rule) => ({
+          id: rule.id,
+          risk: rule.risk,
+          intervention: rule.intervention,
+          active: rule.active,
+          confidence: rule.confidence,
+          hits: rule.hits,
+          overrides: rule.overrides,
+        })),
+      }),
+    );
     return;
   }
 
