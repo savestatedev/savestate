@@ -1118,6 +1118,20 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('savestate trace list --json');
   });
 
+  it('registers --json on savestate trace export', () => {
+    const exportBlock = trace.slice(trace.indexOf("command('export')"));
+    expect(exportBlock).toContain(".option('--json'");
+  });
+
+  it('documents trace export --json', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain('omits event payloads and on-disk file paths');
+    expect(traceSection).toContain('savestate trace export --json');
+    expect(trace).toContain('export function formatTraceExportJson');
+  });
+
   it('registers savestate container on the CLI', () => {
     expect(cli).toContain('registerContainerCommands');
   });
