@@ -16,6 +16,7 @@ import {
   initializeIdentity,
   updateIdentityField,
   getIdentityVersion,
+  LOCAL_IDENTITY_PATH,
 } from '../identity/store.js';
 import { getJsonSchema, CORE_IDENTITY_FIELDS } from '../identity/schema.js';
 import type { AgentIdentity, ToolReference } from '../identity/schema.js';
@@ -86,6 +87,28 @@ export function formatIdentitySetJson(result: IdentitySetJson): string {
     {
       updated: result.updated,
       field: result.field,
+      name: result.name,
+      version: result.version,
+    },
+    null,
+    2,
+  );
+}
+
+export interface IdentityInitJson {
+  created: boolean;
+  alreadyExists: boolean;
+  path: string;
+  name: string;
+  version: string;
+}
+
+export function formatIdentityInitJson(result: IdentityInitJson): string {
+  return JSON.stringify(
+    {
+      created: result.created,
+      alreadyExists: result.alreadyExists,
+      path: result.path,
       name: result.name,
       version: result.version,
     },
@@ -351,7 +374,15 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions)
     const existing = await loadLocalIdentity();
     if (existing) {
       if (options?.json) {
-        console.log(formatIdentityJson(existing.identity));
+        console.log(
+          formatIdentityInitJson({
+            created: false,
+            alreadyExists: true,
+            path: existing.path ?? LOCAL_IDENTITY_PATH,
+            name: existing.identity.name,
+            version: existing.identity.version,
+          }),
+        );
         return;
       }
       spinner?.warn('Identity already exists');
@@ -367,7 +398,15 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions)
     spinner?.succeed('Identity initialized');
 
     if (options?.json) {
-      console.log(formatIdentityJson(identity));
+      console.log(
+        formatIdentityInitJson({
+          created: true,
+          alreadyExists: false,
+          path,
+          name: identity.name,
+          version: identity.version,
+        }),
+      );
       return;
     }
 
