@@ -1028,6 +1028,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityQuarantineJson');
   });
 
+  it('documents integrity config --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('honeyfact count/TTL');
+    expect(integritySection).toContain('savestate integrity config --json');
+    expect(integrity).toContain('export function formatIntegrityConfigJson');
+  });
+
   it('lists savestate trace in the command overview', () => {
     expect(docs).toContain('id="trace"');
     expect(docs).toContain('savestate trace');
