@@ -23,6 +23,11 @@ const acl = readFileSync(
   'utf8',
 );
 
+const identity = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../identity.ts'),
+  'utf8',
+);
+
 const integrity = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../integrity.ts'),
   'utf8',
@@ -960,6 +965,15 @@ describe('CLI docs', () => {
     expect(identitySection).toContain('--json');
     expect(identitySection).toContain('scripting');
     expect(identitySection).toContain('savestate identity show --json');
+  });
+
+  it('documents identity schema --json', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('omits descriptions and nested tool config');
+    expect(identitySection).toContain('savestate identity schema --json');
+    expect(identity).toContain('export function formatIdentitySchemaJson');
   });
 
   it('registers savestate integrity on the CLI', () => {

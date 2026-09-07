@@ -74,6 +74,59 @@ export function formatIdentityJson(identity: AgentIdentity): string {
   return JSON.stringify(toIdentityJson(identity), null, 2);
 }
 
+export interface IdentitySchemaPropertyJson {
+  name: string;
+  type: string;
+}
+
+export interface IdentitySchemaJson {
+  id: string;
+  title: string;
+  type: string;
+  required: string[];
+  properties: IdentitySchemaPropertyJson[];
+  additionalProperties: boolean;
+}
+
+function toSchemaPropertyJson(name: string, property: unknown): IdentitySchemaPropertyJson {
+  const type =
+    property && typeof property === 'object' && 'type' in property && typeof (property as { type?: unknown }).type === 'string'
+      ? (property as { type: string }).type
+      : 'object';
+  return {
+    name,
+    type,
+  };
+}
+
+export function formatIdentitySchemaJson(schema: {
+  $id?: string;
+  title?: string;
+  type?: string;
+  required?: string[];
+  properties?: Record<string, unknown>;
+  additionalProperties?: boolean;
+}): string {
+  return JSON.stringify(
+    {
+      id: schema.$id ?? '',
+      title: schema.title ?? '',
+      type: schema.type ?? 'object',
+      required: [...(schema.required ?? [])],
+      properties: Object.entries(schema.properties ?? {}).map(([name, property]) => {
+        const json = toSchemaPropertyJson(name, property);
+        return {
+          name: json.name,
+          type: json.type,
+        };
+      }),
+      additionalProperties: Boolean(schema.additionalProperties),
+    },
+    null,
+    2,
+  );
+}
+
 export async function identityCommand(
   subcommand: string,
   args: string[],
@@ -334,10 +387,17 @@ async function setIdentityField(
  * Show the JSON schema.
  */
 function showSchema(options?: IdentityOptions): void {
-  const schema = getJsonSchema();
+  const schema = getJsonSchema() as {
+    $id?: string;
+    title?: string;
+    type?: string;
+    required?: string[];
+    properties?: Record<string, unknown>;
+    additionalProperties?: boolean;
+  };
 
   if (options?.json) {
-    console.log(JSON.stringify(schema, null, 2));
+    console.log(formatIdentitySchemaJson(schema));
     return;
   }
 
