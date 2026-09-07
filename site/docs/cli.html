@@ -1111,7 +1111,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit a rotation summary as JSON on <code>rotate</code> (rotated, valid, created/retired counts, tenant, TTL, rotatedAt; omits honeyfact contents). Emit a seed summary as JSON on <code>seed</code> (count, tenant, TTL, seededAt; omits honeyfact contents). Emit a quarantine summary as JSON on <code>quarantine</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a clear summary as JSON on <code>clear</code> (cleared count, tenant; omits honeyfact contents). Emit incident records as JSON on <code>incidents</code> and <code>incident</code>. Omits event match context. Skips the banner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit a rotation summary as JSON on <code>rotate</code> (rotated, valid, created/retired counts, tenant, TTL, rotatedAt; omits honeyfact contents). Emit a seed summary as JSON on <code>seed</code> (count, tenant, TTL, seededAt; omits honeyfact contents). Emit a quarantine summary as JSON on <code>quarantine</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a config summary as JSON on <code>config</code> (enabled, honeyfact count/TTL, tripwire threshold/fuzzy, containment policy/auto-escalate; omits nested objects). Emit a clear summary as JSON on <code>clear</code> (cleared count, tenant; omits honeyfact contents). Emit incident records as JSON on <code>incidents</code> and <code>incident</code>. Omits event match context. Skips the banner. Useful for scripting.</td></tr>
         <tr><td><code>--tenant &lt;id&gt;</code></td><td>Tenant ID (default: <code>default</code>)</td></tr>
         <tr><td><code>--count &lt;n&gt;</code></td><td>Number of honeyfacts to seed</td></tr>
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status</td></tr>
@@ -1136,6 +1136,7 @@
 <span class="code-prompt">$</span> savestate integrity quarantine mem-123 --json
 <span class="code-prompt">$</span> savestate integrity clear --force --json
 <span class="code-prompt">$</span> savestate integrity incidents --json
+<span class="code-prompt">$</span> savestate integrity config --json
 
 <span class="code-comment"># Quarantine a memory or agent</span>
 <span class="code-prompt">$</span> savestate integrity quarantine mem-123 --reason "tripwire hit" --user reviewer-1</code></pre>

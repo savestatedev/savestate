@@ -167,6 +167,32 @@ export function formatIntegrityClearJson(result: IntegrityClearJson): string {
   );
 }
 
+export interface IntegrityConfigJson {
+  enabled: boolean;
+  honeyfactCount: number;
+  honeyfactTtlDays: number;
+  tripwireThreshold: number;
+  tripwireFuzzyEnabled: boolean;
+  containmentPolicy: string;
+  containmentAutoEscalate: boolean;
+}
+
+export function formatIntegrityConfigJson(result: IntegrityConfigJson): string {
+  return JSON.stringify(
+    {
+      enabled: result.enabled,
+      honeyfactCount: result.honeyfactCount,
+      honeyfactTtlDays: result.honeyfactTtlDays,
+      tripwireThreshold: result.tripwireThreshold,
+      tripwireFuzzyEnabled: result.tripwireFuzzyEnabled,
+      containmentPolicy: result.containmentPolicy,
+      containmentAutoEscalate: result.containmentAutoEscalate,
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -611,7 +637,17 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
   if (!setting) {
     // Show current config
     if (options.json) {
-      console.log(JSON.stringify(config.integrity, null, 2));
+      console.log(
+        formatIntegrityConfigJson({
+          enabled: config.integrity?.enabled ?? false,
+          honeyfactCount: config.integrity?.honeyfact.count ?? 10,
+          honeyfactTtlDays: config.integrity?.honeyfact.ttl_days ?? 7,
+          tripwireThreshold: config.integrity?.tripwire.threshold ?? 0.8,
+          tripwireFuzzyEnabled: config.integrity?.tripwire.fuzzy_enabled ?? true,
+          containmentPolicy: config.integrity?.containment.policy ?? 'approve',
+          containmentAutoEscalate: config.integrity?.containment.auto_escalate_critical ?? true,
+        }),
+      );
       return;
     }
 
