@@ -151,6 +151,22 @@ export function formatIntegrityQuarantineJson(result: IntegrityQuarantineJson): 
   );
 }
 
+export interface IntegrityClearJson {
+  cleared: number;
+  tenantId: string;
+}
+
+export function formatIntegrityClearJson(result: IntegrityClearJson): string {
+  return JSON.stringify(
+    {
+      cleared: result.cleared,
+      tenantId: result.tenantId,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityConfigJson {
   enabled: boolean;
   honeyfactCount: number;
@@ -767,6 +783,17 @@ async function clearCommand(options: IntegrityOptions): Promise<void> {
   }
 
   const count = await clearHoneyfacts(tenant_id);
+
+  if (options.json) {
+    console.log(
+      formatIntegrityClearJson({
+        cleared: count,
+        tenantId: tenant_id,
+      }),
+    );
+    return;
+  }
+
   console.log(chalk.green(`✓ Cleared ${count} honeyfacts for tenant: ${tenant_id}`));
   console.log();
 }

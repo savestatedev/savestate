@@ -1028,6 +1028,14 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityQuarantineJson');
   });
 
+  it('documents integrity clear --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('savestate integrity clear --force --json');
+    expect(integrity).toContain('export function formatIntegrityClearJson');
+  });
+
   it('documents integrity config --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
