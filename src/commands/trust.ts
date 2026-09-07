@@ -109,6 +109,22 @@ export function formatTrustDenyListJson(
   );
 }
 
+export interface TrustDenyRemoveJson {
+  pattern: string;
+  removed: number;
+}
+
+export function formatTrustDenyRemoveJson(result: TrustDenyRemoveJson): string {
+  return JSON.stringify(
+    {
+      pattern: result.pattern,
+      removed: result.removed,
+    },
+    null,
+    2,
+  );
+}
+
 export interface TrustAuditEventJson {
   id: string;
   entryId: string;
@@ -257,7 +273,7 @@ export async function trustDenyRemoveCommand(
   store.close();
 
   if (options.json) {
-    console.log(JSON.stringify({ pattern, removed }, null, 2));
+    console.log(formatTrustDenyRemoveJson({ pattern, removed }));
     return;
   }
   console.log();
