@@ -277,6 +277,42 @@ export function formatIntegrityConfigJson(result: IntegrityConfigJson): string {
   );
 }
 
+export interface IntegrityTestEventJson {
+  id: string;
+  honeyfactId: string;
+  confidence: number;
+  detectedIn: string;
+}
+
+export interface IntegrityTestJson {
+  triggered: boolean;
+  durationMs: number;
+  eventCount: number;
+  events: IntegrityTestEventJson[];
+  incidentId: string | null;
+  incidentSeverity: string | null;
+}
+
+export function formatIntegrityTestJson(result: IntegrityTestJson): string {
+  return JSON.stringify(
+    {
+      triggered: result.triggered,
+      durationMs: result.durationMs,
+      eventCount: result.eventCount,
+      events: result.events.map((event) => ({
+        id: event.id,
+        honeyfactId: event.honeyfactId,
+        confidence: event.confidence,
+        detectedIn: event.detectedIn,
+      })),
+      incidentId: result.incidentId,
+      incidentSeverity: result.incidentSeverity,
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -864,7 +900,21 @@ async function testMonitorCommand(input: string | undefined, options: IntegrityO
   const result = await monitor.monitorOutput(input, tenant_id);
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegrityTestJson({
+        triggered: result.triggered,
+        durationMs: result.duration_ms,
+        eventCount: result.events.length,
+        events: result.events.map((event) => ({
+          id: event.id,
+          honeyfactId: event.honeyfact_id,
+          confidence: event.confidence,
+          detectedIn: event.detected_in,
+        })),
+        incidentId: result.incident?.id ?? null,
+        incidentSeverity: result.incident?.severity ?? null,
+      }),
+    );
     return;
   }
 
