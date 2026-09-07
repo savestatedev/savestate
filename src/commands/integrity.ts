@@ -103,6 +103,26 @@ export function formatIntegrityRotateJson(result: IntegrityRotateJson): string {
   );
 }
 
+export interface IntegritySeedJson {
+  count: number;
+  tenantId: string;
+  ttlDays: number;
+  seededAt: string;
+}
+
+export function formatIntegritySeedJson(result: IntegritySeedJson): string {
+  return JSON.stringify(
+    {
+      count: result.count,
+      tenantId: result.tenantId,
+      ttlDays: result.ttlDays,
+      seededAt: result.seededAt,
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -223,7 +243,9 @@ async function seedCommand(options: IntegrityOptions): Promise<void> {
   const count = options.count ? parseInt(options.count, 10) : (config.integrity?.honeyfact.count ?? 10);
   const ttl_days = config.integrity?.honeyfact.ttl_days ?? 7;
 
-  console.log(chalk.dim(`  Seeding ${count} honeyfacts for tenant: ${tenant_id}`));
+  if (!options.json) {
+    console.log(chalk.dim(`  Seeding ${count} honeyfacts for tenant: ${tenant_id}`));
+  }
 
   const result = await seedHoneyfacts('integrity', count, {
     tenant_id,
@@ -231,7 +253,14 @@ async function seedCommand(options: IntegrityOptions): Promise<void> {
   });
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegritySeedJson({
+        count: result.count,
+        tenantId: result.tenant_id,
+        ttlDays: ttl_days,
+        seededAt: result.seeded_at,
+      }),
+    );
     return;
   }
 
