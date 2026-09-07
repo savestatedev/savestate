@@ -77,6 +77,62 @@ export function formatIntegrityIncidentsJson(incidents: IntegrityIncident[]): st
   return JSON.stringify(incidents.map(toIncidentJson), null, 2);
 }
 
+export interface IntegrityStatusHoneyfactsJson {
+  active: number;
+  expired: number;
+  total: number;
+}
+
+export interface IntegrityStatusIncidentsJson {
+  open: number;
+  contained: number;
+  resolved: number;
+  events: number;
+}
+
+export interface IntegrityStatusContainmentJson {
+  quarantinedMemories: number;
+  quarantinedAgents: number;
+  pendingApprovals: number;
+  lastActionAt: string | null;
+}
+
+export interface IntegrityStatusJson {
+  enabled: boolean;
+  policy: string;
+  honeyfacts: IntegrityStatusHoneyfactsJson;
+  incidents: IntegrityStatusIncidentsJson;
+  containment: IntegrityStatusContainmentJson;
+}
+
+export function formatIntegrityStatusJson(result: IntegrityStatusJson): string {
+  return JSON.stringify(
+    {
+      enabled: result.enabled,
+      policy: result.policy,
+      honeyfacts: {
+        active: result.honeyfacts.active,
+        expired: result.honeyfacts.expired,
+        total: result.honeyfacts.total,
+      },
+      incidents: {
+        open: result.incidents.open,
+        contained: result.incidents.contained,
+        resolved: result.incidents.resolved,
+        events: result.incidents.events,
+      },
+      containment: {
+        quarantinedMemories: result.containment.quarantinedMemories,
+        quarantinedAgents: result.containment.quarantinedAgents,
+        pendingApprovals: result.containment.pendingApprovals,
+        lastActionAt: result.containment.lastActionAt,
+      },
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -141,12 +197,29 @@ async function showStatus(options: IntegrityOptions): Promise<void> {
   const containmentStatus = await controller.getStatus();
 
   if (options.json) {
-    console.log(JSON.stringify({
-      enabled: config.integrity?.enabled ?? false,
-      honeyfacts: honeyfactStats,
-      incidents: incidentStats,
-      containment: containmentStatus,
-    }, null, 2));
+    console.log(
+      formatIntegrityStatusJson({
+        enabled: config.integrity?.enabled ?? false,
+        policy: containmentStatus.policy,
+        honeyfacts: {
+          active: honeyfactStats.active,
+          expired: honeyfactStats.expired,
+          total: honeyfactStats.total,
+        },
+        incidents: {
+          open: incidentStats.by_status.open,
+          contained: incidentStats.by_status.contained,
+          resolved: incidentStats.by_status.resolved,
+          events: incidentStats.events_total,
+        },
+        containment: {
+          quarantinedMemories: containmentStatus.quarantined_memories,
+          quarantinedAgents: containmentStatus.quarantined_agents,
+          pendingApprovals: containmentStatus.pending_approvals,
+          lastActionAt: containmentStatus.last_action_at ?? null,
+        },
+      }),
+    );
     return;
   }
 

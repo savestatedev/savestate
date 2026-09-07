@@ -1003,6 +1003,14 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('savestate integrity incidents --json');
   });
 
+  it('documents integrity status --json', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('enabled, policy, honeyfact counts, incident counts, and containment counts');
+    expect(integritySection).toContain('savestate integrity status --json');
+  });
+
   it('lists savestate trace in the command overview', () => {
     expect(docs).toContain('id="trace"');
     expect(docs).toContain('savestate trace');
