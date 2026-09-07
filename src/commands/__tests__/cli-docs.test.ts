@@ -1155,6 +1155,15 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function formatTraceExportJson');
   });
 
+  it('documents trace show --json when missing', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain('found, runId, adapter, eventCount');
+    expect(traceSection).toContain('savestate trace show run-123 --json');
+    expect(trace).toContain('export function formatTraceShowMissingJson');
+  });
+
   it('registers savestate container on the CLI', () => {
     expect(cli).toContain('registerContainerCommands');
   });
