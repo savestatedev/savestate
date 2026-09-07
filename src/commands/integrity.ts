@@ -77,6 +77,32 @@ export function formatIntegrityIncidentsJson(incidents: IntegrityIncident[]): st
   return JSON.stringify(incidents.map(toIncidentJson), null, 2);
 }
 
+export interface IntegrityRotateJson {
+  rotated: number;
+  valid: number;
+  createdCount: number;
+  retiredCount: number;
+  tenantId: string;
+  ttlDays: number;
+  rotatedAt: string;
+}
+
+export function formatIntegrityRotateJson(result: IntegrityRotateJson): string {
+  return JSON.stringify(
+    {
+      rotated: result.rotated,
+      valid: result.valid,
+      createdCount: result.createdCount,
+      retiredCount: result.retiredCount,
+      tenantId: result.tenantId,
+      ttlDays: result.ttlDays,
+      rotatedAt: result.rotatedAt,
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -242,7 +268,17 @@ async function rotateCommand(options: IntegrityOptions): Promise<void> {
   });
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegrityRotateJson({
+        rotated: result.rotated,
+        valid: result.valid,
+        createdCount: result.created.length,
+        retiredCount: result.retired.length,
+        tenantId: tenant_id,
+        ttlDays: ttl_days,
+        rotatedAt: result.rotated_at,
+      }),
+    );
     return;
   }
 
