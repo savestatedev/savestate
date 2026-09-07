@@ -1094,6 +1094,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityReleaseJson');
   });
 
+  it('documents integrity release --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, targetId, success, eventId');
+    expect(integritySection).toContain('savestate integrity release mem-123 --json');
+    expect(integrity).toContain('export function formatIntegrityReleaseMissingJson');
+  });
+
   it('documents integrity clear --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
