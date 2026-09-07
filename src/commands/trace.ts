@@ -23,6 +23,7 @@ interface TraceShowOptions {
 interface TraceExportOptions {
   format?: TraceExportFormat;
   run?: string;
+  json?: boolean;
 }
 
 export interface TraceRunJson {
@@ -71,6 +72,63 @@ export function formatTraceEventsJson(events: TraceEvent[]): string {
   return JSON.stringify(events.map(toEventJson), null, 2);
 }
 
+export interface TraceShowMissingJson {
+  found: false;
+  runId: string;
+  adapter: null;
+  eventCount: 0;
+}
+
+export function formatTraceShowMissingJson(runId: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      runId,
+      adapter: null,
+      eventCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
+export interface TraceExportJson {
+  format: string;
+  run: string;
+  runCount: number;
+  eventCount: number;
+  runs: TraceRunJson[];
+}
+
+export function formatTraceExportJson(input: {
+  format?: string;
+  run?: string;
+  runs?: TraceRunIndexEntry[];
+}): string {
+  const runs = (input.runs ?? []).map((run) => {
+    const json = toRunJson(run);
+    return {
+      runId: json.runId,
+      adapter: json.adapter,
+      eventCount: json.eventCount,
+      startedAt: json.startedAt,
+      updatedAt: json.updatedAt,
+      tags: json.tags,
+    };
+  });
+  return JSON.stringify(
+    {
+      format: input.format ?? 'jsonl',
+      run: input.run ?? 'all',
+      runCount: runs.length,
+      eventCount: runs.reduce((sum, run) => sum + run.eventCount, 0),
+      runs,
+    },
+    null,
+    2,
+  );
+}
+
 export function registerTraceCommands(program: Command): void {
   const trace = program
     .command('trace')
@@ -93,6 +151,7 @@ export function registerTraceCommands(program: Command): void {
     .description('Export trace events as JSONL')
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID')
+    .option('--json', 'Output as JSON')
     .action(traceExportCommand);
 }
 
@@ -165,6 +224,10 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
   const events = await store.getRun(runId);
 
   if (events.length === 0) {
+    if (options.json) {
+      console.log(formatTraceShowMissingJson(runId));
+      return;
+    }
     console.log(chalk.red(`✗ Trace run not found: ${runId}`));
     console.log();
     process.exit(1);
@@ -209,7 +272,16 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   }
 
   const store = new TraceStore();
-  const output = await store.export(options.run ?? 'all', format);
+  const run = options.run ?? 'all';
+
+  if (options.json) {
+    const allRuns = await store.listRuns();
+    const runs = run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run);
+    console.log(formatTraceExportJson({ format, run, runs }));
+    return;
+  }
+
+  const output = await store.export(run, format);
   process.stdout.write(output);
 }
 

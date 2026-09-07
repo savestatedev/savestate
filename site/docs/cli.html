@@ -636,7 +636,7 @@
         <tr><td><code>-f, --from &lt;platform&gt;</code></td><td>Source platform to migrate from</td></tr>
         <tr><td><code>-t, --to &lt;platform&gt;</code></td><td>Target platform to migrate to</td></tr>
         <tr><td><code>-l, --list</code></td><td>List available platforms and their capabilities</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the platform catalog as JSON with <code>--list</code>. Skips the wizard banner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the platform catalog as JSON with <code>--list</code>, or a compatibility report as JSON with <code>--dry-run</code> (source, target, feasibility, summary, items, and recommendations; omits source refs). Skips the wizard banner. Useful for scripting.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show a compatibility report without making changes</td></tr>
         <tr><td><code>--review</code></td><td>Inspect items needing manual attention without migrating</td></tr>
         <tr><td><code>--resume</code></td><td>Resume an interrupted migration</td></tr>
@@ -655,6 +655,9 @@
 
 <span class="code-comment"># Preview ChatGPT → Claude without writing anything</span>
 <span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --dry-run
+
+<span class="code-comment"># Scriptable compatibility report</span>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --dry-run --json
 
 <span class="code-comment"># Inspect items that need manual attention</span>
 <span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --review
@@ -749,7 +752,7 @@
         <tr><td><code>--threshold &lt;0..1&gt;</code></td><td>Confidence threshold for pass/fail on <code>quality</code> (default 0.7)</td></tr>
         <tr><td><code>--suite &lt;name&gt;</code></td><td>Run only a specific benchmark suite</td></tr>
         <tr><td><code>-v, --verbose</code></td><td>Show per-test metrics</td></tr>
-        <tr><td><code>--json</code></td><td>Emit quality and report results as JSON. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit quality and report results as JSON. When no report exists, <code>report</code> emits a missing summary (found, suiteCount, passed, total, passRate; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -1080,7 +1083,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit a set summary as JSON on <code>set</code> (updated, field, name, version; omits tool config). Emit identity as JSON on <code>show</code> and <code>init</code> (omits tool config). Skips the spinner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit a set summary as JSON on <code>set</code> (updated, field, name, version; omits tool config). Emit identity as JSON on <code>show</code> and <code>init</code> (omits tool config). When no identity exists, <code>show</code> emits a missing summary (found, name, version, schemaVersion; omits extra fields). Emit a schema summary as JSON on <code>schema</code> (id, title, type, required fields, property names/types, additionalProperties; omits descriptions and nested tool config). Skips the spinner. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -1100,7 +1103,8 @@
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate identity show --json
-<span class="code-prompt">$</span> savestate identity set tone professional --json</code></pre>
+<span class="code-prompt">$</span> savestate identity set tone professional --json
+<span class="code-prompt">$</span> savestate identity schema --json</code></pre>
 
     <!-- integrity -->
     <h2 id="integrity"><code>savestate integrity</code></h2>
@@ -1112,7 +1116,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit a rotation summary as JSON on <code>rotate</code> (rotated, valid, created/retired counts, tenant, TTL, rotatedAt; omits honeyfact contents). Emit a seed summary as JSON on <code>seed</code> (count, tenant, TTL, seededAt; omits honeyfact contents). Emit a quarantine summary as JSON on <code>quarantine</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a release summary as JSON on <code>release</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a config summary as JSON on <code>config</code> (enabled, honeyfact count/TTL, tripwire threshold/fuzzy, containment policy/auto-escalate; omits nested objects). Emit a clear summary as JSON on <code>clear</code> (cleared count, tenant; omits honeyfact contents). Emit a test summary as JSON on <code>test</code> (triggered, duration, event count/ids/confidence/source, incident id/severity; omits matched content). Emit incident records as JSON on <code>incidents</code> and <code>incident</code> (omits event match context). Status output is a stable summary (enabled, policy, honeyfact counts, incident counts, and containment counts). Omits extra fields. Skips the banner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit a rotation summary as JSON on <code>rotate</code> (rotated, valid, created/retired counts, tenant, TTL, rotatedAt; omits honeyfact contents). Emit a seed summary as JSON on <code>seed</code> (count, tenant, TTL, seededAt; omits honeyfact contents). Emit a quarantine summary as JSON on <code>quarantine</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a release summary as JSON on <code>release</code> (success, approval, target, action, reason, eventId, error; omits event metadata). Emit a config summary as JSON on <code>config</code> (enabled, honeyfact count/TTL, tripwire threshold/fuzzy, containment policy/auto-escalate; omits nested objects). Emit a clear summary as JSON on <code>clear</code> (cleared count, tenant; omits honeyfact contents). Emit a test summary as JSON on <code>test</code> (triggered, duration, event count/ids/confidence/source, incident id/severity; omits matched content). Emit incident records as JSON on <code>incidents</code> and <code>incident</code> (omits event match context). When no incident exists, <code>incident</code> emits a missing summary (found, id, status, eventCount; omits extra fields). Status output is a stable summary (enabled, policy, honeyfact counts, incident counts, and containment counts). Omits extra fields. Skips the banner. Useful for scripting.</td></tr>
         <tr><td><code>--tenant &lt;id&gt;</code></td><td>Tenant ID (default: <code>default</code>)</td></tr>
         <tr><td><code>--count &lt;n&gt;</code></td><td>Number of honeyfacts to seed</td></tr>
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status</td></tr>
@@ -1140,6 +1144,7 @@
 <span class="code-prompt">$</span> savestate integrity clear --force --json
 <span class="code-prompt">$</span> savestate integrity test "canary text" --json
 <span class="code-prompt">$</span> savestate integrity incidents --json
+<span class="code-prompt">$</span> savestate integrity incident inc-123 --json
 <span class="code-prompt">$</span> savestate integrity config --json
 
 <span class="code-comment"># Quarantine a memory or agent</span>
@@ -1155,7 +1160,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit run and event summaries as JSON on <code>list</code> and <code>show</code>. Omits event payloads. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit run and event summaries as JSON on <code>list</code> and <code>show</code>. When no run exists, <code>show</code> emits a missing summary (found, runId, adapter, eventCount; omits extra fields and event payloads). Emit an export summary as JSON on <code>export</code> (format, run, run/event counts, run ids/adapters/timestamps/tags; omits event payloads and on-disk file paths). Useful for scripting.</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Export format on <code>export</code> (only <code>jsonl</code> is supported)</td></tr>
         <tr><td><code>--run &lt;id&gt;</code></td><td>Export only a specific run ID (default: all runs)</td></tr>
       </tbody>
@@ -1174,7 +1179,8 @@
 <span class="code-prompt">$</span> savestate trace export --run run-123
 
 <span class="code-comment"># Scripting</span>
-<span class="code-prompt">$</span> savestate trace list --json</code></pre>
+<span class="code-prompt">$</span> savestate trace list --json
+<span class="code-prompt">$</span> savestate trace export --json</code></pre>
 
     <!-- container -->
     <h2 id="container"><code>savestate container</code></h2>

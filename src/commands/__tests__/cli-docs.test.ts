@@ -23,6 +23,11 @@ const acl = readFileSync(
   'utf8',
 );
 
+const identity = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../identity.ts'),
+  'utf8',
+);
+
 const integrity = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../integrity.ts'),
   'utf8',
@@ -53,8 +58,8 @@ const memoryCli = readFileSync(
   'utf8',
 );
 
-const identity = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), '../identity.ts'),
+const evalSource = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../eval.ts'),
   'utf8',
 );
 
@@ -234,6 +239,8 @@ describe('CLI docs', () => {
     expect(migrateSection).toContain('--json');
     expect(migrateSection).toContain('scripting');
     expect(migrateSection).toContain('savestate migrate --list --json');
+    expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --dry-run --json');
+    expect(migrateSection).toContain('omits source refs');
   });
 
   it('documents migrate --review, --resume, --include, --force, --verbose, and --no-color', () => {
@@ -445,6 +452,15 @@ describe('CLI docs', () => {
     expect(evalSection).toContain('--json');
     expect(evalSection).toContain('scripting');
     expect(evalSection).toContain('savestate eval report --json');
+  });
+
+  it('documents eval report --json when missing', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('scripting');
+    expect(evalSection).toContain('found, suiteCount, passed, total, passRate');
+    expect(evalSection).toContain('savestate eval report --json');
+    expect(evalSource).toContain('export function formatEvalReportMissingJson');
   });
 
   it('lists savestate login and logout in the command overview', () => {
@@ -975,6 +991,24 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function formatIdentitySetJson');
   });
 
+  it('documents identity schema --json', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('omits descriptions and nested tool config');
+    expect(identitySection).toContain('savestate identity schema --json');
+    expect(identity).toContain('export function formatIdentitySchemaJson');
+  });
+
+  it('documents identity show --json when missing', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('found, name, version, schemaVersion');
+    expect(identitySection).toContain('savestate identity show --json');
+    expect(identity).toContain('export function formatIdentityShowMissingJson');
+  });
+
   it('registers savestate integrity on the CLI', () => {
     expect(cli).toContain('registerIntegrityCommands');
   });
@@ -1086,6 +1120,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityTestJson');
   });
 
+  it('documents integrity incident --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, id, status, eventCount');
+    expect(integritySection).toContain('savestate integrity incident inc-123 --json');
+    expect(integrity).toContain('export function formatIntegrityIncidentMissingJson');
+  });
+
   it('lists savestate trace in the command overview', () => {
     expect(docs).toContain('id="trace"');
     expect(docs).toContain('savestate trace');
@@ -1115,6 +1158,29 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('--json');
     expect(traceSection).toContain('scripting');
     expect(traceSection).toContain('savestate trace list --json');
+  });
+
+  it('registers --json on savestate trace export', () => {
+    const exportBlock = trace.slice(trace.indexOf("command('export')"));
+    expect(exportBlock).toContain(".option('--json'");
+  });
+
+  it('documents trace export --json', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain('omits event payloads and on-disk file paths');
+    expect(traceSection).toContain('savestate trace export --json');
+    expect(trace).toContain('export function formatTraceExportJson');
+  });
+
+  it('documents trace show --json when missing', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain('found, runId, adapter, eventCount');
+    expect(traceSection).toContain('savestate trace show run-123 --json');
+    expect(trace).toContain('export function formatTraceShowMissingJson');
   });
 
   it('registers savestate container on the CLI', () => {
