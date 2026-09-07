@@ -109,6 +109,38 @@ export function formatTrustDenyListJson(
   );
 }
 
+export interface TrustAuditEventJson {
+  id: string;
+  entryId: string;
+  fromState: TrustState;
+  toState: TrustState;
+  reason: string;
+  actor: string;
+  timestamp: string;
+}
+
+export interface TrustAuditJson {
+  events: TrustAuditEventJson[];
+}
+
+export function formatTrustAuditJson(events: TransitionEvent[]): string {
+  return JSON.stringify(
+    {
+      events: events.map((event) => ({
+        id: event.id,
+        entryId: event.entryId,
+        fromState: event.fromState,
+        toState: event.toState,
+        reason: event.reason,
+        actor: event.actor,
+        timestamp: event.timestamp,
+      })),
+    },
+    null,
+    2,
+  );
+}
+
 export async function trustStatusCommand(options: TrustOptions): Promise<void> {
   const store = new TrustStore();
   const metrics = store.getMetrics();
@@ -148,7 +180,7 @@ export async function trustAuditCommand(options: TrustOptions): Promise<void> {
   const events = store.getRecentTransitions(limit);
 
   if (options.json) {
-    console.log(JSON.stringify(events, null, 2));
+    console.log(formatTrustAuditJson(events));
     store.close();
     return;
   }

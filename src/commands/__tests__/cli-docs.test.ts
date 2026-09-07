@@ -278,6 +278,23 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('savestate trust deny list --json');
   });
 
+  it('registers --json on savestate trust audit', () => {
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const auditBlock = trustBlock.slice(
+      trustBlock.indexOf("command('audit')"),
+      trustBlock.indexOf("command('deny')"),
+    );
+    expect(auditBlock).toContain(".option('--json'");
+  });
+
+  it('documents trust audit --json', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--json');
+    expect(trustSection).toContain('scripting');
+    expect(trustSection).toContain('entry id, states, actor, and reason');
+    expect(trustSection).toContain('savestate trust audit --json');
+  });
+
   it('lists savestate team in the command overview', () => {
     expect(docs).toContain('id="team"');
     expect(docs).toContain('savestate team');
@@ -329,6 +346,22 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('scripting');
     expect(teamSection).toContain('email, role, and invite timestamps');
     expect(teamSection).toContain('savestate team members --json');
+  });
+
+  it('registers --json on savestate team invite', () => {
+    const inviteBlock = cli.slice(
+      cli.indexOf("Invite a member by email"),
+      cli.indexOf("Stream the team audit log to stdout"),
+    );
+    expect(inviteBlock).toContain(".option('--json'");
+  });
+
+  it('documents team invite --json', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('invited email, role, and invite timestamps');
+    expect(teamSection).toContain('savestate team invite user@example.com --role viewer --json');
   });
 
   it('registers --json on savestate team audit', () => {

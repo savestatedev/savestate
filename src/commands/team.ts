@@ -70,6 +70,26 @@ export function formatTeamMembersJson(result: TeamMembersJson): string {
   );
 }
 
+export interface TeamInviteJson {
+  email: string;
+  role: string;
+  acceptedAt: string | null;
+  invitedAt: string;
+}
+
+export function formatTeamInviteJson(invite: TeamInviteJson): string {
+  return JSON.stringify(
+    {
+      email: invite.email,
+      role: invite.role,
+      acceptedAt: invite.acceptedAt,
+      invitedAt: invite.invitedAt,
+    },
+    null,
+    2,
+  );
+}
+
 interface CallResult {
   ok: boolean;
   status: number;
@@ -209,7 +229,17 @@ export async function teamInviteCommand(email: string, options: TeamCommandOptio
   if (!result.ok) return printError(result, 'Invite failed');
 
   if (options.json) {
-    console.log(JSON.stringify(result.body, null, 2));
+    const data = result.body as {
+      member?: { email?: string; role?: string; acceptedAt?: string | null; invitedAt?: string };
+    };
+    console.log(
+      formatTeamInviteJson({
+        email: data.member?.email || email,
+        role: data.member?.role || role,
+        acceptedAt: data.member?.acceptedAt ?? null,
+        invitedAt: data.member?.invitedAt || '',
+      }),
+    );
     return;
   }
 

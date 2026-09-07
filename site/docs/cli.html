@@ -678,7 +678,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit Trust Kernel metrics as JSON on <code>status</code>, or denylist entries as JSON (pattern, reason, actor, and epoch) on <code>deny list</code>. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit Trust Kernel metrics as JSON on <code>status</code>, audit events as JSON (entry id, states, actor, and reason) on <code>audit</code>, or denylist entries as JSON (pattern, reason, actor, and epoch) on <code>deny list</code>. Omits event metadata. Useful for scripting.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Number of recent events for <code>audit</code> (default 50)</td></tr>
         <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Why a pattern is denylisted on <code>deny add</code></td></tr>
         <tr><td><code>-b, --by &lt;actor&gt;</code></td><td>Who is adding the denylist entry (defaults to <code>cli</code>)</td></tr>
@@ -690,6 +690,9 @@
 
 <span class="code-comment"># Recent promotion and rejection events</span>
 <span class="code-prompt">$</span> savestate trust audit --limit 20 --json
+
+<span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate trust audit --json
 
 <span class="code-comment"># Block a pattern at the WriteGate</span>
 <span class="code-prompt">$</span> savestate trust deny add secret.env --reason "contains credentials"
@@ -708,7 +711,7 @@
       </thead>
       <tbody>
         <tr><td><code>-r, --role &lt;role&gt;</code></td><td>Invite role: <code>admin</code>, <code>member</code>, or <code>viewer</code> (default <code>member</code>)</td></tr>
-        <tr><td><code>--json</code></td><td>Emit team status as JSON (id, name, and role), or members as JSON (email, role, and invite timestamps). Also used for invite and audit. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit team status as JSON (id, name, and role), members as JSON (email, role, and invite timestamps), or invite as JSON (invited email, role, and invite timestamps). Also used for audit. Useful for scripting.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Audit entries after this ISO 8601 date</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Audit entries before this ISO 8601 date</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Audit output: <code>csv</code> or <code>json</code> (default <code>json</code>)</td></tr>
@@ -722,7 +725,7 @@
 <span class="code-prompt">$</span> savestate team members --json
 
 <span class="code-comment"># Invite a viewer</span>
-<span class="code-prompt">$</span> savestate team invite user@example.com --role viewer
+<span class="code-prompt">$</span> savestate team invite user@example.com --role viewer --json
 
 <span class="code-comment"># Stream the audit log as CSV</span>
 <span class="code-prompt">$</span> savestate team audit --since 2026-01-01 --format csv
