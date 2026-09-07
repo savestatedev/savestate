@@ -75,6 +75,40 @@ export function formatAntibodiesPreflightJson(result: AntibodiesPreflightJson): 
   );
 }
 
+export interface AntibodiesListRuleJson {
+  id: string;
+  risk: RiskLevel;
+  intervention: Intervention;
+  active: boolean;
+  confidence: number;
+  hits: number;
+  overrides: number;
+  safeAction: SafeActionType;
+}
+
+export interface AntibodiesListJson {
+  rules: AntibodiesListRuleJson[];
+}
+
+export function formatAntibodiesListJson(result: AntibodiesListJson): string {
+  return JSON.stringify(
+    {
+      rules: result.rules.map((rule) => ({
+        id: rule.id,
+        risk: rule.risk,
+        intervention: rule.intervention,
+        active: rule.active,
+        confidence: rule.confidence,
+        hits: rule.hits,
+        overrides: rule.overrides,
+        safeAction: rule.safeAction,
+      })),
+    },
+    null,
+    2,
+  );
+}
+
 export async function antibodiesCommand(subcommand: string, options: AntibodiesOptions): Promise<void> {
   console.log();
 
@@ -108,7 +142,20 @@ async function listRules(store: AntibodyStore, options: AntibodiesOptions): Prom
   const rules = await store.list({ activeOnly: !options.all });
 
   if (options.json) {
-    console.log(JSON.stringify(rules, null, 2));
+    console.log(
+      formatAntibodiesListJson({
+        rules: rules.map((rule) => ({
+          id: rule.id,
+          risk: rule.risk,
+          intervention: rule.intervention,
+          active: !rule.retired_at,
+          confidence: rule.confidence,
+          hits: rule.hits,
+          overrides: rule.overrides,
+          safeAction: rule.safe_action.type,
+        })),
+      }),
+    );
     return;
   }
 
