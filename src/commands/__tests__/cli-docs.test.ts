@@ -163,6 +163,14 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('savestate antibodies list --json');
   });
 
+  it('documents antibodies preflight --json', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--json');
+    expect(antibodiesSection).toContain('scripting');
+    expect(antibodiesSection).toContain('blocked, elapsed, semantic, and warnings with rule id, risk, intervention, confidence, safe action, and reasons');
+    expect(antibodiesSection).toContain('savestate antibodies preflight --tool write --path ./secret.env --json');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');

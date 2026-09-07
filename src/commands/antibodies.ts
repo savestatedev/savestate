@@ -7,6 +7,7 @@ import { isInitialized } from '../config.js';
 import { AntibodyEngine, AntibodyStore, deriveRuleId } from '../antibodies/index.js';
 import type {
   AntibodyRule,
+  Intervention,
   PreflightContext,
   RiskLevel,
   SafeActionType,
@@ -35,6 +36,44 @@ const SAFE_ACTION_TYPES: SafeActionType[] = [
   'run_read_only_probe',
   'confirm_with_user',
 ];
+
+export type AntibodiesPreflightReasonJson = 'tool' | 'error_code' | 'path_prefix' | 'tag' | 'semantic';
+
+export interface AntibodiesPreflightWarningJson {
+  ruleId: string;
+  risk: RiskLevel;
+  intervention: Intervention;
+  confidence: number;
+  safeAction: SafeActionType;
+  reasons: AntibodiesPreflightReasonJson[];
+}
+
+export interface AntibodiesPreflightJson {
+  blocked: boolean;
+  elapsedMs: number;
+  semanticUsed: boolean;
+  warnings: AntibodiesPreflightWarningJson[];
+}
+
+export function formatAntibodiesPreflightJson(result: AntibodiesPreflightJson): string {
+  return JSON.stringify(
+    {
+      blocked: result.blocked,
+      elapsedMs: result.elapsedMs,
+      semanticUsed: result.semanticUsed,
+      warnings: result.warnings.map((warning) => ({
+        ruleId: warning.ruleId,
+        risk: warning.risk,
+        intervention: warning.intervention,
+        confidence: warning.confidence,
+        safeAction: warning.safeAction,
+        reasons: [...warning.reasons],
+      })),
+    },
+    null,
+    2,
+  );
+}
 
 export async function antibodiesCommand(subcommand: string, options: AntibodiesOptions): Promise<void> {
   console.log();
@@ -157,7 +196,21 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
   const result = await engine.preflight(context);
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatAntibodiesPreflightJson({
+        blocked: result.blocked,
+        elapsedMs: result.elapsed_ms,
+        semanticUsed: result.semantic_used,
+        warnings: result.warnings.map((warning) => ({
+          ruleId: warning.rule_id,
+          risk: warning.risk,
+          intervention: warning.intervention,
+          confidence: warning.confidence,
+          safeAction: warning.safe_action.type,
+          reasons: [...warning.reason_codes],
+        })),
+      }),
+    );
     return;
   }
 
