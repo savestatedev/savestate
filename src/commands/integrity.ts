@@ -123,6 +123,34 @@ export function formatIntegritySeedJson(result: IntegritySeedJson): string {
   );
 }
 
+export interface IntegrityQuarantineJson {
+  success: boolean;
+  requiresApproval: boolean;
+  targetId: string;
+  targetType: string;
+  action: string;
+  reason: string;
+  eventId: string;
+  error: string | null;
+}
+
+export function formatIntegrityQuarantineJson(result: IntegrityQuarantineJson): string {
+  return JSON.stringify(
+    {
+      success: result.success,
+      requiresApproval: result.requiresApproval,
+      targetId: result.targetId,
+      targetType: result.targetType,
+      action: result.action,
+      reason: result.reason,
+      eventId: result.eventId,
+      error: result.error,
+    },
+    null,
+    2,
+  );
+}
+
 export async function integrityCommand(
   subcommand: string,
   args: string[],
@@ -464,7 +492,18 @@ async function quarantineCommand(id: string, options: IntegrityOptions): Promise
   }
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      formatIntegrityQuarantineJson({
+        success: result.success,
+        requiresApproval: result.requires_approval,
+        targetId: result.event.target_id,
+        targetType: result.event.target_type,
+        action: result.event.action,
+        reason: result.event.reason,
+        eventId: result.event.id,
+        error: result.error ?? null,
+      }),
+    );
     return;
   }
 
