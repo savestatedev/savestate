@@ -70,6 +70,24 @@ export function formatTrustJson(metrics: TrustMetrics): string {
   return JSON.stringify(record, null, 2);
 }
 
+export interface TrustDenyAddJson {
+  added: string;
+  reason: string;
+  addedBy: string;
+}
+
+export function formatTrustDenyAddJson(result: TrustDenyAddJson): string {
+  return JSON.stringify(
+    {
+      added: result.added,
+      reason: result.reason,
+      addedBy: result.addedBy,
+    },
+    null,
+    2,
+  );
+}
+
 export async function trustStatusCommand(options: TrustOptions): Promise<void> {
   const store = new TrustStore();
   const metrics = store.getMetrics();
@@ -167,7 +185,7 @@ export async function trustDenyAddCommand(
   store.close();
 
   if (options.json) {
-    console.log(JSON.stringify({ added: pattern, reason, addedBy }, null, 2));
+    console.log(formatTrustDenyAddJson({ added: pattern, reason, addedBy }));
     return;
   }
   console.log();
