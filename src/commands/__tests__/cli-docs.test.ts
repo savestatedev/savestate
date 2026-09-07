@@ -409,6 +409,7 @@ describe('CLI docs', () => {
     const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('--json');
     expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('id, action, actor, resource, and timestamp');
     expect(teamSection).toContain('savestate team audit --json');
   });
 

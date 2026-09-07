@@ -90,6 +90,42 @@ export function formatTeamInviteJson(invite: TeamInviteJson): string {
   );
 }
 
+export interface TeamAuditEntryJson {
+  id: string;
+  action: string;
+  actorAccountId: string | null;
+  resourceType: string | null;
+  resourceId: string | null;
+  createdAt: string;
+}
+
+export interface TeamAuditJson {
+  teamId: string;
+  count: number;
+  nextCursor: string | null;
+  entries: TeamAuditEntryJson[];
+}
+
+export function formatTeamAuditJson(result: TeamAuditJson): string {
+  return JSON.stringify(
+    {
+      teamId: result.teamId,
+      count: result.count,
+      nextCursor: result.nextCursor,
+      entries: result.entries.map((entry) => ({
+        id: entry.id,
+        action: entry.action,
+        actorAccountId: entry.actorAccountId,
+        resourceType: entry.resourceType,
+        resourceId: entry.resourceId,
+        createdAt: entry.createdAt,
+      })),
+    },
+    null,
+    2,
+  );
+}
+
 interface CallResult {
   ok: boolean;
   status: number;
@@ -270,7 +306,36 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   if (format === 'csv') {
     process.stdout.write(result.text || '');
   } else {
-    process.stdout.write(JSON.stringify(result.body, null, 2));
+    const body = (result.body ?? {}) as {
+      team_id?: string;
+      count?: number;
+      next_cursor?: string | null;
+      entries?: Array<{
+        id?: string;
+        actor_account_id?: string | null;
+        action?: string;
+        resource_type?: string | null;
+        resource_id?: string | null;
+        created_at?: string;
+        metadata?: unknown;
+      }>;
+    };
+    const entries = Array.isArray(body.entries) ? body.entries : [];
+    process.stdout.write(
+      formatTeamAuditJson({
+        teamId: typeof body.team_id === 'string' ? body.team_id : teamId,
+        count: typeof body.count === 'number' ? body.count : entries.length,
+        nextCursor: body.next_cursor ?? null,
+        entries: entries.map((entry) => ({
+          id: entry.id ?? '',
+          action: entry.action ?? '',
+          actorAccountId: entry.actor_account_id ?? null,
+          resourceType: entry.resource_type ?? null,
+          resourceId: entry.resource_id ?? null,
+          createdAt: entry.created_at ?? '',
+        })),
+      }),
+    );
     process.stdout.write('\n');
   }
 }
