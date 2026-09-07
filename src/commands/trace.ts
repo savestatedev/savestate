@@ -72,6 +72,26 @@ export function formatTraceEventsJson(events: TraceEvent[]): string {
   return JSON.stringify(events.map(toEventJson), null, 2);
 }
 
+export interface TraceShowMissingJson {
+  found: false;
+  runId: string;
+  adapter: null;
+  eventCount: 0;
+}
+
+export function formatTraceShowMissingJson(runId: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      runId,
+      adapter: null,
+      eventCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface TraceExportJson {
   format: string;
   run: string;
@@ -204,6 +224,10 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
   const events = await store.getRun(runId);
 
   if (events.length === 0) {
+    if (options.json) {
+      console.log(formatTraceShowMissingJson(runId));
+      return;
+    }
     console.log(chalk.red(`✗ Trace run not found: ${runId}`));
     console.log();
     process.exit(1);
