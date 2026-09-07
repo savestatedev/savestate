@@ -981,6 +981,16 @@ describe('CLI docs', () => {
     expect(identitySection).toContain('savestate identity show --json');
   });
 
+  it('documents identity set --json', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('updated, field, name, version');
+    expect(identitySection).toContain('omits tool config');
+    expect(identitySection).toContain('savestate identity set tone professional --json');
+    expect(identity).toContain('export function formatIdentitySetJson');
+  });
+
   it('documents identity schema --json', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     expect(identitySection).toContain('--json');
