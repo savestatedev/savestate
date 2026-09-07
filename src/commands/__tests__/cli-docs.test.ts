@@ -317,6 +317,22 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('savestate team members --json');
   });
 
+  it('registers --json on savestate team invite', () => {
+    const inviteBlock = cli.slice(
+      cli.indexOf("Invite a member by email"),
+      cli.indexOf("Stream the team audit log to stdout"),
+    );
+    expect(inviteBlock).toContain(".option('--json'");
+  });
+
+  it('documents team invite --json', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('invited email, role, and invite timestamps');
+    expect(teamSection).toContain('savestate team invite user@example.com --role viewer --json');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("Stream the team audit log to stdout"),
