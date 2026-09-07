@@ -64,6 +64,28 @@ export function formatEvalJson(results: BenchmarkResult[]): string {
   return JSON.stringify(payload, null, 2);
 }
 
+export interface EvalReportMissingJson {
+  found: false;
+  suiteCount: 0;
+  passed: 0;
+  total: 0;
+  passRate: 0;
+}
+
+export function formatEvalReportMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      suiteCount: 0,
+      passed: 0,
+      total: 0,
+      passRate: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export async function evalCommand(subcommand: string, options: EvalOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -163,7 +185,7 @@ async function showReport(options: EvalOptions): Promise<void> {
 
   if (!existsSync(resultsPath)) {
     if (options.json) {
-      console.log(formatEvalJson([]));
+      console.log(formatEvalReportMissingJson());
       return;
     }
     console.log(chalk.yellow('  No evaluation results found.'));
