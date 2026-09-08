@@ -740,6 +740,15 @@ describe('CLI docs', () => {
     expect(mcpSection).toContain('savestate mcp export --agent my-agent --json');
   });
 
+  it('documents mcp export --json when missing', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--json');
+    expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain('found, agent, output, memories, snapshots, written');
+    expect(mcpSection).toContain('savestate mcp export --agent my-agent --json');
+    expect(mcp).toContain('export function formatMcpExportMissingJson');
+  });
+
   it('lists savestate context in the command overview', () => {
     expect(docs).toContain('id="context"');
     expect(docs).toContain('savestate context');
