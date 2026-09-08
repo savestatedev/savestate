@@ -587,6 +587,24 @@ export function formatMemoryPinJson(id: string): string {
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryPinMissingJson {
+  found: false;
+  id: string;
+  pinned: null;
+}
+
+export function formatMemoryPinMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      pinned: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function pinMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -600,6 +618,10 @@ export async function pinMemoryCommand(
 
   const entryIndex = snapshot.memory.core.findIndex((e) => e.id === memoryId);
   if (entryIndex === -1) {
+    if (options?.format === 'json') {
+      console.log(formatMemoryPinMissingJson(memoryId));
+      return;
+    }
     throw new Error(`Memory entry not found: ${memoryId}`);
   }
 

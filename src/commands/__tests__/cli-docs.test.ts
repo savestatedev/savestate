@@ -874,6 +874,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory pin mem-123 --json');
   });
 
+  it('documents memory pin --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, pinned');
+    expect(memorySection).toContain('savestate memory pin mem-123 --json');
+    expect(memory).toContain('export function formatMemoryPinMissingJson');
+  });
+
   it('registers --json on savestate memory unpin', () => {
     const unpinBlock = memoryCli.slice(memoryCli.indexOf("command('unpin"), memoryCli.indexOf("command('apply-policies"));
     expect(unpinBlock).toContain(".option('--json'");
