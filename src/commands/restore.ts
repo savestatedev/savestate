@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
+import { getLatestEntry } from '../index-file.js';
 import { restoreSnapshot, type RestoreResult } from '../restore.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { detectAdapter, getAdapter } from '../adapters/registry.js';
@@ -36,6 +37,28 @@ export function formatRestoreResultJson(result: RestoreResult, extra?: { dryRun?
   );
 }
 
+export interface RestoreMissingJson {
+  found: false;
+  snapshotId: string;
+  timestamp: null;
+  platform: null;
+  hasIdentity: false;
+}
+
+export function formatRestoreMissingJson(snapshotId: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      snapshotId,
+      timestamp: null,
+      platform: null,
+      hasIdentity: false,
+    },
+    null,
+    2,
+  );
+}
+
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -47,6 +70,15 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
   }
 
   const resolvedId = snapshotId ?? 'latest';
+
+  if (options.json && resolvedId === 'latest') {
+    const latest = await getLatestEntry();
+    if (!latest) {
+      console.log(formatRestoreMissingJson('latest'));
+      return;
+    }
+  }
+
   const config = await loadConfig();
 
   if (!options.json) {
@@ -119,9 +151,14 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     console.log();
 
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (options.json && (message.startsWith('No snapshots found') || message.startsWith('Snapshot not found'))) {
+      console.log(formatRestoreMissingJson(resolvedId));
+      return;
+    }
     console.error();
     console.error(chalk.red('✗ Restore failed'));
-    console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+    console.error(chalk.red(message));
     process.exit(1);
   }
 }

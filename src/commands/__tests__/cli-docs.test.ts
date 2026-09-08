@@ -78,6 +78,11 @@ const diff = readFileSync(
   'utf8',
 );
 
+const restore = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../restore.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1428,6 +1433,15 @@ describe('CLI docs', () => {
     expect(restoreSection).toContain('--json');
     expect(restoreSection).toContain('Decrypts the archive');
     expect(restoreSection).toContain('savestate restore latest --json --dry-run');
+  });
+
+  it('documents restore --json when missing', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    expect(restoreSection).toContain('--json');
+    expect(restoreSection).toContain('scripting');
+    expect(restoreSection).toContain('found, snapshotId, timestamp, platform, hasIdentity');
+    expect(restoreSection).toContain('savestate restore latest --json');
+    expect(restore).toContain('export function formatRestoreMissingJson');
   });
 
   it('registers --json on savestate snapshot', () => {
