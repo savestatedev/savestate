@@ -959,6 +959,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory delete mem-123 --reason "stale" --json');
   });
 
+  it('documents memory delete --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, deleted');
+    expect(memorySection).toContain('savestate memory delete mem-123 --reason "stale" --json');
+    expect(memoryLifecycle).toContain('export function formatMemoryDeleteMissingJson');
+  });
+
   it('registers --json on savestate memory rollback', () => {
     const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
     expect(rollbackBlock).toContain(".option('--json'");
