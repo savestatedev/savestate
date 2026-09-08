@@ -639,6 +639,15 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function formatCloudPullMissingJson');
   });
 
+  it('documents cloud delete --json when missing', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain('found, id, deleted, failed');
+    expect(cloudSection).toContain('savestate cloud delete --id ss-2026-01-26 --json');
+    expect(cloud).toContain('export function formatCloudDeleteMissingJson');
+  });
+
   it('lists savestate mcp in the command overview', () => {
     expect(docs).toContain('id="mcp"');
     expect(docs).toContain('savestate mcp');

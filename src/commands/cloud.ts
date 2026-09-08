@@ -103,6 +103,26 @@ export function formatCloudDeleteJson(result: CloudDeleteResult): string {
   );
 }
 
+export interface CloudDeleteMissingJson {
+  found: false;
+  id: string;
+  deleted: 0;
+  failed: 0;
+}
+
+export function formatCloudDeleteMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      deleted: 0,
+      failed: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface CloudPushMissingJson {
   found: false;
   id: string;
@@ -688,6 +708,10 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
 
   if (cloudSnapshots.length === 0) {
     if (options.json) {
+      if (options.id) {
+        console.log(formatCloudDeleteMissingJson(options.id));
+        return;
+      }
       console.log(formatCloudDeleteJson({ deleted: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
       return;
     }
@@ -700,6 +724,10 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
   if (options.id) {
     toDelete = cloudSnapshots.filter(s => s.id === options.id || s.id.startsWith(options.id!));
     if (toDelete.length === 0) {
+      if (options.json) {
+        console.log(formatCloudDeleteMissingJson(options.id));
+        return;
+      }
       console.log(chalk.red(`Snapshot not found in cloud: ${options.id}`));
       process.exit(1);
     }
