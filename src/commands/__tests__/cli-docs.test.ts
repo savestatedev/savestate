@@ -1041,6 +1041,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory explain "inbox preference" --json');
   });
 
+  it('documents memory explain --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, query, shown');
+    expect(memorySection).toContain('savestate memory explain "inbox preference" --json');
+    expect(memory).toContain('export function formatMemoryExplainMissingJson');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');
