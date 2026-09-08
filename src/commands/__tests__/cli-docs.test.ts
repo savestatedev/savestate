@@ -68,6 +68,11 @@ const inspect = readFileSync(
   'utf8',
 );
 
+const cloud = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../cloud.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -560,6 +565,15 @@ describe('CLI docs', () => {
     expect(cloudSection).toContain('scripting');
     expect(cloudSection).toContain('uploaded count');
     expect(cloudSection).toContain('savestate cloud push --json');
+  });
+
+  it('documents cloud push --json when missing', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain('found, id, pushed, failed');
+    expect(cloudSection).toContain('savestate cloud push --json');
+    expect(cloud).toContain('export function formatCloudPushMissingJson');
   });
 
   it('lists savestate mcp in the command overview', () => {
