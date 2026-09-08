@@ -86,6 +86,30 @@ export function formatEvalReportMissingJson(): string {
   );
 }
 
+export interface EvalQualityMissingJson {
+  found: false;
+  suite: string;
+  suiteCount: 0;
+  passed: 0;
+  total: 0;
+  passRate: 0;
+}
+
+export function formatEvalQualityMissingJson(suite: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      suite,
+      suiteCount: 0,
+      passed: 0,
+      total: 0,
+      passRate: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export async function evalCommand(subcommand: string, options: EvalOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -140,7 +164,7 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
 
   if (suitesToRun.length === 0) {
     if (options.json) {
-      console.log(formatEvalJson([]));
+      console.log(formatEvalQualityMissingJson(options.suite ?? ''));
       return;
     }
     console.log(chalk.red(`  Suite not found: ${options.suite}`));
