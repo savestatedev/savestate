@@ -255,6 +255,26 @@ export function formatIntegrityReleaseJson(result: IntegrityReleaseJson): string
   );
 }
 
+export interface IntegrityReleaseMissingJson {
+  found: false;
+  targetId: string;
+  success: false;
+  eventId: null;
+}
+
+export function formatIntegrityReleaseMissingJson(targetId: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      targetId,
+      success: false,
+      eventId: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityClearJson {
   cleared: number;
   tenantId: string;
@@ -774,6 +794,10 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
       return;
     }
 
+    if (options.json) {
+      console.log(formatIntegrityReleaseMissingJson(id));
+      return;
+    }
     console.log(chalk.red(`✗ Not found in quarantine: ${id}`));
     process.exit(1);
   }
