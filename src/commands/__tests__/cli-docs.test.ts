@@ -603,6 +603,15 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function formatCloudPushMissingJson');
   });
 
+  it('documents cloud pull --json when missing', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain('found, id, pulled, failed, skipped');
+    expect(cloudSection).toContain('savestate cloud pull --json');
+    expect(cloud).toContain('export function formatCloudPullMissingJson');
+  });
+
   it('lists savestate mcp in the command overview', () => {
     expect(docs).toContain('id="mcp"');
     expect(docs).toContain('savestate mcp');

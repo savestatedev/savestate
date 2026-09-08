@@ -126,6 +126,28 @@ export function formatCloudPullJson(result: CloudPullResult): string {
   );
 }
 
+export interface CloudPullMissingJson {
+  found: false;
+  id: string;
+  pulled: 0;
+  failed: 0;
+  skipped: 0;
+}
+
+export function formatCloudPullMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      pulled: 0,
+      failed: 0,
+      skipped: 0,
+    },
+    null,
+    2,
+  );
+}
+
 interface SubscriptionStatus {
   valid: boolean;
   tier?: string;
@@ -451,6 +473,10 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
 
   if (cloudSnapshots.length === 0) {
     if (options.json) {
+      if (options.id) {
+        console.log(formatCloudPullMissingJson(options.id));
+        return;
+      }
       console.log(formatCloudPullJson({ pulled: 0, failed: 0, skipped: 0, all: Boolean(options.all), snapshots: [] }));
       return;
     }
@@ -464,6 +490,10 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
   if (options.id) {
     toPull = cloudSnapshots.filter(s => s.id === options.id || s.id.startsWith(options.id!));
     if (toPull.length === 0) {
+      if (options.json) {
+        console.log(formatCloudPullMissingJson(options.id));
+        return;
+      }
       console.log(chalk.red(`Snapshot not found in cloud: ${options.id}`));
       process.exit(1);
     }
