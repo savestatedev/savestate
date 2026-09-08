@@ -526,6 +526,15 @@ describe('CLI docs', () => {
     expect(evalSource).toContain('export function formatEvalReportMissingJson');
   });
 
+  it('documents eval quality --json when missing', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('scripting');
+    expect(evalSection).toContain('found, suite, suiteCount, passed, total, passRate');
+    expect(evalSection).toContain('savestate eval quality --suite recall --threshold 0.9 --json');
+    expect(evalSource).toContain('export function formatEvalQualityMissingJson');
+  });
+
   it('lists savestate login and logout in the command overview', () => {
     expect(docs).toContain('id="login"');
     expect(docs).toContain('id="logout"');
