@@ -103,6 +103,11 @@ const snapshot = readFileSync(
   'utf8',
 );
 
+const search = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../search.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1696,6 +1701,15 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('knowledge');
     expect(searchSection).toContain('20');
     expect(searchSection).toContain('savestate init');
+  });
+
+  it('documents search --json when missing', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('--json');
+    expect(searchSection).toContain('scripting');
+    expect(searchSection).toContain('found, query, snapshot, count');
+    expect(searchSection).toContain('--snapshot missing --json');
+    expect(search).toContain('export function formatSearchMissingJson');
   });
 
   it('registers --json on savestate config', () => {

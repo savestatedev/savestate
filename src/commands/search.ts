@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
+import { findEntry } from '../index-file.js';
 import { searchSnapshots } from '../search.js';
 import { getPassphrase } from '../passphrase.js';
 import type { SearchResult } from '../types.js';
@@ -20,6 +21,26 @@ const VALID_TYPES = new Set(['memory', 'conversation', 'identity', 'knowledge'])
 
 export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
+}
+
+export interface SearchMissingJson {
+  found: false;
+  query: string;
+  snapshot: string;
+  count: 0;
+}
+
+export function formatSearchMissingJson(query: string, snapshot: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      query,
+      snapshot,
+      count: 0,
+    },
+    null,
+    2,
+  );
 }
 
 export async function searchCommand(query: string, options: SearchOptions): Promise<void> {
@@ -45,6 +66,18 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
   if (options.type && (!types || types.length === 0)) {
     console.log(chalk.red(`✗ Invalid --type. Use any of: ${[...VALID_TYPES].join(', ')}`));
     process.exit(1);
+  }
+
+  if (options.snapshot) {
+    const entry = await findEntry(options.snapshot);
+    if (!entry) {
+      if (options.json) {
+        console.log(formatSearchMissingJson(query, options.snapshot));
+        return;
+      }
+      console.log(chalk.red(`✗ Snapshot not found: ${options.snapshot}`));
+      process.exit(1);
+    }
   }
 
   if (!options.json) {
