@@ -944,6 +944,15 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('savestate acl list --json');
   });
 
+  it('documents acl verify --json when missing', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--json');
+    expect(aclSection).toContain('scripting');
+    expect(aclSection).toContain('found, id, state, verifier');
+    expect(aclSection).toContain('savestate acl verify --id cmt-missing --verifier reviewer-1 --json');
+    expect(acl).toContain('export function formatAclVerifyMissingJson');
+  });
+
   it('registers savestate identity on the CLI', () => {
     expect(cli).toContain("command('identity <subcommand> [args...]')");
     expect(cli).toContain('identityCommand');
