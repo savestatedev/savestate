@@ -63,6 +63,11 @@ const memory = readFileSync(
   'utf8',
 );
 
+const memoryLifecycle = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../memory-lifecycle.ts'),
+  'utf8',
+);
+
 const evalSource = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../eval.ts'),
   'utf8',
@@ -930,6 +935,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('edited version');
     expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --importance 0.9 --reason "correction" --json');
+  });
+
+  it('documents memory edit --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, version');
+    expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --importance 0.9 --reason "correction" --json');
+    expect(memoryLifecycle).toContain('export function formatMemoryEditMissingJson');
   });
 
   it('registers --json on savestate memory delete', () => {
