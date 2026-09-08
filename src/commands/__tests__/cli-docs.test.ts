@@ -1410,6 +1410,15 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function formatTraceExportJson');
   });
 
+  it('documents trace export --json when missing', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain('found, format, run, runCount, eventCount');
+    expect(traceSection).toContain('savestate trace export --run run-123 --json');
+    expect(trace).toContain('export function formatTraceExportMissingJson');
+  });
+
   it('documents trace show --json when missing', () => {
     const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     expect(traceSection).toContain('--json');

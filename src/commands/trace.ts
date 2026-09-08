@@ -100,6 +100,28 @@ export interface TraceExportJson {
   runs: TraceRunJson[];
 }
 
+export interface TraceExportMissingJson {
+  found: false;
+  format: string;
+  run: string;
+  runCount: 0;
+  eventCount: 0;
+}
+
+export function formatTraceExportMissingJson(run: string, format?: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      format: format ?? 'jsonl',
+      run,
+      runCount: 0,
+      eventCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export function formatTraceExportJson(input: {
   format?: string;
   run?: string;
@@ -277,6 +299,10 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   if (options.json) {
     const allRuns = await store.listRuns();
     const runs = run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run);
+    if (run !== 'all' && runs.length === 0) {
+      console.log(formatTraceExportMissingJson(run, format));
+      return;
+    }
     console.log(formatTraceExportJson({ format, run, runs }));
     return;
   }
