@@ -97,6 +97,24 @@ export function formatMemoryEditJson(memory: {
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryEditMissingJson {
+  found: false;
+  id: string;
+  version: null;
+}
+
+export function formatMemoryEditMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      version: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface MemoryDeleteJson {
   id: string;
   deleted: true;
@@ -276,7 +294,12 @@ export async function editMemoryCommand(
       console.log(`  Importance: ${updated.importance}`);
     }
   } catch (err) {
-    throw new Error(`Failed to edit memory: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    if (options.format === 'json' && message === `Memory ${memoryId} not found`) {
+      console.log(formatMemoryEditMissingJson(memoryId));
+      return;
+    }
+    throw new Error(`Failed to edit memory: ${message}`);
   }
 }
 

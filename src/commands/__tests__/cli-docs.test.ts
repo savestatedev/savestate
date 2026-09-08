@@ -946,6 +946,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --importance 0.9 --reason "correction" --json');
   });
 
+  it('documents memory edit --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, version');
+    expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --importance 0.9 --reason "correction" --json');
+    expect(memoryLifecycle).toContain('export function formatMemoryEditMissingJson');
+  });
+
   it('registers --json on savestate memory delete', () => {
     const deleteBlock = memoryCli.slice(memoryCli.indexOf("command('delete"), memoryCli.indexOf("command('rollback"));
     expect(deleteBlock).toContain(".option('--json'");
