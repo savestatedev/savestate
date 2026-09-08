@@ -73,6 +73,11 @@ const cloud = readFileSync(
   'utf8',
 );
 
+const diff = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../diff.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1525,5 +1530,14 @@ describe('CLI docs', () => {
     expect(diffSection).toContain('--json');
     expect(diffSection).toContain('scripting');
     expect(diffSection).toContain('savestate diff ss-2026-01-25 ss-2026-01-27 --json');
+  });
+
+  it('documents diff --json when missing', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    expect(diffSection).toContain('--json');
+    expect(diffSection).toContain('scripting');
+    expect(diffSection).toContain('found, snapshotA, snapshotB, hasChanges');
+    expect(diffSection).toContain('savestate diff ss-2026-01-25 ss-2026-01-27 --json');
+    expect(diff).toContain('export function formatDiffMissingJson');
   });
 });
