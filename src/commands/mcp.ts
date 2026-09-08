@@ -182,6 +182,28 @@ export function formatMcpImportJson(result: McpImportJson): string {
   );
 }
 
+export interface McpImportMissingJson {
+  found: false;
+  input: string;
+  importedMemories: 0;
+  totalMemories: 0;
+  snapshots: 0;
+}
+
+export function formatMcpImportMissingJson(input: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      input,
+      importedMemories: 0,
+      totalMemories: 0,
+      snapshots: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface McpExportJson {
   agent: string;
   output: string;
@@ -409,6 +431,10 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     const inputPath = options.input;
 
     if (!existsSync(inputPath)) {
+      if (options.json) {
+        console.log(formatMcpImportMissingJson(inputPath));
+        return;
+      }
       spinner?.fail('Passport file not found');
       console.error(chalk.red(`File not found: ${inputPath}`));
       process.exit(1);
