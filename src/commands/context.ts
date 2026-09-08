@@ -65,6 +65,15 @@ export interface ContextExplainJson {
   candidates: ContextExplainCandidateJson[];
 }
 
+export interface ContextExplainMissingJson {
+  found: false;
+  runId: string;
+  compiledAt: null;
+  totalCandidates: 0;
+  included: 0;
+  excluded: 0;
+}
+
 export interface ContextValidateJson {
   file: string;
   valid: boolean;
@@ -152,6 +161,21 @@ export function formatContextExplainJson(explanation: ExplanationTrace): string 
   return JSON.stringify(record, null, 2);
 }
 
+export function formatContextExplainMissingJson(runId: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      runId,
+      compiledAt: null,
+      totalCandidates: 0,
+      included: 0,
+      excluded: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export function registerContextCommands(program: Command): void {
   const context = program
     .command('context')
@@ -218,6 +242,10 @@ export function registerContextCommands(program: Command): void {
       const explanation = compiler.getExplanation(runId);
       
       if (!explanation) {
+        if (options.json) {
+          console.log(formatContextExplainMissingJson(runId));
+          return;
+        }
         console.error(`❌ No explanation found for run ID: ${runId}`);
         process.exit(1);
       }
