@@ -93,6 +93,11 @@ const restore = readFileSync(
   'utf8',
 );
 
+const trust = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../trust.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -353,6 +358,15 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('scripting');
     expect(trustSection).toContain('pattern and removed count');
     expect(trustSection).toContain('savestate trust deny remove secret.env --json');
+  });
+
+  it('documents trust deny remove --json when missing', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--json');
+    expect(trustSection).toContain('scripting');
+    expect(trustSection).toContain('found, pattern, removed');
+    expect(trustSection).toContain('savestate trust deny remove secret.env --json');
+    expect(trust).toContain('export function formatTrustDenyRemoveMissingJson');
   });
 
   it('registers --json on savestate trust deny list', () => {
