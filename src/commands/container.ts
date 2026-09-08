@@ -419,6 +419,26 @@ export function formatImportResultJson(result: {
   );
 }
 
+export interface ImportMissingJson {
+  found: false;
+  input: string;
+  restored: false;
+  agent: null;
+}
+
+export function formatImportMissingJson(input: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      input,
+      restored: false,
+      agent: null,
+    },
+    null,
+    2,
+  );
+}
+
 function optionalImportPayloadName(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
@@ -1030,6 +1050,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         return undefined;
       }
     } catch {
+      if (options.json) {
+        console.log(formatImportMissingJson(inFile));
+        return undefined;
+      }
       console.error(`Error: Input path not found: ${inFile}`);
       return undefined;
     }
@@ -1043,6 +1067,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     try {
       await fs.access(inFile);
     } catch {
+      if (options.json) {
+        console.log(formatImportMissingJson(inFile));
+        return undefined;
+      }
       console.error(`Error: File not found: ${inFile}`);
       process.exit(1);
     }

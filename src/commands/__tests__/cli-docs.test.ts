@@ -139,6 +139,15 @@ describe('CLI docs', () => {
     expect(importSection).toContain('savestate import agent.savestate --json --dry-run');
   });
 
+  it('documents import --json when missing', () => {
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    expect(importSection).toContain('--json');
+    expect(importSection).toContain('scripting');
+    expect(importSection).toContain('found, input, restored, agent');
+    expect(importSection).toContain('savestate import missing.savestate --json');
+    expect(container).toContain('export function formatImportMissingJson');
+  });
+
   it('documents verify rejecting a missing input path', () => {
     const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
     expect(verifySection).toContain('missing');
