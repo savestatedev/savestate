@@ -91,6 +91,24 @@ export function formatMemoryDeleteJson(id: string, reason: string, actorId: stri
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryDeleteMissingJson {
+  found: false;
+  id: string;
+  deleted: null;
+}
+
+export function formatMemoryDeleteMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      deleted: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface MemoryRollbackJson {
   id: string;
   rolledBack: true;
@@ -274,7 +292,12 @@ export async function deleteMemoryCommand(
     console.log(`  Actor:  ${options.actorId}`);
     console.log(`\nNote: The memory is marked as deleted but retained for audit purposes.`);
   } catch (err) {
-    throw new Error(`Failed to delete memory: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    if (options.format === 'json' && message === `Memory ${memoryId} not found`) {
+      console.log(formatMemoryDeleteMissingJson(memoryId));
+      return;
+    }
+    throw new Error(`Failed to delete memory: ${message}`);
   }
 }
 
