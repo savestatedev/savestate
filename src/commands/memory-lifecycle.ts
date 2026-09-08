@@ -163,6 +163,24 @@ export function formatMemoryRollbackJson(
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryRollbackMissingJson {
+  found: false;
+  id: string;
+  rolledBack: null;
+}
+
+export function formatMemoryRollbackMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      rolledBack: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface MemoryExpireJson {
   dryRun: boolean;
   applied: boolean;
@@ -381,7 +399,12 @@ export async function rollbackMemoryCommand(
     console.log(`  New version:     ${restored.version}`);
     console.log(`  Content:         ${restored.content.slice(0, 50)}...`);
   } catch (err) {
-    throw new Error(`Failed to rollback memory: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    if (options.format === 'json' && message === `Memory ${memoryId} not found`) {
+      console.log(formatMemoryRollbackMissingJson(memoryId));
+      return;
+    }
+    throw new Error(`Failed to rollback memory: ${message}`);
   }
 }
 
