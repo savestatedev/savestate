@@ -94,6 +94,28 @@ export function formatIdentitySetJson(result: IdentitySetJson): string {
   );
 }
 
+export interface IdentitySetMissingJson {
+  found: false;
+  updated: false;
+  field: string;
+  name: null;
+  version: null;
+}
+
+export function formatIdentitySetMissingJson(field: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      updated: false,
+      field,
+      name: null,
+      version: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IdentityShowMissingJson {
   found: false;
   name: null;
@@ -399,6 +421,19 @@ async function setIdentityField(
   const spinner = options?.json ? null : ora(`Setting ${field}...`).start();
 
   try {
+    const existing = await loadLocalIdentity();
+    if (!existing) {
+      if (options?.json) {
+        console.log(formatIdentitySetMissingJson(field));
+        return;
+      }
+      spinner?.warn('No identity found');
+      console.log();
+      console.log(chalk.dim('  Initialize with: savestate identity init <name>'));
+      console.log();
+      return;
+    }
+
     const updated = await updateIdentityField(field, value);
 
     spinner?.succeed(`Updated ${field}`);
