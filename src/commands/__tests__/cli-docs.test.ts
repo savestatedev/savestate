@@ -58,6 +58,11 @@ const memoryCli = readFileSync(
   'utf8',
 );
 
+const memory = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../memory.ts'),
+  'utf8',
+);
+
 const evalSource = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../eval.ts'),
   'utf8',
@@ -814,6 +819,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('from/to tiers');
     expect(memorySection).toContain('savestate memory promote mem-123 --to L1 --json');
+  });
+
+  it('documents memory promote --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, from, to');
+    expect(memorySection).toContain('savestate memory promote mem-123 --to L1 --json');
+    expect(memory).toContain('export function formatMemoryPromoteMissingJson');
   });
 
   it('registers --json on savestate memory demote', () => {

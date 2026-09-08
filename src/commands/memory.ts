@@ -442,6 +442,26 @@ export function formatMemoryPromoteJson(id: string, from: MemoryTier, to: Memory
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryPromoteMissingJson {
+  found: false;
+  id: string;
+  from: null;
+  to: null;
+}
+
+export function formatMemoryPromoteMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      from: null,
+      to: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function promoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -457,6 +477,10 @@ export async function promoteMemoryCommand(
 
   const entryIndex = snapshot.memory.core.findIndex((e) => e.id === memoryId);
   if (entryIndex === -1) {
+    if (options.format === 'json') {
+      console.log(formatMemoryPromoteMissingJson(memoryId));
+      return;
+    }
     throw new Error(`Memory entry not found: ${memoryId}`);
   }
 
