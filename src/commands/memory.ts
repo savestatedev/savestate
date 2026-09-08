@@ -859,6 +859,26 @@ export function formatMemoryExplainJson(
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryExplainMissingJson {
+  found: false;
+  query: string;
+  shown: 0;
+  results: null;
+}
+
+export function formatMemoryExplainMissingJson(query: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      query,
+      shown: 0,
+      results: null,
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * Explain why memories were retrieved for a query.
  * Shows detailed breakdown of scores and policy decisions.
@@ -985,6 +1005,10 @@ export async function explainMemoryCommand(
     .slice(0, options?.limit ?? 5);
 
   if (options?.format === 'json') {
+    if (scored.length === 0) {
+      console.log(formatMemoryExplainMissingJson(query));
+      return;
+    }
     console.log(formatMemoryExplainJson(
       query,
       scored.map((r) => ({
