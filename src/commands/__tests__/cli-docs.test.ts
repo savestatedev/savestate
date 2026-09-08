@@ -58,6 +58,11 @@ const memoryCli = readFileSync(
   'utf8',
 );
 
+const memory = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../memory.ts'),
+  'utf8',
+);
+
 const evalSource = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../eval.ts'),
   'utf8',
@@ -840,6 +845,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('pinned status');
     expect(memorySection).toContain('savestate memory pin mem-123 --json');
+  });
+
+  it('documents memory pin --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, pinned');
+    expect(memorySection).toContain('savestate memory pin mem-123 --json');
+    expect(memory).toContain('export function formatMemoryPinMissingJson');
   });
 
   it('registers --json on savestate memory unpin', () => {
