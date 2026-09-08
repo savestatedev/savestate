@@ -98,6 +98,11 @@ const trust = readFileSync(
   'utf8',
 );
 
+const snapshot = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../snapshot.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1647,6 +1652,15 @@ describe('CLI docs', () => {
     expect(snapshotSection).toContain('--json');
     expect(snapshotSection).toContain('Encrypts the archive');
     expect(snapshotSection).toContain('savestate snapshot --json --full');
+  });
+
+  it('documents snapshot --json when missing', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--json');
+    expect(snapshotSection).toContain('scripting');
+    expect(snapshotSection).toContain('found, adapter, snapshotId, timestamp, platform');
+    expect(snapshotSection).toContain('savestate snapshot --adapter missing --json');
+    expect(snapshot).toContain('export function formatSnapshotMissingJson');
   });
 
   it('documents snapshot --tag and --meta state entries', () => {

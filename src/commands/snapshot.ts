@@ -59,6 +59,28 @@ export function formatSnapshotResultJson(
   );
 }
 
+export interface SnapshotMissingJson {
+  found: false;
+  adapter: string;
+  snapshotId: null;
+  timestamp: null;
+  platform: null;
+}
+
+export function formatSnapshotMissingJson(adapter: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      adapter,
+      snapshotId: null,
+      timestamp: null,
+      platform: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -87,6 +109,10 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     if (options.adapter) {
       adapter = getAdapter(options.adapter);
       if (!adapter) {
+        if (options.json) {
+          console.log(formatSnapshotMissingJson(options.adapter));
+          return;
+        }
         console.log(chalk.red(`✗ Unknown adapter: ${options.adapter}`));
         process.exit(1);
       }
@@ -97,6 +123,10 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     }
 
     if (!adapter) {
+      if (options.json) {
+        console.log(formatSnapshotMissingJson(options.adapter ?? config.defaultAdapter ?? ''));
+        return;
+      }
       console.log(chalk.red('✗ No adapter found. Specify one with --adapter or configure a default.'));
       process.exit(1);
     }

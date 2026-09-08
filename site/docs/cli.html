@@ -159,7 +159,7 @@
         <tr><td><code>-a, --adapter &lt;adapter&gt;</code></td><td>Force a specific adapter instead of auto-detection (e.g., <code>clawdbot</code>, <code>claude-code</code>)</td></tr>
         <tr><td><code>-s, --schedule &lt;interval&gt;</code></td><td>Set up auto-snapshot schedule (e.g., <code>6h</code>, <code>1d</code>) <em>(Pro)</em></td></tr>
         <tr><td><code>--full</code></td><td>Force a full snapshot, skipping incremental delta detection</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the snapshot result as JSON. Encrypts the archive. Skips the spinner.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the snapshot result as JSON. Encrypts the archive. Skips the spinner. When the adapter is missing, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -183,7 +183,10 @@
 <span class="code-prompt">$</span> savestate snapshot --schedule 6h
 
 <span class="code-comment"># Scriptable snapshot metadata</span>
-<span class="code-prompt">$</span> savestate snapshot --json --full</code></pre>
+<span class="code-prompt">$</span> savestate snapshot --json --full
+
+<span class="code-comment"># Scriptable JSON when the adapter is missing</span>
+<span class="code-prompt">$</span> savestate snapshot --adapter missing --json</code></pre>
 
     <p>By default, snapshots are <strong>incremental</strong> — only changes since the last snapshot are stored. Use <code>--full</code> to force a complete capture. See <a href="/docs/incremental.html">Incremental Snapshots</a> for details.</p>
 
