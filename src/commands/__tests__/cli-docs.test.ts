@@ -700,6 +700,15 @@ describe('CLI docs', () => {
     expect(mcpSection).toContain('savestate mcp import --input passport.json --json');
   });
 
+  it('documents mcp import --json when missing', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--json');
+    expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain('found, input, importedMemories, totalMemories, snapshots');
+    expect(mcpSection).toContain('savestate mcp import --input passport.json --json');
+    expect(mcp).toContain('export function formatMcpImportMissingJson');
+  });
+
   it('documents mcp export --json', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     expect(mcpSection).toContain('--json');
