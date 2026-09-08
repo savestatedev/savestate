@@ -151,6 +151,26 @@ export function formatAntibodiesStatsJson(stats: AntibodiesStatsJson): string {
   );
 }
 
+export interface AntibodiesAddJson {
+  id: string;
+  risk: RiskLevel;
+  safeAction: SafeActionType;
+  confidence: number;
+}
+
+export function formatAntibodiesAddJson(result: AntibodiesAddJson): string {
+  return JSON.stringify(
+    {
+      id: result.id,
+      risk: result.risk,
+      safeAction: result.safeAction,
+      confidence: result.confidence,
+    },
+    null,
+    2,
+  );
+}
+
 export async function antibodiesCommand(subcommand: string, options: AntibodiesOptions): Promise<void> {
   console.log();
 
@@ -264,6 +284,18 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
   };
 
   const created = await store.add(rule);
+
+  if (options.json) {
+    console.log(
+      formatAntibodiesAddJson({
+        id: created.id,
+        risk: created.risk,
+        safeAction: created.safe_action.type,
+        confidence: created.confidence,
+      }),
+    );
+    return;
+  }
 
   console.log(chalk.green(`✓ Antibody rule saved: ${created.id}`));
   console.log(chalk.dim(`  safe_action=${created.safe_action.type} confidence=${created.confidence}`));
