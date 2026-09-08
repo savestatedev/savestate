@@ -871,7 +871,7 @@
         <tr><td><code>--include-snapshots</code></td><td>Include snapshot metadata in the exported passport</td></tr>
         <tr><td><code>-i, --input &lt;path&gt;</code></td><td>Passport file to import (required for <code>import</code>)</td></tr>
         <tr><td><code>--merge</code></td><td>Merge imported memories with existing ones instead of replacing</td></tr>
-        <tr><td><code>--json</code></td><td>Emit MCP status as JSON on <code>status</code>, export summary (agent, output path, memory/snapshot counts) on <code>export</code>, or import summary (input path, source/target agents, memory/snapshot counts) on <code>import</code>. When the passport file is missing, <code>import</code> emits a missing summary (found, input, importedMemories, totalMemories, snapshots; omits extra fields). Skips progress output. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit MCP status as JSON on <code>status</code>, export summary (agent, output path, memory/snapshot counts) on <code>export</code>, or import summary (input path, source/target agents, memory/snapshot counts) on <code>import</code>. When the agent has no memories or snapshots, <code>export</code> emits a missing summary (found, agent, output, memories, snapshots, written; omits extra fields). When the passport file is missing, <code>import</code> emits a missing summary (found, input, importedMemories, totalMemories, snapshots; omits extra fields). Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 

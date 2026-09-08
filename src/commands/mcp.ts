@@ -228,6 +228,30 @@ export function formatMcpExportJson(result: McpExportJson): string {
   );
 }
 
+export interface McpExportMissingJson {
+  found: false;
+  agent: string;
+  output: string;
+  memories: 0;
+  snapshots: 0;
+  written: false;
+}
+
+export function formatMcpExportMissingJson(agent: string, output: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      agent,
+      output,
+      memories: 0,
+      snapshots: 0,
+      written: false,
+    },
+    null,
+    2,
+  );
+}
+
 interface MCPStatusOptions {
   json?: boolean;
 }
@@ -358,6 +382,11 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
         label: s.label,
         size: s.size,
       }));
+
+    if (options.json && memories.length === 0 && snapshots.length === 0) {
+      console.log(formatMcpExportMissingJson(agentId, outputPath));
+      return;
+    }
 
     // Create passport
     const passport: MemoryPassport = {
