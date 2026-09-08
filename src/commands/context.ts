@@ -86,6 +86,14 @@ export interface ContextValidateJson {
   };
 }
 
+export interface ContextValidateMissingJson {
+  found: false;
+  file: string;
+  valid: false;
+  errors: [];
+  warnings: [];
+}
+
 const EXPLAIN_CANDIDATE_LIMIT = 10;
 
 export function formatContextCompileJson(brief: RunBrief): string {
@@ -130,6 +138,20 @@ export function formatContextValidateJson(
     },
   };
   return JSON.stringify(record, null, 2);
+}
+
+export function formatContextValidateMissingJson(file: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      file,
+      valid: false,
+      errors: [],
+      warnings: [],
+    },
+    null,
+    2,
+  );
 }
 
 export function formatContextExplainJson(explanation: ExplanationTrace): string {
@@ -290,6 +312,10 @@ export function registerContextCommands(program: Command): void {
       }
 
       if (!existsSync(filePath)) {
+        if (options.json) {
+          console.log(formatContextValidateMissingJson(filePath));
+          return;
+        }
         console.error(`File not found: ${filePath}`);
         process.exit(1);
       }

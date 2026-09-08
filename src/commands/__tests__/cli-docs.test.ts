@@ -689,6 +689,15 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('savestate context validate --file brief.json --json');
   });
 
+  it('documents context validate --json when missing', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('--json');
+    expect(contextSection).toContain('scripting');
+    expect(contextSection).toContain('found, file, valid, errors, warnings');
+    expect(contextSection).toContain('savestate context validate --file brief.json --json');
+    expect(context).toContain('export function formatContextValidateMissingJson');
+  });
+
   it('lists savestate memory in the command overview', () => {
     expect(docs).toContain('id="memory"');
     expect(docs).toContain('savestate memory');

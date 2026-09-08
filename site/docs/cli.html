@@ -909,7 +909,7 @@
         <tr><td><code>-f, --file &lt;path&gt;</code></td><td>Path to a RunBrief JSON file for <code>validate</code></td></tr>
         <tr><td><code>--weights</code></td><td>Show scoring weights on <code>config</code></td></tr>
         <tr><td><code>--budget</code></td><td>Show budget allocation on <code>config</code></td></tr>
-        <tr><td><code>--json</code></td><td>Emit compile, explain, validate, and config results as JSON. Explain omits score breakdowns. Validate includes valid flag, errors, warnings, and coverage. Skips progress output. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit compile, explain, validate, and config results as JSON. Explain omits score breakdowns. Validate includes valid flag, errors, warnings, and coverage. When the RunBrief file is missing, <code>validate</code> emits a missing summary (found, file, valid, errors, warnings; omits extra fields). Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
