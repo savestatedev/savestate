@@ -63,6 +63,11 @@ const evalSource = readFileSync(
   'utf8',
 );
 
+const inspect = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../inspect.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1302,6 +1307,15 @@ describe('CLI docs', () => {
     expect(inspectSection).toContain('--json');
     expect(inspectSection).toContain('scripting');
     expect(inspectSection).toContain('savestate inspect latest --json');
+  });
+
+  it('documents inspect --json when missing', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    expect(inspectSection).toContain('--json');
+    expect(inspectSection).toContain('scripting');
+    expect(inspectSection).toContain('found, id, timestamp, platform, hasIdentity');
+    expect(inspectSection).toContain('savestate inspect latest --json');
+    expect(inspect).toContain('export function formatInspectMissingJson');
   });
 
   it('lists savestate list in the command overview', () => {
