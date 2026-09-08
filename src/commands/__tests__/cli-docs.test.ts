@@ -852,6 +852,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory demote mem-123 --to L3 --json');
   });
 
+  it('documents memory demote --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, from, to');
+    expect(memorySection).toContain('savestate memory demote mem-123 --to L3 --json');
+    expect(memory).toContain('export function formatMemoryDemoteMissingJson');
+  });
+
   it('registers --json on savestate memory pin', () => {
     const pinBlock = memoryCli.slice(memoryCli.indexOf("command('pin"), memoryCli.indexOf("command('unpin"));
     expect(pinBlock).toContain(".option('--json'");

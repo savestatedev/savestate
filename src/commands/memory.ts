@@ -515,6 +515,26 @@ export function formatMemoryDemoteJson(id: string, from: MemoryTier, to: MemoryT
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryDemoteMissingJson {
+  found: false;
+  id: string;
+  from: null;
+  to: null;
+}
+
+export function formatMemoryDemoteMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      from: null,
+      to: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function demoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -530,6 +550,10 @@ export async function demoteMemoryCommand(
 
   const entryIndex = snapshot.memory.core.findIndex((e) => e.id === memoryId);
   if (entryIndex === -1) {
+    if (options.format === 'json') {
+      console.log(formatMemoryDemoteMissingJson(memoryId));
+      return;
+    }
     throw new Error(`Memory entry not found: ${memoryId}`);
   }
 
