@@ -65,6 +65,26 @@ export function formatDiffJson(
   return JSON.stringify(record, null, 2);
 }
 
+export interface DiffMissingJson {
+  found: false;
+  snapshotA: string;
+  snapshotB: string;
+  hasChanges: false;
+}
+
+export function formatDiffMissingJson(snapshotA: string, snapshotB: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      snapshotA,
+      snapshotB,
+      hasChanges: false,
+    },
+    null,
+    2,
+  );
+}
+
 export async function diffCommand(
   snapshotA: string,
   snapshotB: string,
@@ -232,8 +252,13 @@ export async function diffCommand(
     );
     console.log();
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (options?.json && message.startsWith('Snapshot not found')) {
+      console.log(formatDiffMissingJson(snapshotA, snapshotB));
+      return;
+    }
     spinner?.fail('Diff failed');
-    console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+    console.error(chalk.red(message));
     process.exit(1);
   }
 }
