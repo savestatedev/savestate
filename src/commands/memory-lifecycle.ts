@@ -54,6 +54,24 @@ export function formatMemoryLogJson(memoryId: string, log: ProvenanceEntry[]): s
   );
 }
 
+export interface MemoryLogMissingJson {
+  found: false;
+  id: string;
+  events: null;
+}
+
+export function formatMemoryLogMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      events: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface MemoryEditJson {
   id: string;
   version: number;
@@ -416,6 +434,10 @@ export async function memoryLogCommand(
     const log = await knowledgeLane.memoryAuditLog(memoryId);
 
     if (options?.format === 'json') {
+      if (log.length === 0) {
+        console.log(formatMemoryLogMissingJson(memoryId));
+        return;
+      }
       console.log(formatMemoryLogJson(memoryId, log));
       return;
     }

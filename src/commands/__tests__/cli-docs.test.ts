@@ -63,6 +63,11 @@ const memory = readFileSync(
   'utf8',
 );
 
+const memoryLifecycle = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../memory-lifecycle.ts'),
+  'utf8',
+);
+
 const evalSource = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../eval.ts'),
   'utf8',
@@ -791,6 +796,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('Omits previous content');
     expect(memorySection).toContain('savestate memory log mem-123 --json');
+  });
+
+  it('documents memory log --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, id, events');
+    expect(memorySection).toContain('savestate memory log mem-123 --json');
+    expect(memoryLifecycle).toContain('export function formatMemoryLogMissingJson');
   });
 
   it('registers --json on savestate memory list', () => {
