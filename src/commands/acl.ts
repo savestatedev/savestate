@@ -57,6 +57,26 @@ export function formatAclGateJson(result: AclGateResult): string {
   );
 }
 
+export interface AclVerifyMissingJson {
+  found: false;
+  id: string;
+  state: null;
+  verifier: null;
+}
+
+export function formatAclVerifyMissingJson(id: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id,
+      state: null,
+      verifier: null,
+    },
+    null,
+    2,
+  );
+}
+
 async function aclPropose(options: {
   type: string;
   criticality: string;
@@ -99,6 +119,10 @@ async function aclVerify(options: { id: string; verifier: string; approve: boole
   try {
     const commitment = verifyCommitment(options.id, options.verifier, options.approve);
     if (!commitment) {
+      if (options.json) {
+        console.log(formatAclVerifyMissingJson(options.id));
+        return;
+      }
       console.error('Commitment not found:', options.id);
       process.exit(1);
     }
