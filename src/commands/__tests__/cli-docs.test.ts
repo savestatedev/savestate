@@ -878,6 +878,15 @@ describe('CLI docs', () => {
     expect(mcpSection).toContain('savestate mcp status --json');
   });
 
+  it('documents mcp status --json when missing', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--json');
+    expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain('found, initialized, enabled');
+    expect(mcpSection).toContain('savestate mcp status --json');
+    expect(mcp).toContain('export function formatMcpStatusMissingJson');
+  });
+
   it('documents mcp import --json', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     expect(mcpSection).toContain('--json');
@@ -1552,6 +1561,15 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('scripting');
     expect(integritySection).toContain('savestate integrity seed --count 10 --json');
     expect(integrity).toContain('export function formatIntegritySeedJson');
+  });
+
+  it('documents integrity seed --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, count');
+    expect(integritySection).toContain('savestate integrity seed --count 10 --json');
+    expect(integrity).toContain('export function formatIntegritySeedMissingJson');
   });
 
   it('documents integrity quarantine --json', () => {
