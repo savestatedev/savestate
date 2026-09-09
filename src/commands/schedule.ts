@@ -48,6 +48,26 @@ export function formatScheduleStatusJson(status: ScheduleStatus): string {
   );
 }
 
+export interface ScheduleMissingJson {
+  found: false;
+  enabled: false;
+  running: false;
+  supported: false;
+}
+
+export function formatScheduleMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      enabled: false,
+      running: false,
+      supported: false,
+    },
+    null,
+    2,
+  );
+}
+
 const LABEL = 'dev.savestate.autobackup';
 
 /**
@@ -90,6 +110,10 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatScheduleMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

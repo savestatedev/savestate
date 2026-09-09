@@ -123,6 +123,11 @@ const prune = readFileSync(
   'utf8',
 );
 
+const schedule = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../schedule.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -316,6 +321,15 @@ describe('CLI docs', () => {
     expect(scheduleSection).toContain('--json');
     expect(scheduleSection).toContain('scripting');
     expect(scheduleSection).toContain('savestate schedule --json');
+  });
+
+  it('documents schedule --json when missing', () => {
+    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'), docs.indexOf('id="migrate"'));
+    expect(scheduleSection).toContain('--json');
+    expect(scheduleSection).toContain('scripting');
+    expect(scheduleSection).toContain('found, enabled, running, supported');
+    expect(scheduleSection).toContain('savestate schedule --json');
+    expect(schedule).toContain('export function formatScheduleMissingJson');
   });
 
   it('lists savestate migrate in the command overview', () => {
