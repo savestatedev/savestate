@@ -113,6 +113,11 @@ const search = readFileSync(
   'utf8',
 );
 
+const configSource = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../config.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1781,6 +1786,15 @@ describe('CLI docs', () => {
     expect(configSection).toContain('--json');
     expect(configSection).toContain('scripting');
     expect(configSection).toContain('savestate config --json');
+  });
+
+  it('documents config --json when missing', () => {
+    const configSection = docs.slice(docs.indexOf('id="config"'), docs.indexOf('id="adapters"'));
+    expect(configSection).toContain('--json');
+    expect(configSection).toContain('scripting');
+    expect(configSection).toContain('found, version, storage, defaultAdapter');
+    expect(configSection).toContain('savestate config --json');
+    expect(configSource).toContain('export function formatConfigMissingJson');
   });
 
   it('registers --json on savestate adapters', () => {

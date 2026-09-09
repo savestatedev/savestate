@@ -398,7 +398,7 @@
       </thead>
       <tbody>
         <tr><td><code>--set &lt;key=value&gt;</code></td><td>Set a configuration value (e.g., <code>storage.type=s3</code>)</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the current config as JSON. Omits the saved cloud API key. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the current config as JSON. Omits the saved cloud API key. When SaveState is not initialized, emits a missing summary (found, version, storage, defaultAdapter; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -409,6 +409,9 @@
 <span class="code-prompt">$</span> savestate config --set <span class="code-string">"storage.type=s3"</span>
 
 <span class="code-comment"># Scriptable config (API key omitted)</span>
+<span class="code-prompt">$</span> savestate config --json
+
+<span class="code-comment"># Scriptable JSON when SaveState is not initialized</span>
 <span class="code-prompt">$</span> savestate config --json</code></pre>
 
     <!-- adapters -->
