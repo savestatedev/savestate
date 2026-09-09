@@ -373,6 +373,22 @@ export function formatIntegrityConfigJson(result: IntegrityConfigJson): string {
   );
 }
 
+export interface IntegrityConfigMissingJson {
+  found: false;
+  enabled: false;
+}
+
+export function formatIntegrityConfigMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      enabled: false,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityTestEventJson {
   id: string;
   honeyfactId: string;
@@ -429,6 +445,10 @@ export async function integrityCommand(
     }
     if (options.json && subcommand === 'quarantine') {
       console.log(formatIntegrityQuarantineMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'config') {
+      console.log(formatIntegrityConfigMissingJson());
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));

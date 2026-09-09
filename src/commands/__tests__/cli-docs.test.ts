@@ -1623,6 +1623,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityConfigJson');
   });
 
+  it('documents integrity config --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, enabled');
+    expect(integritySection).toContain('savestate integrity config --json');
+    expect(integrity).toContain('export function formatIntegrityConfigMissingJson');
+  });
+
   it('documents integrity test --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
