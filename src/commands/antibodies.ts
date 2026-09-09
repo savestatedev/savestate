@@ -169,6 +169,30 @@ export function formatAntibodiesStatsJson(stats: AntibodiesStatsJson): string {
   );
 }
 
+export interface AntibodiesStatsMissingJson {
+  found: false;
+  totalRules: 0;
+  activeRules: 0;
+  retiredRules: 0;
+  totalHits: 0;
+  totalOverrides: 0;
+}
+
+export function formatAntibodiesStatsMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      totalRules: 0,
+      activeRules: 0,
+      retiredRules: 0,
+      totalHits: 0,
+      totalOverrides: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface AntibodiesAddJson {
   id: string;
   risk: RiskLevel;
@@ -215,6 +239,10 @@ export async function antibodiesCommand(subcommand: string, options: AntibodiesO
     }
     if (options.json && subcommand === 'add') {
       console.log(formatAntibodiesAddMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'stats') {
+      console.log(formatAntibodiesStatsMissingJson());
       return;
     }
     console.log();
