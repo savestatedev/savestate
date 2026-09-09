@@ -940,6 +940,26 @@ export function verifyExitCode(status: VerifyStatus): number {
   return 1;
 }
 
+export interface VerifyMissingJson {
+  found: false;
+  input: string;
+  valid: false;
+  agent: null;
+}
+
+export function formatVerifyMissingJson(input: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      input,
+      valid: false,
+      agent: null,
+    },
+    null,
+    2,
+  );
+}
+
 export function formatVerifyResult(result: VerifyResult, json: boolean): string {
   if (json) {
     return JSON.stringify(result, null, 2);
@@ -1093,6 +1113,15 @@ export async function verifyCommand(
   if (typeof filePath !== 'string' || filePath.trim() === '') {
     console.error(`✗ Input path must not be empty: ${JSON.stringify(filePath)}.`);
     process.exit(1);
+  }
+
+  if (options.json) {
+    try {
+      await fs.stat(filePath);
+    } catch {
+      console.log(formatVerifyMissingJson(filePath));
+      process.exit(1);
+    }
   }
 
   if (options.passphrase !== undefined && (typeof options.passphrase !== 'string' || options.passphrase.trim() === '')) {
