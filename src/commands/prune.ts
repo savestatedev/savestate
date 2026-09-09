@@ -73,12 +73,36 @@ export function formatPruneJson(plan: PrunePlan, dryRun: boolean): string {
   return JSON.stringify(record, null, 2);
 }
 
+export interface PruneMissingJson {
+  found: false;
+  dryRun: true;
+  keepCount: 0;
+  dropCount: 0;
+}
+
+export function formatPruneMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      dryRun: true,
+      keepCount: 0,
+      dropCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export async function pruneCommand(options: PruneOptions): Promise<void> {
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatPruneMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

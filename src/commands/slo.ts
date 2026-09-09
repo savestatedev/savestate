@@ -93,6 +93,28 @@ export function formatSloStatusJson(compliance: SLOComplianceStatus): string {
   return JSON.stringify(record, null, 2);
 }
 
+export interface SloStatusMissingJson {
+  found: false;
+  enabled: false;
+  namespace: string;
+  compliant: false;
+  violations: 0;
+}
+
+export function formatSloStatusMissingJson(namespace: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      enabled: false,
+      namespace,
+      compliant: false,
+      violations: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export function formatSloConfigJson(config: SLOConfig): string {
   const record: SloConfigJson = {
     enabled: config.enabled,
@@ -121,6 +143,28 @@ export function formatSloReportJson(report: SLOReport): string {
     namespaces: report.namespace_compliance.length,
   };
   return JSON.stringify(record, null, 2);
+}
+
+export interface SloReportMissingJson {
+  found: false;
+  enabled: false;
+  reportId: null;
+  totalQueries: 0;
+  namespaces: 0;
+}
+
+export function formatSloReportMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      enabled: false,
+      reportId: null,
+      totalQueries: 0,
+      namespaces: 0,
+    },
+    null,
+    2,
+  );
 }
 
 /**
@@ -159,6 +203,10 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
   const sloConfig = await loadSLOConfig();
 
   if (!sloConfig.enabled) {
+    if (options.json) {
+      console.log(formatSloStatusMissingJson(options.namespace ?? 'default:default:default'));
+      return;
+    }
     console.log(chalk.yellow('SLO monitoring is disabled.'));
     console.log('Enable with: savestate slo config --set enabled=true');
     return;
@@ -238,6 +286,11 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
  */
 async function sloReport(options: { period?: string; json?: boolean }): Promise<void> {
   const sloConfig = await loadSLOConfig();
+
+  if (!sloConfig.enabled && options.json) {
+    console.log(formatSloReportMissingJson());
+    return;
+  }
 
   // Calculate period
   const periodDays = options.period ? (parseDuration(options.period) ?? 168) / 24 : 7;

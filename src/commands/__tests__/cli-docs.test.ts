@@ -113,6 +113,16 @@ const search = readFileSync(
   'utf8',
 );
 
+const configSource = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../config.ts'),
+  'utf8',
+);
+
+const prune = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../prune.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -208,6 +218,15 @@ describe('CLI docs', () => {
     expect(pruneSection).toContain('--json');
     expect(pruneSection).toContain('scripting');
     expect(pruneSection).toContain('savestate prune --keep-last 10 --json');
+  });
+
+  it('documents prune --json when missing', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    expect(pruneSection).toContain('--json');
+    expect(pruneSection).toContain('scripting');
+    expect(pruneSection).toContain('found, dryRun, keepCount, dropCount');
+    expect(pruneSection).toContain('savestate prune --json');
+    expect(prune).toContain('export function formatPruneMissingJson');
   });
 
   it('lists savestate antibodies in the command overview', () => {
@@ -1138,6 +1157,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory expire --namespace org:app:agent --json');
   });
 
+  it('documents memory expire --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, namespace, applied, expiredCount');
+    expect(memorySection).toContain('savestate memory expire --namespace org:missing --json');
+    expect(memoryLifecycle).toContain('export function formatMemoryExpireMissingJson');
+  });
+
   it('registers --json on savestate memory explain', () => {
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
     expect(explainBlock).toContain(".option('--json'");
@@ -1188,6 +1216,24 @@ describe('CLI docs', () => {
     expect(sloSection).toContain('--json');
     expect(sloSection).toContain('scripting');
     expect(sloSection).toContain('savestate slo status --json');
+  });
+
+  it('documents slo report --json when missing', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--json');
+    expect(sloSection).toContain('scripting');
+    expect(sloSection).toContain('found, enabled, reportId, totalQueries, namespaces');
+    expect(sloSection).toContain('savestate slo report --json');
+    expect(slo).toContain('export function formatSloReportMissingJson');
+  });
+
+  it('documents slo status --json when missing', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--json');
+    expect(sloSection).toContain('scripting');
+    expect(sloSection).toContain('found, enabled, namespace, compliant, violations');
+    expect(sloSection).toContain('savestate slo status --namespace org:missing --json');
+    expect(slo).toContain('export function formatSloStatusMissingJson');
   });
 
   it('lists savestate acl in the command overview', () => {
@@ -1772,6 +1818,15 @@ describe('CLI docs', () => {
     expect(configSection).toContain('--json');
     expect(configSection).toContain('scripting');
     expect(configSection).toContain('savestate config --json');
+  });
+
+  it('documents config --json when missing', () => {
+    const configSection = docs.slice(docs.indexOf('id="config"'), docs.indexOf('id="adapters"'));
+    expect(configSection).toContain('--json');
+    expect(configSection).toContain('scripting');
+    expect(configSection).toContain('found, version, storage, defaultAdapter');
+    expect(configSection).toContain('savestate config --json');
+    expect(configSource).toContain('export function formatConfigMissingJson');
   });
 
   it('registers --json on savestate adapters', () => {

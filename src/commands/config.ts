@@ -30,6 +30,26 @@ export function formatConfigJson(config: SaveStateConfig): string {
   );
 }
 
+export interface ConfigMissingJson {
+  found: false;
+  version: null;
+  storage: null;
+  defaultAdapter: null;
+}
+
+export function formatConfigMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      version: null,
+      storage: null,
+      defaultAdapter: null,
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * Set a deeply nested property on an object using dot-notation path.
  * Auto-creates intermediate objects as needed.
@@ -64,6 +84,10 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatConfigMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
