@@ -326,6 +326,15 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('savestate antibodies add --tool write --error-code EACCES --risk high --safe-action check_permissions --json');
   });
 
+  it('documents antibodies add --json when missing', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--json');
+    expect(antibodiesSection).toContain('scripting');
+    expect(antibodiesSection).toContain('found, added, id');
+    expect(antibodiesSection).toContain('savestate antibodies add --json');
+    expect(antibodies).toContain('export function formatAntibodiesAddMissingJson');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');

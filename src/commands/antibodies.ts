@@ -189,10 +189,32 @@ export function formatAntibodiesAddJson(result: AntibodiesAddJson): string {
   );
 }
 
+export interface AntibodiesAddMissingJson {
+  found: false;
+  added: false;
+  id: null;
+}
+
+export function formatAntibodiesAddMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      added: false,
+      id: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function antibodiesCommand(subcommand: string, options: AntibodiesOptions): Promise<void> {
   if (!isInitialized()) {
     if (options.json && subcommand === 'list') {
       console.log(formatAntibodiesListMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'add') {
+      console.log(formatAntibodiesAddMissingJson());
       return;
     }
     console.log();
