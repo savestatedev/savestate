@@ -672,6 +672,15 @@ describe('CLI docs', () => {
     expect(logoutSection).toContain('savestate logout --json');
   });
 
+  it('documents logout --json when missing', () => {
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="cloud"'));
+    expect(logoutSection).toContain('--json');
+    expect(logoutSection).toContain('scripting');
+    expect(logoutSection).toContain('found, loggedOut, hadKey');
+    expect(logoutSection).toContain('savestate logout --json');
+    expect(login).toContain('export function formatLogoutMissingJson');
+  });
+
   it('documents login --key, ss_live_ keys, and logout removing the saved key', () => {
     const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
     expect(loginSection).toContain('--key');
