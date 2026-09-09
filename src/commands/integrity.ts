@@ -199,6 +199,22 @@ export function formatIntegritySeedJson(result: IntegritySeedJson): string {
   );
 }
 
+export interface IntegritySeedMissingJson {
+  found: false;
+  count: 0;
+}
+
+export function formatIntegritySeedMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      count: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityQuarantineJson {
   success: boolean;
   requiresApproval: boolean;
@@ -363,6 +379,10 @@ export async function integrityCommand(
   }
 
   if (!isInitialized()) {
+    if (options.json && subcommand === 'seed') {
+      console.log(formatIntegritySeedMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
