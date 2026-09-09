@@ -143,6 +143,11 @@ const antibodies = readFileSync(
   'utf8',
 );
 
+const listSource = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../list.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1780,6 +1785,15 @@ describe('CLI docs', () => {
     expect(listSection).toContain('--json');
     expect(listSection).toContain('scripting');
     expect(listSection).toContain('savestate list --json');
+  });
+
+  it('documents list --json when missing', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    expect(listSection).toContain('--json');
+    expect(listSection).toContain('scripting');
+    expect(listSection).toContain('found, total, storage');
+    expect(listSection).toContain('savestate list --json');
+    expect(listSource).toContain('export function formatListMissingJson');
   });
 
   it('lists savestate search in the command overview', () => {

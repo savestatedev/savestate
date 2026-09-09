@@ -43,12 +43,34 @@ export function formatListJson(snapshots: SnapshotIndexEntry[], limit = 50): str
   return JSON.stringify(records, null, 2);
 }
 
+export interface ListMissingJson {
+  found: false;
+  total: 0;
+  storage: null;
+}
+
+export function formatListMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+      storage: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function listCommand(options: ListOptions): Promise<void> {
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatListMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

@@ -240,7 +240,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit snapshot records as JSON, newest first. Does not decrypt archives. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit snapshot records as JSON, newest first. Does not decrypt archives. When SaveState is not initialized, emits a missing summary (found, total, storage; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of snapshots to show (default 50)</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only snapshots taken after this date (ISO 8601, e.g. <code>2026-04-01</code>)</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only snapshots taken before this date (ISO 8601)</td></tr>
