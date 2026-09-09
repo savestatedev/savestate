@@ -123,6 +123,28 @@ export function formatSloReportJson(report: SLOReport): string {
   return JSON.stringify(record, null, 2);
 }
 
+export interface SloReportMissingJson {
+  found: false;
+  enabled: false;
+  reportId: null;
+  totalQueries: 0;
+  namespaces: 0;
+}
+
+export function formatSloReportMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      enabled: false,
+      reportId: null,
+      totalQueries: 0,
+      namespaces: 0,
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * SLO command handler.
  */
@@ -238,6 +260,11 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
  */
 async function sloReport(options: { period?: string; json?: boolean }): Promise<void> {
   const sloConfig = await loadSLOConfig();
+
+  if (!sloConfig.enabled && options.json) {
+    console.log(formatSloReportMissingJson());
+    return;
+  }
 
   // Calculate period
   const periodDays = options.period ? (parseDuration(options.period) ?? 168) / 24 : 7;

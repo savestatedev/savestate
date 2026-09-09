@@ -1181,6 +1181,15 @@ describe('CLI docs', () => {
     expect(sloSection).toContain('savestate slo status --json');
   });
 
+  it('documents slo report --json when missing', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--json');
+    expect(sloSection).toContain('scripting');
+    expect(sloSection).toContain('found, enabled, reportId, totalQueries, namespaces');
+    expect(sloSection).toContain('savestate slo report --json');
+    expect(slo).toContain('export function formatSloReportMissingJson');
+  });
+
   it('lists savestate acl in the command overview', () => {
     expect(docs).toContain('id="acl"');
     expect(docs).toContain('savestate acl');
