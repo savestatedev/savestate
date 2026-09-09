@@ -1580,6 +1580,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityQuarantineJson');
   });
 
+  it('documents integrity quarantine --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, success, eventId');
+    expect(integritySection).toContain('savestate integrity quarantine mem-123 --json');
+    expect(integrity).toContain('export function formatIntegrityQuarantineMissingJson');
+  });
+
   it('documents integrity release --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');

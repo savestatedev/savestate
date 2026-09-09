@@ -265,6 +265,24 @@ export function formatIntegrityQuarantineJson(result: IntegrityQuarantineJson): 
   );
 }
 
+export interface IntegrityQuarantineMissingJson {
+  found: false;
+  success: false;
+  eventId: null;
+}
+
+export function formatIntegrityQuarantineMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      success: false,
+      eventId: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityReleaseJson {
   success: boolean;
   requiresApproval: boolean;
@@ -407,6 +425,10 @@ export async function integrityCommand(
     }
     if (options.json && subcommand === 'seed') {
       console.log(formatIntegritySeedMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'quarantine') {
+      console.log(formatIntegrityQuarantineMissingJson());
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
