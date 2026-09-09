@@ -885,6 +885,26 @@ export function formatMemoryConfigJson(config: MemoryTierConfig): string {
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryConfigMissingJson {
+  found: false;
+  snapshot: string;
+  version: null;
+  defaultTier: null;
+}
+
+export function formatMemoryConfigMissingJson(snapshot: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      snapshot,
+      version: null,
+      defaultTier: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function showTierConfig(
   storage: StorageBackend,
   passphrase: string,
@@ -893,6 +913,23 @@ export async function showTierConfig(
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {
+  if (options?.format === 'json') {
+    const snapshotId = options.snapshotId;
+    if (snapshotId && snapshotId !== 'latest') {
+      const entry = await findEntry(snapshotId);
+      if (!entry) {
+        console.log(formatMemoryConfigMissingJson(snapshotId));
+        return;
+      }
+    } else {
+      const latest = await getLatestEntry();
+      if (!latest) {
+        console.log(formatMemoryConfigMissingJson(snapshotId ?? 'latest'));
+        return;
+      }
+    }
+  }
+
   const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
   const config = snapshot.memory.tierConfig ?? DEFAULT_TIER_CONFIG;
 

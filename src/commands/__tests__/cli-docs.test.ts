@@ -940,6 +940,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory config --json');
   });
 
+  it('documents memory config --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, snapshot, version, defaultTier');
+    expect(memorySection).toContain('savestate memory config --snapshot ss-missing --json');
+    expect(memory).toContain('export function formatMemoryConfigMissingJson');
+  });
+
   it('registers --json on savestate memory promote', () => {
     const promoteBlock = memoryCli.slice(memoryCli.indexOf("command('promote"), memoryCli.indexOf("command('demote"));
     expect(promoteBlock).toContain(".option('--json'");
