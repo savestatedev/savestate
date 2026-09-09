@@ -156,6 +156,24 @@ export function formatMcpStatusJson(status: McpStatus): string {
   );
 }
 
+export interface McpStatusMissingJson {
+  found: false;
+  initialized: false;
+  enabled: false;
+}
+
+export function formatMcpStatusMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      initialized: false,
+      enabled: false,
+    },
+    null,
+    2,
+  );
+}
+
 export interface McpImportJson {
   input: string;
   sourceAgent: string;
@@ -283,6 +301,10 @@ async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
   };
 
   if (options.json) {
+    if (!initialized) {
+      console.log(formatMcpStatusMissingJson());
+      return;
+    }
     console.log(formatMcpStatusJson(status));
     return;
   }
