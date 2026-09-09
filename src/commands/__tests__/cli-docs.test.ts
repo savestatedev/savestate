@@ -1041,6 +1041,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory apply-policies --json');
   });
 
+  it('documents memory apply-policies --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, snapshot, applied, changeCount');
+    expect(memorySection).toContain('savestate memory apply-policies --snapshot ss-missing --json');
+    expect(memory).toContain('export function formatMemoryApplyPoliciesMissingJson');
+  });
+
   it('registers --json on savestate memory edit', () => {
     const editBlock = memoryCli.slice(memoryCli.indexOf("command('edit"), memoryCli.indexOf("command('delete"));
     expect(editBlock).toContain(".option('--json'");

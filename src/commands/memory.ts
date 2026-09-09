@@ -376,6 +376,26 @@ export function formatMemoryApplyPoliciesJson(
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryApplyPoliciesMissingJson {
+  found: false;
+  snapshot: string;
+  applied: false;
+  changeCount: 0;
+}
+
+export function formatMemoryApplyPoliciesMissingJson(snapshot: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      snapshot,
+      applied: false,
+      changeCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
 function getNextLowerTier(tier: MemoryTier): MemoryTier | null {
   const order: MemoryTier[] = ['L1', 'L2', 'L3'];
   const index = order.indexOf(tier);
@@ -769,6 +789,23 @@ export async function applyPoliciesCommand(
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {
+  if (options?.format === 'json') {
+    const snapshotId = options.snapshotId;
+    if (snapshotId && snapshotId !== 'latest') {
+      const entry = await findEntry(snapshotId);
+      if (!entry) {
+        console.log(formatMemoryApplyPoliciesMissingJson(snapshotId));
+        return;
+      }
+    } else {
+      const latest = await getLatestEntry();
+      if (!latest) {
+        console.log(formatMemoryApplyPoliciesMissingJson(snapshotId ?? 'latest'));
+        return;
+      }
+    }
+  }
+
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options?.snapshotId);
   const config = snapshot.memory.tierConfig ?? DEFAULT_TIER_CONFIG;
 
