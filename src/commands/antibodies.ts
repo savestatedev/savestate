@@ -109,6 +109,24 @@ export function formatAntibodiesListJson(result: AntibodiesListJson): string {
   );
 }
 
+export interface AntibodiesListMissingJson {
+  found: false;
+  total: 0;
+  shown: 0;
+}
+
+export function formatAntibodiesListMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+      shown: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface AntibodiesStatsRuleJson {
   id: string;
   risk: RiskLevel;
@@ -172,12 +190,17 @@ export function formatAntibodiesAddJson(result: AntibodiesAddJson): string {
 }
 
 export async function antibodiesCommand(subcommand: string, options: AntibodiesOptions): Promise<void> {
-  console.log();
-
   if (!isInitialized()) {
+    if (options.json && subcommand === 'list') {
+      console.log(formatAntibodiesListMissingJson());
+      return;
+    }
+    console.log();
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
+
+  console.log();
 
   const store = new AntibodyStore();
 
