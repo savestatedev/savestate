@@ -1545,6 +1545,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegritySeedJson');
   });
 
+  it('documents integrity seed --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, count');
+    expect(integritySection).toContain('savestate integrity seed --count 10 --json');
+    expect(integrity).toContain('export function formatIntegritySeedMissingJson');
+  });
+
   it('documents integrity quarantine --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
