@@ -75,6 +75,26 @@ export function formatAntibodiesPreflightJson(result: AntibodiesPreflightJson): 
   );
 }
 
+export interface AntibodiesPreflightMissingJson {
+  found: false;
+  blocked: false;
+  elapsedMs: 0;
+  semanticUsed: false;
+}
+
+export function formatAntibodiesPreflightMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      blocked: false,
+      elapsedMs: 0,
+      semanticUsed: false,
+    },
+    null,
+    2,
+  );
+}
+
 export interface AntibodiesListRuleJson {
   id: string;
   risk: RiskLevel;
@@ -243,6 +263,10 @@ export async function antibodiesCommand(subcommand: string, options: AntibodiesO
     }
     if (options.json && subcommand === 'stats') {
       console.log(formatAntibodiesStatsMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'preflight') {
+      console.log(formatAntibodiesPreflightMissingJson());
       return;
     }
     console.log();

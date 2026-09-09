@@ -307,6 +307,15 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('savestate antibodies preflight --tool write --path ./secret.env --json');
   });
 
+  it('documents antibodies preflight --json when missing', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--json');
+    expect(antibodiesSection).toContain('scripting');
+    expect(antibodiesSection).toContain('found, blocked, elapsedMs, semanticUsed');
+    expect(antibodiesSection).toContain('savestate antibodies preflight --json');
+    expect(antibodies).toContain('export function formatAntibodiesPreflightMissingJson');
+  });
+
   it('documents antibodies list --json', () => {
     const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
     expect(antibodiesSection).toContain('--json');
