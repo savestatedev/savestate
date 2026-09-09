@@ -35,12 +35,36 @@ export function formatLoginResultJson(result: LoginResult): string {
   );
 }
 
+export interface LoginMissingJson {
+  found: false;
+  authenticated: false;
+  email: null;
+  tier: null;
+}
+
+export function formatLoginMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      authenticated: false,
+      email: null,
+      tier: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function loginCommand(options: LoginOptions): Promise<void> {
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatLoginMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

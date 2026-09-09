@@ -797,7 +797,7 @@
       </thead>
       <tbody>
         <tr><td><code>-k, --key &lt;api-key&gt;</code></td><td>API key (or enter interactively)</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the login result as JSON. Skips the spinner. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the login result as JSON. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, authenticated, email, tier; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -808,7 +808,10 @@
 <span class="code-prompt">$</span> savestate login --key ss_live_...
 
 <span class="code-comment"># Scriptable login</span>
-<span class="code-prompt">$</span> savestate login --key ss_live_... --json</code></pre>
+<span class="code-prompt">$</span> savestate login --key ss_live_... --json
+
+<span class="code-comment"># Scriptable JSON when SaveState is not initialized</span>
+<span class="code-prompt">$</span> savestate login --json</code></pre>
 
     <!-- logout -->
     <h2 id="logout"><code>savestate logout</code></h2>

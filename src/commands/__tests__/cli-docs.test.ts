@@ -128,6 +128,11 @@ const schedule = readFileSync(
   'utf8',
 );
 
+const login = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../login.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -644,6 +649,15 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('--json');
     expect(loginSection).toContain('scripting');
     expect(loginSection).toContain('savestate login --key ss_live_... --json');
+  });
+
+  it('documents login --json when missing', () => {
+    const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
+    expect(loginSection).toContain('--json');
+    expect(loginSection).toContain('scripting');
+    expect(loginSection).toContain('found, authenticated, email, tier');
+    expect(loginSection).toContain('savestate login --json');
+    expect(login).toContain('export function formatLoginMissingJson');
   });
 
   it('registers --json on savestate logout', () => {
