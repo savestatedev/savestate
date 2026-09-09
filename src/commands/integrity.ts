@@ -179,6 +179,28 @@ export function formatIntegrityRotateJson(result: IntegrityRotateJson): string {
   );
 }
 
+export interface IntegrityRotateMissingJson {
+  found: false;
+  rotated: 0;
+  valid: 0;
+  createdCount: 0;
+  retiredCount: 0;
+}
+
+export function formatIntegrityRotateMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      rotated: 0,
+      valid: 0,
+      createdCount: 0,
+      retiredCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegritySeedJson {
   count: number;
   tenantId: string;
@@ -379,6 +401,10 @@ export async function integrityCommand(
   }
 
   if (!isInitialized()) {
+    if (options.json && subcommand === 'rotate') {
+      console.log(formatIntegrityRotateMissingJson());
+      return;
+    }
     if (options.json && subcommand === 'seed') {
       console.log(formatIntegritySeedMissingJson());
       return;

@@ -1546,6 +1546,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityRotateJson');
   });
 
+  it('documents integrity rotate --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, rotated, valid, createdCount, retiredCount');
+    expect(integritySection).toContain('savestate integrity rotate --json');
+    expect(integrity).toContain('export function formatIntegrityRotateMissingJson');
+  });
+
   it('documents integrity seed --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
