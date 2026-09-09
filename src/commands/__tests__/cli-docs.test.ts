@@ -118,6 +118,11 @@ const configSource = readFileSync(
   'utf8',
 );
 
+const prune = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../prune.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -213,6 +218,15 @@ describe('CLI docs', () => {
     expect(pruneSection).toContain('--json');
     expect(pruneSection).toContain('scripting');
     expect(pruneSection).toContain('savestate prune --keep-last 10 --json');
+  });
+
+  it('documents prune --json when missing', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    expect(pruneSection).toContain('--json');
+    expect(pruneSection).toContain('scripting');
+    expect(pruneSection).toContain('found, dryRun, keepCount, dropCount');
+    expect(pruneSection).toContain('savestate prune --json');
+    expect(prune).toContain('export function formatPruneMissingJson');
   });
 
   it('lists savestate antibodies in the command overview', () => {
