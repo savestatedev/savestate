@@ -511,7 +511,7 @@
       <tbody>
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase used to decrypt the container. An empty or whitespace-only value is rejected before decrypting.</td></tr>
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. An empty path, missing file, directory, or file with no contents is rejected before decrypting.</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the full verify result as JSON. Decrypts the archive when a key is provided. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the full verify result as JSON. Decrypts the archive when a key is provided. When the input file is missing, emits a missing summary (found, input, valid, agent; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -523,6 +523,9 @@
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate verify agent.savestate --json
+
+<span class="code-comment"># Missing input file</span>
+<span class="code-prompt">$</span> savestate verify missing.savestate --json
 
 <span class="code-comment"># Verify with a keyfile and JSON</span>
 <span class="code-prompt">$</span> savestate verify agent.savestate --keyfile ./key.bin --json</code></pre>

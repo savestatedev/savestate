@@ -103,6 +103,11 @@ const snapshot = readFileSync(
   'utf8',
 );
 
+const verify = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../verify.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -154,6 +159,15 @@ describe('CLI docs', () => {
     expect(verifySection).toContain('--json');
     expect(verifySection).toContain('scripting');
     expect(verifySection).toContain('savestate verify agent.savestate --json');
+  });
+
+  it('documents verify --json when missing', () => {
+    const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
+    expect(verifySection).toContain('--json');
+    expect(verifySection).toContain('scripting');
+    expect(verifySection).toContain('found, input, valid, agent');
+    expect(verifySection).toContain('savestate verify missing.savestate --json');
+    expect(verify).toContain('export function formatVerifyMissingJson');
   });
 
   it('lists savestate prune in the command overview', () => {
