@@ -155,6 +155,24 @@ export function formatLogoutResultJson(result: LogoutResult): string {
   );
 }
 
+export interface LogoutMissingJson {
+  found: false;
+  loggedOut: false;
+  hadKey: false;
+}
+
+export function formatLogoutMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      loggedOut: false,
+      hadKey: false,
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * savestate logout — Remove API key
  */
@@ -164,6 +182,10 @@ export async function logoutCommand(options: LogoutOptions = {}): Promise<void> 
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatLogoutMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized.'));
     process.exit(1);
   }
