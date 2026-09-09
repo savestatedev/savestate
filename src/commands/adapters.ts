@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { getAdapterInfo } from '../adapters/registry.js';
+import { isInitialized } from '../config.js';
 
 export interface AdapterListEntry {
   id: string;
@@ -22,7 +23,33 @@ export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
   return JSON.stringify(adapters, null, 2);
 }
 
+export interface AdaptersMissingJson {
+  found: false;
+  total: 0;
+}
+
+export function formatAdaptersMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export async function adaptersCommand(options: AdaptersOptions = {}): Promise<void> {
+  if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatAdaptersMissingJson());
+      return;
+    }
+    console.log();
+    console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
+    process.exit(1);
+  }
+
   if (!options.json) {
     console.log();
     console.log(chalk.bold('🔌 Available Adapters'));
