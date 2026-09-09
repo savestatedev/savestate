@@ -424,7 +424,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Output adapter records as JSON (useful for scripting)</td></tr>
+        <tr><td><code>--json</code></td><td>Output adapter records as JSON. When SaveState is not initialized, emits a missing summary (found, total; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
@@ -438,6 +438,9 @@
 <span class="code-output">gemini              Google Gemini         gemini            ✗</span>
 
 <span class="code-comment"># Scriptable JSON records</span>
+<span class="code-prompt">$</span> savestate adapters --json
+
+<span class="code-comment"># Scriptable JSON when SaveState is not initialized</span>
 <span class="code-prompt">$</span> savestate adapters --json</code></pre>
 
     <p>Detection is automatic based on the current directory and environment. See <a href="/docs/adapters.html">Platform Adapters</a> for details on what each adapter captures.</p>

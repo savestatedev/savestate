@@ -148,6 +148,11 @@ const listSource = readFileSync(
   'utf8',
 );
 
+const adapters = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../adapters.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1923,6 +1928,15 @@ describe('CLI docs', () => {
     expect(adaptersSection).toContain('--json');
     expect(adaptersSection).toContain('scripting');
     expect(adaptersSection).toContain('/docs/adapters.html');
+  });
+
+  it('documents adapters --json when missing', () => {
+    const adaptersSection = docs.slice(docs.indexOf('id="adapters"'), docs.indexOf('id="export"'));
+    expect(adaptersSection).toContain('--json');
+    expect(adaptersSection).toContain('scripting');
+    expect(adaptersSection).toContain('found, total');
+    expect(adaptersSection).toContain('savestate adapters --json');
+    expect(adapters).toContain('export function formatAdaptersMissingJson');
   });
 
   it('registers --json on savestate diff', () => {
