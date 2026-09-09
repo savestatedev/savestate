@@ -50,12 +50,40 @@ export function formatStatsJson(snapshots: SnapshotIndexEntry[], storageType: st
   return JSON.stringify(record, null, 2);
 }
 
+export interface StatsMissingJson {
+  found: false;
+  total: 0;
+  totalBytes: 0;
+  first: null;
+  latest: null;
+  storage: null;
+}
+
+export function formatStatsMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+      totalBytes: 0,
+      first: null,
+      latest: null,
+      storage: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function statsCommand(options: StatsOptions): Promise<void> {
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatStatsMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
