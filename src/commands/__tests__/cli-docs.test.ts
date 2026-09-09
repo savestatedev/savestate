@@ -1529,6 +1529,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityStatusJson');
   });
 
+  it('documents integrity status --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, enabled, policy, honeyfacts, incidents');
+    expect(integritySection).toContain('savestate integrity status --json');
+    expect(integrity).toContain('export function formatIntegrityStatusMissingJson');
+  });
+
   it('documents integrity rotate --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
