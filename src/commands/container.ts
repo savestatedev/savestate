@@ -333,6 +333,26 @@ export function formatExportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
 
+export interface ExportMissingJson {
+  found: false;
+  output: string;
+  written: false;
+  agent: null;
+}
+
+export function formatExportMissingJson(output: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      output,
+      written: false,
+      agent: null,
+    },
+    null,
+    2,
+  );
+}
+
 export function formatExportResultJson(result: {
   agent: string;
   formatVersion: number;
@@ -729,6 +749,10 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       try {
         await fs.stat(dirname(out));
       } catch {
+        if (options.json) {
+          console.log(formatExportMissingJson(out));
+          return { written: false, out, overwritten: false };
+        }
         console.error(`Error: Output directory not found: ${dirname(out)}`);
         return { written: false, out, overwritten: false };
       }
