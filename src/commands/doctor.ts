@@ -55,12 +55,36 @@ export function formatDoctorJson(results: SnapshotDiagnosis[]): string {
   return JSON.stringify(record, null, 2);
 }
 
+export interface DoctorMissingJson {
+  found: false;
+  total: 0;
+  healthy: 0;
+  unhealthy: 0;
+}
+
+export function formatDoctorMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+      healthy: 0,
+      unhealthy: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatDoctorMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

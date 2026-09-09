@@ -291,7 +291,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit per-snapshot diagnosis as JSON. Decrypts archives. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit per-snapshot diagnosis as JSON. Decrypts archives. When SaveState is not initialized, emits a missing summary (found, total, healthy, unhealthy; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only check snapshots from this adapter</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Only check the N most recent snapshots</td></tr>
       </tbody>
@@ -301,6 +301,9 @@
 <span class="code-prompt">$</span> savestate doctor
 
 <span class="code-comment"># Scripting</span>
+<span class="code-prompt">$</span> savestate doctor --json
+
+<span class="code-comment"># Scriptable JSON when SaveState is not initialized</span>
 <span class="code-prompt">$</span> savestate doctor --json
 
 <span class="code-comment"># Restrict to recent Claude Code snapshots</span>
