@@ -1190,6 +1190,15 @@ describe('CLI docs', () => {
     expect(slo).toContain('export function formatSloReportMissingJson');
   });
 
+  it('documents slo status --json when missing', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--json');
+    expect(sloSection).toContain('scripting');
+    expect(sloSection).toContain('found, enabled, namespace, compliant, violations');
+    expect(sloSection).toContain('savestate slo status --namespace org:missing --json');
+    expect(slo).toContain('export function formatSloStatusMissingJson');
+  });
+
   it('lists savestate acl in the command overview', () => {
     expect(docs).toContain('id="acl"');
     expect(docs).toContain('savestate acl');
