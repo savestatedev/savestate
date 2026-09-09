@@ -890,6 +890,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory list --json');
   });
 
+  it('documents memory list --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, snapshot, total, shown');
+    expect(memorySection).toContain('savestate memory list --snapshot ss-missing --json');
+    expect(memory).toContain('export function formatMemoryListMissingJson');
+  });
+
   it('registers --json on savestate memory config', () => {
     const configBlock = memoryCli.slice(memoryCli.indexOf("command('config')"), memoryCli.indexOf("command('explain"));
     expect(configBlock).toContain(".option('--json'");

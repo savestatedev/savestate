@@ -162,6 +162,26 @@ export function formatMemoryListJson(all: MemoryEntry[], shown: MemoryEntry[]): 
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryListMissingJson {
+  found: false;
+  snapshot: string;
+  total: 0;
+  shown: 0;
+}
+
+export function formatMemoryListMissingJson(snapshot: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      snapshot,
+      total: 0,
+      shown: 0,
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * Promote a memory entry to a higher tier.
  */
@@ -379,6 +399,23 @@ export async function listMemories(
     format?: 'table' | 'json';
   },
 ): Promise<void> {
+  if (options?.format === 'json') {
+    const snapshotId = options.snapshotId;
+    if (snapshotId && snapshotId !== 'latest') {
+      const entry = await findEntry(snapshotId);
+      if (!entry) {
+        console.log(formatMemoryListMissingJson(snapshotId));
+        return;
+      }
+    } else {
+      const latest = await getLatestEntry();
+      if (!latest) {
+        console.log(formatMemoryListMissingJson(snapshotId ?? 'latest'));
+        return;
+      }
+    }
+  }
+
   const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
   const normalized = normalizeMemory(snapshot.memory);
 
