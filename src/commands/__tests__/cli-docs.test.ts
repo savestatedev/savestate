@@ -1632,6 +1632,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityTestJson');
   });
 
+  it('documents integrity test --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, triggered, eventCount, incidentId');
+    expect(integritySection).toContain('savestate integrity test "canary text" --json');
+    expect(integrity).toContain('export function formatIntegrityTestMissingJson');
+  });
+
   it('documents integrity incident --json when missing', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
