@@ -1129,6 +1129,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory expire --namespace org:app:agent --json');
   });
 
+  it('documents memory expire --json when missing', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scripting');
+    expect(memorySection).toContain('found, namespace, applied, expiredCount');
+    expect(memorySection).toContain('savestate memory expire --namespace org:missing --json');
+    expect(memoryLifecycle).toContain('export function formatMemoryExpireMissingJson');
+  });
+
   it('registers --json on savestate memory explain', () => {
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
     expect(explainBlock).toContain(".option('--json'");
