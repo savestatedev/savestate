@@ -128,6 +128,11 @@ const schedule = readFileSync(
   'utf8',
 );
 
+const antibodies = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../antibodies.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -279,6 +284,15 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('scripting');
     expect(antibodiesSection).toContain('id, risk, intervention, active, confidence, hits, overrides, and safe action');
     expect(antibodiesSection).toContain('savestate antibodies list --json');
+  });
+
+  it('documents antibodies list --json when missing', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--json');
+    expect(antibodiesSection).toContain('scripting');
+    expect(antibodiesSection).toContain('found, total, shown');
+    expect(antibodiesSection).toContain('savestate antibodies list --json');
+    expect(antibodies).toContain('export function formatAntibodiesListMissingJson');
   });
 
   it('documents antibodies stats --json', () => {
