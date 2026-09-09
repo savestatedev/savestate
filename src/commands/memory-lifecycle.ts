@@ -205,6 +205,26 @@ export function formatMemoryExpireJson(
   return JSON.stringify(record, null, 2);
 }
 
+export interface MemoryExpireMissingJson {
+  found: false;
+  namespace: string;
+  applied: false;
+  expiredCount: 0;
+}
+
+export function formatMemoryExpireMissingJson(namespace: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      namespace,
+      applied: false,
+      expiredCount: 0,
+    },
+    null,
+    2,
+  );
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -424,6 +444,17 @@ export async function expireMemoriesCommand(
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
   const namespace = parseNamespace(options.namespace);
+
+  if (options.format === 'json') {
+    const memories = await knowledgeLane.listMemories(namespace, {
+      include_expired: true,
+      status: 'active',
+    });
+    if (memories.length === 0) {
+      console.log(formatMemoryExpireMissingJson(options.namespace));
+      return;
+    }
+  }
 
   if (options.dryRun) {
     // In dry-run mode, just list what would be expired
