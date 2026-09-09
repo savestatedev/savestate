@@ -142,6 +142,26 @@ export function formatMigrateDryRunJson(report: CompatibilityReport): string {
   );
 }
 
+export interface MigrateMissingJson {
+  found: false;
+  source: null;
+  target: null;
+  feasibility: null;
+}
+
+export function formatMigrateMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      source: null,
+      target: null,
+      feasibility: null,
+    },
+    null,
+    2,
+  );
+}
+
 // ─── Main Command ────────────────────────────────────────────
 
 export async function migrateCommand(options: MigrateCommandOptions): Promise<void> {
@@ -174,6 +194,10 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
 
   // Check initialization
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatMigrateMissingJson());
+      return;
+    }
     error('SaveState not initialized. Run `savestate init` first.');
     process.exit(1);
   }

@@ -133,6 +133,11 @@ const login = readFileSync(
   'utf8',
 );
 
+const migrate = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../migrate.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -363,6 +368,15 @@ describe('CLI docs', () => {
     expect(migrateSection).toContain('savestate migrate --list --json');
     expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --dry-run --json');
     expect(migrateSection).toContain('omits source refs');
+  });
+
+  it('documents migrate --json when missing', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    expect(migrateSection).toContain('--json');
+    expect(migrateSection).toContain('scripting');
+    expect(migrateSection).toContain('found, source, target, feasibility');
+    expect(migrateSection).toContain('savestate migrate --json');
+    expect(migrate).toContain('export function formatMigrateMissingJson');
   });
 
   it('documents migrate --review, --resume, --include, --force, --verbose, and --no-color', () => {
