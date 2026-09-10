@@ -309,6 +309,10 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
 
 export async function traceExportCommand(options: TraceExportOptions): Promise<void> {
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatTraceExportMissingJson(options.run ?? 'all', options.format ?? 'jsonl'));
+      return;
+    }
     console.error(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
