@@ -42,6 +42,26 @@ export function formatTeamStatusJson(status: TeamStatusJson): string {
   );
 }
 
+export interface TeamStatusMissingJson {
+  found: false;
+  id: null;
+  name: null;
+  role: null;
+}
+
+export function formatTeamStatusMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id: null,
+      name: null,
+      role: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface TeamMemberJson {
   email: string;
   role: string;
@@ -70,6 +90,26 @@ export function formatTeamMembersJson(result: TeamMembersJson): string {
   );
 }
 
+export interface TeamMembersMissingJson {
+  found: false;
+  name: null;
+  total: 0;
+  shown: 0;
+}
+
+export function formatTeamMembersMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      name: null,
+      total: 0,
+      shown: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface TeamInviteJson {
   email: string;
   role: string;
@@ -84,6 +124,24 @@ export function formatTeamInviteJson(invite: TeamInviteJson): string {
       role: invite.role,
       acceptedAt: invite.acceptedAt,
       invitedAt: invite.invitedAt,
+    },
+    null,
+    2,
+  );
+}
+
+export interface TeamInviteMissingJson {
+  found: false;
+  email: null;
+  role: null;
+}
+
+export function formatTeamInviteMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      email: null,
+      role: null,
     },
     null,
     2,
@@ -120,6 +178,26 @@ export function formatTeamAuditJson(result: TeamAuditJson): string {
         resourceId: entry.resourceId,
         createdAt: entry.createdAt,
       })),
+    },
+    null,
+    2,
+  );
+}
+
+export interface TeamAuditMissingJson {
+  found: false;
+  teamId: null;
+  count: 0;
+  nextCursor: null;
+}
+
+export function formatTeamAuditMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      teamId: null,
+      count: 0,
+      nextCursor: null,
     },
     null,
     2,
@@ -191,7 +269,13 @@ export async function apiRequest(
 
 export async function teamStatusCommand(options: TeamCommandOptions = {}): Promise<void> {
   const result = await apiRequest('GET', '/team');
-  if (!result.ok) return printError(result, 'Could not fetch team status');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamStatusMissingJson());
+      return;
+    }
+    return printError(result, 'Could not fetch team status');
+  }
 
   const data = result.body as { team: { id: string; name: string; createdAt: string }; role: string };
   if (options.json) {
@@ -216,7 +300,13 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
 
 export async function teamMembersCommand(options: TeamCommandOptions = {}): Promise<void> {
   const result = await apiRequest('GET', '/team/members');
-  if (!result.ok) return printError(result, 'Could not fetch members');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamMembersMissingJson());
+      return;
+    }
+    return printError(result, 'Could not fetch members');
+  }
 
   const data = result.body as {
     team: { name: string };
@@ -262,7 +352,13 @@ export async function teamInviteCommand(email: string, options: TeamCommandOptio
   }
 
   const result = await apiRequest('POST', '/team/members', { email, role });
-  if (!result.ok) return printError(result, 'Invite failed');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamInviteMissingJson());
+      return;
+    }
+    return printError(result, 'Invite failed');
+  }
 
   if (options.json) {
     const data = result.body as {
@@ -293,7 +389,13 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   }
 
   const teamRes = await apiRequest('GET', '/team');
-  if (!teamRes.ok) return printError(teamRes, 'Could not resolve team');
+  if (!teamRes.ok) {
+    if (options.json) {
+      console.log(formatTeamAuditMissingJson());
+      return;
+    }
+    return printError(teamRes, 'Could not resolve team');
+  }
   const teamId = (teamRes.body as { team: { id: string } }).team.id;
 
   const params = new URLSearchParams({ team_id: teamId, format });
@@ -301,7 +403,13 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   if (options.until) params.set('until', options.until);
 
   const result = await apiRequest('GET', `/audit-export?${params.toString()}`, undefined, format === 'csv');
-  if (!result.ok) return printError(result, 'Audit export failed');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamAuditMissingJson());
+      return;
+    }
+    return printError(result, 'Audit export failed');
+  }
 
   if (format === 'csv') {
     process.stdout.write(result.text || '');

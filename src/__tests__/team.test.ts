@@ -119,6 +119,21 @@ describe('savestate team status', () => {
     const out = log.mock.calls.map((c) => c[0]).join('\n');
     expect(JSON.parse(out)).toMatchObject({ role: 'admin' });
   });
+
+  it('emits missing JSON when --json is set and the team is missing', async () => {
+    const { fn } = makeFetchMock(() => jsonResponse({ error: 'not found' }, 404));
+    global.fetch = fn as unknown as typeof fetch;
+
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await teamStatusCommand({ json: true });
+    const out = log.mock.calls.map((c) => c[0]).join('\n');
+    expect(JSON.parse(out)).toEqual({
+      found: false,
+      id: null,
+      name: null,
+      role: null,
+    });
+  });
 });
 
 describe('savestate team members', () => {

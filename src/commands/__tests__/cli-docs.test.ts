@@ -98,6 +98,11 @@ const trust = readFileSync(
   'utf8',
 );
 
+const team = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../team.ts'),
+  'utf8',
+);
+
 const snapshot = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../snapshot.ts'),
   'utf8',
@@ -599,6 +604,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('savestate team status --json');
   });
 
+  it('documents team status --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, id, name, role');
+    expect(teamSection).toContain('savestate team status --json');
+    expect(team).toContain('export function formatTeamStatusMissingJson');
+  });
+
   it('registers --json on savestate team members', () => {
     const membersBlock = cli.slice(
       cli.indexOf("List team members"),
@@ -613,6 +627,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('scripting');
     expect(teamSection).toContain('email, role, and invite timestamps');
     expect(teamSection).toContain('savestate team members --json');
+  });
+
+  it('documents team members --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, name, total, shown');
+    expect(teamSection).toContain('savestate team members --json');
+    expect(team).toContain('export function formatTeamMembersMissingJson');
   });
 
   it('registers --json on savestate team invite', () => {
@@ -631,6 +654,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('savestate team invite user@example.com --role viewer --json');
   });
 
+  it('documents team invite --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, email, role');
+    expect(teamSection).toContain('savestate team invite user@example.com --role viewer --json');
+    expect(team).toContain('export function formatTeamInviteMissingJson');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("Stream the team audit log to stdout"),
@@ -645,6 +677,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('scripting');
     expect(teamSection).toContain('id, action, actor, resource, and timestamp');
     expect(teamSection).toContain('savestate team audit --json');
+  });
+
+  it('documents team audit --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, teamId, count, nextCursor');
+    expect(teamSection).toContain('savestate team audit --json');
+    expect(team).toContain('export function formatTeamAuditMissingJson');
   });
 
   it('lists savestate eval in the command overview', () => {
@@ -1457,6 +1498,15 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function formatIdentitySchemaJson');
   });
 
+  it('documents identity schema --json when missing', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('found, id, title, type');
+    expect(identitySection).toContain('savestate identity schema --json');
+    expect(identity).toContain('export function formatIdentitySchemaMissingJson');
+  });
+
   it('documents identity show --json when missing', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     expect(identitySection).toContain('--json');
@@ -1614,6 +1664,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityClearJson');
   });
 
+  it('documents integrity clear --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, cleared');
+    expect(integritySection).toContain('savestate integrity clear --force --json');
+    expect(integrity).toContain('export function formatIntegrityClearMissingJson');
+  });
+
   it('documents integrity config --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
@@ -1621,6 +1680,15 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('honeyfact count/TTL');
     expect(integritySection).toContain('savestate integrity config --json');
     expect(integrity).toContain('export function formatIntegrityConfigJson');
+  });
+
+  it('documents integrity config --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, enabled');
+    expect(integritySection).toContain('savestate integrity config --json');
+    expect(integrity).toContain('export function formatIntegrityConfigMissingJson');
   });
 
   it('documents integrity test --json', () => {
@@ -1639,6 +1707,15 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('found, triggered, eventCount, incidentId');
     expect(integritySection).toContain('savestate integrity test "canary text" --json');
     expect(integrity).toContain('export function formatIntegrityTestMissingJson');
+  });
+
+  it('documents integrity incidents --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, total, shown');
+    expect(integritySection).toContain('savestate integrity incidents --json');
+    expect(integrity).toContain('export function formatIntegrityIncidentsMissingJson');
   });
 
   it('documents integrity incident --json when missing', () => {
