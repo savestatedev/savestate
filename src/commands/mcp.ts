@@ -478,6 +478,10 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
 
   try {
     if (!isInitialized()) {
+      if (options.json) {
+        console.log(formatMcpImportMissingJson(options.input ?? ''));
+        return;
+      }
       spinner?.fail('SaveState not initialized');
       console.error(chalk.red('Run `savestate init` first.'));
       process.exit(1);
