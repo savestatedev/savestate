@@ -153,6 +153,11 @@ const adapters = readFileSync(
   'utf8',
 );
 
+const team = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../team.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -645,6 +650,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('scripting');
     expect(teamSection).toContain('id, action, actor, resource, and timestamp');
     expect(teamSection).toContain('savestate team audit --json');
+  });
+
+  it('documents team audit --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, teamId, count, nextCursor');
+    expect(teamSection).toContain('savestate team audit --json');
+    expect(team).toContain('export function formatTeamAuditMissingJson');
   });
 
   it('lists savestate eval in the command overview', () => {
