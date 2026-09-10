@@ -2265,4 +2265,16 @@ describe('CLI docs', () => {
     expect(diffSection).toContain('savestate diff ss-2026-01-25 ss-2026-01-27 --json');
     expect(diff).toContain('export function formatDiffMissingJson');
   });
+
+  it('documents diff --json when SaveState is not initialized', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    expect(diffSection).toContain('--json');
+    expect(diffSection).toContain('scripting');
+    expect(diffSection).toContain(
+      'When SaveState is not initialized, emits a missing summary (found, snapshotA, snapshotB, hasChanges',
+    );
+    expect(diffSection).toContain('savestate diff ss-2026-01-25 ss-2026-01-27 --json');
+    expect(diff).toContain('export function formatDiffMissingJson');
+    expect(diff).toContain('formatDiffMissingJson(snapshotA, snapshotB)');
+  });
 });
