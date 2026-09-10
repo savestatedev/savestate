@@ -1535,6 +1535,15 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function formatIdentityInitJson');
   });
 
+  it('documents identity init --json when missing', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain('found, created, alreadyExists, path, name, version');
+    expect(identitySection).toContain('savestate identity init MyAgent --json');
+    expect(identity).toContain('export function formatIdentityInitMissingJson');
+  });
+
   it('registers savestate integrity on the CLI', () => {
     expect(cli).toContain('registerIntegrityCommands');
   });

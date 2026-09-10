@@ -117,6 +117,30 @@ export function formatIdentityInitJson(result: IdentityInitJson): string {
   );
 }
 
+export interface IdentityInitMissingJson {
+  found: false;
+  created: false;
+  alreadyExists: false;
+  path: null;
+  name: string | null;
+  version: null;
+}
+
+export function formatIdentityInitMissingJson(name?: string): string {
+  return JSON.stringify(
+    {
+      found: false,
+      created: false,
+      alreadyExists: false,
+      path: null,
+      name: name || null,
+      version: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IdentitySetMissingJson {
   found: false;
   updated: false;
@@ -244,6 +268,10 @@ export async function identityCommand(
   if (!isInitialized()) {
     if (options?.json && subcommand === 'schema') {
       console.log(formatIdentitySchemaMissingJson());
+      return;
+    }
+    if (options?.json && subcommand === 'init') {
+      console.log(formatIdentityInitMissingJson(args[0]));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
