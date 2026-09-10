@@ -87,6 +87,10 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatSnapshotMissingJson(options.adapter ?? ''));
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
