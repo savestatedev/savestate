@@ -715,6 +715,15 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
     console.log();
   }
 
+  if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatCloudDeleteMissingJson(options.id ?? ''));
+      return;
+    }
+    console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
+    process.exit(1);
+  }
+
   if (!options.id && !options.all) {
     console.log(chalk.red('✗ Specify --id <snapshot> or --all to delete'));
     process.exit(1);
