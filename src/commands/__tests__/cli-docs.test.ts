@@ -891,6 +891,18 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function formatCloudPushMissingJson');
   });
 
+  it('documents cloud push --json when SaveState is not initialized', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain(
+      'When SaveState is not initialized, <code>push</code> emits a missing summary (found, id, pushed, failed',
+    );
+    expect(cloudSection).toContain('savestate cloud push --json');
+    expect(cloud).toContain('export function formatCloudPushMissingJson');
+    expect(cloud).toContain('formatCloudPushMissingJson(options.id ?? \'\')');
+  });
+
   it('documents cloud pull --json when missing', () => {
     const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
     expect(cloudSection).toContain('--json');
