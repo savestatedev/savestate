@@ -654,6 +654,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('savestate team invite user@example.com --role viewer --json');
   });
 
+  it('documents team invite --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, email, role');
+    expect(teamSection).toContain('savestate team invite user@example.com --role viewer --json');
+    expect(team).toContain('export function formatTeamInviteMissingJson');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("Stream the team audit log to stdout"),
