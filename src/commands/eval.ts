@@ -116,6 +116,10 @@ export async function evalCommand(subcommand: string, options: EvalOptions): Pro
   }
 
   if (!isInitialized()) {
+    if (options.json && subcommand === 'quality') {
+      console.log(formatEvalQualityMissingJson(options.suite ?? ''));
+      return;
+    }
     console.log(chalk.red('SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

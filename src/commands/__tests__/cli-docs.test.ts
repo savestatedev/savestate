@@ -735,6 +735,18 @@ describe('CLI docs', () => {
     expect(evalSource).toContain('export function formatEvalQualityMissingJson');
   });
 
+  it('documents eval quality --json when SaveState is not initialized', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('scripting');
+    expect(evalSection).toContain(
+      'When SaveState is not initialized, <code>quality</code> emits a missing summary (found, suite, suiteCount, passed, total, passRate',
+    );
+    expect(evalSection).toContain('savestate eval quality --suite recall --threshold 0.9 --json');
+    expect(evalSource).toContain('export function formatEvalQualityMissingJson');
+    expect(evalSource).toContain("options.json && subcommand === 'quality'");
+  });
+
   it('lists savestate login and logout in the command overview', () => {
     expect(docs).toContain('id="login"');
     expect(docs).toContain('id="logout"');
