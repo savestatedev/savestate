@@ -2158,6 +2158,18 @@ describe('CLI docs', () => {
     expect(search).toContain('export function formatSearchMissingJson');
   });
 
+  it('documents search --json when SaveState is not initialized', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('--json');
+    expect(searchSection).toContain('scripting');
+    expect(searchSection).toContain(
+      'When SaveState is not initialized, emits a missing summary (found, query, snapshot, count',
+    );
+    expect(searchSection).toContain('savestate search');
+    expect(search).toContain('export function formatSearchMissingJson');
+    expect(search).toContain("formatSearchMissingJson(query, options.snapshot ?? '')");
+  });
+
   it('registers --json on savestate config', () => {
     const configBlock = cli.slice(cli.indexOf("command('config')"), cli.indexOf("command('adapters')"));
     expect(configBlock).toContain(".option('--json'");

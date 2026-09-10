@@ -368,7 +368,7 @@
         <tr><td><code>--type &lt;type&gt;</code></td><td>Filter by type: <code>memory</code>, <code>conversation</code>, <code>identity</code>, or <code>knowledge</code> (comma-separated)</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20)</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>
-        <tr><td><code>--json</code></td><td>Output ranked results as JSON. When the snapshot is missing, emits a missing summary (found, query, snapshot, count; omits extra fields). Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Output ranked results as JSON. When SaveState is not initialized, emits a missing summary (found, query, snapshot, count; omits extra fields). When the snapshot is missing, emits a missing summary (found, query, snapshot, count; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 

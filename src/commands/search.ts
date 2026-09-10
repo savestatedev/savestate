@@ -49,6 +49,10 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatSearchMissingJson(query, options.snapshot ?? ''));
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
