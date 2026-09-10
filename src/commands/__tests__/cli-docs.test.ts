@@ -747,6 +747,18 @@ describe('CLI docs', () => {
     expect(evalSource).toContain("options.json && subcommand === 'quality'");
   });
 
+  it('documents eval report --json when SaveState is not initialized', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--json');
+    expect(evalSection).toContain('scripting');
+    expect(evalSection).toContain(
+      'When SaveState is not initialized, <code>report</code> emits a missing summary (found, suiteCount, passed, total, passRate',
+    );
+    expect(evalSection).toContain('savestate eval report --json');
+    expect(evalSource).toContain('export function formatEvalReportMissingJson');
+    expect(evalSource).toContain("options.json && subcommand === 'report'");
+  });
+
   it('lists savestate login and logout in the command overview', () => {
     expect(docs).toContain('id="login"');
     expect(docs).toContain('id="logout"');
