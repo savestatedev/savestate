@@ -158,6 +158,11 @@ const adapters = readFileSync(
   'utf8',
 );
 
+const doctor = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../doctor.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1962,6 +1967,15 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('--json');
     expect(doctorSection).toContain('scripting');
     expect(doctorSection).toContain('savestate doctor --json');
+  });
+
+  it('documents doctor --json when missing', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    expect(doctorSection).toContain('--json');
+    expect(doctorSection).toContain('scripting');
+    expect(doctorSection).toContain('found, total, healthy, unhealthy');
+    expect(doctorSection).toContain('savestate doctor --json');
+    expect(doctor).toContain('export function formatDoctorMissingJson');
   });
 
   it('registers savestate inspect on the CLI', () => {
