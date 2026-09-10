@@ -1869,6 +1869,23 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function formatTraceExportMissingJson');
   });
 
+  it('documents trace export --json when SaveState is not initialized', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    const exportBlock = trace.slice(
+      trace.indexOf('export async function traceExportCommand'),
+    );
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain(
+      'When SaveState is not initialized, <code>export</code> emits a missing summary (found, format, run, runCount, eventCount',
+    );
+    expect(traceSection).toContain('savestate trace export --json');
+    expect(trace).toContain('export function formatTraceExportMissingJson');
+    expect(exportBlock).toContain('if (!isInitialized())');
+    expect(exportBlock).toContain('if (options.json)');
+    expect(exportBlock).toContain("formatTraceExportMissingJson(options.run ?? 'all', options.format ?? 'jsonl')");
+  });
+
   it('documents trace list --json when SaveState is not initialized', () => {
     const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     const listBlock = trace.slice(
