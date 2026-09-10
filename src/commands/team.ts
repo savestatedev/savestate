@@ -90,6 +90,24 @@ export function formatTeamInviteJson(invite: TeamInviteJson): string {
   );
 }
 
+export interface TeamInviteMissingJson {
+  found: false;
+  email: null;
+  role: null;
+}
+
+export function formatTeamInviteMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      email: null,
+      role: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface TeamAuditEntryJson {
   id: string;
   action: string;
@@ -262,7 +280,13 @@ export async function teamInviteCommand(email: string, options: TeamCommandOptio
   }
 
   const result = await apiRequest('POST', '/team/members', { email, role });
-  if (!result.ok) return printError(result, 'Invite failed');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamInviteMissingJson());
+      return;
+    }
+    return printError(result, 'Invite failed');
+  }
 
   if (options.json) {
     const data = result.body as {
