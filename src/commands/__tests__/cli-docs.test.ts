@@ -921,6 +921,18 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function formatCloudDeleteMissingJson');
   });
 
+  it('documents cloud delete --json when SaveState is not initialized', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain(
+      'When SaveState is not initialized, <code>delete</code> emits a missing summary (found, id, deleted, failed',
+    );
+    expect(cloudSection).toContain('savestate cloud delete --id ss-2026-01-26 --json');
+    expect(cloud).toContain('export function formatCloudDeleteMissingJson');
+    expect(cloud).toContain('formatCloudDeleteMissingJson(options.id ?? \'\')');
+  });
+
   it('lists savestate mcp in the command overview', () => {
     expect(docs).toContain('id="mcp"');
     expect(docs).toContain('savestate mcp');
