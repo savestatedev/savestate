@@ -1614,6 +1614,15 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityClearJson');
   });
 
+  it('documents integrity clear --json when missing', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain('found, cleared');
+    expect(integritySection).toContain('savestate integrity clear --force --json');
+    expect(integrity).toContain('export function formatIntegrityClearMissingJson');
+  });
+
   it('documents integrity config --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');

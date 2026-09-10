@@ -365,6 +365,22 @@ export function formatIntegrityClearJson(result: IntegrityClearJson): string {
   );
 }
 
+export interface IntegrityClearMissingJson {
+  found: false;
+  cleared: 0;
+}
+
+export function formatIntegrityClearMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      cleared: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityConfigJson {
   enabled: boolean;
   honeyfactCount: number;
@@ -447,6 +463,10 @@ export async function integrityCommand(
     }
     if (options.json && subcommand === 'quarantine') {
       console.log(formatIntegrityQuarantineMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'clear') {
+      console.log(formatIntegrityClearMissingJson());
       return;
     }
     if (options.json && subcommand === 'incidents') {
