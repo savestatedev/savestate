@@ -65,6 +65,10 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatRestoreMissingJson(snapshotId ?? 'latest'));
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
