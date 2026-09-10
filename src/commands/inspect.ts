@@ -72,6 +72,10 @@ export async function inspectCommand(snapshotId: string, options: InspectOptions
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatInspectMissingJson(snapshotId));
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

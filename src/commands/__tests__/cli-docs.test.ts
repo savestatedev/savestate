@@ -2018,6 +2018,18 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function formatInspectMissingJson');
   });
 
+  it('documents inspect --json when SaveState is not initialized', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    expect(inspectSection).toContain('--json');
+    expect(inspectSection).toContain('scripting');
+    expect(inspectSection).toContain(
+      'When SaveState is not initialized, emits a missing summary (found, id, timestamp, platform, hasIdentity',
+    );
+    expect(inspectSection).toContain('savestate inspect latest --json');
+    expect(inspect).toContain('export function formatInspectMissingJson');
+    expect(inspect).toContain('formatInspectMissingJson(snapshotId)');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
