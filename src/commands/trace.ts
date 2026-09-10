@@ -68,6 +68,24 @@ export function formatTraceRunsJson(runs: TraceRunIndexEntry[]): string {
   return JSON.stringify(runs.map(toRunJson), null, 2);
 }
 
+export interface TraceListMissingJson {
+  found: false;
+  total: 0;
+  shown: 0;
+}
+
+export function formatTraceListMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+      shown: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export function formatTraceEventsJson(events: TraceEvent[]): string {
   return JSON.stringify(events.map(toEventJson), null, 2);
 }
@@ -183,6 +201,10 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatTraceListMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
