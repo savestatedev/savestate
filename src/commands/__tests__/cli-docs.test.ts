@@ -133,6 +133,11 @@ const login = readFileSync(
   'utf8',
 );
 
+const team = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../team.ts'),
+  'utf8',
+);
+
 const migrate = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../migrate.ts'),
   'utf8',
@@ -597,6 +602,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('scripting');
     expect(teamSection).toContain('id, name, and role');
     expect(teamSection).toContain('savestate team status --json');
+  });
+
+  it('documents team status --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, id, name, role');
+    expect(teamSection).toContain('savestate team status --json');
+    expect(team).toContain('export function formatTeamStatusMissingJson');
   });
 
   it('registers --json on savestate team members', () => {

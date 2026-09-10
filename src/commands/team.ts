@@ -42,6 +42,26 @@ export function formatTeamStatusJson(status: TeamStatusJson): string {
   );
 }
 
+export interface TeamStatusMissingJson {
+  found: false;
+  id: null;
+  name: null;
+  role: null;
+}
+
+export function formatTeamStatusMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id: null,
+      name: null,
+      role: null,
+    },
+    null,
+    2,
+  );
+}
+
 export interface TeamMemberJson {
   email: string;
   role: string;
@@ -191,7 +211,13 @@ export async function apiRequest(
 
 export async function teamStatusCommand(options: TeamCommandOptions = {}): Promise<void> {
   const result = await apiRequest('GET', '/team');
-  if (!result.ok) return printError(result, 'Could not fetch team status');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamStatusMissingJson());
+      return;
+    }
+    return printError(result, 'Could not fetch team status');
+  }
 
   const data = result.body as { team: { id: string; name: string; createdAt: string }; role: string };
   if (options.json) {
