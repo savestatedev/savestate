@@ -369,6 +369,10 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
 
   try {
     if (!isInitialized()) {
+      if (options.json) {
+        console.log(formatMcpExportMissingJson(options.agent ?? 'default', options.output ?? ''));
+        return;
+      }
       spinner?.fail('SaveState not initialized');
       console.error(chalk.red('Run `savestate init` first.'));
       process.exit(1);

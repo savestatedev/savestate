@@ -1044,6 +1044,21 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function formatMcpExportMissingJson');
   });
 
+  it('documents mcp export --json when SaveState is not initialized', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    const exportBlock = mcp.slice(mcp.indexOf('async function mcpExportCommand'), mcp.indexOf('async function mcpImportCommand'));
+    expect(mcpSection).toContain('--json');
+    expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain(
+      'When SaveState is not initialized, <code>export</code> emits a missing summary (found, agent, output, memories, snapshots, written',
+    );
+    expect(mcpSection).toContain('savestate mcp export --agent my-agent --json');
+    expect(mcp).toContain('export function formatMcpExportMissingJson');
+    expect(exportBlock).toContain('if (!isInitialized())');
+    expect(exportBlock).toContain('if (options.json)');
+    expect(exportBlock).toContain("formatMcpExportMissingJson(options.agent ?? 'default', options.output ?? '')");
+  });
+
   it('lists savestate context in the command overview', () => {
     expect(docs).toContain('id="context"');
     expect(docs).toContain('savestate context');
