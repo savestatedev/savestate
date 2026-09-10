@@ -246,6 +246,10 @@ export async function identityCommand(
       console.log(formatIdentitySchemaMissingJson());
       return;
     }
+    if (options?.json && subcommand === 'set') {
+      console.log(formatIdentitySetMissingJson(args[0] ?? ''));
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }

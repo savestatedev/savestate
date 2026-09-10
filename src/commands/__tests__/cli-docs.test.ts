@@ -1525,6 +1525,18 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function formatIdentitySetMissingJson');
   });
 
+  it('documents identity set --json when SaveState is not initialized', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('--json');
+    expect(identitySection).toContain('scripting');
+    expect(identitySection).toContain(
+      'When SaveState is not initialized, <code>set</code> emits a missing summary (found, updated, field, name, version',
+    );
+    expect(identitySection).toContain('savestate identity set tone professional --json');
+    expect(identity).toContain('export function formatIdentitySetMissingJson');
+    expect(identity).toContain("options?.json && subcommand === 'set'");
+  });
+
   it('documents identity init --json', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     expect(identitySection).toContain('--json');
