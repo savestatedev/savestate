@@ -171,6 +171,28 @@ export function formatIntegrityStatusJson(result: IntegrityStatusJson): string {
   );
 }
 
+export interface IntegrityStatusMissingJson {
+  found: false;
+  enabled: false;
+  policy: null;
+  honeyfacts: 0;
+  incidents: 0;
+}
+
+export function formatIntegrityStatusMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      enabled: false,
+      policy: null,
+      honeyfacts: 0,
+      incidents: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityRotateJson {
   rotated: number;
   valid: number;
@@ -515,6 +537,10 @@ export async function integrityCommand(
     }
     if (options.json && subcommand === 'test') {
       console.log(formatIntegrityTestMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'status') {
+      console.log(formatIntegrityStatusMissingJson());
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
