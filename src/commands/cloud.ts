@@ -53,6 +53,24 @@ export function formatCloudListJson(result: CloudListResult): string {
   );
 }
 
+export interface CloudListMissingJson {
+  found: false;
+  total: 0;
+  shown: 0;
+}
+
+export function formatCloudListMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+      shown: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface CloudPushSnapshotJson {
   id: string;
   uploaded: boolean;
@@ -621,6 +639,15 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
 export async function cloudListCommand(options: CloudOptions = {}): Promise<void> {
   if (!options.json) {
     console.log();
+  }
+
+  if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatCloudListMissingJson());
+      return;
+    }
+    console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
+    process.exit(1);
   }
 
   const spinner = options.json ? null : ora('Verifying subscription...').start();
