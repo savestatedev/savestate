@@ -212,6 +212,26 @@ export function formatIdentitySchemaJson(schema: {
   );
 }
 
+export interface IdentitySchemaMissingJson {
+  found: false;
+  id: null;
+  title: null;
+  type: null;
+}
+
+export function formatIdentitySchemaMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      id: null,
+      title: null,
+      type: null,
+    },
+    null,
+    2,
+  );
+}
+
 export async function identityCommand(
   subcommand: string,
   args: string[],
@@ -222,6 +242,10 @@ export async function identityCommand(
   }
 
   if (!isInitialized()) {
+    if (options?.json && subcommand === 'schema') {
+      console.log(formatIdentitySchemaMissingJson());
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
