@@ -163,6 +163,11 @@ const doctor = readFileSync(
   'utf8',
 );
 
+const stats = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../stats.ts'),
+  'utf8',
+);
+
 describe('CLI docs', () => {
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
@@ -1941,6 +1946,15 @@ describe('CLI docs', () => {
     expect(statsSection).toContain('--json');
     expect(statsSection).toContain('scripting');
     expect(statsSection).toContain('savestate stats --json');
+  });
+
+  it('documents stats --json when missing', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    expect(statsSection).toContain('--json');
+    expect(statsSection).toContain('scripting');
+    expect(statsSection).toContain('found, total, totalBytes, first, latest, storage');
+    expect(statsSection).toContain('savestate stats --json');
+    expect(stats).toContain('export function formatStatsMissingJson');
   });
 
   it('lists savestate doctor in the command overview', () => {
