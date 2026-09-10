@@ -97,6 +97,24 @@ export function formatIntegrityIncidentsJson(incidents: IntegrityIncident[]): st
   return JSON.stringify(incidents.map(toIncidentJson), null, 2);
 }
 
+export interface IntegrityIncidentsMissingJson {
+  found: false;
+  total: 0;
+  shown: 0;
+}
+
+export function formatIntegrityIncidentsMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      total: 0,
+      shown: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface IntegrityStatusHoneyfactsJson {
   active: number;
   expired: number;
@@ -429,6 +447,10 @@ export async function integrityCommand(
     }
     if (options.json && subcommand === 'quarantine') {
       console.log(formatIntegrityQuarantineMissingJson());
+      return;
+    }
+    if (options.json && subcommand === 'incidents') {
+      console.log(formatIntegrityIncidentsMissingJson());
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
