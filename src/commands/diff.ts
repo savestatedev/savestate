@@ -95,6 +95,10 @@ export async function diffCommand(
   }
 
   if (!isInitialized()) {
+    if (options?.json) {
+      console.log(formatDiffMissingJson(snapshotA, snapshotB));
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
