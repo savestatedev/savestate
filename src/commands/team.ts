@@ -184,6 +184,26 @@ export function formatTeamAuditJson(result: TeamAuditJson): string {
   );
 }
 
+export interface TeamAuditMissingJson {
+  found: false;
+  teamId: null;
+  count: 0;
+  nextCursor: null;
+}
+
+export function formatTeamAuditMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      teamId: null,
+      count: 0,
+      nextCursor: null,
+    },
+    null,
+    2,
+  );
+}
+
 interface CallResult {
   ok: boolean;
   status: number;
@@ -369,7 +389,13 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   }
 
   const teamRes = await apiRequest('GET', '/team');
-  if (!teamRes.ok) return printError(teamRes, 'Could not resolve team');
+  if (!teamRes.ok) {
+    if (options.json) {
+      console.log(formatTeamAuditMissingJson());
+      return;
+    }
+    return printError(teamRes, 'Could not resolve team');
+  }
   const teamId = (teamRes.body as { team: { id: string } }).team.id;
 
   const params = new URLSearchParams({ team_id: teamId, format });
@@ -377,7 +403,13 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   if (options.until) params.set('until', options.until);
 
   const result = await apiRequest('GET', `/audit-export?${params.toString()}`, undefined, format === 'csv');
-  if (!result.ok) return printError(result, 'Audit export failed');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamAuditMissingJson());
+      return;
+    }
+    return printError(result, 'Audit export failed');
+  }
 
   if (format === 'csv') {
     process.stdout.write(result.text || '');
