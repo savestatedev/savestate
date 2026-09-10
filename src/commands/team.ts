@@ -70,6 +70,26 @@ export function formatTeamMembersJson(result: TeamMembersJson): string {
   );
 }
 
+export interface TeamMembersMissingJson {
+  found: false;
+  name: null;
+  total: 0;
+  shown: 0;
+}
+
+export function formatTeamMembersMissingJson(): string {
+  return JSON.stringify(
+    {
+      found: false,
+      name: null,
+      total: 0,
+      shown: 0,
+    },
+    null,
+    2,
+  );
+}
+
 export interface TeamInviteJson {
   email: string;
   role: string;
@@ -216,7 +236,13 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
 
 export async function teamMembersCommand(options: TeamCommandOptions = {}): Promise<void> {
   const result = await apiRequest('GET', '/team/members');
-  if (!result.ok) return printError(result, 'Could not fetch members');
+  if (!result.ok) {
+    if (options.json) {
+      console.log(formatTeamMembersMissingJson());
+      return;
+    }
+    return printError(result, 'Could not fetch members');
+  }
 
   const data = result.body as {
     team: { name: string };
