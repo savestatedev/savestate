@@ -924,6 +924,18 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function formatCloudPullMissingJson');
   });
 
+  it('documents cloud pull --json when SaveState is not initialized', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--json');
+    expect(cloudSection).toContain('scripting');
+    expect(cloudSection).toContain(
+      'When SaveState is not initialized, <code>pull</code> emits a missing summary (found, id, pulled, failed, skipped',
+    );
+    expect(cloudSection).toContain('savestate cloud pull --json');
+    expect(cloud).toContain('export function formatCloudPullMissingJson');
+    expect(cloud).toContain('formatCloudPullMissingJson(options.id ?? \'\')');
+  });
+
   it('documents cloud delete --json when missing', () => {
     const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
     expect(cloudSection).toContain('--json');
