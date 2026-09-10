@@ -495,6 +495,10 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
   }
 
   if (!isInitialized()) {
+    if (options.json) {
+      console.log(formatCloudPullMissingJson(options.id ?? ''));
+      return;
+    }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
