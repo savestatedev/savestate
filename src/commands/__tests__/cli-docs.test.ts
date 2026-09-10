@@ -2069,6 +2069,18 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function formatRestoreMissingJson');
   });
 
+  it('documents restore --json when SaveState is not initialized', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    expect(restoreSection).toContain('--json');
+    expect(restoreSection).toContain('scripting');
+    expect(restoreSection).toContain(
+      'When SaveState is not initialized, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity',
+    );
+    expect(restoreSection).toContain('savestate restore latest --json');
+    expect(restore).toContain('export function formatRestoreMissingJson');
+    expect(restore).toContain("formatRestoreMissingJson(snapshotId ?? 'latest')");
+  });
+
   it('registers --json on savestate snapshot', () => {
     const snapshotBlock = cli.slice(cli.indexOf("command('snapshot')"), cli.indexOf("command('restore"));
     expect(snapshotBlock).toContain(".option('--json'");
