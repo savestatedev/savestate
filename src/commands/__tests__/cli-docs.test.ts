@@ -98,6 +98,11 @@ const trust = readFileSync(
   'utf8',
 );
 
+const team = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../team.ts'),
+  'utf8',
+);
+
 const snapshot = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../snapshot.ts'),
   'utf8',
@@ -130,11 +135,6 @@ const schedule = readFileSync(
 
 const login = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../login.ts'),
-  'utf8',
-);
-
-const team = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), '../team.ts'),
   'utf8',
 );
 
@@ -627,6 +627,15 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('scripting');
     expect(teamSection).toContain('email, role, and invite timestamps');
     expect(teamSection).toContain('savestate team members --json');
+  });
+
+  it('documents team members --json when missing', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--json');
+    expect(teamSection).toContain('scripting');
+    expect(teamSection).toContain('found, name, total, shown');
+    expect(teamSection).toContain('savestate team members --json');
+    expect(team).toContain('export function formatTeamMembersMissingJson');
   });
 
   it('registers --json on savestate team invite', () => {
