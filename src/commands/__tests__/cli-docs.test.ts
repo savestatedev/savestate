@@ -1856,6 +1856,24 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function formatTraceShowMissingJson');
   });
 
+  it('documents trace show --json when SaveState is not initialized', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    const showBlock = trace.slice(
+      trace.indexOf('export async function traceShowCommand'),
+      trace.indexOf('export async function traceExportCommand'),
+    );
+    expect(traceSection).toContain('--json');
+    expect(traceSection).toContain('scripting');
+    expect(traceSection).toContain(
+      'When SaveState is not initialized, <code>show</code> emits a missing summary (found, runId, adapter, eventCount',
+    );
+    expect(traceSection).toContain('savestate trace show run-123 --json');
+    expect(trace).toContain('export function formatTraceShowMissingJson');
+    expect(showBlock).toContain('if (!isInitialized())');
+    expect(showBlock).toContain('if (options.json)');
+    expect(showBlock).toContain('formatTraceShowMissingJson(runId)');
+  });
+
   it('registers savestate container on the CLI', () => {
     expect(cli).toContain('registerContainerCommands');
   });
