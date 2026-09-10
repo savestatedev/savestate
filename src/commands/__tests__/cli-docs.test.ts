@@ -2072,6 +2072,18 @@ describe('CLI docs', () => {
     expect(snapshot).toContain('export function formatSnapshotMissingJson');
   });
 
+  it('documents snapshot --json when SaveState is not initialized', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--json');
+    expect(snapshotSection).toContain('scripting');
+    expect(snapshotSection).toContain(
+      'When SaveState is not initialized, emits a missing summary (found, adapter, snapshotId, timestamp, platform',
+    );
+    expect(snapshotSection).toContain('savestate snapshot --json --full');
+    expect(snapshot).toContain('export function formatSnapshotMissingJson');
+    expect(snapshot).toContain("formatSnapshotMissingJson(options.adapter ?? '')");
+  });
+
   it('documents snapshot --tag and --meta state entries', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--tag');
