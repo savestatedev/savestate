@@ -61,6 +61,17 @@ export function formatListMissingJson(): string {
   );
 }
 
+/** Parse a snapshot-list limit without turning user input errors into empty output. */
+export function parseListLimit(value: string | undefined): number {
+  if (value === undefined) return 50;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new Error(`Invalid --limit value "${value}". Expected a positive integer.`);
+  }
+  return limit;
+}
+
 export async function listCommand(options: ListOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -76,7 +87,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   }
 
   const config = await loadConfig();
-  const limit = options.limit ? parseInt(options.limit, 10) : 50;
+  const limit = parseListLimit(options.limit);
   const index = await loadIndex();
 
   const filtered = applyListFilters(index.snapshots, options);
