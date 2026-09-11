@@ -27,6 +27,17 @@ import { loadConfig } from '../config.js';
 import { resolveStorage } from '../storage/index.js';
 import type { MemoryTier } from '../types.js';
 
+/** Parse a memory command limit without silently turning bad input into NaN. */
+export function parseMemoryLimit(value: string | undefined, fallback: number): number {
+  if (value === undefined) return fallback;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new Error(`Invalid --limit value "${value}". Expected a positive integer.`);
+  }
+  return limit;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -55,7 +66,7 @@ export function registerMemoryCommands(program: Command): void {
         await listMemories(storage, passphrase, {
           tier: options.tier as MemoryTier | undefined,
           pinned: options.pinned,
-          limit: parseInt(options.limit, 10),
+          limit: parseMemoryLimit(options.limit, 20),
           snapshotId: options.snapshot,
           format: options.json ? 'json' : 'table',
         });
@@ -219,7 +230,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await explainMemoryCommand(storage, passphrase, query, {
           namespace: options.namespace,
-          limit: parseInt(options.limit, 10),
+          limit: parseMemoryLimit(options.limit, 5),
           tags: options.tags?.split(',').map((t: string) => t.trim()),
           format: options.json ? 'json' : 'pretty',
         });
