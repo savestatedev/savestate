@@ -23,6 +23,7 @@ import { searchSnapshots } from '../../../src/search.js';
 import { loadIndex, type SnapshotIndexEntry } from '../../../src/index-file.js';
 import { applyListFilters } from '../../../src/commands/list.js';
 import { computeStats } from '../../../src/commands/stats.js';
+import { diagnoseSnapshot, type DoctorJson } from '../../../src/commands/doctor.js';
 import { LocalStorageBackend } from '../../../src/storage/local.js';
 import { resolveStorage } from '../../../src/storage/resolve.js';
 import { getAdapter } from '../../../src/adapters/registry.js';
@@ -241,6 +242,26 @@ export class SaveStateClient {
   async stats(): Promise<ReturnType<typeof computeStats>> {
     const index = await loadIndex();
     return computeStats(index.snapshots);
+  }
+
+  /**
+   * Check every indexed snapshot without emitting CLI output.
+   * Decrypts and verifies each archive using the same doctor engine as the CLI.
+   */
+  async doctor(): Promise<DoctorJson> {
+    const index = await loadIndex();
+    const passphrase = this.passphrase();
+    const results = [];
+    for (const entry of index.snapshots) {
+      results.push(await diagnoseSnapshot(entry, this.storage, passphrase));
+    }
+    const healthy = results.filter((result) => result.ok).length;
+    return {
+      total: results.length,
+      healthy,
+      unhealthy: results.length - healthy,
+      results,
+    };
   }
 
   /**

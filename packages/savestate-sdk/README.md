@@ -32,6 +32,7 @@ await client.restore('latest', { adapter: 'claude-code' });
 // List, inspect, stats — match the CLI surface
 const list = await client.list({ adapter: 'claude-code' });
 const stats = await client.stats();
+const health = await client.doctor();
 
 // Memory layer (live SQLite-backed memory store, not snapshots)
 const mem = client.memory();
@@ -86,6 +87,7 @@ client.restore(id, { adapter, include?, dryRun? }):           Promise<RestoreRes
 client.search(query, { snapshots?, types?, limit? }):         Promise<SearchResult[]>
 client.list({ since?, until?, adapter?, tag? }):              Promise<SnapshotIndexEntry[]>
 client.stats():                                               Promise<ComputedStats>
+client.doctor():                                               Promise<DoctorJson>
 client.memory():                                              MemoryHandle
 ```
 

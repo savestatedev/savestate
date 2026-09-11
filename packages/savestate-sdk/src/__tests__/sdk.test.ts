@@ -149,6 +149,15 @@ describe('SaveStateClient', () => {
     expect(stats.tagCount).toBe(2);
   });
 
+  it('runs the archive doctor through the programmatic API', async () => {
+    const adapter = new FakeAdapter(buildSnapshot([{ id: 'm1', content: 'healthy' }]));
+    await client.snapshot({ adapter });
+
+    const report = await client.doctor();
+    expect(report).toMatchObject({ total: 1, healthy: 1, unhealthy: 0 });
+    expect(report.results[0]).toMatchObject({ ok: true, id: expect.any(String) });
+  });
+
   it('filters list by adapter and tag', async () => {
     const adapter = new FakeAdapter(buildSnapshot([{ id: 'm1', content: 'a' }]));
     await client.snapshot({ adapter, tags: ['alpha'] });
