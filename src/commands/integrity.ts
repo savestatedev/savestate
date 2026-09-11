@@ -523,6 +523,10 @@ export async function integrityCommand(
       console.log(formatIntegrityQuarantineMissingJson());
       return;
     }
+    if (options.json && subcommand === 'release') {
+      console.log(formatIntegrityReleaseMissingJson(args[0] ?? ''));
+      return;
+    }
     if (options.json && subcommand === 'clear') {
       console.log(formatIntegrityClearMissingJson());
       return;

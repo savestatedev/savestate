@@ -1810,6 +1810,18 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegrityReleaseMissingJson');
   });
 
+  it('documents integrity release --json when SaveState is not initialized', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--json');
+    expect(integritySection).toContain('scripting');
+    expect(integritySection).toContain(
+      'When SaveState is not initialized, <code>release</code> emits a missing summary (found, targetId, success, eventId',
+    );
+    expect(integritySection).toContain('savestate integrity release mem-123 --json');
+    expect(integrity).toContain('export function formatIntegrityReleaseMissingJson');
+    expect(integrity).toContain("options.json && subcommand === 'release'");
+  });
+
   it('documents integrity clear --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
