@@ -93,6 +93,13 @@ export interface SearchOptions {
   limit?: number;
 }
 
+export interface DoctorOptions {
+  /** Restrict the health check to snapshots from one adapter. */
+  adapter?: string;
+  /** Check only the most recent N snapshots. */
+  limit?: number;
+}
+
 /**
  * Live, SQLite-backed memory store handle (NOT a snapshot).
  * Surfaces the runtime memory layer used by the MCP server and other
@@ -245,14 +252,26 @@ export class SaveStateClient {
   }
 
   /**
-   * Check every indexed snapshot without emitting CLI output.
+   * Check indexed snapshots without emitting CLI output.
    * Decrypts and verifies each archive using the same doctor engine as the CLI.
    */
-  async doctor(): Promise<DoctorJson> {
+  async doctor(options: DoctorOptions = {}): Promise<DoctorJson> {
     const index = await loadIndex();
     const passphrase = this.passphrase();
+    let targets = index.snapshots;
+    if (options.adapter) {
+      targets = targets.filter((entry) => entry.adapter === options.adapter);
+    }
+    if (options.limit !== undefined) {
+      if (!Number.isInteger(options.limit) || options.limit < 0) {
+        throw new Error('Doctor limit must be a non-negative integer.');
+      }
+      targets = [...targets]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, options.limit);
+    }
     const results = [];
-    for (const entry of index.snapshots) {
+    for (const entry of targets) {
       results.push(await diagnoseSnapshot(entry, this.storage, passphrase));
     }
     const healthy = results.filter((result) => result.ok).length;

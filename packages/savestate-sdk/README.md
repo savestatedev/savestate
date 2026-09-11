@@ -87,7 +87,7 @@ client.restore(id, { adapter, include?, dryRun? }):           Promise<RestoreRes
 client.search(query, { snapshots?, types?, limit? }):         Promise<SearchResult[]>
 client.list({ since?, until?, adapter?, tag? }):              Promise<SnapshotIndexEntry[]>
 client.stats():                                               Promise<ComputedStats>
-client.doctor():                                               Promise<DoctorJson>
+client.doctor({ adapter?, limit? }):                            Promise<DoctorJson>
 client.memory():                                              MemoryHandle
 ```
 

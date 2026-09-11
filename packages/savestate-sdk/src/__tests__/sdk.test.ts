@@ -158,6 +158,23 @@ describe('SaveStateClient', () => {
     expect(report.results[0]).toMatchObject({ ok: true, id: expect.any(String) });
   });
 
+  it('filters doctor results by adapter and recency limit', async () => {
+    const adapter = new FakeAdapter(buildSnapshot([{ id: 'm1', content: 'first' }]));
+    await client.snapshot({ adapter, label: 'first' });
+    await client.snapshot({ adapter, label: 'second' });
+
+    const report = await client.doctor({ adapter: 'sdk-test', limit: 1 });
+
+    expect(report).toMatchObject({ total: 1, healthy: 1, unhealthy: 0 });
+    expect(report.results[0].id).toBeTruthy();
+  });
+
+  it('rejects an invalid doctor limit', async () => {
+    await expect(client.doctor({ limit: -1 })).rejects.toThrow(
+      'Doctor limit must be a non-negative integer.',
+    );
+  });
+
   it('filters list by adapter and tag', async () => {
     const adapter = new FakeAdapter(buildSnapshot([{ id: 'm1', content: 'a' }]));
     await client.snapshot({ adapter, tags: ['alpha'] });

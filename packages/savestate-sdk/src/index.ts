@@ -17,6 +17,7 @@ export type {
   RestoreOptions,
   ListOptions,
   SearchOptions,
+  DoctorOptions,
   MemoryHandle,
 } from './client.js';
 
