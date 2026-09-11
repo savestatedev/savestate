@@ -531,6 +531,10 @@ export async function integrityCommand(
       console.log(formatIntegrityIncidentsMissingJson());
       return;
     }
+    if (options.json && subcommand === 'incident') {
+      console.log(formatIntegrityIncidentMissingJson(args[0] ?? ''));
+      return;
+    }
     if (options.json && subcommand === 'config') {
       console.log(formatIntegrityConfigMissingJson());
       return;
