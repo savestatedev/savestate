@@ -175,6 +175,25 @@ describe('SaveStateClient', () => {
     );
   });
 
+  it('returns an empty filtered report without requiring a passphrase', async () => {
+    const noPass = new SaveStateClient({
+      storage: { type: 'local', path: storagePath },
+    });
+    const previous = process.env.SAVESTATE_PASSPHRASE;
+    delete process.env.SAVESTATE_PASSPHRASE;
+    try {
+      await expect(noPass.doctor({ adapter: 'missing' })).resolves.toEqual({
+        total: 0,
+        healthy: 0,
+        unhealthy: 0,
+        results: [],
+      });
+    } finally {
+      if (previous === undefined) delete process.env.SAVESTATE_PASSPHRASE;
+      else process.env.SAVESTATE_PASSPHRASE = previous;
+    }
+  });
+
   it('filters list by adapter and tag', async () => {
     const adapter = new FakeAdapter(buildSnapshot([{ id: 'm1', content: 'a' }]));
     await client.snapshot({ adapter, tags: ['alpha'] });

@@ -257,7 +257,6 @@ export class SaveStateClient {
    */
   async doctor(options: DoctorOptions = {}): Promise<DoctorJson> {
     const index = await loadIndex();
-    const passphrase = this.passphrase();
     let targets = index.snapshots;
     if (options.adapter) {
       targets = targets.filter((entry) => entry.adapter === options.adapter);
@@ -270,6 +269,13 @@ export class SaveStateClient {
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         .slice(0, options.limit);
     }
+    // Empty filtered reports contain no encrypted data, so they should not
+    // require credentials just to describe the empty result.
+    if (targets.length === 0) {
+      return { total: 0, healthy: 0, unhealthy: 0, results: [] };
+    }
+
+    const passphrase = this.passphrase();
     const results = [];
     for (const entry of targets) {
       results.push(await diagnoseSnapshot(entry, this.storage, passphrase));
