@@ -27,13 +27,17 @@ import { loadConfig } from '../config.js';
 import { resolveStorage } from '../storage/index.js';
 import type { MemoryTier } from '../types.js';
 
+const MAX_MEMORY_LIMIT = 1000;
+
 /** Parse a memory command limit without silently turning bad input into NaN. */
 export function parseMemoryLimit(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;
 
   const limit = Number(value);
-  if (!Number.isInteger(limit) || limit < 1) {
-    throw new Error(`Invalid --limit value "${value}". Expected a positive integer.`);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_LIMIT}.`,
+    );
   }
   return limit;
 }
