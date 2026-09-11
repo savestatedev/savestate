@@ -15,4 +15,10 @@ describe('memory tier CLI parsing', () => {
   it('leaves omitted optional filters unset', () => {
     expect(parseMemoryTier(undefined)).toBeUndefined();
   });
+
+  it('rejects empty mutation targets instead of passing them downstream', () => {
+    expect(() => parseMemoryTier('')).toThrow(
+      'Invalid memory tier "". Expected one of L1, L2, or L3.',
+    );
+  });
 });
