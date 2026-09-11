@@ -15,6 +15,8 @@ interface ListOptions {
   tag?: string;
 }
 
+const MAX_LIST_LIMIT = 1000;
+
 export interface ListSnapshotJson {
   id: string;
   timestamp: string;
@@ -66,8 +68,10 @@ export function parseListLimit(value: string | undefined): number {
   if (value === undefined) return 50;
 
   const limit = Number(value);
-  if (!Number.isInteger(limit) || limit < 1) {
-    throw new Error(`Invalid --limit value "${value}". Expected a positive integer.`);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIST_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_LIST_LIMIT}.`,
+    );
   }
   return limit;
 }

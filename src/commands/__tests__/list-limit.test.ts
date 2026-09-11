@@ -12,7 +12,14 @@ describe('savestate list --limit', () => {
 
   it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseListLimit(value)).toThrow(
-      `Invalid --limit value "${value}". Expected a positive integer.`,
+      `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
+    );
+  });
+
+  it('rejects values above the bounded result count', () => {
+    expect(parseListLimit('1000')).toBe(1000);
+    expect(() => parseListLimit('1001')).toThrow(
+      'Invalid --limit value "1001". Expected a positive integer up to 1000.',
     );
   });
 });
