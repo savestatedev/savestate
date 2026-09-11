@@ -28,6 +28,18 @@ import { resolveStorage } from '../storage/index.js';
 import type { MemoryTier } from '../types.js';
 
 const MAX_MEMORY_LIMIT = 1000;
+const MEMORY_TIERS = ['L1', 'L2', 'L3'] as const;
+
+/** Parse a memory tier with a clear CLI error instead of a downstream lookup failure. */
+export function parseMemoryTier(value: string | undefined): MemoryTier | undefined {
+  if (value === undefined) return undefined;
+
+  const tier = value.toUpperCase();
+  if (!MEMORY_TIERS.includes(tier as (typeof MEMORY_TIERS)[number])) {
+    throw new Error(`Invalid memory tier "${value}". Expected one of L1, L2, or L3.`);
+  }
+  return tier as MemoryTier;
+}
 
 /** Parse a memory command limit without silently turning bad input into NaN. */
 export function parseMemoryLimit(value: string | undefined, fallback: number): number {
@@ -68,7 +80,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await listMemories(storage, passphrase, {
-          tier: options.tier as MemoryTier | undefined,
+          tier: parseMemoryTier(options.tier),
           pinned: options.pinned,
           limit: parseMemoryLimit(options.limit, 20),
           snapshotId: options.snapshot,
@@ -94,7 +106,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await promoteMemoryCommand(storage, passphrase, memoryId, {
-          to: options.to as MemoryTier,
+          to: parseMemoryTier(options.to) as MemoryTier,
           snapshotId: options.snapshot,
           format: options.json ? 'json' : 'pretty',
         });
@@ -118,7 +130,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await demoteMemoryCommand(storage, passphrase, memoryId, {
-          to: options.to as MemoryTier,
+          to: parseMemoryTier(options.to) as MemoryTier,
           snapshotId: options.snapshot,
           format: options.json ? 'json' : 'pretty',
         });
