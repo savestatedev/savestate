@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
 
-import { SaveStateClient } from '../index.js';
+import { SaveStateClient, type DoctorJson } from '../index.js';
 import { LocalStorageBackend } from '../../../../src/storage/local.js';
 import { clearSnapshotCache } from '../../../../src/search.js';
 import type { Adapter, Snapshot } from '../../../../src/types.js';
@@ -154,7 +154,9 @@ describe('SaveStateClient', () => {
     await client.snapshot({ adapter });
 
     const report = await client.doctor();
+    const typedReport: DoctorJson = report;
     expect(report).toMatchObject({ total: 1, healthy: 1, unhealthy: 0 });
+    expect(typedReport).toBe(report);
     expect(report.results[0]).toMatchObject({ ok: true, id: expect.any(String) });
   });
 
