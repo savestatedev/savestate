@@ -363,6 +363,10 @@ export function validateMemoryEntry(
   input: MemoryValidationInput,
   config: MemoryValidationConfig = DEFAULT_MEMORY_VALIDATION_CONFIG
 ): MemoryValidationResult {
+  if (typeof input.sourceId !== 'string' || !input.sourceId.trim()) {
+    return rejectionResult(input, 'Memory source identifier must not be empty');
+  }
+
   if (typeof input.content !== 'string') {
     return rejectionResult(input, 'Memory content must be a string');
   }

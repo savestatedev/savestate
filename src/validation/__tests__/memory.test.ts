@@ -43,6 +43,17 @@ describe('memory validation', () => {
   });
 
   describe('validateMemoryEntry', () => {
+    it('rejects entries without a provenance identifier', () => {
+      const result = validateMemoryEntry({
+        content: 'Remember this preference',
+        sourceType: 'user_input',
+        sourceId: '   ',
+      });
+
+      expect(result.accepted).toBe(false);
+      expect(result.rejectionReason).toContain('source identifier');
+    });
+
     it('rejects null bytes and control chars', () => {
       const result = validateMemoryEntry({
         content: 'hello\u0000world',
