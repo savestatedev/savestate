@@ -17,6 +17,7 @@ export type {
   RestoreOptions,
   ListOptions,
   SearchOptions,
+  DoctorOptions,
   MemoryHandle,
 } from './client.js';
 
@@ -44,4 +45,5 @@ export type {
 
 export type { CreateSnapshotResult } from '../../../src/snapshot.js';
 export type { RestoreResult } from '../../../src/restore.js';
+export type { DoctorJson } from '../../../src/commands/doctor.js';
 export type { SnapshotIndexEntry, SnapshotIndex } from '../../../src/index-file.js';

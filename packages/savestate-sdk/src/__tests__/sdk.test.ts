@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
 
-import { SaveStateClient } from '../index.js';
+import { SaveStateClient, type DoctorJson } from '../index.js';
 import { LocalStorageBackend } from '../../../../src/storage/local.js';
 import { clearSnapshotCache } from '../../../../src/search.js';
 import type { Adapter, Snapshot } from '../../../../src/types.js';
@@ -147,6 +147,53 @@ describe('SaveStateClient', () => {
     expect(stats.total).toBe(2);
     expect(stats.byAdapter['sdk-test']).toBe(2);
     expect(stats.tagCount).toBe(2);
+  });
+
+  it('runs the archive doctor through the programmatic API', async () => {
+    const adapter = new FakeAdapter(buildSnapshot([{ id: 'm1', content: 'healthy' }]));
+    await client.snapshot({ adapter });
+
+    const report = await client.doctor();
+    const typedReport: DoctorJson = report;
+    expect(report).toMatchObject({ total: 1, healthy: 1, unhealthy: 0 });
+    expect(typedReport).toBe(report);
+    expect(report.results[0]).toMatchObject({ ok: true, id: expect.any(String) });
+  });
+
+  it('filters doctor results by adapter and recency limit', async () => {
+    const adapter = new FakeAdapter(buildSnapshot([{ id: 'm1', content: 'first' }]));
+    await client.snapshot({ adapter, label: 'first' });
+    await client.snapshot({ adapter, label: 'second' });
+
+    const report = await client.doctor({ adapter: 'sdk-test', limit: 1 });
+
+    expect(report).toMatchObject({ total: 1, healthy: 1, unhealthy: 0 });
+    expect(report.results[0].id).toBeTruthy();
+  });
+
+  it('rejects an invalid doctor limit', async () => {
+    await expect(client.doctor({ limit: -1 })).rejects.toThrow(
+      'Doctor limit must be a non-negative integer.',
+    );
+  });
+
+  it('returns an empty filtered report without requiring a passphrase', async () => {
+    const noPass = new SaveStateClient({
+      storage: { type: 'local', path: storagePath },
+    });
+    const previous = process.env.SAVESTATE_PASSPHRASE;
+    delete process.env.SAVESTATE_PASSPHRASE;
+    try {
+      await expect(noPass.doctor({ adapter: 'missing' })).resolves.toEqual({
+        total: 0,
+        healthy: 0,
+        unhealthy: 0,
+        results: [],
+      });
+    } finally {
+      if (previous === undefined) delete process.env.SAVESTATE_PASSPHRASE;
+      else process.env.SAVESTATE_PASSPHRASE = previous;
+    }
   });
 
   it('filters list by adapter and tag', async () => {
