@@ -42,6 +42,7 @@ interface IntegrityOptions {
 }
 
 const MAX_INTEGRITY_COUNT = 1000;
+const MAX_INTEGRITY_TTL_DAYS = 365;
 
 /** Parse a honeyfact seed count without turning user input errors into an empty or NaN seed. */
 export function parseIntegrityCount(value: string | undefined): number | undefined {
@@ -54,6 +55,17 @@ export function parseIntegrityCount(value: string | undefined): number | undefin
     );
   }
   return count;
+}
+
+/** Parse honeyfact.ttl_days without writing NaN or unbounded TTLs into integrity config. */
+export function parseIntegrityTtlDays(value: string): number {
+  const ttlDays = Number(value);
+  if (!Number.isInteger(ttlDays) || ttlDays < 1 || ttlDays > MAX_INTEGRITY_TTL_DAYS) {
+    throw new Error(
+      `Invalid honeyfact.ttl_days value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_TTL_DAYS}.`,
+    );
+  }
+  return ttlDays;
 }
 
 export interface IntegrityIncidentJson {
@@ -1101,7 +1113,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
       config.integrity.honeyfact.count = parseInt(value, 10);
       break;
     case 'honeyfact.ttl_days':
-      config.integrity.honeyfact.ttl_days = parseInt(value, 10);
+      config.integrity.honeyfact.ttl_days = parseIntegrityTtlDays(value);
       break;
     case 'tripwire.threshold':
       config.integrity.tripwire.threshold = parseFloat(value);
