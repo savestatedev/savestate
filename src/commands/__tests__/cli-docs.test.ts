@@ -274,6 +274,13 @@ describe('CLI docs', () => {
     expect(pruneSection).toContain('savestate prune --keep-last 10 --json');
   });
 
+  it('documents prune --keep-last as a bounded positive integer', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    expect(pruneSection).toContain('--keep-last');
+    expect(pruneSection).toContain('positive integer up to 1000');
+    expect(prune).toContain('export function parseKeepLast');
+  });
+
   it('documents prune --json when missing', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     expect(pruneSection).toContain('--json');
