@@ -77,6 +77,21 @@ export function formatAclVerifyMissingJson(id: string): string {
   );
 }
 
+const MAX_ACL_EXPIRES_IN_MINUTES = 10080;
+
+/** Parse --expires-in as minutes so invalid input cannot write NaN or second-scale expirations. */
+export function parseAclExpiresIn(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const minutes = Number(value);
+  if (!Number.isInteger(minutes) || minutes < 1 || minutes > MAX_ACL_EXPIRES_IN_MINUTES) {
+    throw new Error(
+      `Invalid --expires-in value "${value}". Expected a positive integer up to ${MAX_ACL_EXPIRES_IN_MINUTES}.`,
+    );
+  }
+  return minutes;
+}
+
 async function aclPropose(options: {
   type: string;
   criticality: string;
@@ -87,9 +102,9 @@ async function aclPropose(options: {
 }) {
   try {
     let expiresAt: string | undefined;
-    if (options.expiresIn) {
-      const ms = parseInt(options.expiresIn) * 1000;
-      expiresAt = new Date(Date.now() + ms).toISOString();
+    const minutes = parseAclExpiresIn(options.expiresIn);
+    if (minutes !== undefined) {
+      expiresAt = new Date(Date.now() + minutes * 60 * 1000).toISOString();
     }
 
     const commitment = proposeCommitment({
