@@ -1109,6 +1109,13 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('RunBrief');
   });
 
+  it('documents context compile --budget as a bounded positive integer', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('--budget');
+    expect(contextSection).toContain('positive integer up to 1000000');
+    expect(context).toContain('export function parseContextBudget');
+  });
+
   it('registers --json on savestate context compile', () => {
     const compileBlock = context.slice(context.indexOf("command('compile')"), context.indexOf("command('explain"));
     expect(compileBlock).toContain(".option('--json'");

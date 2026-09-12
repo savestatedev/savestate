@@ -198,6 +198,22 @@ export function formatContextExplainMissingJson(runId: string): string {
   );
 }
 
+const MAX_CONTEXT_BUDGET = 1_000_000;
+const DEFAULT_CONTEXT_BUDGET = 4000;
+
+/** Parse a compile token budget without turning user input errors into NaN. */
+export function parseContextBudget(value: string | undefined): number {
+  if (value === undefined) return DEFAULT_CONTEXT_BUDGET;
+
+  const budget = Number(value);
+  if (!Number.isInteger(budget) || budget < 1 || budget > MAX_CONTEXT_BUDGET) {
+    throw new Error(
+      `Invalid --budget value "${value}". Expected a positive integer up to ${MAX_CONTEXT_BUDGET}.`,
+    );
+  }
+  return budget;
+}
+
 export function registerContextCommands(program: Command): void {
   const context = program
     .command('context')
@@ -217,7 +233,7 @@ export function registerContextCommands(program: Command): void {
       const request: CompileRequest = {
         agent_id: options.agent,
         task: { intent: options.task },
-        token_budget: parseInt(options.budget, 10),
+        token_budget: parseContextBudget(options.budget),
       };
       
       // TODO: Load actual candidates from memory store
