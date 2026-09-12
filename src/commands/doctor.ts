@@ -27,6 +27,21 @@ interface DoctorOptions {
   limit?: string;
 }
 
+const MAX_DOCTOR_LIMIT = 1000;
+
+/** Parse a doctor snapshot cap without turning user input errors into empty output. */
+export function parseDoctorLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_DOCTOR_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
 export interface SnapshotDiagnosis {
   id: string;
   filename: string;
@@ -96,11 +111,11 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   if (options.adapter) {
     targets = targets.filter((s) => s.adapter === options.adapter);
   }
-  if (options.limit) {
-    const n = parseInt(options.limit, 10);
+  const limit = parseDoctorLimit(options.limit);
+  if (limit !== undefined) {
     targets = [...targets]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, n);
+      .slice(0, limit);
   }
 
   if (targets.length === 0) {
