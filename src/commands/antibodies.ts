@@ -345,7 +345,7 @@ async function listRules(store: AntibodyStore, options: AntibodiesOptions): Prom
 async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
   const tags = parseTags(options.tags);
   const risk = parseRisk(options.risk);
-  const safeAction = parseSafeAction(options.safeAction);
+  const safeAction = parseAntibodiesSafeAction(options.safeAction);
   const confidence = parseAntibodiesConfidence(options.confidence);
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const errorCode = options.errorCode?.toUpperCase();
@@ -516,16 +516,18 @@ function parseRisk(raw?: string): RiskLevel {
   process.exit(1);
 }
 
-function parseSafeAction(raw?: string): SafeActionType {
-  if (!raw) return 'validate_inputs';
-  const normalized = raw.trim().toLowerCase() as SafeActionType;
-  if (SAFE_ACTION_TYPES.includes(normalized)) {
-    return normalized;
+/** Parse antibodies add --safe-action without exiting the CLI process on bad input. */
+export function parseAntibodiesSafeAction(value: string | undefined): SafeActionType {
+  if (value === undefined) return 'validate_inputs';
+
+  const normalized = value.trim().toLowerCase();
+  if ((SAFE_ACTION_TYPES as string[]).includes(normalized)) {
+    return normalized as SafeActionType;
   }
 
-  console.log(chalk.red(`✗ Invalid safe action: ${raw}`));
-  console.log(chalk.dim(`  Allowed: ${SAFE_ACTION_TYPES.join(', ')}`));
-  process.exit(1);
+  throw new Error(
+    `Invalid --safe-action value "${value}". Expected one of: ${SAFE_ACTION_TYPES.join(', ')}.`,
+  );
 }
 
 const DEFAULT_ANTIBODIES_CONFIDENCE = 0.7;
