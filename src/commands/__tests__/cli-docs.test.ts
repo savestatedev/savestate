@@ -1832,6 +1832,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityHoneyfactCount');
   });
 
+  it('documents integrity config tripwire.threshold as a bounded 0-1 number', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('tripwire.threshold');
+    expect(integritySection).toContain('number between 0 and 1');
+    expect(integrity).toContain('export function parseIntegrityTripwireThreshold');
+  });
+
   it('documents integrity quarantine --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');

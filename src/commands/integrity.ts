@@ -79,6 +79,17 @@ export function parseIntegrityHoneyfactCount(value: string): number {
   return count;
 }
 
+/** Parse tripwire.threshold without writing NaN or out-of-range scores into integrity config. */
+export function parseIntegrityTripwireThreshold(value: string): number {
+  const threshold = Number(value);
+  if (value.trim() === '' || !Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+    throw new Error(
+      `Invalid tripwire.threshold value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+  return threshold;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1127,7 +1138,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
       config.integrity.honeyfact.ttl_days = parseIntegrityTtlDays(value);
       break;
     case 'tripwire.threshold':
-      config.integrity.tripwire.threshold = parseFloat(value);
+      config.integrity.tripwire.threshold = parseIntegrityTripwireThreshold(value);
       break;
     case 'tripwire.fuzzy_enabled':
       config.integrity.tripwire.fuzzy_enabled = value === 'true';
