@@ -2108,6 +2108,13 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('incremental chains');
   });
 
+  it('documents doctor --limit as a bounded positive integer', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    expect(doctorSection).toContain('--limit');
+    expect(doctorSection).toContain('positive integer up to 1000');
+    expect(doctor).toContain('export function parseDoctorLimit');
+  });
+
   it('registers --json on savestate doctor', () => {
     const doctorBlock = cli.slice(cli.indexOf("command('doctor')"), cli.indexOf("command('inspect <snapshot-id>')"));
     expect(doctorBlock).toContain(".option('--json'");
