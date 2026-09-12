@@ -19,6 +19,21 @@ interface TrustOptions {
   limit?: string;
 }
 
+const MAX_TRUST_AUDIT_LIMIT = 1000;
+
+/** Parse a trust audit event cap without turning user input errors into empty output. */
+export function parseTrustAuditLimit(value: string | undefined): number {
+  if (value === undefined) return 50;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRUST_AUDIT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRUST_AUDIT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
 interface DenyAddOptions {
   reason?: string;
   by?: string;
@@ -228,7 +243,7 @@ export async function trustStatusCommand(options: TrustOptions): Promise<void> {
 
 export async function trustAuditCommand(options: TrustOptions): Promise<void> {
   const store = new TrustStore();
-  const limit = options.limit ? parseInt(options.limit, 10) : 50;
+  const limit = parseTrustAuditLimit(options.limit);
   const events = store.getRecentTransitions(limit);
 
   if (options.json) {

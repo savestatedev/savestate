@@ -560,6 +560,13 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('savestate trust audit --json');
   });
 
+  it('documents trust audit --limit as a bounded positive integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--limit');
+    expect(trustSection).toContain('positive integer up to 1000');
+    expect(trust).toContain('export function parseTrustAuditLimit');
+  });
+
   it('registers --json on savestate trust deny add', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const addBlock = trustBlock.slice(
