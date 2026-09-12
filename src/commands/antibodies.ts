@@ -346,7 +346,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
   const tags = parseTags(options.tags);
   const risk = parseRisk(options.risk);
   const safeAction = parseSafeAction(options.safeAction);
-  const confidence = parseConfidence(options.confidence);
+  const confidence = parseAntibodiesConfidence(options.confidence);
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const errorCode = options.errorCode?.toUpperCase();
 
@@ -528,14 +528,19 @@ function parseSafeAction(raw?: string): SafeActionType {
   process.exit(1);
 }
 
-function parseConfidence(raw?: string): number {
-  if (!raw) return 0.7;
-  const value = Number(raw);
-  if (!Number.isFinite(value) || value < 0 || value > 1) {
-    console.log(chalk.red('✗ --confidence must be a number between 0 and 1'));
-    process.exit(1);
+const DEFAULT_ANTIBODIES_CONFIDENCE = 0.7;
+
+/** Parse antibodies add --confidence without silently turning bad input into 0 or NaN. */
+export function parseAntibodiesConfidence(value: string | undefined): number {
+  if (value === undefined) return DEFAULT_ANTIBODIES_CONFIDENCE;
+
+  const confidence = Number(value);
+  if (value.trim() === '' || !Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
+    throw new Error(
+      `Invalid --confidence value "${value}". Expected a number between 0 and 1.`,
+    );
   }
-  return Number(value.toFixed(3));
+  return Number(confidence.toFixed(3));
 }
 
 function normalizePathPrefix(raw?: string): string | undefined {
