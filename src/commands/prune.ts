@@ -23,6 +23,21 @@ interface PruneOptions {
   json?: boolean;
 }
 
+const MAX_KEEP_LAST = 1000;
+
+/** Parse --keep-last without turning user input errors into an empty prune plan. */
+export function parseKeepLast(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const keepLast = Number(value);
+  if (!Number.isInteger(keepLast) || keepLast < 1 || keepLast > MAX_KEEP_LAST) {
+    throw new Error(
+      `Invalid --keep-last value "${value}". Expected a positive integer up to ${MAX_KEEP_LAST}.`,
+    );
+  }
+  return keepLast;
+}
+
 export interface PrunePlan {
   keep: SnapshotIndexEntry[];
   drop: SnapshotIndexEntry[];
@@ -118,7 +133,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
   const index = await loadIndex();
 
   const plan = planPrune(index.snapshots, {
-    keepLast: options.keepLast ? parseInt(options.keepLast, 10) : undefined,
+    keepLast: parseKeepLast(options.keepLast),
     olderThanMs: options.olderThan ? parseDateOrThrow(options.olderThan) : undefined,
   });
 
