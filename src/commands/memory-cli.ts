@@ -28,6 +28,7 @@ import { resolveStorage } from '../storage/index.js';
 import type { MemoryTier } from '../types.js';
 
 const MAX_MEMORY_LIMIT = 1000;
+const MAX_MEMORY_VERSION = 1000;
 const MEMORY_TIERS = ['L1', 'L2', 'L3'] as const;
 
 /** Parse a memory tier with a clear CLI error instead of a downstream lookup failure. */
@@ -52,6 +53,17 @@ export function parseMemoryLimit(value: string | undefined, fallback: number): n
     );
   }
   return limit;
+}
+
+/** Parse a memory rollback version without silently turning bad input into NaN. */
+export function parseMemoryVersion(value: string | undefined): number {
+  const version = Number(value);
+  if (!Number.isInteger(version) || version < 1 || version > MAX_MEMORY_VERSION) {
+    throw new Error(
+      `Invalid --version value "${value}". Expected a positive integer up to ${MAX_MEMORY_VERSION}.`,
+    );
+  }
+  return version;
 }
 
 /**
@@ -327,7 +339,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await rollbackMemoryCommand(storage, passphrase, memoryId, {
-          version: parseInt(options.version, 10),
+          version: parseMemoryVersion(options.version),
           actorId: options.actor,
           format: options.json ? 'json' : 'pretty',
         });
