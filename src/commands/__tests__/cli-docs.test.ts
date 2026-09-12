@@ -1589,6 +1589,13 @@ describe('CLI docs', () => {
     expect(acl).toContain('export function formatAclVerifyMissingJson');
   });
 
+  it('documents acl propose --expires-in as a bounded positive integer', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--expires-in');
+    expect(aclSection).toContain('positive integer up to 10080');
+    expect(acl).toContain('export function parseAclExpiresIn');
+  });
+
   it('registers savestate identity on the CLI', () => {
     expect(cli).toContain("command('identity <subcommand> [args...]')");
     expect(cli).toContain('identityCommand');
