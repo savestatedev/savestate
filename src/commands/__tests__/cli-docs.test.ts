@@ -1195,6 +1195,13 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('rollback');
   });
 
+  it('documents memory rollback --version as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--version');
+    expect(memorySection).toContain('positive integer up to 1000');
+    expect(memoryCli).toContain('export function parseMemoryVersion');
+  });
+
   it('documents memory log --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
