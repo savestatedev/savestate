@@ -1825,6 +1825,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityTtlDays');
   });
 
+  it('documents integrity config honeyfact.count as a bounded positive integer', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('honeyfact.count');
+    expect(integritySection).toContain('positive integer up to 1000');
+    expect(integrity).toContain('export function parseIntegrityHoneyfactCount');
+  });
+
   it('documents integrity quarantine --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
