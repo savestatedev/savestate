@@ -1202,6 +1202,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryVersion');
   });
 
+  it('documents memory edit --importance as a number between 0 and 1', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--importance');
+    expect(memorySection).toContain('number between 0 and 1');
+    expect(memoryCli).toContain('export function parseMemoryImportance');
+  });
+
   it('documents memory log --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');

@@ -66,6 +66,19 @@ export function parseMemoryVersion(value: string | undefined): number {
   return version;
 }
 
+/** Parse a memory importance score without silently turning bad input into NaN. */
+export function parseMemoryImportance(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const importance = Number(value);
+  if (value.trim() === '' || !Number.isFinite(importance) || importance < 0 || importance > 1) {
+    throw new Error(
+      `Invalid --importance value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+  return importance;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -289,7 +302,7 @@ export function registerMemoryCommands(program: Command): void {
         await editMemoryCommand(storage, passphrase, memoryId, {
           content: options.content,
           tags: options.tags?.split(',').map((t: string) => t.trim()),
-          importance: options.importance ? parseFloat(options.importance) : undefined,
+          importance: parseMemoryImportance(options.importance),
           actorId: options.actor,
           reason: options.reason,
           format: options.json ? 'json' : 'pretty',
