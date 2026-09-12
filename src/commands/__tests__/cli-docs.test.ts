@@ -1790,6 +1790,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function formatIntegritySeedMissingJson');
   });
 
+  it('documents integrity --count as a bounded positive integer', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--count');
+    expect(integritySection).toContain('positive integer up to 1000');
+    expect(integrity).toContain('export function parseIntegrityCount');
+  });
+
   it('documents integrity quarantine --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
