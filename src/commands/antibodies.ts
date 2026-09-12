@@ -344,7 +344,7 @@ async function listRules(store: AntibodyStore, options: AntibodiesOptions): Prom
 
 async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
   const tags = parseTags(options.tags);
-  const risk = parseRisk(options.risk);
+  const risk = parseAntibodiesRisk(options.risk);
   const safeAction = parseAntibodiesSafeAction(options.safeAction);
   const confidence = parseAntibodiesConfidence(options.confidence);
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
@@ -504,16 +504,18 @@ function parseTags(raw?: string): string[] {
   return [...new Set(raw.split(',').map((token) => token.trim().toLowerCase()).filter(Boolean))];
 }
 
-function parseRisk(raw?: string): RiskLevel {
-  if (!raw) return 'medium';
-  const normalized = raw.trim().toLowerCase();
-  if (RISK_LEVELS.includes(normalized as RiskLevel)) {
+/** Parse antibodies add --risk without exiting the CLI process on bad input. */
+export function parseAntibodiesRisk(value: string | undefined): RiskLevel {
+  if (value === undefined) return 'medium';
+
+  const normalized = value.trim().toLowerCase();
+  if ((RISK_LEVELS as string[]).includes(normalized)) {
     return normalized as RiskLevel;
   }
 
-  console.log(chalk.red(`✗ Invalid risk: ${raw}`));
-  console.log(chalk.dim(`  Allowed: ${RISK_LEVELS.join(', ')}`));
-  process.exit(1);
+  throw new Error(
+    `Invalid --risk value "${value}". Expected one of: ${RISK_LEVELS.join(', ')}.`,
+  );
 }
 
 /** Parse antibodies add --safe-action without exiting the CLI process on bad input. */
