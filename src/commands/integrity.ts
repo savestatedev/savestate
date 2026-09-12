@@ -90,6 +90,20 @@ export function parseIntegrityTripwireThreshold(value: string): number {
   return threshold;
 }
 
+const CONTAINMENT_POLICIES: ContainmentPolicy[] = ['observe', 'approve', 'auto'];
+const CONTAINMENT_POLICY_LIST = CONTAINMENT_POLICIES.join(', ');
+
+/** Parse containment.policy without writing unknown values or exiting the process. */
+export function parseIntegrityContainmentPolicy(value: string): ContainmentPolicy {
+  if (CONTAINMENT_POLICIES.includes(value as ContainmentPolicy)) {
+    return value as ContainmentPolicy;
+  }
+
+  throw new Error(
+    `Invalid containment.policy value "${value}". Expected one of: ${CONTAINMENT_POLICY_LIST}.`,
+  );
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1144,12 +1158,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
       config.integrity.tripwire.fuzzy_enabled = value === 'true';
       break;
     case 'containment.policy':
-      if (!['observe', 'approve', 'auto'].includes(value)) {
-        console.log(chalk.red(`✗ Invalid policy: ${value}`));
-        console.log(chalk.dim('  Allowed: observe, approve, auto'));
-        process.exit(1);
-      }
-      config.integrity.containment.policy = value as ContainmentPolicy;
+      config.integrity.containment.policy = parseIntegrityContainmentPolicy(value);
       break;
     case 'containment.auto_escalate':
       config.integrity.containment.auto_escalate_critical = value === 'true';
