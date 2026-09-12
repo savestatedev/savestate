@@ -19,6 +19,7 @@ interface SearchOptions {
 
 const VALID_TYPES = new Set(['memory', 'conversation', 'identity', 'knowledge']);
 const MAX_SEARCH_LIMIT = 1000;
+const SEARCH_TYPE_LIST = [...VALID_TYPES].join(', ');
 
 export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
@@ -57,6 +58,29 @@ export function parseSearchLimit(value: string | undefined): number {
   return limit;
 }
 
+/** Parse search --type without silently dropping unknown filters or exiting the process. */
+export function parseSearchType(
+  value: string | undefined,
+): Array<'memory' | 'conversation' | 'identity' | 'knowledge'> | undefined {
+  if (value === undefined) return undefined;
+
+  const types = value
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (
+    types.length === 0 ||
+    types.some((token) => !VALID_TYPES.has(token))
+  ) {
+    throw new Error(
+      `Invalid --type value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,
+    );
+  }
+
+  return types as Array<'memory' | 'conversation' | 'identity' | 'knowledge'>;
+}
+
 export async function searchCommand(query: string, options: SearchOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -73,18 +97,7 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
 
   const config = await loadConfig();
   const limit = parseSearchLimit(options.limit);
-
-  const types = options.type
-    ? options.type
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => VALID_TYPES.has(t))
-    : undefined;
-
-  if (options.type && (!types || types.length === 0)) {
-    console.log(chalk.red(`✗ Invalid --type. Use any of: ${[...VALID_TYPES].join(', ')}`));
-    process.exit(1);
-  }
+  const types = parseSearchType(options.type);
 
   if (options.snapshot) {
     const entry = await findEntry(options.snapshot);
