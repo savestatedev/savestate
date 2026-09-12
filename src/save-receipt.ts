@@ -65,6 +65,16 @@ export interface ReceiptStore {
   receipts: SaveReceipt[];
 }
 
+function isReceiptStore(value: unknown): value is ReceiptStore {
+  if (!value || typeof value !== 'object' || !Array.isArray((value as { receipts?: unknown }).receipts)) {
+    return false;
+  }
+
+  return (value as { receipts: unknown[] }).receipts.every(
+    (receipt) => receipt && typeof receipt === 'object' && typeof (receipt as { resource_id?: unknown }).resource_id === 'string'
+  );
+}
+
 /**
  * Path to the receipts file
  */
@@ -82,7 +92,8 @@ export async function loadReceipts(cwd?: string): Promise<ReceiptStore> {
   }
   try {
     const raw = await readFile(path, 'utf-8');
-    return JSON.parse(raw) as ReceiptStore;
+    const parsed: unknown = JSON.parse(raw);
+    return isReceiptStore(parsed) ? parsed : { receipts: [] };
   } catch {
     return { receipts: [] };
   }
