@@ -41,6 +41,21 @@ interface IntegrityOptions {
   user?: string;
 }
 
+const MAX_INTEGRITY_COUNT = 1000;
+
+/** Parse a honeyfact seed count without turning user input errors into an empty or NaN seed. */
+export function parseIntegrityCount(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const count = Number(value);
+  if (!Number.isInteger(count) || count < 1 || count > MAX_INTEGRITY_COUNT) {
+    throw new Error(
+      `Invalid --count value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_COUNT}.`,
+    );
+  }
+  return count;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -675,7 +690,7 @@ async function showStatus(options: IntegrityOptions): Promise<void> {
 async function seedCommand(options: IntegrityOptions): Promise<void> {
   const config = await loadConfig();
   const tenant_id = options.tenant ?? 'default';
-  const count = options.count ? parseInt(options.count, 10) : (config.integrity?.honeyfact.count ?? 10);
+  const count = parseIntegrityCount(options.count) ?? (config.integrity?.honeyfact.count ?? 10);
   const ttl_days = config.integrity?.honeyfact.ttl_days ?? 7;
 
   if (!options.json) {
