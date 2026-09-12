@@ -729,6 +729,13 @@ describe('CLI docs', () => {
     expect(evalSection).toContain('.savestate/benchmarks/');
   });
 
+  it('documents eval --threshold as a number between 0 and 1', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--threshold');
+    expect(evalSection).toContain('number between 0 and 1');
+    expect(evalSource).toContain('export function parseEvalThreshold');
+  });
+
   it('registers --json on savestate eval', () => {
     const evalBlock = cli.slice(cli.indexOf("command('eval <subcommand>')"), cli.indexOf("command('search <query>')"));
     expect(evalBlock).toContain(".option('--json'");

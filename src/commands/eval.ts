@@ -142,7 +142,7 @@ export async function evalCommand(subcommand: string, options: EvalOptions): Pro
 }
 
 async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
-  const threshold = parseThreshold(options.threshold);
+  const threshold = parseEvalThreshold(options.threshold);
   const benchmark = new QualityBenchmark({ confidenceThreshold: threshold });
 
   if (!options.json) {
@@ -326,14 +326,19 @@ function formatPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function parseThreshold(raw?: string): number {
-  if (!raw) return 0.7;
-  const value = Number(raw);
-  if (!Number.isFinite(value) || value < 0 || value > 1) {
-    console.log(chalk.red('--threshold must be a number between 0 and 1'));
-    process.exit(1);
+const DEFAULT_EVAL_THRESHOLD = 0.7;
+
+/** Parse eval --threshold without silently turning bad input into 0 or NaN. */
+export function parseEvalThreshold(value: string | undefined): number {
+  if (value === undefined) return DEFAULT_EVAL_THRESHOLD;
+
+  const threshold = Number(value);
+  if (value.trim() === '' || !Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+    throw new Error(
+      `Invalid --threshold value "${value}". Expected a number between 0 and 1.`,
+    );
   }
-  return value;
+  return threshold;
 }
 
 /**
