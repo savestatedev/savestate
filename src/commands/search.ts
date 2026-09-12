@@ -18,6 +18,7 @@ interface SearchOptions {
 }
 
 const VALID_TYPES = new Set(['memory', 'conversation', 'identity', 'knowledge']);
+const MAX_SEARCH_LIMIT = 1000;
 
 export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
@@ -43,6 +44,19 @@ export function formatSearchMissingJson(query: string, snapshot: string): string
   );
 }
 
+/** Parse a search result limit without turning user input errors into empty output. */
+export function parseSearchLimit(value: string | undefined): number {
+  if (value === undefined) return 20;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SEARCH_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SEARCH_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
 export async function searchCommand(query: string, options: SearchOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -58,7 +72,7 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
   }
 
   const config = await loadConfig();
-  const limit = options.limit ? parseInt(options.limit, 10) : 20;
+  const limit = parseSearchLimit(options.limit);
 
   const types = options.type
     ? options.type

@@ -2347,6 +2347,13 @@ describe('CLI docs', () => {
     expect(search).toContain("formatSearchMissingJson(query, options.snapshot ?? '')");
   });
 
+  it('documents search --limit as a bounded positive integer', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('--limit');
+    expect(searchSection).toContain('positive integer up to 1000');
+    expect(search).toContain('export function parseSearchLimit');
+  });
+
   it('registers --json on savestate config', () => {
     const configBlock = cli.slice(cli.indexOf("command('config')"), cli.indexOf("command('adapters')"));
     expect(configBlock).toContain(".option('--json'");
