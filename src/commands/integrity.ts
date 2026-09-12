@@ -68,6 +68,17 @@ export function parseIntegrityTtlDays(value: string): number {
   return ttlDays;
 }
 
+/** Parse honeyfact.count without writing NaN or unbounded seed counts into integrity config. */
+export function parseIntegrityHoneyfactCount(value: string): number {
+  const count = Number(value);
+  if (!Number.isInteger(count) || count < 1 || count > MAX_INTEGRITY_COUNT) {
+    throw new Error(
+      `Invalid honeyfact.count value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_COUNT}.`,
+    );
+  }
+  return count;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1110,7 +1121,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
       config.integrity.enabled = value === 'true';
       break;
     case 'honeyfact.count':
-      config.integrity.honeyfact.count = parseInt(value, 10);
+      config.integrity.honeyfact.count = parseIntegrityHoneyfactCount(value);
       break;
     case 'honeyfact.ttl_days':
       config.integrity.honeyfact.ttl_days = parseIntegrityTtlDays(value);
