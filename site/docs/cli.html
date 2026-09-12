@@ -721,7 +721,7 @@
       </thead>
       <tbody>
         <tr><td><code>--json</code></td><td>Emit Trust Kernel metrics as JSON on <code>status</code>, audit events as JSON (entry id, states, actor, and reason) on <code>audit</code>, denylist entries as JSON (pattern, reason, actor, and epoch) on <code>deny list</code>, a deny-remove summary (pattern and removed count) on <code>deny remove</code>, or a deny-add summary (pattern, reason, and actor) on <code>deny add</code>. When no denylist entry matches, <code>deny remove</code> emits a missing summary (found, pattern, removed; omits extra fields). Omits event metadata. Useful for scripting.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Number of recent events for <code>audit</code> (default 50)</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Number of recent events for <code>audit</code> (default 50). Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Why a pattern is denylisted on <code>deny add</code></td></tr>
         <tr><td><code>-b, --by &lt;actor&gt;</code></td><td>Who is adding the denylist entry (defaults to <code>cli</code>)</td></tr>
       </tbody>
