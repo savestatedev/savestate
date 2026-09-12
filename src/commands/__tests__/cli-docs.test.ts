@@ -1853,6 +1853,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityTripwireThreshold');
   });
 
+  it('documents integrity incidents --status as a known incident status', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--status');
+    expect(integritySection).toContain('open, investigating, contained, resolved, false_positive');
+    expect(integrity).toContain('export function parseIntegrityIncidentStatus');
+  });
+
   it('documents integrity quarantine --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');
