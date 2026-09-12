@@ -104,6 +104,17 @@ export function parseIntegrityContainmentPolicy(value: string): ContainmentPolic
   );
 }
 
+/** Parse enabled without silently writing false for unknown boolean values. */
+export function parseIntegrityEnabled(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+
+  throw new Error(
+    `Invalid enabled value "${value}". Expected true or false.`,
+  );
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1143,7 +1154,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
   // Apply setting
   switch (key) {
     case 'enabled':
-      config.integrity.enabled = value === 'true';
+      config.integrity.enabled = parseIntegrityEnabled(value);
       break;
     case 'honeyfact.count':
       config.integrity.honeyfact.count = parseIntegrityHoneyfactCount(value);
