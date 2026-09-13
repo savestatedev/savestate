@@ -61,6 +61,22 @@ export interface MigrateCommandOptions {
 const VALID_INCLUDE = ['instructions', 'memories', 'conversations', 'files', 'customBots'] as const;
 type MigrateIncludeType = (typeof VALID_INCLUDE)[number];
 const MIGRATE_INCLUDE_LIST = VALID_INCLUDE.join(', ');
+const MIGRATE_TO_PLATFORMS = ['chatgpt', 'claude', 'gemini', 'copilot'] as const;
+const MIGRATE_TO_PLATFORM_LIST = MIGRATE_TO_PLATFORMS.join(', ');
+
+/** Parse migrate --to without exiting the CLI process on an unknown platform. */
+export function parseMigrateTo(value: string | undefined): Platform | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim().toLowerCase();
+  if ((MIGRATE_TO_PLATFORMS as readonly string[]).includes(normalized)) {
+    return normalized as Platform;
+  }
+
+  throw new Error(
+    `Invalid --to value "${value}". Expected one of: ${MIGRATE_TO_PLATFORM_LIST}.`,
+  );
+}
 
 /** Parse migrate --include without silently skipping unknown types. */
 export function parseMigrateInclude(
@@ -219,6 +235,8 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     return;
   }
 
+  parseMigrateTo(options.to);
+
   // Check initialization
   if (!isInitialized()) {
     if (options.json) {
@@ -272,7 +290,7 @@ async function determinePlatforms(
   if (!options.to) {
     target = await selectTargetPlatform(source);
   } else {
-    target = validatePlatform(options.to, 'target');
+    target = parseMigrateTo(options.to)!;
   }
 
   // Validate source != target
