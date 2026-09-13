@@ -293,4 +293,14 @@ describe('savestate team audit', () => {
     );
     expect(calls).toHaveLength(0);
   });
+
+  it('rejects invalid --since before any API call', async () => {
+    const { fn, calls } = makeFetchMock(() => jsonResponse({}));
+    global.fetch = fn as unknown as typeof fetch;
+
+    await expect(teamAuditCommand({ since: 'nope' })).rejects.toThrow(
+      'Invalid --since value "nope". Expected an ISO 8601 date.',
+    );
+    expect(calls).toHaveLength(0);
+  });
 });
