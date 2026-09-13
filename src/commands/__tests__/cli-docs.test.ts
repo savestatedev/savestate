@@ -485,6 +485,13 @@ describe('CLI docs', () => {
     expect(migrateSection).toContain('interrupted');
   });
 
+  it('documents migrate --include as known migrate types', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    expect(migrateSection).toContain('--include');
+    expect(migrateSection).toContain('Must be one or more of: instructions, memories, conversations, files, customBots');
+    expect(migrate).toContain('export function parseMigrateInclude');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
