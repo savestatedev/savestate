@@ -21,9 +21,26 @@ interface TraceShowOptions {
 }
 
 interface TraceExportOptions {
-  format?: TraceExportFormat;
+  format?: string;
   run?: string;
   json?: boolean;
+}
+
+const TRACE_EXPORT_FORMATS: readonly TraceExportFormat[] = ['jsonl'];
+const TRACE_EXPORT_FORMAT_LIST = TRACE_EXPORT_FORMATS.join(', ');
+
+/** Parse trace export --format without exiting the CLI process on bad input. */
+export function parseTraceExportFormat(value: string | undefined): TraceExportFormat {
+  if (value === undefined) return 'jsonl';
+
+  const normalized = value.trim().toLowerCase();
+  if ((TRACE_EXPORT_FORMATS as readonly string[]).includes(normalized)) {
+    return normalized as TraceExportFormat;
+  }
+
+  throw new Error(
+    `Invalid --format value "${value}". Expected one of: ${TRACE_EXPORT_FORMAT_LIST}.`,
+  );
 }
 
 export interface TraceRunJson {
@@ -308,18 +325,14 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
 }
 
 export async function traceExportCommand(options: TraceExportOptions): Promise<void> {
+  const format = parseTraceExportFormat(options.format);
+
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatTraceExportMissingJson(options.run ?? 'all', options.format ?? 'jsonl'));
+      console.log(formatTraceExportMissingJson(options.run ?? 'all', format));
       return;
     }
     console.error(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
-    process.exit(1);
-  }
-
-  const format = options.format ?? 'jsonl';
-  if (format !== 'jsonl') {
-    console.error(chalk.red(`✗ Unsupported format: ${format}. Only jsonl is supported.`));
     process.exit(1);
   }
 
