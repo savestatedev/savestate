@@ -403,6 +403,13 @@ describe('CLI docs', () => {
     expect(scheduleSection).toContain('snapshot --label auto');
   });
 
+  it('documents schedule --every as a bounded duration', () => {
+    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'), docs.indexOf('id="migrate"'));
+    expect(scheduleSection).toContain('--every');
+    expect(scheduleSection).toContain('duration like 1h, 6h, 12h, or 1d up to 7 days');
+    expect(schedule).toContain('export function parseScheduleEvery');
+  });
+
   it('registers --json on savestate schedule', () => {
     const scheduleBlock = cli.slice(cli.indexOf("command('schedule')"), cli.indexOf("command('migrate')"));
     expect(scheduleBlock).toContain(".option('--json'");
