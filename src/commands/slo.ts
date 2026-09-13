@@ -40,6 +40,23 @@ function parseNamespace(ns: string): Namespace {
   };
 }
 
+const DEFAULT_SLO_PERIOD_DAYS = 7;
+const MAX_SLO_PERIOD_DAYS = 365;
+
+/** Parse slo report --period without silently falling back to a 7-day window. */
+export function parseSloPeriod(value: string | undefined): number {
+  if (value === undefined) return DEFAULT_SLO_PERIOD_DAYS;
+
+  const hours = parseDuration(value);
+  const days = hours === null ? Number.NaN : hours / 24;
+  if (!Number.isFinite(days) || days <= 0 || days > MAX_SLO_PERIOD_DAYS) {
+    throw new Error(
+      `Invalid --period value "${value}". Expected a duration like 24h, 7d, or 1w up to ${MAX_SLO_PERIOD_DAYS} days.`,
+    );
+  }
+  return days;
+}
+
 export interface SloStatusJson {
   enabled: boolean;
   namespace: string;
@@ -285,15 +302,13 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
  * Generate and display SLO report.
  */
 async function sloReport(options: { period?: string; json?: boolean }): Promise<void> {
+  const periodDays = parseSloPeriod(options.period);
   const sloConfig = await loadSLOConfig();
 
   if (!sloConfig.enabled && options.json) {
     console.log(formatSloReportMissingJson());
     return;
   }
-
-  // Calculate period
-  const periodDays = options.period ? (parseDuration(options.period) ?? 168) / 24 : 7;
   const periodEnd = new Date();
   const periodStart = new Date(periodEnd.getTime() - periodDays * 24 * 60 * 60 * 1000);
 
