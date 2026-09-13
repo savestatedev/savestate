@@ -22,6 +22,32 @@ interface ScheduleOptions {
   json?: boolean;
 }
 
+const MAX_SCHEDULE_DAYS = 7;
+const MAX_SCHEDULE_SECONDS = MAX_SCHEDULE_DAYS * 86400;
+
+/** Parse schedule --every without treating bad intervals as a later setup failure. */
+export function parseScheduleEvery(value: string): number {
+  const normalized = value.trim();
+  const match = normalized.match(/^(\d+)(h|d|m)$/i);
+  const amount = match ? Number(match[1]) : Number.NaN;
+  const unit = match ? match[2].toLowerCase() : '';
+
+  let seconds = Number.NaN;
+  if (Number.isInteger(amount) && amount >= 1) {
+    if (unit === 'm') seconds = amount * 60;
+    else if (unit === 'h') seconds = amount * 3600;
+    else if (unit === 'd') seconds = amount * 86400;
+  }
+
+  if (!Number.isFinite(seconds) || seconds < 1 || seconds > MAX_SCHEDULE_SECONDS) {
+    throw new Error(
+      `Invalid --every value "${value}". Expected a duration like 1h, 6h, 12h, or 1d up to ${MAX_SCHEDULE_DAYS} days.`,
+    );
+  }
+
+  return seconds;
+}
+
 export interface ScheduleStatus {
   enabled: boolean;
   running: boolean;
@@ -132,6 +158,7 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
 
   // Enable with interval - requires Pro/Team
   if (options.every) {
+    const seconds = parseScheduleEvery(options.every);
     // Verify subscription first
     const spinner = ora('Verifying subscription...').start();
     const { valid, tier, error } = await verifySubscription();
@@ -149,7 +176,7 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
     }
 
     spinner.succeed(`Subscription verified (${tier!.toUpperCase()})`);
-    await enableSchedule(options.every);
+    await enableSchedule(seconds);
     return;
   }
 }
@@ -278,14 +305,7 @@ async function showStatus(asJson?: boolean): Promise<void> {
   console.log();
 }
 
-async function enableSchedule(interval: string): Promise<void> {
-  const seconds = parseInterval(interval);
-  if (!seconds) {
-    console.log(chalk.red(`✗ Invalid interval: ${interval}`));
-    console.log(chalk.dim('  Examples: 1h, 6h, 12h, 1d'));
-    process.exit(1);
-  }
-
+async function enableSchedule(seconds: number): Promise<void> {
   const hours = seconds / 3600;
   const os = platform();
   const spinner = ora(`Setting up ${hours}h backup schedule...`).start();
@@ -448,21 +468,6 @@ WantedBy=timers.target
 }
 
 // ─── Helpers ────────────────────────────────────────────────
-
-function parseInterval(interval: string): number | null {
-  const match = interval.match(/^(\d+)(h|d|m)$/i);
-  if (!match) return null;
-
-  const value = parseInt(match[1]);
-  const unit = match[2].toLowerCase();
-
-  switch (unit) {
-    case 'm': return value * 60;
-    case 'h': return value * 3600;
-    case 'd': return value * 86400;
-    default: return null;
-  }
-}
 
 function findSavestateCommand(): string {
   // Check if we're running via npx/node
