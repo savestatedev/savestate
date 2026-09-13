@@ -1652,6 +1652,13 @@ describe('CLI docs', () => {
     expect(acl).toContain('export function parseAclExpiresIn');
   });
 
+  it('documents acl propose --criticality as known criticality levels', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--criticality');
+    expect(aclSection).toContain('Must be one of: c1, c2, c3');
+    expect(acl).toContain('export function parseAclCriticality');
+  });
+
   it('registers savestate identity on the CLI', () => {
     expect(cli).toContain("command('identity <subcommand> [args...]')");
     expect(cli).toContain('identityCommand');

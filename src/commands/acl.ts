@@ -5,6 +5,7 @@ import {
   gateAction,
   listCommitments,
   type Commitment,
+  type Criticality,
 } from '../acl/index.js';
 
 export interface AclCommitmentJson {
@@ -78,6 +79,26 @@ export function formatAclVerifyMissingJson(id: string): string {
 }
 
 const MAX_ACL_EXPIRES_IN_MINUTES = 10080;
+const ACL_CRITICALITIES = ['c1', 'c2', 'c3'] as const;
+const ACL_CRITICALITY_LIST = ACL_CRITICALITIES.join(', ');
+
+/** Parse --criticality so invalid input cannot write an untyped commitment. */
+export function parseAclCriticality(value: string | undefined): Criticality {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid --criticality value. Expected one of: ${ACL_CRITICALITY_LIST}.`,
+    );
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if ((ACL_CRITICALITIES as readonly string[]).includes(normalized)) {
+    return normalized as Criticality;
+  }
+
+  throw new Error(
+    `Invalid --criticality value "${value}". Expected one of: ${ACL_CRITICALITY_LIST}.`,
+  );
+}
 
 /** Parse --expires-in as minutes so invalid input cannot write NaN or second-scale expirations. */
 export function parseAclExpiresIn(value: string | undefined): number | undefined {
@@ -109,7 +130,7 @@ async function aclPropose(options: {
 
     const commitment = proposeCommitment({
       type: options.type as any,
-      criticality: options.criticality as any,
+      criticality: parseAclCriticality(options.criticality),
       description: options.description,
       proposer: options.proposer,
       expiresAt,
