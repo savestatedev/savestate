@@ -281,6 +281,13 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parseKeepLast');
   });
 
+  it('documents prune --older-than as an ISO 8601 date', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    expect(pruneSection).toContain('--older-than');
+    expect(pruneSection).toContain('Must be an ISO 8601 date');
+    expect(prune).toContain('export function parsePruneOlderThan');
+  });
+
   it('documents prune --json when missing', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     expect(pruneSection).toContain('--json');
