@@ -2416,6 +2416,13 @@ describe('CLI docs', () => {
     expect(listSection).toContain('savestate init');
   });
 
+  it('documents list --until as an ISO 8601 date', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    expect(listSection).toContain('--until');
+    expect(listSection).toContain('Must be an ISO 8601 date');
+    expect(listSource).toContain('export function parseListUntil');
+  });
+
   it('registers --json on savestate list', () => {
     const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
     expect(listBlock).toContain(".option('--json'");
