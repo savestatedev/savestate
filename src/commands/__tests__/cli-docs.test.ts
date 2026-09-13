@@ -1881,6 +1881,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityFuzzyEnabled');
   });
 
+  it('documents integrity config containment.auto_escalate as a true/false boolean', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('containment.auto_escalate');
+    expect(integritySection).toContain('Must be true or false');
+    expect(integrity).toContain('export function parseIntegrityAutoEscalate');
+  });
+
   it('documents integrity quarantine --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');

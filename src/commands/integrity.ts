@@ -150,6 +150,17 @@ export function parseIntegrityFuzzyEnabled(value: string): boolean {
   );
 }
 
+/** Parse containment.auto_escalate without silently writing false for unknown boolean values. */
+export function parseIntegrityAutoEscalate(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+
+  throw new Error(
+    `Invalid containment.auto_escalate value "${value}". Expected true or false.`,
+  );
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1207,7 +1218,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
       config.integrity.containment.policy = parseIntegrityContainmentPolicy(value);
       break;
     case 'containment.auto_escalate':
-      config.integrity.containment.auto_escalate_critical = value === 'true';
+      config.integrity.containment.auto_escalate_critical = parseIntegrityAutoEscalate(value);
       break;
     default:
       console.log(chalk.red(`✗ Unknown setting: ${key}`));
