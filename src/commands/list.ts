@@ -76,6 +76,19 @@ export function parseListLimit(value: string | undefined): number {
   return limit;
 }
 
+/** Parse list --since without treating invalid dates as an empty snapshot list. */
+export function parseListSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 export async function listCommand(options: ListOptions): Promise<void> {
   if (!options.json) {
     console.log();
@@ -174,12 +187,12 @@ export function applyListFilters(
   snapshots: SnapshotIndexEntry[],
   options: { since?: string; until?: string; adapter?: string; tag?: string },
 ): SnapshotIndexEntry[] {
-  const since = options.since ? parseDateOrThrow(options.since, '--since') : null;
+  const since = parseListSince(options.since);
   const until = options.until ? parseDateOrThrow(options.until, '--until') : null;
 
   return snapshots.filter((s) => {
     const ts = new Date(s.timestamp).getTime();
-    if (since !== null && ts < since) return false;
+    if (since !== undefined && ts < since) return false;
     if (until !== null && ts > until) return false;
     if (options.adapter && s.adapter !== options.adapter) return false;
     if (options.tag && !(s.tags ?? []).includes(options.tag)) return false;

@@ -61,6 +61,8 @@ describe('applyListFilters', () => {
   });
 
   it('throws on invalid date input', () => {
-    expect(() => applyListFilters(all, { since: 'not-a-date' })).toThrow(/Invalid date/);
+    expect(() => applyListFilters(all, { since: 'not-a-date' })).toThrow(
+      'Invalid --since value "not-a-date". Expected an ISO 8601 date.',
+    );
   });
 });
