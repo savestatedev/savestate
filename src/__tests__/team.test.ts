@@ -181,13 +181,11 @@ describe('savestate team invite', () => {
     global.fetch = fn as unknown as typeof fetch;
 
     vi.spyOn(console, 'log').mockImplementation(() => {});
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((_code?: number) => {
-      throw new Error('exit');
-    }) as never);
 
-    await expect(teamInviteCommand('a@b.co', { role: 'bogus' })).rejects.toThrow('exit');
+    await expect(teamInviteCommand('a@b.co', { role: 'bogus' })).rejects.toThrow(
+      'Invalid --role value "bogus". Expected one of: admin, member, viewer.',
+    );
     expect(calls).toHaveLength(0);
-    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it('rejects malformed emails before calling the API', async () => {
