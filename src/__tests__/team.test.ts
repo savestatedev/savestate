@@ -287,11 +287,10 @@ describe('savestate team audit', () => {
     global.fetch = fn as unknown as typeof fetch;
 
     vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(process, 'exit').mockImplementation(((_code?: number) => {
-      throw new Error('exit');
-    }) as never);
 
-    await expect(teamAuditCommand({ format: 'xml' })).rejects.toThrow('exit');
+    await expect(teamAuditCommand({ format: 'xml' })).rejects.toThrow(
+      'Invalid --format value "xml". Expected one of: csv, json.',
+    );
     expect(calls).toHaveLength(0);
   });
 });

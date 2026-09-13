@@ -31,6 +31,24 @@ export function parseTeamInviteRole(value: string | undefined): TeamInviteRole {
   );
 }
 
+const TEAM_AUDIT_FORMATS = ['csv', 'json'] as const;
+type TeamAuditFormat = (typeof TEAM_AUDIT_FORMATS)[number];
+const TEAM_AUDIT_FORMAT_LIST = TEAM_AUDIT_FORMATS.join(', ');
+
+/** Parse team audit --format without exiting the CLI process on bad input. */
+export function parseTeamAuditFormat(value: string | undefined): TeamAuditFormat {
+  if (value === undefined) return 'json';
+
+  const normalized = value.trim().toLowerCase();
+  if ((TEAM_AUDIT_FORMATS as readonly string[]).includes(normalized)) {
+    return normalized as TeamAuditFormat;
+  }
+
+  throw new Error(
+    `Invalid --format value "${value}". Expected one of: ${TEAM_AUDIT_FORMAT_LIST}.`,
+  );
+}
+
 export interface TeamCommandOptions {
   role?: string;
   name?: string;
@@ -396,11 +414,7 @@ export async function teamInviteCommand(email: string, options: TeamCommandOptio
 }
 
 export async function teamAuditCommand(options: TeamCommandOptions = {}): Promise<void> {
-  const format = (options.json ? 'json' : (options.format || 'json')).toLowerCase();
-  if (format !== 'json' && format !== 'csv') {
-    console.log(chalk.red("✗ --format must be 'csv' or 'json'"));
-    process.exit(1);
-  }
+  const format = options.json ? 'json' : parseTeamAuditFormat(options.format);
 
   const teamRes = await apiRequest('GET', '/team');
   if (!teamRes.ok) {
