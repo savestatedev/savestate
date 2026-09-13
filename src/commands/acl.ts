@@ -6,6 +6,7 @@ import {
   listCommitments,
   type Commitment,
   type Criticality,
+  type CommitmentType,
 } from '../acl/index.js';
 
 export interface AclCommitmentJson {
@@ -100,6 +101,32 @@ export function parseAclCriticality(value: string | undefined): Criticality {
   );
 }
 
+const ACL_TYPES = [
+  'customer_promise',
+  'ticket_status_change',
+  'escalation_closure',
+  'account_tool_write',
+] as const;
+const ACL_TYPE_LIST = ACL_TYPES.join(', ');
+
+/** Parse --type so invalid input cannot write an untyped commitment. */
+export function parseAclType(value: string | undefined): CommitmentType {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid --type value. Expected one of: ${ACL_TYPE_LIST}.`,
+    );
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if ((ACL_TYPES as readonly string[]).includes(normalized)) {
+    return normalized as CommitmentType;
+  }
+
+  throw new Error(
+    `Invalid --type value "${value}". Expected one of: ${ACL_TYPE_LIST}.`,
+  );
+}
+
 /** Parse --expires-in as minutes so invalid input cannot write NaN or second-scale expirations. */
 export function parseAclExpiresIn(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -129,7 +156,7 @@ async function aclPropose(options: {
     }
 
     const commitment = proposeCommitment({
-      type: options.type as any,
+      type: parseAclType(options.type),
       criticality: parseAclCriticality(options.criticality),
       description: options.description,
       proposer: options.proposer,
