@@ -2064,6 +2064,13 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('Askable Echoes');
   });
 
+  it('documents trace export --format as known export formats', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--format');
+    expect(traceSection).toContain('Must be one of: jsonl');
+    expect(trace).toContain('export function parseTraceExportFormat');
+  });
+
   it('registers --json on savestate trace list', () => {
     const listBlock = trace.slice(trace.indexOf("command('list')"), trace.indexOf("command('show"));
     expect(listBlock).toContain(".option('--json'");
@@ -2113,7 +2120,7 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function formatTraceExportMissingJson');
     expect(exportBlock).toContain('if (!isInitialized())');
     expect(exportBlock).toContain('if (options.json)');
-    expect(exportBlock).toContain("formatTraceExportMissingJson(options.run ?? 'all', options.format ?? 'jsonl')");
+    expect(exportBlock).toContain("formatTraceExportMissingJson(options.run ?? 'all', format)");
   });
 
   it('documents trace list --json when SaveState is not initialized', () => {
