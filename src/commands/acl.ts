@@ -127,6 +127,24 @@ export function parseAclType(value: string | undefined): CommitmentType {
   );
 }
 
+/** Parse --action so invalid input cannot gate an untyped commitment action. */
+export function parseAclAction(value: string | undefined): CommitmentType {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid --action value. Expected one of: ${ACL_TYPE_LIST}.`,
+    );
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if ((ACL_TYPES as readonly string[]).includes(normalized)) {
+    return normalized as CommitmentType;
+  }
+
+  throw new Error(
+    `Invalid --action value "${value}". Expected one of: ${ACL_TYPE_LIST}.`,
+  );
+}
+
 /** Parse --expires-in as minutes so invalid input cannot write NaN or second-scale expirations. */
 export function parseAclExpiresIn(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -203,22 +221,23 @@ async function aclVerify(options: { id: string; verifier: string; approve: boole
 
 async function aclGate(options: { action: string; json?: boolean }) {
   try {
-    const result = gateAction(options.action as any);
+    const action = parseAclAction(options.action);
+    const result = gateAction(action);
     if (options.json) {
       console.log(
         formatAclGateJson({
           allowed: result.allowed,
-          action: options.action,
+          action,
           reason: result.reason ?? null,
         }),
       );
       process.exit(result.allowed ? 0 : 1);
     }
     if (result.allowed) {
-      console.log(`✅ Action '${options.action}' is ALLOWED`);
+      console.log(`✅ Action '${action}' is ALLOWED`);
       process.exit(0);
     } else {
-      console.log(`❌ Action '${options.action}' is BLOCKED`);
+      console.log(`❌ Action '${action}' is BLOCKED`);
       console.log(`Reason: ${result.reason}`);
       process.exit(1);
     }
@@ -281,7 +300,7 @@ export function registerACLCommands(program: Command) {
   acl
     .command('gate')
     .description('Check if an action is allowed based on active commitments.')
-    .requiredOption('-a, --action <type>', 'Action type to check')
+    .requiredOption('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .option('--json', 'Output as JSON')
     .action(aclGate);
 
