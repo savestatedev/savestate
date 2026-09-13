@@ -499,6 +499,13 @@ describe('CLI docs', () => {
     expect(migrate).toContain('export function parseMigrateInclude');
   });
 
+  it('documents migrate --from as a known platform', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    expect(migrateSection).toContain('--from');
+    expect(migrateSection).toContain('Must be one of: chatgpt, claude, gemini, copilot');
+    expect(migrate).toContain('export function parseMigrateFrom');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
