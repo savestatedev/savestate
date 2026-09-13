@@ -31,7 +31,7 @@ import {
   confirm,
   setColorsEnabled,
 } from '../cli/prompts.js';
-import { ProgressDisplay, success, warning, error, info } from '../cli/progress.js';
+import { ProgressDisplay, success, error, info } from '../cli/progress.js';
 import {
   showMigrationSummary,
   showCompatibilityReport,
@@ -56,6 +56,33 @@ export interface MigrateCommandOptions {
   force?: boolean;
   verbose?: boolean;
   json?: boolean;
+}
+
+const VALID_INCLUDE = ['instructions', 'memories', 'conversations', 'files', 'customBots'] as const;
+type MigrateIncludeType = (typeof VALID_INCLUDE)[number];
+const MIGRATE_INCLUDE_LIST = VALID_INCLUDE.join(', ');
+
+/** Parse migrate --include without silently skipping unknown types. */
+export function parseMigrateInclude(
+  value: string | undefined,
+): MigrationOptions['include'] | undefined {
+  if (value === undefined) return undefined;
+
+  const types = value
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (
+    types.length === 0 ||
+    types.some((token) => !(VALID_INCLUDE as readonly string[]).includes(token))
+  ) {
+    throw new Error(
+      `Invalid --include value "${value}". Expected one or more of: ${MIGRATE_INCLUDE_LIST}.`,
+    );
+  }
+
+  return types as MigrateIncludeType[];
 }
 
 export interface MigratePlatformJson {
@@ -202,6 +229,8 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     process.exit(1);
   }
 
+  parseMigrateInclude(options.include);
+
   // Determine source and target platforms
   const { source, target } = await determinePlatforms(options);
 
@@ -282,7 +311,7 @@ async function handleDryRun(
     // Create orchestrator
     const orchestrator = new MigrationOrchestrator(source, target, {
       dryRun: true,
-      include: parseInclude(options.include),
+      include: parseMigrateInclude(options.include),
     });
 
     // Setup signal handler
@@ -328,7 +357,7 @@ async function handleReview(
     // Create orchestrator
     const orchestrator = new MigrationOrchestrator(source, target, {
       dryRun: true,
-      include: parseInclude(options.include),
+      include: parseMigrateInclude(options.include),
     });
 
     // Setup signal handler
@@ -451,7 +480,7 @@ async function runMigration(
 
     // Create orchestrator
     const migrationOptions: MigrationOptions = {
-      include: parseInclude(options.include),
+      include: parseMigrateInclude(options.include),
       dryRun: false,
     };
 
@@ -509,7 +538,7 @@ async function showMigrationPlan(
   console.log(chalk.white.bold('What will be migrated:'));
   console.log();
 
-  const include = parseInclude(options.include);
+  const include = parseMigrateInclude(options.include);
 
   // Instructions
   if (!include || include.includes('instructions')) {
@@ -601,24 +630,3 @@ function showHeader(): void {
   console.log();
 }
 
-// ─── Helpers ─────────────────────────────────────────────────
-
-function parseInclude(
-  include?: string,
-): MigrationOptions['include'] | undefined {
-  if (!include) return undefined;
-
-  const valid = ['instructions', 'memories', 'conversations', 'files', 'customBots'] as const;
-  const items = include.split(',').map((s) => s.trim());
-
-  const result: MigrationOptions['include'] = [];
-  for (const item of items) {
-    if (valid.includes(item as (typeof valid)[number])) {
-      result.push(item as (typeof valid)[number]);
-    } else {
-      warning(`Unknown content type: ${item}`);
-    }
-  }
-
-  return result.length > 0 ? result : undefined;
-}
