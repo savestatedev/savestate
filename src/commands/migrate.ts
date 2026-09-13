@@ -72,9 +72,22 @@ export function parseMigrateFrom(value: string | undefined): Platform | undefine
   if ((MIGRATE_PLATFORMS as readonly string[]).includes(normalized)) {
     return normalized as Platform;
   }
-
   throw new Error(
     `Invalid --from value "${value}". Expected one of: ${MIGRATE_PLATFORM_LIST}.`,
+  );
+}
+
+/** Parse migrate --to without exiting the CLI process on an unknown platform. */
+export function parseMigrateTo(value: string | undefined): Platform | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim().toLowerCase();
+  if ((MIGRATE_PLATFORMS as readonly string[]).includes(normalized)) {
+    return normalized as Platform;
+  }
+
+  throw new Error(
+    `Invalid --to value "${value}". Expected one of: ${MIGRATE_PLATFORM_LIST}.`,
   );
 }
 
@@ -236,6 +249,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
   }
 
   parseMigrateFrom(options.from);
+  parseMigrateTo(options.to);
 
   // Check initialization
   if (!isInitialized()) {
@@ -290,7 +304,7 @@ async function determinePlatforms(
   if (!options.to) {
     target = await selectTargetPlatform(source);
   } else {
-    target = validatePlatform(options.to, 'target');
+    target = parseMigrateTo(options.to)!;
   }
 
   // Validate source != target
@@ -647,4 +661,3 @@ function showHeader(): void {
   console.log(chalk.cyan.bold('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
   console.log();
 }
-
