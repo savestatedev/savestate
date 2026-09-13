@@ -92,6 +92,14 @@ export function parseIntegrityTripwireThreshold(value: string): number {
 
 const CONTAINMENT_POLICIES: ContainmentPolicy[] = ['observe', 'approve', 'auto'];
 const CONTAINMENT_POLICY_LIST = CONTAINMENT_POLICIES.join(', ');
+const INCIDENT_STATUSES: IntegrityIncident['status'][] = [
+  'open',
+  'investigating',
+  'contained',
+  'resolved',
+  'false_positive',
+];
+const INCIDENT_STATUS_LIST = INCIDENT_STATUSES.join(', ');
 
 /** Parse containment.policy without writing unknown values or exiting the process. */
 export function parseIntegrityContainmentPolicy(value: string): ContainmentPolicy {
@@ -101,6 +109,22 @@ export function parseIntegrityContainmentPolicy(value: string): ContainmentPolic
 
   throw new Error(
     `Invalid containment.policy value "${value}". Expected one of: ${CONTAINMENT_POLICY_LIST}.`,
+  );
+}
+
+/** Parse integrity incidents --status without silently treating unknown values as an empty filter. */
+export function parseIntegrityIncidentStatus(
+  value: string | undefined,
+): IntegrityIncident['status'] | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim().toLowerCase();
+  if ((INCIDENT_STATUSES as string[]).includes(normalized)) {
+    return normalized as IntegrityIncident['status'];
+  }
+
+  throw new Error(
+    `Invalid --status value "${value}". Expected one of: ${INCIDENT_STATUS_LIST}.`,
   );
 }
 
@@ -825,7 +849,7 @@ async function rotateCommand(options: IntegrityOptions): Promise<void> {
  */
 async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const tenant_id = options.tenant;
-  const status = options.status as IntegrityIncident['status'] | undefined;
+  const status = parseIntegrityIncidentStatus(options.status);
 
   const incidents = await getIncidents(tenant_id, status);
 
