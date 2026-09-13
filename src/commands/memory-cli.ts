@@ -42,6 +42,28 @@ export function parseMemoryTier(value: string | undefined): MemoryTier | undefin
   return tier as MemoryTier;
 }
 
+const MEMORY_DEMOTE_TIERS = ['L2', 'L3'] as const;
+type MemoryDemoteTier = (typeof MEMORY_DEMOTE_TIERS)[number];
+const MEMORY_DEMOTE_TIER_LIST = MEMORY_DEMOTE_TIERS.join(', ');
+
+/** Parse demote --to so hot L1 cannot be passed as a demotion target. */
+export function parseMemoryDemoteTo(value: string | undefined): MemoryDemoteTier {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid --to value. Expected one of: ${MEMORY_DEMOTE_TIER_LIST}.`,
+    );
+  }
+
+  const tier = value.trim().toUpperCase();
+  if ((MEMORY_DEMOTE_TIERS as readonly string[]).includes(tier)) {
+    return tier as MemoryDemoteTier;
+  }
+
+  throw new Error(
+    `Invalid --to value "${value}". Expected one of: ${MEMORY_DEMOTE_TIER_LIST}.`,
+  );
+}
+
 /** Parse a memory command limit without silently turning bad input into NaN. */
 export function parseMemoryLimit(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;
@@ -155,7 +177,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await demoteMemoryCommand(storage, passphrase, memoryId, {
-          to: parseMemoryTier(options.to) as MemoryTier,
+          to: parseMemoryDemoteTo(options.to),
           snapshotId: options.snapshot,
           format: options.json ? 'json' : 'pretty',
         });
