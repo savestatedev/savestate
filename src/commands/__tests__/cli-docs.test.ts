@@ -1521,6 +1521,13 @@ describe('CLI docs', () => {
     expect(sloSection).toContain('freshness.max_age_hours');
   });
 
+  it('documents slo report --period as a bounded duration', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--period');
+    expect(sloSection).toContain('duration like 24h, 7d, or 1w up to 365 days');
+    expect(slo).toContain('export function parseSloPeriod');
+  });
+
   it('registers --json on savestate slo', () => {
     const sloBlock = slo.slice(slo.indexOf("command('slo"));
     expect(sloBlock).toContain(".option('--json'");
