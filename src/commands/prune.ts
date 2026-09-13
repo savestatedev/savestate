@@ -38,6 +38,19 @@ export function parseKeepLast(value: string | undefined): number | undefined {
   return keepLast;
 }
 
+/** Parse --older-than without treating bad dates as an empty prune plan. */
+export function parsePruneOlderThan(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --older-than value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 export interface PrunePlan {
   keep: SnapshotIndexEntry[];
   drop: SnapshotIndexEntry[];
@@ -134,7 +147,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
 
   const plan = planPrune(index.snapshots, {
     keepLast: parseKeepLast(options.keepLast),
-    olderThanMs: options.olderThan ? parseDateOrThrow(options.olderThan) : undefined,
+    olderThanMs: parsePruneOlderThan(options.olderThan),
   });
 
   if (options.json) {
@@ -298,10 +311,4 @@ function printPlan(plan: PrunePlan): void {
   }
 }
 
-function parseDateOrThrow(input: string): number {
-  const ms = new Date(input).getTime();
-  if (Number.isNaN(ms)) {
-    throw new Error(`Invalid date for --older-than: ${input}`);
-  }
-  return ms;
-}
+
