@@ -49,6 +49,19 @@ export function parseTeamAuditFormat(value: string | undefined): TeamAuditFormat
   );
 }
 
+/** Parse team audit --since without sending a bad date to the API. */
+export function parseTeamAuditSince(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return value;
+}
+
 export interface TeamCommandOptions {
   role?: string;
   name?: string;
@@ -415,6 +428,7 @@ export async function teamInviteCommand(email: string, options: TeamCommandOptio
 
 export async function teamAuditCommand(options: TeamCommandOptions = {}): Promise<void> {
   const format = options.json ? 'json' : parseTeamAuditFormat(options.format);
+  const since = parseTeamAuditSince(options.since);
 
   const teamRes = await apiRequest('GET', '/team');
   if (!teamRes.ok) {
@@ -427,7 +441,7 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   const teamId = (teamRes.body as { team: { id: string } }).team.id;
 
   const params = new URLSearchParams({ team_id: teamId, format });
-  if (options.since) params.set('since', options.since);
+  if (since) params.set('since', since);
   if (options.until) params.set('until', options.until);
 
   const result = await apiRequest('GET', `/audit-export?${params.toString()}`, undefined, format === 'csv');
