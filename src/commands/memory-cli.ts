@@ -42,6 +42,28 @@ export function parseMemoryTier(value: string | undefined): MemoryTier | undefin
   return tier as MemoryTier;
 }
 
+const MEMORY_PROMOTE_TIERS = ['L1', 'L2'] as const;
+type MemoryPromoteTier = (typeof MEMORY_PROMOTE_TIERS)[number];
+const MEMORY_PROMOTE_TIER_LIST = MEMORY_PROMOTE_TIERS.join(', ');
+
+/** Parse promote --to so archival L3 cannot be passed as a promotion target. */
+export function parseMemoryPromoteTo(value: string | undefined): MemoryPromoteTier {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid --to value. Expected one of: ${MEMORY_PROMOTE_TIER_LIST}.`,
+    );
+  }
+
+  const tier = value.trim().toUpperCase();
+  if ((MEMORY_PROMOTE_TIERS as readonly string[]).includes(tier)) {
+    return tier as MemoryPromoteTier;
+  }
+
+  throw new Error(
+    `Invalid --to value "${value}". Expected one of: ${MEMORY_PROMOTE_TIER_LIST}.`,
+  );
+}
+
 /** Parse a memory command limit without silently turning bad input into NaN. */
 export function parseMemoryLimit(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;
@@ -131,7 +153,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await promoteMemoryCommand(storage, passphrase, memoryId, {
-          to: parseMemoryTier(options.to) as MemoryTier,
+          to: parseMemoryPromoteTo(options.to),
           snapshotId: options.snapshot,
           format: options.json ? 'json' : 'pretty',
         });

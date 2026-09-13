@@ -1247,6 +1247,13 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('Target tier');
   });
 
+  it('documents memory promote --to as L1 or L2', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--to');
+    expect(memorySection).toContain('Promote must be one of: L1, L2');
+    expect(memoryCli).toContain('export function parseMemoryPromoteTo');
+  });
+
   it('documents memory edit --content, --importance, --actor, and rollback --version', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--content');
