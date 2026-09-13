@@ -701,6 +701,13 @@ describe('CLI docs', () => {
     expect(team).toContain('export function formatTeamInviteMissingJson');
   });
 
+  it('documents team audit --format as known audit formats', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--format');
+    expect(teamSection).toContain('Must be one of: csv, json');
+    expect(team).toContain('export function parseTeamAuditFormat');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("Stream the team audit log to stdout"),
