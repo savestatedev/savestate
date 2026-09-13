@@ -18,6 +18,33 @@ interface RestoreOptions {
   json?: boolean;
 }
 
+const VALID_INCLUDE = ['identity', 'memory', 'conversations'] as const;
+type RestoreIncludeCategory = (typeof VALID_INCLUDE)[number];
+const RESTORE_INCLUDE_LIST = VALID_INCLUDE.join(', ');
+
+/** Parse restore --include without silently restoring unknown categories. */
+export function parseRestoreInclude(
+  value: string | undefined,
+): RestoreIncludeCategory[] | undefined {
+  if (value === undefined) return undefined;
+
+  const categories = value
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (
+    categories.length === 0 ||
+    categories.some((token) => !(VALID_INCLUDE as readonly string[]).includes(token))
+  ) {
+    throw new Error(
+      `Invalid --include value "${value}". Expected one or more of: ${RESTORE_INCLUDE_LIST}.`,
+    );
+  }
+
+  return categories as RestoreIncludeCategory[];
+}
+
 export function formatRestoreResultJson(result: RestoreResult, extra?: { dryRun?: boolean }): string {
   return JSON.stringify(
     {
@@ -73,6 +100,7 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     process.exit(1);
   }
 
+  const include = parseRestoreInclude(options.include);
   const resolvedId = snapshotId ?? 'latest';
 
   if (options.json && resolvedId === 'latest') {
@@ -117,10 +145,6 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     const passphrase = await getPassphrase();
     const storage = resolveStorage(config);
     const spinner = options.json ? null : ora('Retrieving and decrypting snapshot...').start();
-
-    const include = options.include
-      ? (options.include.split(',').map((s) => s.trim()) as ('identity' | 'memory' | 'conversations')[])
-      : undefined;
 
     const result = await restoreSnapshot(resolvedId, adapter, storage, passphrase, {
       include,

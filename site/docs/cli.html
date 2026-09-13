@@ -202,7 +202,7 @@
       <tbody>
         <tr><td><code>--to &lt;platform&gt;</code></td><td>Restore to a different platform (cross-platform migration)</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show what would be restored without making any changes</td></tr>
-        <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated)</td></tr>
+        <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the restore result as JSON. Decrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
