@@ -79,11 +79,19 @@ export function parseListLimit(value: string | undefined): number {
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
 export function parseListSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) throw new Error(`Invalid --since value "${value}". Expected an ISO 8601 date.`);
+  return ms;
+}
+
+/** Parse list --until without treating invalid dates as an empty snapshot list. */
+export function parseListUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
 
   const ms = new Date(value).getTime();
   if (Number.isNaN(ms)) {
     throw new Error(
-      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
     );
   }
   return ms;
@@ -188,12 +196,12 @@ export function applyListFilters(
   options: { since?: string; until?: string; adapter?: string; tag?: string },
 ): SnapshotIndexEntry[] {
   const since = parseListSince(options.since);
-  const until = options.until ? parseDateOrThrow(options.until, '--until') : null;
+  const until = parseListUntil(options.until);
 
   return snapshots.filter((s) => {
     const ts = new Date(s.timestamp).getTime();
     if (since !== undefined && ts < since) return false;
-    if (until !== null && ts > until) return false;
+    if (until !== undefined && ts > until) return false;
     if (options.adapter && s.adapter !== options.adapter) return false;
     if (options.tag && !(s.tags ?? []).includes(options.tag)) return false;
     return true;
