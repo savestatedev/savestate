@@ -1049,6 +1049,13 @@ describe('CLI docs', () => {
     expect(mcpSection).toContain('/docs/mcp.html');
   });
 
+  it('documents mcp serve --port as a TCP port', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--port');
+    expect(mcpSection).toContain('Must be an integer from 1 to 65535');
+    expect(mcp).toContain('export function parseMcpPort');
+  });
+
   it('registers --json on savestate mcp status', () => {
     const statusBlock = mcp.slice(mcp.indexOf("command('status')"), mcp.indexOf("command('export')"));
     expect(statusBlock).toContain(".option('--json'");

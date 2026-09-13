@@ -76,6 +76,23 @@ export interface PassportSnapshot {
 
 // ─── MCP Serve Command ───────────────────────────────────────
 
+const DEFAULT_MCP_PORT = 3333;
+const MIN_MCP_PORT = 1;
+const MAX_MCP_PORT = 65535;
+
+/** Parse mcp serve --port without silently accepting parseInt leftovers like 123abc. */
+export function parseMcpPort(value: string | undefined): number {
+  if (value === undefined) return DEFAULT_MCP_PORT;
+
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < MIN_MCP_PORT || port > MAX_MCP_PORT) {
+    throw new Error(
+      `Invalid --port value "${value}". Expected an integer from ${MIN_MCP_PORT} to ${MAX_MCP_PORT}.`,
+    );
+  }
+  return port;
+}
+
 interface MCPServeOptions {
   port?: string;
   stdio?: boolean;
@@ -96,13 +113,7 @@ async function mcpServeCommand(options: MCPServeOptions): Promise<void> {
       await startMCPServer();
     } else {
       // HTTP mode (future implementation)
-      const port = options.port ? parseInt(options.port, 10) : 3333;
-
-      if (isNaN(port) || port < 1 || port > 65535) {
-        spinner.fail('Invalid port number');
-        console.error(chalk.red('Port must be a number between 1 and 65535'));
-        process.exit(1);
-      }
+      const port = parseMcpPort(options.port);
 
       spinner.text = `Starting MCP HTTP server on port ${port}...`;
 
