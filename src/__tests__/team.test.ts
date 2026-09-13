@@ -303,4 +303,14 @@ describe('savestate team audit', () => {
     );
     expect(calls).toHaveLength(0);
   });
+
+  it('rejects invalid --until before any API call', async () => {
+    const { fn, calls } = makeFetchMock(() => jsonResponse({}));
+    global.fetch = fn as unknown as typeof fetch;
+
+    await expect(teamAuditCommand({ until: 'nope' })).rejects.toThrow(
+      'Invalid --until value "nope". Expected an ISO 8601 date.',
+    );
+    expect(calls).toHaveLength(0);
+  });
 });

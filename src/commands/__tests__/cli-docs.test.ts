@@ -729,6 +729,13 @@ describe('CLI docs', () => {
     expect(team).toContain('export function parseTeamAuditSince');
   });
 
+  it('documents team audit --until as an ISO 8601 date', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--until');
+    expect(teamSection).toContain('Must be an ISO 8601 date');
+    expect(team).toContain('export function parseTeamAuditUntil');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("Stream the team audit log to stdout"),
