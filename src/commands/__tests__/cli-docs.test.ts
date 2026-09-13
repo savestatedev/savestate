@@ -1853,6 +1853,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityTripwireThreshold');
   });
 
+  it('documents integrity config tripwire.fuzzy_enabled as a true/false boolean', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('tripwire.fuzzy_enabled');
+    expect(integritySection).toContain('Must be true or false');
+    expect(integrity).toContain('export function parseIntegrityFuzzyEnabled');
+  });
+
   it('documents integrity quarantine --json', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--json');

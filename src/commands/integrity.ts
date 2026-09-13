@@ -104,6 +104,17 @@ export function parseIntegrityContainmentPolicy(value: string): ContainmentPolic
   );
 }
 
+/** Parse tripwire.fuzzy_enabled without silently writing false for unknown boolean values. */
+export function parseIntegrityFuzzyEnabled(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+
+  throw new Error(
+    `Invalid tripwire.fuzzy_enabled value "${value}". Expected true or false.`,
+  );
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1155,7 +1166,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
       config.integrity.tripwire.threshold = parseIntegrityTripwireThreshold(value);
       break;
     case 'tripwire.fuzzy_enabled':
-      config.integrity.tripwire.fuzzy_enabled = value === 'true';
+      config.integrity.tripwire.fuzzy_enabled = parseIntegrityFuzzyEnabled(value);
       break;
     case 'containment.policy':
       config.integrity.containment.policy = parseIntegrityContainmentPolicy(value);
