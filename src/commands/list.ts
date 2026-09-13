@@ -122,8 +122,23 @@ export function parseListAdapter(value: string | undefined): string | undefined 
   );
 }
 
+/** Parse list --tag without treating blank or comma-separated values as an empty snapshot list. */
+export function parseListTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
 export async function listCommand(options: ListOptions): Promise<void> {
   parseListAdapter(options.adapter);
+  parseListTag(options.tag);
 
   if (!options.json) {
     console.log();
@@ -225,13 +240,14 @@ export function applyListFilters(
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
   const adapter = parseListAdapter(options.adapter);
+  const tag = parseListTag(options.tag);
 
   return snapshots.filter((s) => {
     const ts = new Date(s.timestamp).getTime();
     if (since !== undefined && ts < since) return false;
     if (until !== undefined && ts > until) return false;
     if (adapter && s.adapter !== adapter) return false;
-    if (options.tag && !(s.tags ?? []).includes(options.tag)) return false;
+    if (tag && !(s.tags ?? []).includes(tag)) return false;
     return true;
   });
 }
