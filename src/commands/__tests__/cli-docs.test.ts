@@ -1666,6 +1666,13 @@ describe('CLI docs', () => {
     expect(acl).toContain('export function parseAclCriticality');
   });
 
+  it('documents acl propose --type as known commitment types', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--type');
+    expect(aclSection).toContain('Must be one of: customer_promise, ticket_status_change, escalation_closure, account_tool_write');
+    expect(acl).toContain('export function parseAclType');
+  });
+
   it('registers savestate identity on the CLI', () => {
     expect(cli).toContain("command('identity <subcommand> [args...]')");
     expect(cli).toContain('identityCommand');
