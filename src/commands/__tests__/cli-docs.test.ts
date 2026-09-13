@@ -684,6 +684,13 @@ describe('CLI docs', () => {
     expect(inviteBlock).toContain(".option('--json'");
   });
 
+  it('documents team invite --role as known invite roles', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('--role');
+    expect(teamSection).toContain('Must be one of: admin, member, viewer');
+    expect(team).toContain('export function parseTeamInviteRole');
+  });
+
   it('documents team invite --json', () => {
     const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('--json');

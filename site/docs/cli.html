@@ -755,7 +755,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>-r, --role &lt;role&gt;</code></td><td>Invite role: <code>admin</code>, <code>member</code>, or <code>viewer</code> (default <code>member</code>)</td></tr>
+        <tr><td><code>-r, --role &lt;role&gt;</code></td><td>Invite role: <code>admin</code>, <code>member</code>, or <code>viewer</code> (default <code>member</code>). Must be one of: admin, member, viewer.</td></tr>
         <tr><td><code>--json</code></td><td>Emit team status as JSON (id, name, and role), members as JSON (email, role, and invite timestamps), invite as JSON (invited email, role, and invite timestamps), or audit as JSON (id, action, actor, resource, and timestamp). Omits event metadata. When team status is missing, emits a missing summary (found, id, name, role; omits extra fields). When team members are missing, emits a missing summary (found, name, total, shown; omits extra fields). When a team invite is missing, emits a missing summary (found, email, role; omits extra fields). When the team or audit log is missing, <code>audit --json</code> emits a missing summary (found, teamId, count, nextCursor; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Audit entries after this ISO 8601 date</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Audit entries before this ISO 8601 date</td></tr>

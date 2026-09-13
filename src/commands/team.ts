@@ -13,6 +13,24 @@ import { loadConfig } from '../config.js';
 
 const API_BASE = process.env.SAVESTATE_API_URL || 'https://savestate.dev/api';
 
+const TEAM_INVITE_ROLES = ['admin', 'member', 'viewer'] as const;
+type TeamInviteRole = (typeof TEAM_INVITE_ROLES)[number];
+const TEAM_INVITE_ROLE_LIST = TEAM_INVITE_ROLES.join(', ');
+
+/** Parse team invite --role without exiting the CLI process on bad input. */
+export function parseTeamInviteRole(value: string | undefined): TeamInviteRole {
+  if (value === undefined) return 'member';
+
+  const normalized = value.trim().toLowerCase();
+  if ((TEAM_INVITE_ROLES as readonly string[]).includes(normalized)) {
+    return normalized as TeamInviteRole;
+  }
+
+  throw new Error(
+    `Invalid --role value "${value}". Expected one of: ${TEAM_INVITE_ROLE_LIST}.`,
+  );
+}
+
 export interface TeamCommandOptions {
   role?: string;
   name?: string;
@@ -345,11 +363,7 @@ export async function teamInviteCommand(email: string, options: TeamCommandOptio
     console.log(chalk.red('✗ Provide a valid email: savestate team invite user@example.com'));
     process.exit(1);
   }
-  const role = options.role || 'member';
-  if (!['admin', 'member', 'viewer'].includes(role)) {
-    console.log(chalk.red('✗ --role must be one of: admin, member, viewer'));
-    process.exit(1);
-  }
+  const role = parseTeamInviteRole(options.role);
 
   const result = await apiRequest('POST', '/team/members', { email, role });
   if (!result.ok) {
