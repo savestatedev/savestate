@@ -2014,6 +2014,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityCount');
   });
 
+  it('documents integrity --tenant as a single tenant id', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--tenant');
+    expect(integritySection).toContain('Must be a single non-empty tenant id');
+    expect(integrity).toContain('export function parseIntegrityTenant');
+  });
+
   it('documents integrity config honeyfact.ttl_days as a bounded positive integer', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('honeyfact.ttl_days');
