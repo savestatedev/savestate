@@ -62,6 +62,17 @@ describe('applyListFilters', () => {
     expect(out.map((s) => s.id)).toEqual(['a', 'c']);
   });
 
+  it('trims --tag', () => {
+    const out = applyListFilters(all, { tag: ' work ' });
+    expect(out.map((s) => s.id)).toEqual(['a', 'c']);
+  });
+
+  it('throws on blank --tag', () => {
+    expect(() => applyListFilters(all, { tag: ' ' })).toThrow(
+      'Invalid --tag value " ". Expected a single non-empty snapshot tag (no commas).',
+    );
+  });
+
   it('combines filters as AND', () => {
     const out = applyListFilters(all, {
       since: '2026-04-01',
