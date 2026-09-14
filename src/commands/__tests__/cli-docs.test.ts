@@ -1263,6 +1263,13 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextBudget');
   });
 
+  it('documents context --agent as a single agent id', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('--agent');
+    expect(contextSection).toContain('Must be a single non-empty agent id');
+    expect(context).toContain('export function parseContextAgent');
+  });
+
   it('registers --json on savestate context compile', () => {
     const compileBlock = context.slice(context.indexOf("command('compile')"), context.indexOf("command('explain"));
     expect(compileBlock).toContain(".option('--json'");
