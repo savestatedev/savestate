@@ -81,14 +81,30 @@ export function parseSearchType(
   return types as Array<'memory' | 'conversation' | 'identity' | 'knowledge'>;
 }
 
+/** Parse search --snapshot without treating blank ids as a missing snapshot. */
+export function parseSearchSnapshot(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const snapshot = value.trim();
+  if (snapshot.length === 0 || snapshot.includes(',') || /\s/.test(snapshot)) {
+    throw new Error(
+      `Invalid --snapshot value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return snapshot;
+}
+
 export async function searchCommand(query: string, options: SearchOptions): Promise<void> {
+  const snapshotId = parseSearchSnapshot(options.snapshot);
+
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatSearchMissingJson(query, options.snapshot ?? ''));
+      console.log(formatSearchMissingJson(query, snapshotId ?? ''));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -99,14 +115,14 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
   const limit = parseSearchLimit(options.limit);
   const types = parseSearchType(options.type);
 
-  if (options.snapshot) {
-    const entry = await findEntry(options.snapshot);
+  if (snapshotId) {
+    const entry = await findEntry(snapshotId);
     if (!entry) {
       if (options.json) {
-        console.log(formatSearchMissingJson(query, options.snapshot));
+        console.log(formatSearchMissingJson(query, snapshotId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${options.snapshot}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${snapshotId}`));
       process.exit(1);
     }
   }
@@ -114,7 +130,7 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
   if (!options.json) {
     console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
     if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
-    if (options.snapshot) console.log(chalk.dim(`   Snapshot: ${options.snapshot}`));
+    if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));
     console.log();
   }
 
@@ -126,7 +142,7 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
     const results = await searchSnapshots(query, config, {
       types: types as ('memory' | 'conversation' | 'identity' | 'knowledge')[] | undefined,
       limit,
-      snapshots: options.snapshot ? [options.snapshot] : undefined,
+      snapshots: snapshotId ? [snapshotId] : undefined,
       passphrase,
     });
 
