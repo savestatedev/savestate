@@ -348,7 +348,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
   const risk = parseAntibodiesRisk(options.risk);
   const safeAction = parseAntibodiesSafeAction(options.safeAction);
   const confidence = parseAntibodiesConfidence(options.confidence);
-  const pathPrefix = normalizePathPrefix(options.pathPrefix);
+  const pathPrefix = parseAntibodiesPathPrefix(options.pathPrefix);
   const errorCode = parseAntibodiesErrorCode(options.errorCode);
 
   if (!tool && !errorCode && !pathPrefix && tags.length === 0) {
@@ -576,11 +576,18 @@ export function parseAntibodiesConfidence(value: string | undefined): number {
   return Number(confidence.toFixed(3));
 }
 
-function normalizePathPrefix(raw?: string): string | undefined {
-  if (!raw) return undefined;
-  const trimmed = raw.trim();
-  if (!trimmed) return undefined;
-  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+/** Parse antibodies --path-prefix without treating blank or comma-separated prefixes as a trigger. */
+export function parseAntibodiesPathPrefix(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const prefix = value.trim();
+  if (prefix.length === 0 || prefix.includes(',') || /\s/.test(prefix)) {
+    throw new Error(
+      `Invalid --path-prefix value "${value}". Expected a single non-empty path prefix.`,
+    );
+  }
+
+  return prefix.startsWith('/') ? prefix : `/${prefix}`;
 }
 
 function formatTrigger(rule: AntibodyRule): string {
