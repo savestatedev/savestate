@@ -1000,6 +1000,13 @@ describe('CLI docs', () => {
     expect(cloudSection).toContain('.saf.enc');
   });
 
+  it('documents cloud --id as a single snapshot id', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('--id');
+    expect(cloudSection).toContain('Must be a single non-empty snapshot id');
+    expect(cloud).toContain('export function parseCloudId');
+  });
+
   it('registers --json on savestate cloud', () => {
     const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team')"));
     expect(cloudBlock).toContain(".option('--json'");
@@ -1040,7 +1047,7 @@ describe('CLI docs', () => {
     );
     expect(cloudSection).toContain('savestate cloud push --json');
     expect(cloud).toContain('export function formatCloudPushMissingJson');
-    expect(cloud).toContain('formatCloudPushMissingJson(options.id ?? \'\')');
+    expect(cloud).toContain("formatCloudPushMissingJson(id ?? '')");
   });
 
   it('documents cloud list --json when SaveState is not initialized', () => {
@@ -1073,7 +1080,7 @@ describe('CLI docs', () => {
     );
     expect(cloudSection).toContain('savestate cloud pull --json');
     expect(cloud).toContain('export function formatCloudPullMissingJson');
-    expect(cloud).toContain('formatCloudPullMissingJson(options.id ?? \'\')');
+    expect(cloud).toContain("formatCloudPullMissingJson(id ?? '')");
   });
 
   it('documents cloud delete --json when missing', () => {
@@ -1094,7 +1101,7 @@ describe('CLI docs', () => {
     );
     expect(cloudSection).toContain('savestate cloud delete --id ss-2026-01-26 --json');
     expect(cloud).toContain('export function formatCloudDeleteMissingJson');
-    expect(cloud).toContain('formatCloudDeleteMissingJson(options.id ?? \'\')');
+    expect(cloud).toContain("formatCloudDeleteMissingJson(id ?? '')");
   });
 
   it('lists savestate mcp in the command overview', () => {

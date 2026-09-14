@@ -322,7 +322,7 @@ import { cloudCommand } from './commands/cloud.js';
 program
   .command('cloud <subcommand>')
   .description('Cloud storage commands (Pro/Team)')
-  .option('--id <id>', 'Specific snapshot ID')
+  .option('--id <id>', 'Specific snapshot ID (single non-empty id)')
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')
   .option('--json', 'Output as JSON')

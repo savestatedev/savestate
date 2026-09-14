@@ -27,6 +27,20 @@ interface CloudOptions {
   json?: boolean;
 }
 
+/** Parse cloud --id without treating blank or comma-separated values as a snapshot id. */
+export function parseCloudId(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid --id value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return id;
+}
+
 export interface CloudSnapshotJson {
   id: string;
   size: number;
@@ -361,13 +375,15 @@ async function listCloudSnapshots(): Promise<Array<{ id: string; size: number; c
  * Push local snapshots to cloud
  */
 export async function cloudPushCommand(options: CloudOptions): Promise<void> {
+  const id = parseCloudId(options.id);
+
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatCloudPushMissingJson(options.id ?? ''));
+      console.log(formatCloudPushMissingJson(id ?? ''));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -407,8 +423,8 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   if (entries.length === 0) {
     if (options.json) {
-      if (options.id) {
-        console.log(formatCloudPushMissingJson(options.id));
+      if (id) {
+        console.log(formatCloudPushMissingJson(id));
         return;
       }
       console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -421,14 +437,14 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   // Filter to specific snapshot or all
   let toPush = entries;
-  if (options.id) {
-    toPush = entries.filter(e => e.id === options.id || e.id.startsWith(options.id!));
+  if (id) {
+    toPush = entries.filter(e => e.id === id || e.id.startsWith(id));
     if (toPush.length === 0) {
       if (options.json) {
-        console.log(formatCloudPushMissingJson(options.id));
+        console.log(formatCloudPushMissingJson(id));
         return;
       }
-      console.log(chalk.red(`Snapshot not found: ${options.id}`));
+      console.log(chalk.red(`Snapshot not found: ${id}`));
       process.exit(1);
     }
   } else if (!options.all) {
@@ -508,13 +524,15 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
  * Pull snapshots from cloud
  */
 export async function cloudPullCommand(options: CloudOptions): Promise<void> {
+  const id = parseCloudId(options.id);
+
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatCloudPullMissingJson(options.id ?? ''));
+      console.log(formatCloudPullMissingJson(id ?? ''));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -544,8 +562,8 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
 
   if (cloudSnapshots.length === 0) {
     if (options.json) {
-      if (options.id) {
-        console.log(formatCloudPullMissingJson(options.id));
+      if (id) {
+        console.log(formatCloudPullMissingJson(id));
         return;
       }
       console.log(formatCloudPullJson({ pulled: 0, failed: 0, skipped: 0, all: Boolean(options.all), snapshots: [] }));
@@ -558,14 +576,14 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
 
   // Filter
   let toPull = cloudSnapshots;
-  if (options.id) {
-    toPull = cloudSnapshots.filter(s => s.id === options.id || s.id.startsWith(options.id!));
+  if (id) {
+    toPull = cloudSnapshots.filter(s => s.id === id || s.id.startsWith(id));
     if (toPull.length === 0) {
       if (options.json) {
-        console.log(formatCloudPullMissingJson(options.id));
+        console.log(formatCloudPullMissingJson(id));
         return;
       }
-      console.log(chalk.red(`Snapshot not found in cloud: ${options.id}`));
+      console.log(chalk.red(`Snapshot not found in cloud: ${id}`));
       process.exit(1);
     }
   } else if (!options.all) {
@@ -715,20 +733,22 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
  * Delete cloud snapshots
  */
 export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
+  const id = parseCloudId(options.id);
+
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatCloudDeleteMissingJson(options.id ?? ''));
+      console.log(formatCloudDeleteMissingJson(id ?? ''));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
   }
 
-  if (!options.id && !options.all) {
+  if (!id && !options.all) {
     console.log(chalk.red('✗ Specify --id <snapshot> or --all to delete'));
     process.exit(1);
   }
@@ -752,8 +772,8 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
 
   if (cloudSnapshots.length === 0) {
     if (options.json) {
-      if (options.id) {
-        console.log(formatCloudDeleteMissingJson(options.id));
+      if (id) {
+        console.log(formatCloudDeleteMissingJson(id));
         return;
       }
       console.log(formatCloudDeleteJson({ deleted: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -765,14 +785,14 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
 
   // Filter
   let toDelete = cloudSnapshots;
-  if (options.id) {
-    toDelete = cloudSnapshots.filter(s => s.id === options.id || s.id.startsWith(options.id!));
+  if (id) {
+    toDelete = cloudSnapshots.filter(s => s.id === id || s.id.startsWith(id));
     if (toDelete.length === 0) {
       if (options.json) {
-        console.log(formatCloudDeleteMissingJson(options.id));
+        console.log(formatCloudDeleteMissingJson(id));
         return;
       }
-      console.log(chalk.red(`Snapshot not found in cloud: ${options.id}`));
+      console.log(chalk.red(`Snapshot not found in cloud: ${id}`));
       process.exit(1);
     }
   }
