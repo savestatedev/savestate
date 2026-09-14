@@ -1314,6 +1314,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryImportance');
   });
 
+  it('documents memory --tags as one or more non-empty memory tags', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--tags');
+    expect(memorySection).toContain('Must be one or more non-empty memory tags (comma-separated)');
+    expect(memoryCli).toContain('export function parseMemoryTags');
+  });
+
   it('documents memory log --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
