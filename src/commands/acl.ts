@@ -158,6 +158,24 @@ export function parseAclExpiresIn(value: string | undefined): number | undefined
   return minutes;
 }
 
+/** Parse acl --id without treating blank or comma-separated values as a commitment id. */
+export function parseAclId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --id value. Expected a single non-empty commitment id.',
+    );
+  }
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid --id value "${value}". Expected a single non-empty commitment id.`,
+    );
+  }
+
+  return id;
+}
+
 async function aclPropose(options: {
   type: string;
   criticality: string;
@@ -198,20 +216,21 @@ async function aclPropose(options: {
 
 async function aclVerify(options: { id: string; verifier: string; approve: boolean; json?: boolean }) {
   try {
-    const commitment = verifyCommitment(options.id, options.verifier, options.approve);
+    const id = parseAclId(options.id);
+    const commitment = verifyCommitment(id, options.verifier, options.approve);
     if (!commitment) {
       if (options.json) {
-        console.log(formatAclVerifyMissingJson(options.id));
+        console.log(formatAclVerifyMissingJson(id));
         return;
       }
-      console.error('Commitment not found:', options.id);
+      console.error('Commitment not found:', id);
       process.exit(1);
     }
     if (options.json) {
       console.log(formatAclCommitmentJson(commitment));
       return;
     }
-    console.log(`Commitment ${options.id} is now: ${commitment.state}`);
+    console.log(`Commitment ${id} is now: ${commitment.state}`);
     console.log(`Verified by: ${commitment.verifier}`);
   } catch (error: any) {
     console.error('Error verifying commitment:', error.message);
@@ -291,7 +310,7 @@ export function registerACLCommands(program: Command) {
   acl
     .command('verify')
     .description('Verify or reject a commitment.')
-    .requiredOption('-i, --id <id>', 'Commitment ID')
+    .requiredOption('-i, --id <id>', 'Commitment ID (single non-empty id)')
     .requiredOption('-v, --verifier <id>', 'ID of the verifier')
     .option('-a, --approve', 'Approve the commitment (default is reject)', false)
     .option('--json', 'Output as JSON')

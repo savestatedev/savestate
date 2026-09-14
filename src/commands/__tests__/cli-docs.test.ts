@@ -1778,6 +1778,13 @@ describe('CLI docs', () => {
     expect(acl).toContain('export function formatAclVerifyMissingJson');
   });
 
+  it('documents acl --id as a single commitment id', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--id');
+    expect(aclSection).toContain('Must be a single non-empty commitment id');
+    expect(acl).toContain('export function parseAclId');
+  });
+
   it('documents acl propose --expires-in as a bounded positive integer', () => {
     const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
     expect(aclSection).toContain('--expires-in');
