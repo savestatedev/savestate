@@ -214,6 +214,20 @@ export function parseContextBudget(value: string | undefined): number {
   return budget;
 }
 
+/** Parse context --agent without treating blank or comma-separated ids as an agent. */
+export function parseContextAgent(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const agent = value.trim();
+  if (agent.length === 0 || agent.includes(',') || /\s/.test(agent)) {
+    throw new Error(
+      `Invalid --agent value "${value}". Expected a single non-empty agent id.`,
+    );
+  }
+
+  return agent;
+}
+
 export function registerContextCommands(program: Command): void {
   const context = program
     .command('context')
@@ -223,15 +237,16 @@ export function registerContextCommands(program: Command): void {
   context
     .command('compile')
     .description('Compile context for an agent run')
-    .requiredOption('-a, --agent <id>', 'Agent ID')
+    .requiredOption('-a, --agent <id>', 'Agent ID (single non-empty id)')
     .requiredOption('-t, --task <intent>', 'Task intent/description')
     .option('-b, --budget <tokens>', 'Token budget', '4000')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       const compiler = new ContextCompiler();
+      const agentId = parseContextAgent(options.agent);
       
       const request: CompileRequest = {
-        agent_id: options.agent,
+        agent_id: agentId ?? options.agent,
         task: { intent: options.task },
         token_budget: parseContextBudget(options.budget),
       };
@@ -241,7 +256,7 @@ export function registerContextCommands(program: Command): void {
       const candidates: Candidate[] = [];
 
       if (!options.json) {
-        console.log(`Compiling context for agent "${options.agent}"...`);
+        console.log(`Compiling context for agent "${agentId}"...`);
         console.log(`Task: ${options.task}`);
         console.log(`Budget: ${options.budget} tokens`);
         console.log('');
