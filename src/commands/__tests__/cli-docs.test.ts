@@ -431,6 +431,13 @@ describe('CLI docs', () => {
     expect(antibodies).toContain('export function parseAntibodiesTags');
   });
 
+  it('documents antibodies --id as a single rule id', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--id');
+    expect(antibodiesSection).toContain('Must be a single non-empty rule id');
+    expect(antibodies).toContain('export function parseAntibodiesId');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');

@@ -374,7 +374,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
 
   const rule: AntibodyRule = {
     ...partialRule,
-    id: options.id ?? deriveRuleId(partialRule),
+    id: parseAntibodiesId(options.id) ?? deriveRuleId(partialRule),
     created_at: new Date().toISOString(),
     source_event_ids: [],
     hits: 0,
@@ -540,6 +540,20 @@ export function parseAntibodiesErrorCode(value: string | undefined): string | un
   }
 
   return code.toUpperCase();
+}
+
+/** Parse antibodies --id without treating blank or comma-separated ids as a rule id. */
+export function parseAntibodiesId(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid --id value "${value}". Expected a single non-empty rule id.`,
+    );
+  }
+
+  return id;
 }
 
 /** Parse antibodies --path without treating blank or comma-separated paths as context. */
