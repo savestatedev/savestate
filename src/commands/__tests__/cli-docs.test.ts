@@ -2607,6 +2607,13 @@ describe('CLI docs', () => {
     expect(snapshot).toContain('export function parseSnapshotTags');
   });
 
+  it('documents snapshot --schedule as a duration up to 7 days', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--schedule');
+    expect(snapshotSection).toContain('Must be a duration like <code>1h</code>, <code>6h</code>, <code>12h</code>, or <code>1d</code> up to 7 days');
+    expect(snapshot).toContain('export function parseSnapshotSchedule');
+  });
+
   it('documents snapshot --tag and --meta state entries', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--tag');
