@@ -2577,6 +2577,13 @@ describe('CLI docs', () => {
     expect(snapshot).toContain("formatSnapshotMissingJson(options.adapter ?? '')");
   });
 
+  it('documents snapshot --label as a single snapshot label', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--label');
+    expect(snapshotSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(snapshot).toContain('export function parseSnapshotLabel');
+  });
+
   it('documents snapshot --tag and --meta state entries', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--tag');
