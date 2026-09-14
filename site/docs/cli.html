@@ -200,7 +200,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--to &lt;platform&gt;</code></td><td>Restore to a different platform (cross-platform migration)</td></tr>
+        <tr><td><code>--to &lt;platform&gt;</code></td><td>Restore to a different platform (cross-platform migration). Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show what would be restored without making any changes</td></tr>
         <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the restore result as JSON. Decrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
@@ -214,8 +214,8 @@
 <span class="code-comment"># Restore a specific snapshot</span>
 <span class="code-prompt">$</span> savestate restore ss-2026-01-26T09-30-00-b7c1m4
 
-<span class="code-comment"># Migrate to Claude</span>
-<span class="code-prompt">$</span> savestate restore latest --to claude
+<span class="code-comment"># Migrate to Claude Code</span>
+<span class="code-prompt">$</span> savestate restore latest --to claude-code
 
 <span class="code-comment"># Restore only memory files</span>
 <span class="code-prompt">$</span> savestate restore latest --include memory

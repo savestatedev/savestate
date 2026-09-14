@@ -21,6 +21,31 @@ interface RestoreOptions {
 const VALID_INCLUDE = ['identity', 'memory', 'conversations'] as const;
 type RestoreIncludeCategory = (typeof VALID_INCLUDE)[number];
 const RESTORE_INCLUDE_LIST = VALID_INCLUDE.join(', ');
+const RESTORE_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const RESTORE_ADAPTER_LIST = RESTORE_ADAPTERS.join(', ');
+
+/** Parse restore --to without treating unknown adapters as a process.exit. */
+export function parseRestoreTo(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((RESTORE_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --to value "${value}". Expected one of: ${RESTORE_ADAPTER_LIST}.`,
+  );
+}
 
 /** Parse restore --include without silently restoring unknown categories. */
 export function parseRestoreInclude(
@@ -101,6 +126,7 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
   }
 
   const include = parseRestoreInclude(options.include);
+  const to = parseRestoreTo(options.to);
   const resolvedId = snapshotId ?? 'latest';
 
   if (options.json && resolvedId === 'latest') {
@@ -125,10 +151,10 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
 
   try {
     let adapter;
-    if (options.to) {
-      adapter = getAdapter(options.to);
+    if (to) {
+      adapter = getAdapter(to);
       if (!adapter) {
-        console.log(chalk.red(`✗ Unknown adapter: ${options.to}`));
+        console.log(chalk.red(`✗ Unknown adapter: ${to}`));
         process.exit(1);
       }
     } else if (config.defaultAdapter) {

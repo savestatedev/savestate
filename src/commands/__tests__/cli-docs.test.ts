@@ -2477,6 +2477,15 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreInclude');
   });
 
+  it('documents restore --to as a known adapter', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    expect(restoreSection).toContain('--to');
+    expect(restoreSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(restore).toContain('export function parseRestoreTo');
+  });
+
   it('registers --json on savestate restore', () => {
     const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
     expect(restoreBlock).toContain(".option('--json'");
