@@ -57,6 +57,20 @@ export function parseIntegrityCount(value: string | undefined): number | undefin
   return count;
 }
 
+/** Parse integrity --tenant without treating blank or comma-separated ids as a tenant. */
+export function parseIntegrityTenant(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tenant = value.trim();
+  if (tenant.length === 0 || tenant.includes(',') || /\s/.test(tenant)) {
+    throw new Error(
+      `Invalid --tenant value "${value}". Expected a single non-empty tenant id.`,
+    );
+  }
+
+  return tenant;
+}
+
 /** Parse honeyfact.ttl_days without writing NaN or unbounded TTLs into integrity config. */
 export function parseIntegrityTtlDays(value: string): number {
   const ttlDays = Number(value);
@@ -717,7 +731,7 @@ export async function integrityCommand(
  */
 async function showStatus(options: IntegrityOptions): Promise<void> {
   const config = await loadConfig();
-  const tenant_id = options.tenant ?? 'default';
+  const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
 
   const honeyfactStats = await getHoneyfactStats(tenant_id);
   const incidentStats = await getIncidentStats(tenant_id);
@@ -794,7 +808,7 @@ async function showStatus(options: IntegrityOptions): Promise<void> {
  */
 async function seedCommand(options: IntegrityOptions): Promise<void> {
   const config = await loadConfig();
-  const tenant_id = options.tenant ?? 'default';
+  const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
   const count = parseIntegrityCount(options.count) ?? (config.integrity?.honeyfact.count ?? 10);
   const ttl_days = config.integrity?.honeyfact.ttl_days ?? 7;
 
@@ -843,7 +857,7 @@ async function seedCommand(options: IntegrityOptions): Promise<void> {
  */
 async function rotateCommand(options: IntegrityOptions): Promise<void> {
   const config = await loadConfig();
-  const tenant_id = options.tenant ?? 'default';
+  const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
   const ttl_days = config.integrity?.honeyfact.ttl_days ?? 7;
 
   const result = await rotateHoneyfacts({
@@ -881,7 +895,7 @@ async function rotateCommand(options: IntegrityOptions): Promise<void> {
  * List incidents.
  */
 async function incidentsCommand(options: IntegrityOptions): Promise<void> {
-  const tenant_id = options.tenant;
+  const tenant_id = parseIntegrityTenant(options.tenant);
   const status = parseIntegrityIncidentStatus(options.status);
 
   const incidents = await getIncidents(tenant_id, status);
@@ -1011,13 +1025,13 @@ async function quarantineCommand(id: string, options: IntegrityOptions): Promise
   if (isAgent) {
     result = await controller.quarantineAgent(id, reason, {
       initiated_by: options.user ?? 'cli',
-      tenant_id: options.tenant ?? 'default',
+      tenant_id: parseIntegrityTenant(options.tenant) ?? 'default',
       force: options.force,
     });
   } else {
     result = await controller.quarantineMemory(id, reason, {
       initiated_by: options.user ?? 'cli',
-      tenant_id: options.tenant ?? 'default',
+      tenant_id: parseIntegrityTenant(options.tenant) ?? 'default',
       force: options.force,
     });
   }
@@ -1241,7 +1255,7 @@ async function testMonitorCommand(input: string | undefined, options: IntegrityO
   }
 
   const config = await loadConfig();
-  const tenant_id = options.tenant ?? 'default';
+  const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
 
   const monitor = new TripwireMonitor({
     threshold: config.integrity?.tripwire.threshold ?? 0.8,
@@ -1298,7 +1312,7 @@ async function testMonitorCommand(input: string | undefined, options: IntegrityO
  * Clear all honeyfacts for a tenant.
  */
 async function clearCommand(options: IntegrityOptions): Promise<void> {
-  const tenant_id = options.tenant ?? 'default';
+  const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
 
   if (!options.force) {
     console.log(chalk.yellow('⚠️  This will delete all honeyfacts for this tenant.'));
@@ -1340,7 +1354,7 @@ function showUsage(): void {
   console.log('  savestate integrity clear --force              Clear all honeyfacts');
   console.log();
   console.log('Options:');
-  console.log('  --tenant <id>     Tenant ID (default: "default")');
+  console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release');
@@ -1356,7 +1370,7 @@ export function registerIntegrityCommands(program: Command): void {
     .command('integrity [subcommand] [args...]')
     .description('Memory Integrity Grid - detect and contain memory poisoning')
     .option('--json', 'Output as JSON')
-    .option('--tenant <id>', 'Tenant ID')
+    .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
     .option('--policy <policy>', 'Containment policy')
