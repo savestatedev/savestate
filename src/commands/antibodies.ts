@@ -404,7 +404,7 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
   const context: PreflightContext = {
     tool: parseAntibodiesTool(options.tool),
     error_code: parseAntibodiesErrorCode(options.errorCode),
-    path: options.path,
+    path: parseAntibodiesPath(options.path),
     tags: parseTags(options.tags),
   };
 
@@ -531,6 +531,20 @@ export function parseAntibodiesErrorCode(value: string | undefined): string | un
   }
 
   return code.toUpperCase();
+}
+
+/** Parse antibodies --path without treating blank or comma-separated paths as context. */
+export function parseAntibodiesPath(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const path = value.trim();
+  if (path.length === 0 || path.includes(',') || /\s/.test(path)) {
+    throw new Error(
+      `Invalid --path value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return path;
 }
 
 /** Parse antibodies add --risk without exiting the CLI process on bad input. */

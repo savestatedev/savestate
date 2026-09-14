@@ -410,6 +410,13 @@ describe('CLI docs', () => {
     expect(antibodies).toContain('export function parseAntibodiesErrorCode');
   });
 
+  it('documents antibodies --path as a single path', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--path');
+    expect(antibodiesSection).toContain('Must be a single non-empty path');
+    expect(antibodies).toContain('export function parseAntibodiesPath');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');
