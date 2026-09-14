@@ -1710,6 +1710,13 @@ describe('CLI docs', () => {
     expect(slo).toContain('export function parseSloPeriod');
   });
 
+  it('documents slo --namespace as a single namespace', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--namespace');
+    expect(sloSection).toContain('Must be a single non-empty namespace');
+    expect(slo).toContain('export function parseSloNamespace');
+  });
+
   it('registers --json on savestate slo', () => {
     const sloBlock = slo.slice(slo.indexOf("command('slo"));
     expect(sloBlock).toContain(".option('--json'");
