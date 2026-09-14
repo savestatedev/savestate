@@ -43,6 +43,20 @@ export function parseTraceExportFormat(value: string | undefined): TraceExportFo
   );
 }
 
+/** Parse trace export --run without treating blank or comma-separated ids as a run. */
+export function parseTraceRun(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const run = value.trim();
+  if (run.length === 0 || run.includes(',') || /\s/.test(run)) {
+    throw new Error(
+      `Invalid --run value "${value}". Expected a single non-empty run id.`,
+    );
+  }
+
+  return run;
+}
+
 export interface TraceRunJson {
   runId: string;
   adapter: string;
@@ -207,7 +221,7 @@ export function registerTraceCommands(program: Command): void {
     .command('export')
     .description('Export trace events as JSONL')
     .option('--format <format>', 'Export format', 'jsonl')
-    .option('--run <id>', 'Export only a specific run ID')
+    .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
     .option('--json', 'Output as JSON')
     .action(traceExportCommand);
 }
@@ -326,10 +340,11 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
 
 export async function traceExportCommand(options: TraceExportOptions): Promise<void> {
   const format = parseTraceExportFormat(options.format);
+  const run = parseTraceRun(options.run) ?? 'all';
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatTraceExportMissingJson(options.run ?? 'all', format));
+      console.log(formatTraceExportMissingJson(run, format));
       return;
     }
     console.error(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -337,7 +352,6 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   }
 
   const store = new TraceStore();
-  const run = options.run ?? 'all';
 
   if (options.json) {
     const allRuns = await store.listRuns();

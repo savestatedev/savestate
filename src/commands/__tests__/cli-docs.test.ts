@@ -2218,6 +2218,13 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function parseTraceExportFormat');
   });
 
+  it('documents trace export --run as a single run id', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('--run');
+    expect(traceSection).toContain('Must be a single non-empty run id');
+    expect(trace).toContain('export function parseTraceRun');
+  });
+
   it('registers --json on savestate trace list', () => {
     const listBlock = trace.slice(trace.indexOf("command('list')"), trace.indexOf("command('show"));
     expect(listBlock).toContain(".option('--json'");
