@@ -46,6 +46,17 @@ describe('applyListFilters', () => {
     expect(out.map((s) => s.id)).toEqual(['a', 'b']);
   });
 
+  it('normalizes --adapter case', () => {
+    const out = applyListFilters(all, { adapter: 'ChatGPT' });
+    expect(out.map((s) => s.id)).toEqual(['c']);
+  });
+
+  it('throws on unknown --adapter', () => {
+    expect(() => applyListFilters(all, { adapter: 'nope' })).toThrow(
+      'Invalid --adapter value "nope". Expected one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.',
+    );
+  });
+
   it('filters by --tag', () => {
     const out = applyListFilters(all, { tag: 'work' });
     expect(out.map((s) => s.id)).toEqual(['a', 'c']);

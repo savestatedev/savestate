@@ -2444,6 +2444,15 @@ describe('CLI docs', () => {
     expect(listSource).toContain('export function parseListUntil');
   });
 
+  it('documents list --adapter as a known adapter', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    expect(listSection).toContain('--adapter');
+    expect(listSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(listSource).toContain('export function parseListAdapter');
+  });
+
   it('registers --json on savestate list', () => {
     const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
     expect(listBlock).toContain(".option('--json'");

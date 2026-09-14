@@ -16,6 +16,17 @@ interface ListOptions {
 }
 
 const MAX_LIST_LIMIT = 1000;
+const LIST_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const LIST_ADAPTER_LIST = LIST_ADAPTERS.join(', ');
 
 export interface ListSnapshotJson {
   id: string;
@@ -97,7 +108,23 @@ export function parseListUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Parse list --adapter without treating unknown ids as an empty snapshot list. */
+export function parseListAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((LIST_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${LIST_ADAPTER_LIST}.`,
+  );
+}
+
 export async function listCommand(options: ListOptions): Promise<void> {
+  parseListAdapter(options.adapter);
+
   if (!options.json) {
     console.log();
   }
@@ -197,12 +224,13 @@ export function applyListFilters(
 ): SnapshotIndexEntry[] {
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
+  const adapter = parseListAdapter(options.adapter);
 
   return snapshots.filter((s) => {
     const ts = new Date(s.timestamp).getTime();
     if (since !== undefined && ts < since) return false;
     if (until !== undefined && ts > until) return false;
-    if (options.adapter && s.adapter !== options.adapter) return false;
+    if (adapter && s.adapter !== adapter) return false;
     if (options.tag && !(s.tags ?? []).includes(options.tag)) return false;
     return true;
   });
