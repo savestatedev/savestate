@@ -403,6 +403,13 @@ describe('CLI docs', () => {
     expect(antibodies).toContain('export function parseAntibodiesTool');
   });
 
+  it('documents antibodies --error-code as a single error code', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--error-code');
+    expect(antibodiesSection).toContain('Must be a single non-empty error code');
+    expect(antibodies).toContain('export function parseAntibodiesErrorCode');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');

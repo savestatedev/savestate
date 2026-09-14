@@ -349,7 +349,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
   const safeAction = parseAntibodiesSafeAction(options.safeAction);
   const confidence = parseAntibodiesConfidence(options.confidence);
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
-  const errorCode = options.errorCode?.toUpperCase();
+  const errorCode = parseAntibodiesErrorCode(options.errorCode);
 
   if (!tool && !errorCode && !pathPrefix && tags.length === 0) {
     console.log(chalk.red('✗ Provide at least one trigger: --tool, --error-code, --path-prefix, or --tags'));
@@ -403,7 +403,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
 async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
   const context: PreflightContext = {
     tool: parseAntibodiesTool(options.tool),
-    error_code: options.errorCode?.toUpperCase(),
+    error_code: parseAntibodiesErrorCode(options.errorCode),
     path: options.path,
     tags: parseTags(options.tags),
   };
@@ -517,6 +517,20 @@ export function parseAntibodiesTool(value: string | undefined): string | undefin
   }
 
   return tool;
+}
+
+/** Parse antibodies --error-code without treating blank or comma-separated codes as a trigger. */
+export function parseAntibodiesErrorCode(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const code = value.trim();
+  if (code.length === 0 || code.includes(',') || /\s/.test(code)) {
+    throw new Error(
+      `Invalid --error-code value "${value}". Expected a single non-empty error code.`,
+    );
+  }
+
+  return code.toUpperCase();
 }
 
 /** Parse antibodies add --risk without exiting the CLI process on bad input. */
