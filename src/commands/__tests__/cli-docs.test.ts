@@ -527,6 +527,13 @@ describe('CLI docs', () => {
     expect(migrate).toContain('export function parseMigrateTo');
   });
 
+  it('documents migrate --snapshot as a single snapshot id', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    expect(migrateSection).toContain('--snapshot');
+    expect(migrateSection).toContain('Must be a single non-empty snapshot id');
+    expect(migrate).toContain('export function parseMigrateSnapshot');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
@@ -2695,7 +2702,7 @@ describe('CLI docs', () => {
     );
     expect(searchSection).toContain('savestate search');
     expect(search).toContain('export function formatSearchMissingJson');
-    expect(search).toContain("formatSearchMissingJson(query, options.snapshot ?? '')");
+    expect(search).toContain("formatSearchMissingJson(query, snapshotId ?? '')");
   });
 
   it('documents search --limit as a bounded positive integer', () => {
