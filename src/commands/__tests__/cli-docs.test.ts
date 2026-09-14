@@ -2556,12 +2556,21 @@ describe('CLI docs', () => {
     expect(snapshotSection).toContain('savestate snapshot --json --full');
   });
 
+  it('documents snapshot --adapter as a known adapter', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--adapter');
+    expect(snapshotSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(snapshot).toContain('export function parseSnapshotAdapter');
+  });
+
   it('documents snapshot --json when missing', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--json');
     expect(snapshotSection).toContain('scripting');
     expect(snapshotSection).toContain('found, adapter, snapshotId, timestamp, platform');
-    expect(snapshotSection).toContain('savestate snapshot --adapter missing --json');
+    expect(snapshotSection).toContain('savestate snapshot --json');
     expect(snapshot).toContain('export function formatSnapshotMissingJson');
   });
 
@@ -2574,7 +2583,7 @@ describe('CLI docs', () => {
     );
     expect(snapshotSection).toContain('savestate snapshot --json --full');
     expect(snapshot).toContain('export function formatSnapshotMissingJson');
-    expect(snapshot).toContain("formatSnapshotMissingJson(options.adapter ?? '')");
+    expect(snapshot).toContain("formatSnapshotMissingJson(adapterId ?? '')");
   });
 
   it('documents snapshot --tag and --meta state entries', () => {
