@@ -1370,6 +1370,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryTags');
   });
 
+  it('documents memory --actor as a single actor id', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--actor');
+    expect(memorySection).toContain('Must be a single non-empty actor id');
+    expect(memoryCli).toContain('export function parseMemoryActor');
+  });
+
   it('documents memory log --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
