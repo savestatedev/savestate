@@ -1806,6 +1806,13 @@ describe('CLI docs', () => {
     expect(acl).toContain('export function parseAclId');
   });
 
+  it('documents acl --verifier as a single verifier id', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--verifier');
+    expect(aclSection).toContain('Must be a single non-empty verifier id');
+    expect(acl).toContain('export function parseAclVerifier');
+  });
+
   it('documents acl propose --expires-in as a bounded positive integer', () => {
     const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
     expect(aclSection).toContain('--expires-in');

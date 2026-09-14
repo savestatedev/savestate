@@ -176,6 +176,24 @@ export function parseAclId(value: string | undefined): string {
   return id;
 }
 
+/** Parse acl --verifier without treating blank or comma-separated values as a verifier id. */
+export function parseAclVerifier(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --verifier value. Expected a single non-empty verifier id.',
+    );
+  }
+
+  const verifier = value.trim();
+  if (verifier.length === 0 || verifier.includes(',') || /\s/.test(verifier)) {
+    throw new Error(
+      `Invalid --verifier value "${value}". Expected a single non-empty verifier id.`,
+    );
+  }
+
+  return verifier;
+}
+
 async function aclPropose(options: {
   type: string;
   criticality: string;
@@ -217,7 +235,8 @@ async function aclPropose(options: {
 async function aclVerify(options: { id: string; verifier: string; approve: boolean; json?: boolean }) {
   try {
     const id = parseAclId(options.id);
-    const commitment = verifyCommitment(id, options.verifier, options.approve);
+    const verifier = parseAclVerifier(options.verifier);
+    const commitment = verifyCommitment(id, verifier, options.approve);
     if (!commitment) {
       if (options.json) {
         console.log(formatAclVerifyMissingJson(id));
@@ -311,7 +330,7 @@ export function registerACLCommands(program: Command) {
     .command('verify')
     .description('Verify or reject a commitment.')
     .requiredOption('-i, --id <id>', 'Commitment ID (single non-empty id)')
-    .requiredOption('-v, --verifier <id>', 'ID of the verifier')
+    .requiredOption('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
     .option('-a, --approve', 'Approve the commitment (default is reject)', false)
     .option('--json', 'Output as JSON')
     .action(aclVerify);

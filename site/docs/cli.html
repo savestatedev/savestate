@@ -1107,7 +1107,7 @@
         <tr><td><code>-p, --proposer &lt;id&gt;</code></td><td>ID of the proposing agent for <code>propose</code></td></tr>
         <tr><td><code>-e, --expires-in &lt;minutes&gt;</code></td><td>Minutes until expiration on <code>propose</code> (positive integer up to 10080)</td></tr>
         <tr><td><code>-i, --id &lt;id&gt;</code></td><td>Commitment ID for <code>verify</code>. Must be a single non-empty commitment id.</td></tr>
-        <tr><td><code>-v, --verifier &lt;id&gt;</code></td><td>ID of the verifier for <code>verify</code></td></tr>
+        <tr><td><code>-v, --verifier &lt;id&gt;</code></td><td>ID of the verifier for <code>verify</code>. Must be a single non-empty verifier id.</td></tr>
         <tr><td><code>-a, --approve</code></td><td>Approve the commitment on <code>verify</code> (default is reject)</td></tr>
         <tr><td><code>-a, --action &lt;type&gt;</code></td><td>Action type to check on <code>gate</code>. Must be one of: customer_promise, ticket_status_change, escalation_closure, account_tool_write.</td></tr>
         <tr><td><code>--json</code></td><td>Emit commitments or gate status as JSON. Omits the audit trail. When no commitment exists, <code>verify</code> emits a missing summary (found, id, state, verifier; omits extra fields). Useful for scripting.</td></tr>
