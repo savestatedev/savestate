@@ -2339,6 +2339,15 @@ describe('CLI docs', () => {
     expect(doctor).toContain('export function parseDoctorLimit');
   });
 
+  it('documents doctor --adapter as a known adapter', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    expect(doctorSection).toContain('--adapter');
+    expect(doctorSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(doctor).toContain('export function parseDoctorAdapter');
+  });
+
   it('registers --json on savestate doctor', () => {
     const doctorBlock = cli.slice(cli.indexOf("command('doctor')"), cli.indexOf("command('inspect <snapshot-id>')"));
     expect(doctorBlock).toContain(".option('--json'");

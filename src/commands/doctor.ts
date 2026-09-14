@@ -28,6 +28,17 @@ interface DoctorOptions {
 }
 
 const MAX_DOCTOR_LIMIT = 1000;
+const DOCTOR_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const DOCTOR_ADAPTER_LIST = DOCTOR_ADAPTERS.join(', ');
 
 /** Parse a doctor snapshot cap without turning user input errors into empty output. */
 export function parseDoctorLimit(value: string | undefined): number | undefined {
@@ -40,6 +51,20 @@ export function parseDoctorLimit(value: string | undefined): number | undefined 
     );
   }
   return limit;
+}
+
+/** Parse doctor --adapter without treating unknown ids as an empty snapshot set. */
+export function parseDoctorAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((DOCTOR_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${DOCTOR_ADAPTER_LIST}.`,
+  );
 }
 
 export interface SnapshotDiagnosis {
@@ -91,6 +116,8 @@ export function formatDoctorMissingJson(): string {
 }
 
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
+  const adapter = parseDoctorAdapter(options.adapter);
+
   if (!options.json) {
     console.log();
   }
@@ -108,8 +135,8 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   const index = await loadIndex();
 
   let targets = index.snapshots;
-  if (options.adapter) {
-    targets = targets.filter((s) => s.adapter === options.adapter);
+  if (adapter) {
+    targets = targets.filter((s) => s.adapter === adapter);
   }
   const limit = parseDoctorLimit(options.limit);
   if (limit !== undefined) {
