@@ -111,13 +111,15 @@ export function formatEvalQualityMissingJson(suite: string): string {
 }
 
 export async function evalCommand(subcommand: string, options: EvalOptions): Promise<void> {
+  const suite = parseEvalSuite(options.suite);
+
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
     if (options.json && subcommand === 'quality') {
-      console.log(formatEvalQualityMissingJson(options.suite ?? ''));
+      console.log(formatEvalQualityMissingJson(suite ?? ''));
       return;
     }
     if (options.json && subcommand === 'report') {
@@ -166,16 +168,17 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
   }
 
   // Filter by suite name if specified
-  const suitesToRun = options.suite
-    ? suites.filter((s) => s.name === options.suite)
+  const suite = parseEvalSuite(options.suite);
+  const suitesToRun = suite
+    ? suites.filter((s) => s.name === suite)
     : suites;
 
   if (suitesToRun.length === 0) {
     if (options.json) {
-      console.log(formatEvalQualityMissingJson(options.suite ?? ''));
+      console.log(formatEvalQualityMissingJson(suite ?? ''));
       return;
     }
-    console.log(chalk.red(`  Suite not found: ${options.suite}`));
+    console.log(chalk.red(`  Suite not found: ${suite}`));
     console.log(chalk.dim(`  Available: ${suites.map((s) => s.name).join(', ')}`));
     console.log();
     return;
@@ -339,6 +342,20 @@ export function parseEvalThreshold(value: string | undefined): number {
     );
   }
   return threshold;
+}
+
+/** Parse eval --suite without treating blank names as a missing benchmark. */
+export function parseEvalSuite(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const suite = value.trim();
+  if (suite.length === 0 || suite.includes(',') || /\s/.test(suite)) {
+    throw new Error(
+      `Invalid --suite value "${value}". Expected a single non-empty benchmark suite name.`,
+    );
+  }
+
+  return suite;
 }
 
 /**
