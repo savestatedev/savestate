@@ -410,6 +410,13 @@ describe('CLI docs', () => {
     expect(antibodies).toContain('export function parseAntibodiesErrorCode');
   });
 
+  it('documents antibodies --path-prefix as a single path prefix', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('--path-prefix');
+    expect(antibodiesSection).toContain('Must be a single non-empty path prefix');
+    expect(antibodies).toContain('export function parseAntibodiesPathPrefix');
+  });
+
   it('lists savestate schedule in the command overview', () => {
     expect(docs).toContain('id="schedule"');
     expect(docs).toContain('savestate schedule');
