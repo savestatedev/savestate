@@ -81,7 +81,23 @@ export function formatSnapshotMissingJson(adapter: string): string {
   );
 }
 
+/** Parse snapshot --label without storing blank or comma-separated labels. */
+export function parseSnapshotLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
+  const label = parseSnapshotLabel(options.label);
+
   if (!options.json) {
     console.log();
   }
@@ -177,7 +193,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     const spinner = options.json ? null : ora(`Extracting state via ${adapter.name} adapter...`).start();
 
     const result = await createSnapshot(adapter, storage, passphrase, {
-      label: options.label,
+      label,
       tags: options.tags?.split(',').map((t) => t.trim()),
       full: options.full,
       stateEvents: stateEventCount > 0 ? stateEventStore : undefined,
@@ -200,8 +216,8 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     console.log(`  ${chalk.dim('ID:')}         ${chalk.cyan(result.snapshot.manifest.id)}`);
     console.log(`  ${chalk.dim('Adapter:')}    ${adapter.name}`);
     console.log(`  ${chalk.dim('Type:')}       ${result.incremental ? chalk.yellow('incremental (delta)') : chalk.blue('full')}`);
-    if (options.label) {
-      console.log(`  ${chalk.dim('Label:')}      ${options.label}`);
+    if (label) {
+      console.log(`  ${chalk.dim('Label:')}      ${label}`);
     }
     if (result.incremental && result.delta) {
       console.log(`  ${chalk.dim('Changes:')}    ${chalk.green(`+${result.delta.added}`)} added, ${chalk.yellow(`~${result.delta.modified}`)} modified, ${chalk.red(`-${result.delta.removed}`)} removed, ${chalk.dim(`${result.delta.unchanged} unchanged`)}`);
