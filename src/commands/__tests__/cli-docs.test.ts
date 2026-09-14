@@ -1391,6 +1391,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryActor');
   });
 
+  it('documents memory --namespace as a single namespace', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--namespace');
+    expect(memorySection).toContain('Must be a single non-empty namespace');
+    expect(memoryCli).toContain('export function parseMemoryNamespace');
+  });
+
   it('documents memory log --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');

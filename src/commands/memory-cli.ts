@@ -165,6 +165,20 @@ export function parseMemoryActor(value: string | undefined): string | undefined 
   return actor;
 }
 
+/** Parse memory --namespace without treating blank or comma-separated values as a namespace. */
+export function parseMemoryNamespace(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const namespace = value.trim();
+  if (namespace.length === 0 || namespace.includes(',') || /\s/.test(namespace)) {
+    throw new Error(
+      `Invalid --namespace value "${value}". Expected a single non-empty namespace (org:app:agent[:user]).`,
+    );
+  }
+
+  return namespace;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -345,7 +359,7 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('explain <query>')
     .description('Explain why memories were retrieved for a query')
-    .option('-n, --namespace <ns>', 'Namespace to search (org:app:agent format)')
+    .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
     .option('-l, --limit <n>', 'Maximum number of results', '5')
     .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--json', 'Output as JSON')
@@ -356,7 +370,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await explainMemoryCommand(storage, passphrase, query, {
-          namespace: options.namespace,
+          namespace: parseMemoryNamespace(options.namespace),
           limit: parseMemoryLimit(options.limit, 5),
           tags: parseMemoryTags(options.tags),
           format: options.json ? 'json' : 'pretty',
@@ -452,7 +466,7 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('expire')
     .description('Expire memories based on TTL policy')
-    .requiredOption('-n, --namespace <ns>', 'Namespace (format: org:app:agent[:user])')
+    .requiredOption('-n, --namespace <ns>', 'Namespace (single non-empty org:app:agent[:user])')
     .option('--dry-run', 'Show what would be expired without applying')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
@@ -462,7 +476,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await expireMemoriesCommand(storage, passphrase, {
-          namespace: options.namespace,
+          namespace: parseMemoryNamespace(options.namespace) ?? options.namespace,
           dryRun: options.dryRun,
           format: options.json ? 'json' : 'pretty',
         });
