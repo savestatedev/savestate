@@ -344,20 +344,21 @@ async function listRules(store: AntibodyStore, options: AntibodiesOptions): Prom
 
 async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
   const tags = parseTags(options.tags);
+  const tool = parseAntibodiesTool(options.tool);
   const risk = parseAntibodiesRisk(options.risk);
   const safeAction = parseAntibodiesSafeAction(options.safeAction);
   const confidence = parseAntibodiesConfidence(options.confidence);
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const errorCode = options.errorCode?.toUpperCase();
 
-  if (!options.tool && !errorCode && !pathPrefix && tags.length === 0) {
+  if (!tool && !errorCode && !pathPrefix && tags.length === 0) {
     console.log(chalk.red('✗ Provide at least one trigger: --tool, --error-code, --path-prefix, or --tags'));
     process.exit(1);
   }
 
   const partialRule = {
     trigger: {
-      tool: options.tool?.trim(),
+      tool,
       error_codes: errorCode ? [errorCode] : undefined,
       path_prefixes: pathPrefix ? [pathPrefix] : undefined,
       tags: tags.length > 0 ? tags : undefined,
@@ -401,7 +402,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
 
 async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
   const context: PreflightContext = {
-    tool: options.tool?.trim(),
+    tool: parseAntibodiesTool(options.tool),
     error_code: options.errorCode?.toUpperCase(),
     path: options.path,
     tags: parseTags(options.tags),
@@ -502,6 +503,20 @@ async function showStats(store: AntibodyStore, options: AntibodiesOptions): Prom
 function parseTags(raw?: string): string[] {
   if (!raw) return [];
   return [...new Set(raw.split(',').map((token) => token.trim().toLowerCase()).filter(Boolean))];
+}
+
+/** Parse antibodies --tool without treating blank or comma-separated names as a trigger. */
+export function parseAntibodiesTool(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tool = value.trim();
+  if (tool.length === 0 || tool.includes(',') || /\s/.test(tool)) {
+    throw new Error(
+      `Invalid --tool value "${value}". Expected a single non-empty tool name.`,
+    );
+  }
+
+  return tool;
 }
 
 /** Parse antibodies add --risk without exiting the CLI process on bad input. */
