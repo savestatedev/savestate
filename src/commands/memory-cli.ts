@@ -123,6 +123,20 @@ export function parseMemoryImportance(value: string | undefined): number | undef
   return importance;
 }
 
+/** Parse memory --tags without treating blank or empty comma-separated tags as filters. */
+export function parseMemoryTags(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const tags = value.split(',').map((token) => token.trim());
+  if (tags.length === 0 || tags.some((token) => token.length === 0)) {
+    throw new Error(
+      `Invalid --tags value "${value}". Expected one or more non-empty memory tags (comma-separated).`,
+    );
+  }
+
+  return tags;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -305,7 +319,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Explain why memories were retrieved for a query')
     .option('-n, --namespace <ns>', 'Namespace to search (org:app:agent format)')
     .option('-l, --limit <n>', 'Maximum number of results', '5')
-    .option('-t, --tags <tags>', 'Filter by tags (comma-separated)')
+    .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--json', 'Output as JSON')
     .action(async (query, options) => {
       try {
@@ -316,7 +330,7 @@ export function registerMemoryCommands(program: Command): void {
         await explainMemoryCommand(storage, passphrase, query, {
           namespace: options.namespace,
           limit: parseMemoryLimit(options.limit, 5),
-          tags: options.tags?.split(',').map((t: string) => t.trim()),
+          tags: parseMemoryTags(options.tags),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
@@ -332,7 +346,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('edit <memory-id>')
     .description('Edit a memory\'s content or metadata')
     .option('-c, --content <content>', 'New content for the memory')
-    .option('-t, --tags <tags>', 'New tags (comma-separated)')
+    .option('-t, --tags <tags>', 'New tags (comma-separated non-empty tags)')
     .option('-i, --importance <n>', 'New importance score (0-1)')
     .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
     .option('-r, --reason <reason>', 'Reason for the edit')
@@ -345,7 +359,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await editMemoryCommand(storage, passphrase, memoryId, {
           content: options.content,
-          tags: options.tags?.split(',').map((t: string) => t.trim()),
+          tags: parseMemoryTags(options.tags),
           importance: parseMemoryImportance(options.importance),
           actorId: options.actor,
           reason: options.reason,
