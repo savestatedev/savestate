@@ -121,9 +121,24 @@ export function parseSnapshotLabel(value: string | undefined): string | undefine
   return label;
 }
 
+/** Parse snapshot --tags without storing blank or empty comma-separated tags. */
+export function parseSnapshotTags(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const tags = value.split(',').map((token) => token.trim());
+  if (tags.length === 0 || tags.some((token) => token.length === 0)) {
+    throw new Error(
+      `Invalid --tags value "${value}". Expected one or more non-empty snapshot tags (comma-separated).`,
+    );
+  }
+
+  return tags;
+}
+
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   const label = parseSnapshotLabel(options.label);
   const adapterId = parseSnapshotAdapter(options.adapter);
+  const tags = parseSnapshotTags(options.tags);
 
   if (!options.json) {
     console.log();
@@ -221,7 +236,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
 
     const result = await createSnapshot(adapter, storage, passphrase, {
       label,
-      tags: options.tags?.split(',').map((t) => t.trim()),
+      tags,
       full: options.full,
       stateEvents: stateEventCount > 0 ? stateEventStore : undefined,
     });

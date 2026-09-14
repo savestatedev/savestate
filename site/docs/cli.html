@@ -153,7 +153,7 @@
       </thead>
       <tbody>
         <tr><td><code>-l, --label &lt;label&gt;</code></td><td>Human-readable label for this snapshot (e.g., <code>"Before migration"</code>). Must be a single non-empty snapshot label (no commas).</td></tr>
-        <tr><td><code>-t, --tags &lt;tags&gt;</code></td><td>Comma-separated tags for organization (e.g., <code>"backup,weekly"</code>)</td></tr>
+        <tr><td><code>-t, --tags &lt;tags&gt;</code></td><td>Comma-separated tags for organization (e.g., <code>"backup,weekly"</code>). Must be one or more non-empty snapshot tags (comma-separated).</td></tr>
         <tr><td><code>--tag &lt;entry...&gt;</code></td><td>Record a structured state entry as <code>type:key=value</code> (repeatable). Types: <code>decision</code>, <code>preference</code>, <code>error</code>, <code>api_response</code>, <code>custom</code>. Distinct from <code>-t, --tags</code>.</td></tr>
         <tr><td><code>--meta &lt;entry...&gt;</code></td><td>Additional metadata for <code>--tag</code> entries as <code>key=value</code> (repeatable). Applied to every state entry on this snapshot.</td></tr>
         <tr><td><code>-a, --adapter &lt;adapter&gt;</code></td><td>Force a specific adapter instead of auto-detection. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>

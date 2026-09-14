@@ -2600,6 +2600,13 @@ describe('CLI docs', () => {
     expect(snapshot).toContain('export function parseSnapshotLabel');
   });
 
+  it('documents snapshot --tags as one or more non-empty snapshot tags', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--tags');
+    expect(snapshotSection).toContain('Must be one or more non-empty snapshot tags (comma-separated)');
+    expect(snapshot).toContain('export function parseSnapshotTags');
+  });
+
   it('documents snapshot --tag and --meta state entries', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--tag');
