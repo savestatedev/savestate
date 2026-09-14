@@ -2274,7 +2274,7 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function formatTraceExportMissingJson');
     expect(exportBlock).toContain('if (!isInitialized())');
     expect(exportBlock).toContain('if (options.json)');
-    expect(exportBlock).toContain("formatTraceExportMissingJson(options.run ?? 'all', format)");
+    expect(exportBlock).toContain('formatTraceExportMissingJson(run, format)');
   });
 
   it('documents trace list --json when SaveState is not initialized', () => {
