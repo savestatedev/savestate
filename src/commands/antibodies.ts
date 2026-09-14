@@ -343,7 +343,7 @@ async function listRules(store: AntibodyStore, options: AntibodiesOptions): Prom
 }
 
 async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
-  const tags = parseTags(options.tags);
+  const tags = parseAntibodiesTags(options.tags) ?? [];
   const tool = parseAntibodiesTool(options.tool);
   const risk = parseAntibodiesRisk(options.risk);
   const safeAction = parseAntibodiesSafeAction(options.safeAction);
@@ -405,7 +405,7 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
     tool: parseAntibodiesTool(options.tool),
     error_code: parseAntibodiesErrorCode(options.errorCode),
     path: options.path,
-    tags: parseTags(options.tags),
+    tags: parseAntibodiesTags(options.tags),
   };
 
   const engine = new AntibodyEngine(store, {
@@ -500,9 +500,18 @@ async function showStats(store: AntibodyStore, options: AntibodiesOptions): Prom
   }
 }
 
-function parseTags(raw?: string): string[] {
-  if (!raw) return [];
-  return [...new Set(raw.split(',').map((token) => token.trim().toLowerCase()).filter(Boolean))];
+/** Parse antibodies --tags without treating blank or empty comma-separated tags as a trigger. */
+export function parseAntibodiesTags(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const tags = value.split(',').map((token) => token.trim());
+  if (tags.length === 0 || tags.some((token) => token.length === 0)) {
+    throw new Error(
+      `Invalid --tags value "${value}". Expected one or more non-empty antibody tags (comma-separated).`,
+    );
+  }
+
+  return [...new Set(tags.map((tag) => tag.toLowerCase()))];
 }
 
 /** Parse antibodies --tool without treating blank or comma-separated names as a trigger. */
