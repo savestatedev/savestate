@@ -11,6 +11,7 @@ import { resolveStorage } from '../storage/resolve.js';
 import { getPassphrase } from '../passphrase.js';
 import { parseTagString, parseMetaString } from '../state-events/types.js';
 import { getGlobalStore, clearGlobalStore } from '../state-events/helpers.js';
+import { parseScheduleEvery } from './schedule.js';
 
 interface SnapshotOptions {
   label?: string;
@@ -135,10 +136,26 @@ export function parseSnapshotTags(value: string | undefined): string[] | undefin
   return tags;
 }
 
+/** Parse snapshot --schedule without suggesting an invalid interval. */
+export function parseSnapshotSchedule(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  try {
+    parseScheduleEvery(value);
+  } catch {
+    throw new Error(
+      `Invalid --schedule value "${value}". Expected a duration like 1h, 6h, 12h, or 1d up to 7 days.`,
+    );
+  }
+
+  return value.trim();
+}
+
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   const label = parseSnapshotLabel(options.label);
   const adapterId = parseSnapshotAdapter(options.adapter);
   const tags = parseSnapshotTags(options.tags);
+  const schedule = parseSnapshotSchedule(options.schedule);
 
   if (!options.json) {
     console.log();
@@ -153,10 +170,10 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     process.exit(1);
   }
 
-  if (options.schedule) {
+  if (schedule) {
     console.log(chalk.cyan(`⏰ To set up scheduled backups, use:`));
     console.log();
-    console.log(`   savestate schedule --every ${options.schedule}`);
+    console.log(`   savestate schedule --every ${schedule}`);
     console.log();
     console.log(chalk.dim('   This creates a system job (launchd/systemd) for reliable auto-backups.'));
     console.log();

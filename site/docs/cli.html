@@ -157,7 +157,7 @@
         <tr><td><code>--tag &lt;entry...&gt;</code></td><td>Record a structured state entry as <code>type:key=value</code> (repeatable). Types: <code>decision</code>, <code>preference</code>, <code>error</code>, <code>api_response</code>, <code>custom</code>. Distinct from <code>-t, --tags</code>.</td></tr>
         <tr><td><code>--meta &lt;entry...&gt;</code></td><td>Additional metadata for <code>--tag</code> entries as <code>key=value</code> (repeatable). Applied to every state entry on this snapshot.</td></tr>
         <tr><td><code>-a, --adapter &lt;adapter&gt;</code></td><td>Force a specific adapter instead of auto-detection. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
-        <tr><td><code>-s, --schedule &lt;interval&gt;</code></td><td>Set up auto-snapshot schedule (e.g., <code>6h</code>, <code>1d</code>) <em>(Pro)</em></td></tr>
+        <tr><td><code>-s, --schedule &lt;interval&gt;</code></td><td>Set up auto-snapshot schedule (e.g., <code>6h</code>, <code>1d</code>). Must be a duration like <code>1h</code>, <code>6h</code>, <code>12h</code>, or <code>1d</code> up to 7 days. <em>(Pro)</em></td></tr>
         <tr><td><code>--full</code></td><td>Force a full snapshot, skipping incremental delta detection</td></tr>
         <tr><td><code>--json</code></td><td>Emit the snapshot result as JSON. Encrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). When no adapter can be detected, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
