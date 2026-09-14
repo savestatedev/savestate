@@ -161,6 +161,20 @@ export function parseIntegrityAutoEscalate(value: string): boolean {
   );
 }
 
+/** Parse integrity --user without treating blank or comma-separated values as an actor. */
+export function parseIntegrityUser(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const user = value.trim();
+  if (user.length === 0 || user.includes(',') || /\s/.test(user)) {
+    throw new Error(
+      `Invalid --user value "${value}". Expected a single non-empty user id.`,
+    );
+  }
+
+  return user;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1002,6 +1016,7 @@ async function quarantineCommand(id: string, options: IntegrityOptions): Promise
   }
 
   const reason = options.reason ?? 'Manual quarantine via CLI';
+  const user = parseIntegrityUser(options.user) ?? 'cli';
   const controller = new ContainmentController();
 
   // Determine if it's a memory or agent based on prefix
@@ -1010,13 +1025,13 @@ async function quarantineCommand(id: string, options: IntegrityOptions): Promise
   let result;
   if (isAgent) {
     result = await controller.quarantineAgent(id, reason, {
-      initiated_by: options.user ?? 'cli',
+      initiated_by: user,
       tenant_id: options.tenant ?? 'default',
       force: options.force,
     });
   } else {
     result = await controller.quarantineMemory(id, reason, {
-      initiated_by: options.user ?? 'cli',
+      initiated_by: user,
       tenant_id: options.tenant ?? 'default',
       force: options.force,
     });
@@ -1067,6 +1082,7 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
   }
 
   const reason = options.reason ?? 'Released via CLI';
+  const user = parseIntegrityUser(options.user) ?? 'cli';
   const controller = new ContainmentController();
 
   // Check quarantine lists to determine type
@@ -1081,7 +1097,7 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
     const pending = await getPendingApprovals();
     const approval = pending.find(pa => pa.id === id);
     if (approval) {
-      const result = await controller.dismissApproval(id, options.user ?? 'cli', reason);
+      const result = await controller.dismissApproval(id, user, reason);
       if (options.json) {
         console.log(
           formatIntegrityReleaseJson({
@@ -1112,9 +1128,9 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
 
   let result;
   if (isAgent) {
-    result = await controller.releaseAgent(id, reason, options.user ?? 'cli');
+    result = await controller.releaseAgent(id, reason, user);
   } else {
-    result = await controller.releaseMemory(id, reason, options.user ?? 'cli');
+    result = await controller.releaseMemory(id, reason, user);
   }
 
   if (options.json) {
@@ -1344,7 +1360,7 @@ function showUsage(): void {
   console.log('  --json            Output as JSON');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release');
-  console.log('  --user <id>       User performing action');
+  console.log('  --user <id>       User performing action (single non-empty id)');
   console.log();
 }
 
@@ -1362,7 +1378,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--policy <policy>', 'Containment policy')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action')
-    .option('--user <id>', 'User performing action')
+    .option('--user <id>', 'User performing action (single non-empty id)')
     .action(async (subcommand: string | undefined, args: string[], options: IntegrityOptions) => {
       if (!subcommand) {
         showUsage();

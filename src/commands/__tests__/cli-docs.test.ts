@@ -1943,6 +1943,13 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('--user reviewer-1');
   });
 
+  it('documents integrity --user as a single user id', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--user');
+    expect(integritySection).toContain('Must be a single non-empty user id');
+    expect(integrity).toContain('export function parseIntegrityUser');
+  });
+
   it('registers --json on savestate integrity', () => {
     const integrityBlock = integrity.slice(integrity.indexOf("command('integrity [subcommand] [args...]')"));
     expect(integrityBlock).toContain(".option('--json'");
