@@ -151,6 +151,20 @@ export function parseMemoryTags(value: string | undefined): string[] | undefined
   return tags;
 }
 
+/** Parse memory --actor without treating blank or comma-separated ids as an audit actor. */
+export function parseMemoryActor(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const actor = value.trim();
+  if (actor.length === 0 || actor.includes(',') || /\s/.test(actor)) {
+    throw new Error(
+      `Invalid --actor value "${value}". Expected a single non-empty actor id.`,
+    );
+  }
+
+  return actor;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -362,7 +376,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-c, --content <content>', 'New content for the memory')
     .option('-t, --tags <tags>', 'New tags (comma-separated non-empty tags)')
     .option('-i, --importance <n>', 'New importance score (0-1)')
-    .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
+    .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .option('-r, --reason <reason>', 'Reason for the edit')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
@@ -375,7 +389,7 @@ export function registerMemoryCommands(program: Command): void {
           content: options.content,
           tags: parseMemoryTags(options.tags),
           importance: parseMemoryImportance(options.importance),
-          actorId: options.actor,
+          actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           reason: options.reason,
           format: options.json ? 'json' : 'pretty',
         });
@@ -390,7 +404,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('delete <memory-id>')
     .alias('rm')
     .description('Delete a memory (soft delete with audit trail)')
-    .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
+    .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .requiredOption('-r, --reason <reason>', 'Reason for deletion (required)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
@@ -400,7 +414,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await deleteMemoryCommand(storage, passphrase, memoryId, {
-          actorId: options.actor,
+          actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           reason: options.reason,
           format: options.json ? 'json' : 'pretty',
         });
@@ -415,7 +429,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('rollback <memory-id>')
     .description('Rollback a memory to a previous version')
     .requiredOption('-v, --version <n>', 'Version number to rollback to')
-    .option('--actor <id>', 'Actor ID for audit trail', 'cli-user')
+    .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -425,7 +439,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await rollbackMemoryCommand(storage, passphrase, memoryId, {
           version: parseMemoryVersion(options.version),
-          actorId: options.actor,
+          actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
