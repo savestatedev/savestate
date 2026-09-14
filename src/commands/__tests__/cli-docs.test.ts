@@ -799,6 +799,13 @@ describe('CLI docs', () => {
     expect(evalSource).toContain('export function parseEvalThreshold');
   });
 
+  it('documents eval --suite as a single non-empty name', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('--suite');
+    expect(evalSection).toContain('single non-empty name');
+    expect(evalSource).toContain('export function parseEvalSuite');
+  });
+
   it('registers --json on savestate eval', () => {
     const evalBlock = cli.slice(cli.indexOf("command('eval <subcommand>')"), cli.indexOf("command('search <query>')"));
     expect(evalBlock).toContain(".option('--json'");
