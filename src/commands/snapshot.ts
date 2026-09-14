@@ -25,6 +25,32 @@ interface SnapshotOptions {
   json?: boolean;
 }
 
+const SNAPSHOT_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const SNAPSHOT_ADAPTER_LIST = SNAPSHOT_ADAPTERS.join(', ');
+
+/** Parse snapshot --adapter without treating unknown ids as a missing snapshot. */
+export function parseSnapshotAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((SNAPSHOT_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${SNAPSHOT_ADAPTER_LIST}.`,
+  );
+}
+
 export function formatSnapshotResultJson(
   result: CreateSnapshotResult,
   extra?: { adapter?: string; storage?: string; stateEventCount?: number },
@@ -97,6 +123,7 @@ export function parseSnapshotLabel(value: string | undefined): string | undefine
 
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   const label = parseSnapshotLabel(options.label);
+  const adapterId = parseSnapshotAdapter(options.adapter);
 
   if (!options.json) {
     console.log();
@@ -104,7 +131,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatSnapshotMissingJson(options.adapter ?? ''));
+      console.log(formatSnapshotMissingJson(adapterId ?? ''));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -126,14 +153,14 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   try {
     // Resolve adapter
     let adapter;
-    if (options.adapter) {
-      adapter = getAdapter(options.adapter);
+    if (adapterId) {
+      adapter = getAdapter(adapterId);
       if (!adapter) {
         if (options.json) {
-          console.log(formatSnapshotMissingJson(options.adapter));
+          console.log(formatSnapshotMissingJson(adapterId));
           return;
         }
-        console.log(chalk.red(`✗ Unknown adapter: ${options.adapter}`));
+        console.log(chalk.red(`✗ Unknown adapter: ${adapterId}`));
         process.exit(1);
       }
     } else if (config.defaultAdapter) {
@@ -144,7 +171,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
 
     if (!adapter) {
       if (options.json) {
-        console.log(formatSnapshotMissingJson(options.adapter ?? config.defaultAdapter ?? ''));
+        console.log(formatSnapshotMissingJson(adapterId ?? config.defaultAdapter ?? ''));
         return;
       }
       console.log(chalk.red('✗ No adapter found. Specify one with --adapter or configure a default.'));
