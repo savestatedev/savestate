@@ -57,6 +57,20 @@ export function parseSloPeriod(value: string | undefined): number {
   return days;
 }
 
+/** Parse slo --namespace without treating blank or comma-separated values as a namespace. */
+export function parseSloNamespace(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const namespace = value.trim();
+  if (namespace.length === 0 || namespace.includes(',') || /\s/.test(namespace)) {
+    throw new Error(
+      `Invalid --namespace value "${value}". Expected a single non-empty namespace (org:app:agent[:user]).`,
+    );
+  }
+
+  return namespace;
+}
+
 export interface SloStatusJson {
   enabled: boolean;
   namespace: string;
@@ -217,11 +231,12 @@ export async function sloCommand(
  * Show SLO compliance status for a namespace.
  */
 async function sloStatus(options: { namespace?: string; json?: boolean }): Promise<void> {
+  const nsString = parseSloNamespace(options.namespace) ?? 'default:default:default';
   const sloConfig = await loadSLOConfig();
 
   if (!sloConfig.enabled) {
     if (options.json) {
-      console.log(formatSloStatusMissingJson(options.namespace ?? 'default:default:default'));
+      console.log(formatSloStatusMissingJson(nsString));
       return;
     }
     console.log(chalk.yellow('SLO monitoring is disabled.'));
@@ -229,7 +244,6 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
     return;
   }
 
-  const nsString = options.namespace ?? 'default:default:default';
   const namespace = parseNamespace(nsString);
 
   // Create storage and service (in production, this would use configured backend)
@@ -415,7 +429,7 @@ export function registerSLOCommands(program: import('commander').Command): void 
   program
     .command('slo <subcommand>')
     .description('Memory freshness SLO monitoring (status, report, config)')
-    .option('-n, --namespace <ns>', 'Namespace (org:app:agent:user)')
+    .option('-n, --namespace <ns>', 'Namespace (single non-empty org:app:agent[:user])')
     .option('--json', 'Output as JSON')
     .option('--set <key=value>', 'Set a config value')
     .option('-p, --period <duration>', 'Report period (e.g., 7d, 30d)')
