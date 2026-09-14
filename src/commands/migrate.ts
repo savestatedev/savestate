@@ -91,6 +91,20 @@ export function parseMigrateTo(value: string | undefined): Platform | undefined 
   );
 }
 
+/** Parse migrate --snapshot without treating blank ids as creating a new snapshot. */
+export function parseMigrateSnapshot(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const snapshot = value.trim();
+  if (snapshot.length === 0 || snapshot.includes(',') || /\s/.test(snapshot)) {
+    throw new Error(
+      `Invalid --snapshot value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return snapshot;
+}
+
 /** Parse migrate --include without silently skipping unknown types. */
 export function parseMigrateInclude(
   value: string | undefined,
@@ -250,6 +264,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
 
   parseMigrateFrom(options.from);
   parseMigrateTo(options.to);
+  parseMigrateSnapshot(options.snapshot);
 
   // Check initialization
   if (!isInitialized()) {
