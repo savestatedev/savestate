@@ -93,6 +93,20 @@ export function parseMcpPort(value: string | undefined): number {
   return port;
 }
 
+/** Parse mcp --agent without treating blank or comma-separated ids as an agent. */
+export function parseMcpAgent(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const agent = value.trim();
+  if (agent.length === 0 || agent.includes(',') || /\s/.test(agent)) {
+    throw new Error(
+      `Invalid --agent value "${value}". Expected a single non-empty agent id.`,
+    );
+  }
+
+  return agent;
+}
+
 interface MCPServeOptions {
   port?: string;
   stdio?: boolean;
@@ -379,17 +393,17 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
   const spinner = options.json ? null : ora('Exporting memory passport...').start();
 
   try {
+    const agentId = parseMcpAgent(options.agent) ?? 'default';
+
     if (!isInitialized()) {
       if (options.json) {
-        console.log(formatMcpExportMissingJson(options.agent ?? 'default', options.output ?? ''));
+        console.log(formatMcpExportMissingJson(agentId, options.output ?? ''));
         return;
       }
       spinner?.fail('SaveState not initialized');
       console.error(chalk.red('Run `savestate init` first.'));
       process.exit(1);
     }
-
-    const agentId = options.agent ?? 'default';
     const outputPath = options.output ?? `passport-${agentId}-${Date.now()}.json`;
 
     // Create namespace for the agent
@@ -488,6 +502,8 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
   const spinner = options.json ? null : ora('Importing memory passport...').start();
 
   try {
+    const agentId = parseMcpAgent(options.agent);
+
     if (!isInitialized()) {
       if (options.json) {
         console.log(formatMcpImportMissingJson(options.input ?? ''));
@@ -522,7 +538,7 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
       process.exit(1);
     }
 
-    const targetAgent = options.agent ?? passport.source_agent.id;
+    const targetAgent = agentId ?? passport.source_agent.id;
 
     // Create namespace for the target agent
     const namespace: Namespace = {
@@ -613,7 +629,7 @@ export function registerMCPCommands(program: Command): void {
   mcp
     .command('export')
     .description('Export memory passport for cross-platform transfer')
-    .option('-a, --agent <id>', 'Agent ID to export (default: "default")')
+    .option('-a, --agent <id>', 'Agent ID to export (single non-empty id, default: "default")')
     .option('-o, --output <path>', 'Output file path (default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
     .option('--json', 'Output as JSON')
@@ -624,7 +640,7 @@ export function registerMCPCommands(program: Command): void {
     .command('import')
     .description('Import memory passport from another platform')
     .requiredOption('-i, --input <path>', 'Passport file to import')
-    .option('-a, --agent <id>', 'Target agent ID (default: source agent ID)')
+    .option('-a, --agent <id>', 'Target agent ID (single non-empty id, default: source agent ID)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
     .action(mcpImportCommand);
