@@ -123,6 +123,20 @@ export function parseMemoryImportance(value: string | undefined): number | undef
   return importance;
 }
 
+/** Parse memory --snapshot without treating blank ids as the latest snapshot. */
+export function parseMemorySnapshot(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const snapshot = value.trim();
+  if (snapshot.length === 0 || snapshot.includes(',') || /\s/.test(snapshot)) {
+    throw new Error(
+      `Invalid --snapshot value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return snapshot;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -152,7 +166,7 @@ export function registerMemoryCommands(program: Command): void {
           tier: parseMemoryTier(options.tier),
           pinned: options.pinned,
           limit: parseMemoryLimit(options.limit, 20),
-          snapshotId: options.snapshot,
+          snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'table',
         });
       } catch (err) {
@@ -176,7 +190,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await promoteMemoryCommand(storage, passphrase, memoryId, {
           to: parseMemoryPromoteTo(options.to),
-          snapshotId: options.snapshot,
+          snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
@@ -200,7 +214,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await demoteMemoryCommand(storage, passphrase, memoryId, {
           to: parseMemoryDemoteTo(options.to),
-          snapshotId: options.snapshot,
+          snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
@@ -222,7 +236,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await pinMemoryCommand(storage, passphrase, memoryId, {
-          snapshotId: options.snapshot,
+          snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
@@ -244,7 +258,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await unpinMemoryCommand(storage, passphrase, memoryId, {
-          snapshotId: options.snapshot,
+          snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
@@ -267,7 +281,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await applyPoliciesCommand(storage, passphrase, {
-          snapshotId: options.snapshot,
+          snapshotId: parseMemorySnapshot(options.snapshot),
           dryRun: options.dryRun,
           format: options.json ? 'json' : 'pretty',
         });
@@ -290,7 +304,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await showTierConfig(storage, passphrase, {
-          snapshotId: options.snapshot,
+          snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {

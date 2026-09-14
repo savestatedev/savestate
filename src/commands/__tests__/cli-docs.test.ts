@@ -1275,6 +1275,13 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('Target tier');
   });
 
+  it('documents memory --snapshot as a single snapshot id', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--snapshot');
+    expect(memorySection).toContain('Must be a single non-empty snapshot id');
+    expect(memoryCli).toContain('export function parseMemorySnapshot');
+  });
+
   it('documents memory promote --to as L1 or L2', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--to');
