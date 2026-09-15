@@ -194,6 +194,24 @@ export function parseAclVerifier(value: string | undefined): string {
   return verifier;
 }
 
+/** Parse acl --description without writing a blank commitment description. */
+export function parseAclDescription(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --description value. Expected a non-empty commitment description.',
+    );
+  }
+
+  const description = value.trim();
+  if (description.length === 0) {
+    throw new Error(
+      `Invalid --description value "${value}". Expected a non-empty commitment description.`,
+    );
+  }
+
+  return description;
+}
+
 async function aclPropose(options: {
   type: string;
   criticality: string;
@@ -212,7 +230,7 @@ async function aclPropose(options: {
     const commitment = proposeCommitment({
       type: parseAclType(options.type),
       criticality: parseAclCriticality(options.criticality),
-      description: options.description,
+      description: parseAclDescription(options.description),
       proposer: options.proposer,
       expiresAt,
     });
@@ -320,7 +338,7 @@ export function registerACLCommands(program: Command) {
     .description('Propose a new commitment.')
     .requiredOption('-t, --type <type>', 'Commitment type (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .requiredOption('-c, --criticality <level>', 'Criticality level (c1, c2, c3)')
-    .requiredOption('-d, --description <text>', 'Description of the commitment')
+    .requiredOption('-d, --description <text>', 'Description of the commitment (non-empty)')
     .requiredOption('-p, --proposer <id>', 'ID of the proposing agent')
     .option('-e, --expires-in <minutes>', 'Minutes until expiration')
     .option('--json', 'Output as JSON')
