@@ -219,6 +219,20 @@ export function parseContainerAgent(value: string | undefined): string {
   return agent;
 }
 
+/** Parse export --output without treating blank or comma-separated values as a path. */
+export function parseContainerOutput(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const output = value.trim();
+  if (output.length === 0 || output.includes(',') || /\s/.test(output)) {
+    throw new Error(
+      `Invalid --output value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return output;
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -713,7 +727,8 @@ export function reportContainerProgress(phase: string, bytes?: number): string {
 
 export async function exportState(options: ExportOptions): Promise<ExportResult> {
   try {
-    const { out, passphrase, keyfile, description } = options;
+    const { passphrase, keyfile, description } = options;
+    let out = options.out;
     let agent: string;
     try {
       agent = parseContainerAgent(options.agent);
@@ -724,6 +739,12 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
 
     if (typeof out !== 'string' || out.trim() === '') {
       console.error(`Error: Output path must not be empty: ${JSON.stringify(out)}.`);
+      return { written: false, out, overwritten: false };
+    }
+    try {
+      out = parseContainerOutput(out) ?? out;
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
       return { written: false, out, overwritten: false };
     }
 
@@ -1644,7 +1665,7 @@ export function registerContainerCommands(program: Command) {
     .command('export')
     .description('Export agent state to an encrypted .savestate file with optional path selection. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
-    .option('-o, --output <file>', 'Output file path', 'agent.savestate')
+    .option('-o, --output <file>', 'Output file path (single non-empty path, default: agent.savestate)', 'agent.savestate')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')

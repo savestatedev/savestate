@@ -462,7 +462,7 @@
       </thead>
       <tbody>
         <tr><td><code>-a, --agent &lt;id&gt;</code></td><td>Agent ID to export. Must be a single non-empty agent id.</td></tr>
-        <tr><td><code>-o, --output &lt;file&gt;</code></td><td>Output file path (default: <code>agent.savestate</code>). A missing parent directory, directory path, or empty path is rejected before writing.</td></tr>
+        <tr><td><code>-o, --output &lt;file&gt;</code></td><td>Output file path (default: <code>agent.savestate</code>). Must be a single non-empty path. A missing parent directory, directory path, or empty path is rejected before writing.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Encrypt and print export metadata without writing. An existing output file can still be previewed without <code>--force</code>.</td></tr>
         <tr><td><code>--force</code></td><td>Overwrite an existing output file</td></tr>
         <tr><td><code>--include &lt;paths&gt;</code></td><td>Only pack named state paths (<code>personality</code>, <code>memory</code>, <code>tools</code>, <code>preferences</code>, <code>conversation_history</code>)</td></tr>
