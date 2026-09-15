@@ -68,7 +68,7 @@ program
   .option('-a, --adapter <adapter>', 'Adapter to use (default: auto-detect)')
   .option('-s, --schedule <interval>', 'Set up auto-snapshot schedule (e.g., 6h, 1d)')
   .option('--full', 'Force a full snapshot (skip incremental)')
-  .option('--tag <entry...>', 'Record structured state entry (type:key=value)')
+  .option('--tag <entry...>', 'Record structured state entry (type:key=value with type decision, preference, error, api_response, or custom)')
   .option('--meta <entry...>', 'Additional metadata for state entries (key=value)')
   .option('--json', 'Output as JSON')
   .action(snapshotCommand);

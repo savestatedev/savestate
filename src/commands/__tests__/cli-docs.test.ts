@@ -2868,6 +2868,13 @@ describe('CLI docs', () => {
     expect(cli).toContain('--meta <entry...>');
   });
 
+  it('documents snapshot --tag as type:key=value with a known type', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--tag');
+    expect(snapshotSection).toContain('Must be type:key=value with type one of: decision, preference, error, api_response, custom');
+    expect(snapshot).toContain('export function parseSnapshotTag');
+  });
+
   it('registers --json on savestate search', () => {
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
     expect(searchBlock).toContain(".option('--json'");

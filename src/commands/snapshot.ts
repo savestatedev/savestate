@@ -9,7 +9,7 @@ import { detectAdapter, getAdapter } from '../adapters/registry.js';
 import { createSnapshot, type CreateSnapshotResult } from '../snapshot.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { getPassphrase } from '../passphrase.js';
-import { parseTagString, parseMetaString } from '../state-events/types.js';
+import { parseTagString, parseMetaString, type StateEventInput } from '../state-events/types.js';
 import { getGlobalStore, clearGlobalStore } from '../state-events/helpers.js';
 import { parseScheduleEvery } from './schedule.js';
 
@@ -151,11 +151,39 @@ export function parseSnapshotSchedule(value: string | undefined): string | undef
   return value.trim();
 }
 
+const SNAPSHOT_TAG_TYPES = ['decision', 'preference', 'error', 'api_response', 'custom'] as const;
+const SNAPSHOT_TAG_TYPE_LIST = SNAPSHOT_TAG_TYPES.join(', ');
+
+/** Parse snapshot --tag without recording a malformed state entry. */
+export function parseSnapshotTag(value: string | undefined): StateEventInput | undefined {
+  if (value === undefined) return undefined;
+
+  const parsed = parseTagString(value.trim());
+  const key = parsed?.key.trim() ?? '';
+  const rawValue = parsed?.value;
+  const eventValue = typeof rawValue === 'string' ? rawValue.trim() : rawValue;
+
+  if (!parsed || key.length === 0 || eventValue === undefined || eventValue === '') {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected type:key=value with type one of: ${SNAPSHOT_TAG_TYPE_LIST}.`,
+    );
+  }
+
+  return {
+    ...parsed,
+    key,
+    value: eventValue,
+  };
+}
+
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   const label = parseSnapshotLabel(options.label);
   const adapterId = parseSnapshotAdapter(options.adapter);
   const tags = parseSnapshotTags(options.tags);
   const schedule = parseSnapshotSchedule(options.schedule);
+  const stateEntries = (options.tag ?? [])
+    .map((entry) => parseSnapshotTag(entry))
+    .filter((entry): entry is StateEventInput => entry !== undefined);
 
   if (!options.json) {
     console.log();
@@ -221,7 +249,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     const stateEventStore = getGlobalStore();
     let stateEventCount = 0;
 
-    if (options.tag && options.tag.length > 0) {
+    if (stateEntries.length > 0) {
       // Parse global metadata first
       const globalMeta: Record<string, unknown> = {};
       if (options.meta && options.meta.length > 0) {
@@ -233,19 +261,12 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
         }
       }
 
-      // Process each tag entry
-      for (const tagStr of options.tag) {
-        const parsed = parseTagString(tagStr);
-        if (parsed) {
-          stateEventStore.add({
-            ...parsed,
-            metadata: { ...globalMeta, ...parsed.metadata },
-          });
-          stateEventCount++;
-        } else if (!options.json) {
-          console.log(chalk.yellow(`  ⚠ Invalid state entry format: ${tagStr}`));
-          console.log(chalk.dim('    Expected: type:key=value (e.g., decision:api_provider=openai)'));
-        }
+      for (const parsed of stateEntries) {
+        stateEventStore.add({
+          ...parsed,
+          metadata: { ...globalMeta, ...parsed.metadata },
+        });
+        stateEventCount++;
       }
     }
 
