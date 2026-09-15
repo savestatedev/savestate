@@ -247,6 +247,20 @@ export function parseContainerTarget(value: string | undefined): string | undefi
   return target;
 }
 
+/** Parse export --description without storing blank manifest text. */
+export function parseContainerDescription(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const description = value.trim();
+  if (description.length === 0) {
+    throw new Error(
+      `Invalid --description value "${value}". Expected a non-empty description.`,
+    );
+  }
+
+  return description;
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -751,6 +765,14 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       return { written: false, out, overwritten: false };
     }
 
+    let trimmedDescription: string | undefined;
+    try {
+      trimmedDescription = parseContainerDescription(description);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return { written: false, out, overwritten: false };
+    }
+
     if (typeof out !== 'string' || out.trim() === '') {
       console.error(`Error: Output path must not be empty: ${JSON.stringify(out)}.`);
       return { written: false, out, overwritten: false };
@@ -877,7 +899,6 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     const agentState = await getAgentState(agent, components, { silent: !!options.json });
     const plaintext = Buffer.from(agentState);
 
-    const trimmedDescription = description?.trim();
     const formatVersion = 1;
     const created = new Date().toISOString();
     const payloadName = 'agent_state';
@@ -1697,7 +1718,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-preferences', 'Include user preferences')
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
-    .option('--description <text>', 'Optional human-readable description for the export')
+    .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
       const result = await exportState({
@@ -1774,7 +1795,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-preferences', 'Include user preferences')
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
-    .option('--description <text>', 'Optional human-readable description for the export')
+    .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
       const result = await exportState({
