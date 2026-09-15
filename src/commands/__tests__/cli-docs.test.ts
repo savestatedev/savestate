@@ -2440,6 +2440,13 @@ describe('CLI docs', () => {
     expect(containerSection).toContain('savestate container export -a my-agent -o agent.savestate --json --dry-run');
   });
 
+  it('documents container --agent as a single agent id', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(containerSection).toContain('--agent');
+    expect(containerSection).toContain('Must be a single non-empty agent id');
+    expect(container).toContain('export function parseContainerAgent');
+  });
+
   it('lists savestate stats in the command overview', () => {
     expect(docs).toContain('id="stats"');
     expect(docs).toContain('savestate stats');
