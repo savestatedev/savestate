@@ -71,6 +71,34 @@ export function parseSloNamespace(value: string | undefined): string | undefined
   return namespace;
 }
 
+export interface SloSetAssignment {
+  path: string;
+  value: string;
+}
+
+/** Parse slo config --set without treating blank or malformed pairs as updates. */
+export function parseSloSet(value: string | undefined): SloSetAssignment | undefined {
+  if (value === undefined) return undefined;
+
+  const trimmed = value.trim();
+  const eq = trimmed.indexOf('=');
+  if (eq <= 0 || eq === trimmed.length - 1) {
+    throw new Error(
+      `Invalid --set value "${value}". Expected a non-empty key=value pair.`,
+    );
+  }
+
+  const path = trimmed.slice(0, eq).trim();
+  const parsedValue = trimmed.slice(eq + 1).trim();
+  if (path.length === 0 || parsedValue.length === 0) {
+    throw new Error(
+      `Invalid --set value "${value}". Expected a non-empty key=value pair.`,
+    );
+  }
+
+  return { path, value: parsedValue };
+}
+
 export interface SloStatusJson {
   enabled: boolean;
   namespace: string;
@@ -352,12 +380,9 @@ async function sloReport(options: { period?: string; json?: boolean }): Promise<
 async function sloConfig(options: { set?: string; json?: boolean }): Promise<void> {
   let config = await loadSLOConfig();
 
-  if (options.set) {
-    const [path, value] = options.set.split('=');
-    if (!path || value === undefined) {
-      console.log(chalk.red('Invalid format. Use: --set key=value'));
-      process.exit(1);
-    }
+  const assignment = parseSloSet(options.set);
+  if (assignment) {
+    const { path, value } = assignment;
 
     // Parse value
     let parsedValue: unknown = value;
@@ -431,7 +456,7 @@ export function registerSLOCommands(program: import('commander').Command): void 
     .description('Memory freshness SLO monitoring (status, report, config)')
     .option('-n, --namespace <ns>', 'Namespace (single non-empty org:app:agent[:user])')
     .option('--json', 'Output as JSON')
-    .option('--set <key=value>', 'Set a config value')
+    .option('--set <key=value>', 'Set a config value (non-empty key=value)')
     .option('-p, --period <duration>', 'Report period (e.g., 7d, 30d)')
     .action(sloCommand);
 }
