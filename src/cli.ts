@@ -77,7 +77,7 @@ program
 
 program
   .command('restore [snapshot-id]')
-  .description('Restore from a snapshot (default: latest)')
+  .description('Restore from a snapshot (default: latest; single non-empty snapshot id)')
   .option('--to <platform>', 'Restore to a different platform')
   .option('--dry-run', 'Show what would be restored without making changes')
   .option('--include <categories>', 'Only restore specific categories (identity,memory,conversations)')

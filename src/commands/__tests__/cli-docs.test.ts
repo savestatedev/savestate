@@ -2784,6 +2784,13 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate search');
   });
 
+  it('documents restore snapshot-id as a single snapshot id', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    expect(restoreSection).toContain('[snapshot-id]');
+    expect(restoreSection).toContain('Must be a single non-empty snapshot id');
+    expect(restore).toContain('export function parseRestoreId');
+  });
+
   it('documents restore --include as known restore categories', () => {
     const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
     expect(restoreSection).toContain('--include');
@@ -2830,7 +2837,7 @@ describe('CLI docs', () => {
     );
     expect(restoreSection).toContain('savestate restore latest --json');
     expect(restore).toContain('export function formatRestoreMissingJson');
-    expect(restore).toContain("formatRestoreMissingJson(snapshotId ?? 'latest')");
+    expect(restore).toContain('formatRestoreMissingJson(resolvedId)');
   });
 
   it('registers --json on savestate snapshot', () => {

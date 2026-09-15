@@ -33,6 +33,22 @@ const RESTORE_ADAPTERS = [
 ] as const;
 const RESTORE_ADAPTER_LIST = RESTORE_ADAPTERS.join(', ');
 
+/** Parse restore snapshot-id without decrypting archives for blank or comma-separated ids. */
+export function parseRestoreId(value: string | undefined): string {
+  if (value === undefined) {
+    return 'latest';
+  }
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid snapshot id "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return id;
+}
+
 /** Parse restore --to without treating unknown adapters as a process.exit. */
 export function parseRestoreTo(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -112,13 +128,15 @@ export function formatRestoreMissingJson(snapshotId: string): string {
 }
 
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
+  const resolvedId = parseRestoreId(snapshotId);
+
   if (!options.json) {
     console.log();
   }
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatRestoreMissingJson(snapshotId ?? 'latest'));
+      console.log(formatRestoreMissingJson(resolvedId));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -127,7 +145,6 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
 
   const include = parseRestoreInclude(options.include);
   const to = parseRestoreTo(options.to);
-  const resolvedId = snapshotId ?? 'latest';
 
   if (options.json && resolvedId === 'latest') {
     const latest = await getLatestEntry();
