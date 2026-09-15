@@ -189,6 +189,20 @@ export function parseIntegrityUser(value: string | undefined): string | undefine
   return user;
 }
 
+/** Parse integrity --reason without writing a blank quarantine/release reason. */
+export function parseIntegrityReason(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const reason = value.trim();
+  if (reason.length === 0) {
+    throw new Error(
+      `Invalid --reason value "${value}". Expected a non-empty reason.`,
+    );
+  }
+
+  return reason;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -1029,7 +1043,7 @@ async function quarantineCommand(id: string, options: IntegrityOptions): Promise
     process.exit(1);
   }
 
-  const reason = options.reason ?? 'Manual quarantine via CLI';
+  const reason = parseIntegrityReason(options.reason) ?? 'Manual quarantine via CLI';
   const user = parseIntegrityUser(options.user) ?? 'cli';
   const controller = new ContainmentController();
 
@@ -1095,7 +1109,7 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
     process.exit(1);
   }
 
-  const reason = options.reason ?? 'Released via CLI';
+  const reason = parseIntegrityReason(options.reason) ?? 'Released via CLI';
   const user = parseIntegrityUser(options.user) ?? 'cli';
   const controller = new ContainmentController();
 
@@ -1373,7 +1387,7 @@ function showUsage(): void {
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
   console.log('  --force           Force action without confirmation');
-  console.log('  --reason <text>   Reason for quarantine/release');
+  console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
   console.log('  --user <id>       User performing action (single non-empty id)');
   console.log();
 }
@@ -1391,7 +1405,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--status <status>', 'Filter by incident status')
     .option('--policy <policy>', 'Containment policy')
     .option('-f, --force', 'Force action without confirmation')
-    .option('--reason <text>', 'Reason for action')
+    .option('--reason <text>', 'Reason for action (non-empty)')
     .option('--user <id>', 'User performing action (single non-empty id)')
     .action(async (subcommand: string | undefined, args: string[], options: IntegrityOptions) => {
       if (!subcommand) {
