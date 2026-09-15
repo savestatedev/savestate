@@ -66,7 +66,27 @@ export function formatInspectMissingJson(id: string): string {
   );
 }
 
-export async function inspectCommand(snapshotId: string, options: InspectOptions): Promise<void> {
+/** Parse inspect snapshot-id without decrypting archives for blank or comma-separated ids. */
+export function parseInspectId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid snapshot id. Expected a single non-empty snapshot id.',
+    );
+  }
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid snapshot id "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return id;
+}
+
+export async function inspectCommand(rawSnapshotId: string, options: InspectOptions): Promise<void> {
+  const snapshotId = parseInspectId(rawSnapshotId);
+
   if (!options.json) {
     console.log();
   }

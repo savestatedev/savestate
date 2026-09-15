@@ -314,7 +314,7 @@
 
     <!-- inspect -->
     <h2 id="inspect"><code>savestate inspect</code></h2>
-    <p>Decrypt and summarize a snapshot without restoring it. Use this to browse history and confirm what a backup contains before running <code>savestate restore</code>. Requires <code>savestate init</code> and a passphrase.</p>
+    <p>Decrypt and summarize a snapshot without restoring it. Use this to browse history and confirm what a backup contains before running <code>savestate restore</code>. Requires a single non-empty snapshot id, <code>savestate init</code>, and a passphrase.</p>
     <pre><code><span class="code-prompt">$</span> savestate inspect &lt;snapshot-id&gt; [options]</code></pre>
 
     <table>
@@ -322,6 +322,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>&lt;snapshot-id&gt;</code></td><td>Snapshot to decrypt and summarize. Must be a single non-empty snapshot id (or <code>latest</code>).</td></tr>
         <tr><td><code>--json</code></td><td>Emit the snapshot summary as JSON. Decrypts the archive. When SaveState is not initialized, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>

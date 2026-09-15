@@ -126,7 +126,7 @@ import { inspectCommand } from './commands/inspect.js';
 
 program
   .command('inspect <snapshot-id>')
-  .description('Decrypt and summarize a snapshot without restoring it')
+  .description('Decrypt and summarize a snapshot without restoring it (single non-empty snapshot id)')
   .option('--json', 'Output as JSON')
   .action(inspectCommand);
 

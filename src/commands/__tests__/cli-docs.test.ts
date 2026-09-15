@@ -2696,6 +2696,13 @@ describe('CLI docs', () => {
     expect(inspect).toContain('formatInspectMissingJson(snapshotId)');
   });
 
+  it('documents inspect snapshot-id as a single snapshot id', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    expect(inspectSection).toContain('&lt;snapshot-id&gt;');
+    expect(inspectSection).toContain('Must be a single non-empty snapshot id');
+    expect(inspect).toContain('export function parseInspectId');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
