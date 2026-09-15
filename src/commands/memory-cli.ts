@@ -215,6 +215,24 @@ export function parseMemoryContent(value: string | undefined): string {
   return content;
 }
 
+/** Parse memory-id without decrypting archives for blank or comma-separated ids. */
+export function parseMemoryId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid memory id. Expected a single non-empty memory id.',
+    );
+  }
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid memory id "${value}". Expected a single non-empty memory id.`,
+    );
+  }
+
+  return id;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -256,17 +274,18 @@ export function registerMemoryCommands(program: Command): void {
 
   memory
     .command('promote <memory-id>')
-    .description('Promote a memory to a higher tier (faster access)')
+    .description('Promote a memory to a higher tier (faster access; single non-empty memory id)')
     .option('-t, --to <tier>', 'Target tier (L1 or L2)', 'L1')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await promoteMemoryCommand(storage, passphrase, memoryId, {
+        await promoteMemoryCommand(storage, passphrase, id, {
           to: parseMemoryPromoteTo(options.to),
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
@@ -280,17 +299,18 @@ export function registerMemoryCommands(program: Command): void {
 
   memory
     .command('demote <memory-id>')
-    .description('Demote a memory to a lower tier (archival)')
+    .description('Demote a memory to a lower tier (archival; single non-empty memory id)')
     .option('-t, --to <tier>', 'Target tier (L2 or L3)', 'L3')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await demoteMemoryCommand(storage, passphrase, memoryId, {
+        await demoteMemoryCommand(storage, passphrase, id, {
           to: parseMemoryDemoteTo(options.to),
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
@@ -304,16 +324,17 @@ export function registerMemoryCommands(program: Command): void {
 
   memory
     .command('pin <memory-id>')
-    .description('Pin a memory (prevents automatic demotion)')
+    .description('Pin a memory (prevents automatic demotion; single non-empty memory id)')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await pinMemoryCommand(storage, passphrase, memoryId, {
+        await pinMemoryCommand(storage, passphrase, id, {
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
         });
@@ -326,16 +347,17 @@ export function registerMemoryCommands(program: Command): void {
 
   memory
     .command('unpin <memory-id>')
-    .description('Unpin a memory (allows automatic demotion)')
+    .description('Unpin a memory (allows automatic demotion; single non-empty memory id)')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await unpinMemoryCommand(storage, passphrase, memoryId, {
+        await unpinMemoryCommand(storage, passphrase, id, {
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
         });
@@ -422,7 +444,7 @@ export function registerMemoryCommands(program: Command): void {
 
   memory
     .command('edit <memory-id>')
-    .description('Edit a memory\'s content or metadata')
+    .description('Edit a memory\'s content or metadata (single non-empty memory id)')
     .option('-c, --content <content>', 'New content for the memory (non-empty)')
     .option('-t, --tags <tags>', 'New tags (comma-separated non-empty tags)')
     .option('-i, --importance <n>', 'New importance score (0-1)')
@@ -431,11 +453,12 @@ export function registerMemoryCommands(program: Command): void {
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await editMemoryCommand(storage, passphrase, memoryId, {
+        await editMemoryCommand(storage, passphrase, id, {
           content: options.content === undefined ? undefined : parseMemoryContent(options.content),
           tags: parseMemoryTags(options.tags),
           importance: parseMemoryImportance(options.importance),
@@ -453,17 +476,18 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('delete <memory-id>')
     .alias('rm')
-    .description('Delete a memory (soft delete with audit trail)')
+    .description('Delete a memory (soft delete with audit trail; single non-empty memory id)')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .requiredOption('-r, --reason <reason>', 'Reason for deletion (non-empty)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await deleteMemoryCommand(storage, passphrase, memoryId, {
+        await deleteMemoryCommand(storage, passphrase, id, {
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           reason: parseMemoryReason(options.reason),
           format: options.json ? 'json' : 'pretty',
@@ -477,17 +501,18 @@ export function registerMemoryCommands(program: Command): void {
 
   memory
     .command('rollback <memory-id>')
-    .description('Rollback a memory to a previous version')
+    .description('Rollback a memory to a previous version (single non-empty memory id)')
     .requiredOption('-v, --version <n>', 'Version number to rollback to')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await rollbackMemoryCommand(storage, passphrase, memoryId, {
+        await rollbackMemoryCommand(storage, passphrase, id, {
           version: parseMemoryVersion(options.version),
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           format: options.json ? 'json' : 'pretty',
@@ -526,15 +551,16 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('log <memory-id>')
     .alias('history')
-    .description('Show audit history for a memory')
+    .description('Show audit history for a memory (single non-empty memory id)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
+        const id = parseMemoryId(memoryId);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await memoryLogCommand(storage, passphrase, memoryId, {
+        await memoryLogCommand(storage, passphrase, id, {
           format: options.json ? 'json' : 'table',
         });
       } catch (err) {
