@@ -985,7 +985,7 @@
 
     <!-- memory -->
     <h2 id="memory"><code>savestate memory</code></h2>
-    <p>Manage multi-tier memory (L1/L2/L3) for long-running agents. Subcommands: <code>list</code>, <code>promote</code>, <code>demote</code>, <code>pin</code>, <code>unpin</code>, <code>apply-policies</code>, <code>config</code>, <code>explain</code>, <code>edit</code>, <code>delete</code>, <code>rollback</code>, <code>expire</code>, and <code>log</code>. Requires <code>savestate init</code>. Prompts for the archive passphrase unless <code>SAVESTATE_PASSPHRASE</code> is set.</p>
+    <p>Manage multi-tier memory (L1/L2/L3) for long-running agents. Subcommands: <code>list</code>, <code>promote</code>, <code>demote</code>, <code>pin</code>, <code>unpin</code>, <code>apply-policies</code>, <code>config</code>, <code>explain</code>, <code>edit</code>, <code>delete</code>, <code>rollback</code>, <code>expire</code>, and <code>log</code>. <code>promote</code>, <code>demote</code>, <code>pin</code>, <code>unpin</code>, <code>edit</code>, <code>delete</code>, <code>rollback</code>, and <code>log</code> require a single non-empty memory id. Requires <code>savestate init</code>. Prompts for the archive passphrase unless <code>SAVESTATE_PASSPHRASE</code> is set.</p>
     <pre><code><span class="code-prompt">$</span> savestate memory &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -993,6 +993,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>&lt;memory-id&gt;</code></td><td>Memory to promote, demote, pin, unpin, edit, delete, rollback, or log. Must be a single non-empty memory id.</td></tr>
         <tr><td><code>-t, --tier &lt;tier&gt;</code></td><td>Filter <code>list</code> by tier (L1, L2, L3)</td></tr>
         <tr><td><code>-p, --pinned</code></td><td>Show only pinned memories on <code>list</code></td></tr>
         <tr><td><code>-l, --limit &lt;n&gt;</code></td><td>Maximum number of memories to show on <code>list</code> (default 20)</td></tr>
