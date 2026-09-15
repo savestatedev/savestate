@@ -1813,6 +1813,13 @@ describe('CLI docs', () => {
     expect(acl).toContain('export function parseAclVerifier');
   });
 
+  it('documents acl --proposer as a single proposer id', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('--proposer');
+    expect(aclSection).toContain('Must be a single non-empty proposer id');
+    expect(acl).toContain('export function parseAclProposer');
+  });
+
   it('documents acl propose --expires-in as a bounded positive integer', () => {
     const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
     expect(aclSection).toContain('--expires-in');

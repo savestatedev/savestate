@@ -176,6 +176,24 @@ export function parseAclId(value: string | undefined): string {
   return id;
 }
 
+/** Parse acl --proposer without treating blank or comma-separated values as a proposer id. */
+export function parseAclProposer(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --proposer value. Expected a single non-empty proposer id.',
+    );
+  }
+
+  const proposer = value.trim();
+  if (proposer.length === 0 || proposer.includes(',') || /\s/.test(proposer)) {
+    throw new Error(
+      `Invalid --proposer value "${value}". Expected a single non-empty proposer id.`,
+    );
+  }
+
+  return proposer;
+}
+
 /** Parse acl --verifier without treating blank or comma-separated values as a verifier id. */
 export function parseAclVerifier(value: string | undefined): string {
   if (value === undefined) {
@@ -213,7 +231,7 @@ async function aclPropose(options: {
       type: parseAclType(options.type),
       criticality: parseAclCriticality(options.criticality),
       description: options.description,
-      proposer: options.proposer,
+      proposer: parseAclProposer(options.proposer),
       expiresAt,
     });
 
@@ -321,7 +339,7 @@ export function registerACLCommands(program: Command) {
     .requiredOption('-t, --type <type>', 'Commitment type (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .requiredOption('-c, --criticality <level>', 'Criticality level (c1, c2, c3)')
     .requiredOption('-d, --description <text>', 'Description of the commitment')
-    .requiredOption('-p, --proposer <id>', 'ID of the proposing agent')
+    .requiredOption('-p, --proposer <id>', 'ID of the proposing agent (single non-empty id)')
     .option('-e, --expires-in <minutes>', 'Minutes until expiration')
     .option('--json', 'Output as JSON')
     .action(aclPropose);
