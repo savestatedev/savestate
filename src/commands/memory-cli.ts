@@ -197,6 +197,24 @@ export function parseMemoryReason(value: string | undefined): string {
   return reason;
 }
 
+/** Parse memory --content without writing blank memory text. */
+export function parseMemoryContent(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --content value. Expected non-empty memory content.',
+    );
+  }
+
+  const content = value.trim();
+  if (content.length === 0) {
+    throw new Error(
+      `Invalid --content value "${value}". Expected non-empty memory content.`,
+    );
+  }
+
+  return content;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -405,7 +423,7 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('edit <memory-id>')
     .description('Edit a memory\'s content or metadata')
-    .option('-c, --content <content>', 'New content for the memory')
+    .option('-c, --content <content>', 'New content for the memory (non-empty)')
     .option('-t, --tags <tags>', 'New tags (comma-separated non-empty tags)')
     .option('-i, --importance <n>', 'New importance score (0-1)')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
@@ -418,7 +436,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await editMemoryCommand(storage, passphrase, memoryId, {
-          content: options.content,
+          content: options.content === undefined ? undefined : parseMemoryContent(options.content),
           tags: parseMemoryTags(options.tags),
           importance: parseMemoryImportance(options.importance),
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',

@@ -1366,6 +1366,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryReason');
   });
 
+  it('documents memory --content as non-empty memory content', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--content');
+    expect(memorySection).toContain('Must be non-empty memory content');
+    expect(memoryCli).toContain('export function parseMemoryContent');
+  });
+
   it('documents memory promote --to as L1 or L2', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--to');
