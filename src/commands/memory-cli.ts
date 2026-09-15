@@ -179,6 +179,24 @@ export function parseMemoryNamespace(value: string | undefined): string | undefi
   return namespace;
 }
 
+/** Parse memory --reason without writing a blank audit reason. */
+export function parseMemoryReason(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --reason value. Expected a non-empty reason.',
+    );
+  }
+
+  const reason = value.trim();
+  if (reason.length === 0) {
+    throw new Error(
+      `Invalid --reason value "${value}". Expected a non-empty reason.`,
+    );
+  }
+
+  return reason;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -391,7 +409,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-t, --tags <tags>', 'New tags (comma-separated non-empty tags)')
     .option('-i, --importance <n>', 'New importance score (0-1)')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
-    .option('-r, --reason <reason>', 'Reason for the edit')
+    .option('-r, --reason <reason>', 'Reason for the edit (non-empty)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -404,7 +422,7 @@ export function registerMemoryCommands(program: Command): void {
           tags: parseMemoryTags(options.tags),
           importance: parseMemoryImportance(options.importance),
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
-          reason: options.reason,
+          reason: options.reason === undefined ? undefined : parseMemoryReason(options.reason),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
@@ -419,7 +437,7 @@ export function registerMemoryCommands(program: Command): void {
     .alias('rm')
     .description('Delete a memory (soft delete with audit trail)')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
-    .requiredOption('-r, --reason <reason>', 'Reason for deletion (required)')
+    .requiredOption('-r, --reason <reason>', 'Reason for deletion (non-empty)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -429,7 +447,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await deleteMemoryCommand(storage, passphrase, memoryId, {
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
-          reason: options.reason,
+          reason: parseMemoryReason(options.reason),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
