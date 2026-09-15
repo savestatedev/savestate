@@ -48,6 +48,20 @@ export function parseTrustReason(value: string | undefined): string | undefined 
   return reason;
 }
 
+/** Parse trust deny --by without writing a blank denylist actor. */
+export function parseTrustBy(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const actor = value.trim();
+  if (actor.length === 0 || actor.includes(',') || /\s/.test(actor)) {
+    throw new Error(
+      `Invalid --by value "${value}". Expected a single non-empty actor id.`,
+    );
+  }
+
+  return actor;
+}
+
 interface DenyAddOptions {
   reason?: string;
   by?: string;
@@ -314,7 +328,7 @@ export async function trustDenyAddCommand(
 ): Promise<void> {
   const store = new TrustStore();
   const reason = parseTrustReason(options.reason) ?? 'no reason given';
-  const addedBy = options.by ?? 'cli';
+  const addedBy = parseTrustBy(options.by) ?? 'cli';
   store.addToDenylist(pattern, reason, addedBy);
   store.close();
 

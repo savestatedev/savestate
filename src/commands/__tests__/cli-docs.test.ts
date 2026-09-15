@@ -665,6 +665,13 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustReason');
   });
 
+  it('documents trust --by as a single actor id', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--by');
+    expect(trustSection).toContain('Must be a single non-empty actor id');
+    expect(trust).toContain('export function parseTrustBy');
+  });
+
   it('registers --json on savestate trust deny add', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const addBlock = trustBlock.slice(
