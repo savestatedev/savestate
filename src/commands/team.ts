@@ -31,6 +31,24 @@ export function parseTeamInviteRole(value: string | undefined): TeamInviteRole {
   );
 }
 
+/** Parse team invite email without sending a blank or comma-separated address. */
+export function parseTeamInviteEmail(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid email. Expected a single non-empty email address.',
+    );
+  }
+
+  const email = value.trim();
+  if (email.length === 0 || email.includes(',') || /\s/.test(email) || !email.includes('@')) {
+    throw new Error(
+      `Invalid email "${value}". Expected a single non-empty email address.`,
+    );
+  }
+
+  return email;
+}
+
 const TEAM_AUDIT_FORMATS = ['csv', 'json'] as const;
 type TeamAuditFormat = (typeof TEAM_AUDIT_FORMATS)[number];
 const TEAM_AUDIT_FORMAT_LIST = TEAM_AUDIT_FORMATS.join(', ');
@@ -402,11 +420,8 @@ export async function teamMembersCommand(options: TeamCommandOptions = {}): Prom
   console.log();
 }
 
-export async function teamInviteCommand(email: string, options: TeamCommandOptions = {}): Promise<void> {
-  if (!email || !email.includes('@')) {
-    console.log(chalk.red('✗ Provide a valid email: savestate team invite user@example.com'));
-    process.exit(1);
-  }
+export async function teamInviteCommand(rawEmail: string, options: TeamCommandOptions = {}): Promise<void> {
+  const email = parseTeamInviteEmail(rawEmail);
   const role = parseTeamInviteRole(options.role);
 
   const result = await apiRequest('POST', '/team/members', { email, role });
