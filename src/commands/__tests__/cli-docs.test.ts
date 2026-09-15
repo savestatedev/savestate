@@ -2899,6 +2899,13 @@ describe('CLI docs', () => {
     expect(configSection).toContain('savestate config --json');
   });
 
+  it('documents config --set as a non-empty key=value pair', () => {
+    const configSection = docs.slice(docs.indexOf('id="config"'), docs.indexOf('id="adapters"'));
+    expect(configSection).toContain('--set');
+    expect(configSection).toContain('Must be a non-empty key=value pair');
+    expect(configSource).toContain('export function parseConfigSet');
+  });
+
   it('documents config --json when missing', () => {
     const configSection = docs.slice(docs.indexOf('id="config"'), docs.indexOf('id="adapters"'));
     expect(configSection).toContain('--json');
