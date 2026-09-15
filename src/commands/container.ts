@@ -219,6 +219,20 @@ export function parseContainerAgent(value: string | undefined): string {
   return agent;
 }
 
+/** Parse import --target without treating blank or comma-separated values as a path. */
+export function parseContainerTarget(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const target = value.trim();
+  if (target.length === 0 || target.includes(',') || /\s/.test(target)) {
+    throw new Error(
+      `Invalid --target value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return target;
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -998,6 +1012,7 @@ export interface ImportResult {
 export async function importState(options: RestoreOptions): Promise<ImportResult | undefined> {
   try {
     const { in: inFile, passphrase, keyfile } = options;
+    let { target } = options;
 
     if (typeof inFile !== 'string' || inFile.trim() === '') {
       console.error(`Error: Input path must not be empty: ${JSON.stringify(inFile)}.`);
@@ -1020,31 +1035,37 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       excluded = parsed.components;
     }
 
-    if (options.target !== undefined) {
-      if (typeof options.target !== 'string' || options.target.trim() === '') {
-        console.error(`Error: Target path must not be empty: ${JSON.stringify(options.target)}.`);
+    if (target !== undefined) {
+      if (typeof target !== 'string' || target.trim() === '') {
+        console.error(`Error: Target path must not be empty: ${JSON.stringify(target)}.`);
         return undefined;
       }
       try {
-        const targetStats = await fs.stat(options.target);
+        target = parseContainerTarget(target) ?? target;
+      } catch (error: any) {
+        console.error(`Error: ${error.message}`);
+        return undefined;
+      }
+      try {
+        const targetStats = await fs.stat(target);
         if (targetStats.isFile()) {
-          console.error(`Error: Target path is a file: ${options.target}`);
+          console.error(`Error: Target path is a file: ${target}`);
           return undefined;
         }
       } catch {
         try {
-          const parentStats = await fs.stat(dirname(options.target));
+          const parentStats = await fs.stat(dirname(target));
           if (!parentStats.isDirectory()) {
-            console.error(`Error: Target directory is a file: ${dirname(options.target)}`);
+            console.error(`Error: Target directory is a file: ${dirname(target)}`);
             return undefined;
           }
         } catch {
-          console.error(`Error: Target directory not found: ${dirname(options.target)}`);
+          console.error(`Error: Target directory not found: ${dirname(target)}`);
           return undefined;
         }
       }
       if (!options.dryRun) {
-        const targetFile = join(resolve(options.target), TARGET_STATE_FILE);
+        const targetFile = join(resolve(target), TARGET_STATE_FILE);
         try {
           const destStats = await fs.stat(targetFile);
           if (destStats.isFile() && !options.force) {
@@ -1273,8 +1294,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.error(formatImportExcluded(excludedComponents));
       }
       console.error(formatImportInput(inFile));
-      if (options.target) {
-        console.error(formatImportTarget(join(resolve(options.target), TARGET_STATE_FILE)));
+      if (target) {
+        console.error(formatImportTarget(join(resolve(target), TARGET_STATE_FILE)));
       }
       return undefined;
     }
@@ -1360,8 +1381,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.error(formatImportExcluded(excludedComponents));
       }
       console.error(formatImportInput(inFile));
-      if (options.target) {
-        console.error(formatImportTarget(join(resolve(options.target), TARGET_STATE_FILE)));
+      if (target) {
+        console.error(formatImportTarget(join(resolve(target), TARGET_STATE_FILE)));
       }
       process.exit(1);
     }
@@ -1432,8 +1453,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
         console.error(formatImportExcluded(excludedComponents));
       }
       console.error(formatImportInput(inFile));
-      if (options.target) {
-        console.error(formatImportTarget(join(resolve(options.target), TARGET_STATE_FILE)));
+      if (target) {
+        console.error(formatImportTarget(join(resolve(target), TARGET_STATE_FILE)));
       }
       process.exit(1);
     }
@@ -1539,8 +1560,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     };
 
     if (options.dryRun) {
-      if (options.target) {
-        result.target = join(resolve(options.target), TARGET_STATE_FILE);
+      if (target) {
+        result.target = join(resolve(target), TARGET_STATE_FILE);
       }
       if (emitImportResult()) {
         return result;
@@ -1582,8 +1603,8 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     }
 
     let targetPath: string | undefined;
-    if (options.target) {
-      targetPath = await writeTargetState(options.target, stateText);
+    if (target) {
+      targetPath = await writeTargetState(target, stateText);
       result.target = targetPath;
       if (!options.json) {
         console.log(`Wrote agent state to ${targetPath}`);
@@ -1691,7 +1712,7 @@ export function registerContainerCommands(program: Command) {
     .option('--merge', 'Merge with existing state (default: replace)')
     .option('--replace', 'Replace existing state completely')
     .option('--dry-run', 'Show what would be imported without restoring')
-    .option('--target <dir>', 'Write restored agent state to this directory')
+    .option('--target <dir>', 'Write restored agent state to this directory (single non-empty path)')
     .option('--force', 'Overwrite an existing target file')
     .option('--json', 'Output as JSON')
     .action(async (file, opts) => {
@@ -1767,7 +1788,7 @@ export function registerContainerCommands(program: Command) {
     .option('--merge', 'Merge with existing state')
     .option('--replace', 'Replace existing state (default)')
     .option('--dry-run', 'Show what would be imported without restoring')
-    .option('--target <dir>', 'Write restored agent state to this directory')
+    .option('--target <dir>', 'Write restored agent state to this directory (single non-empty path)')
     .option('--force', 'Overwrite an existing target file')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {

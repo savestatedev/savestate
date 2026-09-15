@@ -499,7 +499,7 @@
         <tr><td><code>--dry-run</code></td><td>Decrypt and print import metadata without restoring. An existing target file can still be previewed without <code>--force</code>.</td></tr>
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase for decryption, or <code>SAVESTATE_PASSPHRASE</code> / prompt. An empty value is rejected before decrypting.</td></tr>
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. An empty path, missing file, directory, or file with no contents is rejected before decrypting.</td></tr>
-        <tr><td><code>--target &lt;dir&gt;</code></td><td>Write restored agent state to this directory. A missing parent directory is rejected before restoring.</td></tr>
+        <tr><td><code>--target &lt;dir&gt;</code></td><td>Write restored agent state to this directory. Must be a single non-empty path. A missing parent directory is rejected before restoring.</td></tr>
         <tr><td><code>--force</code></td><td>Overwrite an existing target file</td></tr>
         <tr><td><code>--include &lt;paths&gt;</code></td><td>Only restore named state paths</td></tr>
         <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths while restoring</td></tr>
