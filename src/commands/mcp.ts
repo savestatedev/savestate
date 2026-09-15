@@ -107,6 +107,20 @@ export function parseMcpAgent(value: string | undefined): string | undefined {
   return agent;
 }
 
+/** Parse mcp export --output without treating blank or comma-separated values as a path. */
+export function parseMcpOutput(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const output = value.trim();
+  if (output.length === 0 || output.includes(',') || /\s/.test(output)) {
+    throw new Error(
+      `Invalid --output value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return output;
+}
+
 interface MCPServeOptions {
   port?: string;
   stdio?: boolean;
@@ -394,17 +408,18 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
 
   try {
     const agentId = parseMcpAgent(options.agent) ?? 'default';
+    const output = parseMcpOutput(options.output);
 
     if (!isInitialized()) {
       if (options.json) {
-        console.log(formatMcpExportMissingJson(agentId, options.output ?? ''));
+        console.log(formatMcpExportMissingJson(agentId, output ?? ''));
         return;
       }
       spinner?.fail('SaveState not initialized');
       console.error(chalk.red('Run `savestate init` first.'));
       process.exit(1);
     }
-    const outputPath = options.output ?? `passport-${agentId}-${Date.now()}.json`;
+    const outputPath = output ?? `passport-${agentId}-${Date.now()}.json`;
 
     // Create namespace for the agent
     const namespace: Namespace = {
@@ -630,7 +645,7 @@ export function registerMCPCommands(program: Command): void {
     .command('export')
     .description('Export memory passport for cross-platform transfer')
     .option('-a, --agent <id>', 'Agent ID to export (single non-empty id, default: "default")')
-    .option('-o, --output <path>', 'Output file path (default: passport-{agent}-{timestamp}.json)')
+    .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
     .option('--json', 'Output as JSON')
     .action(mcpExportCommand);
