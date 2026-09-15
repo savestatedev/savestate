@@ -363,7 +363,7 @@
 
     <!-- search -->
     <h2 id="search"><code>savestate search</code></h2>
-    <p>Search across all snapshots without restoring them. Find that conversation from months ago. Searches memory entries, conversations, identity files, and knowledge documents. Returns results ranked by relevance with context snippets. Requires <code>savestate init</code> and a passphrase.</p>
+    <p>Search across all snapshots without restoring them. Find that conversation from months ago. Searches memory entries, conversations, identity files, and knowledge documents. Returns results ranked by relevance with context snippets. Requires a non-empty query, <code>savestate init</code>, and a passphrase.</p>
     <pre><code><span class="code-prompt">$</span> savestate search &lt;query&gt; [options]</code></pre>
 
     <table>
@@ -371,6 +371,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>&lt;query&gt;</code></td><td>Search text. Must be a non-empty query.</td></tr>
         <tr><td><code>--type &lt;type&gt;</code></td><td>Filter by type: <code>memory</code>, <code>conversation</code>, <code>identity</code>, or <code>knowledge</code> (comma-separated)</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20). Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>

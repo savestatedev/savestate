@@ -95,7 +95,26 @@ export function parseSearchSnapshot(value: string | undefined): string | undefin
   return snapshot;
 }
 
-export async function searchCommand(query: string, options: SearchOptions): Promise<void> {
+/** Parse search query without decrypting archives for blank input. */
+export function parseSearchQuery(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid search query. Expected a non-empty query.',
+    );
+  }
+
+  const query = value.trim();
+  if (query.length === 0) {
+    throw new Error(
+      `Invalid search query "${value}". Expected a non-empty query.`,
+    );
+  }
+
+  return query;
+}
+
+export async function searchCommand(rawQuery: string, options: SearchOptions): Promise<void> {
+  const query = parseSearchQuery(rawQuery);
   const snapshotId = parseSearchSnapshot(options.snapshot);
 
   if (!options.json) {

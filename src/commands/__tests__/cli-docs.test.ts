@@ -2966,6 +2966,13 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchLimit');
   });
 
+  it('documents search query as non-empty', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('&lt;query&gt;');
+    expect(searchSection).toContain('Must be a non-empty query');
+    expect(search).toContain('export function parseSearchQuery');
+  });
+
   it('registers --json on savestate config', () => {
     const configBlock = cli.slice(cli.indexOf("command('config')"), cli.indexOf("command('adapters')"));
     expect(configBlock).toContain(".option('--json'");
