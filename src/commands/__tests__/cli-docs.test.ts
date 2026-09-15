@@ -2912,6 +2912,13 @@ describe('CLI docs', () => {
     expect(snapshot).toContain('export function parseSnapshotTag');
   });
 
+  it('documents snapshot --meta as key=value with a non-empty key and value', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    expect(snapshotSection).toContain('--meta');
+    expect(snapshotSection).toContain('Must be key=value with a non-empty key and value');
+    expect(snapshot).toContain('export function parseSnapshotMeta');
+  });
+
   it('registers --json on savestate search', () => {
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
     expect(searchBlock).toContain(".option('--json'");
