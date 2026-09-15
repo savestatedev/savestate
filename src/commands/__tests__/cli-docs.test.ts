@@ -1752,6 +1752,13 @@ describe('CLI docs', () => {
     expect(slo).toContain('export function parseSloNamespace');
   });
 
+  it('documents slo --set as a non-empty key=value pair', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('--set');
+    expect(sloSection).toContain('Must be a non-empty key=value pair');
+    expect(slo).toContain('export function parseSloSet');
+  });
+
   it('registers --json on savestate slo', () => {
     const sloBlock = slo.slice(slo.indexOf("command('slo"));
     expect(sloBlock).toContain(".option('--json'");
