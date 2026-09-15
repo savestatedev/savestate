@@ -469,7 +469,7 @@
         <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths from the packed set</td></tr>
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase for encryption, or <code>SAVESTATE_PASSPHRASE</code> / prompt. An empty value is rejected before encrypting.</td></tr>
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. An empty path, missing file, directory, or file with no contents is rejected before encrypting.</td></tr>
-        <tr><td><code>--description &lt;text&gt;</code></td><td>Optional human-readable description stored in the manifest</td></tr>
+        <tr><td><code>--description &lt;text&gt;</code></td><td>Optional human-readable description stored in the manifest. Must be a non-empty description.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the export result as JSON. Encrypts the archive. Skips progress output. When the output directory is missing, emits a missing summary (found, output, written, agent; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -1268,7 +1268,7 @@
         <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths</td></tr>
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase, or <code>SAVESTATE_PASSPHRASE</code> / prompt</td></tr>
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase</td></tr>
-        <tr><td><code>--description &lt;text&gt;</code></td><td>Optional manifest description on <code>export</code></td></tr>
+        <tr><td><code>--description &lt;text&gt;</code></td><td>Optional manifest description on <code>export</code>. Must be a non-empty description.</td></tr>
         <tr><td><code>--target &lt;dir&gt;</code></td><td>Write restored agent state to this directory on <code>import</code></td></tr>
         <tr><td><code>--merge</code></td><td>Merge with existing state on <code>import</code> (default: replace)</td></tr>
         <tr><td><code>--replace</code></td><td>Replace existing state on <code>import</code></td></tr>

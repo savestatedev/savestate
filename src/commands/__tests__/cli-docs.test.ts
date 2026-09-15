@@ -199,6 +199,13 @@ describe('CLI docs', () => {
     expect(container).toContain('export function formatExportMissingJson');
   });
 
+  it('documents export --description as a non-empty description', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    expect(exportSection).toContain('--description');
+    expect(exportSection).toContain('Must be a non-empty description');
+    expect(container).toContain('export function parseContainerDescription');
+  });
+
   it('documents import --target, --force, and missing parent rejection', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--target');
