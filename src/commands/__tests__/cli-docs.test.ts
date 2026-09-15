@@ -1270,6 +1270,13 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextAgent');
   });
 
+  it('documents context --task as a non-empty task intent', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('--task');
+    expect(contextSection).toContain('Must be a non-empty task intent');
+    expect(context).toContain('export function parseContextTask');
+  });
+
   it('registers --json on savestate context compile', () => {
     const compileBlock = context.slice(context.indexOf("command('compile')"), context.indexOf("command('explain"));
     expect(compileBlock).toContain(".option('--json'");
