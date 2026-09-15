@@ -2041,6 +2041,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityUser');
   });
 
+  it('documents integrity --reason as a non-empty reason', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--reason');
+    expect(integritySection).toContain('Must be a non-empty reason');
+    expect(integrity).toContain('export function parseIntegrityReason');
+  });
+
   it('registers --json on savestate integrity', () => {
     const integrityBlock = integrity.slice(integrity.indexOf("command('integrity [subcommand] [args...]')"));
     expect(integrityBlock).toContain(".option('--json'");
