@@ -85,11 +85,32 @@ export function formatDiffMissingJson(snapshotA: string, snapshotB: string): str
   );
 }
 
+/** Parse a diff snapshot id without decrypting archives for blank or comma-separated ids. */
+export function parseDiffId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid snapshot id. Expected a single non-empty snapshot id.',
+    );
+  }
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid snapshot id "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return id;
+}
+
 export async function diffCommand(
-  snapshotA: string,
-  snapshotB: string,
+  rawSnapshotA: string,
+  rawSnapshotB: string,
   options?: DiffOptions,
 ): Promise<void> {
+  const snapshotA = parseDiffId(rawSnapshotA);
+  const snapshotB = parseDiffId(rawSnapshotB);
+
   if (!options?.json) {
     console.log();
   }

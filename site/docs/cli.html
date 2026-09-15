@@ -341,7 +341,7 @@
 
     <!-- diff -->
     <h2 id="diff"><code>savestate diff</code></h2>
-    <p>Compare two snapshots and see what changed across identity, memory, conversations, and tools. Requires <code>savestate init</code> and a passphrase. Decrypts both archives.</p>
+    <p>Compare two snapshots and see what changed across identity, memory, conversations, and tools. Requires two single non-empty snapshot ids, <code>savestate init</code>, and a passphrase. Decrypts both archives.</p>
     <pre><code><span class="code-prompt">$</span> savestate diff &lt;snapshot-a&gt; &lt;snapshot-b&gt; [options]</code></pre>
 
     <table>
@@ -349,6 +349,8 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>&lt;snapshot-a&gt;</code></td><td>First snapshot to compare. Must be a single non-empty snapshot id.</td></tr>
+        <tr><td><code>&lt;snapshot-b&gt;</code></td><td>Second snapshot to compare. Must be a single non-empty snapshot id.</td></tr>
         <tr><td><code>--json</code></td><td>Emit identity and state diffs as JSON. Decrypts both archives. When SaveState is not initialized, emits a missing summary (found, snapshotA, snapshotB, hasChanges; omits extra fields). When a snapshot is missing, emits a missing summary (found, snapshotA, snapshotB, hasChanges; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
