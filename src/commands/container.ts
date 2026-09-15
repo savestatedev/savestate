@@ -247,6 +247,20 @@ export function parseContainerInput(value: string | undefined): string | undefin
   return input;
 }
 
+/** Parse container export --out without treating blank or comma-separated values as a path. */
+export function parseContainerOut(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const output = value.trim();
+  if (output.length === 0 || output.includes(',') || /\s/.test(output)) {
+    throw new Error(
+      `Invalid --out value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return output;
+}
+
 /** Parse import --target without treating blank or comma-separated values as a path. */
 export function parseContainerTarget(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -1804,7 +1818,7 @@ export function registerContainerCommands(program: Command) {
     .command('export')
     .description('Export agent state to an encrypted file with optional path selection. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
-    .requiredOption('-o, --out <file>', 'Output file path (.savestate)')
+    .requiredOption('-o, --out <file>', 'Output file path (.savestate, single non-empty path)')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
@@ -1818,6 +1832,12 @@ export function registerContainerCommands(program: Command) {
     .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
+      try {
+        opts.out = parseContainerOut(opts.out) ?? opts.out;
+      } catch (error: any) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+      }
       const result = await exportState({
         agent: opts.agent,
         out: opts.out,
