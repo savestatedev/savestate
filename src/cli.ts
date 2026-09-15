@@ -209,7 +209,7 @@ program
 program
   .command('config')
   .description('View/edit SaveState configuration')
-  .option('--set <key=value>', 'Set a config value')
+  .option('--set <key=value>', 'Set a config value (non-empty key=value)')
   .option('--json', 'Output as JSON')
   .action(configCommand);
 

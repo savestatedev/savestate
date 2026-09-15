@@ -50,6 +50,34 @@ export function formatConfigMissingJson(): string {
   );
 }
 
+export interface ConfigSetAssignment {
+  path: string;
+  value: string;
+}
+
+/** Parse config --set without treating blank or malformed pairs as updates. */
+export function parseConfigSet(value: string | undefined): ConfigSetAssignment | undefined {
+  if (value === undefined) return undefined;
+
+  const trimmed = value.trim();
+  const eq = trimmed.indexOf('=');
+  if (eq <= 0 || eq === trimmed.length - 1) {
+    throw new Error(
+      `Invalid --set value "${value}". Expected a non-empty key=value pair.`,
+    );
+  }
+
+  const path = trimmed.slice(0, eq).trim();
+  const parsedValue = trimmed.slice(eq + 1).trim();
+  if (path.length === 0 || parsedValue.length === 0) {
+    throw new Error(
+      `Invalid --set value "${value}". Expected a non-empty key=value pair.`,
+    );
+  }
+
+  return { path, value: parsedValue };
+}
+
 /**
  * Set a deeply nested property on an object using dot-notation path.
  * Auto-creates intermediate objects as needed.
@@ -95,22 +123,12 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
   const config = await loadConfig();
   const configPath = localConfigPath();
 
-  if (options.set) {
-    const eqIndex = options.set.indexOf('=');
-    if (eqIndex === -1) {
-      console.log(chalk.red('  ✗ Invalid format. Use: --set key=value'));
-      console.log(chalk.dim('    Example: savestate config --set storage.type=s3'));
-      console.log();
-      process.exit(1);
-    }
-
-    const key = options.set.slice(0, eqIndex);
-    const value = options.set.slice(eqIndex + 1);
-
-    setNestedValue(config as unknown as Record<string, unknown>, key, value);
+  const assignment = parseConfigSet(options.set);
+  if (assignment) {
+    setNestedValue(config as unknown as Record<string, unknown>, assignment.path, assignment.value);
     await saveConfig(config);
 
-    console.log(chalk.green(`  ✓ Set ${chalk.bold(key)} = ${chalk.bold(value)}`));
+    console.log(chalk.green(`  ✓ Set ${chalk.bold(assignment.path)} = ${chalk.bold(assignment.value)}`));
     console.log(chalk.dim(`    ${configPath}`));
     console.log();
     return;
