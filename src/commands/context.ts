@@ -228,6 +228,24 @@ export function parseContextAgent(value: string | undefined): string | undefined
   return agent;
 }
 
+/** Parse context --task without compiling a blank intent. */
+export function parseContextTask(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --task value. Expected a non-empty task intent.',
+    );
+  }
+
+  const task = value.trim();
+  if (task.length === 0) {
+    throw new Error(
+      `Invalid --task value "${value}". Expected a non-empty task intent.`,
+    );
+  }
+
+  return task;
+}
+
 export function registerContextCommands(program: Command): void {
   const context = program
     .command('context')
@@ -238,16 +256,17 @@ export function registerContextCommands(program: Command): void {
     .command('compile')
     .description('Compile context for an agent run')
     .requiredOption('-a, --agent <id>', 'Agent ID (single non-empty id)')
-    .requiredOption('-t, --task <intent>', 'Task intent/description')
+    .requiredOption('-t, --task <intent>', 'Task intent/description (non-empty)')
     .option('-b, --budget <tokens>', 'Token budget', '4000')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       const compiler = new ContextCompiler();
       const agentId = parseContextAgent(options.agent);
-      
+      const task = parseContextTask(options.task);
+
       const request: CompileRequest = {
         agent_id: agentId ?? options.agent,
-        task: { intent: options.task },
+        task: { intent: task },
         token_budget: parseContextBudget(options.budget),
       };
       
@@ -257,7 +276,7 @@ export function registerContextCommands(program: Command): void {
 
       if (!options.json) {
         console.log(`Compiling context for agent "${agentId}"...`);
-        console.log(`Task: ${options.task}`);
+        console.log(`Task: ${task}`);
         console.log(`Budget: ${options.budget} tokens`);
         console.log('');
       }
