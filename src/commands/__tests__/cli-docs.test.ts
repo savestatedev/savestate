@@ -1168,6 +1168,13 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function parseMcpOutput');
   });
 
+  it('documents mcp --input as a single path', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--input');
+    expect(mcpSection).toContain('Must be a single non-empty path');
+    expect(mcp).toContain('export function parseMcpInput');
+  });
+
   it('registers --json on savestate mcp status', () => {
     const statusBlock = mcp.slice(mcp.indexOf("command('status')"), mcp.indexOf("command('export')"));
     expect(statusBlock).toContain(".option('--json'");
@@ -1260,7 +1267,7 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function formatMcpImportMissingJson');
     expect(importBlock).toContain('if (!isInitialized())');
     expect(importBlock).toContain('if (options.json)');
-    expect(importBlock).toContain("formatMcpImportMissingJson(options.input ?? '')");
+    expect(importBlock).toContain("formatMcpImportMissingJson(input ?? '')");
   });
 
   it('lists savestate context in the command overview', () => {

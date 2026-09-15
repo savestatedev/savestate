@@ -121,6 +121,20 @@ export function parseMcpOutput(value: string | undefined): string | undefined {
   return output;
 }
 
+/** Parse mcp import --input without treating blank or comma-separated values as a path. */
+export function parseMcpInput(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const input = value.trim();
+  if (input.length === 0 || input.includes(',') || /\s/.test(input)) {
+    throw new Error(
+      `Invalid --input value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return input;
+}
+
 interface MCPServeOptions {
   port?: string;
   stdio?: boolean;
@@ -518,10 +532,11 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
 
   try {
     const agentId = parseMcpAgent(options.agent);
+    const input = parseMcpInput(options.input);
 
     if (!isInitialized()) {
       if (options.json) {
-        console.log(formatMcpImportMissingJson(options.input ?? ''));
+        console.log(formatMcpImportMissingJson(input ?? ''));
         return;
       }
       spinner?.fail('SaveState not initialized');
@@ -529,7 +544,7 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
       process.exit(1);
     }
 
-    const inputPath = options.input;
+    const inputPath = input ?? '';
 
     if (!existsSync(inputPath)) {
       if (options.json) {
@@ -654,7 +669,7 @@ export function registerMCPCommands(program: Command): void {
   mcp
     .command('import')
     .description('Import memory passport from another platform')
-    .requiredOption('-i, --input <path>', 'Passport file to import')
+    .requiredOption('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('-a, --agent <id>', 'Target agent ID (single non-empty id, default: source agent ID)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
