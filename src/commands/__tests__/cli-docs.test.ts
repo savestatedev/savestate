@@ -977,6 +977,13 @@ describe('CLI docs', () => {
     expect(login).toContain('export function formatLogoutMissingJson');
   });
 
+  it('documents login --key as a single API key', () => {
+    const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
+    expect(loginSection).toContain('--key');
+    expect(loginSection).toContain('Must be a single non-empty API key');
+    expect(login).toContain('export function parseLoginKey');
+  });
+
   it('documents login --key, ss_live_ keys, and logout removing the saved key', () => {
     const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
     expect(loginSection).toContain('--key');
