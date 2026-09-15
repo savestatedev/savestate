@@ -246,6 +246,20 @@ export function parseContextTask(value: string | undefined): string {
   return task;
 }
 
+/** Parse context validate --file without treating blank or comma-separated values as a path. */
+export function parseContextFile(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const file = value.trim();
+  if (file.length === 0 || file.includes(',') || /\s/.test(file)) {
+    throw new Error(
+      `Invalid --file value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return file;
+}
+
 export function registerContextCommands(program: Command): void {
   const context = program
     .command('context')
@@ -351,10 +365,10 @@ export function registerContextCommands(program: Command): void {
   context
     .command('validate')
     .description('Validate a RunBrief')
-    .option('-f, --file <path>', 'Path to RunBrief JSON file')
+    .option('-f, --file <path>', 'Path to RunBrief JSON file (single non-empty path)')
     .option('--json', 'Output as JSON')
     .action((options) => {
-      const filePath = options.file as string | undefined;
+      const filePath = parseContextFile(options.file);
       if (!filePath) {
         console.error('Validation requires a RunBrief file (--file)');
         console.error('Usage: savestate context validate --file brief.json');
