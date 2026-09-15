@@ -13,6 +13,20 @@ interface LoginOptions {
   json?: boolean;
 }
 
+/** Parse login --key without treating blank or comma-separated values as an API key. */
+export function parseLoginKey(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const key = value.trim();
+  if (key.length === 0 || key.includes(',') || /\s/.test(key)) {
+    throw new Error(
+      `Invalid --key value "${value}". Expected a single non-empty API key.`,
+    );
+  }
+
+  return key;
+}
+
 export interface LoginResult {
   authenticated: boolean;
   email: string;
@@ -69,7 +83,7 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
     process.exit(1);
   }
 
-  let apiKey = options.key;
+  let apiKey = parseLoginKey(options.key);
 
   // If no key provided, prompt for it
   if (!apiKey) {
