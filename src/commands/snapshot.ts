@@ -176,6 +176,23 @@ export function parseSnapshotTag(value: string | undefined): StateEventInput | u
   };
 }
 
+/** Parse snapshot --meta without silently dropping blank or malformed key=value entries. */
+export function parseSnapshotMeta(value: string | undefined): { key: string; value: string } | undefined {
+  if (value === undefined) return undefined;
+
+  const parsed = parseMetaString(value.trim());
+  const key = parsed?.key.trim() ?? '';
+  const metaValue = parsed?.value.trim() ?? '';
+
+  if (!parsed || key.length === 0 || metaValue.length === 0) {
+    throw new Error(
+      `Invalid --meta value "${value}". Expected key=value with a non-empty key and value.`,
+    );
+  }
+
+  return { key, value: metaValue };
+}
+
 export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   const label = parseSnapshotLabel(options.label);
   const adapterId = parseSnapshotAdapter(options.adapter);
@@ -254,7 +271,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
       const globalMeta: Record<string, unknown> = {};
       if (options.meta && options.meta.length > 0) {
         for (const metaStr of options.meta) {
-          const parsed = parseMetaString(metaStr);
+          const parsed = parseSnapshotMeta(metaStr);
           if (parsed) {
             globalMeta[parsed.key] = parsed.value;
           }
