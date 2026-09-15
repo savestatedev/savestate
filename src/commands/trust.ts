@@ -34,6 +34,20 @@ export function parseTrustAuditLimit(value: string | undefined): number {
   return limit;
 }
 
+/** Parse trust deny --reason without writing a blank denylist reason. */
+export function parseTrustReason(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const reason = value.trim();
+  if (reason.length === 0) {
+    throw new Error(
+      `Invalid --reason value "${value}". Expected a non-empty reason.`,
+    );
+  }
+
+  return reason;
+}
+
 interface DenyAddOptions {
   reason?: string;
   by?: string;
@@ -299,7 +313,7 @@ export async function trustDenyAddCommand(
   options: DenyAddOptions,
 ): Promise<void> {
   const store = new TrustStore();
-  const reason = options.reason ?? 'no reason given';
+  const reason = parseTrustReason(options.reason) ?? 'no reason given';
   const addedBy = options.by ?? 'cli';
   store.addToDenylist(pattern, reason, addedBy);
   store.close();

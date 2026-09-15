@@ -658,6 +658,13 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustAuditLimit');
   });
 
+  it('documents trust --reason as a non-empty reason', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('--reason');
+    expect(trustSection).toContain('Must be a non-empty reason');
+    expect(trust).toContain('export function parseTrustReason');
+  });
+
   it('registers --json on savestate trust deny add', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const addBlock = trustBlock.slice(
