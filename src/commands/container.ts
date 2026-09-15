@@ -201,6 +201,24 @@ export function listExcludedPaths(raw?: string): string[] {
     .filter((part) => part.length > 0);
 }
 
+/** Parse container/export --agent without treating blank or comma-separated ids as an agent. */
+export function parseContainerAgent(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid --agent value. Expected a single non-empty agent id.',
+    );
+  }
+
+  const agent = value.trim();
+  if (agent.length === 0 || agent.includes(',') || /\s/.test(agent)) {
+    throw new Error(
+      `Invalid --agent value "${value}". Expected a single non-empty agent id.`,
+    );
+  }
+
+  return agent;
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -695,10 +713,12 @@ export function reportContainerProgress(phase: string, bytes?: number): string {
 
 export async function exportState(options: ExportOptions): Promise<ExportResult> {
   try {
-    const { agent, out, passphrase, keyfile, description } = options;
-
-    if (typeof agent !== 'string' || agent.trim() === '') {
-      console.error('Error: Agent id must not be empty.');
+    const { out, passphrase, keyfile, description } = options;
+    let agent: string;
+    try {
+      agent = parseContainerAgent(options.agent);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
       return { written: false, out, overwritten: false };
     }
 
@@ -1623,7 +1643,7 @@ export function registerContainerCommands(program: Command) {
   program
     .command('export')
     .description('Export agent state to an encrypted .savestate file with optional path selection. Prints byte-size progress.')
-    .requiredOption('-a, --agent <id>', 'ID of the agent to export')
+    .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
     .option('-o, --output <file>', 'Output file path', 'agent.savestate')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
@@ -1700,7 +1720,7 @@ export function registerContainerCommands(program: Command) {
   container
     .command('export')
     .description('Export agent state to an encrypted file with optional path selection. Prints byte-size progress.')
-    .requiredOption('-a, --agent <id>', 'ID of the agent to export')
+    .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
     .requiredOption('-o, --out <file>', 'Output file path (.savestate)')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption')
