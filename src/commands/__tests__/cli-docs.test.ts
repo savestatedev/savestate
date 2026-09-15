@@ -3060,6 +3060,14 @@ describe('CLI docs', () => {
     expect(diffSection).toContain('Decrypts both archives');
   });
 
+  it('documents diff snapshot ids as single snapshot ids', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    expect(diffSection).toContain('&lt;snapshot-a&gt;');
+    expect(diffSection).toContain('&lt;snapshot-b&gt;');
+    expect(diffSection).toContain('Must be a single non-empty snapshot id');
+    expect(diff).toContain('export function parseDiffId');
+  });
+
   it('documents diff --json', () => {
     const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
     expect(diffSection).toContain('--json');

@@ -200,7 +200,7 @@ program
 
 program
   .command('diff <a> <b>')
-  .description('Compare two snapshots')
+  .description('Compare two snapshots (single non-empty snapshot ids)')
   .option('--json', 'Output as JSON')
   .action(diffCommand);
 
