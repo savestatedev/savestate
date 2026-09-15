@@ -1277,6 +1277,13 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextTask');
   });
 
+  it('documents context --file as a single path', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('--file');
+    expect(contextSection).toContain('Must be a single non-empty path');
+    expect(context).toContain('export function parseContextFile');
+  });
+
   it('registers --json on savestate context compile', () => {
     const compileBlock = context.slice(context.indexOf("command('compile')"), context.indexOf("command('explain"));
     expect(compileBlock).toContain(".option('--json'");
