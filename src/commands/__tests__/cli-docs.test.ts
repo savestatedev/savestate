@@ -1154,6 +1154,13 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function parseMcpAgent');
   });
 
+  it('documents mcp --output as a single path', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('--output');
+    expect(mcpSection).toContain('Must be a single non-empty path');
+    expect(mcp).toContain('export function parseMcpOutput');
+  });
+
   it('registers --json on savestate mcp status', () => {
     const statusBlock = mcp.slice(mcp.indexOf("command('status')"), mcp.indexOf("command('export')"));
     expect(statusBlock).toContain(".option('--json'");
@@ -1231,7 +1238,7 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function formatMcpExportMissingJson');
     expect(exportBlock).toContain('if (!isInitialized())');
     expect(exportBlock).toContain('if (options.json)');
-    expect(exportBlock).toContain("formatMcpExportMissingJson(agentId, options.output ?? '')");
+    expect(exportBlock).toContain("formatMcpExportMissingJson(agentId, output ?? '')");
   });
 
   it('documents mcp import --json when SaveState is not initialized', () => {
