@@ -213,6 +213,13 @@ describe('CLI docs', () => {
     expect(importSection).toContain('missing parent directory');
   });
 
+  it('documents import --target as a single path', () => {
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    expect(importSection).toContain('--target');
+    expect(importSection).toContain('Must be a single non-empty path');
+    expect(container).toContain('export function parseContainerTarget');
+  });
+
   it('documents import --json', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--json');
