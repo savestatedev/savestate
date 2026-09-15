@@ -488,7 +488,7 @@
 
     <!-- import -->
     <h2 id="import"><code>savestate import</code></h2>
-    <p>Import agent state from an encrypted <code>.savestate</code> container. Decrypts, verifies, and restores. A missing input path is rejected before decrypting. A missing <code>--target</code> parent directory is rejected before restoring. An existing target file is refused unless <code>--force</code> is set.</p>
+    <p>Import agent state from an encrypted <code>.savestate</code> container. Decrypts, verifies, and restores. The input file must be a single non-empty path. A missing input path is rejected before decrypting. A missing <code>--target</code> parent directory is rejected before restoring. An existing target file is refused unless <code>--force</code> is set.</p>
     <pre><code><span class="code-prompt">$</span> savestate import &lt;file&gt; [options]</code></pre>
 
     <table>
@@ -1261,7 +1261,7 @@
       <tbody>
         <tr><td><code>-a, --agent &lt;id&gt;</code></td><td>Required on <code>export</code>. Agent ID to pack. Must be a single non-empty agent id.</td></tr>
         <tr><td><code>-o, --out &lt;file&gt;</code></td><td>Required on <code>export</code>. Output <code>.savestate</code> path.</td></tr>
-        <tr><td><code>-i, --in &lt;file&gt;</code></td><td>Required on <code>import</code>. Input <code>.savestate</code> path.</td></tr>
+        <tr><td><code>-i, --in &lt;file&gt;</code></td><td>Required on <code>import</code>. Input <code>.savestate</code> path. Must be a single non-empty path.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Preview without writing or restoring</td></tr>
         <tr><td><code>--force</code></td><td>Overwrite an existing export file or import target file</td></tr>
         <tr><td><code>--include &lt;paths&gt;</code></td><td>Only pack or restore named state paths (<code>personality</code>, <code>memory</code>, <code>tools</code>, <code>preferences</code>, <code>conversation_history</code>)</td></tr>

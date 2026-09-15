@@ -233,6 +233,20 @@ export function parseContainerOutput(value: string | undefined): string | undefi
   return output;
 }
 
+/** Parse import --in without treating blank or comma-separated values as a path. */
+export function parseContainerInput(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const input = value.trim();
+  if (input.length === 0 || input.includes(',') || /\s/.test(input)) {
+    throw new Error(
+      `Invalid --in value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return input;
+}
+
 /** Parse import --target without treating blank or comma-separated values as a path. */
 export function parseContainerTarget(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -1053,11 +1067,17 @@ export interface ImportResult {
 
 export async function importState(options: RestoreOptions): Promise<ImportResult | undefined> {
   try {
-    const { in: inFile, passphrase, keyfile } = options;
+    let { in: inFile, passphrase, keyfile } = options;
     let { target } = options;
 
     if (typeof inFile !== 'string' || inFile.trim() === '') {
       console.error(`Error: Input path must not be empty: ${JSON.stringify(inFile)}.`);
+      return undefined;
+    }
+    try {
+      inFile = parseContainerInput(inFile) ?? inFile;
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
       return undefined;
     }
 
@@ -1822,7 +1842,7 @@ export function registerContainerCommands(program: Command) {
   container
     .command('import')
     .description('Import agent state from an encrypted file. Prints byte-size progress.')
-    .requiredOption('-i, --in <file>', 'Input file path (.savestate)')
+    .requiredOption('-i, --in <file>', 'Input file path (.savestate, single non-empty path)')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption')
     .option('--include <paths>', 'Comma-separated state paths to restore (personality,memory,tools,preferences,conversation_history)')

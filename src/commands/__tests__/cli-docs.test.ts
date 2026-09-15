@@ -227,6 +227,15 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerTarget');
   });
 
+  it('documents import --in as a single path', () => {
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(importSection).toContain('input file must be a single non-empty path');
+    expect(containerSection).toContain('--in');
+    expect(containerSection).toContain('Must be a single non-empty path');
+    expect(container).toContain('export function parseContainerInput');
+  });
+
   it('documents import --json', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--json');
