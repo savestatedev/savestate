@@ -999,7 +999,7 @@
         <tr><td><code>-t, --to &lt;tier&gt;</code></td><td>Target tier on <code>promote</code> (default L1) and <code>demote</code> (default L3). Promote must be one of: L1, L2; demote target (Must be one of: L2, L3).</td></tr>
         <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Required reason on <code>delete</code>; optional on <code>edit</code>. Must be a non-empty reason.</td></tr>
         <tr><td><code>-n, --namespace &lt;ns&gt;</code></td><td>Namespace (<code>org:app:agent[:user]</code>) for <code>explain</code> and <code>expire</code>. Must be a single non-empty namespace.</td></tr>
-        <tr><td><code>-c, --content &lt;content&gt;</code></td><td>New content on <code>edit</code></td></tr>
+        <tr><td><code>-c, --content &lt;content&gt;</code></td><td>New content on <code>edit</code>. Must be non-empty memory content.</td></tr>
         <tr><td><code>-t, --tags &lt;tags&gt;</code></td><td>Comma-separated tags on <code>explain</code> (filter) and <code>edit</code> (replace). Must be one or more non-empty memory tags (comma-separated).</td></tr>
         <tr><td><code>-i, --importance &lt;n&gt;</code></td><td>New importance score (0-1) on <code>edit</code>. Must be a number between 0 and 1.</td></tr>
         <tr><td><code>--actor &lt;id&gt;</code></td><td>Actor ID for the audit trail on <code>edit</code>, <code>delete</code>, and <code>rollback</code> (default <code>cli-user</code>). Must be a single non-empty actor id.</td></tr>
