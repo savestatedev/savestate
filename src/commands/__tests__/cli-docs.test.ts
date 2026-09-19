@@ -1126,6 +1126,14 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function parseCloudId');
   });
 
+  it('documents cloud subcommand as a single cloud action', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('&lt;subcommand&gt;');
+    expect(cloudSection).toContain('Must be a single non-empty subcommand');
+    expect(cloud).toContain('export function parseCloudSubcommand');
+    expect(cli).toContain('single non-empty subcommand: push, pull, list, or delete');
+  });
+
   it('registers --json on savestate cloud', () => {
     const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team')"));
     expect(cloudBlock).toContain(".option('--json'");
