@@ -243,6 +243,14 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerOut');
   });
 
+  it('documents container --passphrase as non-empty', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(containerSection).toContain('--passphrase');
+    expect(containerSection).toContain('An empty or whitespace-only value is rejected before encrypting or decrypting');
+    expect(container).toContain('export function parseContainerPassphrase');
+    expect(container).toContain('Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)');
+  });
+
   it('documents import --json', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--json');

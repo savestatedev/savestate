@@ -289,6 +289,19 @@ export function parseContainerDescription(value: string | undefined): string | u
   return description;
 }
 
+/** Parse container --passphrase without treating blank values as a key. */
+export function parseContainerPassphrase(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  if (value.trim().length === 0) {
+    throw new Error(
+      `Invalid --passphrase value "${value}". Expected a non-empty passphrase.`,
+    );
+  }
+
+  return value;
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -812,11 +825,11 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       return { written: false, out, overwritten: false };
     }
 
-    if (passphrase !== undefined) {
-      if (typeof passphrase !== 'string' || passphrase.trim() === '') {
-        console.error(`Error: Passphrase must not be empty: ${JSON.stringify(passphrase)}.`);
-        return { written: false, out, overwritten: false };
-      }
+    try {
+      parseContainerPassphrase(passphrase);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return { written: false, out, overwritten: false };
     }
 
     if (keyfile !== undefined) {
@@ -1155,11 +1168,11 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       }
     }
 
-    if (passphrase !== undefined) {
-      if (typeof passphrase !== 'string' || passphrase.trim() === '') {
-        console.error(`Error: Passphrase must not be empty: ${JSON.stringify(passphrase)}.`);
-        return undefined;
-      }
+    try {
+      parseContainerPassphrase(passphrase);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return undefined;
     }
 
     if (keyfile !== undefined) {
@@ -1742,7 +1755,7 @@ export function registerContainerCommands(program: Command) {
     .description('Export agent state to an encrypted .savestate file with optional path selection. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
     .option('-o, --output <file>', 'Output file path (single non-empty path, default: agent.savestate)', 'agent.savestate')
-    .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
+    .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences,conversation_history)')
@@ -1781,7 +1794,7 @@ export function registerContainerCommands(program: Command) {
   program
     .command('import <file>')
     .description('Import agent state from an encrypted .savestate file. Prints byte-size progress.')
-    .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt)')
+    .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase)')
     .option('--include <paths>', 'Comma-separated state paths to restore (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
@@ -1819,7 +1832,7 @@ export function registerContainerCommands(program: Command) {
     .description('Export agent state to an encrypted file with optional path selection. Prints byte-size progress.')
     .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
     .requiredOption('-o, --out <file>', 'Output file path (.savestate, single non-empty path)')
-    .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt)')
+    .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences,conversation_history)')
@@ -1863,7 +1876,7 @@ export function registerContainerCommands(program: Command) {
     .command('import')
     .description('Import agent state from an encrypted file. Prints byte-size progress.')
     .requiredOption('-i, --in <file>', 'Input file path (.savestate, single non-empty path)')
-    .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt)')
+    .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption')
     .option('--include <paths>', 'Comma-separated state paths to restore (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
