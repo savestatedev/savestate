@@ -25,6 +25,24 @@ interface IdentityOptions {
   json?: boolean;
 }
 
+/** Parse identity init name without writing a blank or comma-separated identity. */
+export function parseIdentityName(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid name. Expected a single non-empty identity name.',
+    );
+  }
+
+  const name = value.trim();
+  if (name.length === 0 || name.includes(',') || /\s/.test(name)) {
+    throw new Error(
+      `Invalid name "${value}". Expected a single non-empty identity name.`,
+    );
+  }
+
+  return name;
+}
+
 export interface IdentityToolJson {
   name: string;
   description: string | null;
@@ -261,6 +279,8 @@ export async function identityCommand(
   args: string[],
   options?: IdentityOptions,
 ): Promise<void> {
+  const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
+
   if (!options?.json) {
     console.log();
   }
@@ -271,7 +291,7 @@ export async function identityCommand(
       return;
     }
     if (options?.json && subcommand === 'init') {
-      console.log(formatIdentityInitMissingJson(args[0]));
+      console.log(formatIdentityInitMissingJson(initName));
       return;
     }
     if (options?.json && subcommand === 'show') {
@@ -291,7 +311,7 @@ export async function identityCommand(
       await showIdentity(options);
       break;
     case 'init':
-      await initIdentity(args[0], options);
+      await initIdentity(initName, options);
       break;
     case 'set':
       await setIdentityField(args[0], args.slice(1).join(' '), options);

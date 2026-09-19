@@ -2069,6 +2069,14 @@ describe('CLI docs', () => {
     expect(identity).toContain("options?.json && subcommand === 'set'");
   });
 
+  it('documents identity init name as a single identity name', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('&lt;name&gt;');
+    expect(identitySection).toContain('Must be a single non-empty identity name');
+    expect(identity).toContain('export function parseIdentityName');
+    expect(cli).toContain('init requires a single non-empty identity name');
+  });
+
   it('documents identity init --json', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     expect(identitySection).toContain('--json');

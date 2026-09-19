@@ -412,7 +412,7 @@ registerContextCommands(program);
 
 program
   .command('identity <subcommand> [args...]')
-  .description('Manage agent identity (show, init, set, schema)')
+  .description('Manage agent identity (show, init, set, schema; init requires a single non-empty identity name)')
   .option('--json', 'Output as JSON')
   .action(identityCommand);
 
