@@ -1106,6 +1106,20 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
   }
 }
 
+/** Parse verify --keyfile without treating blank or comma-separated values as a path. */
+export function parseVerifyKeyfile(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const keyfile = value.trim();
+  if (keyfile.length === 0 || keyfile.includes(',') || /\s/.test(keyfile)) {
+    throw new Error(
+      `Invalid --keyfile value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return keyfile;
+}
+
 export async function verifyCommand(
   filePath: string,
   options: { passphrase?: string; keyfile?: string; json?: boolean }
@@ -1130,12 +1144,7 @@ export async function verifyCommand(
   }
 
   const passphrase = options.passphrase || process.env.SAVESTATE_PASSPHRASE;
-  const keyfile = options.keyfile;
-
-  if (keyfile !== undefined && (typeof keyfile !== 'string' || keyfile.trim() === '')) {
-    console.error(`✗ Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
-    process.exit(1);
-  }
+  const keyfile = parseVerifyKeyfile(options.keyfile);
 
   if (!passphrase && !keyfile) {
     console.error(
