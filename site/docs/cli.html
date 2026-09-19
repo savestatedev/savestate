@@ -868,7 +868,7 @@
 
     <!-- cloud -->
     <h2 id="cloud"><code>savestate cloud</code></h2>
-    <p>Push, pull, list, and delete encrypted snapshots in SaveState cloud storage. Requires Pro or Team and a logged-in API key (<code>savestate login</code>). Snapshots stay encrypted; the CLI uploads <code>.saf.enc</code> files through the API. Default push/pull is the latest snapshot unless you pass <code>--id</code> or <code>--all</code>.</p>
+    <p>Push, pull, list, and delete encrypted snapshots in SaveState cloud storage. Requires Pro or Team and a logged-in API key (<code>savestate login</code>). Snapshots stay encrypted; the CLI uploads <code>.saf.enc</code> files through the API. Default push/pull is the latest snapshot unless you pass <code>--id</code> or <code>--all</code>. Subcommand must be a single non-empty value: <code>push</code>, <code>pull</code>, <code>list</code>, or <code>delete</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate cloud &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -876,6 +876,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>&lt;subcommand&gt;</code></td><td>Cloud action. Must be a single non-empty subcommand: <code>push</code>, <code>pull</code>, <code>list</code>, or <code>delete</code>.</td></tr>
         <tr><td><code>--id &lt;id&gt;</code></td><td>Specific snapshot ID (prefix match allowed). Must be a single non-empty snapshot id.</td></tr>
         <tr><td><code>--all</code></td><td>Process all snapshots instead of the latest</td></tr>
         <tr><td><code>-f, --force</code></td><td>Overwrite existing local files on pull, or skip delete confirmation</td></tr>

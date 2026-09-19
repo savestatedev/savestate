@@ -321,7 +321,7 @@ import { cloudCommand } from './commands/cloud.js';
 
 program
   .command('cloud <subcommand>')
-  .description('Cloud storage commands (Pro/Team)')
+  .description('Cloud storage commands (Pro/Team; single non-empty subcommand: push, pull, list, or delete)')
   .option('--id <id>', 'Specific snapshot ID (single non-empty id)')
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')

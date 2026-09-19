@@ -41,6 +41,35 @@ export function parseCloudId(value: string | undefined): string | undefined {
   return id;
 }
 
+const CLOUD_SUBCOMMANDS = ['push', 'pull', 'list', 'delete'] as const;
+export type CloudSubcommand = (typeof CLOUD_SUBCOMMANDS)[number];
+const CLOUD_SUBCOMMAND_LIST = CLOUD_SUBCOMMANDS.join(', ');
+
+/** Parse cloud subcommand without treating blank or comma-separated values as an action. */
+export function parseCloudSubcommand(value: string | undefined): CloudSubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty cloud subcommand (${CLOUD_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty cloud subcommand (${CLOUD_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((CLOUD_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as CloudSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty cloud subcommand (${CLOUD_SUBCOMMAND_LIST}).`,
+  );
+}
+
 export interface CloudSnapshotJson {
   id: string;
   size: number;
@@ -860,7 +889,8 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
 /**
  * Main cloud command handler
  */
-export async function cloudCommand(subcommand: string, options: CloudOptions): Promise<void> {
+export async function cloudCommand(rawSubcommand: string, options: CloudOptions): Promise<void> {
+  const subcommand = parseCloudSubcommand(rawSubcommand);
   switch (subcommand) {
     case 'push':
       await cloudPushCommand(options);
@@ -874,15 +904,5 @@ export async function cloudCommand(subcommand: string, options: CloudOptions): P
     case 'delete':
       await cloudDeleteCommand(options);
       break;
-    default:
-      console.log(chalk.red(`Unknown cloud command: ${subcommand}`));
-      console.log();
-      console.log('Usage:');
-      console.log('  savestate cloud push [--id <id>] [--all]   Push snapshots to cloud');
-      console.log('  savestate cloud pull [--id <id>] [--all]   Pull snapshots from cloud');
-      console.log('  savestate cloud list                       List cloud snapshots');
-      console.log('  savestate cloud delete --id <id> [--force] Delete cloud snapshot');
-      console.log('  savestate cloud delete --all [--force]     Delete all cloud snapshots');
-      process.exit(1);
   }
 }
