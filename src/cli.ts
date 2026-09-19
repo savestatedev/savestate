@@ -225,7 +225,7 @@ program
 
 program
   .command('antibodies <subcommand>')
-  .description('Failure antibody system (list, add, preflight, stats)')
+  .description('Failure antibody system (list, add, preflight, stats; single non-empty subcommand: list, add, preflight, or stats)')
   .option('--id <id>', 'Rule ID (for manual add)')
   .option('--all', 'Include retired rules in list')
   .option('--json', 'Output as JSON')

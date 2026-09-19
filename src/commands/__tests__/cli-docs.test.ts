@@ -397,6 +397,14 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('--safe-action');
   });
 
+  it('documents antibodies subcommand as a single antibodies action', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    expect(antibodiesSection).toContain('&lt;subcommand&gt;');
+    expect(antibodiesSection).toContain('Must be a single non-empty subcommand');
+    expect(antibodies).toContain('export function parseAntibodiesSubcommand');
+    expect(cli).toContain('single non-empty subcommand: list, add, preflight, or stats');
+  });
+
   it('registers --json on savestate antibodies', () => {
     const antibodiesBlock = cli.slice(
       cli.indexOf("command('antibodies <subcommand>')"),

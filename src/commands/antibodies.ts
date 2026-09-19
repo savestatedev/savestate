@@ -251,7 +251,9 @@ export function formatAntibodiesAddMissingJson(): string {
   );
 }
 
-export async function antibodiesCommand(subcommand: string, options: AntibodiesOptions): Promise<void> {
+export async function antibodiesCommand(rawSubcommand: string, options: AntibodiesOptions): Promise<void> {
+  const subcommand = parseAntibodiesSubcommand(rawSubcommand);
+
   if (!isInitialized()) {
     if (options.json && subcommand === 'list') {
       console.log(formatAntibodiesListMissingJson());
@@ -291,9 +293,6 @@ export async function antibodiesCommand(subcommand: string, options: AntibodiesO
     case 'stats':
       await showStats(store, options);
       return;
-    default:
-      showUsage();
-      process.exit(1);
   }
 }
 
@@ -498,6 +497,35 @@ async function showStats(store: AntibodyStore, options: AntibodiesOptions): Prom
     }
     console.log();
   }
+}
+
+const ANTIBODIES_SUBCOMMANDS = ['list', 'add', 'preflight', 'stats'] as const;
+export type AntibodiesSubcommand = (typeof ANTIBODIES_SUBCOMMANDS)[number];
+const ANTIBODIES_SUBCOMMAND_LIST = ANTIBODIES_SUBCOMMANDS.join(', ');
+
+/** Parse antibodies subcommand without treating blank or comma-separated values as an action. */
+export function parseAntibodiesSubcommand(value: string | undefined): AntibodiesSubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty antibodies subcommand (${ANTIBODIES_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty antibodies subcommand (${ANTIBODIES_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((ANTIBODIES_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as AntibodiesSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty antibodies subcommand (${ANTIBODIES_SUBCOMMAND_LIST}).`,
+  );
 }
 
 /** Parse antibodies --tags without treating blank or empty comma-separated tags as a trigger. */
