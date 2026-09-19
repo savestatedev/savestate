@@ -1144,7 +1144,7 @@
 
     <!-- identity -->
     <h2 id="identity"><code>savestate identity</code></h2>
-    <p>Manage the workspace agent identity document at <code>.savestate/identity.json</code>. Subcommands: <code>show</code>, <code>init</code>, <code>set</code>, and <code>schema</code>. <code>show</code> prints the current identity. <code>init &lt;name&gt;</code> creates one if missing. <code>set &lt;field&gt; &lt;value&gt;</code> updates a core field or <code>metadata.&lt;key&gt;</code>. <code>schema</code> prints the JSON schema. Requires <code>savestate init</code>.</p>
+    <p>Manage the workspace agent identity document at <code>.savestate/identity.json</code>. Subcommands: <code>show</code>, <code>init</code>, <code>set</code>, and <code>schema</code>. Must be a single non-empty subcommand (show, init, set, or schema). <code>show</code> prints the current identity. <code>init &lt;name&gt;</code> creates one if missing. <code>set &lt;field&gt; &lt;value&gt;</code> updates a core field or <code>metadata.&lt;key&gt;</code>. <code>schema</code> prints the JSON schema. Requires <code>savestate init</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate identity &lt;subcommand&gt; [args...] [options]</code></pre>
 
     <table>

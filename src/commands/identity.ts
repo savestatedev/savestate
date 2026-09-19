@@ -79,6 +79,35 @@ export function parseIdentityValue(value: string | undefined): string {
   return parsed;
 }
 
+const IDENTITY_SUBCOMMANDS = ['show', 'init', 'set', 'schema'] as const;
+export type IdentitySubcommand = (typeof IDENTITY_SUBCOMMANDS)[number];
+const IDENTITY_SUBCOMMAND_LIST = IDENTITY_SUBCOMMANDS.join(', ');
+
+/** Parse identity subcommand without treating blank or comma-separated values as an action. */
+export function parseIdentitySubcommand(value: string | undefined): IdentitySubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty identity subcommand (${IDENTITY_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty identity subcommand (${IDENTITY_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((IDENTITY_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as IdentitySubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty identity subcommand (${IDENTITY_SUBCOMMAND_LIST}).`,
+  );
+}
+
 export interface IdentityToolJson {
   name: string;
   description: string | null;
@@ -311,10 +340,11 @@ export function formatIdentitySchemaMissingJson(): string {
 }
 
 export async function identityCommand(
-  subcommand: string,
+  rawSubcommand: string,
   args: string[],
   options?: IdentityOptions,
 ): Promise<void> {
+  const subcommand = parseIdentitySubcommand(rawSubcommand);
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
   const setValue = subcommand === 'set'
@@ -359,15 +389,6 @@ export async function identityCommand(
     case 'schema':
       showSchema(options);
       break;
-    default:
-      console.log(chalk.red(`Unknown subcommand: ${subcommand}`));
-      console.log();
-      console.log('Usage:');
-      console.log('  savestate identity show           Display current identity');
-      console.log('  savestate identity init <name>    Initialize new identity');
-      console.log('  savestate identity set <field> <value>  Update identity field');
-      console.log('  savestate identity schema         Show JSON schema');
-      process.exit(1);
   }
 }
 
