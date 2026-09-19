@@ -1438,6 +1438,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemorySnapshot');
   });
 
+  it('documents memory memory-id as a single memory id', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('&lt;memory-id&gt;');
+    expect(memorySection).toContain('Must be a single non-empty memory id');
+    expect(memoryCli).toContain('export function parseMemoryId');
+  });
+
   it('documents memory --reason as a non-empty reason', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--reason');
