@@ -355,7 +355,7 @@ teamCmd
 
 teamCmd
   .command('invite <email>')
-  .description('Invite a member by email')
+  .description('Invite a member by email (single non-empty email address)')
   .option('-r, --role <role>', 'Role: admin, member, or viewer', 'member')
   .option('--json', 'Output as JSON')
   .action(teamInviteCommand);

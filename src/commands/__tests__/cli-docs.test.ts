@@ -819,6 +819,13 @@ describe('CLI docs', () => {
     expect(team).toContain('export function parseTeamInviteRole');
   });
 
+  it('documents team invite email as a single email address', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('&lt;email&gt;');
+    expect(teamSection).toContain('Must be a single non-empty email address');
+    expect(team).toContain('export function parseTeamInviteEmail');
+  });
+
   it('documents team invite --json', () => {
     const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('--json');

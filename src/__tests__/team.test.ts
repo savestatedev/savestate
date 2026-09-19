@@ -193,11 +193,10 @@ describe('savestate team invite', () => {
     global.fetch = fn as unknown as typeof fetch;
 
     vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(process, 'exit').mockImplementation(((_code?: number) => {
-      throw new Error('exit');
-    }) as never);
 
-    await expect(teamInviteCommand('not-an-email', {})).rejects.toThrow('exit');
+    await expect(teamInviteCommand('not-an-email', {})).rejects.toThrow(
+      'Invalid email "not-an-email". Expected a single non-empty email address.',
+    );
     expect(calls).toHaveLength(0);
   });
 
