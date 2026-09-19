@@ -302,6 +302,20 @@ export function parseContainerPassphrase(value: string | undefined): string | un
   return value;
 }
 
+/** Parse container --keyfile without treating blank or comma-separated values as a path. */
+export function parseContainerKeyfile(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const keyfile = value.trim();
+  if (keyfile.length === 0 || keyfile.includes(',') || /\s/.test(keyfile)) {
+    throw new Error(
+      `Invalid --keyfile value "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return keyfile;
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -796,7 +810,8 @@ export function reportContainerProgress(phase: string, bytes?: number): string {
 
 export async function exportState(options: ExportOptions): Promise<ExportResult> {
   try {
-    const { passphrase, keyfile, description } = options;
+    const { passphrase, description } = options;
+    let keyfile = options.keyfile;
     let out = options.out;
     let agent: string;
     try {
@@ -832,11 +847,14 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       return { written: false, out, overwritten: false };
     }
 
+    try {
+      keyfile = parseContainerKeyfile(keyfile);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return { written: false, out, overwritten: false };
+    }
+
     if (keyfile !== undefined) {
-      if (typeof keyfile !== 'string' || keyfile.trim() === '') {
-        console.error(`Error: Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
-        return { written: false, out, overwritten: false };
-      }
       try {
         const keyfileStats = await fs.stat(keyfile);
         if (keyfileStats.isDirectory()) {
@@ -1175,11 +1193,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       return undefined;
     }
 
+    try {
+      keyfile = parseContainerKeyfile(keyfile);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return undefined;
+    }
+
     if (keyfile !== undefined) {
-      if (typeof keyfile !== 'string' || keyfile.trim() === '') {
-        console.error(`Error: Keyfile must not be empty: ${JSON.stringify(keyfile)}.`);
-        return undefined;
-      }
       try {
         const keyfileStats = await fs.stat(keyfile);
         if (keyfileStats.isDirectory()) {
@@ -1756,7 +1777,7 @@ export function registerContainerCommands(program: Command) {
     .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
     .option('-o, --output <file>', 'Output file path (single non-empty path, default: agent.savestate)', 'agent.savestate')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
-    .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase)')
+    .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase; single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences,conversation_history)')
     .option('--include-personality', 'Include personality data')
@@ -1795,7 +1816,7 @@ export function registerContainerCommands(program: Command) {
     .command('import <file>')
     .description('Import agent state from an encrypted .savestate file. Prints byte-size progress.')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
-    .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase)')
+    .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase; single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to restore (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
     .option('--merge', 'Merge with existing state (default: replace)')
@@ -1833,7 +1854,7 @@ export function registerContainerCommands(program: Command) {
     .requiredOption('-a, --agent <id>', 'ID of the agent to export (single non-empty id)')
     .requiredOption('-o, --out <file>', 'Output file path (.savestate, single non-empty path)')
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
-    .option('-k, --keyfile <path>', 'Keyfile for encryption')
+    .option('-k, --keyfile <path>', 'Keyfile for encryption (single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences,conversation_history)')
     .option('--include-personality', 'Include personality data')
@@ -1877,7 +1898,7 @@ export function registerContainerCommands(program: Command) {
     .description('Import agent state from an encrypted file. Prints byte-size progress.')
     .requiredOption('-i, --in <file>', 'Input file path (.savestate, single non-empty path)')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
-    .option('-k, --keyfile <path>', 'Keyfile for decryption')
+    .option('-k, --keyfile <path>', 'Keyfile for decryption (single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to restore (personality,memory,tools,preferences,conversation_history)')
     .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
     .option('--merge', 'Merge with existing state')
