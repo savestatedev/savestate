@@ -243,6 +243,21 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerOut');
   });
 
+  it('documents container --keyfile as a single path', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(exportSection).toContain('--keyfile');
+    expect(exportSection).toContain('Must be a single non-empty path');
+    expect(importSection).toContain('--keyfile');
+    expect(importSection).toContain('Must be a single non-empty path');
+    expect(containerSection).toContain('--keyfile');
+    expect(containerSection).toContain('Must be a single non-empty path');
+    expect(container).toContain('export function parseContainerKeyfile');
+    expect(container).toContain('Keyfile for encryption (alternative to passphrase; single non-empty path)');
+    expect(container).toContain('Keyfile for decryption (alternative to passphrase; single non-empty path)');
+  });
+
   it('documents import --json', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--json');
