@@ -244,7 +244,7 @@ program
 
 program
   .command('eval <subcommand>')
-  .description('Memory quality evaluation (quality, report)')
+  .description('Memory quality evaluation (quality, report; single non-empty subcommand: quality or report)')
   .option('--json', 'Output as JSON')
   .option('--threshold <0..1>', 'Confidence threshold (default: 0.7)')
   .option('--suite <name>', 'Run only a specific benchmark suite')

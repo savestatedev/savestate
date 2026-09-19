@@ -792,7 +792,7 @@
 
     <!-- eval -->
     <h2 id="eval"><code>savestate eval</code></h2>
-    <p>Run memory quality benchmarks and print the last report. Subcommands: <code>quality</code> and <code>report</code>. Requires <code>savestate init</code>. Suites load from <code>.savestate/benchmarks/</code> (JSON files). Results are saved to <code>.savestate/eval-results.json</code>. Reports precision, recall, F1, stale-hit rate, constraint retention, and confidence.</p>
+    <p>Run memory quality benchmarks and print the last report. Subcommands: <code>quality</code> and <code>report</code>. Must be a single non-empty subcommand (quality or report). Requires <code>savestate init</code>. Suites load from <code>.savestate/benchmarks/</code> (JSON files). Results are saved to <code>.savestate/eval-results.json</code>. Reports precision, recall, F1, stale-hit rate, constraint retention, and confidence.</p>
     <pre><code><span class="code-prompt">$</span> savestate eval &lt;subcommand&gt; [options]</code></pre>
 
     <table>
