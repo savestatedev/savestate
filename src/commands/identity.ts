@@ -43,6 +43,24 @@ export function parseIdentityName(value: string | undefined): string {
   return name;
 }
 
+/** Parse identity set field without writing a blank or comma-separated field. */
+export function parseIdentityField(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid field. Expected a single non-empty identity field.',
+    );
+  }
+
+  const field = value.trim();
+  if (field.length === 0 || field.includes(',') || /\s/.test(field)) {
+    throw new Error(
+      `Invalid field "${value}". Expected a single non-empty identity field.`,
+    );
+  }
+
+  return field;
+}
+
 export interface IdentityToolJson {
   name: string;
   description: string | null;
@@ -280,6 +298,7 @@ export async function identityCommand(
   options?: IdentityOptions,
 ): Promise<void> {
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
+  const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
 
   if (!options?.json) {
     console.log();
@@ -299,7 +318,7 @@ export async function identityCommand(
       return;
     }
     if (options?.json && subcommand === 'set') {
-      console.log(formatIdentitySetMissingJson(args[0] ?? ''));
+      console.log(formatIdentitySetMissingJson(setField ?? ''));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -314,7 +333,7 @@ export async function identityCommand(
       await initIdentity(initName, options);
       break;
     case 'set':
-      await setIdentityField(args[0], args.slice(1).join(' '), options);
+      await setIdentityField(setField, args.slice(1).join(' '), options);
       break;
     case 'schema':
       showSchema(options);

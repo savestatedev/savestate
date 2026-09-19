@@ -2098,6 +2098,14 @@ describe('CLI docs', () => {
     expect(cli).toContain('init requires a single non-empty identity name');
   });
 
+  it('documents identity set field as a single identity field', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('&lt;field&gt;');
+    expect(identitySection).toContain('Must be a single non-empty identity field');
+    expect(identity).toContain('export function parseIdentityField');
+    expect(cli).toContain('set requires a single non-empty identity field');
+  });
+
   it('documents identity init --json', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     expect(identitySection).toContain('--json');
