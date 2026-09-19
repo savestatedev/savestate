@@ -61,6 +61,24 @@ export function parseIdentityField(value: string | undefined): string {
   return field;
 }
 
+/** Parse identity set value without writing a blank identity field. */
+export function parseIdentityValue(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid value. Expected a non-empty identity value.',
+    );
+  }
+
+  const parsed = value.trim();
+  if (parsed.length === 0) {
+    throw new Error(
+      `Invalid value "${value}". Expected a non-empty identity value.`,
+    );
+  }
+
+  return parsed;
+}
+
 export interface IdentityToolJson {
   name: string;
   description: string | null;
@@ -299,6 +317,9 @@ export async function identityCommand(
 ): Promise<void> {
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
+  const setValue = subcommand === 'set'
+    ? parseIdentityValue(args.length > 1 ? args.slice(1).join(' ') : undefined)
+    : undefined;
 
   if (!options?.json) {
     console.log();
@@ -333,7 +354,7 @@ export async function identityCommand(
       await initIdentity(initName, options);
       break;
     case 'set':
-      await setIdentityField(setField, args.slice(1).join(' '), options);
+      await setIdentityField(setField, setValue, options);
       break;
     case 'schema':
       showSchema(options);
