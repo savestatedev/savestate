@@ -1459,6 +1459,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryId');
   });
 
+  it('documents memory explain query as non-empty', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('&lt;query&gt;');
+    expect(memorySection).toContain('Must be a non-empty query');
+    expect(memoryCli).toContain('export function parseMemoryQuery');
+  });
+
   it('documents memory --reason as a non-empty reason', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--reason');

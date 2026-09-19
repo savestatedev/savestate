@@ -233,6 +233,24 @@ export function parseMemoryId(value: string | undefined): string {
   return id;
 }
 
+/** Parse memory explain query without decrypting archives for blank input. */
+export function parseMemoryQuery(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid memory query. Expected a non-empty query.',
+    );
+  }
+
+  const query = value.trim();
+  if (query.length === 0) {
+    throw new Error(
+      `Invalid memory query "${value}". Expected a non-empty query.`,
+    );
+  }
+
+  return query;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -416,18 +434,19 @@ export function registerMemoryCommands(program: Command): void {
 
   memory
     .command('explain <query>')
-    .description('Explain why memories were retrieved for a query')
+    .description('Explain why memories were retrieved for a query (non-empty query)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
     .option('-l, --limit <n>', 'Maximum number of results', '5')
     .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--json', 'Output as JSON')
     .action(async (query, options) => {
       try {
+        const parsedQuery = parseMemoryQuery(query);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        await explainMemoryCommand(storage, passphrase, query, {
+        await explainMemoryCommand(storage, passphrase, parsedQuery, {
           namespace: parseMemoryNamespace(options.namespace),
           limit: parseMemoryLimit(options.limit, 5),
           tags: parseMemoryTags(options.tags),
