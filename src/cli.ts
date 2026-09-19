@@ -379,7 +379,7 @@ registerACLCommands(program);
 
 program
   .command('verify <file>')
-  .description('Verify integrity of a .savestate file and list packed components')
+  .description('Verify integrity of a .savestate file and list packed components (single non-empty path)')
   .option('-p, --passphrase <pass>', 'Passphrase for verification')
   .option('-k, --keyfile <path>', 'Keyfile for verification (alternative to passphrase)')
   .option('--json', 'Output as JSON')

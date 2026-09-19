@@ -285,6 +285,14 @@ describe('CLI docs', () => {
     expect(verify).toContain('export function formatVerifyMissingJson');
   });
 
+  it('documents verify file as a single path', () => {
+    const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
+    expect(verifySection).toContain('&lt;file&gt;');
+    expect(verifySection).toContain('Must be a single non-empty path');
+    expect(verify).toContain('export function parseVerifyFile');
+    expect(cli).toContain('list packed components (single non-empty path)');
+  });
+
   it('lists savestate prune in the command overview', () => {
     expect(docs).toContain('id="prune"');
     expect(docs).toContain('savestate prune');
