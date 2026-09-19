@@ -110,7 +110,8 @@ export function formatEvalQualityMissingJson(suite: string): string {
   );
 }
 
-export async function evalCommand(subcommand: string, options: EvalOptions): Promise<void> {
+export async function evalCommand(rawSubcommand: string, options: EvalOptions): Promise<void> {
+  const subcommand = parseEvalSubcommand(rawSubcommand);
   const suite = parseEvalSuite(options.suite);
 
   if (!options.json) {
@@ -137,9 +138,6 @@ export async function evalCommand(subcommand: string, options: EvalOptions): Pro
     case 'report':
       await showReport(options);
       return;
-    default:
-      showUsage();
-      process.exit(1);
   }
 }
 
@@ -356,6 +354,35 @@ export function parseEvalSuite(value: string | undefined): string | undefined {
   }
 
   return suite;
+}
+
+const EVAL_SUBCOMMANDS = ['quality', 'report'] as const;
+export type EvalSubcommand = (typeof EVAL_SUBCOMMANDS)[number];
+const EVAL_SUBCOMMAND_LIST = EVAL_SUBCOMMANDS.join(', ');
+
+/** Parse eval subcommand without treating blank or comma-separated values as an action. */
+export function parseEvalSubcommand(value: string | undefined): EvalSubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty eval subcommand (${EVAL_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty eval subcommand (${EVAL_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((EVAL_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as EvalSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty eval subcommand (${EVAL_SUBCOMMAND_LIST}).`,
+  );
 }
 
 /**

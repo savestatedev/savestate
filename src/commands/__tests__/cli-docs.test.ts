@@ -967,6 +967,14 @@ describe('CLI docs', () => {
     expect(evalSource).toContain('export function parseEvalSuite');
   });
 
+  it('documents eval subcommand as a single eval action', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    expect(evalSection).toContain('&lt;subcommand&gt;');
+    expect(evalSection).toContain('Must be a single non-empty subcommand');
+    expect(evalSource).toContain('export function parseEvalSubcommand');
+    expect(cli).toContain('single non-empty subcommand: quality or report');
+  });
+
   it('registers --json on savestate eval', () => {
     const evalBlock = cli.slice(cli.indexOf("command('eval <subcommand>')"), cli.indexOf("command('search <query>')"));
     expect(evalBlock).toContain(".option('--json'");
