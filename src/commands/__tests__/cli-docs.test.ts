@@ -301,6 +301,14 @@ describe('CLI docs', () => {
     expect(cli).toContain('Keyfile for verification (alternative to passphrase; single non-empty path)');
   });
 
+  it('documents verify --passphrase as non-empty', () => {
+    const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
+    expect(verifySection).toContain('--passphrase');
+    expect(verifySection).toContain('An empty or whitespace-only value is rejected before decrypting');
+    expect(verify).toContain('export function parseVerifyPassphrase');
+    expect(cli).toContain('Passphrase for verification (non-empty)');
+  });
+
   it('lists savestate prune in the command overview', () => {
     expect(docs).toContain('id="prune"');
     expect(docs).toContain('savestate prune');

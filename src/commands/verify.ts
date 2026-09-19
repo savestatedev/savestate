@@ -1138,6 +1138,19 @@ export function parseVerifyKeyfile(value: string | undefined): string | undefine
   return keyfile;
 }
 
+/** Parse verify --passphrase without treating blank values as a key. */
+export function parseVerifyPassphrase(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  if (value.trim().length === 0) {
+    throw new Error(
+      `Invalid --passphrase value "${value}". Expected a non-empty passphrase.`,
+    );
+  }
+
+  return value;
+}
+
 export async function verifyCommand(
   filePath: string,
   options: { passphrase?: string; keyfile?: string; json?: boolean }
@@ -1153,12 +1166,7 @@ export async function verifyCommand(
     }
   }
 
-  if (options.passphrase !== undefined && (typeof options.passphrase !== 'string' || options.passphrase.trim() === '')) {
-    console.error(`✗ Passphrase must not be empty: ${JSON.stringify(options.passphrase)}.`);
-    process.exit(1);
-  }
-
-  const passphrase = options.passphrase || process.env.SAVESTATE_PASSPHRASE;
+  const passphrase = parseVerifyPassphrase(options.passphrase) || process.env.SAVESTATE_PASSPHRASE;
   const keyfile = parseVerifyKeyfile(options.keyfile);
 
   if (!passphrase && !keyfile) {
