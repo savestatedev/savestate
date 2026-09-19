@@ -709,6 +709,13 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustBy');
   });
 
+  it('documents trust deny pattern as a single denylist pattern', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('&lt;pattern&gt;');
+    expect(trustSection).toContain('Must be a single non-empty denylist pattern');
+    expect(trust).toContain('export function parseTrustPattern');
+  });
+
   it('registers --json on savestate trust deny add', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const addBlock = trustBlock.slice(

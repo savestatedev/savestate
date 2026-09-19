@@ -163,7 +163,7 @@ const denyCmd = trustCmd
 
 denyCmd
   .command('add <pattern>')
-  .description('Add a pattern to the denylist')
+  .description('Add a pattern to the denylist (single non-empty pattern)')
   .option('-r, --reason <reason>', 'Why this pattern is denylisted (non-empty)')
   .option('-b, --by <actor>', 'Who is adding this entry (defaults to "cli", single non-empty actor id)')
   .option('--json', 'Output as JSON')
@@ -172,7 +172,7 @@ denyCmd
 denyCmd
   .command('remove <pattern>')
   .alias('rm')
-  .description('Remove a pattern from the denylist (exact match)')
+  .description('Remove a pattern from the denylist (exact match; single non-empty pattern)')
   .option('--json', 'Output as JSON')
   .action(trustDenyRemoveCommand);
 

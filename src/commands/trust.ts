@@ -62,6 +62,24 @@ export function parseTrustBy(value: string | undefined): string | undefined {
   return actor;
 }
 
+/** Parse trust deny pattern without writing a blank or comma-separated denylist entry. */
+export function parseTrustPattern(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid pattern. Expected a single non-empty denylist pattern.',
+    );
+  }
+
+  const pattern = value.trim();
+  if (pattern.length === 0 || pattern.includes(',') || /\s/.test(pattern)) {
+    throw new Error(
+      `Invalid pattern "${value}". Expected a single non-empty denylist pattern.`,
+    );
+  }
+
+  return pattern;
+}
+
 interface DenyAddOptions {
   reason?: string;
   by?: string;
@@ -323,9 +341,10 @@ function printRow(label: string, value: string): void {
 }
 
 export async function trustDenyAddCommand(
-  pattern: string,
+  rawPattern: string,
   options: DenyAddOptions,
 ): Promise<void> {
+  const pattern = parseTrustPattern(rawPattern);
   const store = new TrustStore();
   const reason = parseTrustReason(options.reason) ?? 'no reason given';
   const addedBy = parseTrustBy(options.by) ?? 'cli';
@@ -344,9 +363,10 @@ export async function trustDenyAddCommand(
 }
 
 export async function trustDenyRemoveCommand(
-  pattern: string,
+  rawPattern: string,
   options: DenyListOptions,
 ): Promise<void> {
+  const pattern = parseTrustPattern(rawPattern);
   const store = new TrustStore();
   const removed = store.removeFromDenylist(pattern);
   store.close();
