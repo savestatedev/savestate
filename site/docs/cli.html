@@ -537,7 +537,7 @@
       <tbody>
         <tr><td><code>&lt;file&gt;</code></td><td>Container to verify. Must be a single non-empty path.</td></tr>
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase used to decrypt the container. An empty or whitespace-only value is rejected before decrypting.</td></tr>
-        <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. An empty path, missing file, directory, or file with no contents is rejected before decrypting.</td></tr>
+        <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. Must be a single non-empty path. An empty path, missing file, directory, or file with no contents is rejected before decrypting.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the full verify result as JSON. Decrypts the archive when a key is provided. When the input file is missing, emits a missing summary (found, input, valid, agent; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
