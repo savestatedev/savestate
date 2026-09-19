@@ -1106,20 +1106,35 @@ export function formatVerifyResult(result: VerifyResult, json: boolean): string 
   }
 }
 
+/** Parse verify file path without reading a blank or comma-separated path. */
+export function parseVerifyFile(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid file. Expected a single non-empty path.',
+    );
+  }
+
+  const file = value.trim();
+  if (file.length === 0 || file.includes(',') || /\s/.test(file)) {
+    throw new Error(
+      `Invalid file "${value}". Expected a single non-empty path.`,
+    );
+  }
+
+  return file;
+}
+
 export async function verifyCommand(
   filePath: string,
   options: { passphrase?: string; keyfile?: string; json?: boolean }
 ): Promise<void> {
-  if (typeof filePath !== 'string' || filePath.trim() === '') {
-    console.error(`✗ Input path must not be empty: ${JSON.stringify(filePath)}.`);
-    process.exit(1);
-  }
+  const parsedPath = parseVerifyFile(filePath);
 
   if (options.json) {
     try {
-      await fs.stat(filePath);
+      await fs.stat(parsedPath);
     } catch {
-      console.log(formatVerifyMissingJson(filePath));
+      console.log(formatVerifyMissingJson(parsedPath));
       process.exit(1);
     }
   }
@@ -1152,7 +1167,7 @@ export async function verifyCommand(
 
   const keySource: KeySource = keyfile ? { keyfile } : { passphrase };
 
-  const result = await verifyContainer(filePath, keySource);
+  const result = await verifyContainer(parsedPath, keySource);
   const output = formatVerifyResult(result, !!options.json);
   const exitCode = verifyExitCode(result.status);
 
