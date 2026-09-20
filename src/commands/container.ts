@@ -316,6 +316,29 @@ export function parseContainerKeyfile(value: string | undefined): string | undef
   return keyfile;
 }
 
+const CONTAINER_EXCLUDE_LIST = INCLUDE_PATHS.join(', ');
+
+/** Parse container --exclude without silently skipping unknown state paths. */
+export function parseContainerExclude(value: string | undefined): IncludePath[] | undefined {
+  if (value === undefined) return undefined;
+
+  const paths = value
+    .split(',')
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (
+    paths.length === 0 ||
+    paths.some((token) => !(INCLUDE_PATHS as readonly string[]).includes(token))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${CONTAINER_EXCLUDE_LIST}.`,
+    );
+  }
+
+  return paths as IncludePath[];
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -854,6 +877,13 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       return { written: false, out, overwritten: false };
     }
 
+    try {
+      parseContainerExclude(options.exclude);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return { written: false, out, overwritten: false };
+    }
+
     if (keyfile !== undefined) {
       try {
         const keyfileStats = await fs.stat(keyfile);
@@ -1121,6 +1151,13 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     }
     try {
       inFile = parseContainerInput(inFile) ?? inFile;
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return undefined;
+    }
+
+    try {
+      parseContainerExclude(options.exclude);
     } catch (error: any) {
       console.error(`Error: ${error.message}`);
       return undefined;
@@ -1779,7 +1816,7 @@ export function registerContainerCommands(program: Command) {
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (alternative to passphrase; single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
-    .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences,conversation_history)')
+    .option('--exclude <paths>', 'Comma-separated state paths to exclude (one or more of: personality, memory, tools, preferences, conversation_history)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -1818,7 +1855,7 @@ export function registerContainerCommands(program: Command) {
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (alternative to passphrase; single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to restore (personality,memory,tools,preferences,conversation_history)')
-    .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
+    .option('--exclude <paths>', 'Comma-separated state paths to skip (one or more of: personality, memory, tools, preferences, conversation_history)')
     .option('--merge', 'Merge with existing state (default: replace)')
     .option('--replace', 'Replace existing state completely')
     .option('--dry-run', 'Show what would be imported without restoring')
@@ -1856,7 +1893,7 @@ export function registerContainerCommands(program: Command) {
     .option('-p, --passphrase <pass>', 'Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for encryption (single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to include (personality,memory,tools,preferences,conversation_history)')
-    .option('--exclude <paths>', 'Comma-separated state paths to exclude (personality,memory,tools,preferences,conversation_history)')
+    .option('--exclude <paths>', 'Comma-separated state paths to exclude (one or more of: personality, memory, tools, preferences, conversation_history)')
     .option('--include-personality', 'Include personality data')
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
@@ -1900,7 +1937,7 @@ export function registerContainerCommands(program: Command) {
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to restore (personality,memory,tools,preferences,conversation_history)')
-    .option('--exclude <paths>', 'Comma-separated state paths to skip (personality,memory,tools,preferences,conversation_history)')
+    .option('--exclude <paths>', 'Comma-separated state paths to skip (one or more of: personality, memory, tools, preferences, conversation_history)')
     .option('--merge', 'Merge with existing state')
     .option('--replace', 'Replace existing state (default)')
     .option('--dry-run', 'Show what would be imported without restoring')

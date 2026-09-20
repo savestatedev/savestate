@@ -251,6 +251,19 @@ describe('CLI docs', () => {
     expect(container).toContain('Passphrase for encryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)');
   });
 
+  it('documents container --exclude as known state paths', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(exportSection).toContain('--exclude');
+    expect(importSection).toContain('--exclude');
+    expect(containerSection).toContain('--exclude');
+    expect(exportSection).toContain(
+      'Must be one or more of: personality, memory, tools, preferences, conversation_history',
+    );
+    expect(container).toContain('export function parseContainerExclude');
+  });
+
   it('documents container --keyfile as a single path', () => {
     const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));

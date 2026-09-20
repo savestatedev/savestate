@@ -98,7 +98,7 @@ describe('savestate export manifest excluded', () => {
 
     expect(result).toEqual({ written: false, out: filePath, overwritten: false });
     await expect(fs.access(filePath)).rejects.toThrow();
-    expect(error.mock.calls.flat().join('\n')).toMatch(/unknown exclude path/i);
+    expect(error.mock.calls.flat().join('\n')).toMatch(/Invalid --exclude value "secrets"/);
     error.mockRestore();
     log.mockRestore();
   });

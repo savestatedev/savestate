@@ -117,7 +117,7 @@ describe('savestate --exclude path output', () => {
     });
 
     expect(result).toEqual({ written: false, out: filePath, overwritten: false });
-    expect(error.mock.calls.flat().join('\n')).toMatch(/unknown exclude path/i);
+    expect(error.mock.calls.flat().join('\n')).toMatch(/Invalid --exclude value "secrets"/);
     expect(log.mock.calls.flat().join('\n')).not.toContain('Excluding paths:');
     error.mockRestore();
     log.mockRestore();
