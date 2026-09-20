@@ -57,6 +57,24 @@ export function parseTraceRun(value: string | undefined): string | undefined {
   return run;
 }
 
+/** Parse trace show run_id without looking up blank or comma-separated ids. */
+export function parseTraceShowRunId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid run id. Expected a single non-empty run id.',
+    );
+  }
+
+  const runId = value.trim();
+  if (runId.length === 0 || runId.includes(',') || /\s/.test(runId)) {
+    throw new Error(
+      `Invalid run id "${value}". Expected a single non-empty run id.`,
+    );
+  }
+
+  return runId;
+}
+
 export interface TraceRunJson {
   runId: string;
   adapter: string;
@@ -213,7 +231,7 @@ export function registerTraceCommands(program: Command): void {
 
   trace
     .command('show <run_id>')
-    .description('Show events for a trace run')
+    .description('Show events for a trace run (single non-empty run id)')
     .option('--json', 'Output as JSON')
     .action(traceShowCommand);
 
@@ -286,6 +304,8 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
 }
 
 export async function traceShowCommand(runId: string, options: TraceShowOptions): Promise<void> {
+  runId = parseTraceShowRunId(runId);
+
   if (!options.json) {
     console.log();
   }
