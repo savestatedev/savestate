@@ -2266,6 +2266,14 @@ describe('CLI docs', () => {
     expect(integrity).toContain('single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear');
   });
 
+  it('documents integrity incident id as a single incident id', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('&lt;id&gt;');
+    expect(integritySection).toContain('Must be a single non-empty incident id');
+    expect(integrity).toContain('export function parseIntegrityIncidentId');
+    expect(integrity).toContain('single non-empty incident id');
+  });
+
   it('documents integrity --user on quarantine and release', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--user');
