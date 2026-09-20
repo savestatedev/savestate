@@ -674,6 +674,16 @@ describe('CLI docs', () => {
     expect(migrate).toContain('export function parseMigrateInclude');
   });
 
+  it('documents migrate --exclude as known migrate types', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    const migrateBlock = cli.slice(cli.indexOf("command('migrate')"), cli.indexOf("command('cloud'"));
+    expect(migrateSection).toContain('--exclude');
+    expect(migrateSection).toContain('Must be one or more of: instructions, memories, conversations, files, customBots');
+    expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --exclude conversations --force');
+    expect(migrateBlock).toContain(".option('--exclude <types>'");
+    expect(migrate).toContain('export function parseMigrateExclude');
+  });
+
   it('documents migrate --from as a known platform', () => {
     const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
     expect(migrateSection).toContain('--from');

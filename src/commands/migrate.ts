@@ -52,6 +52,7 @@ export interface MigrateCommandOptions {
   resume?: boolean;
   review?: boolean;
   include?: string;
+  exclude?: string;
   noColor?: boolean;
   force?: boolean;
   verbose?: boolean;
@@ -126,6 +127,40 @@ export function parseMigrateInclude(
   }
 
   return types as MigrateIncludeType[];
+}
+
+/** Parse migrate --exclude without silently skipping unknown types. */
+export function parseMigrateExclude(
+  value: string | undefined,
+): MigrationOptions['include'] | undefined {
+  if (value === undefined) return undefined;
+
+  const types = value
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (
+    types.length === 0 ||
+    types.some((token) => !(VALID_INCLUDE as readonly string[]).includes(token))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${MIGRATE_INCLUDE_LIST}.`,
+    );
+  }
+
+  return types as MigrateIncludeType[];
+}
+
+/** Resolve migrate --include/--exclude into the types that will be packed. */
+export function resolveMigrateInclude(
+  options: Pick<MigrateCommandOptions, 'include' | 'exclude'>,
+): MigrationOptions['include'] | undefined {
+  const include = parseMigrateInclude(options.include);
+  const exclude = parseMigrateExclude(options.exclude);
+  return exclude
+    ? (include ?? [...VALID_INCLUDE]).filter((type) => !exclude.includes(type))
+    : include;
 }
 
 export interface MigratePlatformJson {
@@ -276,7 +311,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     process.exit(1);
   }
 
-  parseMigrateInclude(options.include);
+  resolveMigrateInclude(options);
 
   // Determine source and target platforms
   const { source, target } = await determinePlatforms(options);
@@ -358,7 +393,7 @@ async function handleDryRun(
     // Create orchestrator
     const orchestrator = new MigrationOrchestrator(source, target, {
       dryRun: true,
-      include: parseMigrateInclude(options.include),
+      include: resolveMigrateInclude(options),
     });
 
     // Setup signal handler
@@ -404,7 +439,7 @@ async function handleReview(
     // Create orchestrator
     const orchestrator = new MigrationOrchestrator(source, target, {
       dryRun: true,
-      include: parseMigrateInclude(options.include),
+      include: resolveMigrateInclude(options),
     });
 
     // Setup signal handler
@@ -527,7 +562,7 @@ async function runMigration(
 
     // Create orchestrator
     const migrationOptions: MigrationOptions = {
-      include: parseMigrateInclude(options.include),
+      include: resolveMigrateInclude(options),
       dryRun: false,
     };
 
@@ -585,7 +620,7 @@ async function showMigrationPlan(
   console.log(chalk.white.bold('What will be migrated:'));
   console.log();
 
-  const include = parseMigrateInclude(options.include);
+  const include = resolveMigrateInclude(options);
 
   // Instructions
   if (!include || include.includes('instructions')) {
