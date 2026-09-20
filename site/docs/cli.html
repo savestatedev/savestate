@@ -1070,7 +1070,7 @@
 
     <!-- slo -->
     <h2 id="slo"><code>savestate slo</code></h2>
-    <p>Memory freshness SLO monitoring. Subcommands: <code>status</code>, <code>report</code>, and <code>config</code>. <code>status</code> evaluates namespace compliance against freshness, relevance, recall, and cross-session targets. <code>report</code> prints a period summary (default 7 days). <code>config</code> shows or updates SLO thresholds. Enable monitoring with <code>savestate slo config --set enabled=true</code>.</p>
+    <p>Memory freshness SLO monitoring. Subcommands: <code>status</code>, <code>report</code>, and <code>config</code>. Must be a single non-empty subcommand (status, report, or config). <code>status</code> evaluates namespace compliance against freshness, relevance, recall, and cross-session targets. <code>report</code> prints a period summary (default 7 days). <code>config</code> shows or updates SLO thresholds. Enable monitoring with <code>savestate slo config --set enabled=true</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate slo &lt;subcommand&gt; [options]</code></pre>
 
     <table>

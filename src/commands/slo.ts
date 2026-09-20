@@ -76,6 +76,35 @@ export interface SloSetAssignment {
   value: string;
 }
 
+const SLO_SUBCOMMANDS = ['status', 'report', 'config'] as const;
+export type SloSubcommand = (typeof SLO_SUBCOMMANDS)[number];
+const SLO_SUBCOMMAND_LIST = SLO_SUBCOMMANDS.join(', ');
+
+/** Parse slo subcommand without treating blank or comma-separated values as an action. */
+export function parseSloSubcommand(value: string | undefined): SloSubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty slo subcommand (${SLO_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty slo subcommand (${SLO_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((SLO_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as SloSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty slo subcommand (${SLO_SUBCOMMAND_LIST}).`,
+  );
+}
+
 /** Parse slo config --set without treating blank or malformed pairs as updates. */
 export function parseSloSet(value: string | undefined): SloSetAssignment | undefined {
   if (value === undefined) return undefined;
@@ -230,7 +259,7 @@ export function formatSloReportMissingJson(): string {
  * SLO command handler.
  */
 export async function sloCommand(
-  subcommand: string,
+  rawSubcommand: string,
   options: {
     namespace?: string;
     json?: boolean;
@@ -238,6 +267,7 @@ export async function sloCommand(
     period?: string;
   },
 ): Promise<void> {
+  const subcommand = parseSloSubcommand(rawSubcommand);
   switch (subcommand) {
     case 'status':
       await sloStatus(options);
@@ -248,10 +278,6 @@ export async function sloCommand(
     case 'config':
       await sloConfig(options);
       break;
-    default:
-      console.log(chalk.red(`Unknown SLO subcommand: ${subcommand}`));
-      console.log('Available subcommands: status, report, config');
-      process.exit(1);
   }
 }
 
@@ -453,7 +479,7 @@ function formatPercent(value: number): string {
 export function registerSLOCommands(program: import('commander').Command): void {
   program
     .command('slo <subcommand>')
-    .description('Memory freshness SLO monitoring (status, report, config)')
+    .description('Memory freshness SLO monitoring (status, report, config; single non-empty subcommand: status, report, or config)')
     .option('-n, --namespace <ns>', 'Namespace (single non-empty org:app:agent[:user])')
     .option('--json', 'Output as JSON')
     .option('--set <key=value>', 'Set a config value (non-empty key=value)')
