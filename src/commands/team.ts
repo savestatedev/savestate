@@ -93,6 +93,35 @@ export function parseTeamAuditUntil(value: string | undefined): string | undefin
   return value;
 }
 
+const TEAM_SUBCOMMANDS = ['status', 'members', 'invite', 'audit'] as const;
+export type TeamSubcommand = (typeof TEAM_SUBCOMMANDS)[number];
+const TEAM_SUBCOMMAND_LIST = TEAM_SUBCOMMANDS.join(', ');
+
+/** Parse team subcommand without treating blank or comma-separated values as an action. */
+export function parseTeamSubcommand(value: string | undefined): TeamSubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty team subcommand (${TEAM_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty team subcommand (${TEAM_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((TEAM_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as TeamSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty team subcommand (${TEAM_SUBCOMMAND_LIST}).`,
+  );
+}
+
 export interface TeamCommandOptions {
   role?: string;
   name?: string;
@@ -420,7 +449,7 @@ export async function teamMembersCommand(options: TeamCommandOptions = {}): Prom
   console.log();
 }
 
-export async function teamInviteCommand(rawEmail: string, options: TeamCommandOptions = {}): Promise<void> {
+export async function teamInviteCommand(rawEmail: string | undefined, options: TeamCommandOptions = {}): Promise<void> {
   const email = parseTeamInviteEmail(rawEmail);
   const role = parseTeamInviteRole(options.role);
 
@@ -522,25 +551,17 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
 /**
  * Top-level dispatcher used by cli.ts so we keep one entry point per command tree.
  */
-export async function teamCommand(subcommand: string, arg: string | undefined, options: TeamCommandOptions): Promise<void> {
+export async function teamCommand(rawSubcommand: string, args: string[], options: TeamCommandOptions): Promise<void> {
+  const subcommand = parseTeamSubcommand(rawSubcommand);
   switch (subcommand) {
     case 'status':
       return teamStatusCommand(options);
     case 'members':
       return teamMembersCommand(options);
     case 'invite':
-      return teamInviteCommand(arg || '', options);
+      return teamInviteCommand(args[0], options);
     case 'audit':
       return teamAuditCommand(options);
-    default:
-      console.log(chalk.red(`Unknown team subcommand: ${subcommand}`));
-      console.log();
-      console.log('Usage:');
-      console.log('  savestate team status');
-      console.log('  savestate team members');
-      console.log('  savestate team invite <email> [--role admin|member|viewer]');
-      console.log('  savestate team audit [--since DATE] [--format csv|json] [--json]');
-      process.exit(1);
   }
 }
 
