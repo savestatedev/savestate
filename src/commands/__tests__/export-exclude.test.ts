@@ -58,7 +58,7 @@ describe('savestate export --exclude', () => {
 
     expect(result).toEqual({ written: false, out: filePath, overwritten: false });
     await expect(fs.access(filePath)).rejects.toThrow();
-    expect(error.mock.calls.flat().join('\n')).toMatch(/unknown exclude path/i);
+    expect(error.mock.calls.flat().join('\n')).toMatch(/Invalid --exclude value "secrets"/);
     expect(log.mock.calls.flat().join('\n')).not.toContain('Successfully exported');
     expect(log.mock.calls.flat().join('\n')).not.toContain('Encrypting agent state');
     error.mockRestore();

@@ -88,7 +88,7 @@ describe('savestate import --exclude', () => {
     });
 
     expect(result).toBeUndefined();
-    expect(error.mock.calls.flat().join('\n')).toMatch(/unknown exclude path/i);
+    expect(error.mock.calls.flat().join('\n')).toMatch(/Invalid --exclude value "secrets"/);
     expect(log.mock.calls.flat().join('\n')).not.toContain('Successfully restored');
     expect(log.mock.calls.flat().join('\n')).not.toContain('Decrypting agent state');
     error.mockRestore();
