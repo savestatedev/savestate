@@ -2168,6 +2168,14 @@ describe('CLI docs', () => {
     expect(identity).toContain("options?.json && subcommand === 'set'");
   });
 
+  it('documents identity subcommand as a single identity action', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    expect(identitySection).toContain('&lt;subcommand&gt;');
+    expect(identitySection).toContain('Must be a single non-empty subcommand');
+    expect(identity).toContain('export function parseIdentitySubcommand');
+    expect(cli).toContain('single non-empty subcommand: show, init, set, or schema');
+  });
+
   it('documents identity init name as a single identity name', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     expect(identitySection).toContain('&lt;name&gt;');
