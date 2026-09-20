@@ -1,0 +1,49 @@
+import { describe, expect, it } from 'vitest';
+import { parseDoctorUntil, resolveDoctorSnapshots } from '../doctor.js';
+
+describe('savestate doctor --until', () => {
+  it('leaves the cutoff unset when omitted', () => {
+    expect(parseDoctorUntil(undefined)).toBeUndefined();
+  });
+
+  it('accepts ISO 8601 dates', () => {
+    expect(parseDoctorUntil('2026-04-01')).toBe(new Date('2026-04-01').getTime());
+    expect(parseDoctorUntil('2026-04-01T00:00:00Z')).toBe(
+      new Date('2026-04-01T00:00:00Z').getTime(),
+    );
+  });
+
+  it.each(['', ' ', 'nope', '2026-13-01', 'not-a-date'])(
+    'rejects invalid value %s',
+    (value) => {
+      expect(() => parseDoctorUntil(value)).toThrow(
+        `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+      );
+    },
+  );
+
+  it('skips snapshots newer than the cutoff', () => {
+    expect(
+      resolveDoctorSnapshots(
+        [
+          { id: 'old', timestamp: '2026-01-01T00:00:00Z', adapter: 'chatgpt' },
+          { id: 'new', timestamp: '2026-05-01T00:00:00Z', adapter: 'chatgpt' },
+        ],
+        { until: '2026-04-01' },
+      ).map((entry) => entry.id),
+    ).toEqual(['old']);
+  });
+
+  it('ANDs --adapter with --until', () => {
+    expect(
+      resolveDoctorSnapshots(
+        [
+          { id: 'old-gpt', timestamp: '2026-01-01T00:00:00Z', adapter: 'chatgpt' },
+          { id: 'old-claude', timestamp: '2026-01-01T00:00:00Z', adapter: 'claude-code' },
+          { id: 'new', timestamp: '2026-05-01T00:00:00Z', adapter: 'chatgpt' },
+        ],
+        { adapter: 'chatgpt', until: '2026-04-01' },
+      ).map((entry) => entry.id),
+    ).toEqual(['old-gpt']);
+  });
+});

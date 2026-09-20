@@ -25,6 +25,7 @@ interface DoctorOptions {
   json?: boolean;
   adapter?: string;
   snapshot?: string;
+  until?: string;
   limit?: string;
 }
 
@@ -82,16 +83,33 @@ export function parseDoctorSnapshot(value: string | undefined): string | undefin
   return snapshot;
 }
 
+/** Parse doctor --until without treating invalid dates as an empty snapshot set. */
+export function parseDoctorUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 /** Resolve doctor snapshot filters before decrypting archives. */
 export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string }>(
   snapshots: T[],
-  options: Pick<DoctorOptions, 'adapter' | 'snapshot' | 'limit'>,
+  options: Pick<DoctorOptions, 'adapter' | 'snapshot' | 'until' | 'limit'>,
 ): T[] {
   const adapter = parseDoctorAdapter(options.adapter);
   const snapshot = parseDoctorSnapshot(options.snapshot);
+  const until = parseDoctorUntil(options.until);
   let targets = snapshots.filter((entry) => {
     if (adapter !== undefined && entry.adapter !== adapter) return false;
     if (snapshot !== undefined && entry.id !== snapshot) return false;
+    if (until !== undefined && new Date(entry.timestamp).getTime() > until) {
+      return false;
+    }
     return true;
   });
   const limit = parseDoctorLimit(options.limit);
@@ -154,6 +172,7 @@ export function formatDoctorMissingJson(): string {
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
   parseDoctorAdapter(options.adapter);
   parseDoctorSnapshot(options.snapshot);
+  parseDoctorUntil(options.until);
   parseDoctorLimit(options.limit);
 
   if (!options.json) {
