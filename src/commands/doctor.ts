@@ -24,6 +24,7 @@ import { getPassphrase } from '../passphrase.js';
 interface DoctorOptions {
   json?: boolean;
   adapter?: string;
+  snapshot?: string;
   limit?: string;
 }
 
@@ -65,6 +66,41 @@ export function parseDoctorAdapter(value: string | undefined): string | undefine
   throw new Error(
     `Invalid --adapter value "${value}". Expected one of: ${DOCTOR_ADAPTER_LIST}.`,
   );
+}
+
+/** Parse doctor --snapshot without treating blank ids as an empty snapshot set. */
+export function parseDoctorSnapshot(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const snapshot = value.trim();
+  if (snapshot.length === 0 || snapshot.includes(',') || /\s/.test(snapshot)) {
+    throw new Error(
+      `Invalid --snapshot value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return snapshot;
+}
+
+/** Resolve doctor snapshot filters before decrypting archives. */
+export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string }>(
+  snapshots: T[],
+  options: Pick<DoctorOptions, 'adapter' | 'snapshot' | 'limit'>,
+): T[] {
+  const adapter = parseDoctorAdapter(options.adapter);
+  const snapshot = parseDoctorSnapshot(options.snapshot);
+  let targets = snapshots.filter((entry) => {
+    if (adapter !== undefined && entry.adapter !== adapter) return false;
+    if (snapshot !== undefined && entry.id !== snapshot) return false;
+    return true;
+  });
+  const limit = parseDoctorLimit(options.limit);
+  if (limit !== undefined) {
+    targets = [...targets]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  }
+  return targets;
 }
 
 export interface SnapshotDiagnosis {
@@ -116,7 +152,9 @@ export function formatDoctorMissingJson(): string {
 }
 
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
-  const adapter = parseDoctorAdapter(options.adapter);
+  parseDoctorAdapter(options.adapter);
+  parseDoctorSnapshot(options.snapshot);
+  parseDoctorLimit(options.limit);
 
   if (!options.json) {
     console.log();
@@ -133,17 +171,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
 
   const config = await loadConfig();
   const index = await loadIndex();
-
-  let targets = index.snapshots;
-  if (adapter) {
-    targets = targets.filter((s) => s.adapter === adapter);
-  }
-  const limit = parseDoctorLimit(options.limit);
-  if (limit !== undefined) {
-    targets = [...targets]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
-  }
+  const targets = resolveDoctorSnapshots(index.snapshots, options);
 
   if (targets.length === 0) {
     if (options.json) {
