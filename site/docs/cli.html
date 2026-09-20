@@ -302,6 +302,7 @@
         <tr><td><code>--json</code></td><td>Emit per-snapshot diagnosis as JSON. Decrypts archives. When SaveState is not initialized, emits a missing summary (found, total, healthy, unhealthy; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only check snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Only check this snapshot. Must be a single non-empty snapshot id.</td></tr>
+        <tr><td><code>--since &lt;date&gt;</code></td><td>Only check snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only check snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Only check the N most recent snapshots. Must be a positive integer up to 1000.</td></tr>
       </tbody>
@@ -321,6 +322,9 @@
 
 <span class="code-comment"># Check one snapshot</span>
 <span class="code-prompt">$</span> savestate doctor --snapshot ss-2026-09-13T12-00-00-ab12cd
+
+<span class="code-comment"># Skip snapshots older than a cutoff</span>
+<span class="code-prompt">$</span> savestate doctor --since 2026-04-01
 
 <span class="code-comment"># Skip snapshots newer than a cutoff</span>
 <span class="code-prompt">$</span> savestate doctor --until 2026-04-01</code></pre>

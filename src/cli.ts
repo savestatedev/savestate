@@ -119,6 +119,7 @@ program
   .option('--json', 'Output as JSON')
   .option('--adapter <id>', 'Only check snapshots from this adapter')
   .option('--snapshot <id>', 'Only check this snapshot (single non-empty snapshot id)')
+  .option('--since <date>', 'Only check snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only check snapshots taken before this date (ISO 8601)')
   .option('--limit <n>', 'Only check the N most recent snapshots')
   .action(doctorCommand);

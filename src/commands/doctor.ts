@@ -25,6 +25,7 @@ interface DoctorOptions {
   json?: boolean;
   adapter?: string;
   snapshot?: string;
+  since?: string;
   until?: string;
   limit?: string;
 }
@@ -83,6 +84,19 @@ export function parseDoctorSnapshot(value: string | undefined): string | undefin
   return snapshot;
 }
 
+/** Parse doctor --since without treating invalid dates as an empty snapshot set. */
+export function parseDoctorSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 /** Parse doctor --until without treating invalid dates as an empty snapshot set. */
 export function parseDoctorUntil(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -99,14 +113,18 @@ export function parseDoctorUntil(value: string | undefined): number | undefined 
 /** Resolve doctor snapshot filters before decrypting archives. */
 export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string }>(
   snapshots: T[],
-  options: Pick<DoctorOptions, 'adapter' | 'snapshot' | 'until' | 'limit'>,
+  options: Pick<DoctorOptions, 'adapter' | 'snapshot' | 'since' | 'until' | 'limit'>,
 ): T[] {
   const adapter = parseDoctorAdapter(options.adapter);
   const snapshot = parseDoctorSnapshot(options.snapshot);
+  const since = parseDoctorSince(options.since);
   const until = parseDoctorUntil(options.until);
   let targets = snapshots.filter((entry) => {
     if (adapter !== undefined && entry.adapter !== adapter) return false;
     if (snapshot !== undefined && entry.id !== snapshot) return false;
+    if (since !== undefined && new Date(entry.timestamp).getTime() < since) {
+      return false;
+    }
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) {
       return false;
     }
@@ -172,6 +190,7 @@ export function formatDoctorMissingJson(): string {
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
   parseDoctorAdapter(options.adapter);
   parseDoctorSnapshot(options.snapshot);
+  parseDoctorSince(options.since);
   parseDoctorUntil(options.until);
   parseDoctorLimit(options.limit);
 
