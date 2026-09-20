@@ -118,6 +118,7 @@ program
   .description('Health-check every snapshot: decrypt, unpack, verify checksums, walk chains')
   .option('--json', 'Output as JSON')
   .option('--adapter <id>', 'Only check snapshots from this adapter')
+  .option('--tag <tag>', 'Only check snapshots with this tag')
   .option('--limit <n>', 'Only check the N most recent snapshots')
   .action(doctorCommand);
 

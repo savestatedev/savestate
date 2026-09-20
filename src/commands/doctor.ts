@@ -24,6 +24,7 @@ import { getPassphrase } from '../passphrase.js';
 interface DoctorOptions {
   json?: boolean;
   adapter?: string;
+  tag?: string;
   limit?: string;
 }
 
@@ -65,6 +66,37 @@ export function parseDoctorAdapter(value: string | undefined): string | undefine
   throw new Error(
     `Invalid --adapter value "${value}". Expected one of: ${DOCTOR_ADAPTER_LIST}.`,
   );
+}
+
+/** Parse doctor --tag without treating blank or comma-separated values as an empty snapshot set. */
+export function parseDoctorTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve doctor --adapter/--tag into snapshots before decrypting archives. */
+export function resolveDoctorSnapshots(
+  snapshots: Array<{ id: string; adapter?: string; tags?: string[] }>,
+  options: Pick<DoctorOptions, 'adapter' | 'tag'>,
+): string[] {
+  const adapter = parseDoctorAdapter(options.adapter);
+  const tag = parseDoctorTag(options.tag);
+
+  return snapshots
+    .filter((entry) => {
+      if (adapter !== undefined && entry.adapter !== adapter) return false;
+      if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
+      return true;
+    })
+    .map((entry) => entry.id);
 }
 
 export interface SnapshotDiagnosis {
@@ -116,7 +148,8 @@ export function formatDoctorMissingJson(): string {
 }
 
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
-  const adapter = parseDoctorAdapter(options.adapter);
+  parseDoctorAdapter(options.adapter);
+  parseDoctorTag(options.tag);
 
   if (!options.json) {
     console.log();
@@ -134,10 +167,8 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   const config = await loadConfig();
   const index = await loadIndex();
 
-  let targets = index.snapshots;
-  if (adapter) {
-    targets = targets.filter((s) => s.adapter === adapter);
-  }
+  const matched = new Set(resolveDoctorSnapshots(index.snapshots, options));
+  let targets = index.snapshots.filter((s) => matched.has(s.id));
   const limit = parseDoctorLimit(options.limit);
   if (limit !== undefined) {
     targets = [...targets]
