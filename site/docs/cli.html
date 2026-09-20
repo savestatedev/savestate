@@ -204,6 +204,7 @@
         <tr><td><code>--to &lt;platform&gt;</code></td><td>Restore to a different platform (cross-platform migration). Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show what would be restored without making any changes</td></tr>
         <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
+        <tr><td><code>--exclude &lt;categories&gt;</code></td><td>Skip restore categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the restore result as JSON. Decrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -220,6 +221,9 @@
 
 <span class="code-comment"># Restore only memory files</span>
 <span class="code-prompt">$</span> savestate restore latest --include memory
+
+<span class="code-comment"># Restore everything except conversations</span>
+<span class="code-prompt">$</span> savestate restore latest --exclude conversations
 
 <span class="code-comment"># Preview without changing anything</span>
 <span class="code-prompt">$</span> savestate restore latest --dry-run

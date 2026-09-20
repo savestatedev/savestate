@@ -3029,6 +3029,16 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreInclude');
   });
 
+  it('documents restore --exclude as known restore categories', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--exclude');
+    expect(restoreSection).toContain('Must be one or more of: identity, memory, conversations');
+    expect(restoreSection).toContain('savestate restore latest --exclude conversations');
+    expect(restoreBlock).toContain(".option('--exclude <categories>'");
+    expect(restore).toContain('export function parseRestoreExclude');
+  });
+
   it('documents restore --to as a known adapter', () => {
     const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
     expect(restoreSection).toContain('--to');

@@ -15,6 +15,7 @@ interface RestoreOptions {
   to?: string;
   dryRun?: boolean;
   include?: string;
+  exclude?: string;
   json?: boolean;
 }
 
@@ -86,6 +87,29 @@ export function parseRestoreInclude(
   return categories as RestoreIncludeCategory[];
 }
 
+/** Parse restore --exclude without silently skipping unknown categories. */
+export function parseRestoreExclude(
+  value: string | undefined,
+): RestoreIncludeCategory[] | undefined {
+  if (value === undefined) return undefined;
+
+  const categories = value
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (
+    categories.length === 0 ||
+    categories.some((token) => !(VALID_INCLUDE as readonly string[]).includes(token))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${RESTORE_INCLUDE_LIST}.`,
+    );
+  }
+
+  return categories as RestoreIncludeCategory[];
+}
+
 export function formatRestoreResultJson(result: RestoreResult, extra?: { dryRun?: boolean }): string {
   return JSON.stringify(
     {
@@ -144,6 +168,10 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
   }
 
   const include = parseRestoreInclude(options.include);
+  const exclude = parseRestoreExclude(options.exclude);
+  const categories = exclude
+    ? (include ?? [...VALID_INCLUDE]).filter((category) => !exclude.includes(category))
+    : include;
   const to = parseRestoreTo(options.to);
 
   if (options.json && resolvedId === 'latest') {
@@ -190,7 +218,7 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     const spinner = options.json ? null : ora('Retrieving and decrypting snapshot...').start();
 
     const result = await restoreSnapshot(resolvedId, adapter, storage, passphrase, {
-      include,
+      include: categories,
       dryRun: options.dryRun,
     });
 
