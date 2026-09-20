@@ -2889,10 +2889,11 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate doctor');
   });
 
-  it('documents doctor --json, --adapter, and --limit', () => {
+  it('documents doctor --json, --adapter, --since, and --limit', () => {
     const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
     expect(doctorSection).toContain('--json');
     expect(doctorSection).toContain('--adapter');
+    expect(doctorSection).toContain('--since');
     expect(doctorSection).toContain('--limit');
     expect(doctorSection).toContain('checksums');
     expect(doctorSection).toContain('incremental chains');
@@ -2912,6 +2913,16 @@ describe('CLI docs', () => {
       'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
     );
     expect(doctor).toContain('export function parseDoctorAdapter');
+  });
+
+  it('documents doctor --since as an ISO 8601 date', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    const doctorBlock = cli.slice(cli.indexOf("command('doctor')"), cli.indexOf("command('inspect <snapshot-id>')"));
+    expect(doctorSection).toContain('--since');
+    expect(doctorSection).toContain('Must be an ISO 8601 date');
+    expect(doctorSection).toContain('savestate doctor --since 2026-04-01');
+    expect(doctorBlock).toContain(".option('--since <date>'");
+    expect(doctor).toContain('export function parseDoctorSince');
   });
 
   it('registers --json on savestate doctor', () => {
