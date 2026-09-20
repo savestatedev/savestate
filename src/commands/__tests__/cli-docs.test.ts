@@ -2234,6 +2234,14 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('savestate init');
   });
 
+  it('documents integrity subcommand as a single integrity action', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('&lt;subcommand&gt;');
+    expect(integritySection).toContain('Must be a single non-empty subcommand');
+    expect(integrity).toContain('export function parseIntegritySubcommand');
+    expect(integrity).toContain('single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear');
+  });
+
   it('documents integrity --user on quarantine and release', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--user');
@@ -2258,7 +2266,7 @@ describe('CLI docs', () => {
   });
 
   it('registers --json on savestate integrity', () => {
-    const integrityBlock = integrity.slice(integrity.indexOf("command('integrity [subcommand] [args...]')"));
+    const integrityBlock = integrity.slice(integrity.indexOf("command('integrity <subcommand> [args...]')"));
     expect(integrityBlock).toContain(".option('--json'");
   });
 

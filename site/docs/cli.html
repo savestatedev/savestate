@@ -1181,8 +1181,8 @@
 
     <!-- integrity -->
     <h2 id="integrity"><code>savestate integrity</code></h2>
-    <p>Memory Integrity Grid: detect and contain memory poisoning with honeyfact seeding, tripwire monitoring, and quarantine. Subcommands: <code>status</code>, <code>seed</code>, <code>rotate</code>, <code>incidents</code>, <code>incident</code>, <code>quarantine</code>, <code>release</code>, <code>config</code>, <code>test</code>, and <code>clear</code>. Requires <code>savestate init</code>.</p>
-    <pre><code><span class="code-prompt">$</span> savestate integrity [subcommand] [args...] [options]</code></pre>
+    <p>Memory Integrity Grid: detect and contain memory poisoning with honeyfact seeding, tripwire monitoring, and quarantine. Subcommands: <code>status</code>, <code>seed</code>, <code>rotate</code>, <code>incidents</code>, <code>incident</code>, <code>quarantine</code>, <code>release</code>, <code>config</code>, <code>test</code>, and <code>clear</code>. Must be a single non-empty subcommand (status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear). Requires <code>savestate init</code>.</p>
+    <pre><code><span class="code-prompt">$</span> savestate integrity &lt;subcommand&gt; [args...] [options]</code></pre>
 
     <table>
       <thead>
