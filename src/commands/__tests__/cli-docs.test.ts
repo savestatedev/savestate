@@ -2274,6 +2274,14 @@ describe('CLI docs', () => {
     expect(integrity).toContain('single non-empty incident id');
   });
 
+  it('documents integrity quarantine id as a single memory or agent id', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('&lt;memory_id|agent_id&gt;');
+    expect(integritySection).toContain('Must be a single non-empty memory or agent id');
+    expect(integrity).toContain('export function parseIntegrityTargetId');
+    expect(integrity).toContain('quarantine and release require a single non-empty memory or agent id');
+  });
+
   it('documents integrity --user on quarantine and release', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--user');
