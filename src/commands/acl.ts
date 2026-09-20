@@ -230,14 +230,49 @@ export function parseAclDescription(value: string | undefined): string {
   return description;
 }
 
-async function aclPropose(options: {
-  type: string;
-  criticality: string;
-  description: string;
-  proposer: string;
+const ACL_SUBCOMMANDS = ['propose', 'verify', 'gate', 'list'] as const;
+export type AclSubcommand = (typeof ACL_SUBCOMMANDS)[number];
+const ACL_SUBCOMMAND_LIST = ACL_SUBCOMMANDS.join(', ');
+
+/** Parse acl subcommand without treating blank or comma-separated values as an action. */
+export function parseAclSubcommand(value: string | undefined): AclSubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty acl subcommand (${ACL_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty acl subcommand (${ACL_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((ACL_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as AclSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty acl subcommand (${ACL_SUBCOMMAND_LIST}).`,
+  );
+}
+
+interface AclCommandOptions {
+  type?: string;
+  criticality?: string;
+  description?: string;
+  proposer?: string;
   expiresIn?: string;
+  id?: string;
+  verifier?: string;
+  approve?: boolean;
+  action?: string;
   json?: boolean;
-}) {
+}
+
+async function aclPropose(options: AclCommandOptions) {
   try {
     let expiresAt: string | undefined;
     const minutes = parseAclExpiresIn(options.expiresIn);
@@ -268,11 +303,11 @@ async function aclPropose(options: {
   }
 }
 
-async function aclVerify(options: { id: string; verifier: string; approve: boolean; json?: boolean }) {
+async function aclVerify(options: AclCommandOptions) {
   try {
     const id = parseAclId(options.id);
     const verifier = parseAclVerifier(options.verifier);
-    const commitment = verifyCommitment(id, verifier, options.approve);
+    const commitment = verifyCommitment(id, verifier, options.approve === true);
     if (!commitment) {
       if (options.json) {
         console.log(formatAclVerifyMissingJson(id));
@@ -293,7 +328,7 @@ async function aclVerify(options: { id: string; verifier: string; approve: boole
   }
 }
 
-async function aclGate(options: { action: string; json?: boolean }) {
+async function aclGate(options: AclCommandOptions) {
   try {
     const action = parseAclAction(options.action);
     const result = gateAction(action);
@@ -321,7 +356,7 @@ async function aclGate(options: { action: string; json?: boolean }) {
   }
 }
 
-async function aclList(options: { json?: boolean } = {}) {
+async function aclList(options: AclCommandOptions = {}) {
   try {
     const commitments = listCommitments();
     if (options.json) {
@@ -346,41 +381,33 @@ async function aclList(options: { json?: boolean } = {}) {
   }
 }
 
+export async function aclCommand(rawSubcommand: string, options: AclCommandOptions): Promise<void> {
+  const subcommand = parseAclSubcommand(rawSubcommand);
+  switch (subcommand) {
+    case 'propose':
+      return aclPropose(options);
+    case 'verify':
+      return aclVerify(options);
+    case 'gate':
+      return aclGate(options);
+    case 'list':
+      return aclList(options);
+  }
+}
+
 export function registerACLCommands(program: Command) {
-  const acl = program
-    .command('acl')
-    .description('Manage active commitments (ACL).');
-
-  acl
-    .command('propose')
-    .description('Propose a new commitment.')
-    .requiredOption('-t, --type <type>', 'Commitment type (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
-    .requiredOption('-c, --criticality <level>', 'Criticality level (c1, c2, c3)')
-    .requiredOption('-d, --description <text>', 'Description of the commitment (non-empty)')
-    .requiredOption('-p, --proposer <id>', 'ID of the proposing agent (single non-empty id)')
+  program
+    .command('acl <subcommand>')
+    .description('Manage active commitments (ACL; single non-empty subcommand: propose, verify, gate, or list)')
+    .option('-t, --type <type>', 'Commitment type (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
+    .option('-c, --criticality <level>', 'Criticality level (c1, c2, c3)')
+    .option('-d, --description <text>', 'Description of the commitment (non-empty)')
+    .option('-p, --proposer <id>', 'ID of the proposing agent (single non-empty id)')
     .option('-e, --expires-in <minutes>', 'Minutes until expiration')
+    .option('-i, --id <id>', 'Commitment ID (single non-empty id)')
+    .option('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
+    .option('--approve', 'Approve the commitment (default is reject)')
+    .option('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .option('--json', 'Output as JSON')
-    .action(aclPropose);
-
-  acl
-    .command('verify')
-    .description('Verify or reject a commitment.')
-    .requiredOption('-i, --id <id>', 'Commitment ID (single non-empty id)')
-    .requiredOption('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
-    .option('-a, --approve', 'Approve the commitment (default is reject)', false)
-    .option('--json', 'Output as JSON')
-    .action(aclVerify);
-
-  acl
-    .command('gate')
-    .description('Check if an action is allowed based on active commitments.')
-    .requiredOption('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
-    .option('--json', 'Output as JSON')
-    .action(aclGate);
-
-  acl
-    .command('list')
-    .description('List all commitments.')
-    .option('--json', 'Output as JSON')
-    .action(aclList);
+    .action(aclCommand);
 }
