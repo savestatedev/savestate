@@ -2001,8 +2001,16 @@ describe('CLI docs', () => {
   });
 
   it('registers --json on savestate acl list', () => {
-    const listBlock = acl.slice(acl.indexOf("command('list')"));
+    const listBlock = acl.slice(acl.indexOf("command('acl <subcommand>')"));
     expect(listBlock).toContain(".option('--json'");
+  });
+
+  it('documents acl subcommand as a single acl action', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    expect(aclSection).toContain('&lt;subcommand&gt;');
+    expect(aclSection).toContain('Must be a single non-empty subcommand');
+    expect(acl).toContain('export function parseAclSubcommand');
+    expect(acl).toContain('single non-empty subcommand: propose, verify, gate, or list');
   });
 
   it('documents acl --json', () => {
