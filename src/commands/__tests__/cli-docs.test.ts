@@ -3246,6 +3246,16 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('savestate init');
   });
 
+  it('documents search --exclude as known search types', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchSection).toContain('--exclude');
+    expect(searchSection).toContain('Must be one or more of: memory, conversation, identity, knowledge');
+    expect(searchSection).toContain('savestate search <span class="code-string">"cocktail recommendations"</span> --exclude conversation');
+    expect(searchBlock).toContain(".option('--exclude <types>'");
+    expect(search).toContain('export function parseSearchExclude');
+  });
+
   it('documents search --json when missing', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('--json');

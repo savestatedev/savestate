@@ -12,14 +12,17 @@ import type { SearchResult } from '../types.js';
 
 interface SearchOptions {
   type?: string;
+  exclude?: string;
   limit?: string;
   snapshot?: string;
   json?: boolean;
 }
 
-const VALID_TYPES = new Set(['memory', 'conversation', 'identity', 'knowledge']);
+const SEARCH_TYPES = ['memory', 'conversation', 'identity', 'knowledge'] as const;
+type SearchType = (typeof SEARCH_TYPES)[number];
+const VALID_TYPES = new Set<string>(SEARCH_TYPES);
 const MAX_SEARCH_LIMIT = 1000;
-const SEARCH_TYPE_LIST = [...VALID_TYPES].join(', ');
+const SEARCH_TYPE_LIST = SEARCH_TYPES.join(', ');
 
 export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
@@ -61,7 +64,7 @@ export function parseSearchLimit(value: string | undefined): number {
 /** Parse search --type without silently dropping unknown filters or exiting the process. */
 export function parseSearchType(
   value: string | undefined,
-): Array<'memory' | 'conversation' | 'identity' | 'knowledge'> | undefined {
+): SearchType[] | undefined {
   if (value === undefined) return undefined;
 
   const types = value
@@ -78,7 +81,41 @@ export function parseSearchType(
     );
   }
 
-  return types as Array<'memory' | 'conversation' | 'identity' | 'knowledge'>;
+  return types as SearchType[];
+}
+
+/** Parse search --exclude without silently skipping unknown types. */
+export function parseSearchExclude(
+  value: string | undefined,
+): SearchType[] | undefined {
+  if (value === undefined) return undefined;
+
+  const types = value
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (
+    types.length === 0 ||
+    types.some((token) => !VALID_TYPES.has(token))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,
+    );
+  }
+
+  return types as SearchType[];
+}
+
+/** Resolve search --type/--exclude into the types that will be queried. */
+export function resolveSearchType(
+  options: Pick<SearchOptions, 'type' | 'exclude'>,
+): SearchType[] | undefined {
+  const include = parseSearchType(options.type);
+  const exclude = parseSearchExclude(options.exclude);
+  return exclude
+    ? (include ?? [...SEARCH_TYPES]).filter((type) => !exclude.includes(type))
+    : include;
 }
 
 /** Parse search --snapshot without treating blank ids as a missing snapshot. */
@@ -132,7 +169,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   const config = await loadConfig();
   const limit = parseSearchLimit(options.limit);
-  const types = parseSearchType(options.type);
+  const types = resolveSearchType(options);
 
   if (snapshotId) {
     const entry = await findEntry(snapshotId);
@@ -159,7 +196,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   try {
     const results = await searchSnapshots(query, config, {
-      types: types as ('memory' | 'conversation' | 'identity' | 'knowledge')[] | undefined,
+      types,
       limit,
       snapshots: snapshotId ? [snapshotId] : undefined,
       passphrase,

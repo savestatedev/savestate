@@ -259,7 +259,8 @@ import { searchCommand } from './commands/search.js';
 program
   .command('search <query>')
   .description('Search across all snapshots (non-empty query)')
-  .option('--type <type>', 'Filter by type (memory, conversation, identity)')
+  .option('--type <type>', 'Filter by type (one or more of: memory, conversation, identity, knowledge)')
+  .option('--exclude <types>', 'Skip search types (one or more of: memory, conversation, identity, knowledge)')
   .option('--limit <n>', 'Maximum results')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--json', 'Output as JSON')
