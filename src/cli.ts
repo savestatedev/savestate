@@ -260,6 +260,7 @@ program
   .command('search <query>')
   .description('Search across all snapshots (non-empty query)')
   .option('--type <type>', 'Filter by type (memory, conversation, identity)')
+  .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
   .option('--limit <n>', 'Maximum results')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--json', 'Output as JSON')
