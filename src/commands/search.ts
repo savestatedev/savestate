@@ -14,6 +14,7 @@ interface SearchOptions {
   type?: string;
   exclude?: string;
   since?: string;
+  until?: string;
   limit?: string;
   snapshot?: string;
   adapter?: string;
@@ -172,15 +173,34 @@ export function parseSearchSince(value: string | undefined): number | undefined 
   return ms;
 }
 
-/** Resolve --snapshot/--since/--adapter into snapshot ids before decrypting archives. */
+/** Parse search --until without treating invalid dates as an empty result set. */
+export function parseSearchUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve --snapshot/--since/--until/--adapter into snapshot ids before decrypting archives. */
 export function resolveSearchSnapshots(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
-  options: Pick<SearchOptions, 'snapshot' | 'since' | 'adapter'>,
+  options: Pick<SearchOptions, 'snapshot' | 'since' | 'until' | 'adapter'>,
 ): string[] | undefined {
   const snapshotId = parseSearchSnapshot(options.snapshot);
   const since = parseSearchSince(options.since);
+  const until = parseSearchUntil(options.until);
   const adapter = parseSearchAdapter(options.adapter);
-  if (snapshotId === undefined && since === undefined && adapter === undefined) {
+  if (
+    snapshotId === undefined &&
+    since === undefined &&
+    until === undefined &&
+    adapter === undefined
+  ) {
     return undefined;
   }
 
@@ -188,6 +208,9 @@ export function resolveSearchSnapshots(
     .filter((entry) => {
       if (snapshotId !== undefined && entry.id !== snapshotId) return false;
       if (since !== undefined && new Date(entry.timestamp).getTime() < since) {
+        return false;
+      }
+      if (until !== undefined && new Date(entry.timestamp).getTime() > until) {
         return false;
       }
       if (adapter !== undefined && entry.adapter !== adapter) return false;
@@ -219,6 +242,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const snapshotId = parseSearchSnapshot(options.snapshot);
   const adapter = parseSearchAdapter(options.adapter);
   const since = parseSearchSince(options.since);
+  const until = parseSearchUntil(options.until);
 
   if (!options.json) {
     console.log();
@@ -249,7 +273,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       process.exit(1);
     }
     catalog = [entry];
-  } else if (since !== undefined || adapter) {
+  } else if (since !== undefined || until !== undefined || adapter) {
     catalog = (await loadIndex()).snapshots;
   }
 
@@ -261,6 +285,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
     if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
     if (since !== undefined) console.log(chalk.dim(`   Since: ${options.since}`));
+    if (until !== undefined) console.log(chalk.dim(`   Until: ${options.until}`));
     if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     console.log();

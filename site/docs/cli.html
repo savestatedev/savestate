@@ -383,6 +383,7 @@
         <tr><td><code>--type &lt;type&gt;</code></td><td>Filter by type: <code>memory</code>, <code>conversation</code>, <code>identity</code>, or <code>knowledge</code> (comma-separated). Must be one or more of: memory, conversation, identity, knowledge.</td></tr>
         <tr><td><code>--exclude &lt;types&gt;</code></td><td>Skip search types: <code>memory</code>, <code>conversation</code>, <code>identity</code>, <code>knowledge</code> (comma-separated). Must be one or more of: memory, conversation, identity, knowledge.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only search snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
+        <tr><td><code>--until &lt;date&gt;</code></td><td>Only search snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20). Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only search snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
@@ -401,6 +402,9 @@
 
 <span class="code-comment"># Snapshots since April</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --since 2026-04-01
+
+<span class="code-comment"># Snapshots before a cutoff</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --until 2026-04-01
 
 <span class="code-comment"># One snapshot</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"system prompt"</span> --snapshot ss-2026-01-26T09-30-00-b7c1m4
