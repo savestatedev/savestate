@@ -261,6 +261,24 @@ export function parseIntegrityIncidentId(value: string | undefined): string {
   return id;
 }
 
+/** Parse integrity quarantine/release id without treating blank or comma-separated values as a target. */
+export function parseIntegrityTargetId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid memory or agent id. Expected a single non-empty memory or agent id.',
+    );
+  }
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid memory or agent id "${value}". Expected a single non-empty memory or agent id.`,
+    );
+  }
+
+  return id;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -728,6 +746,10 @@ export async function integrityCommand(
 ): Promise<void> {
   const subcommand = parseIntegritySubcommand(rawSubcommand);
   const incidentId = subcommand === 'incident' ? parseIntegrityIncidentId(args[0]) : undefined;
+  const targetId =
+    subcommand === 'quarantine' || subcommand === 'release'
+      ? parseIntegrityTargetId(args[0])
+      : undefined;
 
   if (!options.json) {
     console.log();
@@ -747,7 +769,7 @@ export async function integrityCommand(
       return;
     }
     if (options.json && subcommand === 'release') {
-      console.log(formatIntegrityReleaseMissingJson(args[0] ?? ''));
+      console.log(formatIntegrityReleaseMissingJson(targetId ?? ''));
       return;
     }
     if (options.json && subcommand === 'clear') {
@@ -795,10 +817,10 @@ export async function integrityCommand(
       await incidentDetailCommand(incidentId!, options);
       return;
     case 'quarantine':
-      await quarantineCommand(args[0], options);
+      await quarantineCommand(targetId!, options);
       return;
     case 'release':
-      await releaseCommand(args[0], options);
+      await releaseCommand(targetId!, options);
       return;
     case 'config':
       await configCommand(args[0], options);
@@ -1450,7 +1472,7 @@ function showUsage(): void {
 export function registerIntegrityCommands(program: Command): void {
   program
     .command('integrity <subcommand> [args...]')
-    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear; incident requires a single non-empty incident id)')
+    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear; incident requires a single non-empty incident id; quarantine and release require a single non-empty memory or agent id)')
     .option('--json', 'Output as JSON')
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
