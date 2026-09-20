@@ -142,6 +142,22 @@ export function parseIntegrityIncidentStatus(
   );
 }
 
+/** Parse integrity --policy without silently ignoring unknown containment policies. */
+export function parseIntegrityPolicy(
+  value: string | undefined,
+): ContainmentPolicy | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim().toLowerCase();
+  if ((CONTAINMENT_POLICIES as string[]).includes(normalized)) {
+    return normalized as ContainmentPolicy;
+  }
+
+  throw new Error(
+    `Invalid --policy value "${value}". Expected one of: ${CONTAINMENT_POLICY_LIST}.`,
+  );
+}
+
 /** Parse enabled without silently writing false for unknown boolean values. */
 export function parseIntegrityEnabled(value: string): boolean {
   const normalized = value.trim().toLowerCase();
@@ -769,6 +785,7 @@ export async function integrityCommand(
       ? parseIntegrityTargetId(args[0])
       : undefined;
   const testInput = subcommand === 'test' ? parseIntegrityTestInput(args[0]) : undefined;
+  const policy = parseIntegrityPolicy(options.policy);
 
   if (!options.json) {
     console.log();
@@ -817,6 +834,11 @@ export async function integrityCommand(
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
+  }
+
+  if (policy) {
+    const controller = new ContainmentController();
+    await controller.updateConfig({ policy });
   }
 
   switch (subcommand) {
@@ -1473,6 +1495,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
+  console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
   console.log('  --user <id>       User performing action (single non-empty id)');
@@ -1490,7 +1513,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
-    .option('--policy <policy>', 'Containment policy')
+    .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
     .option('--user <id>', 'User performing action (single non-empty id)')
