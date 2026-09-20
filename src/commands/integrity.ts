@@ -279,6 +279,24 @@ export function parseIntegrityTargetId(value: string | undefined): string {
   return id;
 }
 
+/** Parse integrity test input without running the tripwire on blank text. */
+export function parseIntegrityTestInput(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid test input. Expected a non-empty text to check.',
+    );
+  }
+
+  const input = value.trim();
+  if (input.length === 0) {
+    throw new Error(
+      `Invalid test input "${value}". Expected a non-empty text to check.`,
+    );
+  }
+
+  return input;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -750,6 +768,7 @@ export async function integrityCommand(
     subcommand === 'quarantine' || subcommand === 'release'
       ? parseIntegrityTargetId(args[0])
       : undefined;
+  const testInput = subcommand === 'test' ? parseIntegrityTestInput(args[0]) : undefined;
 
   if (!options.json) {
     console.log();
@@ -826,7 +845,7 @@ export async function integrityCommand(
       await configCommand(args[0], options);
       return;
     case 'test':
-      await testMonitorCommand(args[0], options);
+      await testMonitorCommand(testInput!, options);
       return;
     case 'clear':
       await clearCommand(options);
@@ -1351,13 +1370,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
 /**
  * Test the tripwire monitor with sample input.
  */
-async function testMonitorCommand(input: string | undefined, options: IntegrityOptions): Promise<void> {
-  if (!input) {
-    console.log(chalk.red('✗ Test input required'));
-    console.log(chalk.dim('  Usage: savestate integrity test "<text to check>"'));
-    process.exit(1);
-  }
-
+async function testMonitorCommand(input: string, options: IntegrityOptions): Promise<void> {
   const config = await loadConfig();
   const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
 
@@ -1454,7 +1467,7 @@ function showUsage(): void {
   console.log('  savestate integrity quarantine <id>            Quarantine a memory/agent');
   console.log('  savestate integrity release <id>               Release from quarantine');
   console.log('  savestate integrity config [key=value]         View/set configuration');
-  console.log('  savestate integrity test "<text>"              Test tripwire with input');
+  console.log('  savestate integrity test "<text>"              Test tripwire with input (non-empty)');
   console.log('  savestate integrity clear --force              Clear all honeyfacts');
   console.log();
   console.log('Options:');
@@ -1472,7 +1485,7 @@ function showUsage(): void {
 export function registerIntegrityCommands(program: Command): void {
   program
     .command('integrity <subcommand> [args...]')
-    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear; incident requires a single non-empty incident id; quarantine and release require a single non-empty memory or agent id)')
+    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear; incident requires a single non-empty incident id; quarantine and release require a single non-empty memory or agent id; test requires a non-empty text to check)')
     .option('--json', 'Output as JSON')
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')

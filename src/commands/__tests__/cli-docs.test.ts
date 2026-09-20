@@ -2282,6 +2282,14 @@ describe('CLI docs', () => {
     expect(integrity).toContain('quarantine and release require a single non-empty memory or agent id');
   });
 
+  it('documents integrity test input as non-empty text', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('&lt;text&gt;');
+    expect(integritySection).toContain('Must be a non-empty text to check');
+    expect(integrity).toContain('export function parseIntegrityTestInput');
+    expect(integrity).toContain('test requires a non-empty text to check');
+  });
+
   it('documents integrity --user on quarantine and release', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--user');
