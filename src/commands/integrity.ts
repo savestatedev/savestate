@@ -243,6 +243,24 @@ export function parseIntegritySubcommand(value: string | undefined): IntegritySu
   );
 }
 
+/** Parse integrity incident id without looking up blank or comma-separated ids. */
+export function parseIntegrityIncidentId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid incident id. Expected a single non-empty incident id.',
+    );
+  }
+
+  const id = value.trim();
+  if (id.length === 0 || id.includes(',') || /\s/.test(id)) {
+    throw new Error(
+      `Invalid incident id "${value}". Expected a single non-empty incident id.`,
+    );
+  }
+
+  return id;
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -709,6 +727,7 @@ export async function integrityCommand(
   options: IntegrityOptions,
 ): Promise<void> {
   const subcommand = parseIntegritySubcommand(rawSubcommand);
+  const incidentId = subcommand === 'incident' ? parseIntegrityIncidentId(args[0]) : undefined;
 
   if (!options.json) {
     console.log();
@@ -740,7 +759,7 @@ export async function integrityCommand(
       return;
     }
     if (options.json && subcommand === 'incident') {
-      console.log(formatIntegrityIncidentMissingJson(args[0] ?? ''));
+      console.log(formatIntegrityIncidentMissingJson(incidentId ?? ''));
       return;
     }
     if (options.json && subcommand === 'config') {
@@ -773,7 +792,7 @@ export async function integrityCommand(
       await incidentsCommand(options);
       return;
     case 'incident':
-      await incidentDetailCommand(args[0], options);
+      await incidentDetailCommand(incidentId!, options);
       return;
     case 'quarantine':
       await quarantineCommand(args[0], options);
@@ -1015,12 +1034,6 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
  * Show incident details.
  */
 async function incidentDetailCommand(id: string, options: IntegrityOptions): Promise<void> {
-  if (!id) {
-    console.log(chalk.red('✗ Incident ID required'));
-    console.log(chalk.dim('  Usage: savestate integrity incident <id>'));
-    process.exit(1);
-  }
-
   const incident = await getIncident(id);
 
   if (!incident) {
@@ -1415,7 +1428,7 @@ function showUsage(): void {
   console.log('  savestate integrity seed [--count N]           Plant honeyfact memories');
   console.log('  savestate integrity rotate                     Rotate expired honeyfacts');
   console.log('  savestate integrity incidents [--status <s>]   List detected incidents');
-  console.log('  savestate integrity incident <id>              Show incident details');
+  console.log('  savestate integrity incident <id>              Show incident details (single non-empty incident id)');
   console.log('  savestate integrity quarantine <id>            Quarantine a memory/agent');
   console.log('  savestate integrity release <id>               Release from quarantine');
   console.log('  savestate integrity config [key=value]         View/set configuration');
@@ -1437,7 +1450,7 @@ function showUsage(): void {
 export function registerIntegrityCommands(program: Command): void {
   program
     .command('integrity <subcommand> [args...]')
-    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear)')
+    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear; incident requires a single non-empty incident id)')
     .option('--json', 'Output as JSON')
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
