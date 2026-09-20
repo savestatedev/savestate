@@ -953,7 +953,7 @@
 
     <!-- context -->
     <h2 id="context"><code>savestate context</code></h2>
-    <p>Preflight context compilation for agent runs. Subcommands: <code>compile</code>, <code>explain</code>, <code>validate</code>, and <code>config</code>. <code>compile</code> builds a RunBrief for an agent and task within a token budget (default 4000). <code>explain</code> prints the inclusion trace for a compiled run. <code>validate</code> checks a RunBrief JSON file. <code>config</code> shows scoring weights and budget allocation.</p>
+    <p>Preflight context compilation for agent runs. Subcommands: <code>compile</code>, <code>explain</code>, <code>validate</code>, and <code>config</code>. <code>compile</code> builds a RunBrief for an agent and task within a token budget (default 4000). <code>explain</code> prints the inclusion trace for a compiled run and requires a single non-empty run id. <code>validate</code> checks a RunBrief JSON file. <code>config</code> shows scoring weights and budget allocation.</p>
     <pre><code><span class="code-prompt">$</span> savestate context &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -961,6 +961,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>&lt;run-id&gt;</code></td><td>Run ID for <code>explain</code>. Must be a single non-empty run id.</td></tr>
         <tr><td><code>-a, --agent &lt;id&gt;</code></td><td>Agent ID for <code>compile</code> (required). Must be a single non-empty agent id.</td></tr>
         <tr><td><code>-t, --task &lt;intent&gt;</code></td><td>Task intent for <code>compile</code> (required). Must be a non-empty task intent.</td></tr>
         <tr><td><code>-b, --budget &lt;tokens&gt;</code></td><td>Token budget for <code>compile</code> (default 4000). Must be a positive integer up to 1000000.</td></tr>

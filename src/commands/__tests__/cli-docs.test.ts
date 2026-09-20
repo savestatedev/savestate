@@ -1441,6 +1441,14 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextFile');
   });
 
+  it('documents context explain run-id as a single run id', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    expect(contextSection).toContain('&lt;run-id&gt;');
+    expect(contextSection).toContain('Must be a single non-empty run id');
+    expect(context).toContain('export function parseContextRunId');
+    expect(context).toContain('single non-empty run id');
+  });
+
   it('registers --json on savestate context compile', () => {
     const compileBlock = context.slice(context.indexOf("command('compile')"), context.indexOf("command('explain"));
     expect(compileBlock).toContain(".option('--json'");

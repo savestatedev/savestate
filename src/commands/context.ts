@@ -260,6 +260,24 @@ export function parseContextFile(value: string | undefined): string | undefined 
   return file;
 }
 
+/** Parse context explain run-id without looking up blank or comma-separated ids. */
+export function parseContextRunId(value: string | undefined): string {
+  if (value === undefined) {
+    throw new Error(
+      'Invalid run id. Expected a single non-empty run id.',
+    );
+  }
+
+  const runId = value.trim();
+  if (runId.length === 0 || runId.includes(',') || /\s/.test(runId)) {
+    throw new Error(
+      `Invalid run id "${value}". Expected a single non-empty run id.`,
+    );
+  }
+
+  return runId;
+}
+
 export function registerContextCommands(program: Command): void {
   const context = program
     .command('context')
@@ -321,9 +339,10 @@ export function registerContextCommands(program: Command): void {
   // Explain command
   context
     .command('explain <run-id>')
-    .description('Get explanation trace for a compiled context')
+    .description('Get explanation trace for a compiled context (single non-empty run id)')
     .option('--json', 'Output as JSON')
-    .action((runId: string, options) => {
+    .action((rawRunId: string, options) => {
+      const runId = parseContextRunId(rawRunId);
       const compiler = new ContextCompiler();
       const explanation = compiler.getExplanation(runId);
       
