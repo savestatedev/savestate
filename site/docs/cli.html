@@ -383,6 +383,7 @@
         <tr><td><code>--type &lt;type&gt;</code></td><td>Filter by type: <code>memory</code>, <code>conversation</code>, <code>identity</code>, or <code>knowledge</code> (comma-separated)</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20). Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only search snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--json</code></td><td>Output ranked results as JSON. When SaveState is not initialized, emits a missing summary (found, query, snapshot, count; omits extra fields). When the snapshot is missing, emits a missing summary (found, query, snapshot, count; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -395,6 +396,9 @@
 
 <span class="code-comment"># One snapshot</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"system prompt"</span> --snapshot ss-2026-01-26T09-30-00-b7c1m4
+
+<span class="code-comment"># ChatGPT snapshots only</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --adapter chatgpt
 
 <span class="code-comment"># Scriptable JSON results</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --json

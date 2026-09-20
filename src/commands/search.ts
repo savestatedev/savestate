@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
-import { findEntry } from '../index-file.js';
+import { findEntry, loadIndex } from '../index-file.js';
 import { searchSnapshots } from '../search.js';
 import { getPassphrase } from '../passphrase.js';
 import type { SearchResult } from '../types.js';
@@ -14,12 +14,24 @@ interface SearchOptions {
   type?: string;
   limit?: string;
   snapshot?: string;
+  adapter?: string;
   json?: boolean;
 }
 
 const VALID_TYPES = new Set(['memory', 'conversation', 'identity', 'knowledge']);
 const MAX_SEARCH_LIMIT = 1000;
 const SEARCH_TYPE_LIST = [...VALID_TYPES].join(', ');
+const SEARCH_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const SEARCH_ADAPTER_LIST = SEARCH_ADAPTERS.join(', ');
 
 export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
@@ -95,6 +107,20 @@ export function parseSearchSnapshot(value: string | undefined): string | undefin
   return snapshot;
 }
 
+/** Parse search --adapter without treating unknown ids as an empty result set. */
+export function parseSearchAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((SEARCH_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${SEARCH_ADAPTER_LIST}.`,
+  );
+}
+
 /** Parse search query without decrypting archives for blank input. */
 export function parseSearchQuery(value: string | undefined): string {
   if (value === undefined) {
@@ -116,6 +142,7 @@ export function parseSearchQuery(value: string | undefined): string {
 export async function searchCommand(rawQuery: string, options: SearchOptions): Promise<void> {
   const query = parseSearchQuery(rawQuery);
   const snapshotId = parseSearchSnapshot(options.snapshot);
+  const adapter = parseSearchAdapter(options.adapter);
 
   if (!options.json) {
     console.log();
@@ -136,7 +163,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   if (snapshotId) {
     const entry = await findEntry(snapshotId);
-    if (!entry) {
+    if (!entry || (adapter && entry.adapter !== adapter)) {
       if (options.json) {
         console.log(formatSearchMissingJson(query, snapshotId));
         return;
@@ -150,6 +177,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
     if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
     if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));
+    if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     console.log();
   }
 
@@ -158,10 +186,20 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const spinner = options.json ? null : ora('Searching across snapshots...').start();
 
   try {
+    let snapshotIds: string[] | undefined;
+    if (snapshotId) {
+      snapshotIds = [snapshotId];
+    } else if (adapter) {
+      const index = await loadIndex();
+      snapshotIds = index.snapshots
+        .filter((entry) => entry.adapter === adapter)
+        .map((entry) => entry.id);
+    }
+
     const results = await searchSnapshots(query, config, {
       types: types as ('memory' | 'conversation' | 'identity' | 'knowledge')[] | undefined,
       limit,
-      snapshots: snapshotId ? [snapshotId] : undefined,
+      snapshots: snapshotIds,
       passphrase,
     });
 

@@ -3274,6 +3274,18 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchLimit');
   });
 
+  it('documents search --adapter as a known adapter', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchSection).toContain('--adapter');
+    expect(searchSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(searchSection).toContain('--adapter chatgpt');
+    expect(searchBlock).toContain(".option('--adapter <id>'");
+    expect(search).toContain('export function parseSearchAdapter');
+  });
+
   it('documents search query as non-empty', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('&lt;query&gt;');
