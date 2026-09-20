@@ -18,6 +18,7 @@ interface SearchOptions {
   limit?: string;
   snapshot?: string;
   adapter?: string;
+  tag?: string;
   json?: boolean;
 }
 
@@ -186,20 +187,36 @@ export function parseSearchUntil(value: string | undefined): number | undefined 
   return ms;
 }
 
-/** Resolve --snapshot/--since/--until/--adapter into snapshot ids before decrypting archives. */
+/** Parse search --tag without treating blank or comma-separated values as an empty result set. */
+export function parseSearchTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve snapshot filters into ids before decrypting archives. */
 export function resolveSearchSnapshots(
-  snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
-  options: Pick<SearchOptions, 'snapshot' | 'since' | 'until' | 'adapter'>,
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string; tags?: string[] }>,
+  options: Pick<SearchOptions, 'snapshot' | 'since' | 'until' | 'adapter' | 'tag'>,
 ): string[] | undefined {
   const snapshotId = parseSearchSnapshot(options.snapshot);
   const since = parseSearchSince(options.since);
   const until = parseSearchUntil(options.until);
   const adapter = parseSearchAdapter(options.adapter);
+  const tag = parseSearchTag(options.tag);
   if (
     snapshotId === undefined &&
     since === undefined &&
     until === undefined &&
-    adapter === undefined
+    adapter === undefined &&
+    tag === undefined
   ) {
     return undefined;
   }
@@ -214,6 +231,7 @@ export function resolveSearchSnapshots(
         return false;
       }
       if (adapter !== undefined && entry.adapter !== adapter) return false;
+      if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
       return true;
     })
     .map((entry) => entry.id);
@@ -243,6 +261,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const adapter = parseSearchAdapter(options.adapter);
   const since = parseSearchSince(options.since);
   const until = parseSearchUntil(options.until);
+  const tag = parseSearchTag(options.tag);
 
   if (!options.json) {
     console.log();
@@ -273,7 +292,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       process.exit(1);
     }
     catalog = [entry];
-  } else if (since !== undefined || until !== undefined || adapter) {
+  } else if (since !== undefined || until !== undefined || adapter || tag) {
     catalog = (await loadIndex()).snapshots;
   }
 
@@ -288,6 +307,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (until !== undefined) console.log(chalk.dim(`   Until: ${options.until}`));
     if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
+    if (tag) console.log(chalk.dim(`   Tag: ${tag}`));
     console.log();
   }
 

@@ -266,6 +266,7 @@ program
   .option('--limit <n>', 'Maximum results')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--adapter <id>', 'Only search snapshots from this adapter')
+  .option('--tag <tag>', 'Only search snapshots with this tag')
   .option('--json', 'Output as JSON')
   .action(searchCommand);
 

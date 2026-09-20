@@ -3320,6 +3320,18 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchAdapter');
   });
 
+  it('documents search --tag as a single snapshot tag', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchSection).toContain('--tag');
+    expect(searchSection).toContain('Must be a single non-empty snapshot tag (no commas)');
+    expect(searchSection).toContain(
+      'savestate search <span class="code-string">"cocktail recommendations"</span> --tag work',
+    );
+    expect(searchBlock).toContain(".option('--tag <tag>'");
+    expect(search).toContain('export function parseSearchTag');
+  });
+
   it('documents search query as non-empty', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('&lt;query&gt;');
