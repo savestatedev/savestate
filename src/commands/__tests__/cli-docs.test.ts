@@ -283,6 +283,15 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerInclude');
   });
 
+  it('documents container --include-conversation-history', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(exportSection).toContain('--include-conversation-history');
+    expect(containerSection).toContain('--include-conversation-history');
+    expect(container).toContain('export function resolveBooleanIncludeFlags');
+    expect(container).toContain(".option('--include-conversation-history'");
+  });
+
   it('documents container --keyfile as a single path', () => {
     const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
