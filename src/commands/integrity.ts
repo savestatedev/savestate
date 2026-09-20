@@ -203,6 +203,46 @@ export function parseIntegrityReason(value: string | undefined): string | undefi
   return reason;
 }
 
+const INTEGRITY_SUBCOMMANDS = [
+  'status',
+  'seed',
+  'rotate',
+  'incidents',
+  'incident',
+  'quarantine',
+  'release',
+  'config',
+  'test',
+  'clear',
+] as const;
+export type IntegritySubcommand = (typeof INTEGRITY_SUBCOMMANDS)[number];
+const INTEGRITY_SUBCOMMAND_LIST = INTEGRITY_SUBCOMMANDS.join(', ');
+
+/** Parse integrity subcommand without treating blank or comma-separated values as an action. */
+export function parseIntegritySubcommand(value: string | undefined): IntegritySubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty integrity subcommand (${INTEGRITY_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty integrity subcommand (${INTEGRITY_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((INTEGRITY_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as IntegritySubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty integrity subcommand (${INTEGRITY_SUBCOMMAND_LIST}).`,
+  );
+}
+
 export interface IntegrityIncidentJson {
   id: string;
   createdAt: string;
@@ -664,10 +704,12 @@ export function formatIntegrityTestMissingJson(): string {
 }
 
 export async function integrityCommand(
-  subcommand: string,
+  rawSubcommand: string | undefined,
   args: string[],
   options: IntegrityOptions,
 ): Promise<void> {
+  const subcommand = parseIntegritySubcommand(rawSubcommand);
+
   if (!options.json) {
     console.log();
   }
@@ -748,9 +790,6 @@ export async function integrityCommand(
     case 'clear':
       await clearCommand(options);
       return;
-    default:
-      showUsage();
-      process.exit(1);
   }
 }
 
@@ -1397,8 +1436,8 @@ function showUsage(): void {
  */
 export function registerIntegrityCommands(program: Command): void {
   program
-    .command('integrity [subcommand] [args...]')
-    .description('Memory Integrity Grid - detect and contain memory poisoning')
+    .command('integrity <subcommand> [args...]')
+    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear)')
     .option('--json', 'Output as JSON')
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
@@ -1407,11 +1446,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
     .option('--user <id>', 'User performing action (single non-empty id)')
-    .action(async (subcommand: string | undefined, args: string[], options: IntegrityOptions) => {
-      if (!subcommand) {
-        showUsage();
-        return;
-      }
+    .action(async (subcommand: string, args: string[], options: IntegrityOptions) => {
       await integrityCommand(subcommand, args, options);
     });
 }
