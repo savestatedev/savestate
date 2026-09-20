@@ -261,6 +261,7 @@ program
   .description('Search across all snapshots (non-empty query)')
   .option('--type <type>', 'Filter by type (one or more of: memory, conversation, identity, knowledge)')
   .option('--exclude <types>', 'Skip search types (one or more of: memory, conversation, identity, knowledge)')
+  .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--limit <n>', 'Maximum results')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--adapter <id>', 'Only search snapshots from this adapter')

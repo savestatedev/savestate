@@ -13,6 +13,7 @@ import type { SearchResult } from '../types.js';
 interface SearchOptions {
   type?: string;
   exclude?: string;
+  since?: string;
   limit?: string;
   snapshot?: string;
   adapter?: string;
@@ -158,6 +159,43 @@ export function parseSearchAdapter(value: string | undefined): string | undefine
   );
 }
 
+/** Parse search --since without treating invalid dates as an empty result set. */
+export function parseSearchSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve --snapshot/--since/--adapter into snapshot ids before decrypting archives. */
+export function resolveSearchSnapshots(
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
+  options: Pick<SearchOptions, 'snapshot' | 'since' | 'adapter'>,
+): string[] | undefined {
+  const snapshotId = parseSearchSnapshot(options.snapshot);
+  const since = parseSearchSince(options.since);
+  const adapter = parseSearchAdapter(options.adapter);
+  if (snapshotId === undefined && since === undefined && adapter === undefined) {
+    return undefined;
+  }
+
+  return snapshots
+    .filter((entry) => {
+      if (snapshotId !== undefined && entry.id !== snapshotId) return false;
+      if (since !== undefined && new Date(entry.timestamp).getTime() < since) {
+        return false;
+      }
+      if (adapter !== undefined && entry.adapter !== adapter) return false;
+      return true;
+    })
+    .map((entry) => entry.id);
+}
+
 /** Parse search query without decrypting archives for blank input. */
 export function parseSearchQuery(value: string | undefined): string {
   if (value === undefined) {
@@ -180,6 +218,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const query = parseSearchQuery(rawQuery);
   const snapshotId = parseSearchSnapshot(options.snapshot);
   const adapter = parseSearchAdapter(options.adapter);
+  const since = parseSearchSince(options.since);
 
   if (!options.json) {
     console.log();
@@ -198,6 +237,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const limit = parseSearchLimit(options.limit);
   const types = resolveSearchType(options);
 
+  let catalog: Array<{ id: string; timestamp: string }> | undefined;
   if (snapshotId) {
     const entry = await findEntry(snapshotId);
     if (!entry || (adapter && entry.adapter !== adapter)) {
@@ -208,11 +248,19 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       console.log(chalk.red(`✗ Snapshot not found: ${snapshotId}`));
       process.exit(1);
     }
+    catalog = [entry];
+  } else if (since !== undefined || adapter) {
+    catalog = (await loadIndex()).snapshots;
   }
+
+  const snapshots = catalog
+    ? resolveSearchSnapshots(catalog, options)
+    : undefined;
 
   if (!options.json) {
     console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
     if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
+    if (since !== undefined) console.log(chalk.dim(`   Since: ${options.since}`));
     if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     console.log();
@@ -223,20 +271,10 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const spinner = options.json ? null : ora('Searching across snapshots...').start();
 
   try {
-    let snapshotIds: string[] | undefined;
-    if (snapshotId) {
-      snapshotIds = [snapshotId];
-    } else if (adapter) {
-      const index = await loadIndex();
-      snapshotIds = index.snapshots
-        .filter((entry) => entry.adapter === adapter)
-        .map((entry) => entry.id);
-    }
-
     const results = await searchSnapshots(query, config, {
       types,
       limit,
-      snapshots: snapshotIds,
+      snapshots,
       passphrase,
     });
 

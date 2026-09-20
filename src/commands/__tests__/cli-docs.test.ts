@@ -3256,6 +3256,18 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchExclude');
   });
 
+  it('documents search --since as an ISO 8601 date', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchSection).toContain('--since');
+    expect(searchSection).toContain('Must be an ISO 8601 date');
+    expect(searchSection).toContain(
+      'savestate search <span class="code-string">"cocktail recommendations"</span> --since 2026-04-01',
+    );
+    expect(searchBlock).toContain(".option('--since <date>'");
+    expect(search).toContain('export function parseSearchSince');
+  });
+
   it('documents search --json when missing', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('--json');
