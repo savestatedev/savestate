@@ -1909,6 +1909,14 @@ describe('CLI docs', () => {
     expect(sloSection).toContain('freshness.max_age_hours');
   });
 
+  it('documents slo subcommand as a single slo action', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    expect(sloSection).toContain('&lt;subcommand&gt;');
+    expect(sloSection).toContain('Must be a single non-empty subcommand');
+    expect(slo).toContain('export function parseSloSubcommand');
+    expect(slo).toContain('single non-empty subcommand: status, report, or config');
+  });
+
   it('documents slo report --period as a bounded duration', () => {
     const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
     expect(sloSection).toContain('--period');
