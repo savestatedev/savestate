@@ -219,6 +219,34 @@ export function parseIntegrityReason(value: string | undefined): string | undefi
   return reason;
 }
 
+export interface IntegrityConfigAssignment {
+  path: string;
+  value: string;
+}
+
+/** Parse integrity config key=value without treating blank or malformed pairs as updates. */
+export function parseIntegrityConfigSet(value: string | undefined): IntegrityConfigAssignment | undefined {
+  if (value === undefined) return undefined;
+
+  const trimmed = value.trim();
+  const eq = trimmed.indexOf('=');
+  if (eq <= 0 || eq === trimmed.length - 1) {
+    throw new Error(
+      `Invalid config setting "${value}". Expected a non-empty key=value pair.`,
+    );
+  }
+
+  const path = trimmed.slice(0, eq).trim();
+  const parsedValue = trimmed.slice(eq + 1).trim();
+  if (path.length === 0 || parsedValue.length === 0) {
+    throw new Error(
+      `Invalid config setting "${value}". Expected a non-empty key=value pair.`,
+    );
+  }
+
+  return { path, value: parsedValue };
+}
+
 const INTEGRITY_SUBCOMMANDS = [
   'status',
   'seed',
@@ -1307,8 +1335,9 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
  */
 async function configCommand(setting: string | undefined, options: IntegrityOptions): Promise<void> {
   const config = await loadConfig();
+  const assignment = parseIntegrityConfigSet(setting);
 
-  if (!setting) {
+  if (!assignment) {
     // Show current config
     if (options.json) {
       console.log(
@@ -1338,13 +1367,7 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
     return;
   }
 
-  // Parse setting=value
-  const [key, value] = setting.split('=');
-  if (!value) {
-    console.log(chalk.red(`✗ Invalid format. Use: savestate integrity config <key>=<value>`));
-    console.log(chalk.dim('  Example: savestate integrity config enabled=true'));
-    process.exit(1);
-  }
+  const { path: key, value } = assignment;
 
   // Ensure integrity config exists
   if (!config.integrity) {
@@ -1488,7 +1511,7 @@ function showUsage(): void {
   console.log('  savestate integrity incident <id>              Show incident details (single non-empty incident id)');
   console.log('  savestate integrity quarantine <id>            Quarantine a memory/agent');
   console.log('  savestate integrity release <id>               Release from quarantine');
-  console.log('  savestate integrity config [key=value]         View/set configuration');
+  console.log('  savestate integrity config [key=value]         View/set configuration (non-empty key=value)');
   console.log('  savestate integrity test "<text>"              Test tripwire with input (non-empty)');
   console.log('  savestate integrity clear --force              Clear all honeyfacts');
   console.log();
@@ -1508,7 +1531,7 @@ function showUsage(): void {
 export function registerIntegrityCommands(program: Command): void {
   program
     .command('integrity <subcommand> [args...]')
-    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear; incident requires a single non-empty incident id; quarantine and release require a single non-empty memory or agent id; test requires a non-empty text to check)')
+    .description('Memory Integrity Grid - detect and contain memory poisoning (status, seed, rotate, incidents, incident, quarantine, release, config, test, clear; single non-empty subcommand: status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear; incident requires a single non-empty incident id; quarantine and release require a single non-empty memory or agent id; test requires a non-empty text to check; config setting must be a non-empty key=value pair)')
     .option('--json', 'Output as JSON')
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')

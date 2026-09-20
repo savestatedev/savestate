@@ -2491,6 +2491,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityPolicy');
   });
 
+  it('documents integrity config setting as a non-empty key=value pair', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('&lt;key&gt;=&lt;value&gt;');
+    expect(integritySection).toContain('Must be a non-empty key=value pair');
+    expect(integrity).toContain('export function parseIntegrityConfigSet');
+  });
+
   it('documents integrity config enabled as a true/false boolean', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('enabled');
