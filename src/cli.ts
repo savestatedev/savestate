@@ -262,6 +262,7 @@ program
   .option('--type <type>', 'Filter by type (memory, conversation, identity)')
   .option('--limit <n>', 'Maximum results')
   .option('--snapshot <id>', 'Search within a specific snapshot')
+  .option('--adapter <id>', 'Only search snapshots from this adapter')
   .option('--json', 'Output as JSON')
   .action(searchCommand);
 
