@@ -19,10 +19,8 @@ describe('savestate mcp export --json', () => {
   it('registers --json on mcp export', () => {
     const program = new Command();
     registerMCPCommands(program);
-    const exportCmd = program.commands
-      .find((command) => command.name() === 'mcp')
-      ?.commands.find((command) => command.name() === 'export');
-    expect(exportCmd?.options.some((option) => option.long === '--json')).toBe(true);
+    const mcpCmd = program.commands.find((command) => command.name() === 'mcp');
+    expect(mcpCmd?.options.some((option) => option.long === '--json')).toBe(true);
   });
 
   it('prints export summary as JSON', () => {

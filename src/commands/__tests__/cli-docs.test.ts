@@ -1319,18 +1319,26 @@ describe('CLI docs', () => {
   });
 
   it('registers --json on savestate mcp status', () => {
-    const statusBlock = mcp.slice(mcp.indexOf("command('status')"), mcp.indexOf("command('export')"));
-    expect(statusBlock).toContain(".option('--json'");
+    const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));
+    expect(mcpBlock).toContain(".option('--json'");
   });
 
   it('registers --json on savestate mcp import', () => {
-    const importBlock = mcp.slice(mcp.indexOf("command('import')"));
-    expect(importBlock).toContain(".option('--json'");
+    const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));
+    expect(mcpBlock).toContain(".option('--json'");
   });
 
   it('registers --json on savestate mcp export', () => {
-    const exportBlock = mcp.slice(mcp.indexOf("command('export')"), mcp.indexOf("command('import')"));
-    expect(exportBlock).toContain(".option('--json'");
+    const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));
+    expect(mcpBlock).toContain(".option('--json'");
+  });
+
+  it('documents mcp subcommand as a single mcp action', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    expect(mcpSection).toContain('&lt;subcommand&gt;');
+    expect(mcpSection).toContain('Must be a single non-empty subcommand');
+    expect(mcp).toContain('export function parseMcpSubcommand');
+    expect(mcp).toContain('single non-empty subcommand: serve, status, export, or import');
   });
 
   it('documents mcp --json', () => {
