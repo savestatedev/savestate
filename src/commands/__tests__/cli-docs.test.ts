@@ -264,6 +264,25 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerExclude');
   });
 
+  it('documents container --include as known state paths', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    expect(exportSection).toContain('--include');
+    expect(importSection).toContain('--include');
+    expect(containerSection).toContain('--include');
+    expect(exportSection).toContain(
+      'Must be one or more of: personality, memory, tools, preferences, conversation_history',
+    );
+    expect(importSection).toContain(
+      'Must be one or more of: personality, memory, tools, preferences, conversation_history',
+    );
+    expect(containerSection).toContain(
+      'Must be one or more of: personality, memory, tools, preferences, conversation_history',
+    );
+    expect(container).toContain('export function parseContainerInclude');
+  });
+
   it('documents container --keyfile as a single path', () => {
     const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
