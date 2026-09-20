@@ -339,6 +339,29 @@ export function parseContainerExclude(value: string | undefined): IncludePath[] 
   return paths as IncludePath[];
 }
 
+export function resolveBooleanIncludeFlags(options: {
+  includePersonality?: boolean;
+  includeMemory?: boolean;
+  includeTools?: boolean;
+  includePreferences?: boolean;
+  includeConversationHistory?: boolean;
+}): ComponentSelection {
+  const includeAll =
+    !options.includePersonality &&
+    !options.includeMemory &&
+    !options.includeTools &&
+    !options.includePreferences &&
+    !options.includeConversationHistory;
+
+  return {
+    personality: includeAll || !!options.includePersonality,
+    memory: includeAll || !!options.includeMemory,
+    tools: includeAll || !!options.includeTools,
+    preferences: includeAll || !!options.includePreferences,
+    conversation_history: includeAll || !!options.includeConversationHistory,
+  };
+}
+
 export function formatImportExcluded(excluded: readonly string[]): string {
   return `  Excluded: ${excluded.join(', ')}`;
 }
@@ -795,6 +818,7 @@ export interface ExportOptions {
   includeMemory?: boolean;
   includeTools?: boolean;
   includePreferences?: boolean;
+  includeConversationHistory?: boolean;
   force?: boolean;
   dryRun?: boolean;
   description?: string;
@@ -950,15 +974,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       }
       components = parsed.components;
     } else {
-      const includeAll = !options.includePersonality && !options.includeMemory && 
-                         !options.includeTools && !options.includePreferences;
-      components = {
-        personality: includeAll || !!options.includePersonality,
-        memory: includeAll || !!options.includeMemory,
-        tools: includeAll || !!options.includeTools,
-        preferences: includeAll || !!options.includePreferences,
-        conversation_history: includeAll,
-      };
+      components = resolveBooleanIncludeFlags(options);
     }
 
     const excluded = applyExcludePaths(components, options.exclude);
@@ -1821,6 +1837,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
+    .option('--include-conversation-history', 'Include conversation history')
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
@@ -1837,6 +1854,7 @@ export function registerContainerCommands(program: Command) {
         includeMemory: opts.includeMemory,
         includeTools: opts.includeTools,
         includePreferences: opts.includePreferences,
+        includeConversationHistory: opts.includeConversationHistory,
         force: opts.force,
         dryRun: opts.dryRun,
         description: opts.description,
@@ -1898,6 +1916,7 @@ export function registerContainerCommands(program: Command) {
     .option('--include-memory', 'Include memory data')
     .option('--include-tools', 'Include tool configurations')
     .option('--include-preferences', 'Include user preferences')
+    .option('--include-conversation-history', 'Include conversation history')
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
@@ -1920,6 +1939,7 @@ export function registerContainerCommands(program: Command) {
         includeMemory: opts.includeMemory,
         includeTools: opts.includeTools,
         includePreferences: opts.includePreferences,
+        includeConversationHistory: opts.includeConversationHistory,
         force: opts.force,
         dryRun: opts.dryRun,
         description: opts.description,
