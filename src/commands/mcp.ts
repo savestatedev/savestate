@@ -135,6 +135,31 @@ export function parseMcpInput(value: string | undefined): string | undefined {
   return input;
 }
 
+const MCP_SUBCOMMANDS = ['serve', 'status', 'export', 'import'] as const;
+export type McpSubcommand = (typeof MCP_SUBCOMMANDS)[number];
+const MCP_SUBCOMMAND_LIST = MCP_SUBCOMMANDS.join(', ');
+
+/** Parse mcp subcommand without treating blank or comma-separated values as an action. Bare `savestate mcp` starts the server. */
+export function parseMcpSubcommand(value: string | undefined): McpSubcommand {
+  if (value === undefined) return 'serve';
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty mcp subcommand (${MCP_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((MCP_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as McpSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty mcp subcommand (${MCP_SUBCOMMAND_LIST}).`,
+  );
+}
+
 interface MCPServeOptions {
   port?: string;
   stdio?: boolean;
@@ -521,10 +546,38 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
 // ─── MCP Import Command ──────────────────────────────────────
 
 interface MCPImportOptions {
-  input: string;
+  input?: string;
   agent?: string;
   merge?: boolean;
   json?: boolean;
+}
+
+interface McpCommandOptions {
+  port?: string;
+  stdio?: boolean;
+  json?: boolean;
+  agent?: string;
+  output?: string;
+  includeSnapshots?: boolean;
+  input?: string;
+  merge?: boolean;
+}
+
+export async function mcpCommand(
+  rawSubcommand: string | undefined,
+  options: McpCommandOptions,
+): Promise<void> {
+  const subcommand = parseMcpSubcommand(rawSubcommand);
+  switch (subcommand) {
+    case 'serve':
+      return mcpServeCommand(options);
+    case 'status':
+      return mcpStatusCommand(options);
+    case 'export':
+      return mcpExportCommand(options);
+    case 'import':
+      return mcpImportCommand(options);
+  }
 }
 
 async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
@@ -635,43 +688,17 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
 // ─── Register MCP Commands ───────────────────────────────────
 
 export function registerMCPCommands(program: Command): void {
-  const mcp = program
-    .command('mcp')
-    .description('MCP server commands for cross-platform interoperability');
-
-  // savestate mcp serve
-  mcp
-    .command('serve')
-    .description('Start the MCP server for Claude Desktop, Cursor, and other MCP clients')
+  program
+    .command('mcp [subcommand]')
+    .description('MCP server commands for cross-platform interoperability (serve, status, export, import; defaults to serve; single non-empty subcommand: serve, status, export, or import)')
     .option('-p, --port <port>', 'HTTP server port (default: 3333)')
     .option('--stdio', 'Use stdio transport (default, recommended for MCP)')
     .option('--no-stdio', 'Use HTTP transport instead of stdio')
-    .action(mcpServeCommand);
-
-  // savestate mcp status
-  mcp
-    .command('status')
-    .description('Check MCP server configuration and available tools')
-    .option('--json', 'Output as JSON')
-    .action(mcpStatusCommand);
-
-  // savestate mcp export
-  mcp
-    .command('export')
-    .description('Export memory passport for cross-platform transfer')
-    .option('-a, --agent <id>', 'Agent ID to export (single non-empty id, default: "default")')
+    .option('-a, --agent <id>', 'Agent ID to export or import (single non-empty id, default: "default")')
     .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
-    .option('--json', 'Output as JSON')
-    .action(mcpExportCommand);
-
-  // savestate mcp import
-  mcp
-    .command('import')
-    .description('Import memory passport from another platform')
-    .requiredOption('-i, --input <path>', 'Passport file to import (single non-empty path)')
-    .option('-a, --agent <id>', 'Target agent ID (single non-empty id, default: source agent ID)')
+    .option('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
-    .action(mcpImportCommand);
+    .action(mcpCommand);
 }

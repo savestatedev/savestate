@@ -20,10 +20,8 @@ describe('savestate mcp import --json', () => {
   it('registers --json on mcp import', () => {
     const program = new Command();
     registerMCPCommands(program);
-    const importCmd = program.commands
-      .find((command) => command.name() === 'mcp')
-      ?.commands.find((command) => command.name() === 'import');
-    expect(importCmd?.options.some((option) => option.long === '--json')).toBe(true);
+    const mcpCmd = program.commands.find((command) => command.name() === 'mcp');
+    expect(mcpCmd?.options.some((option) => option.long === '--json')).toBe(true);
   });
 
   it('prints import summary as JSON', () => {
