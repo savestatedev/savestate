@@ -809,10 +809,18 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('viewer');
   });
 
+  it('documents team subcommand as a single team action', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    expect(teamSection).toContain('&lt;subcommand&gt;');
+    expect(teamSection).toContain('Must be a single non-empty subcommand');
+    expect(team).toContain('export function parseTeamSubcommand');
+    expect(cli).toContain('single non-empty subcommand: status, members, invite, or audit');
+  });
+
   it('registers --json on savestate team status', () => {
     const statusBlock = cli.slice(
-      cli.indexOf("Show your team membership info"),
-      cli.indexOf("List team members"),
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
     );
     expect(statusBlock).toContain(".option('--json'");
   });
@@ -836,8 +844,8 @@ describe('CLI docs', () => {
 
   it('registers --json on savestate team members', () => {
     const membersBlock = cli.slice(
-      cli.indexOf("List team members"),
-      cli.indexOf("Invite a member by email"),
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
     );
     expect(membersBlock).toContain(".option('--json'");
   });
@@ -861,8 +869,8 @@ describe('CLI docs', () => {
 
   it('registers --json on savestate team invite', () => {
     const inviteBlock = cli.slice(
-      cli.indexOf("Invite a member by email"),
-      cli.indexOf("Stream the team audit log to stdout"),
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
     );
     expect(inviteBlock).toContain(".option('--json'");
   });
@@ -921,7 +929,7 @@ describe('CLI docs', () => {
 
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
-      cli.indexOf("Stream the team audit log to stdout"),
+      cli.indexOf("command('team <subcommand> [args...]')"),
       cli.indexOf('registerTraceCommands(program)'),
     );
     expect(auditBlock).toContain(".option('--json'");
@@ -1151,7 +1159,7 @@ describe('CLI docs', () => {
   });
 
   it('registers --json on savestate cloud', () => {
-    const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team')"));
+    const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team <subcommand> [args...]')"));
     expect(cloudBlock).toContain(".option('--json'");
   });
 
