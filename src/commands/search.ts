@@ -5,13 +5,14 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
-import { findEntry } from '../index-file.js';
+import { findEntry, loadIndex } from '../index-file.js';
 import { searchSnapshots } from '../search.js';
 import { getPassphrase } from '../passphrase.js';
 import type { SearchResult } from '../types.js';
 
 interface SearchOptions {
   type?: string;
+  since?: string;
   limit?: string;
   snapshot?: string;
   json?: boolean;
@@ -95,6 +96,39 @@ export function parseSearchSnapshot(value: string | undefined): string | undefin
   return snapshot;
 }
 
+/** Parse search --since without treating invalid dates as an empty result set. */
+export function parseSearchSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve --snapshot/--since into snapshot ids before decrypting archives. */
+export function resolveSearchSnapshots(
+  snapshots: Array<{ id: string; timestamp: string }>,
+  options: Pick<SearchOptions, 'snapshot' | 'since'>,
+): string[] | undefined {
+  const snapshotId = parseSearchSnapshot(options.snapshot);
+  const since = parseSearchSince(options.since);
+  if (snapshotId === undefined && since === undefined) return undefined;
+
+  return snapshots
+    .filter((entry) => {
+      if (snapshotId !== undefined && entry.id !== snapshotId) return false;
+      if (since !== undefined && new Date(entry.timestamp).getTime() < since) {
+        return false;
+      }
+      return true;
+    })
+    .map((entry) => entry.id);
+}
+
 /** Parse search query without decrypting archives for blank input. */
 export function parseSearchQuery(value: string | undefined): string {
   if (value === undefined) {
@@ -116,6 +150,7 @@ export function parseSearchQuery(value: string | undefined): string {
 export async function searchCommand(rawQuery: string, options: SearchOptions): Promise<void> {
   const query = parseSearchQuery(rawQuery);
   const snapshotId = parseSearchSnapshot(options.snapshot);
+  const since = parseSearchSince(options.since);
 
   if (!options.json) {
     console.log();
@@ -134,6 +169,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const limit = parseSearchLimit(options.limit);
   const types = parseSearchType(options.type);
 
+  let catalog: Array<{ id: string; timestamp: string }> | undefined;
   if (snapshotId) {
     const entry = await findEntry(snapshotId);
     if (!entry) {
@@ -144,11 +180,19 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       console.log(chalk.red(`✗ Snapshot not found: ${snapshotId}`));
       process.exit(1);
     }
+    catalog = [entry];
+  } else if (since !== undefined) {
+    catalog = (await loadIndex()).snapshots;
   }
+
+  const snapshots = catalog
+    ? resolveSearchSnapshots(catalog, options)
+    : undefined;
 
   if (!options.json) {
     console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
     if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
+    if (since !== undefined) console.log(chalk.dim(`   Since: ${options.since}`));
     if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));
     console.log();
   }
@@ -161,7 +205,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     const results = await searchSnapshots(query, config, {
       types: types as ('memory' | 'conversation' | 'identity' | 'knowledge')[] | undefined,
       limit,
-      snapshots: snapshotId ? [snapshotId] : undefined,
+      snapshots,
       passphrase,
     });
 
