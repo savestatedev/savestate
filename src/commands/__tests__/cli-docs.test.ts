@@ -2448,6 +2448,13 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityIncidentStatus');
   });
 
+  it('documents integrity --policy as a known containment policy', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--policy');
+    expect(integritySection).toContain('observe, approve, auto');
+    expect(integrity).toContain('export function parseIntegrityPolicy');
+  });
+
   it('documents integrity config enabled as a true/false boolean', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('enabled');
