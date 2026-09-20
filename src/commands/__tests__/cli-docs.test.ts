@@ -2683,8 +2683,16 @@ describe('CLI docs', () => {
   });
 
   it('registers --json on savestate trace list', () => {
-    const listBlock = trace.slice(trace.indexOf("command('list')"), trace.indexOf("command('show"));
-    expect(listBlock).toContain(".option('--json'");
+    const traceBlock = trace.slice(trace.indexOf("command('trace"));
+    expect(traceBlock).toContain(".option('--json'");
+  });
+
+  it('documents trace subcommand as a single trace action', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('&lt;subcommand&gt;');
+    expect(traceSection).toContain('Must be a single non-empty subcommand');
+    expect(trace).toContain('export function parseTraceSubcommand');
+    expect(trace).toContain('single non-empty subcommand: list, show, or export');
   });
 
   it('documents trace --json', () => {
@@ -2695,8 +2703,8 @@ describe('CLI docs', () => {
   });
 
   it('registers --json on savestate trace export', () => {
-    const exportBlock = trace.slice(trace.indexOf("command('export')"));
-    expect(exportBlock).toContain(".option('--json'");
+    const traceBlock = trace.slice(trace.indexOf("command('trace"));
+    expect(traceBlock).toContain(".option('--json'");
   });
 
   it('documents trace export --json', () => {

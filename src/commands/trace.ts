@@ -75,6 +75,35 @@ export function parseTraceShowRunId(value: string | undefined): string {
   return runId;
 }
 
+const TRACE_SUBCOMMANDS = ['list', 'show', 'export'] as const;
+export type TraceSubcommand = (typeof TRACE_SUBCOMMANDS)[number];
+const TRACE_SUBCOMMAND_LIST = TRACE_SUBCOMMANDS.join(', ');
+
+/** Parse trace subcommand without treating blank or comma-separated values as an action. */
+export function parseTraceSubcommand(value: string | undefined): TraceSubcommand {
+  if (value === undefined) {
+    throw new Error(
+      `Invalid subcommand. Expected a single non-empty trace subcommand (${TRACE_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.includes(',') || /\s/.test(trimmed)) {
+    throw new Error(
+      `Invalid subcommand "${value}". Expected a single non-empty trace subcommand (${TRACE_SUBCOMMAND_LIST}).`,
+    );
+  }
+
+  const subcommand = trimmed.toLowerCase();
+  if ((TRACE_SUBCOMMANDS as readonly string[]).includes(subcommand)) {
+    return subcommand as TraceSubcommand;
+  }
+
+  throw new Error(
+    `Invalid subcommand "${value}". Expected a single non-empty trace subcommand (${TRACE_SUBCOMMAND_LIST}).`,
+  );
+}
+
 export interface TraceRunJson {
   runId: string;
   adapter: string;
@@ -218,30 +247,36 @@ export function formatTraceExportJson(input: {
   );
 }
 
+interface TraceCommandOptions {
+  json?: boolean;
+  format?: string;
+  run?: string;
+}
+
+export async function traceCommand(
+  rawSubcommand: string,
+  args: string[],
+  options: TraceCommandOptions,
+): Promise<void> {
+  const subcommand = parseTraceSubcommand(rawSubcommand);
+  switch (subcommand) {
+    case 'list':
+      return traceListCommand(options);
+    case 'show':
+      return traceShowCommand(args[0], options);
+    case 'export':
+      return traceExportCommand(options);
+  }
+}
+
 export function registerTraceCommands(program: Command): void {
-  const trace = program
-    .command('trace')
-    .description('Inspect Askable Echoes trace runs');
-
-  trace
-    .command('list')
-    .description('List trace runs')
+  program
+    .command('trace <subcommand> [args...]')
+    .description('Inspect Askable Echoes trace runs (list, show, export; single non-empty subcommand: list, show, or export; show requires a single non-empty run id)')
     .option('--json', 'Output as JSON')
-    .action(traceListCommand);
-
-  trace
-    .command('show <run_id>')
-    .description('Show events for a trace run (single non-empty run id)')
-    .option('--json', 'Output as JSON')
-    .action(traceShowCommand);
-
-  trace
-    .command('export')
-    .description('Export trace events as JSONL')
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
-    .option('--json', 'Output as JSON')
-    .action(traceExportCommand);
+    .action(traceCommand);
 }
 
 export async function traceListCommand(options: TraceListOptions): Promise<void> {

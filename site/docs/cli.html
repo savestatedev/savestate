@@ -1241,7 +1241,7 @@
 
     <!-- trace -->
     <h2 id="trace"><code>savestate trace</code></h2>
-    <p>Inspect Askable Echoes trace runs: an append-only ledger of tool calls, results, checkpoints, and errors. Subcommands: <code>list</code>, <code>show</code>, and <code>export</code>. Requires <code>savestate init</code>. Runs are stored under <code>.savestate/traces</code>.</p>
+    <p>Inspect Askable Echoes trace runs: an append-only ledger of tool calls, results, checkpoints, and errors. Subcommands: <code>list</code>, <code>show</code>, and <code>export</code>. Must be a single non-empty subcommand (list, show, or export). Requires <code>savestate init</code>. Runs are stored under <code>.savestate/traces</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate trace &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -1249,6 +1249,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>&lt;subcommand&gt;</code></td><td>Trace action. Must be a single non-empty subcommand (list, show, or export).</td></tr>
         <tr><td><code>--json</code></td><td>Emit run and event summaries as JSON on <code>list</code> and <code>show</code>. When SaveState is not initialized, <code>list</code> emits a missing summary (found, total, shown; omits extra fields and event payloads). When SaveState is not initialized, <code>show</code> emits a missing summary (found, runId, adapter, eventCount; omits extra fields and event payloads). When no run exists, <code>show</code> emits a missing summary (found, runId, adapter, eventCount; omits extra fields and event payloads). Emit an export summary as JSON on <code>export</code> (format, run, run/event counts, run ids/adapters/timestamps/tags; omits event payloads and on-disk file paths). When SaveState is not initialized, <code>export</code> emits a missing summary (found, format, run, runCount, eventCount; omits extra fields, run lists, event payloads, and on-disk file paths). When <code>--run</code> names a missing run, <code>export</code> emits a missing summary (found, format, run, runCount, eventCount; omits extra fields, run lists, event payloads, and on-disk file paths). Useful for scripting.</td></tr>
         <tr><td><code>&lt;run_id&gt;</code></td><td>Run ID for <code>show</code>. Must be a single non-empty run id.</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Export format on <code>export</code> (only <code>jsonl</code> is supported). Must be one of: jsonl.</td></tr>
