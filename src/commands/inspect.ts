@@ -8,7 +8,7 @@
 
 import chalk from 'chalk';
 import { isInitialized, loadConfig } from '../config.js';
-import { findEntry, getLatestEntry } from '../index-file.js';
+import { findEntry, getLatestEntry, loadIndex } from '../index-file.js';
 import { resolveStorage } from '../storage/index.js';
 import { decrypt } from '../encryption.js';
 import { unpackFromArchive, unpackSnapshot, snapshotFilename } from '../format.js';
@@ -17,6 +17,7 @@ import { getPassphrase } from '../passphrase.js';
 
 interface InspectOptions {
   json?: boolean;
+  tag?: string;
 }
 
 export interface InspectJson {
@@ -84,8 +85,45 @@ export function parseInspectId(value: string | undefined): string {
   return id;
 }
 
+/** Parse inspect --tag without treating blank or comma-separated values as a missing snapshot. */
+export function parseInspectTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve inspect --tag (and snapshot id) to the newest matching snapshot. */
+export function resolveInspectSnapshot(
+  snapshots: Array<{ id: string; timestamp: string; tags?: string[] }>,
+  options: { snapshot?: string; tag?: string },
+): string | undefined {
+  const snapshotId = parseInspectId(options.snapshot);
+  const tag = parseInspectTag(options.tag);
+  if (tag === undefined) {
+    return snapshotId;
+  }
+
+  let matches = snapshots.filter((entry) => (entry.tags ?? []).includes(tag));
+  if (snapshotId !== 'latest') {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
+
+  matches = [...matches].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return matches[0]?.id;
+}
+
 export async function inspectCommand(rawSnapshotId: string, options: InspectOptions): Promise<void> {
   const snapshotId = parseInspectId(rawSnapshotId);
+  const tag = parseInspectTag(options.tag);
 
   if (!options.json) {
     console.log();
@@ -106,7 +144,23 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   let resolvedId = snapshotId;
   let filename: string;
 
-  if (snapshotId === 'latest') {
+  if (tag !== undefined) {
+    const matched = resolveInspectSnapshot((await loadIndex()).snapshots, {
+      snapshot: rawSnapshotId,
+      tag: options.tag,
+    });
+    if (!matched) {
+      if (options.json) {
+        console.log(formatInspectMissingJson(snapshotId));
+        return;
+      }
+      console.log(chalk.red(`✗ Snapshot not found: ${tag}`));
+      process.exit(1);
+    }
+    resolvedId = matched;
+    const found = await findEntry(resolvedId);
+    filename = found ? found.filename : snapshotFilename(resolvedId);
+  } else if (snapshotId === 'latest') {
     const latest = await getLatestEntry();
     if (!latest) {
       if (options.json) {
