@@ -22,11 +22,13 @@ interface PruneOptions {
   adapter?: string;
   exclude?: string;
   until?: string;
+  limit?: string;
   apply?: boolean;
   json?: boolean;
 }
 
 const MAX_KEEP_LAST = 1000;
+const MAX_PRUNE_LIMIT = 1000;
 const PRUNE_ADAPTERS = [
   'clawdbot',
   'claude-code',
@@ -113,6 +115,19 @@ export function parsePruneUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Parse prune --limit without treating invalid counts as an empty prune plan. */
+export function parsePruneLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PRUNE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_PRUNE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
 export interface PrunePlan {
   keep: SnapshotIndexEntry[];
   drop: SnapshotIndexEntry[];
@@ -187,6 +202,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
   parsePruneAdapter(options.adapter);
   parsePruneExclude(options.exclude);
   parsePruneUntil(options.until);
+  parsePruneLimit(options.limit);
 
   if (!options.json) {
     console.log();
@@ -217,6 +233,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
     adapter: parsePruneAdapter(options.adapter),
     exclude: parsePruneExclude(options.exclude),
     untilMs: parsePruneUntil(options.until),
+    limit: parsePruneLimit(options.limit),
   });
 
   if (options.json) {
@@ -278,21 +295,28 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
  */
 export function planPrune(
   snapshots: SnapshotIndexEntry[],
-  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; untilMs?: number },
+  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; untilMs?: number; limit?: number },
 ): PrunePlan {
   const adapter = filters.adapter;
   const exclude = filters.exclude;
   const untilMs = filters.untilMs;
+  const limit = filters.limit;
   const inScope = (snapshot: SnapshotIndexEntry): boolean => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
     if (untilMs !== undefined && new Date(snapshot.timestamp).getTime() > untilMs) return false;
     return true;
   };
-  const scoped = snapshots.filter(inScope);
+  let scoped = snapshots.filter(inScope);
+  if (limit !== undefined) {
+    scoped = [...scoped]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  }
+  const scopedIds = new Set(scoped.map((snapshot) => snapshot.id));
   const untouched =
-    adapter !== undefined || exclude !== undefined || untilMs !== undefined
-      ? snapshots.filter((snapshot) => !inScope(snapshot))
+    adapter !== undefined || exclude !== undefined || untilMs !== undefined || limit !== undefined
+      ? snapshots.filter((snapshot) => !scopedIds.has(snapshot.id))
       : [];
   const sorted = [...scoped].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
