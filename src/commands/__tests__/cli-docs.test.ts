@@ -3350,6 +3350,16 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreTo');
   });
 
+  it('documents restore --label as a single snapshot label', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--label');
+    expect(restoreSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(restoreSection).toContain('savestate restore --label backup');
+    expect(restoreBlock).toContain(".option('--label <label>'");
+    expect(restore).toContain('export function parseRestoreLabel');
+  });
+
   it('registers --json on savestate restore', () => {
     const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
     expect(restoreBlock).toContain(".option('--json'");
