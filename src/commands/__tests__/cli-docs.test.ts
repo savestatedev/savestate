@@ -447,6 +447,16 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parsePruneUntil');
   });
 
+  it('documents prune --limit as a bounded positive integer', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneSection).toContain('--limit');
+    expect(pruneSection).toContain('positive integer up to 1000');
+    expect(pruneSection).toContain('savestate prune --keep-last 1 --limit 5');
+    expect(pruneBlock).toContain(".option('--limit <n>'");
+    expect(prune).toContain('export function parsePruneLimit');
+  });
+
   it('documents prune --json when missing', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     expect(pruneSection).toContain('--json');
