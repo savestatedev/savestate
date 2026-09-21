@@ -3027,7 +3027,7 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate doctor');
   });
 
-  it('documents doctor --json, --adapter, --exclude, --snapshot, --since, --until, --tag, and --limit', () => {
+  it('documents doctor --json, --adapter, --exclude, --snapshot, --since, --until, --tag, --label, and --limit', () => {
     const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
     expect(doctorSection).toContain('--json');
     expect(doctorSection).toContain('--adapter');
@@ -3036,6 +3036,7 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('--since');
     expect(doctorSection).toContain('--until');
     expect(doctorSection).toContain('--tag');
+    expect(doctorSection).toContain('--label');
     expect(doctorSection).toContain('--limit');
     expect(doctorSection).toContain('checksums');
     expect(doctorSection).toContain('incremental chains');
@@ -3107,6 +3108,16 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('savestate doctor --tag work --json');
     expect(doctorBlock).toContain(".option('--tag <tag>'");
     expect(doctor).toContain('export function parseDoctorTag');
+  });
+
+  it('documents doctor --label as a single snapshot label', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    const doctorBlock = cli.slice(cli.indexOf("command('doctor')"), cli.indexOf("command('inspect <snapshot-id>')"));
+    expect(doctorSection).toContain('--label');
+    expect(doctorSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(doctorSection).toContain('savestate doctor --label backup --json');
+    expect(doctorBlock).toContain(".option('--label <label>'");
+    expect(doctor).toContain('export function parseDoctorLabel');
   });
 
   it('registers --json on savestate doctor', () => {
