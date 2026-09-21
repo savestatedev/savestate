@@ -388,6 +388,7 @@
       </thead>
       <tbody>
         <tr><td><code>&lt;snapshot-id&gt;</code></td><td>Snapshot to decrypt and summarize. Must be a single non-empty snapshot id (or <code>latest</code>).</td></tr>
+        <tr><td><code>--label &lt;label&gt;</code></td><td>Only inspect a snapshot with this human-readable label. Must be a single non-empty snapshot label (no commas). Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the snapshot summary as JSON. Decrypts the archive. When SaveState is not initialized, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -396,6 +397,9 @@
 
     <pre><code><span class="code-comment"># Summarize the latest snapshot</span>
 <span class="code-prompt">$</span> savestate inspect latest
+
+<span class="code-comment"># Summarize the newest labeled snapshot</span>
+<span class="code-prompt">$</span> savestate inspect latest --label backup
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate inspect latest --json
