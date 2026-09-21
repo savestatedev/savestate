@@ -28,6 +28,7 @@ interface DoctorOptions {
   snapshot?: string;
   since?: string;
   until?: string;
+  tag?: string;
   limit?: string;
 }
 
@@ -132,16 +133,31 @@ export function parseDoctorUntil(value: string | undefined): number | undefined 
   return ms;
 }
 
+/** Parse doctor --tag without treating blank or comma-separated values as an empty snapshot set. */
+export function parseDoctorTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
 /** Resolve doctor snapshot filters before decrypting archives. */
-export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string }>(
+export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string; tags?: string[] }>(
   snapshots: T[],
-  options: Pick<DoctorOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'limit'>,
+  options: Pick<DoctorOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'limit'>,
 ): T[] {
   const adapter = parseDoctorAdapter(options.adapter);
   const exclude = parseDoctorExclude(options.exclude);
   const snapshot = parseDoctorSnapshot(options.snapshot);
   const since = parseDoctorSince(options.since);
   const until = parseDoctorUntil(options.until);
+  const tag = parseDoctorTag(options.tag);
   let targets = snapshots.filter((entry) => {
     if (adapter !== undefined && entry.adapter !== adapter) return false;
     if (exclude !== undefined && entry.adapter !== undefined && exclude.includes(entry.adapter)) {
@@ -154,6 +170,7 @@ export function resolveDoctorSnapshots<T extends { id: string; timestamp: string
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) {
       return false;
     }
+    if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
     return true;
   });
   const limit = parseDoctorLimit(options.limit);
@@ -219,6 +236,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   parseDoctorSnapshot(options.snapshot);
   parseDoctorSince(options.since);
   parseDoctorUntil(options.until);
+  parseDoctorTag(options.tag);
   parseDoctorLimit(options.limit);
 
   if (!options.json) {
