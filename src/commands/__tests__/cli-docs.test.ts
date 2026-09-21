@@ -447,6 +447,16 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parsePruneUntil');
   });
 
+  it('documents prune --snapshot as a single snapshot id', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneSection).toContain('--snapshot');
+    expect(pruneSection).toContain('Must be a single non-empty snapshot id');
+    expect(pruneSection).toContain('savestate prune --keep-last 10 --snapshot ss-2026-09-13T12-00-00-ab12cd');
+    expect(pruneBlock).toContain(".option('--snapshot <id>'");
+    expect(prune).toContain('export function parsePruneSnapshot');
+  });
+
   it('documents prune --json when missing', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     expect(pruneSection).toContain('--json');

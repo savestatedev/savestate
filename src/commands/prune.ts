@@ -22,6 +22,7 @@ interface PruneOptions {
   adapter?: string;
   exclude?: string;
   until?: string;
+  snapshot?: string;
   apply?: boolean;
   json?: boolean;
 }
@@ -113,6 +114,20 @@ export function parsePruneUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Parse prune --snapshot without treating blank ids as an empty prune plan. */
+export function parsePruneSnapshot(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const snapshot = value.trim();
+  if (snapshot.length === 0 || snapshot.includes(',') || /\s/.test(snapshot)) {
+    throw new Error(
+      `Invalid --snapshot value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return snapshot;
+}
+
 export interface PrunePlan {
   keep: SnapshotIndexEntry[];
   drop: SnapshotIndexEntry[];
@@ -187,6 +202,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
   parsePruneAdapter(options.adapter);
   parsePruneExclude(options.exclude);
   parsePruneUntil(options.until);
+  parsePruneSnapshot(options.snapshot);
 
   if (!options.json) {
     console.log();
@@ -217,6 +233,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
     adapter: parsePruneAdapter(options.adapter),
     exclude: parsePruneExclude(options.exclude),
     untilMs: parsePruneUntil(options.until),
+    snapshot: parsePruneSnapshot(options.snapshot),
   });
 
   if (options.json) {
@@ -278,20 +295,22 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
  */
 export function planPrune(
   snapshots: SnapshotIndexEntry[],
-  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; untilMs?: number },
+  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; untilMs?: number; snapshot?: string },
 ): PrunePlan {
   const adapter = filters.adapter;
   const exclude = filters.exclude;
   const untilMs = filters.untilMs;
+  const snapshotId = filters.snapshot;
   const inScope = (snapshot: SnapshotIndexEntry): boolean => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
     if (untilMs !== undefined && new Date(snapshot.timestamp).getTime() > untilMs) return false;
+    if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
     return true;
   };
   const scoped = snapshots.filter(inScope);
   const untouched =
-    adapter !== undefined || exclude !== undefined || untilMs !== undefined
+    adapter !== undefined || exclude !== undefined || untilMs !== undefined || snapshotId !== undefined
       ? snapshots.filter((snapshot) => !inScope(snapshot))
       : [];
   const sorted = [...scoped].sort(
