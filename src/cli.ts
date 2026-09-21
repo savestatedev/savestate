@@ -113,6 +113,7 @@ program
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
   .option('--tag <tag>', 'Only snapshots tagged with this label')
+  .option('--limit <n>', 'Only aggregate the N most recent snapshots')
   .action(statsCommand);
 
 // ─── savestate doctor ────────────────────────────────────────

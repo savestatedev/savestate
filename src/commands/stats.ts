@@ -17,6 +17,7 @@ interface StatsOptions {
   since?: string;
   until?: string;
   tag?: string;
+  limit?: string;
 }
 
 const STATS_ADAPTERS = [
@@ -30,6 +31,7 @@ const STATS_ADAPTERS = [
   'windsurf',
 ] as const;
 const STATS_ADAPTER_LIST = STATS_ADAPTERS.join(', ');
+const MAX_STATS_LIMIT = 1000;
 
 /** Parse stats --adapter without treating unknown ids as empty usage stats. */
 export function parseStatsAdapter(value: string | undefined): string | undefined {
@@ -106,17 +108,30 @@ export function parseStatsExclude(value: string | undefined): string[] | undefin
   return adapters;
 }
 
+/** Parse stats --limit without treating invalid counts as empty usage stats. */
+export function parseStatsLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_STATS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_STATS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'since' | 'until' | 'tag'>,
+  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'since' | 'until' | 'tag' | 'limit'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
   const exclude = parseStatsExclude(options.exclude);
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
   const tag = parseStatsTag(options.tag);
-  return snapshots.filter((snapshot) => {
+  let filtered = snapshots.filter((snapshot) => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
@@ -128,6 +143,13 @@ export function applyStatsFilters(
     if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
     return true;
   });
+  const limit = parseStatsLimit(options.limit);
+  if (limit !== undefined) {
+    filtered = [...filtered]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  }
+  return filtered;
 }
 
 export interface StatsJson {
@@ -196,6 +218,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsSince(options.since);
   parseStatsUntil(options.until);
   parseStatsTag(options.tag);
+  parseStatsLimit(options.limit);
 
   if (!options.json) {
     console.log();

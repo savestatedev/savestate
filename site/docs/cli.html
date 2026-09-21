@@ -286,6 +286,7 @@
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only snapshots tagged with this label. Must be a single non-empty snapshot tag (no commas).</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Only aggregate the N most recent snapshots. Must be a positive integer up to 1000.</td></tr>
       </tbody>
     </table>
 
@@ -306,6 +307,9 @@
 
 <span class="code-comment"># Tagged backups</span>
 <span class="code-prompt">$</span> savestate stats --tag work
+
+<span class="code-comment"># Most recent snapshots only</span>
+<span class="code-prompt">$</span> savestate stats --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate stats --json
