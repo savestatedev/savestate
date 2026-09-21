@@ -618,6 +618,7 @@
       <tbody>
         <tr><td><code>--keep-last &lt;n&gt;</code></td><td>Keep the N most recent snapshots. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--older-than &lt;date&gt;</code></td><td>Drop snapshots older than this date. Must be an ISO 8601 date.</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only prune snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--keep-last</code> and <code>--older-than</code>.</td></tr>
         <tr><td><code>--apply</code></td><td>Actually delete. Without this flag, prune only prints the plan</td></tr>
         <tr><td><code>--json</code></td><td>Emit the prune plan as JSON. Useful for scripting. Dry-run is the default unless <code>--apply</code> is set. When SaveState is not initialized, emits a missing summary (found, dryRun, keepCount, dropCount; omits extra fields).</td></tr>
       </tbody>
@@ -627,6 +628,9 @@
 
     <pre><code><span class="code-comment"># Preview which snapshots would be dropped</span>
 <span class="code-prompt">$</span> savestate prune --keep-last 10
+
+<span class="code-comment"># Only prune snapshots from one adapter</span>
+<span class="code-prompt">$</span> savestate prune --keep-last 10 --adapter chatgpt
 
 <span class="code-comment"># Delete snapshots older than a cutoff</span>
 <span class="code-prompt">$</span> savestate prune --older-than 2026-01-01 --apply

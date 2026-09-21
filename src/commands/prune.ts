@@ -19,11 +19,23 @@ import { resolveStorage } from '../storage/index.js';
 interface PruneOptions {
   keepLast?: string;
   olderThan?: string;
+  adapter?: string;
   apply?: boolean;
   json?: boolean;
 }
 
 const MAX_KEEP_LAST = 1000;
+const PRUNE_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const PRUNE_ADAPTER_LIST = PRUNE_ADAPTERS.join(', ');
 
 /** Parse --keep-last without turning user input errors into an empty prune plan. */
 export function parseKeepLast(value: string | undefined): number | undefined {
@@ -49,6 +61,20 @@ export function parsePruneOlderThan(value: string | undefined): number | undefin
     );
   }
   return ms;
+}
+
+/** Parse prune --adapter without treating unknown ids as an empty prune plan. */
+export function parsePruneAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((PRUNE_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${PRUNE_ADAPTER_LIST}.`,
+  );
 }
 
 export interface PrunePlan {
@@ -122,6 +148,8 @@ export function formatPruneMissingJson(): string {
 }
 
 export async function pruneCommand(options: PruneOptions): Promise<void> {
+  parsePruneAdapter(options.adapter);
+
   if (!options.json) {
     console.log();
   }
@@ -148,6 +176,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
   const plan = planPrune(index.snapshots, {
     keepLast: parseKeepLast(options.keepLast),
     olderThanMs: parsePruneOlderThan(options.olderThan),
+    adapter: parsePruneAdapter(options.adapter),
   });
 
   if (options.json) {
@@ -209,9 +238,18 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
  */
 export function planPrune(
   snapshots: SnapshotIndexEntry[],
-  filters: { keepLast?: number; olderThanMs?: number },
+  filters: { keepLast?: number; olderThanMs?: number; adapter?: string },
 ): PrunePlan {
-  const sorted = [...snapshots].sort(
+  const adapter = filters.adapter;
+  const scoped =
+    adapter !== undefined
+      ? snapshots.filter((snapshot) => snapshot.adapter === adapter)
+      : snapshots;
+  const untouched =
+    adapter !== undefined
+      ? snapshots.filter((snapshot) => snapshot.adapter !== adapter)
+      : [];
+  const sorted = [...scoped].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
 
@@ -278,7 +316,10 @@ export function planPrune(
     }
   }
 
-  const keep = sorted.filter((s) => keepSet.has(s.id));
+  const keep = [
+    ...sorted.filter((s) => keepSet.has(s.id)),
+    ...untouched,
+  ];
   const drop = sorted.filter((s) => dropSet.has(s.id));
 
   return { keep, drop, kept_for_chain_safety: keptForSafety, reasons };
