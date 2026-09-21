@@ -110,6 +110,7 @@ program
   .option('--adapter <id>', 'Only snapshots from this adapter')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
+  .option('--limit <n>', 'Only aggregate the N most recent snapshots')
   .action(statsCommand);
 
 // ─── savestate doctor ────────────────────────────────────────

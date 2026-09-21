@@ -280,6 +280,7 @@
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Only aggregate the N most recent snapshots. Must be a positive integer up to 1000.</td></tr>
       </tbody>
     </table>
 
@@ -294,6 +295,9 @@
 
 <span class="code-comment"># Snapshots until April</span>
 <span class="code-prompt">$</span> savestate stats --until 2026-04-01
+
+<span class="code-comment"># Most recent snapshots only</span>
+<span class="code-prompt">$</span> savestate stats --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate stats --json

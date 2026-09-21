@@ -15,6 +15,7 @@ interface StatsOptions {
   adapter?: string;
   since?: string;
   until?: string;
+  limit?: string;
 }
 
 const STATS_ADAPTERS = [
@@ -28,6 +29,7 @@ const STATS_ADAPTERS = [
   'windsurf',
 ] as const;
 const STATS_ADAPTER_LIST = STATS_ADAPTERS.join(', ');
+const MAX_STATS_LIMIT = 1000;
 
 /** Parse stats --adapter without treating unknown ids as empty usage stats. */
 export function parseStatsAdapter(value: string | undefined): string | undefined {
@@ -69,15 +71,28 @@ export function parseStatsUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Parse stats --limit without treating invalid counts as empty usage stats. */
+export function parseStatsLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_STATS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_STATS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'since' | 'until'>,
+  options: Pick<StatsOptions, 'adapter' | 'since' | 'until' | 'limit'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
-  return snapshots.filter((snapshot) => {
+  let filtered = snapshots.filter((snapshot) => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
       return false;
@@ -87,6 +102,13 @@ export function applyStatsFilters(
     }
     return true;
   });
+  const limit = parseStatsLimit(options.limit);
+  if (limit !== undefined) {
+    filtered = [...filtered]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  }
+  return filtered;
 }
 
 export interface StatsJson {
@@ -153,6 +175,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsAdapter(options.adapter);
   parseStatsSince(options.since);
   parseStatsUntil(options.until);
+  parseStatsLimit(options.limit);
 
   if (!options.json) {
     console.log();

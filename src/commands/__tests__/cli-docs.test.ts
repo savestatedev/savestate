@@ -2916,6 +2916,16 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function parseStatsUntil');
   });
 
+  it('documents stats --limit as a bounded positive integer', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--limit');
+    expect(statsSection).toContain('positive integer up to 1000');
+    expect(statsSection).toContain('savestate stats --limit 5');
+    expect(statsBlock).toContain(".option('--limit <n>'");
+    expect(stats).toContain('export function parseStatsLimit');
+  });
+
   it('lists savestate doctor in the command overview', () => {
     expect(docs).toContain('id="doctor"');
     expect(docs).toContain('savestate doctor');
