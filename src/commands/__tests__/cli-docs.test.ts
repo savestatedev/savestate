@@ -413,6 +413,18 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parsePruneOlderThan');
   });
 
+  it('documents prune --adapter as a known adapter', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneSection).toContain('--adapter');
+    expect(pruneSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(pruneSection).toContain('savestate prune --keep-last 10 --adapter chatgpt');
+    expect(pruneBlock).toContain(".option('--adapter <id>'");
+    expect(prune).toContain('export function parsePruneAdapter');
+  });
+
   it('documents prune --json when missing', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     expect(pruneSection).toContain('--json');

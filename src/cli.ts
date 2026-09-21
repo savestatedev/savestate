@@ -204,6 +204,7 @@ program
   .description('Drop old snapshots according to a retention policy (dry-run by default)')
   .option('--keep-last <n>', 'Keep the N most recent snapshots')
   .option('--older-than <date>', 'Drop snapshots older than this date (ISO 8601)')
+  .option('--adapter <id>', 'Only prune snapshots from this adapter')
   .option('--apply', 'Actually delete (default is dry-run)')
   .option('--json', 'Output the plan as JSON')
   .action(pruneCommand);
