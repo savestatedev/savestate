@@ -2896,6 +2896,18 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function parseStatsAdapter');
   });
 
+  it('documents stats --exclude as known adapters', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--exclude');
+    expect(statsSection).toContain(
+      'Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(statsSection).toContain('savestate stats --exclude chatgpt');
+    expect(statsBlock).toContain(".option('--exclude <ids>'");
+    expect(stats).toContain('export function parseStatsExclude');
+  });
+
   it('documents stats --since as an ISO 8601 date', () => {
     const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
     const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));

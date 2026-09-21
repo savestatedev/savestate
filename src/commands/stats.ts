@@ -13,6 +13,7 @@ import type { SnapshotIndexEntry } from '../index-file.js';
 interface StatsOptions {
   json?: boolean;
   adapter?: string;
+  exclude?: string;
   since?: string;
   until?: string;
   tag?: string;
@@ -84,17 +85,40 @@ export function parseStatsTag(value: string | undefined): string | undefined {
   return tag;
 }
 
+/** Parse stats --exclude without treating unknown ids as empty usage stats. */
+export function parseStatsExclude(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const adapters = value
+    .split(',')
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (
+    adapters.length === 0 ||
+    adapters.some((adapter) => !(STATS_ADAPTERS as readonly string[]).includes(adapter))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${STATS_ADAPTER_LIST}.`,
+    );
+  }
+
+  return adapters;
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'since' | 'until' | 'tag'>,
+  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'since' | 'until' | 'tag'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
+  const exclude = parseStatsExclude(options.exclude);
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
   const tag = parseStatsTag(options.tag);
   return snapshots.filter((snapshot) => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
       return false;
     }
@@ -168,6 +192,7 @@ export function formatStatsMissingJson(): string {
 
 export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsAdapter(options.adapter);
+  parseStatsExclude(options.exclude);
   parseStatsSince(options.since);
   parseStatsUntil(options.until);
   parseStatsTag(options.tag);
