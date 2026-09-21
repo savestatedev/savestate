@@ -3220,6 +3220,16 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function parseInspectLabel');
   });
 
+  it('documents inspect --tag as a single snapshot tag', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectSection).toContain('--tag');
+    expect(inspectSection).toContain('Must be a single non-empty snapshot tag (no commas)');
+    expect(inspectSection).toContain('savestate inspect latest --tag work');
+    expect(inspectBlock).toContain(".option('--tag <tag>'");
+    expect(inspect).toContain('export function parseInspectTag');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');

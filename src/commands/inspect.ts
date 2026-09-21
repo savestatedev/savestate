@@ -17,6 +17,7 @@ import { getPassphrase } from '../passphrase.js';
 
 interface InspectOptions {
   json?: boolean;
+  tag?: string;
   label?: string;
 }
 
@@ -85,6 +86,20 @@ export function parseInspectId(value: string | undefined): string {
   return id;
 }
 
+/** Parse inspect --tag without treating blank or comma-separated values as a missing snapshot. */
+export function parseInspectTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
 /** Parse inspect --label without treating blank or comma-separated values as a missing snapshot. */
 export function parseInspectLabel(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -99,18 +114,23 @@ export function parseInspectLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve inspect --label (and snapshot id) to the newest matching snapshot. */
+/** Resolve inspect --tag/--label (and snapshot id) to the newest matching snapshot. */
 export function resolveInspectSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; label?: string }>,
-  options: { snapshot?: string; label?: string },
+  snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
+  options: { snapshot?: string; label?: string; tag?: string },
 ): string | undefined {
   const snapshotId = parseInspectId(options.snapshot);
   const label = parseInspectLabel(options.label);
-  if (label === undefined) {
+  const tag = parseInspectTag(options.tag);
+  if (label === undefined && tag === undefined) {
     return snapshotId;
   }
 
-  let matches = snapshots.filter((entry) => entry.label === label);
+  let matches = snapshots.filter((entry) => {
+    if (label !== undefined && entry.label !== label) return false;
+    if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
+    return true;
+  });
   if (snapshotId !== 'latest') {
     matches = matches.filter((entry) => entry.id === snapshotId);
   }
@@ -124,6 +144,7 @@ export function resolveInspectSnapshot(
 export async function inspectCommand(rawSnapshotId: string, options: InspectOptions): Promise<void> {
   const snapshotId = parseInspectId(rawSnapshotId);
   const label = parseInspectLabel(options.label);
+  const tag = parseInspectTag(options.tag);
 
   if (!options.json) {
     console.log();
@@ -144,17 +165,18 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   let resolvedId = snapshotId;
   let filename: string;
 
-  if (label !== undefined) {
+  if (label !== undefined || tag !== undefined) {
     const matched = resolveInspectSnapshot((await loadIndex()).snapshots, {
       snapshot: rawSnapshotId,
       label: options.label,
+      tag: options.tag,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatInspectMissingJson(snapshotId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${label}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag}`));
       process.exit(1);
     }
     resolvedId = matched;
