@@ -132,6 +132,7 @@ program
   .option('--since <date>', 'Only check snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only check snapshots taken before this date (ISO 8601)')
   .option('--tag <tag>', 'Only check snapshots with this tag')
+  .option('--label <label>', 'Only check snapshots with this label')
   .option('--limit <n>', 'Only check the N most recent snapshots')
   .action(doctorCommand);
 

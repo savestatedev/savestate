@@ -342,6 +342,7 @@
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only check snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only check snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only check snapshots tagged with this label. Must be a single non-empty snapshot tag (no commas).</td></tr>
+        <tr><td><code>--label &lt;label&gt;</code></td><td>Only check snapshots with this human-readable label. Must be a single non-empty snapshot label (no commas).</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Only check the N most recent snapshots. Must be a positive integer up to 1000.</td></tr>
       </tbody>
     </table>
@@ -371,7 +372,10 @@
 <span class="code-prompt">$</span> savestate doctor --until 2026-04-01
 
 <span class="code-comment"># Restrict to tagged snapshots</span>
-<span class="code-prompt">$</span> savestate doctor --tag work --json</code></pre>
+<span class="code-prompt">$</span> savestate doctor --tag work --json
+
+<span class="code-comment"># Restrict to labeled snapshots</span>
+<span class="code-prompt">$</span> savestate doctor --label backup --json</code></pre>
 
     <!-- inspect -->
     <h2 id="inspect"><code>savestate inspect</code></h2>
