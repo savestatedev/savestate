@@ -3361,6 +3361,16 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreExclude');
   });
 
+  it('documents restore --tag as a single snapshot tag', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--tag');
+    expect(restoreSection).toContain('Must be a single non-empty snapshot tag (no commas)');
+    expect(restoreSection).toContain('savestate restore --tag work');
+    expect(restoreBlock).toContain(".option('--tag <tag>'");
+    expect(restore).toContain('export function parseRestoreTag');
+  });
+
   it('documents restore --to as a known adapter', () => {
     const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
     expect(restoreSection).toContain('--to');

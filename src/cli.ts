@@ -82,6 +82,7 @@ program
   .option('--dry-run', 'Show what would be restored without making changes')
   .option('--include <categories>', 'Only restore specific categories (identity,memory,conversations)')
   .option('--exclude <categories>', 'Skip restore categories (one or more of: identity, memory, conversations)')
+  .option('--tag <tag>', 'Restore the newest snapshot with this tag')
   .option('--label <label>', 'Restore the newest snapshot with this label')
   .option('--json', 'Output as JSON')
   .action(restoreCommand);

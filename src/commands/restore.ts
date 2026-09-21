@@ -16,6 +16,7 @@ interface RestoreOptions {
   dryRun?: boolean;
   include?: string;
   exclude?: string;
+  tag?: string;
   label?: string;
   json?: boolean;
 }
@@ -111,6 +112,20 @@ export function parseRestoreExclude(
   return categories as RestoreIncludeCategory[];
 }
 
+/** Parse restore --tag without treating blank or comma-separated values as a missing snapshot. */
+export function parseRestoreTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
 /** Parse restore --label without treating blank or comma-separated values as a missing snapshot. */
 export function parseRestoreLabel(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -125,18 +140,23 @@ export function parseRestoreLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve restore --label (and optional snapshot id) to the newest matching snapshot. */
+/** Resolve restore --tag/--label (and optional snapshot id) to the newest matching snapshot. */
 export function resolveRestoreSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; label?: string }>,
-  options: { snapshot?: string; label?: string },
+  snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
+  options: { snapshot?: string; label?: string; tag?: string },
 ): string | undefined {
   const snapshotId = parseRestoreId(options.snapshot);
   const label = parseRestoreLabel(options.label);
-  if (label === undefined) {
+  const tag = parseRestoreTag(options.tag);
+  if (label === undefined && tag === undefined) {
     return snapshotId;
   }
 
-  let matches = snapshots.filter((entry) => entry.label === label);
+  let matches = snapshots.filter((entry) => {
+    if (label !== undefined && entry.label !== label) return false;
+    if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
+    return true;
+  });
   if (snapshotId !== 'latest') {
     matches = matches.filter((entry) => entry.id === snapshotId);
   }
@@ -190,6 +210,7 @@ export function formatRestoreMissingJson(snapshotId: string): string {
 
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
   const label = parseRestoreLabel(options.label);
+  const tag = parseRestoreTag(options.tag);
   let resolvedId = parseRestoreId(snapshotId);
 
   if (!options.json) {
@@ -212,17 +233,18 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     : include;
   const to = parseRestoreTo(options.to);
 
-  if (label !== undefined) {
+  if (label !== undefined || tag !== undefined) {
     const matched = resolveRestoreSnapshot((await loadIndex()).snapshots, {
       snapshot: snapshotId,
       label: options.label,
+      tag: options.tag,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatRestoreMissingJson(resolvedId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${label}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag}`));
       process.exit(1);
     }
     resolvedId = matched;
