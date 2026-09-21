@@ -18,6 +18,7 @@ interface StatsOptions {
   since?: string;
   until?: string;
   tag?: string;
+  label?: string;
   limit?: string;
 }
 
@@ -88,6 +89,20 @@ export function parseStatsTag(value: string | undefined): string | undefined {
   return tag;
 }
 
+/** Parse stats --label without treating blank or comma-separated values as empty usage stats. */
+export function parseStatsLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
 /** Parse stats --snapshot without treating blank ids as empty usage stats. */
 export function parseStatsSnapshot(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -139,7 +154,7 @@ export function parseStatsLimit(value: string | undefined): number | undefined {
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'limit'>,
+  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
   const exclude = parseStatsExclude(options.exclude);
@@ -147,6 +162,7 @@ export function applyStatsFilters(
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
   const tag = parseStatsTag(options.tag);
+  const label = parseStatsLabel(options.label);
   let filtered = snapshots.filter((snapshot) => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
@@ -158,6 +174,7 @@ export function applyStatsFilters(
       return false;
     }
     if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
+    if (label !== undefined && snapshot.label !== label) return false;
     return true;
   });
   const limit = parseStatsLimit(options.limit);
@@ -236,6 +253,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsSince(options.since);
   parseStatsUntil(options.until);
   parseStatsTag(options.tag);
+  parseStatsLabel(options.label);
   parseStatsLimit(options.limit);
 
   if (!options.json) {

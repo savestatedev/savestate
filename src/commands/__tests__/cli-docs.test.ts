@@ -3012,6 +3012,16 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function parseStatsTag');
   });
 
+  it('documents stats --label as a single snapshot label', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--label');
+    expect(statsSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(statsSection).toContain('savestate stats --label "Pre-update backup"');
+    expect(statsBlock).toContain(".option('--label <label>'");
+    expect(stats).toContain('export function parseStatsLabel');
+  });
+
   it('documents stats --limit as a bounded positive integer', () => {
     const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
     const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
