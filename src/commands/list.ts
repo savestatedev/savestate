@@ -13,6 +13,7 @@ interface ListOptions {
   until?: string;
   adapter?: string;
   exclude?: string;
+  snapshot?: string;
   tag?: string;
 }
 
@@ -144,6 +145,20 @@ export function parseListExclude(value: string | undefined): string[] | undefine
   return adapters;
 }
 
+/** Parse list --snapshot without treating blank ids as an empty snapshot list. */
+export function parseListSnapshot(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const snapshot = value.trim();
+  if (snapshot.length === 0 || snapshot.includes(',') || /\s/.test(snapshot)) {
+    throw new Error(
+      `Invalid --snapshot value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return snapshot;
+}
+
 /** Parse list --tag without treating blank or comma-separated values as an empty snapshot list. */
 export function parseListTag(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -161,6 +176,7 @@ export function parseListTag(value: string | undefined): string | undefined {
 export async function listCommand(options: ListOptions): Promise<void> {
   parseListAdapter(options.adapter);
   parseListExclude(options.exclude);
+  parseListSnapshot(options.snapshot);
   parseListTag(options.tag);
 
   if (!options.json) {
@@ -258,12 +274,13 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
 export function applyListFilters(
   snapshots: SnapshotIndexEntry[],
-  options: { since?: string; until?: string; adapter?: string; exclude?: string; tag?: string },
+  options: { since?: string; until?: string; adapter?: string; exclude?: string; snapshot?: string; tag?: string },
 ): SnapshotIndexEntry[] {
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
   const adapter = parseListAdapter(options.adapter);
   const exclude = parseListExclude(options.exclude);
+  const snapshotId = parseListSnapshot(options.snapshot);
   const tag = parseListTag(options.tag);
 
   return snapshots.filter((s) => {
@@ -272,6 +289,7 @@ export function applyListFilters(
     if (until !== undefined && ts > until) return false;
     if (adapter && s.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(s.adapter)) return false;
+    if (snapshotId !== undefined && s.id !== snapshotId) return false;
     if (tag && !(s.tags ?? []).includes(tag)) return false;
     return true;
   });
