@@ -3561,6 +3561,18 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchTag');
   });
 
+  it('documents search --label as a single snapshot label', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchSection).toContain('--label');
+    expect(searchSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(searchSection).toContain(
+      'savestate search <span class="code-string">"cocktail recommendations"</span> --label backup',
+    );
+    expect(searchBlock).toContain(".option('--label <label>'");
+    expect(search).toContain('export function parseSearchLabel');
+  });
+
   it('documents search query as non-empty', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('&lt;query&gt;');

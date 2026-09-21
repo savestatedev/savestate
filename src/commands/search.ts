@@ -19,6 +19,7 @@ interface SearchOptions {
   snapshot?: string;
   adapter?: string;
   tag?: string;
+  label?: string;
   json?: boolean;
 }
 
@@ -201,22 +202,38 @@ export function parseSearchTag(value: string | undefined): string | undefined {
   return tag;
 }
 
+/** Parse search --label without treating blank or comma-separated values as an empty result set. */
+export function parseSearchLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
 /** Resolve snapshot filters into ids before decrypting archives. */
 export function resolveSearchSnapshots(
-  snapshots: Array<{ id: string; timestamp: string; adapter?: string; tags?: string[] }>,
-  options: Pick<SearchOptions, 'snapshot' | 'since' | 'until' | 'adapter' | 'tag'>,
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string; tags?: string[]; label?: string }>,
+  options: Pick<SearchOptions, 'snapshot' | 'since' | 'until' | 'adapter' | 'tag' | 'label'>,
 ): string[] | undefined {
   const snapshotId = parseSearchSnapshot(options.snapshot);
   const since = parseSearchSince(options.since);
   const until = parseSearchUntil(options.until);
   const adapter = parseSearchAdapter(options.adapter);
   const tag = parseSearchTag(options.tag);
+  const label = parseSearchLabel(options.label);
   if (
     snapshotId === undefined &&
     since === undefined &&
     until === undefined &&
     adapter === undefined &&
-    tag === undefined
+    tag === undefined &&
+    label === undefined
   ) {
     return undefined;
   }
@@ -232,6 +249,7 @@ export function resolveSearchSnapshots(
       }
       if (adapter !== undefined && entry.adapter !== adapter) return false;
       if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
+      if (label !== undefined && entry.label !== label) return false;
       return true;
     })
     .map((entry) => entry.id);
@@ -262,6 +280,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const since = parseSearchSince(options.since);
   const until = parseSearchUntil(options.until);
   const tag = parseSearchTag(options.tag);
+  const label = parseSearchLabel(options.label);
 
   if (!options.json) {
     console.log();
@@ -292,7 +311,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       process.exit(1);
     }
     catalog = [entry];
-  } else if (since !== undefined || until !== undefined || adapter || tag) {
+  } else if (since !== undefined || until !== undefined || adapter || tag || label) {
     catalog = (await loadIndex()).snapshots;
   }
 
@@ -308,6 +327,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     if (tag) console.log(chalk.dim(`   Tag: ${tag}`));
+    if (label) console.log(chalk.dim(`   Label: ${label}`));
     console.log();
   }
 
