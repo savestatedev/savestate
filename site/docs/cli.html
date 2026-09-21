@@ -283,6 +283,7 @@
         <tr><td><code>--json</code></td><td>Emit usage statistics as JSON. Does not decrypt archives. When SaveState is not initialized, emits a missing summary (found, total, totalBytes, first, latest, storage; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--exclude &lt;ids&gt;</code></td><td>Skip snapshots from these adapters. Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
+        <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Only this snapshot. Must be a single non-empty snapshot id.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only snapshots tagged with this label. Must be a single non-empty snapshot tag (no commas).</td></tr>
@@ -298,6 +299,9 @@
 
 <span class="code-comment"># Skip ChatGPT snapshots</span>
 <span class="code-prompt">$</span> savestate stats --exclude chatgpt
+
+<span class="code-comment"># One snapshot</span>
+<span class="code-prompt">$</span> savestate stats --snapshot ss-2026-09-13T12-00-00-ab12cd
 
 <span class="code-comment"># Snapshots since April</span>
 <span class="code-prompt">$</span> savestate stats --since 2026-04-01
