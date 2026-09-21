@@ -437,6 +437,16 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parsePruneExclude');
   });
 
+  it('documents prune --until as an ISO 8601 date', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneSection).toContain('--until');
+    expect(pruneSection).toContain('Must be an ISO 8601 date');
+    expect(pruneSection).toContain('savestate prune --keep-last 10 --until 2026-06-01');
+    expect(pruneBlock).toContain(".option('--until <date>'");
+    expect(prune).toContain('export function parsePruneUntil');
+  });
+
   it('documents prune --json when missing', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     expect(pruneSection).toContain('--json');
