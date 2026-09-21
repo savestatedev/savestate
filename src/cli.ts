@@ -206,6 +206,7 @@ program
   .option('--keep-last <n>', 'Keep the N most recent snapshots')
   .option('--older-than <date>', 'Drop snapshots older than this date (ISO 8601)')
   .option('--adapter <id>', 'Only prune snapshots from this adapter')
+  .option('--tag <tag>', 'Only prune snapshots with this tag')
   .option('--apply', 'Actually delete (default is dry-run)')
   .option('--json', 'Output the plan as JSON')
   .action(pruneCommand);
