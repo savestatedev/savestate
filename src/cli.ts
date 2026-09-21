@@ -206,6 +206,7 @@ program
   .option('--keep-last <n>', 'Keep the N most recent snapshots')
   .option('--older-than <date>', 'Drop snapshots older than this date (ISO 8601)')
   .option('--adapter <id>', 'Only prune snapshots from this adapter')
+  .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--apply', 'Actually delete (default is dry-run)')
   .option('--json', 'Output the plan as JSON')
   .action(pruneCommand);
