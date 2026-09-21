@@ -24,6 +24,7 @@ import { getPassphrase } from '../passphrase.js';
 interface DoctorOptions {
   json?: boolean;
   adapter?: string;
+  exclude?: string;
   snapshot?: string;
   since?: string;
   until?: string;
@@ -70,6 +71,27 @@ export function parseDoctorAdapter(value: string | undefined): string | undefine
   );
 }
 
+/** Parse doctor --exclude without treating unknown ids as an empty snapshot set. */
+export function parseDoctorExclude(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const adapters = value
+    .split(',')
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (
+    adapters.length === 0 ||
+    adapters.some((adapter) => !(DOCTOR_ADAPTERS as readonly string[]).includes(adapter))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${DOCTOR_ADAPTER_LIST}.`,
+    );
+  }
+
+  return adapters;
+}
+
 /** Parse doctor --snapshot without treating blank ids as an empty snapshot set. */
 export function parseDoctorSnapshot(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -113,14 +135,18 @@ export function parseDoctorUntil(value: string | undefined): number | undefined 
 /** Resolve doctor snapshot filters before decrypting archives. */
 export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string }>(
   snapshots: T[],
-  options: Pick<DoctorOptions, 'adapter' | 'snapshot' | 'since' | 'until' | 'limit'>,
+  options: Pick<DoctorOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'limit'>,
 ): T[] {
   const adapter = parseDoctorAdapter(options.adapter);
+  const exclude = parseDoctorExclude(options.exclude);
   const snapshot = parseDoctorSnapshot(options.snapshot);
   const since = parseDoctorSince(options.since);
   const until = parseDoctorUntil(options.until);
   let targets = snapshots.filter((entry) => {
     if (adapter !== undefined && entry.adapter !== adapter) return false;
+    if (exclude !== undefined && entry.adapter !== undefined && exclude.includes(entry.adapter)) {
+      return false;
+    }
     if (snapshot !== undefined && entry.id !== snapshot) return false;
     if (since !== undefined && new Date(entry.timestamp).getTime() < since) {
       return false;
@@ -189,6 +215,7 @@ export function formatDoctorMissingJson(): string {
 
 export async function doctorCommand(options: DoctorOptions): Promise<void> {
   parseDoctorAdapter(options.adapter);
+  parseDoctorExclude(options.exclude);
   parseDoctorSnapshot(options.snapshot);
   parseDoctorSince(options.since);
   parseDoctorUntil(options.until);
