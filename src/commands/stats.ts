@@ -12,6 +12,34 @@ import type { SnapshotIndexEntry } from '../index-file.js';
 
 interface StatsOptions {
   json?: boolean;
+  since?: string;
+}
+
+/** Parse stats --since without treating invalid dates as empty usage stats. */
+export function parseStatsSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve stats snapshot filters before aggregating usage. */
+export function applyStatsFilters(
+  snapshots: SnapshotIndexEntry[],
+  options: Pick<StatsOptions, 'since'>,
+): SnapshotIndexEntry[] {
+  const since = parseStatsSince(options.since);
+  return snapshots.filter((snapshot) => {
+    if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export interface StatsJson {
@@ -75,6 +103,8 @@ export function formatStatsMissingJson(): string {
 }
 
 export async function statsCommand(options: StatsOptions): Promise<void> {
+  parseStatsSince(options.since);
+
   if (!options.json) {
     console.log();
   }
@@ -90,22 +120,29 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
 
   const config = await loadConfig();
   const index = await loadIndex();
+  const filtered = applyStatsFilters(index.snapshots, options);
 
   if (options.json) {
-    console.log(formatStatsJson(index.snapshots, config.storage.type));
+    console.log(formatStatsJson(filtered, config.storage.type));
     return;
   }
 
-  const stats = computeStats(index.snapshots);
+  const stats = computeStats(filtered);
 
   console.log(chalk.bold('📊 SaveState Stats'));
   console.log(chalk.dim(`   Storage: ${config.storage.type}`));
   console.log();
 
-  if (stats.total === 0) {
+  if (index.snapshots.length === 0) {
     console.log(chalk.dim('  No snapshots yet. Create one with:'));
     console.log();
     console.log(`    ${chalk.cyan('savestate snapshot')}`);
+    console.log();
+    return;
+  }
+
+  if (stats.total === 0) {
+    console.log(chalk.dim('  No snapshots match those filters.'));
     console.log();
     return;
   }
