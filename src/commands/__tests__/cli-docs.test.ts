@@ -3220,6 +3220,16 @@ describe('CLI docs', () => {
     expect(listSource).toContain('export function parseListTag');
   });
 
+  it('documents list --snapshot as a single snapshot id', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
+    expect(listSection).toContain('--snapshot');
+    expect(listSection).toContain('Must be a single non-empty snapshot id');
+    expect(listSection).toContain('savestate list --snapshot ss-2026-09-13T12-00-00-ab12cd');
+    expect(listBlock).toContain(".option('--snapshot <id>'");
+    expect(listSource).toContain('export function parseListSnapshot');
+  });
+
   it('registers --json on savestate list', () => {
     const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
     expect(listBlock).toContain(".option('--json'");
