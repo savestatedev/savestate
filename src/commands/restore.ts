@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
-import { getLatestEntry } from '../index-file.js';
+import { getLatestEntry, loadIndex } from '../index-file.js';
 import { restoreSnapshot, type RestoreResult } from '../restore.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { detectAdapter, getAdapter } from '../adapters/registry.js';
@@ -16,6 +16,7 @@ interface RestoreOptions {
   dryRun?: boolean;
   include?: string;
   exclude?: string;
+  label?: string;
   json?: boolean;
 }
 
@@ -110,6 +111,42 @@ export function parseRestoreExclude(
   return categories as RestoreIncludeCategory[];
 }
 
+/** Parse restore --label without treating blank or comma-separated values as a missing snapshot. */
+export function parseRestoreLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
+/** Resolve restore --label (and optional snapshot id) to the newest matching snapshot. */
+export function resolveRestoreSnapshot(
+  snapshots: Array<{ id: string; timestamp: string; label?: string }>,
+  options: { snapshot?: string; label?: string },
+): string | undefined {
+  const snapshotId = parseRestoreId(options.snapshot);
+  const label = parseRestoreLabel(options.label);
+  if (label === undefined) {
+    return snapshotId;
+  }
+
+  let matches = snapshots.filter((entry) => entry.label === label);
+  if (snapshotId !== 'latest') {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
+
+  matches = [...matches].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return matches[0]?.id;
+}
+
 export function formatRestoreResultJson(result: RestoreResult, extra?: { dryRun?: boolean }): string {
   return JSON.stringify(
     {
@@ -152,7 +189,8 @@ export function formatRestoreMissingJson(snapshotId: string): string {
 }
 
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
-  const resolvedId = parseRestoreId(snapshotId);
+  const label = parseRestoreLabel(options.label);
+  let resolvedId = parseRestoreId(snapshotId);
 
   if (!options.json) {
     console.log();
@@ -173,6 +211,22 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     ? (include ?? [...VALID_INCLUDE]).filter((category) => !exclude.includes(category))
     : include;
   const to = parseRestoreTo(options.to);
+
+  if (label !== undefined) {
+    const matched = resolveRestoreSnapshot((await loadIndex()).snapshots, {
+      snapshot: snapshotId,
+      label: options.label,
+    });
+    if (!matched) {
+      if (options.json) {
+        console.log(formatRestoreMissingJson(resolvedId));
+        return;
+      }
+      console.log(chalk.red(`✗ Snapshot not found: ${label}`));
+      process.exit(1);
+    }
+    resolvedId = matched;
+  }
 
   if (options.json && resolvedId === 'latest') {
     const latest = await getLatestEntry();
