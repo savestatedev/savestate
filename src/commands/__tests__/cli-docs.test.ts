@@ -3210,6 +3210,16 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function parseInspectId');
   });
 
+  it('documents inspect --label as a single snapshot label', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectSection).toContain('--label');
+    expect(inspectSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(inspectSection).toContain('savestate inspect latest --label backup');
+    expect(inspectBlock).toContain(".option('--label <label>'");
+    expect(inspect).toContain('export function parseInspectLabel');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
