@@ -12,7 +12,34 @@ import type { SnapshotIndexEntry } from '../index-file.js';
 
 interface StatsOptions {
   json?: boolean;
+  adapter?: string;
   since?: string;
+}
+
+const STATS_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const STATS_ADAPTER_LIST = STATS_ADAPTERS.join(', ');
+
+/** Parse stats --adapter without treating unknown ids as empty usage stats. */
+export function parseStatsAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((STATS_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${STATS_ADAPTER_LIST}.`,
+  );
 }
 
 /** Parse stats --since without treating invalid dates as empty usage stats. */
@@ -31,10 +58,12 @@ export function parseStatsSince(value: string | undefined): number | undefined {
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'since'>,
+  options: Pick<StatsOptions, 'adapter' | 'since'>,
 ): SnapshotIndexEntry[] {
+  const adapter = parseStatsAdapter(options.adapter);
   const since = parseStatsSince(options.since);
   return snapshots.filter((snapshot) => {
+    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
       return false;
     }
@@ -103,6 +132,7 @@ export function formatStatsMissingJson(): string {
 }
 
 export async function statsCommand(options: StatsOptions): Promise<void> {
+  parseStatsAdapter(options.adapter);
   parseStatsSince(options.since);
 
   if (!options.json) {

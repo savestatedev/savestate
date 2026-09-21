@@ -2884,6 +2884,18 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function formatStatsMissingJson');
   });
 
+  it('documents stats --adapter as a known adapter', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--adapter');
+    expect(statsSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(statsSection).toContain('savestate stats --adapter chatgpt');
+    expect(statsBlock).toContain(".option('--adapter <id>'");
+    expect(stats).toContain('export function parseStatsAdapter');
+  });
+
   it('documents stats --since as an ISO 8601 date', () => {
     const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
     const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
