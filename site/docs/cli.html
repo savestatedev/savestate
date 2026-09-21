@@ -653,6 +653,7 @@
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only prune snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--keep-last</code> and <code>--older-than</code>.</td></tr>
         <tr><td><code>--exclude &lt;ids&gt;</code></td><td>Skip snapshots from these adapters. Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only prune snapshots taken before this date. Must be an ISO 8601 date. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
+        <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Only prune this snapshot. Must be a single non-empty snapshot id. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Only consider the N most recent snapshots. Must be a positive integer up to 1000. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--apply</code></td><td>Actually delete. Without this flag, prune only prints the plan</td></tr>
         <tr><td><code>--json</code></td><td>Emit the prune plan as JSON. Useful for scripting. Dry-run is the default unless <code>--apply</code> is set. When SaveState is not initialized, emits a missing summary (found, dryRun, keepCount, dropCount; omits extra fields).</td></tr>
@@ -672,6 +673,9 @@
 
 <span class="code-comment"># Only prune snapshots taken before a cutoff</span>
 <span class="code-prompt">$</span> savestate prune --keep-last 10 --until 2026-06-01
+
+<span class="code-comment"># Only prune one snapshot</span>
+<span class="code-prompt">$</span> savestate prune --keep-last 10 --snapshot ss-2026-09-13T12-00-00-ab12cd
 
 <span class="code-comment"># Only consider the N most recent snapshots</span>
 <span class="code-prompt">$</span> savestate prune --keep-last 1 --limit 5
