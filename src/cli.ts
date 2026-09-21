@@ -107,6 +107,7 @@ program
   .command('stats')
   .description('Show usage statistics about your snapshots')
   .option('--json', 'Output as JSON')
+  .option('--adapter <id>', 'Only snapshots from this adapter')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .action(statsCommand);
 
