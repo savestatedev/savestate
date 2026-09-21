@@ -3240,6 +3240,16 @@ describe('CLI docs', () => {
     expect(listSource).toContain('export function parseListTag');
   });
 
+  it('documents list --label as a single snapshot label', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
+    expect(listSection).toContain('--label');
+    expect(listSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(listSection).toContain('savestate list --label "Pre-update backup"');
+    expect(listBlock).toContain(".option('--label <label>'");
+    expect(listSource).toContain('export function parseListLabel');
+  });
+
   it('documents list --snapshot as a single snapshot id', () => {
     const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
     const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
