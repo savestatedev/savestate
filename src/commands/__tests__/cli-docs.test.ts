@@ -2952,6 +2952,16 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function parseStatsExclude');
   });
 
+  it('documents stats --snapshot as a single snapshot id', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--snapshot');
+    expect(statsSection).toContain('Must be a single non-empty snapshot id');
+    expect(statsSection).toContain('savestate stats --snapshot ss-2026-09-13T12-00-00-ab12cd');
+    expect(statsBlock).toContain(".option('--snapshot <id>'");
+    expect(stats).toContain('export function parseStatsSnapshot');
+  });
+
   it('documents stats --since as an ISO 8601 date', () => {
     const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
     const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));

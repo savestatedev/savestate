@@ -14,6 +14,7 @@ interface StatsOptions {
   json?: boolean;
   adapter?: string;
   exclude?: string;
+  snapshot?: string;
   since?: string;
   until?: string;
   tag?: string;
@@ -87,6 +88,20 @@ export function parseStatsTag(value: string | undefined): string | undefined {
   return tag;
 }
 
+/** Parse stats --snapshot without treating blank ids as empty usage stats. */
+export function parseStatsSnapshot(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const snapshot = value.trim();
+  if (snapshot.length === 0 || snapshot.includes(',') || /\s/.test(snapshot)) {
+    throw new Error(
+      `Invalid --snapshot value "${value}". Expected a single non-empty snapshot id.`,
+    );
+  }
+
+  return snapshot;
+}
+
 /** Parse stats --exclude without treating unknown ids as empty usage stats. */
 export function parseStatsExclude(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
@@ -124,16 +139,18 @@ export function parseStatsLimit(value: string | undefined): number | undefined {
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'since' | 'until' | 'tag' | 'limit'>,
+  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'limit'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
   const exclude = parseStatsExclude(options.exclude);
+  const snapshotId = parseStatsSnapshot(options.snapshot);
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
   const tag = parseStatsTag(options.tag);
   let filtered = snapshots.filter((snapshot) => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
       return false;
     }
@@ -215,6 +232,7 @@ export function formatStatsMissingJson(): string {
 export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsAdapter(options.adapter);
   parseStatsExclude(options.exclude);
+  parseStatsSnapshot(options.snapshot);
   parseStatsSince(options.since);
   parseStatsUntil(options.until);
   parseStatsTag(options.tag);
