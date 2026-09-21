@@ -2921,10 +2921,11 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate doctor');
   });
 
-  it('documents doctor --json, --adapter, --snapshot, --since, --until, and --limit', () => {
+  it('documents doctor --json, --adapter, --exclude, --snapshot, --since, --until, and --limit', () => {
     const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
     expect(doctorSection).toContain('--json');
     expect(doctorSection).toContain('--adapter');
+    expect(doctorSection).toContain('--exclude');
     expect(doctorSection).toContain('--snapshot');
     expect(doctorSection).toContain('--since');
     expect(doctorSection).toContain('--until');
@@ -2947,6 +2948,18 @@ describe('CLI docs', () => {
       'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
     );
     expect(doctor).toContain('export function parseDoctorAdapter');
+  });
+
+  it('documents doctor --exclude as known adapters', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    const doctorBlock = cli.slice(cli.indexOf("command('doctor')"), cli.indexOf("command('inspect <snapshot-id>')"));
+    expect(doctorSection).toContain('--exclude');
+    expect(doctorSection).toContain(
+      'Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(doctorSection).toContain('savestate doctor --exclude chatgpt');
+    expect(doctorBlock).toContain(".option('--exclude <ids>'");
+    expect(doctor).toContain('export function parseDoctorExclude');
   });
 
   it('documents doctor --snapshot as a single snapshot id', () => {

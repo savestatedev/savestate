@@ -121,6 +121,7 @@ program
   .description('Health-check every snapshot: decrypt, unpack, verify checksums, walk chains')
   .option('--json', 'Output as JSON')
   .option('--adapter <id>', 'Only check snapshots from this adapter')
+  .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--snapshot <id>', 'Only check this snapshot (single non-empty snapshot id)')
   .option('--since <date>', 'Only check snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only check snapshots taken before this date (ISO 8601)')
