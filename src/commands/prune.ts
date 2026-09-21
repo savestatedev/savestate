@@ -20,6 +20,7 @@ interface PruneOptions {
   keepLast?: string;
   olderThan?: string;
   adapter?: string;
+  exclude?: string;
   apply?: boolean;
   json?: boolean;
 }
@@ -75,6 +76,27 @@ export function parsePruneAdapter(value: string | undefined): string | undefined
   throw new Error(
     `Invalid --adapter value "${value}". Expected one of: ${PRUNE_ADAPTER_LIST}.`,
   );
+}
+
+/** Parse prune --exclude without treating unknown ids as an empty prune plan. */
+export function parsePruneExclude(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const adapters = value
+    .split(',')
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (
+    adapters.length === 0 ||
+    adapters.some((adapter) => !(PRUNE_ADAPTERS as readonly string[]).includes(adapter))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${PRUNE_ADAPTER_LIST}.`,
+    );
+  }
+
+  return adapters;
 }
 
 export interface PrunePlan {
@@ -149,6 +171,7 @@ export function formatPruneMissingJson(): string {
 
 export async function pruneCommand(options: PruneOptions): Promise<void> {
   parsePruneAdapter(options.adapter);
+  parsePruneExclude(options.exclude);
 
   if (!options.json) {
     console.log();
@@ -177,6 +200,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
     keepLast: parseKeepLast(options.keepLast),
     olderThanMs: parsePruneOlderThan(options.olderThan),
     adapter: parsePruneAdapter(options.adapter),
+    exclude: parsePruneExclude(options.exclude),
   });
 
   if (options.json) {
@@ -238,16 +262,19 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
  */
 export function planPrune(
   snapshots: SnapshotIndexEntry[],
-  filters: { keepLast?: number; olderThanMs?: number; adapter?: string },
+  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[] },
 ): PrunePlan {
   const adapter = filters.adapter;
-  const scoped =
-    adapter !== undefined
-      ? snapshots.filter((snapshot) => snapshot.adapter === adapter)
-      : snapshots;
+  const exclude = filters.exclude;
+  const inScope = (snapshot: SnapshotIndexEntry): boolean => {
+    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    return true;
+  };
+  const scoped = snapshots.filter(inScope);
   const untouched =
-    adapter !== undefined
-      ? snapshots.filter((snapshot) => snapshot.adapter !== adapter)
+    adapter !== undefined || exclude !== undefined
+      ? snapshots.filter((snapshot) => !inScope(snapshot))
       : [];
   const sorted = [...scoped].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
