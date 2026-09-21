@@ -12,6 +12,7 @@ interface ListOptions {
   since?: string;
   until?: string;
   adapter?: string;
+  exclude?: string;
   tag?: string;
 }
 
@@ -122,6 +123,27 @@ export function parseListAdapter(value: string | undefined): string | undefined 
   );
 }
 
+/** Parse list --exclude without treating unknown ids as an empty snapshot list. */
+export function parseListExclude(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const adapters = value
+    .split(',')
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (
+    adapters.length === 0 ||
+    adapters.some((adapter) => !(LIST_ADAPTERS as readonly string[]).includes(adapter))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${LIST_ADAPTER_LIST}.`,
+    );
+  }
+
+  return adapters;
+}
+
 /** Parse list --tag without treating blank or comma-separated values as an empty snapshot list. */
 export function parseListTag(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -138,6 +160,7 @@ export function parseListTag(value: string | undefined): string | undefined {
 
 export async function listCommand(options: ListOptions): Promise<void> {
   parseListAdapter(options.adapter);
+  parseListExclude(options.exclude);
   parseListTag(options.tag);
 
   if (!options.json) {
@@ -235,11 +258,12 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
 export function applyListFilters(
   snapshots: SnapshotIndexEntry[],
-  options: { since?: string; until?: string; adapter?: string; tag?: string },
+  options: { since?: string; until?: string; adapter?: string; exclude?: string; tag?: string },
 ): SnapshotIndexEntry[] {
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
   const adapter = parseListAdapter(options.adapter);
+  const exclude = parseListExclude(options.exclude);
   const tag = parseListTag(options.tag);
 
   return snapshots.filter((s) => {
@@ -247,6 +271,7 @@ export function applyListFilters(
     if (since !== undefined && ts < since) return false;
     if (until !== undefined && ts > until) return false;
     if (adapter && s.adapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(s.adapter)) return false;
     if (tag && !(s.tags ?? []).includes(tag)) return false;
     return true;
   });
