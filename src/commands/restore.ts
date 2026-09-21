@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
-import { getLatestEntry } from '../index-file.js';
+import { getLatestEntry, loadIndex } from '../index-file.js';
 import { restoreSnapshot, type RestoreResult } from '../restore.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { detectAdapter, getAdapter } from '../adapters/registry.js';
@@ -16,6 +16,7 @@ interface RestoreOptions {
   dryRun?: boolean;
   include?: string;
   exclude?: string;
+  tag?: string;
   json?: boolean;
 }
 
@@ -110,6 +111,42 @@ export function parseRestoreExclude(
   return categories as RestoreIncludeCategory[];
 }
 
+/** Parse restore --tag without treating blank or comma-separated values as a missing snapshot. */
+export function parseRestoreTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve restore --tag (and optional snapshot id) to the newest matching snapshot. */
+export function resolveRestoreSnapshot(
+  snapshots: Array<{ id: string; timestamp: string; tags?: string[] }>,
+  options: { snapshot?: string; tag?: string },
+): string | undefined {
+  const snapshotId = parseRestoreId(options.snapshot);
+  const tag = parseRestoreTag(options.tag);
+  if (tag === undefined) {
+    return snapshotId;
+  }
+
+  let matches = snapshots.filter((entry) => (entry.tags ?? []).includes(tag));
+  if (snapshotId !== 'latest') {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
+
+  matches = [...matches].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return matches[0]?.id;
+}
+
 export function formatRestoreResultJson(result: RestoreResult, extra?: { dryRun?: boolean }): string {
   return JSON.stringify(
     {
@@ -152,7 +189,8 @@ export function formatRestoreMissingJson(snapshotId: string): string {
 }
 
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
-  const resolvedId = parseRestoreId(snapshotId);
+  const tag = parseRestoreTag(options.tag);
+  let resolvedId = parseRestoreId(snapshotId);
 
   if (!options.json) {
     console.log();
@@ -173,6 +211,22 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     ? (include ?? [...VALID_INCLUDE]).filter((category) => !exclude.includes(category))
     : include;
   const to = parseRestoreTo(options.to);
+
+  if (tag !== undefined) {
+    const matched = resolveRestoreSnapshot((await loadIndex()).snapshots, {
+      snapshot: snapshotId,
+      tag: options.tag,
+    });
+    if (!matched) {
+      if (options.json) {
+        console.log(formatRestoreMissingJson(resolvedId));
+        return;
+      }
+      console.log(chalk.red(`✗ Snapshot not found: ${tag}`));
+      process.exit(1);
+    }
+    resolvedId = matched;
+  }
 
   if (options.json && resolvedId === 'latest') {
     const latest = await getLatestEntry();

@@ -175,6 +175,7 @@ savestate restore [snapshot-id]       Restore from a snapshot (default: latest)
   --to <platform>                    Restore to different platform
   --dry-run                          Preview without making changes
   --include <categories>             Only restore specific categories
+  --tag <tag>                        Restore the newest snapshot with this tag
 savestate list                        List all snapshots
   --json                             Output as JSON
   --limit <n>                        Max snapshots to show
