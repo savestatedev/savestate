@@ -174,7 +174,7 @@ Recently landed (April 28, 2026):
   decrypted snapshots keyed by `(snapshot id, passphrase fingerprint)`.
   Repeat queries within a process avoid re-decrypt + re-unpack. Real
   win when the MCP search tool gets called multiple times in a session.
-- `savestate list` filters: `--since`, `--until`, `--adapter`, `--tag`
+- `savestate list` filters: `--since`, `--until`, `--adapter`, `--exclude`, `--tag`
   combine as AND. Throws on invalid date strings. The base `list` is now
   practical at 100+ snapshots.
 - MCP `savestate_search_snapshots` + `savestate_stats` tools — the cross-

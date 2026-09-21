@@ -3077,13 +3077,14 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate list');
   });
 
-  it('documents list --since, --until, --adapter, and --tag', () => {
+  it('documents list --since, --until, --adapter, --exclude, and --tag', () => {
     const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
     expect(listSection).toContain('--json');
     expect(listSection).toContain('--limit');
     expect(listSection).toContain('--since');
     expect(listSection).toContain('--until');
     expect(listSection).toContain('--adapter');
+    expect(listSection).toContain('--exclude');
     expect(listSection).toContain('--tag');
     expect(listSection).toContain('50');
     expect(listSection).toContain('ISO 8601');
@@ -3111,6 +3112,18 @@ describe('CLI docs', () => {
       'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
     );
     expect(listSource).toContain('export function parseListAdapter');
+  });
+
+  it('documents list --exclude as known adapters', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
+    expect(listSection).toContain('--exclude');
+    expect(listSection).toContain(
+      'Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(listSection).toContain('savestate list --exclude chatgpt');
+    expect(listBlock).toContain(".option('--exclude <ids>'");
+    expect(listSource).toContain('export function parseListExclude');
   });
 
   it('documents list --tag as a single snapshot tag', () => {

@@ -96,6 +96,7 @@ program
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
   .option('--adapter <id>', 'Only snapshots from this adapter')
+  .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--tag <tag>', 'Only snapshots tagged with this label')
   .action(listCommand);
 
