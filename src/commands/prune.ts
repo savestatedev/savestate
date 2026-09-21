@@ -21,6 +21,7 @@ interface PruneOptions {
   olderThan?: string;
   adapter?: string;
   exclude?: string;
+  since?: string;
   until?: string;
   snapshot?: string;
   label?: string;
@@ -102,6 +103,19 @@ export function parsePruneExclude(value: string | undefined): string[] | undefin
   }
 
   return adapters;
+}
+
+/** Parse prune --since without treating invalid dates as an empty prune plan. */
+export function parsePruneSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
 }
 
 /** Parse prune --until without treating invalid dates as an empty prune plan. */
@@ -231,6 +245,7 @@ export function formatPruneMissingJson(): string {
 export async function pruneCommand(options: PruneOptions): Promise<void> {
   parsePruneAdapter(options.adapter);
   parsePruneExclude(options.exclude);
+  parsePruneSince(options.since);
   parsePruneUntil(options.until);
   parsePruneSnapshot(options.snapshot);
   parsePruneLabel(options.label);
@@ -264,6 +279,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
     olderThanMs: parsePruneOlderThan(options.olderThan),
     adapter: parsePruneAdapter(options.adapter),
     exclude: parsePruneExclude(options.exclude),
+    sinceMs: parsePruneSince(options.since),
     untilMs: parsePruneUntil(options.until),
     snapshot: parsePruneSnapshot(options.snapshot),
     label: parsePruneLabel(options.label),
@@ -329,10 +345,11 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
  */
 export function planPrune(
   snapshots: SnapshotIndexEntry[],
-  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; untilMs?: number; snapshot?: string; label?: string; limit?: number },
+  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; sinceMs?: number; untilMs?: number; snapshot?: string; label?: string; limit?: number },
 ): PrunePlan {
   const adapter = filters.adapter;
   const exclude = filters.exclude;
+  const sinceMs = filters.sinceMs;
   const untilMs = filters.untilMs;
   const snapshotId = filters.snapshot;
   const label = filters.label;
@@ -340,6 +357,7 @@ export function planPrune(
   const inScope = (snapshot: SnapshotIndexEntry): boolean => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    if (sinceMs !== undefined && new Date(snapshot.timestamp).getTime() < sinceMs) return false;
     if (untilMs !== undefined && new Date(snapshot.timestamp).getTime() > untilMs) return false;
     if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
     if (label !== undefined && snapshot.label !== label) return false;
@@ -353,7 +371,7 @@ export function planPrune(
   }
   const scopedSet = new Set(scoped);
   const untouched =
-    adapter !== undefined || exclude !== undefined || untilMs !== undefined || snapshotId !== undefined || label !== undefined || limit !== undefined
+    adapter !== undefined || exclude !== undefined || sinceMs !== undefined || untilMs !== undefined || snapshotId !== undefined || label !== undefined || limit !== undefined
       ? snapshots.filter((snapshot) => !scopedSet.has(snapshot))
       : [];
   const sorted = [...scoped].sort(

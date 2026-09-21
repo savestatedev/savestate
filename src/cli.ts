@@ -216,6 +216,7 @@ program
   .option('--older-than <date>', 'Drop snapshots older than this date (ISO 8601)')
   .option('--adapter <id>', 'Only prune snapshots from this adapter')
   .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
+  .option('--since <date>', 'Only prune snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only prune snapshots taken before this date (ISO 8601)')
   .option('--snapshot <id>', 'Only prune this snapshot (single non-empty snapshot id)')
   .option('--label <label>', 'Only prune snapshots with this label')

@@ -684,6 +684,7 @@
         <tr><td><code>--older-than &lt;date&gt;</code></td><td>Drop snapshots older than this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only prune snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--keep-last</code> and <code>--older-than</code>.</td></tr>
         <tr><td><code>--exclude &lt;ids&gt;</code></td><td>Skip snapshots from these adapters. Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
+        <tr><td><code>--since &lt;date&gt;</code></td><td>Only prune snapshots taken after this date. Must be an ISO 8601 date. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only prune snapshots taken before this date. Must be an ISO 8601 date. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Only prune this snapshot. Must be a single non-empty snapshot id. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Only prune snapshots with this human-readable label. Must be a single non-empty snapshot label (no commas). Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
@@ -703,6 +704,9 @@
 
 <span class="code-comment"># Skip snapshots from excluded adapters</span>
 <span class="code-prompt">$</span> savestate prune --keep-last 10 --exclude chatgpt
+
+<span class="code-comment"># Only prune snapshots taken after a cutoff</span>
+<span class="code-prompt">$</span> savestate prune --keep-last 10 --since 2026-04-01
 
 <span class="code-comment"># Only prune snapshots taken before a cutoff</span>
 <span class="code-prompt">$</span> savestate prune --keep-last 10 --until 2026-06-01
