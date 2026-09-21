@@ -280,6 +280,7 @@
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
+        <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only snapshots tagged with this label. Must be a single non-empty snapshot tag (no commas).</td></tr>
       </tbody>
     </table>
 
@@ -294,6 +295,9 @@
 
 <span class="code-comment"># Snapshots until April</span>
 <span class="code-prompt">$</span> savestate stats --until 2026-04-01
+
+<span class="code-comment"># Tagged backups</span>
+<span class="code-prompt">$</span> savestate stats --tag work
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate stats --json

@@ -2916,6 +2916,16 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function parseStatsUntil');
   });
 
+  it('documents stats --tag as a single snapshot tag', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--tag');
+    expect(statsSection).toContain('Must be a single non-empty snapshot tag (no commas)');
+    expect(statsSection).toContain('savestate stats --tag work');
+    expect(statsBlock).toContain(".option('--tag <tag>'");
+    expect(stats).toContain('export function parseStatsTag');
+  });
+
   it('lists savestate doctor in the command overview', () => {
     expect(docs).toContain('id="doctor"');
     expect(docs).toContain('savestate doctor');

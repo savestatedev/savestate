@@ -15,6 +15,7 @@ interface StatsOptions {
   adapter?: string;
   since?: string;
   until?: string;
+  tag?: string;
 }
 
 const STATS_ADAPTERS = [
@@ -69,14 +70,29 @@ export function parseStatsUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Parse stats --tag without treating blank or comma-separated values as empty usage stats. */
+export function parseStatsTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'since' | 'until'>,
+  options: Pick<StatsOptions, 'adapter' | 'since' | 'until' | 'tag'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
+  const tag = parseStatsTag(options.tag);
   return snapshots.filter((snapshot) => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
@@ -85,6 +101,7 @@ export function applyStatsFilters(
     if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) {
       return false;
     }
+    if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
     return true;
   });
 }
@@ -153,6 +170,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsAdapter(options.adapter);
   parseStatsSince(options.since);
   parseStatsUntil(options.until);
+  parseStatsTag(options.tag);
 
   if (!options.json) {
     console.log();
