@@ -14,6 +14,7 @@ interface StatsOptions {
   json?: boolean;
   adapter?: string;
   since?: string;
+  until?: string;
 }
 
 const STATS_ADAPTERS = [
@@ -55,16 +56,33 @@ export function parseStatsSince(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Parse stats --until without treating invalid dates as empty usage stats. */
+export function parseStatsUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'since'>,
+  options: Pick<StatsOptions, 'adapter' | 'since' | 'until'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
   const since = parseStatsSince(options.since);
+  const until = parseStatsUntil(options.until);
   return snapshots.filter((snapshot) => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
+      return false;
+    }
+    if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) {
       return false;
     }
     return true;
@@ -134,6 +152,7 @@ export function formatStatsMissingJson(): string {
 export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsAdapter(options.adapter);
   parseStatsSince(options.since);
+  parseStatsUntil(options.until);
 
   if (!options.json) {
     console.log();
