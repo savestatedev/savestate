@@ -457,6 +457,16 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parsePruneSnapshot');
   });
 
+  it('documents prune --label as a single snapshot label', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneSection).toContain('--label');
+    expect(pruneSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(pruneSection).toContain('savestate prune --keep-last 10 --label backup');
+    expect(pruneBlock).toContain(".option('--label <label>'");
+    expect(prune).toContain('export function parsePruneLabel');
+  });
+
   it('documents prune --limit as a bounded positive integer', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
