@@ -687,6 +687,7 @@
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only prune snapshots taken after this date. Must be an ISO 8601 date. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only prune snapshots taken before this date. Must be an ISO 8601 date. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Only prune this snapshot. Must be a single non-empty snapshot id. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
+        <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only prune snapshots with this tag. Must be a single non-empty snapshot tag (no commas). Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Only prune snapshots with this human-readable label. Must be a single non-empty snapshot label (no commas). Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Only consider the N most recent snapshots. Must be a positive integer up to 1000. Combines with <code>--adapter</code>, <code>--keep-last</code>, and <code>--older-than</code>.</td></tr>
         <tr><td><code>--apply</code></td><td>Actually delete. Without this flag, prune only prints the plan</td></tr>
@@ -713,6 +714,9 @@
 
 <span class="code-comment"># Only prune one snapshot</span>
 <span class="code-prompt">$</span> savestate prune --keep-last 10 --snapshot ss-2026-09-13T12-00-00-ab12cd
+
+<span class="code-comment"># Only prune snapshots with one tag</span>
+<span class="code-prompt">$</span> savestate prune --keep-last 10 --tag work
 
 <span class="code-comment"># Only prune labeled snapshots</span>
 <span class="code-prompt">$</span> savestate prune --keep-last 10 --label backup

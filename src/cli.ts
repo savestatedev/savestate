@@ -219,6 +219,7 @@ program
   .option('--since <date>', 'Only prune snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only prune snapshots taken before this date (ISO 8601)')
   .option('--snapshot <id>', 'Only prune this snapshot (single non-empty snapshot id)')
+  .option('--tag <tag>', 'Only prune snapshots with this tag')
   .option('--label <label>', 'Only prune snapshots with this label')
   .option('--limit <n>', 'Only consider the N most recent snapshots')
   .option('--apply', 'Actually delete (default is dry-run)')

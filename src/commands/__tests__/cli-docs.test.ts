@@ -467,6 +467,16 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parsePruneSnapshot');
   });
 
+  it('documents prune --tag as a single snapshot tag', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneSection).toContain('--tag');
+    expect(pruneSection).toContain('Must be a single non-empty snapshot tag (no commas)');
+    expect(pruneSection).toContain('savestate prune --keep-last 10 --tag work');
+    expect(pruneBlock).toContain(".option('--tag <tag>'");
+    expect(prune).toContain('export function parsePruneTag');
+  });
+
   it('documents prune --label as a single snapshot label', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
