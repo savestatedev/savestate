@@ -21,6 +21,7 @@ interface PruneOptions {
   olderThan?: string;
   adapter?: string;
   exclude?: string;
+  until?: string;
   apply?: boolean;
   json?: boolean;
 }
@@ -99,6 +100,19 @@ export function parsePruneExclude(value: string | undefined): string[] | undefin
   return adapters;
 }
 
+/** Parse prune --until without treating invalid dates as an empty prune plan. */
+export function parsePruneUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 export interface PrunePlan {
   keep: SnapshotIndexEntry[];
   drop: SnapshotIndexEntry[];
@@ -172,6 +186,7 @@ export function formatPruneMissingJson(): string {
 export async function pruneCommand(options: PruneOptions): Promise<void> {
   parsePruneAdapter(options.adapter);
   parsePruneExclude(options.exclude);
+  parsePruneUntil(options.until);
 
   if (!options.json) {
     console.log();
@@ -201,6 +216,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
     olderThanMs: parsePruneOlderThan(options.olderThan),
     adapter: parsePruneAdapter(options.adapter),
     exclude: parsePruneExclude(options.exclude),
+    untilMs: parsePruneUntil(options.until),
   });
 
   if (options.json) {
@@ -262,18 +278,20 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
  */
 export function planPrune(
   snapshots: SnapshotIndexEntry[],
-  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[] },
+  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; untilMs?: number },
 ): PrunePlan {
   const adapter = filters.adapter;
   const exclude = filters.exclude;
+  const untilMs = filters.untilMs;
   const inScope = (snapshot: SnapshotIndexEntry): boolean => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    if (untilMs !== undefined && new Date(snapshot.timestamp).getTime() > untilMs) return false;
     return true;
   };
   const scoped = snapshots.filter(inScope);
   const untouched =
-    adapter !== undefined || exclude !== undefined
+    adapter !== undefined || exclude !== undefined || untilMs !== undefined
       ? snapshots.filter((snapshot) => !inScope(snapshot))
       : [];
   const sorted = [...scoped].sort(
