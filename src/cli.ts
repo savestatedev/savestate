@@ -111,6 +111,7 @@ program
   .option('--adapter <id>', 'Only snapshots from this adapter')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
+  .option('--tag <tag>', 'Only snapshots tagged with this label')
   .action(statsCommand);
 
 // ─── savestate doctor ────────────────────────────────────────
