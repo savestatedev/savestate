@@ -99,6 +99,7 @@ program
   .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--snapshot <id>', 'Only this snapshot (single non-empty snapshot id)')
   .option('--tag <tag>', 'Only snapshots tagged with this label')
+  .option('--label <label>', 'Only snapshots with this label (single non-empty snapshot label)')
   .action(listCommand);
 
 // ─── savestate stats ─────────────────────────────────────────

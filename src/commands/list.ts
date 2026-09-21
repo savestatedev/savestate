@@ -15,6 +15,7 @@ interface ListOptions {
   exclude?: string;
   snapshot?: string;
   tag?: string;
+  label?: string;
 }
 
 const MAX_LIST_LIMIT = 1000;
@@ -173,11 +174,26 @@ export function parseListTag(value: string | undefined): string | undefined {
   return tag;
 }
 
+/** Parse list --label without treating blank or comma-separated values as an empty snapshot list. */
+export function parseListLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
 export async function listCommand(options: ListOptions): Promise<void> {
   parseListAdapter(options.adapter);
   parseListExclude(options.exclude);
   parseListSnapshot(options.snapshot);
   parseListTag(options.tag);
+  parseListLabel(options.label);
 
   if (!options.json) {
     console.log();
@@ -274,7 +290,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
 export function applyListFilters(
   snapshots: SnapshotIndexEntry[],
-  options: { since?: string; until?: string; adapter?: string; exclude?: string; snapshot?: string; tag?: string },
+  options: { since?: string; until?: string; adapter?: string; exclude?: string; snapshot?: string; tag?: string; label?: string },
 ): SnapshotIndexEntry[] {
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
@@ -282,6 +298,7 @@ export function applyListFilters(
   const exclude = parseListExclude(options.exclude);
   const snapshotId = parseListSnapshot(options.snapshot);
   const tag = parseListTag(options.tag);
+  const label = parseListLabel(options.label);
 
   return snapshots.filter((s) => {
     const ts = new Date(s.timestamp).getTime();
@@ -291,6 +308,7 @@ export function applyListFilters(
     if (exclude !== undefined && exclude.includes(s.adapter)) return false;
     if (snapshotId !== undefined && s.id !== snapshotId) return false;
     if (tag && !(s.tags ?? []).includes(tag)) return false;
+    if (label !== undefined && s.label !== label) return false;
     return true;
   });
 }
