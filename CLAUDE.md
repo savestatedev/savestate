@@ -153,8 +153,8 @@ Recently landed (April 28, 2026):
 - `savestate search <query>` — full implementation; decrypts snapshots on the
   fly, scores by phrase + word + position, returns context snippets across
   memory / identity / conversations / knowledge.
-- `savestate stats [--json] [--adapter] [--since]` — engagement loop: shows total snapshots, time
-  covered, cadence, adapter mix, top tags. `--adapter` limits stats to one known adapter. `--since` limits stats to snapshots after an ISO 8601 date.
+- `savestate stats [--json] [--adapter] [--since] [--until]` — engagement loop: shows total snapshots, time
+  covered, cadence, adapter mix, top tags. `--adapter` limits stats to one known adapter. `--since` / `--until` limit stats to an ISO 8601 date range.
 - `savestate doctor [--json]` — chain-integrity health check across every
   snapshot. Decrypts, unpacks, walks incremental chains, verifies content
   checksums, reports per-snapshot status + summary. Exit non-zero on any

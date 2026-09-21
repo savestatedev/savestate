@@ -2906,6 +2906,16 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function parseStatsSince');
   });
 
+  it('documents stats --until as an ISO 8601 date', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--until');
+    expect(statsSection).toContain('Must be an ISO 8601 date');
+    expect(statsSection).toContain('savestate stats --until 2026-04-01');
+    expect(statsBlock).toContain(".option('--until <date>'");
+    expect(stats).toContain('export function parseStatsUntil');
+  });
+
   it('lists savestate doctor in the command overview', () => {
     expect(docs).toContain('id="doctor"');
     expect(docs).toContain('savestate doctor');
