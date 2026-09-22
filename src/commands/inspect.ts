@@ -17,11 +17,24 @@ import { getPassphrase } from '../passphrase.js';
 
 interface InspectOptions {
   json?: boolean;
+  adapter?: string;
   since?: string;
   until?: string;
   tag?: string;
   label?: string;
 }
+
+const INSPECT_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const INSPECT_ADAPTER_LIST = INSPECT_ADAPTERS.join(', ');
 
 export interface InspectJson {
   id: string;
@@ -142,21 +155,43 @@ export function parseInspectLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve inspect --tag/--label/--since/--until (and snapshot id) to the newest matching snapshot. */
+/** Parse inspect --adapter without treating unknown ids as a missing snapshot. */
+export function parseInspectAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((INSPECT_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${INSPECT_ADAPTER_LIST}.`,
+  );
+}
+
+/** Resolve inspect --adapter/--tag/--label/--since/--until (and snapshot id) to the newest matching snapshot. */
 export function resolveInspectSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; label?: string; tag?: string; since?: string; until?: string },
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
+  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string },
 ): string | undefined {
   const snapshotId = parseInspectId(options.snapshot);
+  const adapter = parseInspectAdapter(options.adapter);
   const label = parseInspectLabel(options.label);
   const tag = parseInspectTag(options.tag);
   const since = parseInspectSince(options.since);
   const until = parseInspectUntil(options.until);
-  if (label === undefined && tag === undefined && since === undefined && until === undefined) {
+  if (
+    adapter === undefined &&
+    label === undefined &&
+    tag === undefined &&
+    since === undefined &&
+    until === undefined
+  ) {
     return snapshotId;
   }
 
   let matches = snapshots.filter((entry) => {
+    if (adapter !== undefined && entry.adapter !== adapter) return false;
     if (label !== undefined && entry.label !== label) return false;
     if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
     if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
@@ -175,6 +210,7 @@ export function resolveInspectSnapshot(
 
 export async function inspectCommand(rawSnapshotId: string, options: InspectOptions): Promise<void> {
   const snapshotId = parseInspectId(rawSnapshotId);
+  const adapter = parseInspectAdapter(options.adapter);
   const label = parseInspectLabel(options.label);
   const tag = parseInspectTag(options.tag);
   const since = parseInspectSince(options.since);
@@ -199,9 +235,16 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   let resolvedId = snapshotId;
   let filename: string;
 
-  if (label !== undefined || tag !== undefined || since !== undefined || until !== undefined) {
+  if (
+    adapter !== undefined ||
+    label !== undefined ||
+    tag !== undefined ||
+    since !== undefined ||
+    until !== undefined
+  ) {
     const matched = resolveInspectSnapshot((await loadIndex()).snapshots, {
       snapshot: rawSnapshotId,
+      adapter: options.adapter,
       label: options.label,
       tag: options.tag,
       since: options.since,
@@ -212,7 +255,7 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
         console.log(formatInspectMissingJson(snapshotId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag ?? options.since ?? options.until}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? label ?? tag ?? options.since ?? options.until}`));
       process.exit(1);
     }
     resolvedId = matched;
