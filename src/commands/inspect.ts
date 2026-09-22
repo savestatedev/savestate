@@ -18,6 +18,7 @@ import { getPassphrase } from '../passphrase.js';
 interface InspectOptions {
   json?: boolean;
   since?: string;
+  until?: string;
   tag?: string;
   label?: string;
 }
@@ -100,6 +101,19 @@ export function parseInspectSince(value: string | undefined): number | undefined
   return ms;
 }
 
+/** Parse inspect --until without treating invalid dates as a missing snapshot. */
+export function parseInspectUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 /** Parse inspect --tag without treating blank or comma-separated values as a missing snapshot. */
 export function parseInspectTag(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -128,16 +142,17 @@ export function parseInspectLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve inspect --tag/--label/--since (and snapshot id) to the newest matching snapshot. */
+/** Resolve inspect --tag/--label/--since/--until (and snapshot id) to the newest matching snapshot. */
 export function resolveInspectSnapshot(
   snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; label?: string; tag?: string; since?: string },
+  options: { snapshot?: string; label?: string; tag?: string; since?: string; until?: string },
 ): string | undefined {
   const snapshotId = parseInspectId(options.snapshot);
   const label = parseInspectLabel(options.label);
   const tag = parseInspectTag(options.tag);
   const since = parseInspectSince(options.since);
-  if (label === undefined && tag === undefined && since === undefined) {
+  const until = parseInspectUntil(options.until);
+  if (label === undefined && tag === undefined && since === undefined && until === undefined) {
     return snapshotId;
   }
 
@@ -145,6 +160,7 @@ export function resolveInspectSnapshot(
     if (label !== undefined && entry.label !== label) return false;
     if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
     if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
+    if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
   if (snapshotId !== 'latest') {
@@ -162,6 +178,7 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   const label = parseInspectLabel(options.label);
   const tag = parseInspectTag(options.tag);
   const since = parseInspectSince(options.since);
+  const until = parseInspectUntil(options.until);
 
   if (!options.json) {
     console.log();
@@ -182,19 +199,20 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   let resolvedId = snapshotId;
   let filename: string;
 
-  if (label !== undefined || tag !== undefined || since !== undefined) {
+  if (label !== undefined || tag !== undefined || since !== undefined || until !== undefined) {
     const matched = resolveInspectSnapshot((await loadIndex()).snapshots, {
       snapshot: rawSnapshotId,
       label: options.label,
       tag: options.tag,
       since: options.since,
+      until: options.until,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatInspectMissingJson(snapshotId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag ?? options.since}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag ?? options.since ?? options.until}`));
       process.exit(1);
     }
     resolvedId = matched;

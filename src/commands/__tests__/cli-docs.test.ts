@@ -3260,6 +3260,16 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function parseInspectSince');
   });
 
+  it('documents inspect --until as an ISO 8601 date', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectSection).toContain('--until');
+    expect(inspectSection).toContain('Must be an ISO 8601 date');
+    expect(inspectSection).toContain('savestate inspect latest --until 2026-06-01');
+    expect(inspectBlock).toContain(".option('--until <date>'");
+    expect(inspect).toContain('export function parseInspectUntil');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
