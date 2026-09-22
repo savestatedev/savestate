@@ -205,6 +205,7 @@
         <tr><td><code>--dry-run</code></td><td>Show what would be restored without making any changes</td></tr>
         <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
         <tr><td><code>--exclude &lt;categories&gt;</code></td><td>Skip restore categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Restore the newest snapshot from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Restore the newest snapshot taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Restore the newest snapshot taken on or before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Restore the newest snapshot with this tag. Must be a single non-empty snapshot tag (no commas).</td></tr>
@@ -228,6 +229,9 @@
 
 <span class="code-comment"># Restore everything except conversations</span>
 <span class="code-prompt">$</span> savestate restore latest --exclude conversations
+
+<span class="code-comment"># Restore the newest snapshot from one adapter</span>
+<span class="code-prompt">$</span> savestate restore --adapter chatgpt
 
 <span class="code-comment"># Restore the newest snapshot since a date</span>
 <span class="code-prompt">$</span> savestate restore --since 2026-04-01
