@@ -3270,6 +3270,18 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function parseInspectUntil');
   });
 
+  it('documents inspect --exclude as known adapters', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectSection).toContain('--exclude');
+    expect(inspectSection).toContain(
+      'Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(inspectSection).toContain('savestate inspect latest --exclude chatgpt');
+    expect(inspectBlock).toContain(".option('--exclude <ids>'");
+    expect(inspect).toContain('export function parseInspectExclude');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
