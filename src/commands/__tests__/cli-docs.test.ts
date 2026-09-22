@@ -3250,6 +3250,16 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function parseInspectTag');
   });
 
+  it('documents inspect --since as an ISO 8601 date', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectSection).toContain('--since');
+    expect(inspectSection).toContain('Must be an ISO 8601 date');
+    expect(inspectSection).toContain('savestate inspect latest --since 2026-04-01');
+    expect(inspectBlock).toContain(".option('--since <date>'");
+    expect(inspect).toContain('export function parseInspectSince');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
@@ -3389,6 +3399,16 @@ describe('CLI docs', () => {
     expect(restoreSection).toContain('savestate restore --since 2026-04-01');
     expect(restoreBlock).toContain(".option('--since <date>'");
     expect(restore).toContain('export function parseRestoreSince');
+  });
+
+  it('documents restore --until as an ISO 8601 date', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--until');
+    expect(restoreSection).toContain('Must be an ISO 8601 date');
+    expect(restoreSection).toContain('savestate restore --until 2026-06-01');
+    expect(restoreBlock).toContain(".option('--until <date>'");
+    expect(restore).toContain('export function parseRestoreUntil');
   });
 
   it('documents restore --tag as a single snapshot tag', () => {

@@ -206,6 +206,7 @@
         <tr><td><code>--include &lt;categories&gt;</code></td><td>Only restore specific categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
         <tr><td><code>--exclude &lt;categories&gt;</code></td><td>Skip restore categories: <code>identity</code>, <code>memory</code>, <code>conversations</code> (comma-separated). Must be one or more of: identity, memory, conversations.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Restore the newest snapshot taken after this date. Must be an ISO 8601 date.</td></tr>
+        <tr><td><code>--until &lt;date&gt;</code></td><td>Restore the newest snapshot taken on or before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Restore the newest snapshot with this tag. Must be a single non-empty snapshot tag (no commas).</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Restore the newest snapshot with this human-readable label. Must be a single non-empty snapshot label (no commas).</td></tr>
         <tr><td><code>--json</code></td><td>Emit the restore result as JSON. Decrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
@@ -230,6 +231,9 @@
 
 <span class="code-comment"># Restore the newest snapshot since a date</span>
 <span class="code-prompt">$</span> savestate restore --since 2026-04-01
+
+<span class="code-comment"># Restore the newest snapshot on or before a date</span>
+<span class="code-prompt">$</span> savestate restore --until 2026-06-01
 
 <span class="code-comment"># Restore the newest tagged snapshot</span>
 <span class="code-prompt">$</span> savestate restore --tag work
@@ -408,6 +412,7 @@
       </thead>
       <tbody>
         <tr><td><code>&lt;snapshot-id&gt;</code></td><td>Snapshot to decrypt and summarize. Must be a single non-empty snapshot id (or <code>latest</code>).</td></tr>
+        <tr><td><code>--since &lt;date&gt;</code></td><td>Inspect the newest snapshot taken after this date. Must be an ISO 8601 date. Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only inspect a snapshot tagged with this label. Must be a single non-empty snapshot tag (no commas). Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Only inspect a snapshot with this human-readable label. Must be a single non-empty snapshot label (no commas). Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the snapshot summary as JSON. Decrypts the archive. When SaveState is not initialized, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
@@ -418,6 +423,9 @@
 
     <pre><code><span class="code-comment"># Summarize the latest snapshot</span>
 <span class="code-prompt">$</span> savestate inspect latest
+
+<span class="code-comment"># Restrict to snapshots taken after a date</span>
+<span class="code-prompt">$</span> savestate inspect latest --since 2026-04-01
 
 <span class="code-comment"># Restrict to tagged snapshots</span>
 <span class="code-prompt">$</span> savestate inspect latest --tag work
