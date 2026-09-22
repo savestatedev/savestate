@@ -147,6 +147,7 @@ import { inspectCommand } from './commands/inspect.js';
 program
   .command('inspect <snapshot-id>')
   .description('Decrypt and summarize a snapshot without restoring it (single non-empty snapshot id)')
+  .option('--since <date>', 'Inspect the newest snapshot taken after this date (ISO 8601)')
   .option('--tag <tag>', 'Only inspect a snapshot with this tag')
   .option('--label <label>', 'Only inspect a snapshot with this label')
   .option('--json', 'Output as JSON')
