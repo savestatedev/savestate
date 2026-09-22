@@ -3381,6 +3381,16 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreExclude');
   });
 
+  it('documents restore --since as an ISO 8601 date', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--since');
+    expect(restoreSection).toContain('Must be an ISO 8601 date');
+    expect(restoreSection).toContain('savestate restore --since 2026-04-01');
+    expect(restoreBlock).toContain(".option('--since <date>'");
+    expect(restore).toContain('export function parseRestoreSince');
+  });
+
   it('documents restore --tag as a single snapshot tag', () => {
     const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
     const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
