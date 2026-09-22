@@ -16,6 +16,7 @@ interface RestoreOptions {
   dryRun?: boolean;
   include?: string;
   exclude?: string;
+  until?: string;
   tag?: string;
   label?: string;
   json?: boolean;
@@ -112,6 +113,19 @@ export function parseRestoreExclude(
   return categories as RestoreIncludeCategory[];
 }
 
+/** Parse restore --until without treating invalid dates as a missing snapshot. */
+export function parseRestoreUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 /** Parse restore --tag without treating blank or comma-separated values as a missing snapshot. */
 export function parseRestoreTag(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -140,21 +154,23 @@ export function parseRestoreLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve restore --tag/--label (and optional snapshot id) to the newest matching snapshot. */
+/** Resolve restore --tag/--label/--until (and optional snapshot id) to the newest matching snapshot. */
 export function resolveRestoreSnapshot(
   snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; label?: string; tag?: string },
+  options: { snapshot?: string; label?: string; tag?: string; until?: string },
 ): string | undefined {
   const snapshotId = parseRestoreId(options.snapshot);
   const label = parseRestoreLabel(options.label);
   const tag = parseRestoreTag(options.tag);
-  if (label === undefined && tag === undefined) {
+  const until = parseRestoreUntil(options.until);
+  if (label === undefined && tag === undefined && until === undefined) {
     return snapshotId;
   }
 
   let matches = snapshots.filter((entry) => {
     if (label !== undefined && entry.label !== label) return false;
     if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
+    if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
   if (snapshotId !== 'latest') {
@@ -211,6 +227,7 @@ export function formatRestoreMissingJson(snapshotId: string): string {
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
   const label = parseRestoreLabel(options.label);
   const tag = parseRestoreTag(options.tag);
+  const until = parseRestoreUntil(options.until);
   let resolvedId = parseRestoreId(snapshotId);
 
   if (!options.json) {
@@ -233,18 +250,19 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     : include;
   const to = parseRestoreTo(options.to);
 
-  if (label !== undefined || tag !== undefined) {
+  if (label !== undefined || tag !== undefined || until !== undefined) {
     const matched = resolveRestoreSnapshot((await loadIndex()).snapshots, {
       snapshot: snapshotId,
       label: options.label,
       tag: options.tag,
+      until: options.until,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatRestoreMissingJson(resolvedId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag ?? options.until}`));
       process.exit(1);
     }
     resolvedId = matched;
