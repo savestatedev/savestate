@@ -24,6 +24,7 @@ interface CloudOptions {
   id?: string;
   adapter?: string;
   since?: string;
+  tag?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -82,16 +83,31 @@ export function parseCloudSince(value: string | undefined): number | undefined {
   return ms;
 }
 
-/** Resolve cloud push --adapter/--since/--id/--all to the local snapshots that should upload. */
+/** Parse cloud --tag without treating blank or comma-separated values as the latest snapshot. */
+export function parseCloudTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve cloud push --adapter/--since/--tag/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
-  T extends { id: string; timestamp: string; adapter?: string },
+  T extends { id: string; timestamp: string; adapter?: string; tags?: string[] },
 >(
   snapshots: T[],
-  options: { id?: string; adapter?: string; since?: string; all?: boolean },
+  options: { id?: string; adapter?: string; since?: string; tag?: string; all?: boolean },
 ): T[] {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
   const since = parseCloudSince(options.since);
+  const tag = parseCloudTag(options.tag);
 
   let matches = snapshots;
   if (adapter !== undefined) {
@@ -100,13 +116,16 @@ export function resolveCloudPushSnapshots<
   if (since !== undefined) {
     matches = matches.filter((entry) => new Date(entry.timestamp).getTime() >= since);
   }
+  if (tag !== undefined) {
+    matches = matches.filter((entry) => (entry.tags ?? []).includes(tag));
+  }
   if (id !== undefined) {
     return matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
   }
   if (options.all) {
     return matches;
   }
-  if (adapter !== undefined || since !== undefined) {
+  if (adapter !== undefined || since !== undefined || tag !== undefined) {
     matches = [...matches].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
@@ -481,6 +500,7 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
   const since = parseCloudSince(options.since);
+  const tag = parseCloudTag(options.tag);
 
   if (!options.json) {
     console.log();
@@ -528,8 +548,8 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   if (entries.length === 0) {
     if (options.json) {
-      if (id || adapter || since !== undefined) {
-        console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? ''));
+      if (id || adapter || since !== undefined || tag) {
+        console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? tag ?? ''));
         return;
       }
       console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -544,14 +564,15 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     id: options.id,
     adapter: options.adapter,
     since: options.since,
+    tag: options.tag,
     all: options.all,
   });
-  if ((id || adapter || since !== undefined) && toPush.length === 0) {
+  if ((id || adapter || since !== undefined || tag) && toPush.length === 0) {
     if (options.json) {
-      console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? ''));
+      console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? tag ?? ''));
       return;
     }
-    console.log(chalk.red(`Snapshot not found: ${id ?? adapter ?? options.since}`));
+    console.log(chalk.red(`Snapshot not found: ${id ?? adapter ?? options.since ?? tag}`));
     process.exit(1);
   }
 
@@ -966,6 +987,7 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
 export async function cloudCommand(rawSubcommand: string, options: CloudOptions): Promise<void> {
   const subcommand = parseCloudSubcommand(rawSubcommand);
   parseCloudAdapter(options.adapter);
+  parseCloudTag(options.tag);
   switch (subcommand) {
     case 'push':
       await cloudPushCommand(options);
