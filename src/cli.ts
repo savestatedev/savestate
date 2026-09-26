@@ -374,6 +374,7 @@ program
   .option('--id <id>', 'Specific snapshot ID (single non-empty id)')
   .option('--adapter <id>', 'Push the newest local snapshot from this adapter')
   .option('--since <date>', 'Push the newest local snapshot taken after this date (ISO 8601)')
+  .option('--until <date>', 'Push the newest local snapshot taken on or before this date (ISO 8601)')
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')
   .option('--json', 'Output as JSON')
