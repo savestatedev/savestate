@@ -853,6 +853,7 @@
         <tr><td><code>-s, --snapshot &lt;id&gt;</code></td><td>Use an existing snapshot instead of creating a new one. Must be a single non-empty snapshot id.</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Use the newest existing snapshot with this label instead of creating a new one. Must be a single non-empty snapshot label (no commas). ANDs with <code>--snapshot</code> when both are set.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Use the newest snapshot with this tag instead of creating a new one. Must be a single non-empty snapshot tag (no commas). ANDs with <code>--snapshot</code> and <code>--label</code> when those flags are set.</td></tr>
+        <tr><td><code>--since &lt;date&gt;</code></td><td>Use the newest existing snapshot taken after this date instead of creating a new one. Must be an ISO 8601 date. ANDs with <code>--snapshot</code>, <code>--label</code>, and <code>--tag</code> when those flags are set.</td></tr>
         <tr><td><code>-l, --list</code></td><td>List available platforms and their capabilities</td></tr>
         <tr><td><code>--json</code></td><td>Emit the platform catalog as JSON with <code>--list</code>, or a compatibility report as JSON with <code>--dry-run</code> (source, target, feasibility, summary, items, and recommendations; omits source refs). When SaveState is not initialized, emits a missing summary (found, source, target, feasibility; omits extra fields). Skips the wizard banner. Useful for scripting.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show a compatibility report without making changes</td></tr>
@@ -903,7 +904,10 @@
 <span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --label backup
 
 <span class="code-comment"># Reuse the newest tagged snapshot instead of creating a new one</span>
-<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --tag work</code></pre>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --tag work
+
+<span class="code-comment"># Reuse the newest snapshot taken after this date</span>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --since 2026-04-01</code></pre>
 
     <!-- trust -->
     <h2 id="trust"><code>savestate trust</code></h2>
