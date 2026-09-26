@@ -48,6 +48,7 @@ export interface MigrateCommandOptions {
   from?: string;
   to?: string;
   snapshot?: string;
+  adapter?: string;
   label?: string;
   tag?: string;
   since?: string;
@@ -68,6 +69,17 @@ type MigrateIncludeType = (typeof VALID_INCLUDE)[number];
 const MIGRATE_INCLUDE_LIST = VALID_INCLUDE.join(', ');
 const MIGRATE_PLATFORMS = ['chatgpt', 'claude', 'gemini', 'copilot'] as const;
 const MIGRATE_PLATFORM_LIST = MIGRATE_PLATFORMS.join(', ');
+const MIGRATE_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const MIGRATE_ADAPTER_LIST = MIGRATE_ADAPTERS.join(', ');
 
 /** Parse migrate --from without exiting the CLI process on an unknown platform. */
 export function parseMigrateFrom(value: string | undefined): Platform | undefined {
@@ -151,20 +163,41 @@ export function parseMigrateSince(value: string | undefined): number | undefined
   return ms;
 }
 
-/** Resolve migrate --label/--tag/--since (and optional --snapshot) to the newest matching snapshot. */
+/** Parse migrate --adapter without treating unknown ids as creating a new snapshot. */
+export function parseMigrateAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((MIGRATE_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${MIGRATE_ADAPTER_LIST}.`,
+  );
+}
+
+/** Resolve migrate --adapter/--label/--tag/--since (and optional --snapshot) to the newest matching snapshot. */
 export function resolveMigrateSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; label?: string; tag?: string; since?: string },
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
+  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string },
 ): string | undefined {
   const snapshotId = parseMigrateSnapshot(options.snapshot);
+  const adapter = parseMigrateAdapter(options.adapter);
   const label = parseMigrateLabel(options.label);
   const tag = parseMigrateTag(options.tag);
   const since = parseMigrateSince(options.since);
-  if (label === undefined && tag === undefined && since === undefined) {
+  if (
+    adapter === undefined &&
+    label === undefined &&
+    tag === undefined &&
+    since === undefined
+  ) {
     return snapshotId;
   }
 
   let matches = snapshots.filter((entry) => {
+    if (adapter !== undefined && entry.adapter !== adapter) return false;
     if (label !== undefined && entry.label !== label) return false;
     if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
     if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
@@ -374,6 +407,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
   parseMigrateFrom(options.from);
   parseMigrateTo(options.to);
   parseMigrateSnapshot(options.snapshot);
+  parseMigrateAdapter(options.adapter);
   parseMigrateLabel(options.label);
   parseMigrateTag(options.tag);
   parseMigrateSince(options.since);
@@ -388,9 +422,15 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     process.exit(1);
   }
 
-  if (options.label !== undefined || options.tag !== undefined || options.since !== undefined) {
+  if (
+    options.adapter !== undefined ||
+    options.label !== undefined ||
+    options.tag !== undefined ||
+    options.since !== undefined
+  ) {
     const matched = resolveMigrateSnapshot((await loadIndex()).snapshots, {
       snapshot: options.snapshot,
+      adapter: options.adapter,
       label: options.label,
       tag: options.tag,
       since: options.since,
@@ -400,7 +440,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
         console.log(formatMigrateMissingJson());
         return;
       }
-      error(`Snapshot not found: ${options.label ?? options.tag ?? options.since}`);
+      error(`Snapshot not found: ${options.adapter ?? options.label ?? options.tag ?? options.since}`);
       process.exit(1);
     }
     options.snapshot = matched;

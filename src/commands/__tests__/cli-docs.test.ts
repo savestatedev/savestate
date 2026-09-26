@@ -819,6 +819,16 @@ describe('CLI docs', () => {
     expect(migrate).toContain('export function parseMigrateSince');
   });
 
+  it('documents migrate --adapter as a known adapter', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    const migrateBlock = cli.slice(cli.indexOf("command('migrate')"), cli.indexOf("command('cloud'"));
+    expect(migrateSection).toContain('--adapter');
+    expect(migrateSection).toContain('Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf');
+    expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --adapter chatgpt');
+    expect(migrateBlock).toContain(".option('--adapter <id>'");
+    expect(migrate).toContain('export function parseMigrateAdapter');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
