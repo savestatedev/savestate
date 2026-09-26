@@ -22,6 +22,7 @@ const API_BASE = process.env.SAVESTATE_API_URL || 'https://savestate.dev/api';
 
 interface CloudOptions {
   id?: string;
+  since?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -39,6 +40,48 @@ export function parseCloudId(value: string | undefined): string | undefined {
   }
 
   return id;
+}
+
+/** Parse cloud --since without treating invalid dates as the latest snapshot. */
+export function parseCloudSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve cloud push --since/--id/--all to the local snapshots that should upload. */
+export function resolveCloudPushSnapshots<
+  T extends { id: string; timestamp: string },
+>(
+  snapshots: T[],
+  options: { id?: string; since?: string; all?: boolean },
+): T[] {
+  const id = parseCloudId(options.id);
+  const since = parseCloudSince(options.since);
+
+  let matches = snapshots;
+  if (since !== undefined) {
+    matches = matches.filter((entry) => new Date(entry.timestamp).getTime() >= since);
+  }
+  if (id !== undefined) {
+    return matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
+  }
+  if (options.all) {
+    return matches;
+  }
+  if (since !== undefined) {
+    matches = [...matches].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
+    return matches.slice(0, 1);
+  }
+  return matches.length > 0 ? [matches[matches.length - 1]] : [];
 }
 
 const CLOUD_SUBCOMMANDS = ['push', 'pull', 'list', 'delete'] as const;
@@ -405,6 +448,7 @@ async function listCloudSnapshots(): Promise<Array<{ id: string; size: number; c
  */
 export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
+  const since = parseCloudSince(options.since);
 
   if (!options.json) {
     console.log();
@@ -452,8 +496,8 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   if (entries.length === 0) {
     if (options.json) {
-      if (id) {
-        console.log(formatCloudPushMissingJson(id));
+      if (id || since !== undefined) {
+        console.log(formatCloudPushMissingJson(id ?? options.since ?? ''));
         return;
       }
       console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -464,21 +508,18 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     process.exit(0);
   }
 
-  // Filter to specific snapshot or all
-  let toPush = entries;
-  if (id) {
-    toPush = entries.filter(e => e.id === id || e.id.startsWith(id));
-    if (toPush.length === 0) {
-      if (options.json) {
-        console.log(formatCloudPushMissingJson(id));
-        return;
-      }
-      console.log(chalk.red(`Snapshot not found: ${id}`));
-      process.exit(1);
+  const toPush = resolveCloudPushSnapshots(entries, {
+    id: options.id,
+    since: options.since,
+    all: options.all,
+  });
+  if ((id || since !== undefined) && toPush.length === 0) {
+    if (options.json) {
+      console.log(formatCloudPushMissingJson(id ?? options.since ?? ''));
+      return;
     }
-  } else if (!options.all) {
-    // Default: push latest only
-    toPush = [entries[entries.length - 1]];
+    console.log(chalk.red(`Snapshot not found: ${id ?? options.since}`));
+    process.exit(1);
   }
 
   if (!options.json) {
