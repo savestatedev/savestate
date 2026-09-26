@@ -350,6 +350,7 @@ program
   .option('--label <label>', 'Use the newest existing snapshot with this label')
   .option('--tag <tag>', 'Use the newest snapshot with this tag instead of creating a new one')
   .option('--since <date>', 'Use the newest snapshot taken after this date instead of creating a new one')
+  .option('--until <date>', 'Use the newest snapshot taken on or before this date instead of creating a new one')
   .option('--dry-run', 'Show compatibility report without making changes')
   .option('--review', 'Inspect items needing manual attention')
   .option('--resume', 'Resume an interrupted migration')

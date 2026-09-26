@@ -819,6 +819,16 @@ describe('CLI docs', () => {
     expect(migrate).toContain('export function parseMigrateSince');
   });
 
+  it('documents migrate --until as an ISO 8601 date', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    const migrateBlock = cli.slice(cli.indexOf("command('migrate')"), cli.indexOf("command('cloud'"));
+    expect(migrateSection).toContain('--until');
+    expect(migrateSection).toContain('Must be an ISO 8601 date');
+    expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --until 2026-06-01');
+    expect(migrateBlock).toContain(".option('--until <date>'");
+    expect(migrate).toContain('export function parseMigrateUntil');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
