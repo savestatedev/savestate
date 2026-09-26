@@ -3280,6 +3280,18 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function parseInspectUntil');
   });
 
+  it('documents inspect --adapter as a known adapter', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectSection).toContain('--adapter');
+    expect(inspectSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(inspectSection).toContain('savestate inspect latest --adapter chatgpt');
+    expect(inspectBlock).toContain(".option('--adapter <id>'");
+    expect(inspect).toContain('export function parseInspectAdapter');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
