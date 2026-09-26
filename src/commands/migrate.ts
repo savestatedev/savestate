@@ -21,6 +21,7 @@
 
 import chalk from 'chalk';
 import { isInitialized } from '../config.js';
+import { loadIndex } from '../index-file.js';
 import type { Platform, MigrationOptions, LoadResult, CompatibilityReport } from '../migrate/types.js';
 import { MigrationOrchestrator, PLATFORM_CAPABILITIES, getPlatformCapabilities } from '../migrate/index.js';
 import {
@@ -47,6 +48,7 @@ export interface MigrateCommandOptions {
   from?: string;
   to?: string;
   snapshot?: string;
+  label?: string;
   dryRun?: boolean;
   list?: boolean;
   resume?: boolean;
@@ -104,6 +106,42 @@ export function parseMigrateSnapshot(value: string | undefined): string | undefi
   }
 
   return snapshot;
+}
+
+/** Parse migrate --label without treating blank or comma-separated values as a missing snapshot. */
+export function parseMigrateLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
+/** Resolve migrate --label (and optional --snapshot) to the newest matching snapshot. */
+export function resolveMigrateSnapshot(
+  snapshots: Array<{ id: string; timestamp: string; label?: string }>,
+  options: { snapshot?: string; label?: string },
+): string | undefined {
+  const snapshotId = parseMigrateSnapshot(options.snapshot);
+  const label = parseMigrateLabel(options.label);
+  if (label === undefined) {
+    return snapshotId;
+  }
+
+  let matches = snapshots.filter((entry) => entry.label === label);
+  if (snapshotId !== undefined) {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
+
+  matches = [...matches].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return matches[0]?.id;
 }
 
 /** Parse migrate --include without silently skipping unknown types. */
@@ -300,6 +338,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
   parseMigrateFrom(options.from);
   parseMigrateTo(options.to);
   parseMigrateSnapshot(options.snapshot);
+  parseMigrateLabel(options.label);
 
   // Check initialization
   if (!isInitialized()) {
@@ -309,6 +348,22 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     }
     error('SaveState not initialized. Run `savestate init` first.');
     process.exit(1);
+  }
+
+  if (options.label !== undefined) {
+    const matched = resolveMigrateSnapshot((await loadIndex()).snapshots, {
+      snapshot: options.snapshot,
+      label: options.label,
+    });
+    if (!matched) {
+      if (options.json) {
+        console.log(formatMigrateMissingJson());
+        return;
+      }
+      error(`Snapshot not found: ${options.label}`);
+      process.exit(1);
+    }
+    options.snapshot = matched;
   }
 
   resolveMigrateInclude(options);
