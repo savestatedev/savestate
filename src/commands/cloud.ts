@@ -25,6 +25,7 @@ interface CloudOptions {
   adapter?: string;
   exclude?: string;
   since?: string;
+  label?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -104,17 +105,32 @@ export function parseCloudSince(value: string | undefined): number | undefined {
   return ms;
 }
 
-/** Resolve cloud push --adapter/--exclude/--since/--id/--all to the local snapshots that should upload. */
+/** Parse cloud --label without treating blank or comma-separated values as the latest snapshot. */
+export function parseCloudLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
+/** Resolve cloud push --adapter/--exclude/--since/--label/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
-  T extends { id: string; timestamp: string; adapter?: string },
+  T extends { id: string; timestamp: string; adapter?: string; label?: string },
 >(
   snapshots: T[],
-  options: { id?: string; adapter?: string; exclude?: string; since?: string; all?: boolean },
+  options: { id?: string; adapter?: string; exclude?: string; since?: string; label?: string; all?: boolean },
 ): T[] {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
   const exclude = parseCloudExclude(options.exclude);
   const since = parseCloudSince(options.since);
+  const label = parseCloudLabel(options.label);
 
   let matches = snapshots;
   if (adapter !== undefined) {
@@ -126,13 +142,16 @@ export function resolveCloudPushSnapshots<
   if (since !== undefined) {
     matches = matches.filter((entry) => new Date(entry.timestamp).getTime() >= since);
   }
+  if (label !== undefined) {
+    matches = matches.filter((entry) => entry.label === label);
+  }
   if (id !== undefined) {
     return matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
   }
   if (options.all) {
     return matches;
   }
-  if (adapter !== undefined || exclude !== undefined || since !== undefined) {
+  if (adapter !== undefined || exclude !== undefined || since !== undefined || label !== undefined) {
     matches = [...matches].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
@@ -508,6 +527,7 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   const adapter = parseCloudAdapter(options.adapter);
   const exclude = parseCloudExclude(options.exclude);
   const since = parseCloudSince(options.since);
+  const label = parseCloudLabel(options.label);
 
   if (!options.json) {
     console.log();
@@ -555,8 +575,8 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   if (entries.length === 0) {
     if (options.json) {
-      if (id || adapter || exclude || since !== undefined) {
-        console.log(formatCloudPushMissingJson(id ?? adapter ?? options.exclude ?? options.since ?? ''));
+      if (id || adapter || exclude || since !== undefined || label) {
+        console.log(formatCloudPushMissingJson(id ?? adapter ?? options.exclude ?? options.since ?? label ?? ''));
         return;
       }
       console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -572,14 +592,15 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     adapter: options.adapter,
     exclude: options.exclude,
     since: options.since,
+    label: options.label,
     all: options.all,
   });
-  if ((id || adapter || exclude || since !== undefined) && toPush.length === 0) {
+  if ((id || adapter || exclude || since !== undefined || label) && toPush.length === 0) {
     if (options.json) {
-      console.log(formatCloudPushMissingJson(id ?? adapter ?? options.exclude ?? options.since ?? ''));
+      console.log(formatCloudPushMissingJson(id ?? adapter ?? options.exclude ?? options.since ?? label ?? ''));
       return;
     }
-    console.log(chalk.red(`Snapshot not found: ${id ?? adapter ?? options.exclude ?? options.since}`));
+    console.log(chalk.red(`Snapshot not found: ${id ?? adapter ?? options.exclude ?? options.since ?? label}`));
     process.exit(1);
   }
 
@@ -995,6 +1016,7 @@ export async function cloudCommand(rawSubcommand: string, options: CloudOptions)
   const subcommand = parseCloudSubcommand(rawSubcommand);
   parseCloudAdapter(options.adapter);
   parseCloudExclude(options.exclude);
+  parseCloudLabel(options.label);
   switch (subcommand) {
     case 'push':
       await cloudPushCommand(options);
