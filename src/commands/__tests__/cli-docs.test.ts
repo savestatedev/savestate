@@ -3443,6 +3443,18 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreUntil');
   });
 
+  it('documents restore --adapter as a known adapter', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--adapter');
+    expect(restoreSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(restoreSection).toContain('savestate restore --adapter chatgpt');
+    expect(restoreBlock).toContain(".option('--adapter <id>'");
+    expect(restore).toContain('export function parseRestoreAdapter');
+  });
+
   it('documents restore --tag as a single snapshot tag', () => {
     const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
     const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));

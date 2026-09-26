@@ -16,6 +16,7 @@ interface RestoreOptions {
   dryRun?: boolean;
   include?: string;
   exclude?: string;
+  adapter?: string;
   since?: string;
   until?: string;
   tag?: string;
@@ -114,6 +115,20 @@ export function parseRestoreExclude(
   return categories as RestoreIncludeCategory[];
 }
 
+/** Parse restore --adapter without treating unknown ids as a missing snapshot. */
+export function parseRestoreAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((RESTORE_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${RESTORE_ADAPTER_LIST}.`,
+  );
+}
+
 /** Parse restore --since without treating invalid dates as a missing snapshot. */
 export function parseRestoreSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -168,21 +183,29 @@ export function parseRestoreLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve restore --tag/--label/--since/--until (and optional snapshot id) to the newest matching snapshot. */
+/** Resolve restore --adapter/--tag/--label/--since/--until (and optional snapshot id) to the newest matching snapshot. */
 export function resolveRestoreSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; label?: string; tag?: string; since?: string; until?: string },
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
+  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string },
 ): string | undefined {
   const snapshotId = parseRestoreId(options.snapshot);
+  const adapter = parseRestoreAdapter(options.adapter);
   const label = parseRestoreLabel(options.label);
   const tag = parseRestoreTag(options.tag);
   const since = parseRestoreSince(options.since);
   const until = parseRestoreUntil(options.until);
-  if (label === undefined && tag === undefined && since === undefined && until === undefined) {
+  if (
+    adapter === undefined &&
+    label === undefined &&
+    tag === undefined &&
+    since === undefined &&
+    until === undefined
+  ) {
     return snapshotId;
   }
 
   let matches = snapshots.filter((entry) => {
+    if (adapter !== undefined && entry.adapter !== adapter) return false;
     if (label !== undefined && entry.label !== label) return false;
     if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
     if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
@@ -241,6 +264,7 @@ export function formatRestoreMissingJson(snapshotId: string): string {
 }
 
 export async function restoreCommand(snapshotId: string | undefined, options: RestoreOptions): Promise<void> {
+  const adapter = parseRestoreAdapter(options.adapter);
   const label = parseRestoreLabel(options.label);
   const tag = parseRestoreTag(options.tag);
   const since = parseRestoreSince(options.since);
@@ -267,9 +291,16 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     : include;
   const to = parseRestoreTo(options.to);
 
-  if (label !== undefined || tag !== undefined || since !== undefined || until !== undefined) {
+  if (
+    adapter !== undefined ||
+    label !== undefined ||
+    tag !== undefined ||
+    since !== undefined ||
+    until !== undefined
+  ) {
     const matched = resolveRestoreSnapshot((await loadIndex()).snapshots, {
       snapshot: snapshotId,
+      adapter: options.adapter,
       label: options.label,
       tag: options.tag,
       since: options.since,
@@ -280,7 +311,7 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
         console.log(formatRestoreMissingJson(resolvedId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${label ?? tag ?? options.since ?? options.until}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? label ?? tag ?? options.since ?? options.until}`));
       process.exit(1);
     }
     resolvedId = matched;
