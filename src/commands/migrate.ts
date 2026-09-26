@@ -49,6 +49,7 @@ export interface MigrateCommandOptions {
   to?: string;
   snapshot?: string;
   label?: string;
+  since?: string;
   dryRun?: boolean;
   list?: boolean;
   resume?: boolean;
@@ -122,18 +123,36 @@ export function parseMigrateLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve migrate --label (and optional --snapshot) to the newest matching snapshot. */
+/** Parse migrate --since without treating invalid dates as a missing snapshot. */
+export function parseMigrateSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve migrate --label/--since (and optional --snapshot) to the newest matching snapshot. */
 export function resolveMigrateSnapshot(
   snapshots: Array<{ id: string; timestamp: string; label?: string }>,
-  options: { snapshot?: string; label?: string },
+  options: { snapshot?: string; label?: string; since?: string },
 ): string | undefined {
   const snapshotId = parseMigrateSnapshot(options.snapshot);
   const label = parseMigrateLabel(options.label);
-  if (label === undefined) {
+  const since = parseMigrateSince(options.since);
+  if (label === undefined && since === undefined) {
     return snapshotId;
   }
 
-  let matches = snapshots.filter((entry) => entry.label === label);
+  let matches = snapshots.filter((entry) => {
+    if (label !== undefined && entry.label !== label) return false;
+    if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
+    return true;
+  });
   if (snapshotId !== undefined) {
     matches = matches.filter((entry) => entry.id === snapshotId);
   }
@@ -339,6 +358,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
   parseMigrateTo(options.to);
   parseMigrateSnapshot(options.snapshot);
   parseMigrateLabel(options.label);
+  parseMigrateSince(options.since);
 
   // Check initialization
   if (!isInitialized()) {
@@ -350,17 +370,18 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     process.exit(1);
   }
 
-  if (options.label !== undefined) {
+  if (options.label !== undefined || options.since !== undefined) {
     const matched = resolveMigrateSnapshot((await loadIndex()).snapshots, {
       snapshot: options.snapshot,
       label: options.label,
+      since: options.since,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatMigrateMissingJson());
         return;
       }
-      error(`Snapshot not found: ${options.label}`);
+      error(`Snapshot not found: ${options.label ?? options.since}`);
       process.exit(1);
     }
     options.snapshot = matched;
