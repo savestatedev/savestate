@@ -24,6 +24,7 @@ interface CloudOptions {
   id?: string;
   adapter?: string;
   since?: string;
+  until?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -82,16 +83,30 @@ export function parseCloudSince(value: string | undefined): number | undefined {
   return ms;
 }
 
-/** Resolve cloud push --adapter/--since/--id/--all to the local snapshots that should upload. */
+/** Parse cloud --until without treating invalid dates as the latest snapshot. */
+export function parseCloudUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve cloud push --adapter/--since/--until/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string },
 >(
   snapshots: T[],
-  options: { id?: string; adapter?: string; since?: string; all?: boolean },
+  options: { id?: string; adapter?: string; since?: string; until?: string; all?: boolean },
 ): T[] {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
   const since = parseCloudSince(options.since);
+  const until = parseCloudUntil(options.until);
 
   let matches = snapshots;
   if (adapter !== undefined) {
@@ -100,13 +115,16 @@ export function resolveCloudPushSnapshots<
   if (since !== undefined) {
     matches = matches.filter((entry) => new Date(entry.timestamp).getTime() >= since);
   }
+  if (until !== undefined) {
+    matches = matches.filter((entry) => new Date(entry.timestamp).getTime() <= until);
+  }
   if (id !== undefined) {
     return matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
   }
   if (options.all) {
     return matches;
   }
-  if (adapter !== undefined || since !== undefined) {
+  if (adapter !== undefined || since !== undefined || until !== undefined) {
     matches = [...matches].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
@@ -481,6 +499,7 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
   const since = parseCloudSince(options.since);
+  const until = parseCloudUntil(options.until);
 
   if (!options.json) {
     console.log();
@@ -528,8 +547,8 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   if (entries.length === 0) {
     if (options.json) {
-      if (id || adapter || since !== undefined) {
-        console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? ''));
+      if (id || adapter || since !== undefined || until !== undefined) {
+        console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? options.until ?? ''));
         return;
       }
       console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -544,14 +563,15 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     id: options.id,
     adapter: options.adapter,
     since: options.since,
+    until: options.until,
     all: options.all,
   });
-  if ((id || adapter || since !== undefined) && toPush.length === 0) {
+  if ((id || adapter || since !== undefined || until !== undefined) && toPush.length === 0) {
     if (options.json) {
-      console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? ''));
+      console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? options.until ?? ''));
       return;
     }
-    console.log(chalk.red(`Snapshot not found: ${id ?? adapter ?? options.since}`));
+    console.log(chalk.red(`Snapshot not found: ${id ?? adapter ?? options.since ?? options.until}`));
     process.exit(1);
   }
 

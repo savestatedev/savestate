@@ -1355,6 +1355,16 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function parseCloudSince');
   });
 
+  it('documents cloud --until as an ISO 8601 date', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team <subcommand> [args...]')"));
+    expect(cloudSection).toContain('--until');
+    expect(cloudSection).toContain('Must be an ISO 8601 date');
+    expect(cloudSection).toContain('savestate cloud push --until 2026-06-01');
+    expect(cloudBlock).toContain(".option('--until <date>'");
+    expect(cloud).toContain('export function parseCloudUntil');
+  });
+
   it('documents cloud subcommand as a single cloud action', () => {
     const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
     expect(cloudSection).toContain('&lt;subcommand&gt;');
