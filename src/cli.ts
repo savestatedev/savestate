@@ -348,6 +348,7 @@ program
   .option('-t, --to <platform>', 'Target platform to migrate to')
   .option('-s, --snapshot <id>', 'Use existing snapshot instead of creating new one')
   .option('--label <label>', 'Use the newest existing snapshot with this label')
+  .option('--tag <tag>', 'Use the newest snapshot with this tag instead of creating a new one')
   .option('--dry-run', 'Show compatibility report without making changes')
   .option('--review', 'Inspect items needing manual attention')
   .option('--resume', 'Resume an interrupted migration')

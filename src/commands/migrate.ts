@@ -49,6 +49,7 @@ export interface MigrateCommandOptions {
   to?: string;
   snapshot?: string;
   label?: string;
+  tag?: string;
   dryRun?: boolean;
   list?: boolean;
   resume?: boolean;
@@ -122,18 +123,37 @@ export function parseMigrateLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve migrate --label (and optional --snapshot) to the newest matching snapshot. */
+/** Parse migrate --tag without treating blank or comma-separated values as creating a new snapshot. */
+export function parseMigrateTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve migrate --label/--tag (and optional --snapshot) to the newest matching snapshot. */
 export function resolveMigrateSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; label?: string }>,
-  options: { snapshot?: string; label?: string },
+  snapshots: Array<{ id: string; timestamp: string; label?: string; tags?: string[] }>,
+  options: { snapshot?: string; label?: string; tag?: string },
 ): string | undefined {
   const snapshotId = parseMigrateSnapshot(options.snapshot);
   const label = parseMigrateLabel(options.label);
-  if (label === undefined) {
+  const tag = parseMigrateTag(options.tag);
+  if (label === undefined && tag === undefined) {
     return snapshotId;
   }
 
-  let matches = snapshots.filter((entry) => entry.label === label);
+  let matches = snapshots.filter((entry) => {
+    if (label !== undefined && entry.label !== label) return false;
+    if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
+    return true;
+  });
   if (snapshotId !== undefined) {
     matches = matches.filter((entry) => entry.id === snapshotId);
   }
@@ -339,6 +359,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
   parseMigrateTo(options.to);
   parseMigrateSnapshot(options.snapshot);
   parseMigrateLabel(options.label);
+  parseMigrateTag(options.tag);
 
   // Check initialization
   if (!isInitialized()) {
@@ -350,17 +371,18 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     process.exit(1);
   }
 
-  if (options.label !== undefined) {
+  if (options.label !== undefined || options.tag !== undefined) {
     const matched = resolveMigrateSnapshot((await loadIndex()).snapshots, {
       snapshot: options.snapshot,
       label: options.label,
+      tag: options.tag,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatMigrateMissingJson());
         return;
       }
-      error(`Snapshot not found: ${options.label}`);
+      error(`Snapshot not found: ${options.label ?? options.tag}`);
       process.exit(1);
     }
     options.snapshot = matched;
