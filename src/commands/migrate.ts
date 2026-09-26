@@ -47,6 +47,7 @@ export interface MigrateCommandOptions {
   from?: string;
   to?: string;
   snapshot?: string;
+  tag?: string;
   dryRun?: boolean;
   list?: boolean;
   resume?: boolean;
@@ -104,6 +105,42 @@ export function parseMigrateSnapshot(value: string | undefined): string | undefi
   }
 
   return snapshot;
+}
+
+/** Parse migrate --tag without treating blank or comma-separated values as creating a new snapshot. */
+export function parseMigrateTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve migrate --tag (and optional --snapshot) to the newest matching snapshot. */
+export function resolveMigrateSnapshot(
+  snapshots: Array<{ id: string; timestamp: string; tags?: string[] }>,
+  options: { snapshot?: string; tag?: string },
+): string | undefined {
+  const snapshotId = parseMigrateSnapshot(options.snapshot);
+  const tag = parseMigrateTag(options.tag);
+  if (tag === undefined) {
+    return snapshotId;
+  }
+
+  let matches = snapshots.filter((entry) => (entry.tags ?? []).includes(tag));
+  if (snapshotId !== undefined) {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
+
+  matches = [...matches].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return matches[0]?.id;
 }
 
 /** Parse migrate --include without silently skipping unknown types. */
@@ -300,6 +337,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
   parseMigrateFrom(options.from);
   parseMigrateTo(options.to);
   parseMigrateSnapshot(options.snapshot);
+  parseMigrateTag(options.tag);
 
   // Check initialization
   if (!isInitialized()) {

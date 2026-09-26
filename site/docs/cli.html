@@ -839,6 +839,7 @@
         <tr><td><code>-f, --from &lt;platform&gt;</code></td><td>Source platform to migrate from. Must be one of: chatgpt, claude, gemini, copilot.</td></tr>
         <tr><td><code>-t, --to &lt;platform&gt;</code></td><td>Target platform to migrate to. Must be one of: chatgpt, claude, gemini, copilot.</td></tr>
         <tr><td><code>-s, --snapshot &lt;id&gt;</code></td><td>Use an existing snapshot instead of creating a new one. Must be a single non-empty snapshot id.</td></tr>
+        <tr><td><code>--tag &lt;tag&gt;</code></td><td>Use the newest snapshot with this tag instead of creating a new one. Must be a single non-empty snapshot tag (no commas).</td></tr>
         <tr><td><code>-l, --list</code></td><td>List available platforms and their capabilities</td></tr>
         <tr><td><code>--json</code></td><td>Emit the platform catalog as JSON with <code>--list</code>, or a compatibility report as JSON with <code>--dry-run</code> (source, target, feasibility, summary, items, and recommendations; omits source refs). When SaveState is not initialized, emits a missing summary (found, source, target, feasibility; omits extra fields). Skips the wizard banner. Useful for scripting.</td></tr>
         <tr><td><code>--dry-run</code></td><td>Show a compatibility report without making changes</td></tr>
@@ -883,7 +884,10 @@
 <span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude
 
 <span class="code-comment"># Reuse an existing snapshot instead of creating a new one</span>
-<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --snapshot ss-2026-01-26T09-30-00-b7c1m4</code></pre>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --snapshot ss-2026-01-26T09-30-00-b7c1m4
+
+<span class="code-comment"># Reuse the newest tagged snapshot instead of creating a new one</span>
+<span class="code-prompt">$</span> savestate migrate --from chatgpt --to claude --tag work</code></pre>
 
     <!-- trust -->
     <h2 id="trust"><code>savestate trust</code></h2>
