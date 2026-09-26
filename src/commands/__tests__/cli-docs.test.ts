@@ -789,6 +789,16 @@ describe('CLI docs', () => {
     expect(migrate).toContain('export function parseMigrateSnapshot');
   });
 
+  it('documents migrate --label as a single snapshot label', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    const migrateBlock = cli.slice(cli.indexOf("command('migrate')"), cli.indexOf("command('cloud'"));
+    expect(migrateSection).toContain('--label');
+    expect(migrateSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --label backup');
+    expect(migrateBlock).toContain(".option('--label <label>'");
+    expect(migrate).toContain('export function parseMigrateLabel');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
