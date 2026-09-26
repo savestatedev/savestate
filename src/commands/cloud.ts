@@ -22,6 +22,7 @@ const API_BASE = process.env.SAVESTATE_API_URL || 'https://savestate.dev/api';
 
 interface CloudOptions {
   id?: string;
+  adapter?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -39,6 +40,61 @@ export function parseCloudId(value: string | undefined): string | undefined {
   }
 
   return id;
+}
+
+const CLOUD_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const CLOUD_ADAPTER_LIST = CLOUD_ADAPTERS.join(', ');
+
+/** Parse cloud --adapter without treating unknown ids as the latest snapshot. */
+export function parseCloudAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((CLOUD_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${CLOUD_ADAPTER_LIST}.`,
+  );
+}
+
+/** Resolve cloud push --adapter/--id/--all to the local snapshots that should upload. */
+export function resolveCloudPushSnapshots<
+  T extends { id: string; timestamp: string; adapter?: string },
+>(
+  snapshots: T[],
+  options: { id?: string; adapter?: string; all?: boolean },
+): T[] {
+  const id = parseCloudId(options.id);
+  const adapter = parseCloudAdapter(options.adapter);
+
+  let matches = snapshots;
+  if (adapter !== undefined) {
+    matches = matches.filter((entry) => entry.adapter === adapter);
+  }
+  if (id !== undefined) {
+    return matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
+  }
+  if (options.all) {
+    return matches;
+  }
+  if (adapter !== undefined) {
+    matches = [...matches].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
+    return matches.slice(0, 1);
+  }
+  return matches.length > 0 ? [matches[matches.length - 1]] : [];
 }
 
 const CLOUD_SUBCOMMANDS = ['push', 'pull', 'list', 'delete'] as const;
@@ -405,6 +461,7 @@ async function listCloudSnapshots(): Promise<Array<{ id: string; size: number; c
  */
 export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
+  const adapter = parseCloudAdapter(options.adapter);
 
   if (!options.json) {
     console.log();
@@ -452,8 +509,8 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   if (entries.length === 0) {
     if (options.json) {
-      if (id) {
-        console.log(formatCloudPushMissingJson(id));
+      if (id || adapter) {
+        console.log(formatCloudPushMissingJson(id ?? adapter ?? ''));
         return;
       }
       console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -464,21 +521,18 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     process.exit(0);
   }
 
-  // Filter to specific snapshot or all
-  let toPush = entries;
-  if (id) {
-    toPush = entries.filter(e => e.id === id || e.id.startsWith(id));
-    if (toPush.length === 0) {
-      if (options.json) {
-        console.log(formatCloudPushMissingJson(id));
-        return;
-      }
-      console.log(chalk.red(`Snapshot not found: ${id}`));
-      process.exit(1);
+  const toPush = resolveCloudPushSnapshots(entries, {
+    id: options.id,
+    adapter: options.adapter,
+    all: options.all,
+  });
+  if ((id || adapter) && toPush.length === 0) {
+    if (options.json) {
+      console.log(formatCloudPushMissingJson(id ?? adapter ?? ''));
+      return;
     }
-  } else if (!options.all) {
-    // Default: push latest only
-    toPush = [entries[entries.length - 1]];
+    console.log(chalk.red(`Snapshot not found: ${id ?? adapter}`));
+    process.exit(1);
   }
 
   if (!options.json) {
@@ -891,6 +945,7 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
  */
 export async function cloudCommand(rawSubcommand: string, options: CloudOptions): Promise<void> {
   const subcommand = parseCloudSubcommand(rawSubcommand);
+  parseCloudAdapter(options.adapter);
   switch (subcommand) {
     case 'push':
       await cloudPushCommand(options);

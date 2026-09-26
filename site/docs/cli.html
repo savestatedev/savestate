@@ -1065,7 +1065,7 @@
 
     <!-- cloud -->
     <h2 id="cloud"><code>savestate cloud</code></h2>
-    <p>Push, pull, list, and delete encrypted snapshots in SaveState cloud storage. Requires Pro or Team and a logged-in API key (<code>savestate login</code>). Snapshots stay encrypted; the CLI uploads <code>.saf.enc</code> files through the API. Default push/pull is the latest snapshot unless you pass <code>--id</code> or <code>--all</code>. Subcommand must be a single non-empty value: <code>push</code>, <code>pull</code>, <code>list</code>, or <code>delete</code>.</p>
+    <p>Push, pull, list, and delete encrypted snapshots in SaveState cloud storage. Requires Pro or Team and a logged-in API key (<code>savestate login</code>). Snapshots stay encrypted; the CLI uploads <code>.saf.enc</code> files through the API. Default push/pull is the latest snapshot unless you pass <code>--id</code>, <code>--adapter</code>, or <code>--all</code>. Subcommand must be a single non-empty value: <code>push</code>, <code>pull</code>, <code>list</code>, or <code>delete</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate cloud &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -1075,6 +1075,7 @@
       <tbody>
         <tr><td><code>&lt;subcommand&gt;</code></td><td>Cloud action. Must be a single non-empty subcommand: <code>push</code>, <code>pull</code>, <code>list</code>, or <code>delete</code>.</td></tr>
         <tr><td><code>--id &lt;id&gt;</code></td><td>Specific snapshot ID (prefix match allowed). Must be a single non-empty snapshot id.</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Push the newest local snapshot from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--id</code> and <code>--all</code>.</td></tr>
         <tr><td><code>--all</code></td><td>Process all snapshots instead of the latest</td></tr>
         <tr><td><code>-f, --force</code></td><td>Overwrite existing local files on pull, or skip delete confirmation</td></tr>
         <tr><td><code>--json</code></td><td>Emit the cloud list as JSON, a push summary (uploaded count and snapshot ids) on <code>push</code>, pull results on <code>pull</code>, or delete results on <code>delete</code>. When SaveState is not initialized, <code>push</code> emits a missing summary (found, id, pushed, failed; omits extra fields). When SaveState is not initialized, <code>list</code> emits a missing summary (found, total, shown; omits extra fields). When SaveState is not initialized, <code>pull</code> emits a missing summary (found, id, pulled, failed, skipped; omits extra fields). When SaveState is not initialized, <code>delete</code> emits a missing summary (found, id, deleted, failed; omits extra fields). When the snapshot ID is missing, <code>push</code> emits a missing summary (found, id, pushed, failed; omits extra fields), <code>pull</code> emits a missing summary (found, id, pulled, failed, skipped; omits extra fields), and <code>delete</code> emits a missing summary (found, id, deleted, failed; omits extra fields). Skips the spinner and delete confirmation. Useful for scripting.</td></tr>
@@ -1089,6 +1090,9 @@
 
 <span class="code-comment"># Push the latest local snapshot</span>
 <span class="code-prompt">$</span> savestate cloud push
+
+<span class="code-comment"># Push the newest ChatGPT snapshot</span>
+<span class="code-prompt">$</span> savestate cloud push --adapter chatgpt
 
 <span class="code-comment"># Scriptable cloud push</span>
 <span class="code-prompt">$</span> savestate cloud push --json

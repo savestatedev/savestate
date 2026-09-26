@@ -372,6 +372,7 @@ program
   .command('cloud <subcommand>')
   .description('Cloud storage commands (Pro/Team; single non-empty subcommand: push, pull, list, or delete)')
   .option('--id <id>', 'Specific snapshot ID (single non-empty id)')
+  .option('--adapter <id>', 'Push the newest local snapshot from this adapter')
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')
   .option('--json', 'Output as JSON')
