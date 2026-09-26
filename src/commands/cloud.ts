@@ -23,6 +23,7 @@ const API_BASE = process.env.SAVESTATE_API_URL || 'https://savestate.dev/api';
 interface CloudOptions {
   id?: string;
   adapter?: string;
+  since?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -68,19 +69,36 @@ export function parseCloudAdapter(value: string | undefined): string | undefined
   );
 }
 
-/** Resolve cloud push --adapter/--id/--all to the local snapshots that should upload. */
+/** Parse cloud --since without treating invalid dates as the latest snapshot. */
+export function parseCloudSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve cloud push --adapter/--since/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string },
 >(
   snapshots: T[],
-  options: { id?: string; adapter?: string; all?: boolean },
+  options: { id?: string; adapter?: string; since?: string; all?: boolean },
 ): T[] {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
+  const since = parseCloudSince(options.since);
 
   let matches = snapshots;
   if (adapter !== undefined) {
     matches = matches.filter((entry) => entry.adapter === adapter);
+  }
+  if (since !== undefined) {
+    matches = matches.filter((entry) => new Date(entry.timestamp).getTime() >= since);
   }
   if (id !== undefined) {
     return matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
@@ -88,7 +106,7 @@ export function resolveCloudPushSnapshots<
   if (options.all) {
     return matches;
   }
-  if (adapter !== undefined) {
+  if (adapter !== undefined || since !== undefined) {
     matches = [...matches].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
@@ -462,6 +480,7 @@ async function listCloudSnapshots(): Promise<Array<{ id: string; size: number; c
 export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
+  const since = parseCloudSince(options.since);
 
   if (!options.json) {
     console.log();
@@ -509,8 +528,8 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 
   if (entries.length === 0) {
     if (options.json) {
-      if (id || adapter) {
-        console.log(formatCloudPushMissingJson(id ?? adapter ?? ''));
+      if (id || adapter || since !== undefined) {
+        console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? ''));
         return;
       }
       console.log(formatCloudPushJson({ pushed: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
@@ -524,14 +543,15 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
   const toPush = resolveCloudPushSnapshots(entries, {
     id: options.id,
     adapter: options.adapter,
+    since: options.since,
     all: options.all,
   });
-  if ((id || adapter) && toPush.length === 0) {
+  if ((id || adapter || since !== undefined) && toPush.length === 0) {
     if (options.json) {
-      console.log(formatCloudPushMissingJson(id ?? adapter ?? ''));
+      console.log(formatCloudPushMissingJson(id ?? adapter ?? options.since ?? ''));
       return;
     }
-    console.log(chalk.red(`Snapshot not found: ${id ?? adapter}`));
+    console.log(chalk.red(`Snapshot not found: ${id ?? adapter ?? options.since}`));
     process.exit(1);
   }
 
