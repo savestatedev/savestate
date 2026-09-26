@@ -151,6 +151,7 @@ program
   .command('inspect <snapshot-id>')
   .description('Decrypt and summarize a snapshot without restoring it (single non-empty snapshot id)')
   .option('--adapter <id>', 'Inspect the newest snapshot from this adapter')
+  .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--since <date>', 'Inspect the newest snapshot taken after this date (ISO 8601)')
   .option('--until <date>', 'Inspect the newest snapshot taken on or before this date (ISO 8601)')
   .option('--tag <tag>', 'Only inspect a snapshot with this tag')
