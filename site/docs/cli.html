@@ -1390,7 +1390,7 @@
 
     <!-- acl -->
     <h2 id="acl"><code>savestate acl</code></h2>
-    <p>Manage Active Commitment Layer (ACL) commitments that gate high-impact agent actions. Subcommands: <code>propose</code>, <code>verify</code>, <code>gate</code>, and <code>list</code>. Must be a single non-empty subcommand (propose, verify, gate, or list). <code>propose</code> records a commitment with type, criticality, description, and proposer. <code>verify</code> approves or rejects a proposed commitment. <code>gate</code> checks whether an action type is allowed. <code>list</code> prints all commitments.</p>
+    <p>Manage Active Commitment Layer (ACL) commitments that gate high-impact agent actions. Subcommands: <code>propose</code>, <code>verify</code>, <code>gate</code>, and <code>list</code>. Must be a single non-empty subcommand (propose, verify, gate, or list). <code>propose</code> records a commitment with type, criticality, description, and proposer. <code>verify</code> approves or rejects a proposed commitment. <code>gate</code> checks whether an action type is allowed. <code>list</code> prints commitments, optionally capped with <code>--limit</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate acl &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -1408,6 +1408,7 @@
         <tr><td><code>-v, --verifier &lt;id&gt;</code></td><td>ID of the verifier for <code>verify</code>. Must be a single non-empty verifier id.</td></tr>
         <tr><td><code>--approve</code></td><td>Approve the commitment on <code>verify</code> (default is reject)</td></tr>
         <tr><td><code>-a, --action &lt;type&gt;</code></td><td>Action type to check on <code>gate</code>. Must be one of: customer_promise, ticket_status_change, escalation_closure, account_tool_write.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of commitments to show on <code>list</code>. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit commitments or gate status as JSON. Omits the audit trail. When no commitment exists, <code>verify</code> emits a missing summary (found, id, state, verifier; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -1423,6 +1424,9 @@
 
 <span class="code-comment"># List all commitments</span>
 <span class="code-prompt">$</span> savestate acl list
+
+<span class="code-comment"># Cap the commitment list</span>
+<span class="code-prompt">$</span> savestate acl list --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate acl list --json
