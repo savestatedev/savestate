@@ -246,6 +246,27 @@ export function formatMemoryExpireMissingJson(namespace: string): string {
   );
 }
 
+const MAX_MEMORY_EXPIRE_LIMIT = 1000;
+
+/** Parse memory expire --limit without turning user input errors into an empty expire list. */
+export function parseMemoryExpireLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_EXPIRE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPIRE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N expirable memories when --limit is set. */
+export function selectExpiredMemories<T>(memories: T[], limit?: number): T[] {
+  if (limit === undefined) return memories;
+  return memories.slice(0, limit);
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -459,10 +480,12 @@ export async function expireMemoriesCommand(
     namespace: string;
     dryRun?: boolean;
     format?: 'pretty' | 'json';
+    limit?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
+  const limit = parseMemoryExpireLimit(options.limit);
 
   const namespace = parseNamespace(options.namespace);
 
@@ -485,18 +508,21 @@ export async function expireMemoriesCommand(
     });
 
     const now = Date.now();
-    const expirableMemories = memories.filter((mem) => {
-      if (mem.expires_at) {
-        return new Date(mem.expires_at).getTime() <= now;
-      }
-      if (mem.ttl_seconds !== undefined && mem.ttl_seconds !== null) {
-        if (mem.ttl_seconds === 0) return true;
-        const createdAt = new Date(mem.created_at).getTime();
-        const expiresAt = createdAt + mem.ttl_seconds * 1000;
-        return now >= expiresAt;
-      }
-      return false;
-    });
+    const expirableMemories = selectExpiredMemories(
+      memories.filter((mem) => {
+        if (mem.expires_at) {
+          return new Date(mem.expires_at).getTime() <= now;
+        }
+        if (mem.ttl_seconds !== undefined && mem.ttl_seconds !== null) {
+          if (mem.ttl_seconds === 0) return true;
+          const createdAt = new Date(mem.created_at).getTime();
+          const expiresAt = createdAt + mem.ttl_seconds * 1000;
+          return now >= expiresAt;
+        }
+        return false;
+      }),
+      limit,
+    );
 
     if (options.format === 'json') {
       console.log(formatMemoryExpireJson(
@@ -516,19 +542,20 @@ export async function expireMemoriesCommand(
 
   try {
     const result = await knowledgeLane.expireMemories(namespace);
+    const expiredIds = selectExpiredMemories(result.expired_ids, limit);
 
     if (options.format === 'json') {
-      console.log(formatMemoryExpireJson(options.namespace, result.expired_ids));
+      console.log(formatMemoryExpireJson(options.namespace, expiredIds));
       return;
     }
 
     console.log(`\nExpiration complete.`);
     console.log(`  Namespace:      ${options.namespace}`);
-    console.log(`  Expired count:  ${result.expired_count}`);
+    console.log(`  Expired count:  ${expiredIds.length}`);
 
-    if (result.expired_ids.length > 0) {
+    if (expiredIds.length > 0) {
       console.log(`\nExpired memory IDs:`);
-      for (const id of result.expired_ids) {
+      for (const id of expiredIds) {
         console.log(`  - ${id}`);
       }
     }
