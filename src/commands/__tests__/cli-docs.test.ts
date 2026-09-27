@@ -1355,6 +1355,16 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function parseCloudSince');
   });
 
+  it('documents cloud --exclude as known adapters', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team <subcommand> [args...]')"));
+    expect(cloudSection).toContain('--exclude');
+    expect(cloudSection).toContain('Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf');
+    expect(cloudSection).toContain('savestate cloud push --exclude chatgpt');
+    expect(cloudBlock).toContain(".option('--exclude <ids>'");
+    expect(cloud).toContain('export function parseCloudExclude');
+  });
+
   it('documents cloud subcommand as a single cloud action', () => {
     const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
     expect(cloudSection).toContain('&lt;subcommand&gt;');
