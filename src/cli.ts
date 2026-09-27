@@ -265,6 +265,7 @@ program
   .command('adapters')
   .description('List available platform adapters')
   .option('--json', 'Output as JSON')
+  .option('--limit <n>', 'Maximum number of adapters to show')
   .action(adaptersCommand);
 
 // ─── savestate antibodies ───────────────────────────────────

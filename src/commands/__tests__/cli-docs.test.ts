@@ -3933,6 +3933,16 @@ describe('CLI docs', () => {
     expect(adaptersBlock).toContain(".option('--json'");
   });
 
+  it('documents adapters --limit as a bounded positive integer', () => {
+    const adaptersSection = docs.slice(docs.indexOf('id="adapters"'), docs.indexOf('id="export"'));
+    const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
+    expect(adaptersSection).toContain('--limit');
+    expect(adaptersSection).toContain('Must be a positive integer up to 1000');
+    expect(adaptersSection).toContain('savestate adapters --limit 5');
+    expect(adaptersBlock).toContain(".option('--limit <n>'");
+    expect(adapters).toContain('export function parseAdaptersLimit');
+  });
+
   it('lists savestate adapters in the command overview', () => {
     expect(docs).toContain('id="adapters"');
     expect(docs).toContain('savestate adapters');
