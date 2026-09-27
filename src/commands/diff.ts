@@ -9,7 +9,7 @@ import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
 import { resolveStorage } from '../storage/resolve.js';
 import { getPassphrase } from '../passphrase.js';
-import { findEntry } from '../index-file.js';
+import { findEntry, loadIndex } from '../index-file.js';
 import { decrypt } from '../encryption.js';
 import { unpackFromArchive, unpackSnapshot, snapshotFilename } from '../format.js';
 import { isIncremental, reconstructFromChain } from '../incremental.js';
@@ -21,7 +21,20 @@ import type { AgentIdentity } from '../identity/schema.js';
 
 interface DiffOptions {
   json?: boolean;
+  adapter?: string;
 }
+
+const DIFF_ADAPTERS = [
+  'clawdbot',
+  'claude-code',
+  'claude-web',
+  'openai-assistants',
+  'chatgpt',
+  'gemini',
+  'cursor',
+  'windsurf',
+] as const;
+const DIFF_ADAPTER_LIST = DIFF_ADAPTERS.join(', ');
 
 export interface DiffJson {
   snapshotA: string;
@@ -103,13 +116,50 @@ export function parseDiffId(value: string | undefined): string {
   return id;
 }
 
+/** Parse diff --adapter without treating unknown ids as a missing snapshot. */
+export function parseDiffAdapter(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const adapter = value.trim().toLowerCase();
+  if ((DIFF_ADAPTERS as readonly string[]).includes(adapter)) {
+    return adapter;
+  }
+
+  throw new Error(
+    `Invalid --adapter value "${value}". Expected one of: ${DIFF_ADAPTER_LIST}.`,
+  );
+}
+
+/** Resolve diff --adapter (and snapshot id) to the newest matching snapshot. */
+export function resolveDiffSnapshot(
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
+  options: { snapshot: string; adapter?: string },
+): string | undefined {
+  const snapshotId = parseDiffId(options.snapshot);
+  const adapter = parseDiffAdapter(options.adapter);
+  if (adapter === undefined) {
+    return snapshotId;
+  }
+
+  let matches = snapshots.filter((entry) => entry.adapter === adapter);
+  if (snapshotId !== 'latest') {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
+
+  matches = [...matches].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return matches[0]?.id;
+}
+
 export async function diffCommand(
   rawSnapshotA: string,
   rawSnapshotB: string,
   options?: DiffOptions,
 ): Promise<void> {
-  const snapshotA = parseDiffId(rawSnapshotA);
-  const snapshotB = parseDiffId(rawSnapshotB);
+  let snapshotA = parseDiffId(rawSnapshotA);
+  let snapshotB = parseDiffId(rawSnapshotB);
+  const adapter = parseDiffAdapter(options?.adapter);
 
   if (!options?.json) {
     console.log();
@@ -122,6 +172,28 @@ export async function diffCommand(
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
     process.exit(1);
+  }
+
+  if (adapter !== undefined) {
+    const snapshots = (await loadIndex()).snapshots;
+    const matchedA = resolveDiffSnapshot(snapshots, {
+      snapshot: rawSnapshotA,
+      adapter: options?.adapter,
+    });
+    const matchedB = resolveDiffSnapshot(snapshots, {
+      snapshot: rawSnapshotB,
+      adapter: options?.adapter,
+    });
+    if (!matchedA || !matchedB) {
+      if (options?.json) {
+        console.log(formatDiffMissingJson(snapshotA, snapshotB));
+        return;
+      }
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter}`));
+      process.exit(1);
+    }
+    snapshotA = matchedA;
+    snapshotB = matchedB;
   }
 
   if (!options?.json) {
