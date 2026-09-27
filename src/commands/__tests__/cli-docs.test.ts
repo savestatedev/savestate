@@ -1981,6 +1981,16 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryLogLimit');
   });
 
+  it('documents memory expire --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const expireBlock = memoryCli.slice(memoryCli.indexOf("command('expire')"), memoryCli.indexOf("command('log"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory expire --namespace org:app:agent --limit 5');
+    expect(expireBlock).toContain(".option('--limit <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryExpireLimit');
+  });
+
   it('registers --json on savestate memory list', () => {
     const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
     expect(listBlock).toContain(".option('--json'");
