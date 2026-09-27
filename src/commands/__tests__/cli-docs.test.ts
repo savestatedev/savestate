@@ -3973,6 +3973,16 @@ describe('CLI docs', () => {
     expect(diff).toContain('export function parseDiffUntil');
   });
 
+  it('documents diff --limit as a bounded snapshot count', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
+    expect(diffSection).toContain('--limit');
+    expect(diffSection).toContain('Must be a positive integer up to 1000');
+    expect(diffSection).toContain('savestate diff latest ss-2026-01-25 --limit 2');
+    expect(diffBlock).toContain(".option('--limit <n>'");
+    expect(diff).toContain('export function parseDiffLimit');
+  });
+
   it('lists savestate diff in the command overview', () => {
     expect(docs).toContain('id="diff"');
     expect(docs).toContain('savestate diff');
