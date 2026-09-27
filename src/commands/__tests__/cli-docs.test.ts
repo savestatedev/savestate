@@ -3941,6 +3941,16 @@ describe('CLI docs', () => {
     expect(diff).toContain('export function parseDiffAdapter');
   });
 
+  it('documents diff --label as a single snapshot label', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
+    expect(diffSection).toContain('--label');
+    expect(diffSection).toContain('Must be a single non-empty snapshot label (no commas)');
+    expect(diffSection).toContain('savestate diff latest ss-2026-01-25 --label backup');
+    expect(diffBlock).toContain(".option('--label <label>'");
+    expect(diff).toContain('export function parseDiffLabel');
+  });
+
   it('documents diff --until as an ISO 8601 date', () => {
     const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
     const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
