@@ -1958,6 +1958,16 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function formatMemoryLogMissingJson');
   });
 
+  it('documents memory log --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const logBlock = memoryCli.slice(memoryCli.indexOf("command('log"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory log mem-123 --limit 5');
+    expect(logBlock).toContain(".option('--limit <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryLogLimit');
+  });
+
   it('registers --json on savestate memory list', () => {
     const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
     expect(listBlock).toContain(".option('--json'");
