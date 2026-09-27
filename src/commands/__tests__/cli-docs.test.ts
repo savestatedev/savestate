@@ -3941,6 +3941,18 @@ describe('CLI docs', () => {
     expect(diff).toContain('export function parseDiffAdapter');
   });
 
+  it('documents diff --exclude as known adapters', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
+    expect(diffSection).toContain('--exclude');
+    expect(diffSection).toContain(
+      'Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(diffSection).toContain('savestate diff latest ss-2026-01-25 --exclude chatgpt');
+    expect(diffBlock).toContain(".option('--exclude <ids>'");
+    expect(diff).toContain('export function parseDiffExclude');
+  });
+
   it('documents diff --until as an ISO 8601 date', () => {
     const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
     const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));

@@ -22,6 +22,7 @@ import type { AgentIdentity } from '../identity/schema.js';
 interface DiffOptions {
   json?: boolean;
   adapter?: string;
+  exclude?: string;
   until?: string;
 }
 
@@ -144,20 +145,43 @@ export function parseDiffUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
-/** Resolve diff --adapter/--until (and snapshot id) to the newest matching snapshot. */
+/** Parse diff --exclude without treating unknown ids as a missing snapshot. */
+export function parseDiffExclude(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const adapters = value
+    .split(',')
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (
+    adapters.length === 0 ||
+    adapters.some((adapter) => !(DIFF_ADAPTERS as readonly string[]).includes(adapter))
+  ) {
+    throw new Error(
+      `Invalid --exclude value "${value}". Expected one or more of: ${DIFF_ADAPTER_LIST}.`,
+    );
+  }
+
+  return adapters;
+}
+
+/** Resolve diff --adapter/--exclude/--until (and snapshot id) to the newest matching snapshot. */
 export function resolveDiffSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
-  options: { snapshot: string; adapter?: string; until?: string },
+  options: { snapshot: string; adapter?: string; exclude?: string; until?: string },
 ): string | undefined {
   const snapshotId = parseDiffId(options.snapshot);
   const adapter = parseDiffAdapter(options.adapter);
+  const exclude = parseDiffExclude(options.exclude);
   const until = parseDiffUntil(options.until);
-  if (adapter === undefined && until === undefined) {
+  if (adapter === undefined && exclude === undefined && until === undefined) {
     return snapshotId;
   }
 
   let matches = snapshots.filter((entry) => {
     if (adapter !== undefined && entry.adapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(entry.adapter ?? '')) return false;
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
@@ -179,6 +203,7 @@ export async function diffCommand(
   let snapshotA = parseDiffId(rawSnapshotA);
   let snapshotB = parseDiffId(rawSnapshotB);
   const adapter = parseDiffAdapter(options?.adapter);
+  const exclude = parseDiffExclude(options?.exclude);
   const until = parseDiffUntil(options?.until);
 
   if (!options?.json) {
@@ -194,16 +219,18 @@ export async function diffCommand(
     process.exit(1);
   }
 
-  if (adapter !== undefined || until !== undefined) {
+  if (adapter !== undefined || exclude !== undefined || until !== undefined) {
     const snapshots = (await loadIndex()).snapshots;
     const matchedA = resolveDiffSnapshot(snapshots, {
       snapshot: rawSnapshotA,
       adapter: options?.adapter,
+      exclude: options?.exclude,
       until: options?.until,
     });
     const matchedB = resolveDiffSnapshot(snapshots, {
       snapshot: rawSnapshotB,
       adapter: options?.adapter,
+      exclude: options?.exclude,
       until: options?.until,
     });
     if (!matchedA || !matchedB) {
@@ -211,7 +238,7 @@ export async function diffCommand(
         console.log(formatDiffMissingJson(snapshotA, snapshotB));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options?.until}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? exclude?.join(',') ?? options?.until}`));
       process.exit(1);
     }
     snapshotA = matchedA;
