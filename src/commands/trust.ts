@@ -88,6 +88,28 @@ interface DenyAddOptions {
 
 interface DenyListOptions {
   json?: boolean;
+  limit?: string;
+}
+
+const MAX_TRUST_DENY_LIST_LIMIT = 1000;
+
+/** Parse trust deny list --limit without turning user input errors into an empty denylist. */
+export function parseTrustDenyListLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRUST_DENY_LIST_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRUST_DENY_LIST_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N denylist entries when --limit is set. */
+export function selectTrustDenyListEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 const EMPTY_ENTRIES_BY_STATE: Record<TrustState, number> = {
@@ -390,7 +412,10 @@ export async function trustDenyRemoveCommand(
 
 export async function trustDenyListCommand(options: DenyListOptions): Promise<void> {
   const store = new TrustStore();
-  const entries = store.listDenylist();
+  const entries = selectTrustDenyListEntries(
+    store.listDenylist(),
+    parseTrustDenyListLimit(options.limit),
+  );
   store.close();
 
   if (options.json) {

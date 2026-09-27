@@ -211,6 +211,7 @@ denyCmd
   .command('list')
   .alias('ls')
   .description('Show all denylist entries')
+  .option('--limit <n>', 'Maximum number of denylist entries to show')
   .option('--json', 'Output as JSON')
   .action(trustDenyListCommand);
 

@@ -976,7 +976,7 @@
       <tbody>
         <tr><td><code>--json</code></td><td>Emit Trust Kernel metrics as JSON on <code>status</code>, audit events as JSON (entry id, states, actor, and reason) on <code>audit</code>, denylist entries as JSON (pattern, reason, actor, and epoch) on <code>deny list</code>, a deny-remove summary (pattern and removed count) on <code>deny remove</code>, or a deny-add summary (pattern, reason, and actor) on <code>deny add</code>. When no denylist entry matches, <code>deny remove</code> emits a missing summary (found, pattern, removed; omits extra fields). Omits event metadata. Useful for scripting.</td></tr>
         <tr><td><code>&lt;pattern&gt;</code></td><td>Denylist pattern for <code>deny add</code> and <code>deny remove</code>. Must be a single non-empty denylist pattern.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Number of recent events for <code>audit</code> (default 50). Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Number of recent events for <code>audit</code> (default 50), or maximum denylist entries to show on <code>deny list</code>. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>-r, --reason &lt;reason&gt;</code></td><td>Why a pattern is denylisted on <code>deny add</code>. Must be a non-empty reason.</td></tr>
         <tr><td><code>-b, --by &lt;actor&gt;</code></td><td>Who is adding the denylist entry (defaults to <code>cli</code>). Must be a single non-empty actor id.</td></tr>
       </tbody>
@@ -998,7 +998,10 @@
 <span class="code-prompt">$</span> savestate trust deny remove secret.env --json
 
 <span class="code-comment"># List denylist entries</span>
-<span class="code-prompt">$</span> savestate trust deny list --json</code></pre>
+<span class="code-prompt">$</span> savestate trust deny list --json
+
+<span class="code-comment"># Cap denylist output</span>
+<span class="code-prompt">$</span> savestate trust deny list --limit 5</code></pre>
 
     <!-- team -->
     <h2 id="team"><code>savestate team</code></h2>

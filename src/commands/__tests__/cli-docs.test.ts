@@ -934,6 +934,17 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('savestate trust deny list --json');
   });
 
+  it('documents trust deny list --limit as a bounded positive integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const listBlock = trustBlock.slice(trustBlock.lastIndexOf("command('list')"));
+    expect(trustSection).toContain('--limit');
+    expect(trustSection).toContain('Must be a positive integer up to 1000');
+    expect(trustSection).toContain('savestate trust deny list --limit 5');
+    expect(listBlock).toContain(".option('--limit <n>'");
+    expect(trust).toContain('export function parseTrustDenyListLimit');
+  });
+
   it('registers --json on savestate trust audit', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const auditBlock = trustBlock.slice(
