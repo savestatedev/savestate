@@ -57,6 +57,27 @@ export function parseSloPeriod(value: string | undefined): number {
   return days;
 }
 
+const MAX_SLO_REPORT_LIMIT = 1000;
+
+/** Parse slo report --limit without turning user input errors into an empty namespace list. */
+export function parseSloReportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SLO_REPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SLO_REPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N namespace compliance rows when --limit is set. */
+export function selectSloReportNamespaces<T>(rows: T[], limit?: number): T[] {
+  if (limit === undefined) return rows;
+  return rows.slice(0, limit);
+}
+
 /** Parse slo --namespace without treating blank or comma-separated values as a namespace. */
 export function parseSloNamespace(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -265,6 +286,7 @@ export async function sloCommand(
     json?: boolean;
     set?: string;
     period?: string;
+    limit?: string;
   },
 ): Promise<void> {
   const subcommand = parseSloSubcommand(rawSubcommand);
@@ -369,8 +391,9 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
 /**
  * Generate and display SLO report.
  */
-async function sloReport(options: { period?: string; json?: boolean }): Promise<void> {
+async function sloReport(options: { period?: string; json?: boolean; limit?: string }): Promise<void> {
   const periodDays = parseSloPeriod(options.period);
+  const limit = parseSloReportLimit(options.limit);
   const sloConfig = await loadSLOConfig();
 
   if (!sloConfig.enabled && options.json) {
@@ -391,6 +414,7 @@ async function sloReport(options: { period?: string; json?: boolean }): Promise<
     [], // Namespace compliance
     0,  // Avg drift score
   );
+  report.namespace_compliance = selectSloReportNamespaces(report.namespace_compliance, limit);
 
   if (options.json) {
     console.log(formatSloReportJson(report));
@@ -484,5 +508,6 @@ export function registerSLOCommands(program: import('commander').Command): void 
     .option('--json', 'Output as JSON')
     .option('--set <key=value>', 'Set a config value (non-empty key=value)')
     .option('-p, --period <duration>', 'Report period (e.g., 7d, 30d)')
+    .option('--limit <n>', 'Maximum number of namespace compliance rows to show')
     .action(sloCommand);
 }
