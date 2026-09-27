@@ -156,6 +156,7 @@ program
   .option('--until <date>', 'Inspect the newest snapshot taken on or before this date (ISO 8601)')
   .option('--tag <tag>', 'Only inspect a snapshot with this tag')
   .option('--label <label>', 'Only inspect a snapshot with this label')
+  .option('--limit <n>', 'Only consider the N most recent matching snapshots')
   .option('--json', 'Output as JSON')
   .action(inspectCommand);
 

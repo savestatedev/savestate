@@ -23,6 +23,7 @@ interface InspectOptions {
   until?: string;
   tag?: string;
   label?: string;
+  limit?: string;
 }
 
 const INSPECT_ADAPTERS = [
@@ -191,10 +192,25 @@ export function parseInspectExclude(value: string | undefined): string[] | undef
   return adapters;
 }
 
-/** Resolve inspect --adapter/--exclude/--tag/--label/--since/--until (and snapshot id) to the newest matching snapshot. */
+const MAX_INSPECT_LIMIT = 1000;
+
+/** Parse inspect --limit without treating invalid counts as a missing snapshot. */
+export function parseInspectLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INSPECT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INSPECT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Resolve inspect --adapter/--exclude/--tag/--label/--since/--until/--limit (and snapshot id) to the newest matching snapshot. */
 export function resolveInspectSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; adapter?: string; exclude?: string; label?: string; tag?: string; since?: string; until?: string },
+  options: { snapshot?: string; adapter?: string; exclude?: string; label?: string; tag?: string; since?: string; until?: string; limit?: string },
 ): string | undefined {
   const snapshotId = parseInspectId(options.snapshot);
   const adapter = parseInspectAdapter(options.adapter);
@@ -203,13 +219,15 @@ export function resolveInspectSnapshot(
   const tag = parseInspectTag(options.tag);
   const since = parseInspectSince(options.since);
   const until = parseInspectUntil(options.until);
+  const limit = parseInspectLimit(options.limit);
   if (
     adapter === undefined &&
     exclude === undefined &&
     label === undefined &&
     tag === undefined &&
     since === undefined &&
-    until === undefined
+    until === undefined &&
+    limit === undefined
   ) {
     return snapshotId;
   }
@@ -223,13 +241,16 @@ export function resolveInspectSnapshot(
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
-  if (snapshotId !== 'latest') {
-    matches = matches.filter((entry) => entry.id === snapshotId);
-  }
 
   matches = [...matches].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
+  if (limit !== undefined) {
+    matches = matches.slice(0, limit);
+  }
+  if (snapshotId !== 'latest') {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
   return matches[0]?.id;
 }
 
@@ -241,6 +262,7 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   const tag = parseInspectTag(options.tag);
   const since = parseInspectSince(options.since);
   const until = parseInspectUntil(options.until);
+  const limit = parseInspectLimit(options.limit);
 
   if (!options.json) {
     console.log();
@@ -267,7 +289,8 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
     label !== undefined ||
     tag !== undefined ||
     since !== undefined ||
-    until !== undefined
+    until !== undefined ||
+    limit !== undefined
   ) {
     const matched = resolveInspectSnapshot((await loadIndex()).snapshots, {
       snapshot: rawSnapshotId,
@@ -277,13 +300,14 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
       tag: options.tag,
       since: options.since,
       until: options.until,
+      limit: options.limit,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatInspectMissingJson(snapshotId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options.exclude ?? label ?? tag ?? options.since ?? options.until}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options.exclude ?? label ?? tag ?? options.since ?? options.until ?? options.limit}`));
       process.exit(1);
     }
     resolvedId = matched;

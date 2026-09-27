@@ -3428,6 +3428,16 @@ describe('CLI docs', () => {
     expect(inspect).toContain('export function parseInspectExclude');
   });
 
+  it('documents inspect --limit as a bounded positive integer', () => {
+    const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
+    const inspectBlock = cli.slice(cli.indexOf("command('inspect <snapshot-id>')"), cli.indexOf("command('trust')"));
+    expect(inspectSection).toContain('--limit');
+    expect(inspectSection).toContain('Must be a positive integer up to 1000');
+    expect(inspectSection).toContain('savestate inspect latest --limit 5');
+    expect(inspectBlock).toContain(".option('--limit <n>'");
+    expect(inspect).toContain('export function parseInspectLimit');
+  });
+
   it('lists savestate list in the command overview', () => {
     expect(docs).toContain('id="list"');
     expect(docs).toContain('savestate list');
