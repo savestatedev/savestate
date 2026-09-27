@@ -1537,11 +1537,15 @@
         <tr><td><code>&lt;run_id&gt;</code></td><td>Run ID for <code>show</code>. Must be a single non-empty run id.</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Export format on <code>export</code> (only <code>jsonl</code> is supported). Must be one of: jsonl.</td></tr>
         <tr><td><code>--run &lt;id&gt;</code></td><td>Export only a specific run ID (default: all runs). Must be a single non-empty run id.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of trace runs to show on <code>list</code>. Must be a positive integer up to 1000.</td></tr>
       </tbody>
     </table>
 
     <pre><code><span class="code-comment"># List trace runs</span>
 <span class="code-prompt">$</span> savestate trace list
+
+<span class="code-comment"># Cap the trace run list</span>
+<span class="code-prompt">$</span> savestate trace list --limit 5
 
 <span class="code-comment"># Show events for one run</span>
 <span class="code-prompt">$</span> savestate trace show run-123 --json

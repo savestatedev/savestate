@@ -14,6 +14,7 @@ import {
 
 interface TraceListOptions {
   json?: boolean;
+  limit?: string;
 }
 
 interface TraceShowOptions {
@@ -73,6 +74,27 @@ export function parseTraceShowRunId(value: string | undefined): string {
   }
 
   return runId;
+}
+
+const MAX_TRACE_LIST_LIMIT = 1000;
+
+/** Parse trace list --limit without turning user input errors into an empty run list. */
+export function parseTraceListLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRACE_LIST_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRACE_LIST_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N trace runs when --limit is set. */
+export function selectTraceRuns<T>(runs: T[], limit?: number): T[] {
+  if (limit === undefined) return runs;
+  return runs.slice(0, limit);
 }
 
 const TRACE_SUBCOMMANDS = ['list', 'show', 'export'] as const;
@@ -251,6 +273,7 @@ interface TraceCommandOptions {
   json?: boolean;
   format?: string;
   run?: string;
+  limit?: string;
 }
 
 export async function traceCommand(
@@ -276,6 +299,7 @@ export function registerTraceCommands(program: Command): void {
     .option('--json', 'Output as JSON')
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
+    .option('--limit <n>', 'Maximum number of trace runs to show')
     .action(traceCommand);
 }
 
@@ -294,7 +318,7 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
   }
 
   const store = new TraceStore();
-  const runs = await store.listRuns();
+  const runs = selectTraceRuns(await store.listRuns(), parseTraceListLimit(options.limit));
 
   if (options.json) {
     console.log(formatTraceRunsJson(runs));
