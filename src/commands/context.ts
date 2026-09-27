@@ -94,7 +94,26 @@ export interface ContextValidateMissingJson {
   warnings: [];
 }
 
-const EXPLAIN_CANDIDATE_LIMIT = 10;
+const DEFAULT_CONTEXT_EXPLAIN_LIMIT = 10;
+const MAX_CONTEXT_EXPLAIN_LIMIT = 1000;
+
+/** Parse context explain --limit without turning user input errors into an empty candidate list. */
+export function parseContextLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_EXPLAIN_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_EXPLAIN_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N explain candidates when --limit is set. Defaults to 10 when omitted. */
+export function selectContextCandidates<T>(candidates: T[], limit?: number): T[] {
+  return candidates.slice(0, limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT);
+}
 
 export function formatContextCompileJson(brief: RunBrief): string {
   const record: ContextCompileJson = {
@@ -154,8 +173,11 @@ export function formatContextValidateMissingJson(file: string): string {
   );
 }
 
-export function formatContextExplainJson(explanation: ExplanationTrace): string {
-  const candidates = explanation.candidates.slice(0, EXPLAIN_CANDIDATE_LIMIT).map((candidate) => ({
+export function formatContextExplainJson(
+  explanation: ExplanationTrace,
+  limit?: number,
+): string {
+  const candidates = selectContextCandidates(explanation.candidates, limit).map((candidate) => ({
     id: candidate.candidate_id,
     included: candidate.included,
     score: candidate.score,
@@ -340,9 +362,11 @@ export function registerContextCommands(program: Command): void {
   context
     .command('explain <run-id>')
     .description('Get explanation trace for a compiled context (single non-empty run id)')
+    .option('--limit <n>', 'Maximum number of explain candidates to show')
     .option('--json', 'Output as JSON')
     .action((rawRunId: string, options) => {
       const runId = parseContextRunId(rawRunId);
+      const limit = parseContextLimit(options.limit);
       const compiler = new ContextCompiler();
       const explanation = compiler.getExplanation(runId);
       
@@ -356,7 +380,7 @@ export function registerContextCommands(program: Command): void {
       }
       
       if (options.json) {
-        console.log(formatContextExplainJson(explanation));
+        console.log(formatContextExplainJson(explanation, limit));
         return;
       }
 
@@ -373,7 +397,7 @@ export function registerContextCommands(program: Command): void {
       }
       console.log('');
       console.log('🔍 Top Candidates:');
-      for (const c of explanation.candidates.slice(0, 10)) {
+      for (const c of selectContextCandidates(explanation.candidates, limit)) {
         const status = c.included ? '✅' : '❌';
         console.log(`   ${status} ${c.candidate_id} (score: ${c.score.toFixed(3)})`);
         console.log(`      ${c.reason}`);

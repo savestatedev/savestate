@@ -1801,6 +1801,16 @@ describe('CLI docs', () => {
     expect(explainBlock).toContain(".option('--json'");
   });
 
+  it('documents context explain --limit as a bounded positive integer', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    const explainBlock = context.slice(context.indexOf("command('explain"), context.indexOf("command('validate"));
+    expect(contextSection).toContain('--limit');
+    expect(contextSection).toContain('Must be a positive integer up to 1000');
+    expect(contextSection).toContain('savestate context explain run_abc123 --limit 5');
+    expect(explainBlock).toContain(".option('--limit <n>'");
+    expect(context).toContain('export function parseContextLimit');
+  });
+
   it('registers --json on savestate context validate', () => {
     const validateBlock = context.slice(context.indexOf("command('validate')"), context.indexOf("command('config')"));
     expect(validateBlock).toContain(".option('--json'");
