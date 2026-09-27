@@ -26,6 +26,7 @@ interface DiffOptions {
   since?: string;
   until?: string;
   tag?: string;
+  label?: string;
   limit?: string;
 }
 
@@ -211,10 +212,24 @@ export function parseDiffTag(value: string | undefined): string | undefined {
   return tag;
 }
 
-/** Resolve diff --adapter/--exclude/--since/--until/--tag/--limit (and snapshot id) to the newest matching snapshot. */
+/** Parse diff --label without treating blank or comma-separated values as a missing snapshot. */
+export function parseDiffLabel(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const label = value.trim();
+  if (label.length === 0 || label.includes(',')) {
+    throw new Error(
+      `Invalid --label value "${value}". Expected a single non-empty snapshot label (no commas).`,
+    );
+  }
+
+  return label;
+}
+
+/** Resolve diff --adapter/--exclude/--since/--until/--tag/--label/--limit (and snapshot id) to the newest matching snapshot. */
 export function resolveDiffSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; adapter?: string; tags?: string[] }>,
-  options: { snapshot: string; adapter?: string; exclude?: string; since?: string; until?: string; tag?: string; limit?: string },
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
+  options: { snapshot: string; adapter?: string; exclude?: string; since?: string; until?: string; tag?: string; label?: string; limit?: string },
 ): string | undefined {
   const snapshotId = parseDiffId(options.snapshot);
   const adapter = parseDiffAdapter(options.adapter);
@@ -222,6 +237,7 @@ export function resolveDiffSnapshot(
   const since = parseDiffSince(options.since);
   const until = parseDiffUntil(options.until);
   const tag = parseDiffTag(options.tag);
+  const label = parseDiffLabel(options.label);
   const limit = parseDiffLimit(options.limit);
   if (
     adapter === undefined &&
@@ -229,6 +245,7 @@ export function resolveDiffSnapshot(
     since === undefined &&
     until === undefined &&
     tag === undefined &&
+    label === undefined &&
     limit === undefined
   ) {
     return snapshotId;
@@ -239,6 +256,7 @@ export function resolveDiffSnapshot(
     if (exclude !== undefined && exclude.includes(entry.adapter ?? '')) return false;
     if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
     if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
+    if (label !== undefined && entry.label !== label) return false;
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
@@ -266,6 +284,7 @@ export async function diffCommand(
   const exclude = parseDiffExclude(options?.exclude);
   const since = parseDiffSince(options?.since);
   const tag = parseDiffTag(options?.tag);
+  const label = parseDiffLabel(options?.label);
   const until = parseDiffUntil(options?.until);
   const limit = parseDiffLimit(options?.limit);
 
@@ -288,6 +307,7 @@ export async function diffCommand(
     since !== undefined ||
     until !== undefined ||
     tag !== undefined ||
+    label !== undefined ||
     limit !== undefined
   ) {
     const snapshots = (await loadIndex()).snapshots;
@@ -297,6 +317,7 @@ export async function diffCommand(
       exclude: options?.exclude,
       since: options?.since,
       tag: options?.tag,
+      label: options?.label,
       until: options?.until,
       limit: options?.limit,
     });
@@ -306,6 +327,7 @@ export async function diffCommand(
       exclude: options?.exclude,
       since: options?.since,
       tag: options?.tag,
+      label: options?.label,
       until: options?.until,
       limit: options?.limit,
     });
@@ -314,7 +336,7 @@ export async function diffCommand(
         console.log(formatDiffMissingJson(snapshotA, snapshotB));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? exclude?.join(',') ?? options?.since ?? options?.until ?? options?.tag ?? options?.limit}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? exclude?.join(',') ?? options?.since ?? options?.until ?? options?.tag ?? label ?? options?.limit}`));
       process.exit(1);
     }
     snapshotA = matchedA;

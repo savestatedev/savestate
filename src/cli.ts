@@ -245,6 +245,7 @@ program
   .option('--since <date>', 'Compare the newest snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Compare the newest snapshots taken on or before this date (ISO 8601)')
   .option('--tag <tag>', 'Only compare snapshots with this tag')
+  .option('--label <label>', 'Compare the newest snapshots with this label')
   .option('--limit <n>', 'Only consider the N most recent matching snapshots')
   .option('--json', 'Output as JSON')
   .action(diffCommand);
