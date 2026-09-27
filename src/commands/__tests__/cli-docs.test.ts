@@ -3620,6 +3620,16 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreLabel');
   });
 
+  it('documents restore --limit as a bounded positive integer', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--limit');
+    expect(restoreSection).toContain('Must be a positive integer up to 1000');
+    expect(restoreSection).toContain('savestate restore --limit 5');
+    expect(restoreBlock).toContain(".option('--limit <n>'");
+    expect(restore).toContain('export function parseRestoreLimit');
+  });
+
   it('registers --json on savestate restore', () => {
     const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
     expect(restoreBlock).toContain(".option('--json'");

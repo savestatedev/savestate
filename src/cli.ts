@@ -87,6 +87,7 @@ program
   .option('--until <date>', 'Restore the newest snapshot taken on or before this date')
   .option('--tag <tag>', 'Restore the newest snapshot with this tag')
   .option('--label <label>', 'Restore the newest snapshot with this label')
+  .option('--limit <n>', 'Only consider the N most recent matching snapshots')
   .option('--json', 'Output as JSON')
   .action(restoreCommand);
 
