@@ -12,6 +12,7 @@ interface EvalOptions {
   json?: boolean;
   threshold?: string;
   suite?: string;
+  limit?: string;
   verbose?: boolean;
 }
 
@@ -167,9 +168,11 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
 
   // Filter by suite name if specified
   const suite = parseEvalSuite(options.suite);
-  const suitesToRun = suite
-    ? suites.filter((s) => s.name === suite)
-    : suites;
+  const limit = parseEvalLimit(options.limit);
+  const suitesToRun = selectEvalSuites(
+    suite ? suites.filter((s) => s.name === suite) : suites,
+    limit,
+  );
 
   if (suitesToRun.length === 0) {
     if (options.json) {
@@ -228,7 +231,7 @@ async function showReport(options: EvalOptions): Promise<void> {
   }
 
   const benchmark = new QualityBenchmark();
-  const results = await benchmark.loadResults(resultsPath);
+  const results = selectEvalSuites(await benchmark.loadResults(resultsPath), parseEvalLimit(options.limit));
 
   if (options.json) {
     console.log(formatEvalJson(results));
@@ -356,6 +359,27 @@ export function parseEvalSuite(value: string | undefined): string | undefined {
   return suite;
 }
 
+const MAX_EVAL_LIMIT = 1000;
+
+/** Parse eval --limit without turning user input errors into an empty suite list. */
+export function parseEvalLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_EVAL_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_EVAL_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N suites when --limit is set. */
+export function selectEvalSuites<T>(suites: T[], limit?: number): T[] {
+  if (limit === undefined) return suites;
+  return suites.slice(0, limit);
+}
+
 const EVAL_SUBCOMMANDS = ['quality', 'report'] as const;
 export type EvalSubcommand = (typeof EVAL_SUBCOMMANDS)[number];
 const EVAL_SUBCOMMAND_LIST = EVAL_SUBCOMMANDS.join(', ');
@@ -452,12 +476,13 @@ function createMockRetrievalFn(): (query: string) => Promise<string[]> {
 function showUsage(): void {
   console.log(chalk.bold('Memory Quality Evaluation commands:'));
   console.log();
-  console.log('  savestate eval quality [--threshold <0..1>] [--suite <name>] [--verbose] [--json]');
-  console.log('  savestate eval report [--verbose] [--json]');
+  console.log('  savestate eval quality [--threshold <0..1>] [--suite <name>] [--limit <n>] [--verbose] [--json]');
+  console.log('  savestate eval report [--limit <n>] [--verbose] [--json]');
   console.log();
   console.log('Options:');
   console.log('  --threshold   Confidence threshold for pass/fail (default: 0.7)');
   console.log('  --suite       Run only a specific benchmark suite');
+  console.log('  --limit       Maximum number of benchmark suites to show');
   console.log('  --verbose     Show detailed test results');
   console.log('  --json        Output as JSON');
   console.log();

@@ -294,6 +294,7 @@ program
   .option('--json', 'Output as JSON')
   .option('--threshold <0..1>', 'Confidence threshold (default: 0.7)')
   .option('--suite <name>', 'Run only a specific benchmark suite')
+  .option('--limit <n>', 'Maximum number of benchmark suites to show')
   .option('-v, --verbose', 'Show detailed test results')
   .action(evalCommand);
 
