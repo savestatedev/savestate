@@ -1482,6 +1482,7 @@
         <tr><td><code>honeyfact.count</code></td><td>Honeyfact seed count on <code>config</code>. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>tripwire.threshold</code></td><td>Tripwire fuzzy match threshold on <code>config</code>. Must be a number between 0 and 1.</td></tr>
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status. Must be one of: open, investigating, contained, resolved, false_positive.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of incidents to show on <code>incidents</code>. Must be a positive integer up to 1000. Combines with <code>--status</code>.</td></tr>
         <tr><td><code>&lt;id&gt;</code></td><td>Incident ID for <code>incident</code>. Must be a single non-empty incident id.</td></tr>
         <tr><td><code>--policy &lt;policy&gt;</code></td><td>Containment policy. Must be one of: observe, approve, auto.</td></tr>
         <tr><td><code>&lt;key&gt;=&lt;value&gt;</code></td><td>Setting for <code>config</code>. Must be a non-empty key=value pair.</td></tr>
@@ -1506,6 +1507,7 @@
 
 <span class="code-comment"># List detected incidents</span>
 <span class="code-prompt">$</span> savestate integrity incidents
+<span class="code-prompt">$</span> savestate integrity incidents --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate integrity status --json
