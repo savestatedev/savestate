@@ -2414,6 +2414,16 @@ describe('CLI docs', () => {
     expect(acl).toContain('export function parseAclAction');
   });
 
+  it('documents acl --limit as a bounded positive integer', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    const listBlock = acl.slice(acl.indexOf("command('acl <subcommand>')"));
+    expect(aclSection).toContain('--limit');
+    expect(aclSection).toContain('Must be a positive integer up to 1000');
+    expect(aclSection).toContain('savestate acl list --limit 5');
+    expect(listBlock).toContain(".option('--limit <n>'");
+    expect(acl).toContain('export function parseAclLimit');
+  });
+
   it('registers savestate identity on the CLI', () => {
     expect(cli).toContain("command('identity <subcommand> [args...]')");
     expect(cli).toContain('identityCommand');

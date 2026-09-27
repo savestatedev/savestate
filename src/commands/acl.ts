@@ -269,7 +269,29 @@ interface AclCommandOptions {
   verifier?: string;
   approve?: boolean;
   action?: string;
+  limit?: string;
   json?: boolean;
+}
+
+const MAX_ACL_LIMIT = 1000;
+
+/** Parse acl list --limit without turning user input errors into an empty commitment list. */
+export function parseAclLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ACL_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ACL_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N commitments when --limit is set. */
+export function applyAclLimit<T>(commitments: T[], limit: number | undefined): T[] {
+  if (limit === undefined) return commitments;
+  return commitments.slice(0, limit);
 }
 
 async function aclPropose(options: AclCommandOptions) {
@@ -358,7 +380,7 @@ async function aclGate(options: AclCommandOptions) {
 
 async function aclList(options: AclCommandOptions = {}) {
   try {
-    const commitments = listCommitments();
+    const commitments = applyAclLimit(listCommitments(), parseAclLimit(options.limit));
     if (options.json) {
       console.log(formatAclListJson(commitments));
       return;
@@ -408,6 +430,7 @@ export function registerACLCommands(program: Command) {
     .option('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
     .option('--approve', 'Approve the commitment (default is reject)')
     .option('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
+    .option('--limit <n>', 'Maximum number of commitments to show')
     .option('--json', 'Output as JSON')
     .action(aclCommand);
 }
