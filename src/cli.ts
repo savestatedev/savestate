@@ -375,6 +375,7 @@ program
   .option('--adapter <id>', 'Push the newest local snapshot from this adapter')
   .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--since <date>', 'Push the newest local snapshot taken after this date (ISO 8601)')
+  .option('--until <date>', 'Push the newest local snapshot taken on or before this date (ISO 8601)')
   .option('--label <label>', 'Push the newest local snapshot with this label')
   .option('--tag <tag>', 'Push the newest local snapshot with this tag')
   .option('--limit <n>', 'Push up to this many newest matching local snapshots')
