@@ -17,6 +17,7 @@ interface AntibodiesOptions {
   id?: string;
   all?: boolean;
   json?: boolean;
+  limit?: string;
   tool?: string;
   errorCode?: string;
   path?: string;
@@ -297,7 +298,8 @@ export async function antibodiesCommand(rawSubcommand: string, options: Antibodi
 }
 
 async function listRules(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
-  const rules = await store.list({ activeOnly: !options.all });
+  const limit = parseAntibodiesLimit(options.limit);
+  const rules = applyAntibodiesLimit(await store.list({ activeOnly: !options.all }), limit);
 
   if (options.json) {
     console.log(
@@ -499,6 +501,27 @@ async function showStats(store: AntibodyStore, options: AntibodiesOptions): Prom
   }
 }
 
+const MAX_ANTIBODIES_LIMIT = 1000;
+
+/** Parse antibodies list --limit without turning user input errors into an empty rule list. */
+export function parseAntibodiesLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ANTIBODIES_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ANTIBODIES_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N antibody rules when --limit is set. ANDs with --all. */
+export function applyAntibodiesLimit<T>(rules: T[], limit: number | undefined): T[] {
+  if (limit === undefined) return rules;
+  return rules.slice(0, limit);
+}
+
 const ANTIBODIES_SUBCOMMANDS = ['list', 'add', 'preflight', 'stats'] as const;
 export type AntibodiesSubcommand = (typeof ANTIBODIES_SUBCOMMANDS)[number];
 const ANTIBODIES_SUBCOMMAND_LIST = ANTIBODIES_SUBCOMMANDS.join(', ');
@@ -675,7 +698,7 @@ function formatTrigger(rule: AntibodyRule): string {
 function showUsage(): void {
   console.log(chalk.bold('Failure Antibody commands:'));
   console.log();
-  console.log('  savestate antibodies list [--all] [--json]');
+  console.log('  savestate antibodies list [--all] [--limit <n>] [--json]');
   console.log('  savestate antibodies add --tool <name> [--error-code <code>] [--path-prefix <prefix>]');
   console.log('                             [--tags <a,b>] [--risk <level>] [--safe-action <type>]');
   console.log('                             [--confidence <0..1>] [--id <rule-id>]');

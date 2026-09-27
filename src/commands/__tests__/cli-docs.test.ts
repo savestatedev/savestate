@@ -538,6 +538,19 @@ describe('CLI docs', () => {
     expect(antibodiesBlock).toContain(".option('--json'");
   });
 
+  it('documents antibodies --limit as a bounded positive integer', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    const antibodiesBlock = cli.slice(
+      cli.indexOf("command('antibodies <subcommand>')"),
+      cli.indexOf("command('eval <subcommand>')"),
+    );
+    expect(antibodiesSection).toContain('--limit');
+    expect(antibodiesSection).toContain('Must be a positive integer up to 1000');
+    expect(antibodiesSection).toContain('savestate antibodies list --limit 5');
+    expect(antibodiesBlock).toContain(".option('--limit <n>'");
+    expect(antibodies).toContain('export function parseAntibodiesLimit');
+  });
+
   it('documents antibodies --json', () => {
     const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
     expect(antibodiesSection).toContain('--json');
