@@ -17,6 +17,31 @@ export interface AdapterListEntry {
 
 interface AdaptersOptions {
   json?: boolean;
+  limit?: string;
+}
+
+const MAX_ADAPTERS_LIMIT = 1000;
+
+/** Parse adapters --limit without turning user input errors into an empty adapter list. */
+export function parseAdaptersLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ADAPTERS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ADAPTERS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N adapters when --limit is set. */
+export function selectAdapters(
+  adapters: AdapterListEntry[],
+  limit?: number,
+): AdapterListEntry[] {
+  if (limit === undefined) return adapters;
+  return adapters.slice(0, limit);
 }
 
 export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
@@ -59,7 +84,8 @@ export async function adaptersCommand(options: AdaptersOptions = {}): Promise<vo
   const spinner = options.json ? null : ora('Scanning for adapters...').start();
 
   try {
-    const adapterInfos = await getAdapterInfo();
+    const limit = parseAdaptersLimit(options.limit);
+    const adapterInfos = selectAdapters(await getAdapterInfo(), limit);
     spinner?.stop();
 
     if (options.json) {

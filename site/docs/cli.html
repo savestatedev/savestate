@@ -612,6 +612,7 @@
       </thead>
       <tbody>
         <tr><td><code>--json</code></td><td>Output adapter records as JSON. When SaveState is not initialized, emits a missing summary (found, total; omits extra fields). Useful for scripting.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of adapters to show. Must be a positive integer up to 1000.</td></tr>
       </tbody>
     </table>
 
@@ -623,6 +624,9 @@
 <span class="code-output">openai-assistants   OpenAI Assistants     openai-assistants  ✗</span>
 <span class="code-output">chatgpt             ChatGPT               chatgpt           ✗</span>
 <span class="code-output">gemini              Google Gemini         gemini            ✗</span>
+
+<span class="code-comment"># Cap the adapter list</span>
+<span class="code-prompt">$</span> savestate adapters --limit 5
 
 <span class="code-comment"># Scriptable JSON records</span>
 <span class="code-prompt">$</span> savestate adapters --json
