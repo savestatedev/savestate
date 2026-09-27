@@ -356,6 +356,7 @@ program
   .option('--since <date>', 'Use the newest snapshot taken after this date instead of creating a new one')
   .option('--until <date>', 'Use the newest snapshot taken on or before this date instead of creating a new one')
   .option('--adapter <id>', 'Use the newest snapshot from this adapter instead of creating a new one')
+  .option('--limit <n>', 'Only consider the N most recent matching snapshots')
   .option('--dry-run', 'Show compatibility report without making changes')
   .option('--review', 'Inspect items needing manual attention')
   .option('--resume', 'Resume an interrupted migration')

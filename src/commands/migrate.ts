@@ -53,6 +53,7 @@ export interface MigrateCommandOptions {
   tag?: string;
   since?: string;
   until?: string;
+  limit?: string;
   dryRun?: boolean;
   list?: boolean;
   resume?: boolean;
@@ -191,10 +192,25 @@ export function parseMigrateAdapter(value: string | undefined): string | undefin
   );
 }
 
-/** Resolve migrate --adapter/--label/--tag/--since/--until (and optional --snapshot) to the newest matching snapshot. */
+const MAX_MIGRATE_LIMIT = 1000;
+
+/** Parse migrate --limit without treating invalid counts as creating a new snapshot. */
+export function parseMigrateLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MIGRATE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MIGRATE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Resolve migrate --adapter/--label/--tag/--since/--until/--limit (and optional --snapshot) to the newest matching snapshot. */
 export function resolveMigrateSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string },
+  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string; limit?: string },
 
 ): string | undefined {
   const snapshotId = parseMigrateSnapshot(options.snapshot);
@@ -203,12 +219,14 @@ export function resolveMigrateSnapshot(
   const tag = parseMigrateTag(options.tag);
   const since = parseMigrateSince(options.since);
   const until = parseMigrateUntil(options.until);
+  const limit = parseMigrateLimit(options.limit);
   if (
     adapter === undefined &&
     label === undefined &&
     tag === undefined &&
     since === undefined &&
-    until === undefined
+    until === undefined &&
+    limit === undefined
 
   ) {
     return snapshotId;
@@ -222,13 +240,15 @@ export function resolveMigrateSnapshot(
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
-  if (snapshotId !== undefined) {
-    matches = matches.filter((entry) => entry.id === snapshotId);
-  }
-
   matches = [...matches].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
+  if (limit !== undefined) {
+    matches = matches.slice(0, limit);
+  }
+  if (snapshotId !== undefined) {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
   return matches[0]?.id;
 }
 
@@ -431,6 +451,7 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
   parseMigrateTag(options.tag);
   parseMigrateSince(options.since);
   parseMigrateUntil(options.until);
+  parseMigrateLimit(options.limit);
 
   // Check initialization
   if (!isInitialized()) {
@@ -447,7 +468,8 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
     options.label !== undefined ||
     options.tag !== undefined ||
     options.since !== undefined ||
-    options.until !== undefined
+    options.until !== undefined ||
+    options.limit !== undefined
 
   ) {
     const matched = resolveMigrateSnapshot((await loadIndex()).snapshots, {
@@ -457,13 +479,14 @@ export async function migrateCommand(options: MigrateCommandOptions): Promise<vo
       tag: options.tag,
       since: options.since,
       until: options.until,
+      limit: options.limit,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatMigrateMissingJson());
         return;
       }
-      error(`Snapshot not found: ${options.adapter ?? options.label ?? options.tag ?? options.since ?? options.until}`);
+      error(`Snapshot not found: ${options.adapter ?? options.label ?? options.tag ?? options.since ?? options.until ?? options.limit}`);
       process.exit(1);
     }
     options.snapshot = matched;
