@@ -239,6 +239,7 @@ program
   .command('diff <a> <b>')
   .description('Compare two snapshots (single non-empty snapshot ids)')
   .option('--adapter <id>', 'Only compare snapshots from this adapter')
+  .option('--since <date>', 'Compare the newest snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Compare the newest snapshots taken on or before this date (ISO 8601)')
   .option('--json', 'Output as JSON')
   .action(diffCommand);

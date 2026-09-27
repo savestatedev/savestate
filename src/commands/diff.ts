@@ -22,6 +22,7 @@ import type { AgentIdentity } from '../identity/schema.js';
 interface DiffOptions {
   json?: boolean;
   adapter?: string;
+  since?: string;
   until?: string;
 }
 
@@ -131,6 +132,19 @@ export function parseDiffAdapter(value: string | undefined): string | undefined 
   );
 }
 
+/** Parse diff --since without treating invalid dates as a missing snapshot. */
+export function parseDiffSince(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
 /** Parse diff --until without treating invalid dates as a missing snapshot. */
 export function parseDiffUntil(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -144,20 +158,22 @@ export function parseDiffUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
-/** Resolve diff --adapter/--until (and snapshot id) to the newest matching snapshot. */
+/** Resolve diff --adapter/--since/--until (and snapshot id) to the newest matching snapshot. */
 export function resolveDiffSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
-  options: { snapshot: string; adapter?: string; until?: string },
+  options: { snapshot: string; adapter?: string; since?: string; until?: string },
 ): string | undefined {
   const snapshotId = parseDiffId(options.snapshot);
   const adapter = parseDiffAdapter(options.adapter);
+  const since = parseDiffSince(options.since);
   const until = parseDiffUntil(options.until);
-  if (adapter === undefined && until === undefined) {
+  if (adapter === undefined && since === undefined && until === undefined) {
     return snapshotId;
   }
 
   let matches = snapshots.filter((entry) => {
     if (adapter !== undefined && entry.adapter !== adapter) return false;
+    if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
@@ -179,6 +195,7 @@ export async function diffCommand(
   let snapshotA = parseDiffId(rawSnapshotA);
   let snapshotB = parseDiffId(rawSnapshotB);
   const adapter = parseDiffAdapter(options?.adapter);
+  const since = parseDiffSince(options?.since);
   const until = parseDiffUntil(options?.until);
 
   if (!options?.json) {
@@ -194,16 +211,18 @@ export async function diffCommand(
     process.exit(1);
   }
 
-  if (adapter !== undefined || until !== undefined) {
+  if (adapter !== undefined || since !== undefined || until !== undefined) {
     const snapshots = (await loadIndex()).snapshots;
     const matchedA = resolveDiffSnapshot(snapshots, {
       snapshot: rawSnapshotA,
       adapter: options?.adapter,
+      since: options?.since,
       until: options?.until,
     });
     const matchedB = resolveDiffSnapshot(snapshots, {
       snapshot: rawSnapshotB,
       adapter: options?.adapter,
+      since: options?.since,
       until: options?.until,
     });
     if (!matchedA || !matchedB) {
@@ -211,7 +230,7 @@ export async function diffCommand(
         console.log(formatDiffMissingJson(snapshotA, snapshotB));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options?.until}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options?.since ?? options?.until}`));
       process.exit(1);
     }
     snapshotA = matchedA;
