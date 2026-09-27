@@ -244,6 +244,7 @@ program
   .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--since <date>', 'Compare the newest snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Compare the newest snapshots taken on or before this date (ISO 8601)')
+  .option('--tag <tag>', 'Only compare snapshots with this tag')
   .option('--limit <n>', 'Only consider the N most recent matching snapshots')
   .option('--json', 'Output as JSON')
   .action(diffCommand);

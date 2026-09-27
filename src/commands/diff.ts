@@ -25,6 +25,7 @@ interface DiffOptions {
   exclude?: string;
   since?: string;
   until?: string;
+  tag?: string;
   limit?: string;
 }
 
@@ -196,22 +197,38 @@ export function parseDiffExclude(value: string | undefined): string[] | undefine
   return adapters;
 }
 
-/** Resolve diff --adapter/--exclude/--since/--until/--limit (and snapshot id) to the newest matching snapshot. */
+/** Parse diff --tag without treating blank or comma-separated values as a missing snapshot. */
+export function parseDiffTag(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const tag = value.trim();
+  if (tag.length === 0 || tag.includes(',')) {
+    throw new Error(
+      `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
+    );
+  }
+
+  return tag;
+}
+
+/** Resolve diff --adapter/--exclude/--since/--until/--tag/--limit (and snapshot id) to the newest matching snapshot. */
 export function resolveDiffSnapshot(
-  snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
-  options: { snapshot: string; adapter?: string; exclude?: string; since?: string; until?: string; limit?: string },
+  snapshots: Array<{ id: string; timestamp: string; adapter?: string; tags?: string[] }>,
+  options: { snapshot: string; adapter?: string; exclude?: string; since?: string; until?: string; tag?: string; limit?: string },
 ): string | undefined {
   const snapshotId = parseDiffId(options.snapshot);
   const adapter = parseDiffAdapter(options.adapter);
   const exclude = parseDiffExclude(options.exclude);
   const since = parseDiffSince(options.since);
   const until = parseDiffUntil(options.until);
+  const tag = parseDiffTag(options.tag);
   const limit = parseDiffLimit(options.limit);
   if (
     adapter === undefined &&
     exclude === undefined &&
     since === undefined &&
     until === undefined &&
+    tag === undefined &&
     limit === undefined
   ) {
     return snapshotId;
@@ -221,6 +238,7 @@ export function resolveDiffSnapshot(
     if (adapter !== undefined && entry.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(entry.adapter ?? '')) return false;
     if (since !== undefined && new Date(entry.timestamp).getTime() < since) return false;
+    if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
@@ -247,6 +265,7 @@ export async function diffCommand(
   const adapter = parseDiffAdapter(options?.adapter);
   const exclude = parseDiffExclude(options?.exclude);
   const since = parseDiffSince(options?.since);
+  const tag = parseDiffTag(options?.tag);
   const until = parseDiffUntil(options?.until);
   const limit = parseDiffLimit(options?.limit);
 
@@ -268,6 +287,7 @@ export async function diffCommand(
     exclude !== undefined ||
     since !== undefined ||
     until !== undefined ||
+    tag !== undefined ||
     limit !== undefined
   ) {
     const snapshots = (await loadIndex()).snapshots;
@@ -276,6 +296,7 @@ export async function diffCommand(
       adapter: options?.adapter,
       exclude: options?.exclude,
       since: options?.since,
+      tag: options?.tag,
       until: options?.until,
       limit: options?.limit,
     });
@@ -284,6 +305,7 @@ export async function diffCommand(
       adapter: options?.adapter,
       exclude: options?.exclude,
       since: options?.since,
+      tag: options?.tag,
       until: options?.until,
       limit: options?.limit,
     });
@@ -292,7 +314,7 @@ export async function diffCommand(
         console.log(formatDiffMissingJson(snapshotA, snapshotB));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? exclude?.join(',') ?? options?.since ?? options?.until ?? options?.limit}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? exclude?.join(',') ?? options?.since ?? options?.until ?? options?.tag ?? options?.limit}`));
       process.exit(1);
     }
     snapshotA = matchedA;
