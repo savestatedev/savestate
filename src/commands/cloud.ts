@@ -27,6 +27,7 @@ interface CloudOptions {
   since?: string;
   label?: string;
   tag?: string;
+  limit?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -134,12 +135,27 @@ export function parseCloudTag(value: string | undefined): string | undefined {
   return tag;
 }
 
-/** Resolve cloud push --adapter/--exclude/--since/--label/--tag/--id/--all to the local snapshots that should upload. */
+const MAX_CLOUD_LIMIT = 1000;
+
+/** Parse cloud --limit without treating invalid counts as the latest snapshot. */
+export function parseCloudLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Resolve cloud push --adapter/--exclude/--since/--label/--tag/--limit/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] },
 >(
   snapshots: T[],
-  options: { id?: string; adapter?: string; exclude?: string; since?: string; label?: string; tag?: string; all?: boolean },
+  options: { id?: string; adapter?: string; exclude?: string; since?: string; label?: string; tag?: string; limit?: string; all?: boolean },
 ): T[] {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
@@ -147,6 +163,7 @@ export function resolveCloudPushSnapshots<
   const since = parseCloudSince(options.since);
   const label = parseCloudLabel(options.label);
   const tag = parseCloudTag(options.tag);
+  const limit = parseCloudLimit(options.limit);
 
   let matches = snapshots;
   if (adapter !== undefined) {
@@ -165,7 +182,18 @@ export function resolveCloudPushSnapshots<
     matches = matches.filter((entry) => (entry.tags ?? []).includes(tag));
   }
   if (id !== undefined) {
-    return matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
+    matches = matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
+    if (limit !== undefined) {
+      return [...matches]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, limit);
+    }
+    return matches;
+  }
+  if (limit !== undefined) {
+    return [...matches]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
   }
   if (options.all) {
     return matches;
@@ -1039,6 +1067,7 @@ export async function cloudCommand(rawSubcommand: string, options: CloudOptions)
   parseCloudExclude(options.exclude);
   parseCloudLabel(options.label);
   parseCloudTag(options.tag);
+  parseCloudLimit(options.limit);
   switch (subcommand) {
     case 'push':
       await cloudPushCommand(options);
