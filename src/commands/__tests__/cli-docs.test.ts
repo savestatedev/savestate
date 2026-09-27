@@ -988,6 +988,7 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('--json');
     expect(teamSection).toContain('--since');
     expect(teamSection).toContain('--until');
+    expect(teamSection).toContain('--limit');
     expect(teamSection).toContain('--format');
     expect(teamSection).toContain('savestate login');
     expect(teamSection).toContain('admin');
@@ -1110,6 +1111,19 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('--until');
     expect(teamSection).toContain('Must be an ISO 8601 date');
     expect(team).toContain('export function parseTeamAuditUntil');
+  });
+
+  it('documents team audit --limit as a bounded positive integer', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    const teamBlock = cli.slice(
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
+    );
+    expect(teamSection).toContain('--limit');
+    expect(teamSection).toContain('Must be a positive integer up to 1000');
+    expect(teamSection).toContain('savestate team audit --limit 20 --json');
+    expect(teamBlock).toContain(".option('--limit <n>'");
+    expect(team).toContain('export function parseTeamAuditLimit');
   });
 
   it('registers --json on savestate team audit', () => {
