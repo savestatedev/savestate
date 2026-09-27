@@ -22,6 +22,7 @@ import type { AgentIdentity } from '../identity/schema.js';
 interface DiffOptions {
   json?: boolean;
   adapter?: string;
+  until?: string;
 }
 
 const DIFF_ADAPTERS = [
@@ -130,18 +131,36 @@ export function parseDiffAdapter(value: string | undefined): string | undefined 
   );
 }
 
-/** Resolve diff --adapter (and snapshot id) to the newest matching snapshot. */
+/** Parse diff --until without treating invalid dates as a missing snapshot. */
+export function parseDiffUntil(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const ms = new Date(value).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
+  return ms;
+}
+
+/** Resolve diff --adapter/--until (and snapshot id) to the newest matching snapshot. */
 export function resolveDiffSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string }>,
-  options: { snapshot: string; adapter?: string },
+  options: { snapshot: string; adapter?: string; until?: string },
 ): string | undefined {
   const snapshotId = parseDiffId(options.snapshot);
   const adapter = parseDiffAdapter(options.adapter);
-  if (adapter === undefined) {
+  const until = parseDiffUntil(options.until);
+  if (adapter === undefined && until === undefined) {
     return snapshotId;
   }
 
-  let matches = snapshots.filter((entry) => entry.adapter === adapter);
+  let matches = snapshots.filter((entry) => {
+    if (adapter !== undefined && entry.adapter !== adapter) return false;
+    if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
+    return true;
+  });
   if (snapshotId !== 'latest') {
     matches = matches.filter((entry) => entry.id === snapshotId);
   }
@@ -160,6 +179,7 @@ export async function diffCommand(
   let snapshotA = parseDiffId(rawSnapshotA);
   let snapshotB = parseDiffId(rawSnapshotB);
   const adapter = parseDiffAdapter(options?.adapter);
+  const until = parseDiffUntil(options?.until);
 
   if (!options?.json) {
     console.log();
@@ -174,22 +194,24 @@ export async function diffCommand(
     process.exit(1);
   }
 
-  if (adapter !== undefined) {
+  if (adapter !== undefined || until !== undefined) {
     const snapshots = (await loadIndex()).snapshots;
     const matchedA = resolveDiffSnapshot(snapshots, {
       snapshot: rawSnapshotA,
       adapter: options?.adapter,
+      until: options?.until,
     });
     const matchedB = resolveDiffSnapshot(snapshots, {
       snapshot: rawSnapshotB,
       adapter: options?.adapter,
+      until: options?.until,
     });
     if (!matchedA || !matchedB) {
       if (options?.json) {
         console.log(formatDiffMissingJson(snapshotA, snapshotB));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options?.until}`));
       process.exit(1);
     }
     snapshotA = matchedA;

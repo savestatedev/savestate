@@ -3941,6 +3941,16 @@ describe('CLI docs', () => {
     expect(diff).toContain('export function parseDiffAdapter');
   });
 
+  it('documents diff --until as an ISO 8601 date', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
+    expect(diffSection).toContain('--until');
+    expect(diffSection).toContain('Must be an ISO 8601 date');
+    expect(diffSection).toContain('savestate diff latest ss-2026-01-25 --until 2026-06-01');
+    expect(diffBlock).toContain(".option('--until <date>'");
+    expect(diff).toContain('export function parseDiffUntil');
+  });
+
   it('lists savestate diff in the command overview', () => {
     expect(docs).toContain('id="diff"');
     expect(docs).toContain('savestate diff');
