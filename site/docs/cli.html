@@ -210,6 +210,7 @@
         <tr><td><code>--until &lt;date&gt;</code></td><td>Restore the newest snapshot taken on or before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Restore the newest snapshot with this tag. Must be a single non-empty snapshot tag (no commas).</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Restore the newest snapshot with this human-readable label. Must be a single non-empty snapshot label (no commas).</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Only consider the N most recent matching snapshots. Must be a positive integer up to 1000. Pass <code>latest</code> as the snapshot id to restore the newest matching snapshot.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the restore result as JSON. Decrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, snapshotId, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -244,6 +245,9 @@
 
 <span class="code-comment"># Restore the newest labeled snapshot</span>
 <span class="code-prompt">$</span> savestate restore --label backup
+
+<span class="code-comment"># Restrict to the N most recent matching snapshots</span>
+<span class="code-prompt">$</span> savestate restore --limit 5
 
 <span class="code-comment"># Preview without changing anything</span>
 <span class="code-prompt">$</span> savestate restore latest --dry-run

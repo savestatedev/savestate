@@ -21,6 +21,7 @@ interface RestoreOptions {
   until?: string;
   tag?: string;
   label?: string;
+  limit?: string;
   json?: boolean;
 }
 
@@ -183,10 +184,25 @@ export function parseRestoreLabel(value: string | undefined): string | undefined
   return label;
 }
 
-/** Resolve restore --adapter/--tag/--label/--since/--until (and optional snapshot id) to the newest matching snapshot. */
+const MAX_RESTORE_LIMIT = 1000;
+
+/** Parse restore --limit without treating invalid counts as a missing snapshot. */
+export function parseRestoreLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_RESTORE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_RESTORE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Resolve restore --adapter/--tag/--label/--since/--until/--limit (and optional snapshot id) to the newest matching snapshot. */
 export function resolveRestoreSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string },
+  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string; limit?: string },
 ): string | undefined {
   const snapshotId = parseRestoreId(options.snapshot);
   const adapter = parseRestoreAdapter(options.adapter);
@@ -194,12 +210,14 @@ export function resolveRestoreSnapshot(
   const tag = parseRestoreTag(options.tag);
   const since = parseRestoreSince(options.since);
   const until = parseRestoreUntil(options.until);
+  const limit = parseRestoreLimit(options.limit);
   if (
     adapter === undefined &&
     label === undefined &&
     tag === undefined &&
     since === undefined &&
-    until === undefined
+    until === undefined &&
+    limit === undefined
   ) {
     return snapshotId;
   }
@@ -212,13 +230,15 @@ export function resolveRestoreSnapshot(
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
-  if (snapshotId !== 'latest') {
-    matches = matches.filter((entry) => entry.id === snapshotId);
-  }
-
   matches = [...matches].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
+  if (limit !== undefined) {
+    matches = matches.slice(0, limit);
+  }
+  if (snapshotId !== 'latest') {
+    matches = matches.filter((entry) => entry.id === snapshotId);
+  }
   return matches[0]?.id;
 }
 
@@ -269,6 +289,7 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
   const tag = parseRestoreTag(options.tag);
   const since = parseRestoreSince(options.since);
   const until = parseRestoreUntil(options.until);
+  const limit = parseRestoreLimit(options.limit);
   let resolvedId = parseRestoreId(snapshotId);
 
   if (!options.json) {
@@ -296,7 +317,8 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     label !== undefined ||
     tag !== undefined ||
     since !== undefined ||
-    until !== undefined
+    until !== undefined ||
+    limit !== undefined
   ) {
     const matched = resolveRestoreSnapshot((await loadIndex()).snapshots, {
       snapshot: snapshotId,
@@ -305,13 +327,14 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
       tag: options.tag,
       since: options.since,
       until: options.until,
+      limit: options.limit,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatRestoreMissingJson(resolvedId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? label ?? tag ?? options.since ?? options.until}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? label ?? tag ?? options.since ?? options.until ?? options.limit}`));
       process.exit(1);
     }
     resolvedId = matched;
