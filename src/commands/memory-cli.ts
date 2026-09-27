@@ -571,6 +571,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('log <memory-id>')
     .alias('history')
     .description('Show audit history for a memory (single non-empty memory id)')
+    .option('--limit <n>', 'Maximum number of audit events to show')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -581,6 +582,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await memoryLogCommand(storage, passphrase, id, {
           format: options.json ? 'json' : 'table',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);

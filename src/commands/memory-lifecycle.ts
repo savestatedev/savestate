@@ -72,6 +72,27 @@ export function formatMemoryLogMissingJson(id: string): string {
   );
 }
 
+const MAX_MEMORY_LOG_LIMIT = 1000;
+
+/** Parse memory log --limit without turning user input errors into an empty audit log. */
+export function parseMemoryLogLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_LOG_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_LOG_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N audit events when --limit is set. */
+export function selectMemoryLogEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 export interface MemoryEditJson {
   id: string;
   version: number;
@@ -525,13 +546,17 @@ export async function memoryLogCommand(
   memoryId: string,
   options?: {
     format?: 'table' | 'json';
+    limit?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
   try {
-    const log = await knowledgeLane.memoryAuditLog(memoryId);
+    const log = selectMemoryLogEntries(
+      await knowledgeLane.memoryAuditLog(memoryId),
+      parseMemoryLogLimit(options?.limit),
+    );
 
     if (options?.format === 'json') {
       if (log.length === 0) {
