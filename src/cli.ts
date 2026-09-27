@@ -409,7 +409,7 @@ program
   .option('--json', 'Output as JSON')
   .option('--since <date>', 'Only entries after this date (ISO 8601)')
   .option('--until <date>', 'Only entries before this date (ISO 8601)')
-  .option('--limit <n>', 'Maximum audit entries to show')
+  .option('--limit <n>', 'Maximum number of team members or audit entries to show')
   .option('--format <format>', 'Output format: csv or json', 'json')
   .action(teamCommand);
 

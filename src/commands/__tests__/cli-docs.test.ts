@@ -1078,6 +1078,19 @@ describe('CLI docs', () => {
     expect(teamSection).toContain('savestate team members --json');
   });
 
+  it('documents team members --limit as a bounded positive integer', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    const teamBlock = cli.slice(
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
+    );
+    expect(teamSection).toContain('--limit');
+    expect(teamSection).toContain('Must be a positive integer up to 1000');
+    expect(teamSection).toContain('savestate team members --limit 5');
+    expect(teamBlock).toContain(".option('--limit <n>'");
+    expect(team).toContain('export function parseTeamMembersLimit');
+  });
+
   it('documents team members --json when missing', () => {
     const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('--json');

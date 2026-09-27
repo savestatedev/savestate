@@ -93,6 +93,27 @@ export function parseTeamAuditUntil(value: string | undefined): string | undefin
   return value;
 }
 
+const MAX_TEAM_MEMBERS_LIMIT = 1000;
+
+/** Parse team members --limit without turning user input errors into an empty roster. */
+export function parseTeamMembersLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TEAM_MEMBERS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TEAM_MEMBERS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N team members when --limit is set. */
+export function selectTeamMembers<T>(members: T[], limit?: number): T[] {
+  if (limit === undefined) return members;
+  return members.slice(0, limit);
+}
+
 const MAX_TEAM_AUDIT_LIMIT = 1000;
 
 /** Parse team audit --limit without treating invalid counts as an unbounded audit log. */
@@ -430,6 +451,7 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
 }
 
 export async function teamMembersCommand(options: TeamCommandOptions = {}): Promise<void> {
+  const limit = parseTeamMembersLimit(options.limit);
   const result = await apiRequest('GET', '/team/members');
   if (!result.ok) {
     if (options.json) {
@@ -443,12 +465,13 @@ export async function teamMembersCommand(options: TeamCommandOptions = {}): Prom
     team: { name: string };
     members: Array<{ email: string; role: string; acceptedAt: string | null; invitedAt: string }>;
   };
+  const members = selectTeamMembers(data.members, limit);
 
   if (options.json) {
     console.log(
       formatTeamMembersJson({
         name: data.team.name,
-        members: data.members.map((member) => ({
+        members: members.map((member) => ({
           email: member.email,
           role: member.role,
           acceptedAt: member.acceptedAt,
@@ -464,7 +487,7 @@ export async function teamMembersCommand(options: TeamCommandOptions = {}): Prom
   console.log();
   console.log(chalk.dim('  EMAIL                          ROLE     STATUS'));
   console.log(chalk.dim('  ─────                          ────     ──────'));
-  for (const m of data.members) {
+  for (const m of members) {
     const status = m.acceptedAt ? chalk.green('active') : chalk.yellow('pending');
     console.log(`  ${pad(m.email, 30)} ${pad(m.role, 8)} ${status}`);
   }
