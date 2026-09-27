@@ -422,6 +422,7 @@
         <tr><td><code>--until &lt;date&gt;</code></td><td>Inspect the newest snapshot taken on or before this date. Must be an ISO 8601 date. Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only inspect a snapshot tagged with this label. Must be a single non-empty snapshot tag (no commas). Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Only inspect a snapshot with this human-readable label. Must be a single non-empty snapshot label (no commas). Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Only consider the N most recent matching snapshots. Must be a positive integer up to 1000. Pass <code>latest</code> as the snapshot id to inspect the newest matching snapshot.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the snapshot summary as JSON. Decrypts the archive. When SaveState is not initialized, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). When the snapshot is missing, emits a missing summary (found, id, timestamp, platform, hasIdentity; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -448,6 +449,9 @@
 
 <span class="code-comment"># Summarize the newest labeled snapshot</span>
 <span class="code-prompt">$</span> savestate inspect latest --label backup
+
+<span class="code-comment"># Restrict to the N most recent matching snapshots</span>
+<span class="code-prompt">$</span> savestate inspect latest --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate inspect latest --json
