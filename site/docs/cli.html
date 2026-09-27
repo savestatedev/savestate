@@ -467,14 +467,18 @@
       <tbody>
         <tr><td><code>&lt;snapshot-a&gt;</code></td><td>First snapshot to compare. Must be a single non-empty snapshot id.</td></tr>
         <tr><td><code>&lt;snapshot-b&gt;</code></td><td>Second snapshot to compare. Must be a single non-empty snapshot id.</td></tr>
-        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only compare snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--until</code>. Pass <code>latest</code> as a snapshot id to use the newest matching snapshot.</td></tr>
-        <tr><td><code>--until &lt;date&gt;</code></td><td>Compare the newest snapshots taken on or before this date. Must be an ISO 8601 date. Combines with <code>--adapter</code>. Pass <code>latest</code> as a snapshot id to use the newest matching snapshot.</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only compare snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--exclude</code> and <code>--until</code>. Pass <code>latest</code> as a snapshot id to use the newest matching snapshot.</td></tr>
+        <tr><td><code>--exclude &lt;ids&gt;</code></td><td>Skip snapshots from these adapters. Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf. Combines with <code>--adapter</code> and <code>--until</code>. Pass <code>latest</code> as a snapshot id to use the newest matching snapshot.</td></tr>
+        <tr><td><code>--until &lt;date&gt;</code></td><td>Compare the newest snapshots taken on or before this date. Must be an ISO 8601 date. Combines with <code>--adapter</code> and <code>--exclude</code>. Pass <code>latest</code> as a snapshot id to use the newest matching snapshot.</td></tr>
         <tr><td><code>--json</code></td><td>Emit identity and state diffs as JSON. Decrypts both archives. When SaveState is not initialized, emits a missing summary (found, snapshotA, snapshotB, hasChanges; omits extra fields). When a snapshot is missing, emits a missing summary (found, snapshotA, snapshotB, hasChanges; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
     <pre><code><span class="code-comment"># Newest ChatGPT snapshot vs an earlier id</span>
 <span class="code-prompt">$</span> savestate diff latest ss-2026-01-25 --adapter chatgpt
+
+<span class="code-comment"># Newest snapshot that is not from ChatGPT vs an earlier id</span>
+<span class="code-prompt">$</span> savestate diff latest ss-2026-01-25 --exclude chatgpt
 
 <span class="code-comment"># Newest snapshot on or before a date vs an earlier id</span>
 <span class="code-prompt">$</span> savestate diff latest ss-2026-01-25 --until 2026-06-01

@@ -239,6 +239,7 @@ program
   .command('diff <a> <b>')
   .description('Compare two snapshots (single non-empty snapshot ids)')
   .option('--adapter <id>', 'Only compare snapshots from this adapter')
+  .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--until <date>', 'Compare the newest snapshots taken on or before this date (ISO 8601)')
   .option('--json', 'Output as JSON')
   .action(diffCommand);
