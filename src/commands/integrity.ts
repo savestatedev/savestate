@@ -35,6 +35,7 @@ interface IntegrityOptions {
   tenant?: string;
   count?: string;
   status?: string;
+  limit?: string;
   policy?: string;
   force?: boolean;
   reason?: string;
@@ -42,6 +43,7 @@ interface IntegrityOptions {
 }
 
 const MAX_INTEGRITY_COUNT = 1000;
+const MAX_INTEGRITY_LIMIT = 1000;
 const MAX_INTEGRITY_TTL_DAYS = 365;
 
 /** Parse a honeyfact seed count without turning user input errors into an empty or NaN seed. */
@@ -140,6 +142,25 @@ export function parseIntegrityIncidentStatus(
   throw new Error(
     `Invalid --status value "${value}". Expected one of: ${INCIDENT_STATUS_LIST}.`,
   );
+}
+
+/** Parse integrity incidents --limit without turning user input errors into an empty incident list. */
+export function parseIntegrityLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INTEGRITY_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N incidents when --limit is set. ANDs with --status. */
+export function selectIntegrityIncidents<T>(incidents: T[], limit?: number): T[] {
+  if (limit === undefined) return incidents;
+  return incidents.slice(0, limit);
 }
 
 /** Parse integrity --policy without silently ignoring unknown containment policies. */
@@ -1074,8 +1095,9 @@ async function rotateCommand(options: IntegrityOptions): Promise<void> {
 async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const tenant_id = parseIntegrityTenant(options.tenant);
   const status = parseIntegrityIncidentStatus(options.status);
+  const limit = parseIntegrityLimit(options.limit);
 
-  const incidents = await getIncidents(tenant_id, status);
+  const incidents = selectIntegrityIncidents(await getIncidents(tenant_id, status), limit);
 
   if (options.json) {
     console.log(formatIntegrityIncidentsJson(incidents));
@@ -1091,7 +1113,8 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
     return;
   }
 
-  for (const incident of incidents.slice(0, 20)) {
+  const shown = incidents.slice(0, limit ?? 20);
+  for (const incident of shown) {
     const severityColor = {
       low: chalk.dim,
       medium: chalk.yellow,
@@ -1115,8 +1138,8 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
     );
   }
 
-  if (incidents.length > 20) {
-    console.log(chalk.dim(`  ... and ${incidents.length - 20} more`));
+  if (incidents.length > shown.length) {
+    console.log(chalk.dim(`  ... and ${incidents.length - shown.length} more`));
   }
   console.log();
 }
@@ -1507,7 +1530,7 @@ function showUsage(): void {
   console.log('  savestate integrity status                     Show integrity monitoring status');
   console.log('  savestate integrity seed [--count N]           Plant honeyfact memories');
   console.log('  savestate integrity rotate                     Rotate expired honeyfacts');
-  console.log('  savestate integrity incidents [--status <s>]   List detected incidents');
+  console.log('  savestate integrity incidents [--status <s>] [--limit <n>]   List detected incidents');
   console.log('  savestate integrity incident <id>              Show incident details (single non-empty incident id)');
   console.log('  savestate integrity quarantine <id>            Quarantine a memory/agent');
   console.log('  savestate integrity release <id>               Release from quarantine');
@@ -1518,6 +1541,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
+  console.log('  --limit <n>       Maximum number of incidents to show');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1536,6 +1560,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
+    .option('--limit <n>', 'Maximum number of incidents to show')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
