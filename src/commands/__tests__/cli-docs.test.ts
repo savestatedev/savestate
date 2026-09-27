@@ -3895,6 +3895,18 @@ describe('CLI docs', () => {
     expect(diffBlock).toContain(".option('--json'");
   });
 
+  it('documents diff --adapter as a known adapter', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
+    expect(diffSection).toContain('--adapter');
+    expect(diffSection).toContain(
+      'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
+    );
+    expect(diffSection).toContain('savestate diff latest ss-2026-01-25 --adapter chatgpt');
+    expect(diffBlock).toContain(".option('--adapter <id>'");
+    expect(diff).toContain('export function parseDiffAdapter');
+  });
+
   it('lists savestate diff in the command overview', () => {
     expect(docs).toContain('id="diff"');
     expect(docs).toContain('savestate diff');

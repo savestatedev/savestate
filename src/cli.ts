@@ -238,6 +238,7 @@ program
 program
   .command('diff <a> <b>')
   .description('Compare two snapshots (single non-empty snapshot ids)')
+  .option('--adapter <id>', 'Only compare snapshots from this adapter')
   .option('--json', 'Output as JSON')
   .action(diffCommand);
 
