@@ -177,6 +177,27 @@ export function selectMcpImportItems<T>(items: T[], limit?: number): T[] {
   return items.slice(0, limit);
 }
 
+const MAX_MCP_STATUS_LIMIT = 1000;
+
+/** Parse mcp status --limit without turning user input errors into an empty tool list. */
+export function parseMcpStatusLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_STATUS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_STATUS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N MCP tools or resources when --limit is set. */
+export function selectMcpStatusItems<T>(items: T[], limit?: number): T[] {
+  if (limit === undefined) return items;
+  return items.slice(0, limit);
+}
+
 const MCP_SUBCOMMANDS = ['serve', 'status', 'export', 'import'] as const;
 export type McpSubcommand = (typeof MCP_SUBCOMMANDS)[number];
 const MCP_SUBCOMMAND_LIST = MCP_SUBCOMMANDS.join(', ');
@@ -392,9 +413,13 @@ export function formatMcpExportMissingJson(agent: string, output: string): strin
 
 interface MCPStatusOptions {
   json?: boolean;
+  limit?: string;
 }
 
 async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
+  const limit = parseMcpStatusLimit(options.limit);
+  const tools = selectMcpStatusItems(MCP_TOOLS, limit);
+  const resources = selectMcpStatusItems(MCP_RESOURCES, limit);
   const initialized = isInitialized();
   let configured = false;
   let enabled = false;
@@ -416,8 +441,8 @@ async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
     enabled,
     port,
     auth,
-    tools: [...MCP_TOOLS],
-    resources: [...MCP_RESOURCES],
+    tools,
+    resources,
   };
 
   if (options.json) {
@@ -452,12 +477,12 @@ async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
   }
 
   console.log('\nAvailable MCP Tools:');
-  for (const tool of MCP_TOOLS) {
+  for (const tool of tools) {
     console.log(chalk.gray(`  - ${tool}`));
   }
 
   console.log('\nAvailable MCP Resources:');
-  for (const resource of MCP_RESOURCES) {
+  for (const resource of resources) {
     console.log(chalk.gray(`  - ${resource}`));
   }
 
@@ -747,7 +772,7 @@ export function registerMCPCommands(program: Command): void {
     .option('-a, --agent <id>', 'Agent ID to export or import (single non-empty id, default: "default")')
     .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
-    .option('--limit <n>', 'Maximum number of memories and snapshot metadata rows to include on export, or memories to import')
+    .option('--limit <n>', 'Maximum number of MCP tools and resources to show on status, memories and snapshot metadata rows on export, or memories to import')
     .option('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
