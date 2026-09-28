@@ -99,6 +99,27 @@ export function selectSloStatusViolations<T>(violations: T[], limit?: number): T
   return violations.slice(0, limit);
 }
 
+const MAX_SLO_CONFIG_LIMIT = 1000;
+
+/** Parse slo config --limit without turning user input errors into an empty config. */
+export function parseSloConfigLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SLO_CONFIG_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SLO_CONFIG_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N SLO config setting rows when --limit is set. */
+export function selectSloConfigEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /** Parse slo --namespace without treating blank or comma-separated values as a namespace. */
 export function parseSloNamespace(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -450,7 +471,8 @@ async function sloReport(options: { period?: string; json?: boolean; limit?: str
 /**
  * View or modify SLO configuration.
  */
-async function sloConfig(options: { set?: string; json?: boolean }): Promise<void> {
+async function sloConfig(options: { set?: string; json?: boolean; limit?: string }): Promise<void> {
+  const limit = parseSloConfigLimit(options.limit);
   let config = await loadSLOConfig();
 
   const assignment = parseSloSet(options.set);
@@ -495,15 +517,17 @@ async function sloConfig(options: { set?: string; json?: boolean }): Promise<voi
 
   // Display config
   console.log(chalk.bold('\n⚙️  SLO Configuration\n'));
-  console.log(`Enabled: ${config.enabled ? chalk.green('yes') : chalk.yellow('no')}`);
-  console.log(`Alert Threshold: ${config.alert_threshold_percent}%`);
-  console.log(`Evaluation Interval: ${config.evaluation_interval_minutes} minutes`);
-  console.log('');
-
-  console.log(chalk.bold('Freshness SLO:'));
-  console.log(`  Max Age: ${formatDuration(config.freshness.max_age_hours)}`);
-  console.log(`  Relevance Threshold: ${(config.freshness.relevance_threshold * 100).toFixed(0)}%`);
-  console.log(`  Recall Target: ${config.freshness.recall_target_percent}%`);
+  const rows = [
+    `Enabled: ${config.enabled ? chalk.green('yes') : chalk.yellow('no')}`,
+    `Alert Threshold: ${config.alert_threshold_percent}%`,
+    `Evaluation Interval: ${config.evaluation_interval_minutes} minutes`,
+    `Max Age: ${formatDuration(config.freshness.max_age_hours)}`,
+    `Relevance Threshold: ${(config.freshness.relevance_threshold * 100).toFixed(0)}%`,
+    `Recall Target: ${config.freshness.recall_target_percent}%`,
+  ];
+  for (const row of selectSloConfigEntries(rows, limit)) {
+    console.log(row);
+  }
   console.log('');
 
   console.log(chalk.dim('Modify with: savestate slo config --set <key>=<value>'));
@@ -531,6 +555,6 @@ export function registerSLOCommands(program: import('commander').Command): void 
     .option('--json', 'Output as JSON')
     .option('--set <key=value>', 'Set a config value (non-empty key=value)')
     .option('-p, --period <duration>', 'Report period (e.g., 7d, 30d)')
-    .option('--limit <n>', 'Maximum number of namespace compliance rows to show on report, or status violations')
+    .option('--limit <n>', 'Maximum number of namespace compliance rows to show on report, or status violations, or configuration setting rows on config')
     .action(sloCommand);
 }
