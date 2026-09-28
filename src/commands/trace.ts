@@ -26,6 +26,7 @@ interface TraceExportOptions {
   format?: string;
   run?: string;
   json?: boolean;
+  limit?: string;
 }
 
 const TRACE_EXPORT_FORMATS: readonly TraceExportFormat[] = ['jsonl'];
@@ -117,6 +118,27 @@ export function parseTraceShowLimit(value: string | undefined): number | undefin
 export function selectTraceShowEvents<T>(events: T[], limit?: number): T[] {
   if (limit === undefined) return events;
   return events.slice(0, limit);
+}
+
+const MAX_TRACE_EXPORT_LIMIT = 1000;
+
+/** Parse trace export --limit without turning user input errors into an empty export. */
+export function parseTraceExportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRACE_EXPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRACE_EXPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N trace runs when --limit is set on export. */
+export function selectTraceExportRuns<T>(runs: T[], limit?: number): T[] {
+  if (limit === undefined) return runs;
+  return runs.slice(0, limit);
 }
 
 const TRACE_SUBCOMMANDS = ['list', 'show', 'export'] as const;
@@ -321,7 +343,7 @@ export function registerTraceCommands(program: Command): void {
     .option('--json', 'Output as JSON')
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
-    .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show')
+    .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show, or runs to export')
     .action(traceCommand);
 }
 
@@ -445,6 +467,7 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
 export async function traceExportCommand(options: TraceExportOptions): Promise<void> {
   const format = parseTraceExportFormat(options.format);
   const run = parseTraceRun(options.run) ?? 'all';
+  const limit = parseTraceExportLimit(options.limit);
 
   if (!isInitialized()) {
     if (options.json) {
@@ -459,7 +482,10 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
 
   if (options.json) {
     const allRuns = await store.listRuns();
-    const runs = run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run);
+    const runs = selectTraceExportRuns(
+      run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
+      limit,
+    );
     if (run !== 'all' && runs.length === 0) {
       console.log(formatTraceExportMissingJson(run, format));
       return;
@@ -468,8 +494,22 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
     return;
   }
 
-  const output = await store.export(run, format);
-  process.stdout.write(output);
+  if (limit === undefined) {
+    const output = await store.export(run, format);
+    process.stdout.write(output);
+    return;
+  }
+
+  const allRuns = await store.listRuns();
+  const runs = selectTraceExportRuns(
+    run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
+    limit,
+  );
+  const chunks: string[] = [];
+  for (const entry of runs) {
+    chunks.push(await store.export(entry.run_id, format));
+  }
+  process.stdout.write(chunks.join(''));
 }
 
 function formatDate(iso: string): string {
