@@ -4064,6 +4064,16 @@ describe('CLI docs', () => {
     expect(configSource).toContain('export function formatConfigMissingJson');
   });
 
+  it('documents config --limit as a bounded positive integer', () => {
+    const configSection = docs.slice(docs.indexOf('id="config"'), docs.indexOf('id="adapters"'));
+    const configBlock = cli.slice(cli.indexOf("command('config')"), cli.indexOf("command('adapters')"));
+    expect(configSection).toContain('--limit');
+    expect(configSection).toContain('Must be a positive integer up to 1000');
+    expect(configSection).toContain('savestate config --limit 5');
+    expect(configBlock).toContain(".option('--limit <n>'");
+    expect(configSource).toContain('export function parseConfigLimit');
+  });
+
   it('registers --json on savestate adapters', () => {
     const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
     expect(adaptersBlock).toContain(".option('--json'");

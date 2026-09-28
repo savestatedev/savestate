@@ -257,6 +257,7 @@ program
   .command('config')
   .description('View/edit SaveState configuration')
   .option('--set <key=value>', 'Set a config value (non-empty key=value)')
+  .option('--limit <n>', 'Maximum number of adapters to show')
   .option('--json', 'Output as JSON')
   .action(configCommand);
 
