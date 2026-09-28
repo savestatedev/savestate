@@ -135,6 +135,27 @@ export function parseMcpInput(value: string | undefined): string | undefined {
   return input;
 }
 
+const MAX_MCP_EXPORT_LIMIT = 1000;
+
+/** Parse mcp export --limit without turning user input errors into an empty passport. */
+export function parseMcpExportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_EXPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_EXPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N memories or snapshot metadata rows when --limit is set. */
+export function selectMcpExportItems<T>(items: T[], limit?: number): T[] {
+  if (limit === undefined) return items;
+  return items.slice(0, limit);
+}
+
 const MCP_SUBCOMMANDS = ['serve', 'status', 'export', 'import'] as const;
 export type McpSubcommand = (typeof MCP_SUBCOMMANDS)[number];
 const MCP_SUBCOMMAND_LIST = MCP_SUBCOMMANDS.join(', ');
@@ -439,6 +460,7 @@ interface MCPExportOptions {
   agent?: string;
   output?: string;
   includeSnapshots?: boolean;
+  limit?: string;
   json?: boolean;
 }
 
@@ -448,6 +470,7 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
   try {
     const agentId = parseMcpAgent(options.agent) ?? 'default';
     const output = parseMcpOutput(options.output);
+    const limit = parseMcpExportLimit(options.limit);
 
     if (!isInitialized()) {
       if (options.json) {
@@ -473,20 +496,23 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
 
     // Note: In a real implementation, we'd load from persistent storage
     // For now, we'll export from the index
-    const memories: PassportMemory[] = [];
+    const memories: PassportMemory[] = selectMcpExportItems([], limit);
 
     // Get snapshots
     if (spinner) spinner.text = 'Loading snapshots...';
     const index = await loadIndex();
-    const snapshots: PassportSnapshot[] = index.snapshots
-      .filter((s) => !options.agent || s.platform.includes(agentId) || s.id.includes(agentId))
-      .map((s) => ({
-        id: s.id,
-        timestamp: s.timestamp,
-        platform: s.platform,
-        label: s.label,
-        size: s.size,
-      }));
+    const snapshots: PassportSnapshot[] = selectMcpExportItems(
+      index.snapshots
+        .filter((s) => !options.agent || s.platform.includes(agentId) || s.id.includes(agentId))
+        .map((s) => ({
+          id: s.id,
+          timestamp: s.timestamp,
+          platform: s.platform,
+          label: s.label,
+          size: s.size,
+        })),
+      limit,
+    );
 
     if (options.json && memories.length === 0 && snapshots.length === 0) {
       console.log(formatMcpExportMissingJson(agentId, outputPath));
@@ -559,6 +585,7 @@ interface McpCommandOptions {
   agent?: string;
   output?: string;
   includeSnapshots?: boolean;
+  limit?: string;
   input?: string;
   merge?: boolean;
 }
@@ -697,6 +724,7 @@ export function registerMCPCommands(program: Command): void {
     .option('-a, --agent <id>', 'Agent ID to export or import (single non-empty id, default: "default")')
     .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
+    .option('--limit <n>', 'Maximum number of memories and snapshot metadata rows to include')
     .option('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
