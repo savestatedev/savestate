@@ -393,7 +393,7 @@ program
   .option('--until <date>', 'Push the newest local snapshot taken on or before this date (ISO 8601)')
   .option('--label <label>', 'Push the newest local snapshot with this label')
   .option('--tag <tag>', 'Push the newest local snapshot with this tag')
-  .option('--limit <n>', 'Push up to this many newest matching local snapshots')
+  .option('--limit <n>', 'Push up to this many newest matching local snapshots, or maximum cloud list rows to show')
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')
   .option('--json', 'Output as JSON')

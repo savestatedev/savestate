@@ -164,6 +164,27 @@ export function parseCloudLimit(value: string | undefined): number | undefined {
   return limit;
 }
 
+const MAX_CLOUD_LIST_LIMIT = 1000;
+
+/** Parse cloud list --limit without turning user input errors into an empty cloud inventory. */
+export function parseCloudListLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_LIST_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_LIST_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N cloud snapshots when --limit is set. */
+export function selectCloudListSnapshots<T>(snapshots: T[], limit?: number): T[] {
+  if (limit === undefined) return snapshots;
+  return snapshots.slice(0, limit);
+}
+
 /** Resolve cloud push --adapter/--exclude/--since/--until/--label/--tag/--limit/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] },
@@ -881,6 +902,8 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
  * List cloud snapshots
  */
 export async function cloudListCommand(options: CloudOptions = {}): Promise<void> {
+  const limit = parseCloudListLimit(options.limit);
+
   if (!options.json) {
     console.log();
   }
@@ -907,7 +930,7 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   if (spinner) {
     spinner.text = 'Fetching cloud snapshots...';
   }
-  const snapshots = await listCloudSnapshots();
+  const snapshots = selectCloudListSnapshots(await listCloudSnapshots(), limit);
   spinner?.stop();
 
   if (options.json) {
