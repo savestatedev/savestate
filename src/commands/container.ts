@@ -396,6 +396,27 @@ export function formatImportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
 
+const MAX_IMPORT_LIMIT = 1000;
+
+/** Parse import --limit without turning user input errors into an empty component list. */
+export function parseImportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IMPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IMPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N packed components when --limit is set. */
+export function selectImportComponents<T>(components: T[], limit?: number): T[] {
+  if (limit === undefined) return components;
+  return components.slice(0, limit);
+}
+
 export function formatImportDescription(description: string): string {
   return `  Description: ${description}`;
 }
@@ -1164,6 +1185,7 @@ export interface RestoreOptions {
   exclude?: string;
   force?: boolean;
   json?: boolean;
+  limit?: string;
 }
 
 export interface ImportResult {
@@ -1210,6 +1232,14 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
 
     try {
       parseContainerInclude(options.include);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return undefined;
+    }
+
+    let limit: number | undefined;
+    try {
+      limit = parseImportLimit(options.limit);
     } catch (error: any) {
       console.error(`Error: ${error.message}`);
       return undefined;
@@ -1704,6 +1734,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
     }
     const components = selected.components;
+    const shownComponents = selectImportComponents(components, limit);
     const description = optionalImportDescription(manifest.description);
     const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
     const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
@@ -1741,9 +1772,9 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
             size: decryptedState.length,
             payloadName,
             contentType,
-            description,
-            components,
-            encryption: encryptionAlgorithm,
+              description,
+              components: shownComponents,
+              encryption: encryptionAlgorithm,
             keyDerivation,
             excluded: excludedComponents,
             input: inFile,
@@ -1775,7 +1806,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       if (description) {
         console.log(formatImportDescription(description));
       }
-      console.log(formatImportComponents(components));
+      console.log(formatImportComponents(shownComponents));
       if (encryptionAlgorithm) {
         console.log(formatImportEncryption(encryptionAlgorithm));
       }
@@ -1829,7 +1860,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     if (description) {
       console.log(formatImportDescription(description));
     }
-    console.log(formatImportComponents(components));
+    console.log(formatImportComponents(shownComponents));
     if (encryptionAlgorithm) {
       console.log(formatImportEncryption(encryptionAlgorithm));
     }
@@ -1915,6 +1946,7 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory (single non-empty path)')
     .option('--force', 'Overwrite an existing target file')
+    .option('--limit <n>', 'Maximum number of packed components to show')
     .option('--json', 'Output as JSON')
     .action(async (file, opts) => {
       const result = await importState({
@@ -1929,6 +1961,7 @@ export function registerContainerCommands(program: Command) {
         exclude: opts.exclude,
         force: opts.force,
         json: opts.json,
+        limit: opts.limit,
       });
       if (!result) {
         process.exit(1);

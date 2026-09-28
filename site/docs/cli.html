@@ -678,7 +678,7 @@
 
     <!-- import -->
     <h2 id="import"><code>savestate import</code></h2>
-    <p>Import agent state from an encrypted <code>.savestate</code> container. Decrypts, verifies, and restores. The input file must be a single non-empty path. A missing input path is rejected before decrypting. A missing <code>--target</code> parent directory is rejected before restoring. An existing target file is refused unless <code>--force</code> is set.</p>
+    <p>Import agent state from an encrypted <code>.savestate</code> container. Decrypts, verifies, and restores. Prints packed components, optionally capped with <code>--limit</code>. The input file must be a single non-empty path. A missing input path is rejected before decrypting. A missing <code>--target</code> parent directory is rejected before restoring. An existing target file is refused unless <code>--force</code> is set.</p>
     <pre><code><span class="code-prompt">$</span> savestate import &lt;file&gt; [options]</code></pre>
 
     <table>
@@ -694,6 +694,7 @@
         <tr><td><code>--include &lt;paths&gt;</code></td><td>Only restore named state paths. Must be one or more of: personality, memory, tools, preferences, conversation_history.</td></tr>
         <tr><td><code>--exclude &lt;paths&gt;</code></td><td>Skip named state paths while restoring. Must be one or more of: personality, memory, tools, preferences, conversation_history.</td></tr>
         <tr><td><code>--merge</code></td><td>Merge with existing state (default: replace)</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of packed components to show. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the import result as JSON. Decrypts the archive. Skips progress output. When the input file is missing, emits a missing summary (found, input, restored, agent; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -706,6 +707,9 @@
 
 <span class="code-comment"># Scriptable import metadata</span>
 <span class="code-prompt">$</span> savestate import agent.savestate --json --dry-run
+
+<span class="code-comment"># Cap packed component rows</span>
+<span class="code-prompt">$</span> savestate import agent.savestate --limit 5
 
 <span class="code-comment"># Missing input file</span>
 <span class="code-prompt">$</span> savestate import missing.savestate --json</code></pre>
