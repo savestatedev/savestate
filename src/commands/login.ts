@@ -11,6 +11,28 @@ const API_BASE = 'https://savestate.dev/api';
 interface LoginOptions {
   key?: string;
   json?: boolean;
+  limit?: string;
+}
+
+const MAX_LOGIN_LIMIT = 1000;
+
+/** Parse login --limit without turning user input errors into an empty login. */
+export function parseLoginLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LOGIN_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_LOGIN_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N login status field rows when --limit is set. */
+export function selectLoginEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 /** Parse login --key without treating blank or comma-separated values as an API key. */
@@ -70,6 +92,8 @@ export function formatLoginMissingJson(): string {
 }
 
 export async function loginCommand(options: LoginOptions): Promise<void> {
+  const limit = parseLoginLimit(options.limit);
+
   if (!options.json) {
     console.log();
   }
@@ -154,11 +178,16 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
 
     spinner?.succeed('Authenticated!');
     console.log();
-    console.log(`  ${chalk.dim('Account:')}  ${chalk.cyan(account.email)}`);
-    console.log(`  ${chalk.dim('Tier:')}     ${chalk.green(account.tier.toUpperCase())}`);
-    console.log(`  ${chalk.dim('Features:')} ${account.features.length} enabled`);
+    const rows = [
+      `  ${chalk.dim('Account:')}  ${chalk.cyan(account.email)}`,
+      `  ${chalk.dim('Tier:')}     ${chalk.green(account.tier.toUpperCase())}`,
+      `  ${chalk.dim('Features:')} ${account.features.length} enabled`,
+    ];
     if (account.storage.limit > 0) {
-      console.log(`  ${chalk.dim('Storage:')}  ${formatBytes(account.storage.limit)} cloud storage`);
+      rows.push(`  ${chalk.dim('Storage:')}  ${formatBytes(account.storage.limit)} cloud storage`);
+    }
+    for (const row of selectLoginEntries(rows, limit)) {
+      console.log(row);
     }
     console.log();
     console.log(chalk.dim('  Your API key is saved locally. Cloud features are now unlocked.'));

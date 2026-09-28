@@ -1113,6 +1113,7 @@
       </thead>
       <tbody>
         <tr><td><code>-k, --key &lt;api-key&gt;</code></td><td>API key (or enter interactively). Must be a single non-empty API key.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of status field rows to show. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the login result as JSON. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, authenticated, email, tier; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -1122,6 +1123,9 @@
 
 <span class="code-comment"># Pass the key on the command line</span>
 <span class="code-prompt">$</span> savestate login --key ss_live_...
+
+<span class="code-comment"># Cap status field rows</span>
+<span class="code-prompt">$</span> savestate login --limit 5
 
 <span class="code-comment"># Scriptable login</span>
 <span class="code-prompt">$</span> savestate login --key ss_live_... --json
