@@ -2190,6 +2190,17 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function formatMemoryConfigMissingJson');
   });
 
+  it('documents memory config --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const configBlock = memoryCli.slice(memoryCli.indexOf("command('config')"), memoryCli.indexOf("command('explain"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('or maximum configuration setting rows to show on');
+    expect(memorySection).toContain('savestate memory config --limit 5');
+    expect(configBlock).toContain(".option('--limit <n>'");
+    expect(memory).toContain('export function parseMemoryConfigLimit');
+  });
+
   it('registers --json on savestate memory promote', () => {
     const promoteBlock = memoryCli.slice(memoryCli.indexOf("command('promote"), memoryCli.indexOf("command('demote"));
     expect(promoteBlock).toContain(".option('--json'");

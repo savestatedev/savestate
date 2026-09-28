@@ -15,6 +15,7 @@ import {
   applyPoliciesCommand,
   showTierConfig,
   explainMemoryCommand,
+  parseMemoryConfigLimit,
 } from './memory.js';
 import {
   editMemoryCommand,
@@ -416,6 +417,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('config')
     .description('Show tier configuration')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
+    .option('--limit <n>', 'Maximum number of configuration setting rows to show')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
@@ -426,6 +428,7 @@ export function registerMemoryCommands(program: Command): void {
         await showTierConfig(storage, passphrase, {
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
+          limit: parseMemoryConfigLimit(options.limit),
         });
       } catch (err) {
         handleError(err);
