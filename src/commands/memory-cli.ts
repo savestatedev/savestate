@@ -391,6 +391,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Apply automatic tier policies (age-based demotion, etc.)')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--dry-run', 'Show what would change without applying')
+    .option('--limit <n>', 'Maximum number of tier changes to show')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
@@ -402,6 +403,7 @@ export function registerMemoryCommands(program: Command): void {
           snapshotId: parseMemorySnapshot(options.snapshot),
           dryRun: options.dryRun,
           format: options.json ? 'json' : 'pretty',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);

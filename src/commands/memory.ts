@@ -777,6 +777,27 @@ export async function unpinMemoryCommand(
   console.log(`✓ Unpinned memory ${memoryId}`);
 }
 
+const MAX_MEMORY_APPLY_POLICIES_LIMIT = 1000;
+
+/** Parse memory apply-policies --limit without turning user input errors into an empty change list. */
+export function parseMemoryApplyPoliciesLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_APPLY_POLICIES_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_APPLY_POLICIES_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N tier changes when --limit is set. */
+export function selectMemoryApplyPoliciesChanges<T>(changes: T[], limit?: number): T[] {
+  if (limit === undefined) return changes;
+  return changes.slice(0, limit);
+}
+
 /**
  * Apply tier policies and show what would change.
  */
@@ -787,8 +808,10 @@ export async function applyPoliciesCommand(
     snapshotId?: string;
     dryRun?: boolean;
     format?: 'pretty' | 'json';
+    limit?: string;
   },
 ): Promise<void> {
+  const limit = parseMemoryApplyPoliciesLimit(options?.limit);
   if (options?.format === 'json') {
     const snapshotId = options.snapshotId;
     if (snapshotId && snapshotId !== 'latest') {
@@ -810,6 +833,7 @@ export async function applyPoliciesCommand(
   const config = snapshot.memory.tierConfig ?? DEFAULT_TIER_CONFIG;
 
   const { updated, changes } = applyTierPolicies(snapshot.memory.core, config);
+  const shown = selectMemoryApplyPoliciesChanges(changes, limit);
   const dryRun = options?.dryRun ?? false;
 
   if (options?.format === 'json') {
@@ -817,7 +841,7 @@ export async function applyPoliciesCommand(
       snapshot.memory.core = updated;
       await saveSnapshot(storage, passphrase, snapshot, filename);
     }
-    console.log(formatMemoryApplyPoliciesJson(changes, { dryRun }));
+    console.log(formatMemoryApplyPoliciesJson(shown, { dryRun }));
     return;
   }
 
@@ -827,7 +851,7 @@ export async function applyPoliciesCommand(
   }
 
   console.log(`\nTier changes (${options?.dryRun ? 'dry run' : 'applying'}):\n`);
-  for (const change of changes) {
+  for (const change of shown) {
     console.log(`  ${change.entryId}: ${change.from} → ${change.to} (${change.reason})`);
   }
 

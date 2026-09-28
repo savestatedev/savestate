@@ -2248,6 +2248,16 @@ describe('CLI docs', () => {
     expect(applyBlock).toContain(".option('--json'");
   });
 
+  it('documents memory apply-policies --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const applyBlock = memoryCli.slice(memoryCli.indexOf("command('apply-policies')"), memoryCli.indexOf("command('config')"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory apply-policies --limit 5');
+    expect(applyBlock).toContain(".option('--limit <n>'");
+    expect(memory).toContain('export function parseMemoryApplyPoliciesLimit');
+  });
+
   it('documents memory apply-policies --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
