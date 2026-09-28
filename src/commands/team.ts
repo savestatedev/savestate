@@ -135,6 +135,27 @@ export function applyTeamAuditLimit<T>(entries: T[], limit: number | undefined):
   return entries.slice(0, limit);
 }
 
+const MAX_TEAM_STATUS_LIMIT = 1000;
+
+/** Parse team status --limit without turning user input errors into an empty status. */
+export function parseTeamStatusLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TEAM_STATUS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TEAM_STATUS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N team status field rows when --limit is set. */
+export function selectTeamStatusEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const TEAM_SUBCOMMANDS = ['status', 'members', 'invite', 'audit'] as const;
 export type TeamSubcommand = (typeof TEAM_SUBCOMMANDS)[number];
 const TEAM_SUBCOMMAND_LIST = TEAM_SUBCOMMANDS.join(', ');
@@ -420,6 +441,7 @@ export async function apiRequest(
 // ─── Subcommands ─────────────────────────────────────────────
 
 export async function teamStatusCommand(options: TeamCommandOptions = {}): Promise<void> {
+  const limit = parseTeamStatusLimit(options.limit);
   const result = await apiRequest('GET', '/team');
   if (!result.ok) {
     if (options.json) {
@@ -442,11 +464,16 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
     return;
   }
 
+  const rows = [
+    `${chalk.bold('Team:    ')} ${data.team.name}`,
+    `${chalk.dim('  ID:      ')} ${data.team.id}`,
+    `${chalk.dim('  Role:    ')} ${chalk.cyan(data.role)}`,
+    `${chalk.dim('  Created: ')} ${new Date(data.team.createdAt).toLocaleString()}`,
+  ];
   console.log();
-  console.log(chalk.bold('Team:    '), data.team.name);
-  console.log(chalk.dim('  ID:      '), data.team.id);
-  console.log(chalk.dim('  Role:    '), chalk.cyan(data.role));
-  console.log(chalk.dim('  Created: '), new Date(data.team.createdAt).toLocaleString());
+  for (const row of selectTeamStatusEntries(rows, limit)) {
+    console.log(row);
+  }
   console.log();
 }
 

@@ -1134,6 +1134,20 @@ describe('CLI docs', () => {
     expect(team).toContain('export function formatTeamStatusMissingJson');
   });
 
+  it('documents team status --limit as a bounded positive integer', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    const teamBlock = cli.slice(
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
+    );
+    expect(teamSection).toContain('--limit');
+    expect(teamSection).toContain('Must be a positive integer up to 1000');
+    expect(teamSection).toContain('or status field rows on');
+    expect(teamSection).toContain('savestate team status --limit 5');
+    expect(teamBlock).toContain(".option('--limit <n>'");
+    expect(team).toContain('export function parseTeamStatusLimit');
+  });
+
   it('registers --json on savestate team members', () => {
     const membersBlock = cli.slice(
       cli.indexOf("command('team <subcommand> [args...]')"),
