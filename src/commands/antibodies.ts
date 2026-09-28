@@ -455,7 +455,9 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
 }
 
 async function showStats(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
+  const limit = parseAntibodiesStatsLimit(options.limit);
   const stats = await store.stats();
+  const rules = selectAntibodiesStatsRules(stats.rules, limit);
 
   if (options.json) {
     console.log(
@@ -465,7 +467,7 @@ async function showStats(store: AntibodyStore, options: AntibodiesOptions): Prom
         retiredRules: stats.retired_rules,
         totalHits: stats.total_hits,
         totalOverrides: stats.total_overrides,
-        rules: stats.rules.map((rule) => ({
+        rules: rules.map((rule) => ({
           id: rule.id,
           risk: rule.risk,
           intervention: rule.intervention,
@@ -489,10 +491,9 @@ async function showStats(store: AntibodyStore, options: AntibodiesOptions): Prom
   console.log(`  total overrides: ${stats.total_overrides}`);
   console.log();
 
-  if (stats.rules.length > 0) {
-    const top = [...stats.rules]
-      .sort((a, b) => b.hits - a.hits || a.id.localeCompare(b.id))
-      .slice(0, 10);
+  if (rules.length > 0) {
+    const top = [...rules]
+      .sort((a, b) => b.hits - a.hits || a.id.localeCompare(b.id));
     console.log(chalk.dim('  Top rules by hits:'));
     for (const rule of top) {
       console.log(`    ${rule.id}  hits=${rule.hits} overrides=${rule.overrides} active=${rule.active}`);
@@ -518,6 +519,27 @@ export function parseAntibodiesLimit(value: string | undefined): number | undefi
 
 /** Keep the first N antibody rules when --limit is set. ANDs with --all. */
 export function applyAntibodiesLimit<T>(rules: T[], limit: number | undefined): T[] {
+  if (limit === undefined) return rules;
+  return rules.slice(0, limit);
+}
+
+const MAX_ANTIBODIES_STATS_LIMIT = 1000;
+
+/** Parse antibodies stats --limit without turning user input errors into an empty stats view. */
+export function parseAntibodiesStatsLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ANTIBODIES_STATS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ANTIBODIES_STATS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N antibody stats rules when --limit is set. */
+export function selectAntibodiesStatsRules<T>(rules: T[], limit?: number): T[] {
   if (limit === undefined) return rules;
   return rules.slice(0, limit);
 }
@@ -704,6 +726,6 @@ function showUsage(): void {
   console.log('                             [--confidence <0..1>] [--id <rule-id>]');
   console.log('  savestate antibodies preflight [--tool <name>] [--error-code <code>] [--path <path>]');
   console.log('                                  [--tags <a,b>] [--semantic] [--json]');
-  console.log('  savestate antibodies stats [--json]');
+  console.log('  savestate antibodies stats [--limit <n>] [--json]');
   console.log();
 }
