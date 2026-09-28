@@ -115,6 +115,27 @@ export function selectContextCandidates<T>(candidates: T[], limit?: number): T[]
   return candidates.slice(0, limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT);
 }
 
+const MAX_CONTEXT_CONFIG_LIMIT = 1000;
+
+/** Parse context config --limit without turning user input errors into an empty config. */
+export function parseContextConfigLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_CONFIG_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_CONFIG_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N scoring weight or budget allocation rows when --limit is set. */
+export function selectContextConfigEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 export function formatContextCompileJson(brief: RunBrief): string {
   const record: ContextCompileJson = {
     runId: brief.run_id,
@@ -470,8 +491,10 @@ export function registerContextCommands(program: Command): void {
     .description('View/edit compiler configuration')
     .option('--weights', 'Show scoring weights')
     .option('--budget', 'Show budget allocation')
+    .option('--limit <n>', 'Maximum number of scoring weight or budget allocation rows to show')
     .option('--json', 'Output as JSON')
     .action((options) => {
+      const limit = parseContextConfigLimit(options.limit);
       if (options.json) {
         console.log(formatContextConfigJson());
         return;
@@ -479,7 +502,7 @@ export function registerContextCommands(program: Command): void {
       
       if (options.weights || (!options.weights && !options.budget)) {
         console.log('⚖️ Scoring Weights:');
-        for (const [key, value] of Object.entries(DEFAULT_SCORING_WEIGHTS)) {
+        for (const [key, value] of selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit)) {
           console.log(`   ${key}: ${value}`);
         }
         console.log('');
@@ -487,7 +510,7 @@ export function registerContextCommands(program: Command): void {
       
       if (options.budget || (!options.weights && !options.budget)) {
         console.log('💰 Budget Allocation:');
-        for (const [key, value] of Object.entries(DEFAULT_BUDGET_ALLOCATION)) {
+        for (const [key, value] of selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit)) {
           const percent = ((value as number) * 100).toFixed(0);
           console.log(`   ${key}: ${percent}%`);
         }
