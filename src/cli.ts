@@ -458,6 +458,7 @@ program
   .command('identity <subcommand> [args...]')
     .description('Manage agent identity (show, init, set, schema; single non-empty subcommand: show, init, set, or schema; init requires a single non-empty identity name; set requires a single non-empty identity field and a non-empty identity value)')
   .option('--json', 'Output as JSON')
+  .option('--limit <n>', 'Maximum number of identity tools to show')
   .action(identityCommand);
 
 // ─── savestate integrity ───────────────────────────────────

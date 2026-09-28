@@ -23,6 +23,7 @@ import type { AgentIdentity, ToolReference } from '../identity/schema.js';
 
 interface IdentityOptions {
   json?: boolean;
+  limit?: string;
 }
 
 /** Parse identity init name without writing a blank or comma-separated identity. */
@@ -77,6 +78,27 @@ export function parseIdentityValue(value: string | undefined): string {
   }
 
   return parsed;
+}
+
+const MAX_IDENTITY_SHOW_LIMIT = 1000;
+
+/** Parse identity show --limit without turning user input errors into an empty identity. */
+export function parseIdentityShowLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_SHOW_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_SHOW_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N identity tools when --limit is set. */
+export function selectIdentityShowTools<T>(tools: T[], limit?: number): T[] {
+  if (limit === undefined) return tools;
+  return tools.slice(0, limit);
 }
 
 const IDENTITY_SUBCOMMANDS = ['show', 'init', 'set', 'schema'] as const;
@@ -345,6 +367,7 @@ export async function identityCommand(
   options?: IdentityOptions,
 ): Promise<void> {
   const subcommand = parseIdentitySubcommand(rawSubcommand);
+  const showLimit = subcommand === 'show' ? parseIdentityShowLimit(options?.limit) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
   const setValue = subcommand === 'set'
@@ -378,7 +401,7 @@ export async function identityCommand(
 
   switch (subcommand) {
     case 'show':
-      await showIdentity(options);
+      await showIdentity(options, showLimit);
       break;
     case 'init':
       await initIdentity(initName, options);
@@ -395,7 +418,7 @@ export async function identityCommand(
 /**
  * Display the current identity.
  */
-async function showIdentity(options?: IdentityOptions): Promise<void> {
+async function showIdentity(options?: IdentityOptions, limit?: number): Promise<void> {
   const spinner = options?.json ? null : ora('Loading identity...').start();
 
   try {
@@ -416,9 +439,10 @@ async function showIdentity(options?: IdentityOptions): Promise<void> {
     spinner?.succeed('Identity loaded');
 
     const { identity } = result;
+    const tools = selectIdentityShowTools(identity.tools, limit);
 
     if (options?.json) {
-      console.log(formatIdentityJson(identity));
+      console.log(formatIdentityJson({ ...identity, tools }));
       return;
     }
 
@@ -457,10 +481,10 @@ async function showIdentity(options?: IdentityOptions): Promise<void> {
       }
     }
 
-    if (identity.tools && identity.tools.length > 0) {
+    if (tools.length > 0) {
       console.log();
       console.log(chalk.bold('  Tools:'));
-      for (const tool of identity.tools) {
+      for (const tool of tools) {
         const status = tool.enabled ? chalk.green('enabled') : chalk.red('disabled');
         console.log(`    • ${tool.name} (${status})`);
       }
