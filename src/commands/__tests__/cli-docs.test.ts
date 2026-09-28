@@ -220,6 +220,16 @@ describe('CLI docs', () => {
     expect(importSection).toContain('missing parent directory');
   });
 
+  it('documents import --limit as a bounded positive integer', () => {
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    const importBlock = container.slice(container.indexOf("command('import <file>')"), container.indexOf("command('container')"));
+    expect(importSection).toContain('--limit');
+    expect(importSection).toContain('Must be a positive integer up to 1000');
+    expect(importSection).toContain('savestate import agent.savestate --limit 5');
+    expect(importBlock).toContain(".option('--limit <n>'");
+    expect(container).toContain('export function parseImportLimit');
+  });
+
   it('documents import --target as a single path', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--target');
