@@ -163,6 +163,27 @@ export function selectIntegrityIncidents<T>(incidents: T[], limit?: number): T[]
   return incidents.slice(0, limit);
 }
 
+const MAX_INTEGRITY_CONFIG_LIMIT = 1000;
+
+/** Parse integrity config --limit without turning user input errors into an empty config. */
+export function parseIntegrityConfigLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INTEGRITY_CONFIG_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_CONFIG_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N integrity config setting rows when --limit is set. */
+export function selectIntegrityConfigEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /** Parse integrity --policy without silently ignoring unknown containment policies. */
 export function parseIntegrityPolicy(
   value: string | undefined,
@@ -834,6 +855,7 @@ export async function integrityCommand(
       ? parseIntegrityTargetId(args[0])
       : undefined;
   const testInput = subcommand === 'test' ? parseIntegrityTestInput(args[0]) : undefined;
+  const configLimit = subcommand === 'config' ? parseIntegrityConfigLimit(options.limit) : undefined;
   const policy = parseIntegrityPolicy(options.policy);
 
   if (!options.json) {
@@ -913,7 +935,7 @@ export async function integrityCommand(
       await releaseCommand(targetId!, options);
       return;
     case 'config':
-      await configCommand(args[0], options);
+      await configCommand(args[0], options, configLimit);
       return;
     case 'test':
       await testMonitorCommand(testInput!, options);
@@ -1356,7 +1378,11 @@ async function releaseCommand(id: string, options: IntegrityOptions): Promise<vo
 /**
  * Configure integrity settings.
  */
-async function configCommand(setting: string | undefined, options: IntegrityOptions): Promise<void> {
+async function configCommand(
+  setting: string | undefined,
+  options: IntegrityOptions,
+  limit?: number,
+): Promise<void> {
   const config = await loadConfig();
   const assignment = parseIntegrityConfigSet(setting);
 
@@ -1379,13 +1405,18 @@ async function configCommand(setting: string | undefined, options: IntegrityOpti
 
     console.log(chalk.bold('🔧 Integrity Configuration'));
     console.log();
-    console.log(`  enabled:                    ${config.integrity?.enabled ?? false}`);
-    console.log(`  honeyfact.count:            ${config.integrity?.honeyfact.count ?? 10}`);
-    console.log(`  honeyfact.ttl_days:         ${config.integrity?.honeyfact.ttl_days ?? 7}`);
-    console.log(`  tripwire.threshold:         ${config.integrity?.tripwire.threshold ?? 0.8}`);
-    console.log(`  tripwire.fuzzy_enabled:     ${config.integrity?.tripwire.fuzzy_enabled ?? true}`);
-    console.log(`  containment.policy:         ${config.integrity?.containment.policy ?? 'approve'}`);
-    console.log(`  containment.auto_escalate:  ${config.integrity?.containment.auto_escalate_critical ?? true}`);
+    const rows = [
+      `  enabled:                    ${config.integrity?.enabled ?? false}`,
+      `  honeyfact.count:            ${config.integrity?.honeyfact.count ?? 10}`,
+      `  honeyfact.ttl_days:         ${config.integrity?.honeyfact.ttl_days ?? 7}`,
+      `  tripwire.threshold:         ${config.integrity?.tripwire.threshold ?? 0.8}`,
+      `  tripwire.fuzzy_enabled:     ${config.integrity?.tripwire.fuzzy_enabled ?? true}`,
+      `  containment.policy:         ${config.integrity?.containment.policy ?? 'approve'}`,
+      `  containment.auto_escalate:  ${config.integrity?.containment.auto_escalate_critical ?? true}`,
+    ];
+    for (const row of selectIntegrityConfigEntries(rows, limit)) {
+      console.log(row);
+    }
     console.log();
     return;
   }
@@ -1541,7 +1572,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
-  console.log('  --limit <n>       Maximum number of incidents to show');
+  console.log('  --limit <n>       Maximum number of incidents to show, or configuration setting rows on config');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1560,7 +1591,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
-    .option('--limit <n>', 'Maximum number of incidents to show')
+    .option('--limit <n>', 'Maximum number of incidents to show, or configuration setting rows on config')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
