@@ -2414,6 +2414,17 @@ describe('CLI docs', () => {
     expect(slo).toContain('export function parseSloStatusLimit');
   });
 
+  it('documents slo config --limit as a bounded positive integer', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    const sloBlock = slo.slice(slo.indexOf("command('slo"));
+    expect(sloSection).toContain('--limit');
+    expect(sloSection).toContain('Must be a positive integer up to 1000');
+    expect(sloSection).toContain('or configuration setting rows on');
+    expect(sloSection).toContain('savestate slo config --limit 5');
+    expect(sloBlock).toContain(".option('--limit <n>'");
+    expect(slo).toContain('export function parseSloConfigLimit');
+  });
+
   it('documents slo --namespace as a single namespace', () => {
     const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
     expect(sloSection).toContain('--namespace');
