@@ -905,12 +905,34 @@ export function formatMemoryConfigMissingJson(snapshot: string): string {
   );
 }
 
+const MAX_MEMORY_CONFIG_LIMIT = 1000;
+
+/** Parse memory config --limit without turning user input errors into an empty config. */
+export function parseMemoryConfigLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_CONFIG_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_CONFIG_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N configuration setting rows when --limit is set. */
+export function selectMemoryConfigEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 export async function showTierConfig(
   storage: StorageBackend,
   passphrase: string,
   options?: {
     snapshotId?: string;
     format?: 'pretty' | 'json';
+    limit?: number;
   },
 ): Promise<void> {
   if (options?.format === 'json') {
@@ -939,7 +961,22 @@ export async function showTierConfig(
   }
 
   console.log('\nMemory Tier Configuration:\n');
-  console.log(JSON.stringify(config, null, 2));
+  const rows = [
+    `version: ${config.version}`,
+    `defaultTier: ${config.defaultTier}`,
+    `l1.maxItems: ${config.tiers.L1.maxItems ?? 'null'}`,
+    `l1.maxAge: ${config.tiers.L1.maxAge ?? 'null'}`,
+    `l1.includeInContext: ${config.tiers.L1.includeInContext}`,
+    `l2.maxItems: ${config.tiers.L2.maxItems ?? 'null'}`,
+    `l2.maxAge: ${config.tiers.L2.maxAge ?? 'null'}`,
+    `l2.includeInContext: ${config.tiers.L2.includeInContext}`,
+    `l3.maxItems: ${config.tiers.L3.maxItems ?? 'null'}`,
+    `l3.maxAge: ${config.tiers.L3.maxAge ?? 'null'}`,
+    `l3.includeInContext: ${config.tiers.L3.includeInContext}`,
+  ];
+  for (const row of selectMemoryConfigEntries(rows, options?.limit)) {
+    console.log(row);
+  }
 }
 
 export interface MemoryExplainResultJson {
