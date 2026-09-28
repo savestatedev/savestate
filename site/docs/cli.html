@@ -1568,7 +1568,7 @@
 
     <!-- trace -->
     <h2 id="trace"><code>savestate trace</code></h2>
-    <p>Inspect Askable Echoes trace runs: an append-only ledger of tool calls, results, checkpoints, and errors. Subcommands: <code>list</code>, <code>show</code>, and <code>export</code>. Must be a single non-empty subcommand (list, show, or export). <code>list</code> and <code>show</code> can cap output with <code>--limit</code>. Requires <code>savestate init</code>. Runs are stored under <code>.savestate/traces</code>.</p>
+    <p>Inspect Askable Echoes trace runs: an append-only ledger of tool calls, results, checkpoints, and errors. Subcommands: <code>list</code>, <code>show</code>, and <code>export</code>. Must be a single non-empty subcommand (list, show, or export). <code>list</code>, <code>show</code>, and <code>export</code> can cap output with <code>--limit</code>. Requires <code>savestate init</code>. Runs are stored under <code>.savestate/traces</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate trace &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -1581,7 +1581,7 @@
         <tr><td><code>&lt;run_id&gt;</code></td><td>Run ID for <code>show</code>. Must be a single non-empty run id.</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Export format on <code>export</code> (only <code>jsonl</code> is supported). Must be one of: jsonl.</td></tr>
         <tr><td><code>--run &lt;id&gt;</code></td><td>Export only a specific run ID (default: all runs). Must be a single non-empty run id.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of trace runs to show on <code>list</code>, or events to show on <code>show</code>. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of trace runs to show on <code>list</code>, events to show on <code>show</code>, or runs to export on <code>export</code>. Must be a positive integer up to 1000.</td></tr>
       </tbody>
     </table>
 
@@ -1599,6 +1599,9 @@
 
 <span class="code-comment"># Export every run as JSONL</span>
 <span class="code-prompt">$</span> savestate trace export --format jsonl
+
+<span class="code-comment"># Cap the export run list</span>
+<span class="code-prompt">$</span> savestate trace export --limit 5
 
 <span class="code-comment"># Export one run</span>
 <span class="code-prompt">$</span> savestate trace export --run run-123
