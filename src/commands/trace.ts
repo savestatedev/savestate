@@ -19,6 +19,7 @@ interface TraceListOptions {
 
 interface TraceShowOptions {
   json?: boolean;
+  limit?: string;
 }
 
 interface TraceExportOptions {
@@ -95,6 +96,27 @@ export function parseTraceListLimit(value: string | undefined): number | undefin
 export function selectTraceRuns<T>(runs: T[], limit?: number): T[] {
   if (limit === undefined) return runs;
   return runs.slice(0, limit);
+}
+
+const MAX_TRACE_SHOW_LIMIT = 1000;
+
+/** Parse trace show --limit without turning user input errors into an empty event list. */
+export function parseTraceShowLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRACE_SHOW_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRACE_SHOW_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N trace events when --limit is set. */
+export function selectTraceShowEvents<T>(events: T[], limit?: number): T[] {
+  if (limit === undefined) return events;
+  return events.slice(0, limit);
 }
 
 const TRACE_SUBCOMMANDS = ['list', 'show', 'export'] as const;
@@ -299,7 +321,7 @@ export function registerTraceCommands(program: Command): void {
     .option('--json', 'Output as JSON')
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
-    .option('--limit <n>', 'Maximum number of trace runs to show')
+    .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show')
     .action(traceCommand);
 }
 
@@ -364,6 +386,7 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
 
 export async function traceShowCommand(runId: string, options: TraceShowOptions): Promise<void> {
   runId = parseTraceShowRunId(runId);
+  const limit = parseTraceShowLimit(options.limit);
 
   if (!options.json) {
     console.log();
@@ -391,16 +414,18 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
     process.exit(1);
   }
 
+  const shown = selectTraceShowEvents(events, limit);
+
   if (options.json) {
-    console.log(formatTraceEventsJson(events));
+    console.log(formatTraceEventsJson(shown));
     return;
   }
 
   console.log(chalk.bold(`🧾 Trace Run: ${chalk.cyan(runId)}`));
-  console.log(chalk.dim(`   ${events.length} event${events.length === 1 ? '' : 's'}`));
+  console.log(chalk.dim(`   ${shown.length} event${shown.length === 1 ? '' : 's'}`));
   console.log();
 
-  for (const event of events) {
+  for (const event of shown) {
     const tags = event.tags?.length ? chalk.dim(` [${event.tags.join(', ')}]`) : '';
     console.log(
       `  ${chalk.cyan(event.timestamp)}  ${chalk.yellow(event.event_type)}  ${chalk.dim(event.adapter)}${tags}`,

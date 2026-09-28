@@ -3117,6 +3117,16 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function parseTraceListLimit');
   });
 
+  it('documents trace show --limit as a bounded positive integer', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    const traceBlock = trace.slice(trace.indexOf("command('trace"));
+    expect(traceSection).toContain('--limit');
+    expect(traceSection).toContain('Must be a positive integer up to 1000');
+    expect(traceSection).toContain('savestate trace show run-123 --limit 5');
+    expect(traceBlock).toContain(".option('--limit <n>'");
+    expect(trace).toContain('export function parseTraceShowLimit');
+  });
+
   it('documents trace subcommand as a single trace action', () => {
     const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     expect(traceSection).toContain('&lt;subcommand&gt;');
