@@ -708,7 +708,7 @@
 
     <!-- verify -->
     <h2 id="verify"><code>savestate verify</code></h2>
-    <p>Verify integrity of a <code>.savestate</code> container. Checks the magic header, manifest, checksum, and (when a key is provided) decryptability. Prints packed components and payload metadata. An empty, whitespace-only, comma-separated, missing, or directory file path is rejected before reading.</p>
+    <p>Verify integrity of a <code>.savestate</code> container. Checks the magic header, manifest, checksum, and (when a key is provided) decryptability. Prints packed components and payload metadata, optionally capped with <code>--limit</code>. An empty, whitespace-only, comma-separated, missing, or directory file path is rejected before reading.</p>
     <pre><code><span class="code-prompt">$</span> savestate verify &lt;file&gt; [options]</code></pre>
 
     <table>
@@ -719,6 +719,7 @@
         <tr><td><code>&lt;file&gt;</code></td><td>Container to verify. Must be a single non-empty path.</td></tr>
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase used to decrypt the container. An empty or whitespace-only value is rejected before decrypting.</td></tr>
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. Must be a single non-empty path. An empty path, missing file, directory, or file with no contents is rejected before decrypting.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of packed components to show. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the full verify result as JSON. Decrypts the archive when a key is provided. When the input file is missing, emits a missing summary (found, input, valid, agent; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -728,6 +729,9 @@
 
     <pre><code><span class="code-comment"># Verify with a passphrase</span>
 <span class="code-prompt">$</span> savestate verify agent.savestate --passphrase <span class="code-string">"secret"</span>
+
+<span class="code-comment"># Cap packed components</span>
+<span class="code-prompt">$</span> savestate verify agent.savestate --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate verify agent.savestate --json

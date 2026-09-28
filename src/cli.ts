@@ -426,6 +426,7 @@ program
   .description('Verify integrity of a .savestate file and list packed components (single non-empty path)')
   .option('-p, --passphrase <pass>', 'Passphrase for verification (non-empty)')
   .option('-k, --keyfile <path>', 'Keyfile for verification (alternative to passphrase; single non-empty path)')
+  .option('--limit <n>', 'Maximum number of packed components to show')
   .option('--json', 'Output as JSON')
   .action(verifyCommand);
 

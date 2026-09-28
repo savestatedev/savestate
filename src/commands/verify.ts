@@ -124,6 +124,27 @@ export function listStateComponents(state: unknown): string[] {
     .sort();
 }
 
+const MAX_VERIFY_LIMIT = 1000;
+
+/** Parse verify --limit without turning user input errors into an empty component list. */
+export function parseVerifyLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_VERIFY_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_VERIFY_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N packed components when --limit is set. */
+export function selectVerifyComponents<T>(components: T[], limit?: number): T[] {
+  if (limit === undefined) return components;
+  return components.slice(0, limit);
+}
+
 export function missingPackedComponent(
   listed: readonly string[],
   packed: readonly string[],
@@ -1153,9 +1174,10 @@ export function parseVerifyPassphrase(value: string | undefined): string | undef
 
 export async function verifyCommand(
   filePath: string,
-  options: { passphrase?: string; keyfile?: string; json?: boolean }
+  options: { passphrase?: string; keyfile?: string; json?: boolean; limit?: string }
 ): Promise<void> {
   const parsedPath = parseVerifyFile(filePath);
+  const limit = parseVerifyLimit(options.limit);
 
   if (options.json) {
     try {
@@ -1185,6 +1207,9 @@ export async function verifyCommand(
   const keySource: KeySource = keyfile ? { keyfile } : { passphrase };
 
   const result = await verifyContainer(parsedPath, keySource);
+  if (result.components) {
+    result.components = selectVerifyComponents(result.components, limit);
+  }
   const output = formatVerifyResult(result, !!options.json);
   const exitCode = verifyExitCode(result.status);
 
