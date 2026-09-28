@@ -1539,6 +1539,17 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function parseCloudListLimit');
   });
 
+  it('documents cloud pull --limit as a bounded positive integer', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team <subcommand> [args...]')"));
+    expect(cloudSection).toContain('--limit');
+    expect(cloudSection).toContain('Must be a positive integer up to 1000');
+    expect(cloudSection).toContain('or pull at most N cloud snapshots');
+    expect(cloudSection).toContain('savestate cloud pull --limit 5');
+    expect(cloudBlock).toContain(".option('--limit <n>'");
+    expect(cloud).toContain('export function parseCloudPullLimit');
+  });
+
   it('documents cloud subcommand as a single cloud action', () => {
     const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
     expect(cloudSection).toContain('&lt;subcommand&gt;');

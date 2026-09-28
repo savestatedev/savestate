@@ -185,6 +185,27 @@ export function selectCloudListSnapshots<T>(snapshots: T[], limit?: number): T[]
   return snapshots.slice(0, limit);
 }
 
+const MAX_CLOUD_PULL_LIMIT = 1000;
+
+/** Parse cloud pull --limit without turning user input errors into an empty download list. */
+export function parseCloudPullLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_PULL_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_PULL_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N cloud snapshots when --limit is set on pull. */
+export function selectCloudPullSnapshots<T>(snapshots: T[], limit?: number): T[] {
+  if (limit === undefined) return snapshots;
+  return snapshots.slice(0, limit);
+}
+
 /** Resolve cloud push --adapter/--exclude/--since/--until/--label/--tag/--limit/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] },
@@ -768,6 +789,7 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
  */
 export async function cloudPullCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
+  const limit = parseCloudPullLimit(options.limit);
 
   if (!options.json) {
     console.log();
@@ -829,9 +851,10 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
       console.log(chalk.red(`Snapshot not found in cloud: ${id}`));
       process.exit(1);
     }
-  } else if (!options.all) {
+  } else if (!options.all && limit === undefined) {
     toPull = [cloudSnapshots[cloudSnapshots.length - 1]];
   }
+  toPull = selectCloudPullSnapshots(toPull, limit);
 
   if (!options.json) {
     console.log(chalk.blue(`Pulling ${toPull.length} snapshot(s) from cloud...`));

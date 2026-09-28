@@ -1156,7 +1156,7 @@
         <tr><td><code>--until &lt;date&gt;</code></td><td>Push the newest local snapshot taken on or before this date. Must be an ISO 8601 date. Combines with <code>--id</code>, <code>--adapter</code>, <code>--exclude</code>, <code>--since</code>, <code>--label</code>, <code>--tag</code>, <code>--limit</code>, and <code>--all</code>.</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Push the newest local snapshot with this label. Must be a single non-empty snapshot label (no commas). Combines with <code>--id</code>, <code>--adapter</code>, <code>--exclude</code>, <code>--since</code>, <code>--until</code>, <code>--tag</code>, <code>--limit</code>, and <code>--all</code>.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Push the newest local snapshot with this tag. Must be a single non-empty snapshot tag (no commas). Combines with <code>--id</code>, <code>--adapter</code>, <code>--exclude</code>, <code>--since</code>, <code>--until</code>, <code>--label</code>, <code>--limit</code>, and <code>--all</code>.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Push the N newest matching local snapshots, or show at most N cloud list rows. Must be a positive integer up to 1000. Combines with <code>--id</code>, <code>--adapter</code>, <code>--exclude</code>, <code>--since</code>, <code>--until</code>, <code>--label</code>, <code>--tag</code>, and <code>--all</code>.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Push the N newest matching local snapshots, or show at most N cloud list rows, or pull at most N cloud snapshots. Must be a positive integer up to 1000. Combines with <code>--id</code>, <code>--adapter</code>, <code>--exclude</code>, <code>--since</code>, <code>--until</code>, <code>--label</code>, <code>--tag</code>, and <code>--all</code>.</td></tr>
         <tr><td><code>--all</code></td><td>Process all snapshots instead of the latest</td></tr>
         <tr><td><code>-f, --force</code></td><td>Overwrite existing local files on pull, or skip delete confirmation</td></tr>
         <tr><td><code>--json</code></td><td>Emit the cloud list as JSON, a push summary (uploaded count and snapshot ids) on <code>push</code>, pull results on <code>pull</code>, or delete results on <code>delete</code>. When SaveState is not initialized, <code>push</code> emits a missing summary (found, id, pushed, failed; omits extra fields). When SaveState is not initialized, <code>list</code> emits a missing summary (found, total, shown; omits extra fields). When SaveState is not initialized, <code>pull</code> emits a missing summary (found, id, pulled, failed, skipped; omits extra fields). When SaveState is not initialized, <code>delete</code> emits a missing summary (found, id, deleted, failed; omits extra fields). When the snapshot ID is missing, <code>push</code> emits a missing summary (found, id, pushed, failed; omits extra fields), <code>pull</code> emits a missing summary (found, id, pulled, failed, skipped; omits extra fields), and <code>delete</code> emits a missing summary (found, id, deleted, failed; omits extra fields). Skips the spinner and delete confirmation. Useful for scripting.</td></tr>
@@ -1201,6 +1201,9 @@
 
 <span class="code-comment"># Pull a specific snapshot, overwriting the local file</span>
 <span class="code-prompt">$</span> savestate cloud pull --id ss-2026-01-26 --force
+
+<span class="code-comment"># Cap how many cloud snapshots to pull</span>
+<span class="code-prompt">$</span> savestate cloud pull --limit 5
 
 <span class="code-comment"># Scriptable pull summary</span>
 <span class="code-prompt">$</span> savestate cloud pull --json
