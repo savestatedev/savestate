@@ -8,7 +8,29 @@ import type { SaveStateConfig } from '../types.js';
 
 interface ConfigOptions {
   set?: string;
+  limit?: string;
   json?: boolean;
+}
+
+const MAX_CONFIG_LIMIT = 1000;
+
+/** Parse config --limit without turning user input errors into an empty adapter list. */
+export function parseConfigLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONFIG_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONFIG_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N configured adapters when --limit is set. */
+export function selectConfigAdapters<T>(adapters: T[], limit?: number): T[] {
+  if (limit === undefined) return adapters;
+  return adapters.slice(0, limit);
 }
 
 export function formatConfigJson(config: SaveStateConfig): string {
@@ -107,6 +129,8 @@ function setNestedValue(obj: Record<string, unknown>, path: string, rawValue: st
 }
 
 export async function configCommand(options: ConfigOptions): Promise<void> {
+  const limit = parseConfigLimit(options.limit);
+
   if (!options.json) {
     console.log();
   }
@@ -134,8 +158,10 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     return;
   }
 
+  const adapters = selectConfigAdapters(config.adapters, limit);
+
   if (options.json) {
-    console.log(formatConfigJson(config));
+    console.log(formatConfigJson({ ...config, adapters }));
     return;
   }
 
@@ -165,9 +191,9 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     }
   }
 
-  if (config.adapters.length > 0) {
+  if (adapters.length > 0) {
     console.log(`  ${chalk.dim('Adapters:')}`);
-    for (const adapter of config.adapters) {
+    for (const adapter of adapters) {
       const status = adapter.enabled ? chalk.green('enabled') : chalk.red('disabled');
       console.log(`    • ${adapter.id} (${status})`);
     }
