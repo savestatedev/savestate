@@ -982,6 +982,21 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustDenyListLimit');
   });
 
+  it('documents trust status --limit as a bounded positive integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const statusBlock = trustBlock.slice(
+      trustBlock.indexOf("command('status')"),
+      trustBlock.indexOf("command('audit')"),
+    );
+    expect(trustSection).toContain('--limit');
+    expect(trustSection).toContain('Must be a positive integer up to 1000');
+    expect(trustSection).toContain('or maximum state or scope metric rows on');
+    expect(trustSection).toContain('savestate trust status --limit 5');
+    expect(statusBlock).toContain(".option('--limit <n>'");
+    expect(trust).toContain('export function parseTrustStatusLimit');
+  });
+
   it('registers --json on savestate trust audit', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const auditBlock = trustBlock.slice(

@@ -112,6 +112,27 @@ export function selectTrustDenyListEntries<T>(entries: T[], limit?: number): T[]
   return entries.slice(0, limit);
 }
 
+const MAX_TRUST_STATUS_LIMIT = 1000;
+
+/** Parse trust status --limit without turning user input errors into an empty metrics view. */
+export function parseTrustStatusLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRUST_STATUS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRUST_STATUS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N state or scope metric rows when --limit is set. */
+export function selectTrustStatusEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const EMPTY_ENTRIES_BY_STATE: Record<TrustState, number> = {
   candidate: 0,
   stable: 0,
@@ -277,6 +298,7 @@ export function formatTrustDenyAddJson(result: TrustDenyAddJson): string {
 }
 
 export async function trustStatusCommand(options: TrustOptions): Promise<void> {
+  const limit = parseTrustStatusLimit(options.limit);
   const store = new TrustStore();
   const metrics = store.getMetrics();
 
@@ -290,12 +312,12 @@ export async function trustStatusCommand(options: TrustOptions): Promise<void> {
   console.log(chalk.bold('🛡  Trust Kernel'));
   console.log();
   console.log(chalk.dim('  Entries by state:'));
-  for (const [state, count] of Object.entries(metrics.entriesByState)) {
+  for (const [state, count] of selectTrustStatusEntries(Object.entries(metrics.entriesByState), limit)) {
     console.log(`    ${chalk.cyan(state.padEnd(12))} ${count}`);
   }
   console.log();
   console.log(chalk.dim('  Entries by scope:'));
-  for (const [scope, count] of Object.entries(metrics.entriesByScope)) {
+  for (const [scope, count] of selectTrustStatusEntries(Object.entries(metrics.entriesByScope), limit)) {
     console.log(`    ${chalk.cyan(scope.padEnd(12))} ${count}`);
   }
   console.log();
