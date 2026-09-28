@@ -767,6 +767,17 @@ describe('CLI docs', () => {
     expect(schedule).toContain('export function formatScheduleMissingJson');
   });
 
+  it('documents schedule --limit as a bounded positive integer', () => {
+    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'), docs.indexOf('id="migrate"'));
+    const scheduleBlock = cli.slice(cli.indexOf("command('schedule')"), cli.indexOf("command('migrate')"));
+    expect(scheduleSection).toContain('--limit');
+    expect(scheduleSection).toContain('Must be a positive integer up to 1000');
+    expect(scheduleSection).toContain('status field rows');
+    expect(scheduleSection).toContain('savestate schedule --limit 5');
+    expect(scheduleBlock).toContain(".option('--limit <n>'");
+    expect(schedule).toContain('export function parseScheduleLimit');
+  });
+
   it('lists savestate migrate in the command overview', () => {
     expect(docs).toContain('id="migrate"');
     expect(docs).toContain('savestate migrate');
