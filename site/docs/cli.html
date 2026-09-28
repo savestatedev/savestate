@@ -1511,7 +1511,7 @@
 
     <!-- integrity -->
     <h2 id="integrity"><code>savestate integrity</code></h2>
-    <p>Memory Integrity Grid: detect and contain memory poisoning with honeyfact seeding, tripwire monitoring, and quarantine. Subcommands: <code>status</code>, <code>seed</code>, <code>rotate</code>, <code>incidents</code>, <code>incident</code>, <code>quarantine</code>, <code>release</code>, <code>config</code>, <code>test</code>, and <code>clear</code>. Must be a single non-empty subcommand (status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear). <code>incidents</code> and <code>config</code> can cap output with <code>--limit</code>. Requires <code>savestate init</code>.</p>
+    <p>Memory Integrity Grid: detect and contain memory poisoning with honeyfact seeding, tripwire monitoring, and quarantine. Subcommands: <code>status</code>, <code>seed</code>, <code>rotate</code>, <code>incidents</code>, <code>incident</code>, <code>quarantine</code>, <code>release</code>, <code>config</code>, <code>test</code>, and <code>clear</code>. Must be a single non-empty subcommand (status, seed, rotate, incidents, incident, quarantine, release, config, test, or clear). <code>incidents</code>, <code>config</code>, and <code>status</code> can cap output with <code>--limit</code>. Requires <code>savestate init</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate integrity &lt;subcommand&gt; [args...] [options]</code></pre>
 
     <table>
@@ -1525,7 +1525,7 @@
         <tr><td><code>honeyfact.count</code></td><td>Honeyfact seed count on <code>config</code>. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>tripwire.threshold</code></td><td>Tripwire fuzzy match threshold on <code>config</code>. Must be a number between 0 and 1.</td></tr>
         <tr><td><code>--status &lt;status&gt;</code></td><td>Filter incidents by status. Must be one of: open, investigating, contained, resolved, false_positive.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of incidents to show on <code>incidents</code>, or configuration setting rows on <code>config</code>. Must be a positive integer up to 1000. Combines with <code>--status</code> on <code>incidents</code>.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of incidents to show on <code>incidents</code>, configuration setting rows on <code>config</code>, or honeyfact, incident, and containment metric rows on <code>status</code>. Must be a positive integer up to 1000. Combines with <code>--status</code> on <code>incidents</code>.</td></tr>
         <tr><td><code>&lt;id&gt;</code></td><td>Incident ID for <code>incident</code>. Must be a single non-empty incident id.</td></tr>
         <tr><td><code>--policy &lt;policy&gt;</code></td><td>Containment policy. Must be one of: observe, approve, auto.</td></tr>
         <tr><td><code>&lt;key&gt;=&lt;value&gt;</code></td><td>Setting for <code>config</code>. Must be a non-empty key=value pair.</td></tr>
@@ -1544,6 +1544,7 @@
 
     <pre><code><span class="code-comment"># Show honeyfact, incident, and containment status</span>
 <span class="code-prompt">$</span> savestate integrity status
+<span class="code-prompt">$</span> savestate integrity status --limit 5
 
 <span class="code-comment"># Plant honeyfact memories</span>
 <span class="code-prompt">$</span> savestate integrity seed --count 10

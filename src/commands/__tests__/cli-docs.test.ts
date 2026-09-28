@@ -2958,10 +2958,20 @@ describe('CLI docs', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--limit');
     expect(integritySection).toContain('Must be a positive integer up to 1000');
-    expect(integritySection).toContain('or configuration setting rows on');
+    expect(integritySection).toContain('configuration setting rows on');
     expect(integritySection).toContain('savestate integrity config --limit 5');
     expect(integrity).toContain(".option('--limit <n>'");
     expect(integrity).toContain('export function parseIntegrityConfigLimit');
+  });
+
+  it('documents integrity status --limit as a bounded positive integer', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--limit');
+    expect(integritySection).toContain('Must be a positive integer up to 1000');
+    expect(integritySection).toContain('or honeyfact, incident, and containment metric rows on');
+    expect(integritySection).toContain('savestate integrity status --limit 5');
+    expect(integrity).toContain(".option('--limit <n>'");
+    expect(integrity).toContain('export function parseIntegrityStatusLimit');
   });
 
   it('documents integrity --policy as a known containment policy', () => {

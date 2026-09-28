@@ -184,6 +184,27 @@ export function selectIntegrityConfigEntries<T>(entries: T[], limit?: number): T
   return entries.slice(0, limit);
 }
 
+const MAX_INTEGRITY_STATUS_LIMIT = 1000;
+
+/** Parse integrity status --limit without turning user input errors into an empty metrics view. */
+export function parseIntegrityStatusLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INTEGRITY_STATUS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_STATUS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N honeyfact, incident, or containment metric rows when --limit is set. */
+export function selectIntegrityStatusEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /** Parse integrity --policy without silently ignoring unknown containment policies. */
 export function parseIntegrityPolicy(
   value: string | undefined,
@@ -856,6 +877,7 @@ export async function integrityCommand(
       : undefined;
   const testInput = subcommand === 'test' ? parseIntegrityTestInput(args[0]) : undefined;
   const configLimit = subcommand === 'config' ? parseIntegrityConfigLimit(options.limit) : undefined;
+  const statusLimit = subcommand === 'status' ? parseIntegrityStatusLimit(options.limit) : undefined;
   const policy = parseIntegrityPolicy(options.policy);
 
   if (!options.json) {
@@ -914,7 +936,7 @@ export async function integrityCommand(
 
   switch (subcommand) {
     case 'status':
-      await showStatus(options);
+      await showStatus(options, statusLimit);
       return;
     case 'seed':
       await seedCommand(options);
@@ -949,7 +971,7 @@ export async function integrityCommand(
 /**
  * Show integrity monitoring status.
  */
-async function showStatus(options: IntegrityOptions): Promise<void> {
+async function showStatus(options: IntegrityOptions, limit?: number): Promise<void> {
   const config = await loadConfig();
   const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
 
@@ -996,29 +1018,40 @@ async function showStatus(options: IntegrityOptions): Promise<void> {
   console.log(`  Policy:      ${chalk.cyan(containmentStatus.policy)}`);
   console.log();
 
-  // Honeyfact stats
+  const honeyfactRows = [
+    `    Active:    ${chalk.green(honeyfactStats.active)}`,
+    `    Expired:   ${chalk.dim(honeyfactStats.expired)}`,
+    `    Total:     ${honeyfactStats.total}`,
+  ];
   console.log(chalk.bold('  Honeyfacts'));
-  console.log(`    Active:    ${chalk.green(honeyfactStats.active)}`);
-  console.log(`    Expired:   ${chalk.dim(honeyfactStats.expired)}`);
-  console.log(`    Total:     ${honeyfactStats.total}`);
+  for (const row of selectIntegrityStatusEntries(honeyfactRows, limit)) {
+    console.log(row);
+  }
   console.log();
 
-  // Incident stats
+  const incidentRows = [
+    `    Open:      ${incidentStats.by_status.open > 0 ? chalk.red(incidentStats.by_status.open) : chalk.green('0')}`,
+    `    Contained: ${chalk.yellow(incidentStats.by_status.contained)}`,
+    `    Resolved:  ${chalk.green(incidentStats.by_status.resolved)}`,
+    `    Events:    ${incidentStats.events_total}`,
+  ];
   console.log(chalk.bold('  Incidents'));
-  console.log(`    Open:      ${incidentStats.by_status.open > 0 ? chalk.red(incidentStats.by_status.open) : chalk.green('0')}`);
-  console.log(`    Contained: ${chalk.yellow(incidentStats.by_status.contained)}`);
-  console.log(`    Resolved:  ${chalk.green(incidentStats.by_status.resolved)}`);
-  console.log(`    Events:    ${incidentStats.events_total}`);
+  for (const row of selectIntegrityStatusEntries(incidentRows, limit)) {
+    console.log(row);
+  }
   console.log();
 
-  // Containment stats
-  console.log(chalk.bold('  Containment'));
-  console.log(`    Quarantined Memories: ${containmentStatus.quarantined_memories > 0 ? chalk.red(containmentStatus.quarantined_memories) : chalk.green('0')}`);
-  console.log(`    Quarantined Agents:   ${containmentStatus.quarantined_agents > 0 ? chalk.red(containmentStatus.quarantined_agents) : chalk.green('0')}`);
-  console.log(`    Pending Approvals:    ${containmentStatus.pending_approvals > 0 ? chalk.yellow(containmentStatus.pending_approvals) : '0'}`);
-
+  const containmentRows = [
+    `    Quarantined Memories: ${containmentStatus.quarantined_memories > 0 ? chalk.red(containmentStatus.quarantined_memories) : chalk.green('0')}`,
+    `    Quarantined Agents:   ${containmentStatus.quarantined_agents > 0 ? chalk.red(containmentStatus.quarantined_agents) : chalk.green('0')}`,
+    `    Pending Approvals:    ${containmentStatus.pending_approvals > 0 ? chalk.yellow(containmentStatus.pending_approvals) : '0'}`,
+  ];
   if (containmentStatus.last_action_at) {
-    console.log(`    Last Action:          ${chalk.dim(containmentStatus.last_action_at)}`);
+    containmentRows.push(`    Last Action:          ${chalk.dim(containmentStatus.last_action_at)}`);
+  }
+  console.log(chalk.bold('  Containment'));
+  for (const row of selectIntegrityStatusEntries(containmentRows, limit)) {
+    console.log(row);
   }
   console.log();
 }
@@ -1558,7 +1591,7 @@ async function clearCommand(options: IntegrityOptions): Promise<void> {
 function showUsage(): void {
   console.log(chalk.bold('Memory Integrity Grid commands:'));
   console.log();
-  console.log('  savestate integrity status                     Show integrity monitoring status');
+  console.log('  savestate integrity status [--limit <n>]       Show integrity monitoring status');
   console.log('  savestate integrity seed [--count N]           Plant honeyfact memories');
   console.log('  savestate integrity rotate                     Rotate expired honeyfacts');
   console.log('  savestate integrity incidents [--status <s>] [--limit <n>]   List detected incidents');
@@ -1572,7 +1605,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
-  console.log('  --limit <n>       Maximum number of incidents to show, or configuration setting rows on config');
+  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1591,7 +1624,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
-    .option('--limit <n>', 'Maximum number of incidents to show, or configuration setting rows on config')
+    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
