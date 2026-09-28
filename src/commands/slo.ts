@@ -78,6 +78,27 @@ export function selectSloReportNamespaces<T>(rows: T[], limit?: number): T[] {
   return rows.slice(0, limit);
 }
 
+const MAX_SLO_STATUS_LIMIT = 1000;
+
+/** Parse slo status --limit without turning user input errors into an empty violation list. */
+export function parseSloStatusLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SLO_STATUS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SLO_STATUS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N status violations when --limit is set. */
+export function selectSloStatusViolations<T>(violations: T[], limit?: number): T[] {
+  if (limit === undefined) return violations;
+  return violations.slice(0, limit);
+}
+
 /** Parse slo --namespace without treating blank or comma-separated values as a namespace. */
 export function parseSloNamespace(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -306,7 +327,8 @@ export async function sloCommand(
 /**
  * Show SLO compliance status for a namespace.
  */
-async function sloStatus(options: { namespace?: string; json?: boolean }): Promise<void> {
+async function sloStatus(options: { namespace?: string; json?: boolean; limit?: string }): Promise<void> {
+  const limit = parseSloStatusLimit(options.limit);
   const nsString = parseSloNamespace(options.namespace) ?? 'default:default:default';
   const sloConfig = await loadSLOConfig();
 
@@ -378,9 +400,10 @@ async function sloStatus(options: { namespace?: string; json?: boolean }): Promi
   console.log('');
 
   // Violations
-  if (compliance.violations.length > 0) {
+  const violations = selectSloStatusViolations(compliance.violations, limit);
+  if (violations.length > 0) {
     console.log(chalk.bold.red('Violations:'));
-    for (const violation of compliance.violations) {
+    for (const violation of violations) {
       const icon = violation.severity === 'critical' ? '🚨' : '⚠️';
       console.log(`  ${icon} ${violation.description}`);
     }
@@ -508,6 +531,6 @@ export function registerSLOCommands(program: import('commander').Command): void 
     .option('--json', 'Output as JSON')
     .option('--set <key=value>', 'Set a config value (non-empty key=value)')
     .option('-p, --period <duration>', 'Report period (e.g., 7d, 30d)')
-    .option('--limit <n>', 'Maximum number of namespace compliance rows to show')
+    .option('--limit <n>', 'Maximum number of namespace compliance rows to show on report, or status violations')
     .action(sloCommand);
 }
