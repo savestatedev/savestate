@@ -402,6 +402,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
 }
 
 async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
+  const limit = parseAntibodiesPreflightLimit(options.limit);
   const context: PreflightContext = {
     tool: parseAntibodiesTool(options.tool),
     error_code: parseAntibodiesErrorCode(options.errorCode),
@@ -414,6 +415,7 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
   });
 
   const result = await engine.preflight(context);
+  const warnings = selectAntibodiesPreflightWarnings(result.warnings, limit);
 
   if (options.json) {
     console.log(
@@ -421,7 +423,7 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
         blocked: result.blocked,
         elapsedMs: result.elapsed_ms,
         semanticUsed: result.semantic_used,
-        warnings: result.warnings.map((warning) => ({
+        warnings: warnings.map((warning) => ({
           ruleId: warning.rule_id,
           risk: warning.risk,
           intervention: warning.intervention,
@@ -438,13 +440,13 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
   console.log(chalk.dim(`   elapsed=${result.elapsed_ms}ms semantic=${result.semantic_used ? 'on' : 'off'}`));
   console.log();
 
-  if (result.warnings.length === 0) {
+  if (warnings.length === 0) {
     console.log(chalk.green('  No warnings.'));
     console.log();
     return;
   }
 
-  for (const warning of result.warnings) {
+  for (const warning of warnings) {
     console.log(
       `  ${chalk.yellow('warn')} ${chalk.cyan(warning.rule_id)} ${warning.risk} ${warning.safe_action.type} confidence=${warning.confidence.toFixed(2)}`,
     );
@@ -542,6 +544,27 @@ export function parseAntibodiesStatsLimit(value: string | undefined): number | u
 export function selectAntibodiesStatsRules<T>(rules: T[], limit?: number): T[] {
   if (limit === undefined) return rules;
   return rules.slice(0, limit);
+}
+
+const MAX_ANTIBODIES_PREFLIGHT_LIMIT = 1000;
+
+/** Parse antibodies preflight --limit without turning user input errors into an empty warning list. */
+export function parseAntibodiesPreflightLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ANTIBODIES_PREFLIGHT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ANTIBODIES_PREFLIGHT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N preflight warnings when --limit is set. */
+export function selectAntibodiesPreflightWarnings<T>(warnings: T[], limit?: number): T[] {
+  if (limit === undefined) return warnings;
+  return warnings.slice(0, limit);
 }
 
 const ANTIBODIES_SUBCOMMANDS = ['list', 'add', 'preflight', 'stats'] as const;
@@ -725,7 +748,7 @@ function showUsage(): void {
   console.log('                             [--tags <a,b>] [--risk <level>] [--safe-action <type>]');
   console.log('                             [--confidence <0..1>] [--id <rule-id>]');
   console.log('  savestate antibodies preflight [--tool <name>] [--error-code <code>] [--path <path>]');
-  console.log('                                  [--tags <a,b>] [--semantic] [--json]');
+  console.log('                                  [--tags <a,b>] [--semantic] [--limit <n>] [--json]');
   console.log('  savestate antibodies stats [--limit <n>] [--json]');
   console.log();
 }
