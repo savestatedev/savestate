@@ -156,6 +156,27 @@ export function selectMcpExportItems<T>(items: T[], limit?: number): T[] {
   return items.slice(0, limit);
 }
 
+const MAX_MCP_IMPORT_LIMIT = 1000;
+
+/** Parse mcp import --limit without turning user input errors into an empty import. */
+export function parseMcpImportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_IMPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_IMPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N passport memories when --limit is set. */
+export function selectMcpImportItems<T>(items: T[], limit?: number): T[] {
+  if (limit === undefined) return items;
+  return items.slice(0, limit);
+}
+
 const MCP_SUBCOMMANDS = ['serve', 'status', 'export', 'import'] as const;
 export type McpSubcommand = (typeof MCP_SUBCOMMANDS)[number];
 const MCP_SUBCOMMAND_LIST = MCP_SUBCOMMANDS.join(', ');
@@ -575,6 +596,7 @@ interface MCPImportOptions {
   input?: string;
   agent?: string;
   merge?: boolean;
+  limit?: string;
   json?: boolean;
 }
 
@@ -613,6 +635,7 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
   try {
     const agentId = parseMcpAgent(options.agent);
     const input = parseMcpInput(options.input);
+    const limit = parseMcpImportLimit(options.limit);
 
     if (!isInitialized()) {
       if (options.json) {
@@ -663,7 +686,7 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     const lane = new KnowledgeLane(storage);
 
     let importedMemories = 0;
-    for (const memory of passport.memories) {
+    for (const memory of selectMcpImportItems(passport.memories, limit)) {
       try {
         await lane.storeMemory({
           namespace,
@@ -724,7 +747,7 @@ export function registerMCPCommands(program: Command): void {
     .option('-a, --agent <id>', 'Agent ID to export or import (single non-empty id, default: "default")')
     .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
-    .option('--limit <n>', 'Maximum number of memories and snapshot metadata rows to include')
+    .option('--limit <n>', 'Maximum number of memories and snapshot metadata rows to include on export, or memories to import')
     .option('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
