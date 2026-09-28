@@ -516,6 +516,27 @@ export function formatExportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
 
+const MAX_EXPORT_LIMIT = 1000;
+
+/** Parse export --limit without turning user input errors into an empty component list. */
+export function parseExportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_EXPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_EXPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N packed components when --limit is set. */
+export function selectExportComponents<T>(components: T[], limit?: number): T[] {
+  if (limit === undefined) return components;
+  return components.slice(0, limit);
+}
+
 export interface ExportMissingJson {
   found: false;
   output: string;
@@ -845,6 +866,7 @@ export interface ExportOptions {
   dryRun?: boolean;
   description?: string;
   json?: boolean;
+  limit?: string;
 }
 
 export interface ExportResult {
@@ -885,6 +907,14 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     let agent: string;
     try {
       agent = parseContainerAgent(options.agent);
+    } catch (error: any) {
+      console.error(`Error: ${error.message}`);
+      return { written: false, out, overwritten: false };
+    }
+
+    let limit: number | undefined;
+    try {
+      limit = parseExportLimit(options.limit);
     } catch (error: any) {
       console.error(`Error: ${error.message}`);
       return { written: false, out, overwritten: false };
@@ -1101,6 +1131,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         console.log(`Successfully exported agent '${agent}' to ${out}`);
       }
     }
+    const shownComponents = selectExportComponents(validatedComponents.components, limit);
     if (options.json) {
       console.log(
         formatExportResultJson({
@@ -1112,7 +1143,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
           payloadName,
           contentType,
           description: trimmedDescription ?? null,
-          components: validatedComponents.components,
+          components: shownComponents,
           encryption: encryptionAlgorithm,
           keyDerivation,
           excluded: excludedPaths,
@@ -1133,7 +1164,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       if (trimmedDescription) {
         console.log(formatExportDescription(trimmedDescription));
       }
-      console.log(formatExportComponents(validatedComponents.components));
+      console.log(formatExportComponents(shownComponents));
       console.log(formatExportEncryption(encryptionAlgorithm));
       console.log(formatExportKeyDerivation(keyDerivation));
       if (excludedPaths.length > 0) {
@@ -1877,6 +1908,7 @@ export function registerContainerCommands(program: Command) {
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
+    .option('--limit <n>', 'Maximum number of packed components to show')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
       const result = await exportState({
@@ -1895,6 +1927,7 @@ export function registerContainerCommands(program: Command) {
         dryRun: opts.dryRun,
         description: opts.description,
         json: opts.json,
+        limit: opts.limit,
       });
       if (!result.written && !result.dryRun) {
         process.exit(1);

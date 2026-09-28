@@ -213,6 +213,16 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerDescription');
   });
 
+  it('documents export --limit as a bounded positive integer', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    const exportBlock = container.slice(container.indexOf("command('export')"), container.indexOf("command('import <file>')"));
+    expect(exportSection).toContain('--limit');
+    expect(exportSection).toContain('Must be a positive integer up to 1000');
+    expect(exportSection).toContain('savestate export -a my-agent -o agent.savestate --limit 5');
+    expect(exportBlock).toContain(".option('--limit <n>'");
+    expect(container).toContain('export function parseExportLimit');
+  });
+
   it('documents import --target, --force, and missing parent rejection', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--target');
