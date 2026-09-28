@@ -23,6 +23,28 @@ import type { AgentIdentity, ToolReference } from '../identity/schema.js';
 
 interface IdentityOptions {
   json?: boolean;
+  limit?: string;
+}
+
+const MAX_IDENTITY_SCHEMA_LIMIT = 1000;
+
+/** Parse identity schema --limit without turning user input errors into an empty schema. */
+export function parseIdentitySchemaLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_SCHEMA_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_SCHEMA_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N identity schema properties when --limit is set. */
+export function selectIdentitySchemaProperties<T>(properties: T[], limit?: number): T[] {
+  if (limit === undefined) return properties;
+  return properties.slice(0, limit);
 }
 
 /** Parse identity init name without writing a blank or comma-separated identity. */
@@ -298,20 +320,23 @@ export function formatIdentitySchemaJson(schema: {
   required?: string[];
   properties?: Record<string, unknown>;
   additionalProperties?: boolean;
-}): string {
+}, limit?: number): string {
   return JSON.stringify(
     {
       id: schema.$id ?? '',
       title: schema.title ?? '',
       type: schema.type ?? 'object',
       required: [...(schema.required ?? [])],
-      properties: Object.entries(schema.properties ?? {}).map(([name, property]) => {
-        const json = toSchemaPropertyJson(name, property);
-        return {
-          name: json.name,
-          type: json.type,
-        };
-      }),
+      properties: selectIdentitySchemaProperties(
+        Object.entries(schema.properties ?? {}).map(([name, property]) => {
+          const json = toSchemaPropertyJson(name, property);
+          return {
+            name: json.name,
+            type: json.type,
+          };
+        }),
+        limit,
+      ),
       additionalProperties: Boolean(schema.additionalProperties),
     },
     null,
@@ -345,6 +370,7 @@ export async function identityCommand(
   options?: IdentityOptions,
 ): Promise<void> {
   const subcommand = parseIdentitySubcommand(rawSubcommand);
+  const schemaLimit = subcommand === 'schema' ? parseIdentitySchemaLimit(options?.limit) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
   const setValue = subcommand === 'set'
@@ -387,7 +413,7 @@ export async function identityCommand(
       await setIdentityField(setField, setValue, options);
       break;
     case 'schema':
-      showSchema(options);
+      showSchema(options, schemaLimit);
       break;
   }
 }
@@ -648,7 +674,7 @@ async function setIdentityField(
 /**
  * Show the JSON schema.
  */
-function showSchema(options?: IdentityOptions): void {
+function showSchema(options?: IdentityOptions, limit?: number): void {
   const schema = getJsonSchema() as {
     $id?: string;
     title?: string;
@@ -659,13 +685,17 @@ function showSchema(options?: IdentityOptions): void {
   };
 
   if (options?.json) {
-    console.log(formatIdentitySchemaJson(schema));
+    console.log(formatIdentitySchemaJson(schema, limit));
     return;
   }
 
+  const properties = schema.properties
+    ? Object.fromEntries(selectIdentitySchemaProperties(Object.entries(schema.properties), limit))
+    : schema.properties;
+
   console.log(chalk.bold.cyan('Agent Identity JSON Schema'));
   console.log();
-  console.log(JSON.stringify(schema, null, 2));
+  console.log(JSON.stringify({ ...schema, ...(properties !== undefined ? { properties } : {}) }, null, 2));
   console.log();
 }
 
