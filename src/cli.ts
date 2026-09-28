@@ -178,6 +178,7 @@ const trustCmd = program
 trustCmd
   .command('status')
   .description('Show Trust Kernel metrics: entries by state/scope, denylist size, recent activity')
+  .option('--limit <n>', 'Maximum number of state or scope metric rows to show')
   .option('--json', 'Output as JSON')
   .action(trustStatusCommand);
 
