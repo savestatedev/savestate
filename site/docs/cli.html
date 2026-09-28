@@ -1278,7 +1278,7 @@
 
     <!-- context -->
     <h2 id="context"><code>savestate context</code></h2>
-    <p>Preflight context compilation for agent runs. Subcommands: <code>compile</code>, <code>explain</code>, <code>validate</code>, and <code>config</code>. <code>compile</code> builds a RunBrief for an agent and task within a token budget (default 4000). <code>explain</code> prints the inclusion trace for a compiled run and requires a single non-empty run id. <code>explain --limit</code> caps the candidate list (default 10). <code>validate</code> checks a RunBrief JSON file. <code>config</code> shows scoring weights and budget allocation, optionally capping rows with <code>--limit</code>.</p>
+    <p>Preflight context compilation for agent runs. Subcommands: <code>compile</code>, <code>explain</code>, <code>validate</code>, and <code>config</code>. <code>compile</code> builds a RunBrief for an agent and task within a token budget (default 4000). <code>compile --limit</code> caps the RunBrief section list. <code>explain</code> prints the inclusion trace for a compiled run and requires a single non-empty run id. <code>explain --limit</code> caps the candidate list (default 10). <code>validate</code> checks a RunBrief JSON file. <code>config</code> shows scoring weights and budget allocation, optionally capping rows with <code>--limit</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate context &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -1293,13 +1293,14 @@
         <tr><td><code>-f, --file &lt;path&gt;</code></td><td>Path to a RunBrief JSON file for <code>validate</code>. Must be a single non-empty path.</td></tr>
         <tr><td><code>--weights</code></td><td>Show scoring weights on <code>config</code></td></tr>
         <tr><td><code>--budget</code></td><td>Show budget allocation on <code>config</code></td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of explain candidates to show on <code>explain</code> (default 10), or scoring weight or budget allocation rows on <code>config</code>. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of explain candidates to show on <code>explain</code> (default 10), or scoring weight or budget allocation rows on <code>config</code>, or RunBrief section rows on <code>compile</code>. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit compile, explain, validate, and config results as JSON. Explain omits score breakdowns. Validate includes valid flag, errors, warnings, and coverage. When the RunBrief file is missing, <code>validate</code> emits a missing summary (found, file, valid, errors, warnings; omits extra fields). Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
     <pre><code><span class="code-comment"># Compile a RunBrief</span>
 <span class="code-prompt">$</span> savestate context compile --agent my-agent --task "summarize inbox"
+<span class="code-prompt">$</span> savestate context compile --agent my-agent --task "summarize inbox" --limit 5
 
 <span class="code-comment"># Explain why candidates were included</span>
 <span class="code-prompt">$</span> savestate context explain run_abc123 --json

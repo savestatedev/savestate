@@ -136,6 +136,27 @@ export function selectContextConfigEntries<T>(entries: T[], limit?: number): T[]
   return entries.slice(0, limit);
 }
 
+const MAX_CONTEXT_COMPILE_LIMIT = 1000;
+
+/** Parse context compile --limit without turning user input errors into an empty RunBrief. */
+export function parseContextCompileLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_COMPILE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_COMPILE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N RunBrief section rows when --limit is set. */
+export function selectContextCompileEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 export function formatContextCompileJson(brief: RunBrief): string {
   const record: ContextCompileJson = {
     runId: brief.run_id,
@@ -333,11 +354,13 @@ export function registerContextCommands(program: Command): void {
     .requiredOption('-a, --agent <id>', 'Agent ID (single non-empty id)')
     .requiredOption('-t, --task <intent>', 'Task intent/description (non-empty)')
     .option('-b, --budget <tokens>', 'Token budget', '4000')
+    .option('--limit <n>', 'Maximum number of RunBrief section rows to show')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       const compiler = new ContextCompiler();
       const agentId = parseContextAgent(options.agent);
       const task = parseContextTask(options.task);
+      const limit = parseContextCompileLimit(options.limit);
 
       const request: CompileRequest = {
         agent_id: agentId ?? options.agent,
@@ -370,13 +393,18 @@ export function registerContextCommands(program: Command): void {
       console.log(`   Budget Remaining: ${result.brief.budget_remaining}`);
       console.log('');
       console.log('📊 Sections:');
-      console.log(`   Must-Know Facts: ${result.brief.must_know_facts.length}`);
-      console.log(`   Active State: ${Object.keys(result.brief.active_state).length} entities`);
-      console.log(`   Open Loops: ${result.brief.open_loops.length}`);
-      console.log(`   Constraints: ${result.brief.constraints.length}`);
-      console.log(`   Recent Decisions: ${result.brief.recent_decisions.length}`);
-      console.log(`   Conflicts: ${result.brief.conflicts.length}`);
-      console.log(`   Citations: ${result.brief.citations.length}`);
+      const sectionRows = [
+        `   Must-Know Facts: ${result.brief.must_know_facts.length}`,
+        `   Active State: ${Object.keys(result.brief.active_state).length} entities`,
+        `   Open Loops: ${result.brief.open_loops.length}`,
+        `   Constraints: ${result.brief.constraints.length}`,
+        `   Recent Decisions: ${result.brief.recent_decisions.length}`,
+        `   Conflicts: ${result.brief.conflicts.length}`,
+        `   Citations: ${result.brief.citations.length}`,
+      ];
+      for (const row of selectContextCompileEntries(sectionRows, limit)) {
+        console.log(row);
+      }
     });
 
   // Explain command

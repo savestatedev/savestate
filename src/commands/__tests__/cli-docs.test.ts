@@ -1951,6 +1951,17 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextConfigLimit');
   });
 
+  it('documents context compile --limit as a bounded positive integer', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    const compileBlock = context.slice(context.indexOf("command('compile')"), context.indexOf("command('explain"));
+    expect(contextSection).toContain('--limit');
+    expect(contextSection).toContain('Must be a positive integer up to 1000');
+    expect(contextSection).toContain('or RunBrief section rows on');
+    expect(contextSection).toContain('savestate context compile --agent my-agent --task "summarize inbox" --limit 5');
+    expect(compileBlock).toContain(".option('--limit <n>'");
+    expect(context).toContain('export function parseContextCompileLimit');
+  });
+
   it('documents context --json', () => {
     const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
     expect(contextSection).toContain('--json');
