@@ -373,6 +373,16 @@ describe('CLI docs', () => {
     expect(cli).toContain('Passphrase for verification (non-empty)');
   });
 
+  it('documents verify --limit as a bounded positive integer', () => {
+    const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
+    const verifyBlock = cli.slice(cli.indexOf("command('verify <file>')"), cli.indexOf('registerMemoryCommands'));
+    expect(verifySection).toContain('--limit');
+    expect(verifySection).toContain('Must be a positive integer up to 1000');
+    expect(verifySection).toContain('savestate verify agent.savestate --limit 5');
+    expect(verifyBlock).toContain(".option('--limit <n>'");
+    expect(verify).toContain('export function parseVerifyLimit');
+  });
+
   it('lists savestate prune in the command overview', () => {
     expect(docs).toContain('id="prune"');
     expect(docs).toContain('savestate prune');
