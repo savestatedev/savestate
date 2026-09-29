@@ -122,6 +122,27 @@ export function selectIdentityShowTools<T>(tools: T[], limit?: number): T[] {
   return tools.slice(0, limit);
 }
 
+const MAX_IDENTITY_INIT_LIMIT = 1000;
+
+/** Parse identity init --limit without turning user input errors into an empty identity. */
+export function parseIdentityInitLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_INIT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_INIT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N identity init status field rows when --limit is set. */
+export function selectIdentityInitEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const IDENTITY_SUBCOMMANDS = ['show', 'init', 'set', 'schema'] as const;
 export type IdentitySubcommand = (typeof IDENTITY_SUBCOMMANDS)[number];
 const IDENTITY_SUBCOMMAND_LIST = IDENTITY_SUBCOMMANDS.join(', ');
@@ -393,6 +414,7 @@ export async function identityCommand(
   const subcommand = parseIdentitySubcommand(rawSubcommand);
   const schemaLimit = subcommand === 'schema' ? parseIdentitySchemaLimit(options?.limit) : undefined;
   const showLimit = subcommand === 'show' ? parseIdentityShowLimit(options?.limit) : undefined;
+  const initLimit = subcommand === 'init' ? parseIdentityInitLimit(options?.limit) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
   const setValue = subcommand === 'set'
@@ -429,7 +451,7 @@ export async function identityCommand(
       await showIdentity(options, showLimit);
       break;
     case 'init':
-      await initIdentity(initName, options);
+      await initIdentity(initName, options, initLimit);
       break;
     case 'set':
       await setIdentityField(setField, setValue, options);
@@ -550,7 +572,7 @@ async function showIdentity(options?: IdentityOptions, limit?: number): Promise<
 /**
  * Initialize a new identity.
  */
-async function initIdentity(name: string | undefined, options?: IdentityOptions): Promise<void> {
+async function initIdentity(name: string | undefined, options?: IdentityOptions, limit?: number): Promise<void> {
   if (!name) {
     console.log(chalk.red('✗ Name is required'));
     console.log();
@@ -577,8 +599,13 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions)
       }
       spinner?.warn('Identity already exists');
       console.log();
-      console.log(chalk.dim('  Current identity:'), existing.identity.name);
-      console.log(chalk.dim('  To update, use:'), 'savestate identity set <field> <value>');
+      const existingRows = [
+        `${chalk.dim('  Current identity:')} ${existing.identity.name}`,
+        `${chalk.dim('  To update, use:')} savestate identity set <field> <value>`,
+      ];
+      for (const row of selectIdentityInitEntries(existingRows, limit)) {
+        console.log(row);
+      }
       console.log();
       return;
     }
@@ -602,9 +629,14 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions)
 
     console.log();
 
-    console.log(`  ${chalk.dim('Name:')}     ${identity.name}`);
-    console.log(`  ${chalk.dim('Version:')}  ${identity.version}`);
-    console.log(`  ${chalk.dim('File:')}     ${path}`);
+    const rows = [
+      `  ${chalk.dim('Name:')}     ${identity.name}`,
+      `  ${chalk.dim('Version:')}  ${identity.version}`,
+      `  ${chalk.dim('File:')}     ${path}`,
+    ];
+    for (const row of selectIdentityInitEntries(rows, limit)) {
+      console.log(row);
+    }
     console.log();
     console.log(chalk.dim('  Add goals:       savestate identity set goals \'["Goal 1", "Goal 2"]\''));
     console.log(chalk.dim('  Set tone:        savestate identity set tone professional'));
