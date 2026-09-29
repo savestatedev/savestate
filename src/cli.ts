@@ -55,6 +55,7 @@ program
 program
   .command('init')
   .description('Initialize SaveState in the current directory')
+  .option('--limit <n>', 'Maximum number of status field rows to show')
   .option('--json', 'Output as JSON')
   .action(initCommand);
 

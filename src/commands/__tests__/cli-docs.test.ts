@@ -138,6 +138,11 @@ const login = readFileSync(
   'utf8',
 );
 
+const init = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../init.ts'),
+  'utf8',
+);
+
 const migrate = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../migrate.ts'),
   'utf8',
@@ -1408,6 +1413,16 @@ describe('CLI docs', () => {
   it('registers --json on savestate init', () => {
     const initBlock = cli.slice(cli.indexOf("command('init')"), cli.indexOf("command('snapshot')"));
     expect(initBlock).toContain(".option('--json'");
+  });
+
+  it('documents init --limit as a bounded positive integer', () => {
+    const initSection = docs.slice(docs.indexOf('id="init"'), docs.indexOf('id="snapshot"'));
+    const initBlock = cli.slice(cli.indexOf("command('init')"), cli.indexOf("command('snapshot')"));
+    expect(initSection).toContain('--limit');
+    expect(initSection).toContain('Must be a positive integer up to 1000');
+    expect(initSection).toContain('savestate init --limit 5');
+    expect(initBlock).toContain(".option('--limit <n>'");
+    expect(init).toContain('export function parseInitLimit');
   });
 
   it('documents init --json', () => {
