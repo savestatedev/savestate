@@ -1241,6 +1241,19 @@ describe('CLI docs', () => {
     expect(team).toContain('export function formatTeamInviteMissingJson');
   });
 
+  it('documents team invite --limit as a bounded positive integer', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    const teamBlock = cli.slice(
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
+    );
+    expect(teamSection).toContain('--limit');
+    expect(teamSection).toContain('Must be a positive integer up to 1000');
+    expect(teamSection).toContain('savestate team invite user@example.com --limit 5');
+    expect(teamBlock).toContain(".option('--limit <n>'");
+    expect(team).toContain('export function parseTeamInviteLimit');
+  });
+
   it('documents team audit --format as known audit formats', () => {
     const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('--format');
