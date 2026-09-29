@@ -344,6 +344,7 @@ async function listRules(store: AntibodyStore, options: AntibodiesOptions): Prom
 }
 
 async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
+  const limit = parseAntibodiesAddLimit(options.limit);
   const tags = parseAntibodiesTags(options.tags) ?? [];
   const tool = parseAntibodiesTool(options.tool);
   const risk = parseAntibodiesRisk(options.risk);
@@ -396,8 +397,13 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
     return;
   }
 
-  console.log(chalk.green(`✓ Antibody rule saved: ${created.id}`));
-  console.log(chalk.dim(`  safe_action=${created.safe_action.type} confidence=${created.confidence}`));
+  const rows = [
+    chalk.green(`✓ Antibody rule saved: ${created.id}`),
+    chalk.dim(`  safe_action=${created.safe_action.type} confidence=${created.confidence}`),
+  ];
+  for (const row of selectAntibodiesAddEntries(rows, limit)) {
+    console.log(row);
+  }
   console.log();
 }
 
@@ -565,6 +571,27 @@ export function parseAntibodiesPreflightLimit(value: string | undefined): number
 export function selectAntibodiesPreflightWarnings<T>(warnings: T[], limit?: number): T[] {
   if (limit === undefined) return warnings;
   return warnings.slice(0, limit);
+}
+
+const MAX_ANTIBODIES_ADD_LIMIT = 1000;
+
+/** Parse antibodies add --limit without turning user input errors into an empty add. */
+export function parseAntibodiesAddLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ANTIBODIES_ADD_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ANTIBODIES_ADD_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N add status field rows when --limit is set. */
+export function selectAntibodiesAddEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 const ANTIBODIES_SUBCOMMANDS = ['list', 'add', 'preflight', 'stats'] as const;
@@ -746,7 +773,7 @@ function showUsage(): void {
   console.log('  savestate antibodies list [--all] [--limit <n>] [--json]');
   console.log('  savestate antibodies add --tool <name> [--error-code <code>] [--path-prefix <prefix>]');
   console.log('                             [--tags <a,b>] [--risk <level>] [--safe-action <type>]');
-  console.log('                             [--confidence <0..1>] [--id <rule-id>]');
+  console.log('                             [--confidence <0..1>] [--id <rule-id>] [--limit <n>] [--json]');
   console.log('  savestate antibodies preflight [--tool <name>] [--error-code <code>] [--path <path>]');
   console.log('                                  [--tags <a,b>] [--semantic] [--limit <n>] [--json]');
   console.log('  savestate antibodies stats [--limit <n>] [--json]');
