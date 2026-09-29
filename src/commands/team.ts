@@ -156,6 +156,27 @@ export function selectTeamStatusEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+const MAX_TEAM_INVITE_LIMIT = 1000;
+
+/** Parse team invite --limit without turning user input errors into an empty invite. */
+export function parseTeamInviteLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TEAM_INVITE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TEAM_INVITE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N invite status field rows when --limit is set. */
+export function selectTeamInviteEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const TEAM_SUBCOMMANDS = ['status', 'members', 'invite', 'audit'] as const;
 export type TeamSubcommand = (typeof TEAM_SUBCOMMANDS)[number];
 const TEAM_SUBCOMMAND_LIST = TEAM_SUBCOMMANDS.join(', ');
@@ -524,6 +545,7 @@ export async function teamMembersCommand(options: TeamCommandOptions = {}): Prom
 export async function teamInviteCommand(rawEmail: string | undefined, options: TeamCommandOptions = {}): Promise<void> {
   const email = parseTeamInviteEmail(rawEmail);
   const role = parseTeamInviteRole(options.role);
+  const limit = parseTeamInviteLimit(options.limit);
 
   const result = await apiRequest('POST', '/team/members', { email, role });
   if (!result.ok) {
@@ -549,9 +571,14 @@ export async function teamInviteCommand(rawEmail: string | undefined, options: T
     return;
   }
 
+  const rows = [
+    chalk.green(`✓ Invited ${email} as ${role}`),
+    chalk.dim('  An email has been sent. Status stays "pending" until they sign up.'),
+  ];
   console.log();
-  console.log(chalk.green(`✓ Invited ${email} as ${role}`));
-  console.log(chalk.dim('  An email has been sent. Status stays "pending" until they sign up.'));
+  for (const row of selectTeamInviteEntries(rows, limit)) {
+    console.log(row);
+  }
   console.log();
 }
 
