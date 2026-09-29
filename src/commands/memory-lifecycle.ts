@@ -478,6 +478,27 @@ export async function deleteMemoryCommand(
   }
 }
 
+const MAX_MEMORY_ROLLBACK_LIMIT = 1000;
+
+/** Parse memory rollback --limit without turning user input errors into an empty rollback. */
+export function parseMemoryRollbackLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_ROLLBACK_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_ROLLBACK_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N rollback status field rows when --limit is set. */
+export function selectMemoryRollbackEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /**
  * Rollback a memory to a previous version.
  */
@@ -489,8 +510,10 @@ export async function rollbackMemoryCommand(
     version: number;
     actorId: string;
     format?: 'pretty' | 'json';
+    limit?: string;
   }
 ): Promise<void> {
+  const limit = parseMemoryRollbackLimit(options.limit);
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
@@ -511,11 +534,16 @@ export async function rollbackMemoryCommand(
       return;
     }
 
-    console.log(`\nMemory rolled back successfully.`);
-    console.log(`  ID:              ${restored.memory_id}`);
-    console.log(`  Rolled back to:  Version ${options.version}`);
-    console.log(`  New version:     ${restored.version}`);
-    console.log(`  Content:         ${restored.content.slice(0, 50)}...`);
+    const rows = [
+      `\nMemory rolled back successfully.`,
+      `  ID:              ${restored.memory_id}`,
+      `  Rolled back to:  Version ${options.version}`,
+      `  New version:     ${restored.version}`,
+      `  Content:         ${restored.content.slice(0, 50)}...`,
+    ];
+    for (const row of selectMemoryRollbackEntries(rows, limit)) {
+      console.log(row);
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     if (options.format === 'json' && message === `Memory ${memoryId} not found`) {

@@ -2503,6 +2503,16 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryDeleteLimit');
   });
 
+  it('documents memory rollback --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory rollback mem-123 --version 2 --limit 5');
+    expect(rollbackBlock).toContain(".option('--limit <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryRollbackLimit');
+  });
+
   it('registers --json on savestate memory rollback', () => {
     const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
     expect(rollbackBlock).toContain(".option('--json'");
