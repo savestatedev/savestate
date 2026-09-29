@@ -84,6 +84,28 @@ interface DenyAddOptions {
   reason?: string;
   by?: string;
   json?: boolean;
+  limit?: string;
+}
+
+const MAX_TRUST_DENY_ADD_LIMIT = 1000;
+
+/** Parse trust deny add --limit without turning user input errors into an empty add. */
+export function parseTrustDenyAddLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRUST_DENY_ADD_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRUST_DENY_ADD_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N deny-add status field rows when --limit is set. */
+export function selectTrustDenyAddEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 interface DenyListOptions {
@@ -389,6 +411,7 @@ export async function trustDenyAddCommand(
   options: DenyAddOptions,
 ): Promise<void> {
   const pattern = parseTrustPattern(rawPattern);
+  const limit = parseTrustDenyAddLimit(options.limit);
   const store = new TrustStore();
   const reason = parseTrustReason(options.reason) ?? 'no reason given';
   const addedBy = parseTrustBy(options.by) ?? 'cli';
@@ -400,9 +423,14 @@ export async function trustDenyAddCommand(
     return;
   }
   console.log();
-  console.log(chalk.green(`✓ Added to denylist: ${chalk.cyan(pattern)}`));
-  console.log(chalk.dim(`  reason: ${reason}`));
-  console.log(chalk.dim(`  by:     ${addedBy}`));
+  const rows = [
+    chalk.green(`✓ Added to denylist: ${chalk.cyan(pattern)}`),
+    chalk.dim(`  reason: ${reason}`),
+    chalk.dim(`  by:     ${addedBy}`),
+  ];
+  for (const row of selectTrustDenyAddEntries(rows, limit)) {
+    console.log(row);
+  }
   console.log();
 }
 
