@@ -417,6 +417,27 @@ export function selectImportComponents<T>(components: T[], limit?: number): T[] 
   return components.slice(0, limit);
 }
 
+const MAX_CONTAINER_IMPORT_LIMIT = 1000;
+
+/** Parse container import --limit without turning user input errors into an empty component list. */
+export function parseContainerImportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTAINER_IMPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTAINER_IMPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N packed components when --limit is set on container import. */
+export function selectContainerImportComponents<T>(components: T[], limit?: number): T[] {
+  if (limit === undefined) return components;
+  return components.slice(0, limit);
+}
+
 export function formatImportDescription(description: string): string {
   return `  Description: ${description}`;
 }
@@ -1765,7 +1786,10 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
       console.log(`Excluding paths: ${excludedPaths.join(', ')}`);
     }
     const components = selected.components;
-    const shownComponents = selectImportComponents(components, limit);
+    const shownComponents = selectContainerImportComponents(
+      selectImportComponents(components, limit),
+      limit,
+    );
     const description = optionalImportDescription(manifest.description);
     const encryptionAlgorithm = optionalImportEncryption(manifest.encryption);
     const keyDerivation = optionalImportKeyDerivation(manifest.encryption);
@@ -2065,8 +2089,15 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be imported without restoring')
     .option('--target <dir>', 'Write restored agent state to this directory (single non-empty path)')
     .option('--force', 'Overwrite an existing target file')
+    .option('--limit <n>', 'Maximum number of packed components to show')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
+      try {
+        parseContainerImportLimit(opts.limit);
+      } catch (error: any) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+      }
       const result = await importState({
         in: opts.in,
         passphrase: opts.passphrase,
@@ -2079,6 +2110,7 @@ export function registerContainerCommands(program: Command) {
         exclude: opts.exclude,
         force: opts.force,
         json: opts.json,
+        limit: opts.limit,
       });
       if (!result) {
         process.exit(1);
