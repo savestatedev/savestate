@@ -10,6 +10,28 @@ import { getPassphrase } from '../passphrase.js';
 
 interface InitOptions {
   json?: boolean;
+  limit?: string;
+}
+
+const MAX_INIT_LIMIT = 1000;
+
+/** Parse init --limit without turning user input errors into an empty init. */
+export function parseInitLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INIT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INIT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N init status field rows when --limit is set. */
+export function selectInitEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 export interface InitResult {
@@ -39,6 +61,8 @@ function passphraseHint(config: { storage: { options: Record<string, unknown> } 
 }
 
 export async function initCommand(options: InitOptions = {}): Promise<void> {
+  const limit = parseInitLimit(options.limit);
+
   if (!options.json) {
     console.log();
     console.log(chalk.bold('⚡ SaveState — Time Machine for AI'));
@@ -59,8 +83,13 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
       );
       return;
     }
-    console.log(chalk.yellow('⚠  SaveState is already initialized in this directory.'));
-    console.log(chalk.dim(`   Config: ${localConfigDir()}/config.json`));
+    const rows = [
+      chalk.yellow('⚠  SaveState is already initialized in this directory.'),
+      chalk.dim(`   Config: ${localConfigDir()}/config.json`),
+    ];
+    for (const row of selectInitEntries(rows, limit)) {
+      console.log(row);
+    }
     return;
   }
 
@@ -123,9 +152,14 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
     console.log(chalk.green('✓ SaveState initialized!'));
     console.log();
     console.log(chalk.dim('  Next steps:'));
-    console.log(chalk.dim(`  ${chalk.white('savestate snapshot')}      Capture your first snapshot`));
-    console.log(chalk.dim(`  ${chalk.white('savestate config')}        Configure storage & adapters`));
-    console.log(chalk.dim(`  ${chalk.white('savestate adapters')}      See available platform adapters`));
+    const rows = [
+      chalk.dim(`  ${chalk.white('savestate snapshot')}      Capture your first snapshot`),
+      chalk.dim(`  ${chalk.white('savestate config')}        Configure storage & adapters`),
+      chalk.dim(`  ${chalk.white('savestate adapters')}      See available platform adapters`),
+    ];
+    for (const row of selectInitEntries(rows, limit)) {
+      console.log(row);
+    }
     console.log();
   } catch (err) {
     spinner?.fail('Failed to initialize SaveState');
