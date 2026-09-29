@@ -3528,6 +3528,16 @@ describe('CLI docs', () => {
     expect(containerSection).toContain('savestate container export -a my-agent -o agent.savestate --json --dry-run');
   });
 
+  it('documents container import --limit as a bounded positive integer', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    const containerBlock = container.slice(container.indexOf(".command('container')"));
+    expect(containerSection).toContain('--limit');
+    expect(containerSection).toContain('Must be a positive integer up to 1000');
+    expect(containerSection).toContain('savestate container import --in agent.savestate --limit 5');
+    expect(containerBlock).toContain(".option('--limit <n>'");
+    expect(container).toContain('export function parseContainerImportLimit');
+  });
+
   it('documents container --agent as a single agent id', () => {
     const containerSection = docs.slice(docs.indexOf('id="container"'));
     expect(containerSection).toContain('--agent');
