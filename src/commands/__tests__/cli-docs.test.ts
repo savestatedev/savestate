@@ -1422,6 +1422,16 @@ describe('CLI docs', () => {
     expect(loginBlock).toContain(".option('--json'");
   });
 
+  it('documents login --limit as a bounded positive integer', () => {
+    const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
+    const loginBlock = cli.slice(cli.indexOf("command('login')"), cli.indexOf("command('logout')"));
+    expect(loginSection).toContain('--limit');
+    expect(loginSection).toContain('Must be a positive integer up to 1000');
+    expect(loginSection).toContain('savestate login --limit 5');
+    expect(loginBlock).toContain(".option('--limit <n>'");
+    expect(login).toContain('export function parseLoginLimit');
+  });
+
   it('documents login --json', () => {
     const loginSection = docs.slice(docs.indexOf('id="login"'), docs.indexOf('id="logout"'));
     expect(loginSection).toContain('--json');
