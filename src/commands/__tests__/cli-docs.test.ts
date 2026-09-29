@@ -993,6 +993,20 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function formatTrustDenyRemoveMissingJson');
   });
 
+  it('documents trust deny remove --limit as a bounded positive integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const removeBlock = trustBlock.slice(
+      trustBlock.indexOf("command('remove <pattern>')"),
+      trustBlock.lastIndexOf("command('list')"),
+    );
+    expect(trustSection).toContain('--limit');
+    expect(trustSection).toContain('Must be a positive integer up to 1000');
+    expect(trustSection).toContain('savestate trust deny remove secret.env --limit 5');
+    expect(removeBlock).toContain(".option('--limit <n>'");
+    expect(trust).toContain('export function parseTrustDenyRemoveLimit');
+  });
+
   it('registers --json on savestate trust deny list', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const listBlock = trustBlock.slice(trustBlock.lastIndexOf("command('list')"));

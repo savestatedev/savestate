@@ -113,6 +113,27 @@ interface DenyListOptions {
   limit?: string;
 }
 
+const MAX_TRUST_DENY_REMOVE_LIMIT = 1000;
+
+/** Parse trust deny remove --limit without turning user input errors into an empty remove. */
+export function parseTrustDenyRemoveLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRUST_DENY_REMOVE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRUST_DENY_REMOVE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N deny-remove status field rows when --limit is set. */
+export function selectTrustDenyRemoveEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const MAX_TRUST_DENY_LIST_LIMIT = 1000;
 
 /** Parse trust deny list --limit without turning user input errors into an empty denylist. */
@@ -439,6 +460,7 @@ export async function trustDenyRemoveCommand(
   options: DenyListOptions,
 ): Promise<void> {
   const pattern = parseTrustPattern(rawPattern);
+  const limit = parseTrustDenyRemoveLimit(options.limit);
   const store = new TrustStore();
   const removed = store.removeFromDenylist(pattern);
   store.close();
@@ -452,10 +474,19 @@ export async function trustDenyRemoveCommand(
     return;
   }
   console.log();
-  if (removed === 0) {
-    console.log(chalk.yellow(`⚠ No denylist entry matched: ${pattern}`));
-  } else {
-    console.log(chalk.green(`✓ Removed ${removed} denylist entry(ies) matching: ${chalk.cyan(pattern)}`));
+  const rows = removed === 0
+    ? [
+        chalk.yellow(`⚠ No denylist entry matched: ${pattern}`),
+        chalk.dim(`  pattern: ${pattern}`),
+        chalk.dim(`  removed: 0`),
+      ]
+    : [
+        chalk.green(`✓ Removed ${removed} denylist entry(ies) matching: ${chalk.cyan(pattern)}`),
+        chalk.dim(`  pattern: ${pattern}`),
+        chalk.dim(`  removed: ${removed}`),
+      ];
+  for (const row of selectTrustDenyRemoveEntries(rows, limit)) {
+    console.log(row);
   }
   console.log();
 }
