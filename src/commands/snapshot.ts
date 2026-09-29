@@ -23,7 +23,29 @@ interface SnapshotOptions {
   tag?: string[];
   /** Additional metadata for state entries (key=value) - Issue #91 */
   meta?: string[];
+  limit?: string;
   json?: boolean;
+}
+
+const MAX_SNAPSHOT_LIMIT = 1000;
+
+/** Parse snapshot --limit without turning user input errors into an empty snapshot. */
+export function parseSnapshotLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SNAPSHOT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SNAPSHOT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N snapshot status field rows when --limit is set. */
+export function selectSnapshotEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 const SNAPSHOT_ADAPTERS = [
@@ -198,6 +220,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   const adapterId = parseSnapshotAdapter(options.adapter);
   const tags = parseSnapshotTags(options.tags);
   const schedule = parseSnapshotSchedule(options.schedule);
+  const limit = parseSnapshotLimit(options.limit);
   const stateEntries = (options.tag ?? [])
     .map((entry) => parseSnapshotTag(entry))
     .filter((entry): entry is StateEventInput => entry !== undefined);
@@ -310,25 +333,30 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     const typeLabel = result.incremental ? 'Incremental snapshot' : 'Full snapshot';
     spinner?.succeed(`${typeLabel} created!`);
     console.log();
-    console.log(`  ${chalk.dim('ID:')}         ${chalk.cyan(result.snapshot.manifest.id)}`);
-    console.log(`  ${chalk.dim('Adapter:')}    ${adapter.name}`);
-    console.log(`  ${chalk.dim('Type:')}       ${result.incremental ? chalk.yellow('incremental (delta)') : chalk.blue('full')}`);
+    const rows = [
+      `  ${chalk.dim('ID:')}         ${chalk.cyan(result.snapshot.manifest.id)}`,
+      `  ${chalk.dim('Adapter:')}    ${adapter.name}`,
+      `  ${chalk.dim('Type:')}       ${result.incremental ? chalk.yellow('incremental (delta)') : chalk.blue('full')}`,
+    ];
     if (label) {
-      console.log(`  ${chalk.dim('Label:')}      ${label}`);
+      rows.push(`  ${chalk.dim('Label:')}      ${label}`);
     }
     if (result.incremental && result.delta) {
-      console.log(`  ${chalk.dim('Changes:')}    ${chalk.green(`+${result.delta.added}`)} added, ${chalk.yellow(`~${result.delta.modified}`)} modified, ${chalk.red(`-${result.delta.removed}`)} removed, ${chalk.dim(`${result.delta.unchanged} unchanged`)}`);
-      console.log(`  ${chalk.dim('Chain:')}      depth ${result.delta.chainDepth} (parent: ${result.snapshot.manifest.parent})`);
-      console.log(`  ${chalk.dim('Saved:')}      ${formatBytes(result.delta.bytesSaved)} vs full snapshot`);
+      rows.push(`  ${chalk.dim('Changes:')}    ${chalk.green(`+${result.delta.added}`)} added, ${chalk.yellow(`~${result.delta.modified}`)} modified, ${chalk.red(`-${result.delta.removed}`)} removed, ${chalk.dim(`${result.delta.unchanged} unchanged`)}`);
+      rows.push(`  ${chalk.dim('Chain:')}      depth ${result.delta.chainDepth} (parent: ${result.snapshot.manifest.parent})`);
+      rows.push(`  ${chalk.dim('Saved:')}      ${formatBytes(result.delta.bytesSaved)} vs full snapshot`);
     }
-    console.log(`  ${chalk.dim('Files:')}      ${result.fileCount} files in archive`);
-    console.log(`  ${chalk.dim('Archive:')}    ${formatBytes(result.archiveSize)}`);
-    console.log(`  ${chalk.dim('Encrypted:')}  ${formatBytes(result.encryptedSize)}`);
-    console.log(`  ${chalk.dim('Storage:')}    ${config.storage.type}`);
+    rows.push(`  ${chalk.dim('Files:')}      ${result.fileCount} files in archive`);
+    rows.push(`  ${chalk.dim('Archive:')}    ${formatBytes(result.archiveSize)}`);
+    rows.push(`  ${chalk.dim('Encrypted:')}  ${formatBytes(result.encryptedSize)}`);
+    rows.push(`  ${chalk.dim('Storage:')}    ${config.storage.type}`);
     if (stateEventCount > 0) {
-      console.log(`  ${chalk.dim('State:')}      ${chalk.cyan(`${stateEventCount} event${stateEventCount === 1 ? '' : 's'}`)} recorded`);
+      rows.push(`  ${chalk.dim('State:')}      ${chalk.cyan(`${stateEventCount} event${stateEventCount === 1 ? '' : 's'}`)} recorded`);
     }
-    console.log(`  ${chalk.dim('Status:')}     ${chalk.green('✓ Encrypted & stored')}`);
+    rows.push(`  ${chalk.dim('Status:')}     ${chalk.green('✓ Encrypted & stored')}`);
+    for (const row of selectSnapshotEntries(rows, limit)) {
+      console.log(row);
+    }
     console.log();
     console.log(chalk.dim(`  Restore with: savestate restore ${result.snapshot.manifest.id}`));
     console.log();

@@ -144,7 +144,7 @@
 
     <!-- snapshot -->
     <h2 id="snapshot"><code>savestate snapshot</code></h2>
-    <p>Capture the current AI state and save it as an encrypted archive.</p>
+    <p>Capture the current AI state and save it as an encrypted archive. Optionally cap status field rows with <code>--limit</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate snapshot [options]</code></pre>
 
     <table>
@@ -159,6 +159,7 @@
         <tr><td><code>-a, --adapter &lt;adapter&gt;</code></td><td>Force a specific adapter instead of auto-detection. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>-s, --schedule &lt;interval&gt;</code></td><td>Set up auto-snapshot schedule (e.g., <code>6h</code>, <code>1d</code>). Must be a duration like <code>1h</code>, <code>6h</code>, <code>12h</code>, or <code>1d</code> up to 7 days. <em>(Pro)</em></td></tr>
         <tr><td><code>--full</code></td><td>Force a full snapshot, skipping incremental delta detection</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of status field rows to show. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the snapshot result as JSON. Encrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). When no adapter can be detected, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -166,6 +167,9 @@
     <h3>Examples</h3>
     <pre><code><span class="code-comment"># Basic snapshot with auto-detection</span>
 <span class="code-prompt">$</span> savestate snapshot
+
+<span class="code-comment"># Cap status field rows</span>
+<span class="code-prompt">$</span> savestate snapshot --limit 5
 
 <span class="code-comment"># Labeled + tagged</span>
 <span class="code-prompt">$</span> savestate snapshot --label <span class="code-string">"Pre-update backup"</span> --tags <span class="code-string">"important,v2"</span>

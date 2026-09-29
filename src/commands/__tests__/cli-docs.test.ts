@@ -4150,6 +4150,16 @@ describe('CLI docs', () => {
     expect(snapshotSection).toContain('savestate snapshot --json --full');
   });
 
+  it('documents snapshot --limit as a bounded positive integer', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    const snapshotBlock = cli.slice(cli.indexOf("command('snapshot')"), cli.indexOf("command('restore"));
+    expect(snapshotSection).toContain('--limit');
+    expect(snapshotSection).toContain('Must be a positive integer up to 1000');
+    expect(snapshotSection).toContain('savestate snapshot --limit 5');
+    expect(snapshotBlock).toContain(".option('--limit <n>'");
+    expect(snapshot).toContain('export function parseSnapshotLimit');
+  });
+
   it('documents snapshot --adapter as a known adapter', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--adapter');
