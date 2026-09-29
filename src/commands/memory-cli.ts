@@ -476,6 +476,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-i, --importance <n>', 'New importance score (0-1)')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .option('-r, --reason <reason>', 'Reason for the edit (non-empty)')
+    .option('--limit <n>', 'Maximum number of status field rows to show')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -491,6 +492,7 @@ export function registerMemoryCommands(program: Command): void {
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           reason: options.reason === undefined ? undefined : parseMemoryReason(options.reason),
           format: options.json ? 'json' : 'pretty',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);

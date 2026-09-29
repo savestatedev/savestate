@@ -2422,6 +2422,16 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --importance 0.9 --reason "correction" --json');
   });
 
+  it('documents memory edit --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const editBlock = memoryCli.slice(memoryCli.indexOf("command('edit"), memoryCli.indexOf("command('delete"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --limit 5');
+    expect(editBlock).toContain(".option('--limit <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryEditLimit');
+  });
+
   it('documents memory edit --json when missing', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');

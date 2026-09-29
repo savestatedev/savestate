@@ -318,6 +318,27 @@ function formatAction(action: ProvenanceEntry['action']): string {
 // and checkpoint system. For this implementation, we use a simplified approach
 // that works directly with the KnowledgeLane service.
 
+const MAX_MEMORY_EDIT_LIMIT = 1000;
+
+/** Parse memory edit --limit without turning user input errors into an empty edit. */
+export function parseMemoryEditLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_EDIT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EDIT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N edit status field rows when --limit is set. */
+export function selectMemoryEditEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /**
  * Edit a memory's content or metadata.
  */
@@ -332,8 +353,10 @@ export async function editMemoryCommand(
     actorId: string;
     reason?: string;
     format?: 'pretty' | 'json';
+    limit?: string;
   }
 ): Promise<void> {
+  const limit = parseMemoryEditLimit(options.limit);
   // For this implementation, we'll use a simplified checkpoint storage
   // In production, this would integrate with the full storage backend
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -361,17 +384,22 @@ export async function editMemoryCommand(
       return;
     }
 
-    console.log(`\nMemory edited successfully.`);
-    console.log(`  ID:      ${updated.memory_id}`);
-    console.log(`  Version: ${updated.version}`);
+    const rows = [
+      `\nMemory edited successfully.`,
+      `  ID:      ${updated.memory_id}`,
+      `  Version: ${updated.version}`,
+    ];
     if (options.content) {
-      console.log(`  Content: ${updated.content.slice(0, 50)}...`);
+      rows.push(`  Content: ${updated.content.slice(0, 50)}...`);
     }
     if (options.tags) {
-      console.log(`  Tags:    ${updated.tags.join(', ')}`);
+      rows.push(`  Tags:    ${updated.tags.join(', ')}`);
     }
     if (options.importance !== undefined) {
-      console.log(`  Importance: ${updated.importance}`);
+      rows.push(`  Importance: ${updated.importance}`);
+    }
+    for (const row of selectMemoryEditEntries(rows, limit)) {
+      console.log(row);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
