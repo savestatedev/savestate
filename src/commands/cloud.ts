@@ -206,6 +206,27 @@ export function selectCloudPullSnapshots<T>(snapshots: T[], limit?: number): T[]
   return snapshots.slice(0, limit);
 }
 
+const MAX_CLOUD_DELETE_LIMIT = 1000;
+
+/** Parse cloud delete --limit without turning user input errors into an empty delete list. */
+export function parseCloudDeleteLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_DELETE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_DELETE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N cloud snapshots when --limit is set on delete. */
+export function selectCloudDeleteSnapshots<T>(snapshots: T[], limit?: number): T[] {
+  if (limit === undefined) return snapshots;
+  return snapshots.slice(0, limit);
+}
+
 /** Resolve cloud push --adapter/--exclude/--since/--until/--label/--tag/--limit/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] },
@@ -1002,6 +1023,7 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
  */
 export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
+  const limit = parseCloudDeleteLimit(options.limit);
 
   if (!options.json) {
     console.log();
@@ -1064,6 +1086,7 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
       process.exit(1);
     }
   }
+  toDelete = selectCloudDeleteSnapshots(toDelete, limit);
 
   // Confirm deletion (JSON mode is non-interactive)
   if (!options.force && !options.json) {
