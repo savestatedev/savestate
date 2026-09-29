@@ -2740,6 +2740,19 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function formatIdentitySetJson');
   });
 
+  it('documents identity set --limit as a bounded positive integer', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    const identityBlock = cli.slice(
+      cli.indexOf("command('identity <subcommand> [args...]')"),
+      cli.indexOf('program.parse()'),
+    );
+    expect(identitySection).toContain('--limit');
+    expect(identitySection).toContain('Must be a positive integer up to 1000');
+    expect(identitySection).toContain('savestate identity set tone professional --limit 5');
+    expect(identityBlock).toContain(".option('--limit <n>'");
+    expect(identity).toContain('export function parseIdentitySetLimit');
+  });
+
   it('documents identity schema --limit as a bounded positive integer', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     const identityBlock = cli.slice(

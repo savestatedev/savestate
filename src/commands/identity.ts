@@ -122,6 +122,27 @@ export function selectIdentityShowTools<T>(tools: T[], limit?: number): T[] {
   return tools.slice(0, limit);
 }
 
+const MAX_IDENTITY_SET_LIMIT = 1000;
+
+/** Parse identity set --limit without turning user input errors into an empty update. */
+export function parseIdentitySetLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_SET_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_SET_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N identity set field rows when --limit is set. */
+export function selectIdentitySetEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const IDENTITY_SUBCOMMANDS = ['show', 'init', 'set', 'schema'] as const;
 export type IdentitySubcommand = (typeof IDENTITY_SUBCOMMANDS)[number];
 const IDENTITY_SUBCOMMAND_LIST = IDENTITY_SUBCOMMANDS.join(', ');
@@ -393,6 +414,7 @@ export async function identityCommand(
   const subcommand = parseIdentitySubcommand(rawSubcommand);
   const schemaLimit = subcommand === 'schema' ? parseIdentitySchemaLimit(options?.limit) : undefined;
   const showLimit = subcommand === 'show' ? parseIdentityShowLimit(options?.limit) : undefined;
+  const setLimit = subcommand === 'set' ? parseIdentitySetLimit(options?.limit) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
   const setValue = subcommand === 'set'
@@ -432,7 +454,7 @@ export async function identityCommand(
       await initIdentity(initName, options);
       break;
     case 'set':
-      await setIdentityField(setField, setValue, options);
+      await setIdentityField(setField, setValue, options, setLimit);
       break;
     case 'schema':
       showSchema(options, schemaLimit);
@@ -624,6 +646,7 @@ async function setIdentityField(
   field: string | undefined,
   value: string | undefined,
   options?: IdentityOptions,
+  limit?: number,
 ): Promise<void> {
   if (!field) {
     console.log(chalk.red('✗ Field name is required'));
@@ -681,11 +704,15 @@ async function setIdentityField(
 
     console.log();
 
-    // Show what changed
     const displayValue = (updated as Record<string, unknown>)[field];
-    console.log(`  ${chalk.dim('Field:')}    ${field}`);
-    console.log(`  ${chalk.dim('Value:')}    ${formatValue(displayValue)}`);
-    console.log(`  ${chalk.dim('Version:')}  ${updated.version}`);
+    const rows = [
+      `  ${chalk.dim('Field:')}    ${field}`,
+      `  ${chalk.dim('Value:')}    ${formatValue(displayValue)}`,
+      `  ${chalk.dim('Version:')}  ${updated.version}`,
+    ];
+    for (const row of selectIdentitySetEntries(rows, limit)) {
+      console.log(row);
+    }
     console.log();
   } catch (err) {
     spinner?.fail(`Failed to set ${field}`);
