@@ -374,6 +374,7 @@ export function registerMemoryCommands(program: Command): void {
     .command('unpin <memory-id>')
     .description('Unpin a memory (allows automatic demotion; single non-empty memory id)')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
+    .option('--limit <n>', 'Maximum number of status field rows to show')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -385,6 +386,7 @@ export function registerMemoryCommands(program: Command): void {
         await unpinMemoryCommand(storage, passphrase, id, {
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);

@@ -2397,6 +2397,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function formatMemoryUnpinMissingJson');
   });
 
+  it('documents memory unpin --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const unpinBlock = memoryCli.slice(memoryCli.indexOf("command('unpin"), memoryCli.indexOf("command('apply-policies"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory unpin mem-123 --limit 5');
+    expect(unpinBlock).toContain(".option('--limit <n>'");
+    expect(memory).toContain('export function parseMemoryUnpinLimit');
+  });
+
   it('registers --json on savestate memory apply-policies', () => {
     const applyBlock = memoryCli.slice(memoryCli.indexOf("command('apply-policies')"), memoryCli.indexOf("command('config')"));
     expect(applyBlock).toContain(".option('--json'");
