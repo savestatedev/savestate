@@ -411,6 +411,27 @@ export async function editMemoryCommand(
   }
 }
 
+const MAX_MEMORY_DELETE_LIMIT = 1000;
+
+/** Parse memory delete --limit without turning user input errors into an empty delete. */
+export function parseMemoryDeleteLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_DELETE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_DELETE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N delete status field rows when --limit is set. */
+export function selectMemoryDeleteEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /**
  * Soft delete a memory with audit trail.
  */
@@ -422,8 +443,10 @@ export async function deleteMemoryCommand(
     actorId: string;
     reason: string;
     format?: 'pretty' | 'json';
+    limit?: string;
   }
 ): Promise<void> {
+  const limit = parseMemoryDeleteLimit(options.limit);
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
@@ -435,11 +458,16 @@ export async function deleteMemoryCommand(
       return;
     }
 
-    console.log(`\nMemory deleted (soft delete).`);
-    console.log(`  ID:     ${memoryId}`);
-    console.log(`  Reason: ${options.reason}`);
-    console.log(`  Actor:  ${options.actorId}`);
-    console.log(`\nNote: The memory is marked as deleted but retained for audit purposes.`);
+    const rows = [
+      `\nMemory deleted (soft delete).`,
+      `  ID:     ${memoryId}`,
+      `  Reason: ${options.reason}`,
+      `  Actor:  ${options.actorId}`,
+      `\nNote: The memory is marked as deleted but retained for audit purposes.`,
+    ];
+    for (const row of selectMemoryDeleteEntries(rows, limit)) {
+      console.log(row);
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     if (options.format === 'json' && message === `Memory ${memoryId} not found`) {

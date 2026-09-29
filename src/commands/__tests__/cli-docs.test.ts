@@ -2493,6 +2493,16 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function formatMemoryDeleteMissingJson');
   });
 
+  it('documents memory delete --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const deleteBlock = memoryCli.slice(memoryCli.indexOf("command('delete"), memoryCli.indexOf("command('rollback"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory delete mem-123 --reason "stale" --limit 5');
+    expect(deleteBlock).toContain(".option('--limit <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryDeleteLimit');
+  });
+
   it('registers --json on savestate memory rollback', () => {
     const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
     expect(rollbackBlock).toContain(".option('--json'");

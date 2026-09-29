@@ -513,6 +513,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Delete a memory (soft delete with audit trail; single non-empty memory id)')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .requiredOption('-r, --reason <reason>', 'Reason for deletion (non-empty)')
+    .option('--limit <n>', 'Maximum number of status field rows to show')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -525,6 +526,7 @@ export function registerMemoryCommands(program: Command): void {
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           reason: parseMemoryReason(options.reason),
           format: options.json ? 'json' : 'pretty',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);
