@@ -337,6 +337,7 @@ program
 program
   .command('logout')
   .description('Remove saved API key')
+  .option('--limit <n>', 'Maximum number of status field rows to show')
   .option('--json', 'Output as JSON')
   .action(logoutCommand);
 
