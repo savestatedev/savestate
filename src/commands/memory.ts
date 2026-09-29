@@ -763,6 +763,27 @@ export function formatMemoryUnpinMissingJson(id: string): string {
   );
 }
 
+const MAX_MEMORY_UNPIN_LIMIT = 1000;
+
+/** Parse memory unpin --limit without turning user input errors into an empty unpin. */
+export function parseMemoryUnpinLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_UNPIN_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_UNPIN_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N unpin status field rows when --limit is set. */
+export function selectMemoryUnpinEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 export async function unpinMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -770,8 +791,10 @@ export async function unpinMemoryCommand(
   options?: {
     snapshotId?: string;
     format?: 'pretty' | 'json';
+    limit?: string;
   },
 ): Promise<void> {
+  const limit = parseMemoryUnpinLimit(options?.limit);
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options?.snapshotId);
 
   const entryIndex = snapshot.memory.core.findIndex((e) => e.id === memoryId);
@@ -789,7 +812,10 @@ export async function unpinMemoryCommand(
       console.log(formatMemoryUnpinJson(memoryId));
       return;
     }
-    console.log(`Memory ${memoryId} is not pinned.`);
+    const alreadyUnpinnedRows = [`Memory ${memoryId} is not pinned.`];
+    for (const row of selectMemoryUnpinEntries(alreadyUnpinnedRows, limit)) {
+      console.log(row);
+    }
     return;
   }
 
@@ -802,7 +828,10 @@ export async function unpinMemoryCommand(
     return;
   }
 
-  console.log(`✓ Unpinned memory ${memoryId}`);
+  const rows = [`✓ Unpinned memory ${memoryId}`];
+  for (const row of selectMemoryUnpinEntries(rows, limit)) {
+    console.log(row);
+  }
 }
 
 const MAX_MEMORY_APPLY_POLICIES_LIMIT = 1000;
