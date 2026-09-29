@@ -540,6 +540,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Rollback a memory to a previous version (single non-empty memory id)')
     .requiredOption('-v, --version <n>', 'Version number to rollback to')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
+    .option('--limit <n>', 'Maximum number of status field rows to show')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -552,6 +553,7 @@ export function registerMemoryCommands(program: Command): void {
           version: parseMemoryVersion(options.version),
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           format: options.json ? 'json' : 'pretty',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);
