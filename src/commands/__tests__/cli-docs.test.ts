@@ -2277,6 +2277,16 @@ describe('CLI docs', () => {
     expect(promoteBlock).toContain(".option('--json'");
   });
 
+  it('documents memory promote --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const promoteBlock = memoryCli.slice(memoryCli.indexOf("command('promote"), memoryCli.indexOf("command('demote"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory promote mem-123 --limit 5');
+    expect(promoteBlock).toContain(".option('--limit <n>'");
+    expect(memory).toContain('export function parseMemoryPromoteLimit');
+  });
+
   it('documents memory promote --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');

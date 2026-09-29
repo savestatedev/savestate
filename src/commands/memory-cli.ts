@@ -296,6 +296,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Promote a memory to a higher tier (faster access; single non-empty memory id)')
     .option('-t, --to <tier>', 'Target tier (L1 or L2)', 'L1')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
+    .option('--limit <n>', 'Maximum number of status field rows to show')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -308,6 +309,7 @@ export function registerMemoryCommands(program: Command): void {
           to: parseMemoryPromoteTo(options.to),
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);

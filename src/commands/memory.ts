@@ -519,6 +519,27 @@ export function formatMemoryPromoteMissingJson(id: string): string {
   );
 }
 
+const MAX_MEMORY_PROMOTE_LIMIT = 1000;
+
+/** Parse memory promote --limit without turning user input errors into an empty promote. */
+export function parseMemoryPromoteLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_PROMOTE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_PROMOTE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N promote status field rows when --limit is set. */
+export function selectMemoryPromoteEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 export async function promoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -527,8 +548,10 @@ export async function promoteMemoryCommand(
     to?: MemoryTier;
     snapshotId?: string;
     format?: 'pretty' | 'json';
+    limit?: string;
   },
 ): Promise<void> {
+  const limit = parseMemoryPromoteLimit(options.limit);
   const targetTier = options.to ?? 'L1';
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options.snapshotId);
 
@@ -555,7 +578,12 @@ export async function promoteMemoryCommand(
     return;
   }
 
-  console.log(`✓ Promoted memory ${memoryId} from ${currentTier} to ${targetTier}`);
+  const rows = [
+    `✓ Promoted memory ${memoryId} from ${currentTier} to ${targetTier}`,
+  ];
+  for (const row of selectMemoryPromoteEntries(rows, limit)) {
+    console.log(row);
+  }
 }
 
 /**
