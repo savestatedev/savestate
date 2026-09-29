@@ -207,6 +207,7 @@ denyCmd
   .command('remove <pattern>')
   .alias('rm')
   .description('Remove a pattern from the denylist (exact match; single non-empty pattern)')
+  .option('--limit <n>', 'Maximum number of status field rows to show')
   .option('--json', 'Output as JSON')
   .action(trustDenyRemoveCommand);
 
