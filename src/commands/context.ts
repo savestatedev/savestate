@@ -130,6 +130,21 @@ export function parseContextConfigLimit(value: string | undefined): number | und
   return limit;
 }
 
+const MAX_CONTEXT_VALIDATE_LIMIT = 1000;
+
+/** Parse context validate --limit without turning user input errors into an empty issue list. */
+export function parseContextValidateLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_VALIDATE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_VALIDATE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
 /** Keep the first N scoring weight or budget allocation rows when --limit is set. */
 export function selectContextConfigEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
@@ -155,6 +170,12 @@ export function parseContextCompileLimit(value: string | undefined): number | un
 export function selectContextCompileEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+/** Keep the first N validation errors or warnings when --limit is set. */
+export function selectContextValidateIssues<T>(issues: T[], limit?: number): T[] {
+  if (limit === undefined) return issues;
+  return issues.slice(0, limit);
 }
 
 export function formatContextCompileJson(brief: RunBrief): string {
@@ -186,12 +207,13 @@ export function formatContextConfigJson(): string {
 export function formatContextValidateJson(
   file: string,
   result: ValidationResult,
+  limit?: number,
 ): string {
   const record: ContextValidateJson = {
     file,
     valid: result.valid,
-    errors: [...result.errors],
-    warnings: [...result.warnings],
+    errors: selectContextValidateIssues(result.errors, limit),
+    warnings: selectContextValidateIssues(result.warnings, limit),
     coverage: {
       constraintsCovered: result.coverage.constraints_covered,
       constraintsTotal: result.coverage.constraints_total,
@@ -458,9 +480,11 @@ export function registerContextCommands(program: Command): void {
     .command('validate')
     .description('Validate a RunBrief')
     .option('-f, --file <path>', 'Path to RunBrief JSON file (single non-empty path)')
+    .option('--limit <n>', 'Maximum number of validation errors and warnings to show')
     .option('--json', 'Output as JSON')
     .action((options) => {
       const filePath = parseContextFile(options.file);
+      const limit = parseContextValidateLimit(options.limit);
       if (!filePath) {
         console.error('Validation requires a RunBrief file (--file)');
         console.error('Usage: savestate context validate --file brief.json');
@@ -488,22 +512,24 @@ export function registerContextCommands(program: Command): void {
       const result = compiler.validate(brief);
 
       if (options.json) {
-        console.log(formatContextValidateJson(filePath, result));
+        console.log(formatContextValidateJson(filePath, result, limit));
         if (!result.valid) process.exit(1);
         return;
       }
 
       console.log(result.valid ? 'Valid RunBrief' : 'Invalid RunBrief');
       console.log(`File: ${filePath}`);
-      if (result.errors.length > 0) {
+      const errors = selectContextValidateIssues(result.errors, limit);
+      const warnings = selectContextValidateIssues(result.warnings, limit);
+      if (errors.length > 0) {
         console.log('Errors:');
-        for (const error of result.errors) {
+        for (const error of errors) {
           console.log(`  ${error}`);
         }
       }
-      if (result.warnings.length > 0) {
+      if (warnings.length > 0) {
         console.log('Warnings:');
-        for (const warning of result.warnings) {
+        for (const warning of warnings) {
           console.log(`  ${warning}`);
         }
       }

@@ -1970,6 +1970,17 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextLimit');
   });
 
+  it('documents context validate --limit as a bounded positive integer', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    const validateBlock = context.slice(context.indexOf("command('validate')"), context.indexOf("command('config')"));
+    expect(contextSection).toContain('--limit');
+    expect(contextSection).toContain('Must be a positive integer up to 1000');
+    expect(contextSection).toContain('or validation errors and warnings');
+    expect(contextSection).toContain('savestate context validate --file brief.json --limit 5');
+    expect(validateBlock).toContain(".option('--limit <n>'");
+    expect(context).toContain('export function parseContextValidateLimit');
+  });
+
   it('registers --json on savestate context validate', () => {
     const validateBlock = context.slice(context.indexOf("command('validate')"), context.indexOf("command('config')"));
     expect(validateBlock).toContain(".option('--json'");
