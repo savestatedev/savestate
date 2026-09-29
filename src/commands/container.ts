@@ -558,6 +558,27 @@ export function formatExportComponents(components: readonly string[]): string {
   return `  Components: ${components.length > 0 ? components.join(', ') : 'none'}`;
 }
 
+const MAX_CONTAINER_EXPORT_LIMIT = 1000;
+
+/** Parse container export --limit without turning user input errors into an empty component list. */
+export function parseContainerExportLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTAINER_EXPORT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTAINER_EXPORT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N packed components when --limit is set on container export. */
+export function selectContainerExportComponents<T>(components: T[], limit?: number): T[] {
+  if (limit === undefined) return components;
+  return components.slice(0, limit);
+}
+
 const MAX_EXPORT_LIMIT = 1000;
 
 /** Parse export --limit without turning user input errors into an empty component list. */
@@ -1173,7 +1194,10 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
         console.log(`Successfully exported agent '${agent}' to ${out}`);
       }
     }
-    const shownComponents = selectExportComponents(validatedComponents.components, limit);
+    const shownComponents = selectContainerExportComponents(
+      selectExportComponents(validatedComponents.components, limit),
+      limit,
+    );
     if (options.json) {
       console.log(
         formatExportResultJson({
@@ -2046,10 +2070,12 @@ export function registerContainerCommands(program: Command) {
     .option('--force', 'Overwrite an existing output file')
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
+    .option('--limit <n>', 'Maximum number of packed components to show')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
       try {
         opts.out = parseContainerOut(opts.out) ?? opts.out;
+        parseContainerExportLimit(opts.limit);
       } catch (error: any) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
@@ -2070,6 +2096,7 @@ export function registerContainerCommands(program: Command) {
         dryRun: opts.dryRun,
         description: opts.description,
         json: opts.json,
+        limit: opts.limit,
       });
       if (!result.written && !result.dryRun) {
         process.exit(1);

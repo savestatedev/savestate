@@ -1685,13 +1685,16 @@
         <tr><td><code>--target &lt;dir&gt;</code></td><td>Write restored agent state to this directory on <code>import</code></td></tr>
         <tr><td><code>--merge</code></td><td>Merge with existing state on <code>import</code> (default: replace)</td></tr>
         <tr><td><code>--replace</code></td><td>Replace existing state on <code>import</code></td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of packed components to show on <code>import</code>. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of packed components to show on <code>export</code> or <code>import</code>. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit export or import results as JSON. Encrypts on <code>export</code>, decrypts on <code>import</code>. Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
 
     <pre><code><span class="code-comment"># Preview an export without writing</span>
 <span class="code-prompt">$</span> savestate container export -a my-agent -o agent.savestate --dry-run
+
+<span class="code-comment"># Cap packed components shown</span>
+<span class="code-prompt">$</span> savestate container export -a my-agent -o agent.savestate --limit 5
 
 <span class="code-comment"># Restore into a directory, replacing an existing target file</span>
 <span class="code-prompt">$</span> savestate container import --in agent.savestate --target ./restored --force
