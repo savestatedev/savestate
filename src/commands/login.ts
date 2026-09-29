@@ -204,6 +204,28 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
 
 interface LogoutOptions {
   json?: boolean;
+  limit?: string;
+}
+
+const MAX_LOGOUT_LIMIT = 1000;
+
+/** Parse logout --limit without turning user input errors into an empty logout. */
+export function parseLogoutLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LOGOUT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_LOGOUT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N logout status field rows when --limit is set. */
+export function selectLogoutEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 export interface LogoutResult {
@@ -244,6 +266,8 @@ export function formatLogoutMissingJson(): string {
  * savestate logout — Remove API key
  */
 export async function logoutCommand(options: LogoutOptions = {}): Promise<void> {
+  const limit = parseLogoutLimit(options.limit);
+
   if (!options.json) {
     console.log();
   }
@@ -270,10 +294,19 @@ export async function logoutCommand(options: LogoutOptions = {}): Promise<void> 
     return;
   }
 
-  if (hadKey) {
-    console.log(chalk.green('  ✓ Logged out. API key removed.'));
-  } else {
-    console.log(chalk.dim('  Not logged in.'));
+  const rows = hadKey
+    ? [
+        `  ${chalk.dim('Status:')}   ${chalk.green('Logged out')}`,
+        `  ${chalk.dim('API key:')}  removed`,
+        `  ${chalk.dim('Account:')}  cleared`,
+      ]
+    : [
+        `  ${chalk.dim('Status:')}   Not logged in`,
+        `  ${chalk.dim('API key:')}  none`,
+        `  ${chalk.dim('Account:')}  none`,
+      ];
+  for (const row of selectLogoutEntries(rows, limit)) {
+    console.log(row);
   }
   console.log();
 }

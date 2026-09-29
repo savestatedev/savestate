@@ -1147,12 +1147,16 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of status field rows to show. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit logout status as JSON. Skips progress output. When SaveState is not initialized, emits a missing summary (found, loggedOut, hadKey; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
     <pre><code><span class="code-comment"># Remove the saved cloud API key</span>
 <span class="code-prompt">$</span> savestate logout
+
+<span class="code-comment"># Cap status field rows</span>
+<span class="code-prompt">$</span> savestate logout --limit 5
 
 <span class="code-comment"># Scriptable logout status</span>
 <span class="code-prompt">$</span> savestate logout --json</code></pre>

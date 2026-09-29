@@ -1453,6 +1453,16 @@ describe('CLI docs', () => {
     expect(logoutBlock).toContain(".option('--json'");
   });
 
+  it('documents logout --limit as a bounded positive integer', () => {
+    const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="cloud"'));
+    const logoutBlock = cli.slice(cli.indexOf("command('logout')"), cli.indexOf("command('schedule')"));
+    expect(logoutSection).toContain('--limit');
+    expect(logoutSection).toContain('Must be a positive integer up to 1000');
+    expect(logoutSection).toContain('savestate logout --limit 5');
+    expect(logoutBlock).toContain(".option('--limit <n>'");
+    expect(login).toContain('export function parseLogoutLimit');
+  });
+
   it('documents logout --json', () => {
     const logoutSection = docs.slice(docs.indexOf('id="logout"'), docs.indexOf('id="cloud"'));
     expect(logoutSection).toContain('--json');
