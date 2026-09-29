@@ -349,6 +349,7 @@ program
   .option('-e, --every <interval>', 'Backup interval (e.g., 1h, 6h, 12h, 1d)')
   .option('-d, --disable', 'Disable scheduled backups')
   .option('-s, --status', 'Show schedule status')
+  .option('--limit <n>', 'Maximum number of status field rows to show')
   .option('--json', 'Output as JSON')
   .action(scheduleCommand);
 

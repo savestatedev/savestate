@@ -20,6 +20,7 @@ interface ScheduleOptions {
   disable?: boolean;
   status?: boolean;
   json?: boolean;
+  limit?: string;
 }
 
 const MAX_SCHEDULE_DAYS = 7;
@@ -46,6 +47,27 @@ export function parseScheduleEvery(value: string): number {
   }
 
   return seconds;
+}
+
+const MAX_SCHEDULE_STATUS_LIMIT = 1000;
+
+/** Parse schedule --limit without turning user input errors into an empty status. */
+export function parseScheduleLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SCHEDULE_STATUS_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SCHEDULE_STATUS_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N schedule status field rows when --limit is set. */
+export function selectScheduleStatusEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
 }
 
 export interface ScheduleStatus {
@@ -131,6 +153,8 @@ async function verifySubscription(): Promise<{ valid: boolean; tier?: string; er
 }
 
 export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
+  const limit = parseScheduleLimit(options.limit);
+
   if (!options.json) {
     console.log();
   }
@@ -146,7 +170,7 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
 
   // Status check - allowed for everyone
   if (options.status || (!options.every && !options.disable)) {
-    await showStatus(options.json);
+    await showStatus(options.json, limit);
     return;
   }
 
@@ -241,7 +265,13 @@ function getScheduleStatus(): ScheduleStatus {
   return { ...base, supported: false };
 }
 
-async function showStatus(asJson?: boolean): Promise<void> {
+function printScheduleStatusEntries(rows: string[], limit?: number): void {
+  for (const row of selectScheduleStatusEntries(rows, limit)) {
+    console.log(row);
+  }
+}
+
+async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
   const status = getScheduleStatus();
   if (asJson) {
     console.log(formatScheduleStatusJson(status));
@@ -251,16 +281,19 @@ async function showStatus(asJson?: boolean): Promise<void> {
   const os = status.platform;
 
   if (!status.supported) {
-    console.log(chalk.yellow(`⚠ Scheduled backups not supported on ${os}`));
-    console.log(chalk.dim('  Use cron manually: */360 * * * * savestate snapshot'));
+    printScheduleStatusEntries([
+      chalk.yellow(`⚠ Scheduled backups not supported on ${os}`),
+      chalk.dim('  Use cron manually: */360 * * * * savestate snapshot'),
+    ], limit);
     console.log();
     return;
   }
 
   if (!status.enabled) {
-    console.log(chalk.yellow('⏸  Scheduled backups: disabled'));
-    console.log();
-    console.log(chalk.dim('  Enable with: savestate schedule --every 6h'));
+    printScheduleStatusEntries([
+      chalk.yellow('⏸  Scheduled backups: disabled'),
+      chalk.dim('  Enable with: savestate schedule --every 6h'),
+    ], limit);
     console.log();
     return;
   }
@@ -268,9 +301,11 @@ async function showStatus(asJson?: boolean): Promise<void> {
   if (os === 'darwin' && status.running) {
     console.log(chalk.green(`✓ Scheduled backups: enabled`));
     console.log();
-    console.log(`  ${chalk.dim('Interval:')}  every ${status.intervalHours}h`);
-    console.log(`  ${chalk.dim('Job:')}       ${status.job}`);
-    console.log(`  ${chalk.dim('Plist:')}     ${status.path}`);
+    printScheduleStatusEntries([
+      `  ${chalk.dim('Interval:')}  every ${status.intervalHours}h`,
+      `  ${chalk.dim('Job:')}       ${status.job}`,
+      `  ${chalk.dim('Plist:')}     ${status.path}`,
+    ], limit);
     console.log();
     console.log(chalk.dim('  View logs: tail -f ~/Library/Logs/savestate-autobackup.log'));
     console.log(chalk.dim('  Disable:   savestate schedule --disable'));
@@ -281,7 +316,9 @@ async function showStatus(asJson?: boolean): Promise<void> {
   if (os === 'linux' && status.running) {
     console.log(chalk.green(`✓ Scheduled backups: enabled`));
     console.log();
-    console.log(`  ${chalk.dim('Timer:')} ${status.job}.timer`);
+    printScheduleStatusEntries([
+      `  ${chalk.dim('Timer:')} ${status.job}.timer`,
+    ], limit);
     console.log(chalk.dim('  View: systemctl --user status ' + LABEL + '.timer'));
     console.log(chalk.dim('  Logs: journalctl --user -u ' + LABEL));
     console.log();
@@ -289,19 +326,25 @@ async function showStatus(asJson?: boolean): Promise<void> {
   }
 
   if (os === 'darwin') {
-    console.log(chalk.yellow('⏸  Scheduled backups: configured but not running'));
-    console.log(chalk.dim(`   Try: launchctl load ${status.path}`));
+    printScheduleStatusEntries([
+      chalk.yellow('⏸  Scheduled backups: configured but not running'),
+      chalk.dim(`   Try: launchctl load ${status.path}`),
+    ], limit);
     console.log();
     return;
   }
 
   if (os === 'linux') {
-    console.log(chalk.yellow('⏸  Scheduled backups: configured but not running'));
+    printScheduleStatusEntries([
+      chalk.yellow('⏸  Scheduled backups: configured but not running'),
+    ], limit);
     console.log();
     return;
   }
 
-  console.log(chalk.yellow('⏸  Scheduled backups: unknown status'));
+  printScheduleStatusEntries([
+    chalk.yellow('⏸  Scheduled backups: unknown status'),
+  ], limit);
   console.log();
 }
 
