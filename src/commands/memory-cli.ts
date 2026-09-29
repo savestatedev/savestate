@@ -323,6 +323,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Demote a memory to a lower tier (archival; single non-empty memory id)')
     .option('-t, --to <tier>', 'Target tier (L2 or L3)', 'L3')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
+    .option('--limit <n>', 'Maximum number of status field rows to show')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -335,6 +336,7 @@ export function registerMemoryCommands(program: Command): void {
           to: parseMemoryDemoteTo(options.to),
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
+          limit: options.limit,
         });
       } catch (err) {
         handleError(err);

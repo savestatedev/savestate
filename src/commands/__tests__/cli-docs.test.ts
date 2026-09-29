@@ -2311,6 +2311,16 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryDemoteTo');
   });
 
+  it('documents memory demote --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const demoteBlock = memoryCli.slice(memoryCli.indexOf("command('demote"), memoryCli.indexOf("command('pin"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('savestate memory demote mem-123 --limit 5');
+    expect(demoteBlock).toContain(".option('--limit <n>'");
+    expect(memory).toContain('export function parseMemoryDemoteLimit');
+  });
+
   it('registers --json on savestate memory demote', () => {
     const demoteBlock = memoryCli.slice(memoryCli.indexOf("command('demote"), memoryCli.indexOf("command('pin"));
     expect(demoteBlock).toContain(".option('--json'");

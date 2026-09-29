@@ -620,6 +620,27 @@ export function formatMemoryDemoteMissingJson(id: string): string {
   );
 }
 
+const MAX_MEMORY_DEMOTE_LIMIT = 1000;
+
+/** Parse memory demote --limit without turning user input errors into an empty demote. */
+export function parseMemoryDemoteLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_DEMOTE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_DEMOTE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N demote status field rows when --limit is set. */
+export function selectMemoryDemoteEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 export async function demoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -628,8 +649,10 @@ export async function demoteMemoryCommand(
     to?: MemoryTier;
     snapshotId?: string;
     format?: 'pretty' | 'json';
+    limit?: string;
   },
 ): Promise<void> {
+  const limit = parseMemoryDemoteLimit(options.limit);
   const targetTier = options.to ?? 'L3';
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options.snapshotId);
 
@@ -656,7 +679,12 @@ export async function demoteMemoryCommand(
     return;
   }
 
-  console.log(`✓ Demoted memory ${memoryId} from ${currentTier} to ${targetTier}`);
+  const rows = [
+    `✓ Demoted memory ${memoryId} from ${currentTier} to ${targetTier}`,
+  ];
+  for (const row of selectMemoryDemoteEntries(rows, limit)) {
+    console.log(row);
+  }
 }
 
 /**
