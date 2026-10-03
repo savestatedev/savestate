@@ -3337,6 +3337,16 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityTestLimit');
   });
 
+  it('documents integrity rotate --limit as a bounded positive integer', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--limit');
+    expect(integritySection).toContain('Must be a positive integer up to 1000');
+    expect(integritySection).toContain('or rotate status field rows on <code>rotate</code>');
+    expect(integritySection).toContain('savestate integrity rotate --limit 5');
+    expect(integrity).toContain(".option('--limit <n>'");
+    expect(integrity).toContain('export function parseIntegrityRotateLimit');
+  });
+
   it('documents integrity --policy as a known containment policy', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--policy');
