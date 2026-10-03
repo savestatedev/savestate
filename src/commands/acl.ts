@@ -336,8 +336,30 @@ export function selectAclGateEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+const MAX_ACL_PROPOSE_LIMIT = 1000;
+
+/** Parse acl propose --limit without turning user input errors into an empty propose. */
+export function parseAclProposeLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ACL_PROPOSE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ACL_PROPOSE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N propose status field rows when --limit is set. */
+export function selectAclProposeEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 async function aclPropose(options: AclCommandOptions) {
   try {
+    const limit = parseAclProposeLimit(options.limit);
     let expiresAt: string | undefined;
     const minutes = parseAclExpiresIn(options.expiresIn);
     if (minutes !== undefined) {
@@ -357,10 +379,15 @@ async function aclPropose(options: AclCommandOptions) {
       return;
     }
 
-    console.log(`Commitment proposed: ${commitment.id}`);
-    console.log(`State: ${commitment.state}`);
-    console.log(`Criticality: ${commitment.criticality}`);
-    console.log(`Expires: ${commitment.expiresAt || 'Never'}`);
+    const rows = [
+      `Commitment proposed: ${commitment.id}`,
+      `State: ${commitment.state}`,
+      `Criticality: ${commitment.criticality}`,
+      `Expires: ${commitment.expiresAt || 'Never'}`,
+    ];
+    for (const row of selectAclProposeEntries(rows, limit)) {
+      console.log(row);
+    }
   } catch (error: any) {
     console.error('Error proposing commitment:', error.message);
     process.exit(1);
@@ -478,7 +505,7 @@ export function registerACLCommands(program: Command) {
     .option('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
     .option('--approve', 'Approve the commitment (default is reject)')
     .option('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
-    .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify or gate')
+    .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify, gate, or propose')
     .option('--json', 'Output as JSON')
     .action(aclCommand);
 }
