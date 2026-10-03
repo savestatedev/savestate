@@ -289,6 +289,27 @@ export function selectIntegrityTestEntries<T>(entries: T[], limit?: number): T[]
   return entries.slice(0, limit);
 }
 
+const MAX_INTEGRITY_ROTATE_LIMIT = 1000;
+
+/** Parse integrity rotate --limit without turning user input errors into an empty rotate. */
+export function parseIntegrityRotateLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INTEGRITY_ROTATE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_ROTATE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N rotate status field rows when --limit is set. */
+export function selectIntegrityRotateEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const MAX_INTEGRITY_SEED_LIMIT = 1000;
 
 /** Parse integrity seed --limit without turning user input errors into an empty category list. */
@@ -987,6 +1008,7 @@ export async function integrityCommand(
   const releaseLimit = subcommand === 'release' ? parseIntegrityReleaseLimit(options.limit) : undefined;
   const incidentLimit = subcommand === 'incident' ? parseIntegrityIncidentLimit(options.limit) : undefined;
   const testLimit = subcommand === 'test' ? parseIntegrityTestLimit(options.limit) : undefined;
+  const rotateLimit = subcommand === 'rotate' ? parseIntegrityRotateLimit(options.limit) : undefined;
   const seedLimit = subcommand === 'seed' ? parseIntegritySeedLimit(options.limit) : undefined;
   const policy = parseIntegrityPolicy(options.policy);
 
@@ -1052,7 +1074,7 @@ export async function integrityCommand(
       await seedCommand(options, seedLimit);
       return;
     case 'rotate':
-      await rotateCommand(options);
+      await rotateCommand(options, rotateLimit);
       return;
     case 'incidents':
       await incidentsCommand(options);
@@ -1218,7 +1240,7 @@ async function seedCommand(options: IntegrityOptions, limit?: number): Promise<v
 /**
  * Rotate expired honeyfacts.
  */
-async function rotateCommand(options: IntegrityOptions): Promise<void> {
+async function rotateCommand(options: IntegrityOptions, limit?: number): Promise<void> {
   const config = await loadConfig();
   const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
   const ttl_days = config.integrity?.honeyfact.ttl_days ?? 7;
@@ -1243,13 +1265,19 @@ async function rotateCommand(options: IntegrityOptions): Promise<void> {
     return;
   }
 
-  if (result.rotated === 0) {
-    console.log(chalk.dim('  No honeyfacts needed rotation.'));
-    console.log(chalk.dim(`  Active: ${result.valid}`));
-  } else {
-    console.log(chalk.green(`✓ Rotated ${result.rotated} honeyfacts`));
-    console.log(chalk.dim(`  Created: ${result.created.length}`));
-    console.log(chalk.dim(`  Active: ${result.valid}`));
+  const rows =
+    result.rotated === 0
+      ? [
+          chalk.dim('  No honeyfacts needed rotation.'),
+          chalk.dim(`  Active: ${result.valid}`),
+        ]
+      : [
+          chalk.green(`✓ Rotated ${result.rotated} honeyfacts`),
+          chalk.dim(`  Created: ${result.created.length}`),
+          chalk.dim(`  Active: ${result.valid}`),
+        ];
+  for (const row of selectIntegrityRotateEntries(rows, limit)) {
+    console.log(row);
   }
   console.log();
 }
@@ -1718,7 +1746,7 @@ function showUsage(): void {
   console.log();
   console.log('  savestate integrity status [--limit <n>]       Show integrity monitoring status');
   console.log('  savestate integrity seed [--count N] [--limit <n>] Plant honeyfact memories');
-  console.log('  savestate integrity rotate                     Rotate expired honeyfacts');
+  console.log('  savestate integrity rotate [--limit <n>]       Rotate expired honeyfacts');
   console.log('  savestate integrity incidents [--status <s>] [--limit <n>]   List detected incidents');
   console.log('  savestate integrity incident <id> [--limit <n>] Show incident details (single non-empty incident id)');
   console.log('  savestate integrity quarantine <id> [--limit <n>]  Quarantine a memory/agent');
@@ -1730,7 +1758,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
-  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed');
+  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed, or rotate status field rows');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1749,7 +1777,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
-    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed')
+    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed, or rotate status field rows')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
