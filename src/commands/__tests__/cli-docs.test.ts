@@ -3283,6 +3283,16 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityStatusLimit');
   });
 
+  it('documents integrity incident --limit as a bounded positive integer', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--limit');
+    expect(integritySection).toContain('Must be a positive integer up to 1000');
+    expect(integritySection).toContain('or event rows on');
+    expect(integritySection).toContain('savestate integrity incident inc-123 --limit 5');
+    expect(integrity).toContain(".option('--limit <n>'");
+    expect(integrity).toContain('export function parseIntegrityIncidentLimit');
+  });
+
   it('documents integrity --policy as a known containment policy', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--policy');

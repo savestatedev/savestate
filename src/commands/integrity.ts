@@ -205,6 +205,27 @@ export function selectIntegrityStatusEntries<T>(entries: T[], limit?: number): T
   return entries.slice(0, limit);
 }
 
+const MAX_INTEGRITY_INCIDENT_LIMIT = 1000;
+
+/** Parse integrity incident --limit without turning user input errors into an empty event list. */
+export function parseIntegrityIncidentLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INTEGRITY_INCIDENT_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_INCIDENT_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N incident event rows when --limit is set. */
+export function selectIntegrityIncidentEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /** Parse integrity --policy without silently ignoring unknown containment policies. */
 export function parseIntegrityPolicy(
   value: string | undefined,
@@ -878,6 +899,7 @@ export async function integrityCommand(
   const testInput = subcommand === 'test' ? parseIntegrityTestInput(args[0]) : undefined;
   const configLimit = subcommand === 'config' ? parseIntegrityConfigLimit(options.limit) : undefined;
   const statusLimit = subcommand === 'status' ? parseIntegrityStatusLimit(options.limit) : undefined;
+  const incidentLimit = subcommand === 'incident' ? parseIntegrityIncidentLimit(options.limit) : undefined;
   const policy = parseIntegrityPolicy(options.policy);
 
   if (!options.json) {
@@ -948,7 +970,7 @@ export async function integrityCommand(
       await incidentsCommand(options);
       return;
     case 'incident':
-      await incidentDetailCommand(incidentId!, options);
+      await incidentDetailCommand(incidentId!, options, incidentLimit);
       return;
     case 'quarantine':
       await quarantineCommand(targetId!, options);
@@ -1202,7 +1224,7 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
 /**
  * Show incident details.
  */
-async function incidentDetailCommand(id: string, options: IntegrityOptions): Promise<void> {
+async function incidentDetailCommand(id: string, options: IntegrityOptions, limit?: number): Promise<void> {
   const incident = await getIncident(id);
 
   if (!incident) {
@@ -1246,7 +1268,7 @@ async function incidentDetailCommand(id: string, options: IntegrityOptions): Pro
   }
 
   console.log(chalk.bold(`  Events (${incident.events.length})`));
-  for (const event of incident.events) {
+  for (const event of selectIntegrityIncidentEntries(incident.events, limit)) {
     console.log(`    ${chalk.cyan(event.id)} ${event.detected_in.padEnd(12)} confidence=${event.confidence.toFixed(2)}`);
     console.log(`      honeyfact: ${event.honeyfact_id}`);
     console.log(`      matched: "${event.context.matched_content.slice(0, 50)}${event.context.matched_content.length > 50 ? '...' : ''}"`);
@@ -1595,7 +1617,7 @@ function showUsage(): void {
   console.log('  savestate integrity seed [--count N]           Plant honeyfact memories');
   console.log('  savestate integrity rotate                     Rotate expired honeyfacts');
   console.log('  savestate integrity incidents [--status <s>] [--limit <n>]   List detected incidents');
-  console.log('  savestate integrity incident <id>              Show incident details (single non-empty incident id)');
+  console.log('  savestate integrity incident <id> [--limit <n>] Show incident details (single non-empty incident id)');
   console.log('  savestate integrity quarantine <id>            Quarantine a memory/agent');
   console.log('  savestate integrity release <id>               Release from quarantine');
   console.log('  savestate integrity config [key=value]         View/set configuration (non-empty key=value)');
@@ -1605,7 +1627,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
-  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status');
+  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or event rows on incident');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1624,7 +1646,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
-    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status')
+    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or event rows on incident')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
