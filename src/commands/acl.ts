@@ -294,6 +294,27 @@ export function applyAclLimit<T>(commitments: T[], limit: number | undefined): T
   return commitments.slice(0, limit);
 }
 
+const MAX_ACL_VERIFY_LIMIT = 1000;
+
+/** Parse acl verify --limit without turning user input errors into an empty verify. */
+export function parseAclVerifyLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ACL_VERIFY_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ACL_VERIFY_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N verify status field rows when --limit is set. */
+export function selectAclVerifyEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 async function aclPropose(options: AclCommandOptions) {
   try {
     let expiresAt: string | undefined;
@@ -327,6 +348,7 @@ async function aclPropose(options: AclCommandOptions) {
 
 async function aclVerify(options: AclCommandOptions) {
   try {
+    const limit = parseAclVerifyLimit(options.limit);
     const id = parseAclId(options.id);
     const verifier = parseAclVerifier(options.verifier);
     const commitment = verifyCommitment(id, verifier, options.approve === true);
@@ -342,8 +364,13 @@ async function aclVerify(options: AclCommandOptions) {
       console.log(formatAclCommitmentJson(commitment));
       return;
     }
-    console.log(`Commitment ${id} is now: ${commitment.state}`);
-    console.log(`Verified by: ${commitment.verifier}`);
+    const rows = [
+      `Commitment ${id} is now: ${commitment.state}`,
+      `Verified by: ${commitment.verifier}`,
+    ];
+    for (const row of selectAclVerifyEntries(rows, limit)) {
+      console.log(row);
+    }
   } catch (error: any) {
     console.error('Error verifying commitment:', error.message);
     process.exit(1);
@@ -430,7 +457,7 @@ export function registerACLCommands(program: Command) {
     .option('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
     .option('--approve', 'Approve the commitment (default is reject)')
     .option('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
-    .option('--limit <n>', 'Maximum number of commitments to show')
+    .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify')
     .option('--json', 'Output as JSON')
     .action(aclCommand);
 }
