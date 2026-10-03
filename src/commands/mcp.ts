@@ -198,6 +198,27 @@ export function selectMcpStatusItems<T>(items: T[], limit?: number): T[] {
   return items.slice(0, limit);
 }
 
+const MAX_MCP_SERVE_LIMIT = 1000;
+
+/** Parse mcp serve --limit without turning user input errors into an empty serve. */
+export function parseMcpServeLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_SERVE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_SERVE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N serve status field rows when --limit is set. */
+export function selectMcpServeEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 const MCP_SUBCOMMANDS = ['serve', 'status', 'export', 'import'] as const;
 export type McpSubcommand = (typeof MCP_SUBCOMMANDS)[number];
 const MCP_SUBCOMMAND_LIST = MCP_SUBCOMMANDS.join(', ');
@@ -226,17 +247,26 @@ export function parseMcpSubcommand(value: string | undefined): McpSubcommand {
 interface MCPServeOptions {
   port?: string;
   stdio?: boolean;
+  limit?: string;
 }
 
 async function mcpServeCommand(options: MCPServeOptions): Promise<void> {
+  const limit = parseMcpServeLimit(options.limit);
   const spinner = ora('Starting MCP server...').start();
 
   try {
     // Default to stdio mode for MCP
     if (options.stdio !== false) {
       spinner.succeed('Starting MCP server in stdio mode');
-      console.log(chalk.cyan('\nMCP server will communicate via stdin/stdout.'));
-      console.log(chalk.gray('Configure your MCP client to use this command.\n'));
+      const rows = [
+        chalk.cyan('MCP server will communicate via stdin/stdout.'),
+        chalk.gray('Configure your MCP client to use this command.'),
+      ];
+      console.log();
+      for (const row of selectMcpServeEntries(rows, limit)) {
+        console.log(row);
+      }
+      console.log();
 
       // Import and start the MCP server
       const { startMCPServer } = await import('../mcp/server.js');
@@ -249,8 +279,14 @@ async function mcpServeCommand(options: MCPServeOptions): Promise<void> {
 
       // For now, HTTP mode is not implemented
       spinner.warn('HTTP mode not yet implemented. Use --stdio (default) instead.');
-      console.log(chalk.yellow('\nHTTP server mode is planned for a future release.'));
-      console.log(chalk.gray('For now, use stdio mode with your MCP client.'));
+      const rows = [
+        chalk.yellow('HTTP server mode is planned for a future release.'),
+        chalk.gray('For now, use stdio mode with your MCP client.'),
+      ];
+      console.log();
+      for (const row of selectMcpServeEntries(rows, limit)) {
+        console.log(row);
+      }
     }
   } catch (err) {
     spinner.fail('Failed to start MCP server');
@@ -772,7 +808,7 @@ export function registerMCPCommands(program: Command): void {
     .option('-a, --agent <id>', 'Agent ID to export or import (single non-empty id, default: "default")')
     .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
-    .option('--limit <n>', 'Maximum number of MCP tools and resources to show on status, memories and snapshot metadata rows on export, or memories to import')
+    .option('--limit <n>', 'Maximum number of MCP tools and resources to show on status, memories and snapshot metadata rows on export, memories to import, or serve status field rows')
     .option('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
