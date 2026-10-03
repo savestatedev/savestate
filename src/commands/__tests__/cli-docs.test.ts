@@ -3347,6 +3347,16 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityRotateLimit');
   });
 
+  it('documents integrity seed --limit as a bounded positive integer', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--limit');
+    expect(integritySection).toContain('Must be a positive integer up to 1000');
+    expect(integritySection).toContain('or category rows on <code>seed</code>');
+    expect(integritySection).toContain('savestate integrity seed --count 10 --limit 5');
+    expect(integrity).toContain(".option('--limit <n>'");
+    expect(integrity).toContain('export function parseIntegritySeedLimit');
+  });
+
   it('documents integrity --policy as a known containment policy', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--policy');
