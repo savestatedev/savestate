@@ -315,6 +315,27 @@ export function selectAclVerifyEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+const MAX_ACL_GATE_LIMIT = 1000;
+
+/** Parse acl gate --limit without turning user input errors into an empty gate. */
+export function parseAclGateLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ACL_GATE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ACL_GATE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N gate status field rows when --limit is set. */
+export function selectAclGateEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 async function aclPropose(options: AclCommandOptions) {
   try {
     let expiresAt: string | undefined;
@@ -379,6 +400,7 @@ async function aclVerify(options: AclCommandOptions) {
 
 async function aclGate(options: AclCommandOptions) {
   try {
+    const limit = parseAclGateLimit(options.limit);
     const action = parseAclAction(options.action);
     const result = gateAction(action);
     if (options.json) {
@@ -391,14 +413,13 @@ async function aclGate(options: AclCommandOptions) {
       );
       process.exit(result.allowed ? 0 : 1);
     }
-    if (result.allowed) {
-      console.log(`✅ Action '${action}' is ALLOWED`);
-      process.exit(0);
-    } else {
-      console.log(`❌ Action '${action}' is BLOCKED`);
-      console.log(`Reason: ${result.reason}`);
-      process.exit(1);
+    const rows = result.allowed
+      ? [`✅ Action '${action}' is ALLOWED`]
+      : [`❌ Action '${action}' is BLOCKED`, `Reason: ${result.reason}`];
+    for (const row of selectAclGateEntries(rows, limit)) {
+      console.log(row);
     }
+    process.exit(result.allowed ? 0 : 1);
   } catch (error: any) {
     console.error('Error gating action:', error.message);
     process.exit(1);
@@ -457,7 +478,7 @@ export function registerACLCommands(program: Command) {
     .option('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
     .option('--approve', 'Approve the commitment (default is reject)')
     .option('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
-    .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify')
+    .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify or gate')
     .option('--json', 'Output as JSON')
     .action(aclCommand);
 }
