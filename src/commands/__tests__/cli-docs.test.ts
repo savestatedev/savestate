@@ -1937,6 +1937,17 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function parseMcpStatusLimit');
   });
 
+  it('documents mcp serve --limit as a bounded positive integer', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));
+    expect(mcpSection).toContain('--limit');
+    expect(mcpSection).toContain('Must be a positive integer up to 1000');
+    expect(mcpSection).toContain('or serve status field rows on');
+    expect(mcpSection).toContain('savestate mcp serve --limit 5');
+    expect(mcpBlock).toContain(".option('--limit <n>'");
+    expect(mcp).toContain('export function parseMcpServeLimit');
+  });
+
   it('documents mcp export --json', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     expect(mcpSection).toContain('--json');
