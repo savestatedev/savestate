@@ -205,6 +205,27 @@ export function selectIntegrityStatusEntries<T>(entries: T[], limit?: number): T
   return entries.slice(0, limit);
 }
 
+const MAX_INTEGRITY_QUARANTINE_LIMIT = 1000;
+
+/** Parse integrity quarantine --limit without turning user input errors into an empty quarantine. */
+export function parseIntegrityQuarantineLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INTEGRITY_QUARANTINE_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_QUARANTINE_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N quarantine status field rows when --limit is set. */
+export function selectIntegrityQuarantineEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /** Parse integrity --policy without silently ignoring unknown containment policies. */
 export function parseIntegrityPolicy(
   value: string | undefined,
@@ -878,6 +899,7 @@ export async function integrityCommand(
   const testInput = subcommand === 'test' ? parseIntegrityTestInput(args[0]) : undefined;
   const configLimit = subcommand === 'config' ? parseIntegrityConfigLimit(options.limit) : undefined;
   const statusLimit = subcommand === 'status' ? parseIntegrityStatusLimit(options.limit) : undefined;
+  const quarantineLimit = subcommand === 'quarantine' ? parseIntegrityQuarantineLimit(options.limit) : undefined;
   const policy = parseIntegrityPolicy(options.policy);
 
   if (!options.json) {
@@ -951,7 +973,7 @@ export async function integrityCommand(
       await incidentDetailCommand(incidentId!, options);
       return;
     case 'quarantine':
-      await quarantineCommand(targetId!, options);
+      await quarantineCommand(targetId!, options, quarantineLimit);
       return;
     case 'release':
       await releaseCommand(targetId!, options);
@@ -1257,7 +1279,7 @@ async function incidentDetailCommand(id: string, options: IntegrityOptions): Pro
 /**
  * Quarantine a memory or agent.
  */
-async function quarantineCommand(id: string, options: IntegrityOptions): Promise<void> {
+async function quarantineCommand(id: string, options: IntegrityOptions, limit?: number): Promise<void> {
   if (!id) {
     console.log(chalk.red('✗ ID required'));
     console.log(chalk.dim('  Usage: savestate integrity quarantine <memory_id|agent_id>'));
@@ -1307,15 +1329,20 @@ async function quarantineCommand(id: string, options: IntegrityOptions): Promise
     process.exit(1);
   }
 
-  if (result.requires_approval) {
-    console.log(chalk.yellow('⏳ Quarantine pending approval'));
-    console.log(chalk.dim(`  ID: ${id}`));
-    console.log(chalk.dim(`  Reason: ${reason}`));
-    console.log(chalk.dim('  Use --force to bypass approval'));
-  } else {
-    console.log(chalk.green(`✓ ${isAgent ? 'Agent' : 'Memory'} quarantined: ${id}`));
-    console.log(chalk.dim(`  Event: ${result.event.id}`));
-    console.log(chalk.dim(`  Reason: ${reason}`));
+  const rows = result.requires_approval
+    ? [
+        chalk.yellow('⏳ Quarantine pending approval'),
+        chalk.dim(`  ID: ${id}`),
+        chalk.dim(`  Reason: ${reason}`),
+        chalk.dim('  Use --force to bypass approval'),
+      ]
+    : [
+        chalk.green(`✓ ${isAgent ? 'Agent' : 'Memory'} quarantined: ${id}`),
+        chalk.dim(`  Event: ${result.event.id}`),
+        chalk.dim(`  Reason: ${reason}`),
+      ];
+  for (const row of selectIntegrityQuarantineEntries(rows, limit)) {
+    console.log(row);
   }
   console.log();
 }
@@ -1596,7 +1623,7 @@ function showUsage(): void {
   console.log('  savestate integrity rotate                     Rotate expired honeyfacts');
   console.log('  savestate integrity incidents [--status <s>] [--limit <n>]   List detected incidents');
   console.log('  savestate integrity incident <id>              Show incident details (single non-empty incident id)');
-  console.log('  savestate integrity quarantine <id>            Quarantine a memory/agent');
+  console.log('  savestate integrity quarantine <id> [--limit <n>]  Quarantine a memory/agent');
   console.log('  savestate integrity release <id>               Release from quarantine');
   console.log('  savestate integrity config [key=value]         View/set configuration (non-empty key=value)');
   console.log('  savestate integrity test "<text>"              Test tripwire with input (non-empty)');
@@ -1605,7 +1632,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
-  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status');
+  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1624,7 +1651,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
-    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status')
+    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
