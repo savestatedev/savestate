@@ -289,6 +289,27 @@ export function selectIntegrityTestEntries<T>(entries: T[], limit?: number): T[]
   return entries.slice(0, limit);
 }
 
+const MAX_INTEGRITY_SEED_LIMIT = 1000;
+
+/** Parse integrity seed --limit without turning user input errors into an empty category list. */
+export function parseIntegritySeedLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_INTEGRITY_SEED_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_INTEGRITY_SEED_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N seed category rows when --limit is set. */
+export function selectIntegritySeedEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
 /** Parse integrity --policy without silently ignoring unknown containment policies. */
 export function parseIntegrityPolicy(
   value: string | undefined,
@@ -966,6 +987,7 @@ export async function integrityCommand(
   const releaseLimit = subcommand === 'release' ? parseIntegrityReleaseLimit(options.limit) : undefined;
   const incidentLimit = subcommand === 'incident' ? parseIntegrityIncidentLimit(options.limit) : undefined;
   const testLimit = subcommand === 'test' ? parseIntegrityTestLimit(options.limit) : undefined;
+  const seedLimit = subcommand === 'seed' ? parseIntegritySeedLimit(options.limit) : undefined;
   const policy = parseIntegrityPolicy(options.policy);
 
   if (!options.json) {
@@ -1027,7 +1049,7 @@ export async function integrityCommand(
       await showStatus(options, statusLimit);
       return;
     case 'seed':
-      await seedCommand(options);
+      await seedCommand(options, seedLimit);
       return;
     case 'rotate':
       await rotateCommand(options);
@@ -1147,7 +1169,7 @@ async function showStatus(options: IntegrityOptions, limit?: number): Promise<vo
 /**
  * Seed honeyfacts.
  */
-async function seedCommand(options: IntegrityOptions): Promise<void> {
+async function seedCommand(options: IntegrityOptions, limit?: number): Promise<void> {
   const config = await loadConfig();
   const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
   const count = parseIntegrityCount(options.count) ?? (config.integrity?.honeyfact.count ?? 10);
@@ -1184,7 +1206,7 @@ async function seedCommand(options: IntegrityOptions): Promise<void> {
   }
 
   console.log(chalk.dim('  Categories:'));
-  for (const [category, count] of Object.entries(byCategory)) {
+  for (const [category, count] of selectIntegritySeedEntries(Object.entries(byCategory), limit)) {
     console.log(`    ${category}: ${count}`);
   }
   console.log();
@@ -1695,7 +1717,7 @@ function showUsage(): void {
   console.log(chalk.bold('Memory Integrity Grid commands:'));
   console.log();
   console.log('  savestate integrity status [--limit <n>]       Show integrity monitoring status');
-  console.log('  savestate integrity seed [--count N]           Plant honeyfact memories');
+  console.log('  savestate integrity seed [--count N] [--limit <n>] Plant honeyfact memories');
   console.log('  savestate integrity rotate                     Rotate expired honeyfacts');
   console.log('  savestate integrity incidents [--status <s>] [--limit <n>]   List detected incidents');
   console.log('  savestate integrity incident <id> [--limit <n>] Show incident details (single non-empty incident id)');
@@ -1708,7 +1730,7 @@ function showUsage(): void {
   console.log('Options:');
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
-  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test');
+  console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1727,7 +1749,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--tenant <id>', 'Tenant ID (single non-empty id, default: "default")')
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
-    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test')
+    .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
