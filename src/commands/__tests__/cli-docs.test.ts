@@ -3297,6 +3297,16 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityStatusLimit');
   });
 
+  it('documents integrity quarantine --limit as a bounded positive integer', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('--limit');
+    expect(integritySection).toContain('Must be a positive integer up to 1000');
+    expect(integritySection).toContain('or quarantine status field rows');
+    expect(integritySection).toContain('savestate integrity quarantine mem-123 --limit 5');
+    expect(integrity).toContain(".option('--limit <n>'");
+    expect(integrity).toContain('export function parseIntegrityQuarantineLimit');
+  });
+
   it('documents integrity --policy as a known containment policy', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--policy');
