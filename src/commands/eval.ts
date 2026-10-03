@@ -168,8 +168,8 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
 
   // Filter by suite name if specified
   const suite = parseEvalSuite(options.suite);
-  const limit = parseEvalLimit(options.limit);
-  const suitesToRun = selectEvalSuites(
+  const limit = parseEvalQualityLimit(options.limit);
+  const suitesToRun = selectEvalQualitySuites(
     suite ? suites.filter((s) => s.name === suite) : suites,
     limit,
   );
@@ -397,6 +397,27 @@ export function parseEvalReportLimit(value: string | undefined): number | undefi
 
 /** Keep the first N report suites when --limit is set. */
 export function selectEvalReportSuites<T>(suites: T[], limit?: number): T[] {
+  if (limit === undefined) return suites;
+  return suites.slice(0, limit);
+}
+
+const MAX_EVAL_QUALITY_LIMIT = 1000;
+
+/** Parse eval quality --limit without turning user input errors into an empty suite list. */
+export function parseEvalQualityLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_EVAL_QUALITY_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_EVAL_QUALITY_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N quality suites when --limit is set. */
+export function selectEvalQualitySuites<T>(suites: T[], limit?: number): T[] {
   if (limit === undefined) return suites;
   return suites.slice(0, limit);
 }
