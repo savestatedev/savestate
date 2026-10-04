@@ -59,6 +59,7 @@ import { resolveStorage } from '../storage/resolve.js';
 import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
+import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 
@@ -323,6 +324,10 @@ const tools: Tool[] = [
           type: 'string',
           description: 'Single memory content (alternative to memories array)',
         },
+        limit: {
+          type: 'number',
+          description: 'Maximum memories to store in this call (positive integer up to 1000)',
+        },
       },
     },
   },
@@ -485,6 +490,7 @@ const AddMemoriesInputSchema = z.object({
     metadata: z.record(z.string(), z.any()).optional(),
   })).optional(),
   content: z.string().optional(),
+  limit: z.number().optional(),
 });
 
 const ListMemoriesInputSchema = z.object({
@@ -828,10 +834,11 @@ async function handleAddMemories(
   try {
     const store = getMemoryStore();
     const created: MemoryEntry[] = [];
+    const limit = parseAddMemoriesLimit(input.limit);
 
     // Handle array of memories
     if (input.memories && input.memories.length > 0) {
-      for (const mem of input.memories) {
+      for (const mem of selectAddMemoriesEntries(input.memories, limit)) {
         const entry = await store.create({
           type: mem.type ?? 'fact',
           content: mem.content,
