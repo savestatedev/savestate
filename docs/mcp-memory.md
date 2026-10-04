@@ -52,7 +52,7 @@ Once configured, your AI assistant can use these tools:
 
 ### add_memories
 
-Store one or more memory entries.
+Store one or more memory entries. `limit` is a positive integer up to 1000.
 
 **Input:**
 ```json
