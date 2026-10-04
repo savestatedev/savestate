@@ -59,6 +59,7 @@ import { resolveStorage } from '../storage/resolve.js';
 import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
+import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
 
@@ -233,7 +234,7 @@ const tools: Tool[] = [
         },
         limit: {
           type: 'number',
-          description: 'Maximum results to return (default: 10)',
+          description: 'Maximum results to return (default: 10; positive integer up to 1000)',
         },
         minImportance: {
           type: 'number',
@@ -348,7 +349,7 @@ const tools: Tool[] = [
         },
         limit: {
           type: 'number',
-          description: 'Maximum results (default: 10)',
+          description: 'Maximum results (default: 10; positive integer up to 1000)',
         },
       },
     },
@@ -762,15 +763,16 @@ async function handleMemorySearch(
   try {
     const store = getMemoryStore();
 
+    const limit = parseSearchMemoryLimit(input.limit);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
       search: input.query,
-      limit: input.limit ?? 10,
+      limit: limit ?? 10,
       minImportance: input.minImportance,
     };
 
-    const results = await store.query(query);
+    const results = selectSearchMemoryEntries(await store.query(query), limit);
 
     if (results.length === 0) {
       return 'No memories found matching your query.';

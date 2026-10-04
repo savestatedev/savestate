@@ -83,7 +83,7 @@ Or for a single memory:
 
 ### search_memory
 
-Search memories by query text and filters.
+Search memories by query text and filters. `limit` is a positive integer up to 1000 (default 10).
 
 **Input:**
 ```json
