@@ -61,6 +61,7 @@ import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
+import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -158,7 +159,7 @@ const tools: Tool[] = [
       properties: {
         limit: {
           type: 'number',
-          description: 'Maximum number of snapshots to return (default: 10)',
+          description: 'Maximum number of snapshots to return (default: 10; positive integer up to 1000)',
         },
         platform: {
           type: 'string',
@@ -659,9 +660,8 @@ async function handleList(
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
-    // Limit results
-    const limit = input.limit ?? 10;
-    entries = entries.slice(0, limit);
+    const limit = parseSavestateListLimit(input.limit);
+    entries = selectSavestateListEntries(entries, limit ?? 10);
 
     if (entries.length === 0) {
       return 'No snapshots found.';

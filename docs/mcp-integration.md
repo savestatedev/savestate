@@ -94,7 +94,7 @@ List all available snapshots.
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| limit | number | | Max results (default: 10) |
+| limit | number | | Max results (default: 10; positive integer up to 1000) |
 | platform | string | | Filter by platform |
 
 ### `savestate_status`
