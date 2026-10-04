@@ -83,7 +83,7 @@ Or for a single memory:
 
 ### search_memory
 
-Search memories by query text and filters. `limit` is a positive integer up to 1000 (default 10).
+Search memories by query text and filters. `limit` is a positive integer up to 1000 (default 10). `offset` is a non-negative integer up to 1000.
 
 **Input:**
 ```json
@@ -91,7 +91,8 @@ Search memories by query text and filters. `limit` is a positive integer up to 1
   "query": "database preferences",
   "type": "preference",
   "tags": ["coding"],
-  "limit": 10
+  "limit": 10,
+  "offset": 0
 }
 ```
 
