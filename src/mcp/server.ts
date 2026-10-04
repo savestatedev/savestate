@@ -80,6 +80,7 @@ import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memo
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from './memories-resource-limit.js';
 import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from './snapshots-resource-limit.js';
+import { parseSnapshotsResourceOffset, selectSnapshotsResourceOffsetEntries } from './snapshots-resource-offset.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
 
@@ -483,7 +484,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://snapshots',
     name: 'Snapshots',
-    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000)',
+    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000)',
     mimeType: 'application/json',
   },
   {
@@ -1320,6 +1321,10 @@ async function handleReadResource(uri: string): Promise<string> {
         return JSON.stringify({ error: 'SaveState not initialized' });
       }
 
+      const rawOffset = url.searchParams.get('offset');
+      const offset = rawOffset === null
+        ? undefined
+        : parseSnapshotsResourceOffset(Number(rawOffset));
       const rawLimit = url.searchParams.get('limit');
       const limit = rawLimit === null
         ? undefined
@@ -1332,7 +1337,8 @@ async function handleReadResource(uri: string): Promise<string> {
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
 
-      const selected = selectSnapshotsResourceEntries(entries, limit ?? 50);
+      const skipped = selectSnapshotsResourceOffsetEntries(entries, offset);
+      const selected = selectSnapshotsResourceEntries(skipped, limit ?? 50);
 
       return JSON.stringify({
         count: selected.length,

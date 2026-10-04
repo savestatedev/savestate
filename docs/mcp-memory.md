@@ -164,7 +164,7 @@ These work identically to the OpenMemory tools but follow SaveState's naming con
 The MCP server also exposes resources for programmatic access:
 
 - `savestate://memories` - JSON list of memories (default 50; `?limit=` is a positive integer up to 1000)
-- `savestate://snapshots` - JSON list of snapshots (default 50; `?limit=` is a positive integer up to 1000)
+- `savestate://snapshots` - JSON list of snapshots (default 50; `?limit=` is a positive integer up to 1000; `?offset=` is a non-negative integer up to 1000)
 
 ## Cross-Platform Memory
 
