@@ -62,7 +62,11 @@ import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
-import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
+import {
+  parseSavestateMemorySearchLimit,
+  selectSavestateMemorySearchEntries,
+} from './savestate-memory-search-limit.js';
+import { parseSearchMemoryLimit } from './search-memory-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
 
@@ -770,7 +774,7 @@ async function handleMemorySearch(
   try {
     const store = getMemoryStore();
 
-    const limit = parseSearchMemoryLimit(input.limit);
+    const limit = parseSavestateMemorySearchLimit(input.limit);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
@@ -779,7 +783,7 @@ async function handleMemorySearch(
       minImportance: input.minImportance,
     };
 
-    const results = selectSearchMemoryEntries(await store.query(query), limit);
+    const results = selectSavestateMemorySearchEntries(await store.query(query), limit);
 
     if (results.length === 0) {
       return 'No memories found matching your query.';
@@ -881,7 +885,7 @@ async function handleAddMemories(
 async function handleSearchMemory(
   input: z.infer<typeof MemorySearchInputSchema>,
 ): Promise<string> {
-  // Reuse the SaveState handler
+  parseSearchMemoryLimit(input.limit);
   return handleMemorySearch(input);
 }
 
