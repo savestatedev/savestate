@@ -1396,6 +1396,17 @@ describe('CLI docs', () => {
     expect(evalSource).toContain('export function parseEvalLimit');
   });
 
+  it('documents eval report --limit as a bounded positive integer', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    const evalBlock = cli.slice(cli.indexOf("command('eval <subcommand>')"), cli.indexOf("command('search <query>')"));
+    expect(evalSection).toContain('--limit');
+    expect(evalSection).toContain('Must be a positive integer up to 1000');
+    expect(evalSection).toContain('run on <code>quality</code> or show on <code>report</code>');
+    expect(evalSection).toContain('savestate eval report --limit 5');
+    expect(evalBlock).toContain(".option('--limit <n>'");
+    expect(evalSource).toContain('export function parseEvalReportLimit');
+  });
+
   it('documents eval subcommand as a single eval action', () => {
     const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
     expect(evalSection).toContain('&lt;subcommand&gt;');
