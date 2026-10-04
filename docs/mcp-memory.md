@@ -97,7 +97,7 @@ Search memories by query text and filters. `limit` is a positive integer up to 1
 
 ### list_memories
 
-List all stored memories with optional filtering. `limit` is a positive integer up to 1000 (default 50).
+List all stored memories with optional filtering. `limit` is a positive integer up to 1000 (default 50). `offset` is a non-negative integer up to 1000.
 
 **Input:**
 ```json
