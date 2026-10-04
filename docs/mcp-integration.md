@@ -106,6 +106,11 @@ Check SaveState configuration.
 - "What adapter would be used?"
 - "Check my backup setup"
 
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| limit | number | | Max status field rows (positive integer up to 1000) |
+
 ## What Gets Captured
 
 The Claude Code adapter captures:

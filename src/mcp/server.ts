@@ -64,6 +64,7 @@ import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './d
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
+import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 
@@ -178,7 +179,12 @@ const tools: Tool[] = [
       'Returns whether SaveState is configured and which adapter would be used.',
     inputSchema: {
       type: 'object',
-      properties: {},
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Maximum number of status field rows to return (positive integer up to 1000)',
+        },
+      },
     },
   },
   // ─── SaveState Memory Tools ────────────────────────────────
@@ -473,6 +479,10 @@ const ListInputSchema = z.object({
   platform: z.string().optional(),
 });
 
+const StatusInputSchema = z.object({
+  limit: z.number().optional(),
+});
+
 const MemoryStoreInputSchema = z.object({
   content: z.string(),
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
@@ -700,53 +710,106 @@ async function handleList(
   }
 }
 
-async function handleStatus(): Promise<string> {
-  const initialized = isInitialized();
+async function handleStatus(
+  input: z.infer<typeof StatusInputSchema>,
+): Promise<string> {
+  try {
+    const limit = parseSavestateStatusLimit(input.limit);
+    const initialized = isInitialized();
 
-  if (!initialized) {
-    return [
-      'SaveState Status: Not initialized',
-      '',
-      'Run `savestate init` to set up SaveState in this directory.',
-    ].join('\n');
+    if (!initialized) {
+      const fields = [
+        { key: 'status', value: 'Not initialized' },
+        { key: 'hint', value: 'Run `savestate init` to set up SaveState in this directory.' },
+      ];
+      const selected = selectSavestateStatusEntries(fields, limit);
+      return selected.map((field) =>
+        field.key === 'status' ? `SaveState Status: ${field.value}` : field.value,
+      ).join('\n');
+    }
+
+    const config = await loadConfig();
+    const adapter = await detectAdapter();
+    const fields: Array<{ key: string; value: string }> = [
+      { key: 'status', value: 'Initialized' },
+      { key: 'storage', value: config.storage.type },
+      { key: 'defaultAdapter', value: config.defaultAdapter ?? 'auto-detect' },
+      { key: 'detectedAdapter', value: adapter ? adapter.name : 'none' },
+    ];
+
+    if (adapter) {
+      fields.push({ key: 'adapterVersion', value: adapter.version });
+    }
+
+    const store = getMemoryStore();
+    const stats = store.getStats();
+    fields.push({ key: 'memoryTotal', value: String(stats.totalEntries) });
+    fields.push({ key: 'memoryFacts', value: String(stats.byType.fact) });
+    fields.push({ key: 'memoryEvents', value: String(stats.byType.event) });
+    fields.push({ key: 'memoryPreferences', value: String(stats.byType.preference) });
+    fields.push({ key: 'memoryConversations', value: String(stats.byType.conversation) });
+
+    if (config.mcp) {
+      fields.push({ key: 'mcpEnabled', value: String(config.mcp.enabled) });
+      fields.push({ key: 'mcpPort', value: String(config.mcp.port) });
+      fields.push({ key: 'mcpAuth', value: config.mcp.auth.type });
+    }
+
+    const selected = selectSavestateStatusEntries(fields, limit);
+    const lines: string[] = [];
+
+    for (const field of selected) {
+      switch (field.key) {
+        case 'status':
+          lines.push(`SaveState Status: ${field.value}`);
+          break;
+        case 'storage':
+          lines.push(`Storage: ${field.value}`);
+          break;
+        case 'defaultAdapter':
+          lines.push(`Default adapter: ${field.value}`);
+          break;
+        case 'detectedAdapter':
+          lines.push(`Detected adapter: ${field.value}`);
+          break;
+        case 'adapterVersion':
+          lines.push(`Adapter version: ${field.value}`);
+          break;
+        case 'memoryTotal':
+          lines.push('Memory Store:');
+          lines.push(`  Total entries: ${field.value}`);
+          break;
+        case 'memoryFacts':
+          lines.push(`  Facts: ${field.value}`);
+          break;
+        case 'memoryEvents':
+          lines.push(`  Events: ${field.value}`);
+          break;
+        case 'memoryPreferences':
+          lines.push(`  Preferences: ${field.value}`);
+          break;
+        case 'memoryConversations':
+          lines.push(`  Conversations: ${field.value}`);
+          break;
+        case 'mcpEnabled':
+          lines.push('MCP Configuration:');
+          lines.push(`  Enabled: ${field.value}`);
+          break;
+        case 'mcpPort':
+          lines.push(`  Port: ${field.value}`);
+          break;
+        case 'mcpAuth':
+          lines.push(`  Auth: ${field.value}`);
+          break;
+        default:
+          lines.push(`${field.key}: ${field.value}`);
+      }
+    }
+
+    return lines.join('\n');
+  } catch (err) {
+    return `Error checking status: ${err instanceof Error ? err.message : String(err)}`;
   }
-
-  const config = await loadConfig();
-  const adapter = await detectAdapter();
-
-  const lines = [
-    'SaveState Status: Initialized',
-    '',
-    `Storage: ${config.storage.type}`,
-    `Default adapter: ${config.defaultAdapter ?? 'auto-detect'}`,
-    `Detected adapter: ${adapter ? adapter.name : 'none'}`,
-  ];
-
-  if (adapter) {
-    lines.push(`Adapter version: ${adapter.version}`);
-  }
-
-  // Memory store status
-  const store = getMemoryStore();
-  const stats = store.getStats();
-  lines.push('');
-  lines.push('Memory Store:');
-  lines.push(`  Total entries: ${stats.totalEntries}`);
-  lines.push(`  Facts: ${stats.byType.fact}`);
-  lines.push(`  Events: ${stats.byType.event}`);
-  lines.push(`  Preferences: ${stats.byType.preference}`);
-  lines.push(`  Conversations: ${stats.byType.conversation}`);
-
-  // MCP config status
-  if (config.mcp) {
-    lines.push('');
-    lines.push('MCP Configuration:');
-    lines.push(`  Enabled: ${config.mcp.enabled}`);
-    lines.push(`  Port: ${config.mcp.port}`);
-    lines.push(`  Auth: ${config.mcp.auth.type}`);
-  }
-
-  return lines.join('\n');
 }
 
 // ─── Memory Tool Handlers ────────────────────────────────────
@@ -1200,7 +1263,8 @@ export async function startMCPServer(): Promise<void> {
           break;
         }
         case 'savestate_status': {
-          result = await handleStatus();
+          const input = StatusInputSchema.parse(args);
+          result = await handleStatus(input);
           break;
         }
         // SaveState Memory Tools
