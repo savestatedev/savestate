@@ -60,6 +60,7 @@ import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
+import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './delete-all-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
@@ -423,6 +424,10 @@ const tools: Tool[] = [
           type: 'boolean',
           description: 'Must be true to confirm deletion',
         },
+        limit: {
+          type: 'number',
+          description: 'Maximum memories to delete in this call (positive integer up to 1000)',
+        },
       },
       required: ['confirm'],
     },
@@ -510,6 +515,7 @@ const ListMemoriesInputSchema = z.object({
 
 const DeleteAllMemoriesInputSchema = z.object({
   confirm: z.boolean(),
+  limit: z.number().optional(),
 });
 
 const SearchSnapshotsInputSchema = z.object({
@@ -956,15 +962,28 @@ async function handleDeleteAllMemories(
 
   try {
     const store = getMemoryStore();
-    const stats = store.getStats();
-    const count = stats.totalEntries;
+    const limit = parseDeleteAllMemoriesLimit(input.limit);
 
-    store.clear();
+    if (limit === undefined) {
+      const stats = store.getStats();
+      const count = stats.totalEntries;
+      store.clear();
+      return [
+        'All memories deleted.',
+        '',
+        `Deleted: ${count} memory(ies)`,
+      ].join('\n');
+    }
+
+    const entries = selectDeleteAllMemoriesEntries(await store.query({ limit }), limit);
+    for (const memory of entries) {
+      store.delete(memory.id);
+    }
 
     return [
-      'All memories deleted.',
+      'Memories deleted.',
       '',
-      `Deleted: ${count} memory(ies)`,
+      `Deleted: ${entries.length} memory(ies)`,
     ].join('\n');
   } catch (err) {
     return `Error deleting memories: ${err instanceof Error ? err.message : String(err)}`;
