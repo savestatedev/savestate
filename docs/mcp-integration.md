@@ -97,6 +97,7 @@ List all available snapshots.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | limit | number | | Max results (default: 10; positive integer up to 1000) |
+| offset | number | | Pagination skip (non-negative integer up to 1000) |
 | platform | string | | Filter by platform |
 
 ### `savestate_status`

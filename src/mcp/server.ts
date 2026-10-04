@@ -64,6 +64,7 @@ import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './d
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
+import { parseSavestateListOffset, selectSavestateListOffsetEntries } from './savestate-list-offset.js';
 import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
 import {
   parseSavestateMemorySearchLimit,
@@ -181,6 +182,10 @@ const tools: Tool[] = [
         limit: {
           type: 'number',
           description: 'Maximum number of snapshots to return (default: 10; positive integer up to 1000)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
         },
         platform: {
           type: 'string',
@@ -507,6 +512,7 @@ const RestoreInputSchema = z.object({
 
 const ListInputSchema = z.object({
   limit: z.number().optional(),
+  offset: z.number().optional(),
   platform: z.string().optional(),
 });
 
@@ -802,6 +808,8 @@ async function handleList(
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
+    const offset = parseSavestateListOffset(input.offset);
+    entries = selectSavestateListOffsetEntries(entries, offset);
     const limit = parseSavestateListLimit(input.limit);
     entries = selectSavestateListEntries(entries, limit ?? 10);
 
