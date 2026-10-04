@@ -78,6 +78,7 @@ import {
 import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } from './savestate-memory-store-limit.js';
 import { parseSavestateRestoreLimit, selectSavestateRestoreEntries } from './savestate-restore-limit.js';
 import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './savestate-snapshot-limit.js';
+import { parseSavestateSnapshotOffset, selectSavestateSnapshotOffsetEntries } from './savestate-snapshot-offset.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
 import { parseSavestateStatsOffset, selectSavestateStatsOffsetEntries } from './savestate-stats-offset.js';
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
@@ -145,6 +146,10 @@ const tools: Tool[] = [
         limit: {
           type: 'number',
           description: 'Maximum number of status field rows to return (positive integer up to 1000)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
         },
       },
       required: ['passphrase'],
@@ -525,6 +530,7 @@ const SnapshotInputSchema = z.object({
   full: z.boolean().optional(),
   passphrase: z.string(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 const RestoreInputSchema = z.object({
@@ -618,6 +624,7 @@ async function handleSnapshot(
 ): Promise<string> {
   try {
     const limit = parseSavestateSnapshotLimit(input.limit);
+    const offset = parseSavestateSnapshotOffset(input.offset);
 
     if (!isInitialized()) {
       return 'Error: SaveState not initialized. Run `savestate init` first.';
@@ -673,7 +680,10 @@ async function handleSnapshot(
     fields.push({ key: 'encryptedSize', value: formatBytes(result.encryptedSize) });
     fields.push({ key: 'storage', value: config.storage.type });
 
-    const selected = selectSavestateSnapshotEntries(fields, limit);
+    const selected = selectSavestateSnapshotEntries(
+      selectSavestateSnapshotOffsetEntries(fields, offset),
+      limit,
+    );
     const lines = ['Snapshot created successfully!', ''];
 
     for (const field of selected) {
