@@ -79,6 +79,7 @@ import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './saves
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from './memories-resource-limit.js';
+import { parseMemoriesResourceOffset, selectMemoriesResourceOffsetEntries } from './memories-resource-offset.js';
 import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from './snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffset, selectSnapshotsResourceOffsetEntries } from './snapshots-resource-offset.js';
 
@@ -490,7 +491,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000)',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000)',
     mimeType: 'application/json',
   },
 ];
@@ -1354,12 +1355,19 @@ async function handleReadResource(uri: string): Promise<string> {
 
     case 'memories': {
       const store = getMemoryStore();
+      const rawOffset = url.searchParams.get('offset');
+      const offset = rawOffset === null
+        ? undefined
+        : parseMemoriesResourceOffset(Number(rawOffset));
       const rawLimit = url.searchParams.get('limit');
       const limit = rawLimit === null
         ? undefined
         : parseMemoriesResourceLimit(Number(rawLimit));
       const memories = selectMemoriesResourceEntries(
-        await store.query({ limit: limit ?? 50 }),
+        selectMemoriesResourceOffsetEntries(
+          await store.query({ limit: (offset ?? 0) + (limit ?? 50) }),
+          offset,
+        ),
         limit ?? 50,
       );
       const stats = store.getStats();
