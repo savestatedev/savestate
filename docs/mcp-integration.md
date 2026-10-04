@@ -64,6 +64,7 @@ Create a new encrypted snapshot of your current state.
 | tags | string[] | | Tags for organization |
 | adapter | string | | Force specific adapter |
 | full | boolean | | Skip incremental, do full snapshot |
+| limit | number | | Max status field rows (positive integer up to 1000) |
 
 ### `savestate_restore`
 
