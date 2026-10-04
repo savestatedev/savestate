@@ -77,6 +77,7 @@ import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './s
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
+import { parseSearchMemoryOffset, selectSearchMemoryOffsetEntries } from './search-memory-offset.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from './memories-resource-limit.js';
 import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from './snapshots-resource-limit.js';
@@ -406,6 +407,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Maximum results (default: 10; positive integer up to 1000)',
         },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
+        },
       },
     },
   },
@@ -538,6 +543,7 @@ const MemorySearchInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
   tags: z.array(z.string()).optional(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
   minImportance: z.number().optional(),
 });
 
@@ -1124,8 +1130,46 @@ async function handleAddMemories(
 async function handleSearchMemory(
   input: z.infer<typeof MemorySearchInputSchema>,
 ): Promise<string> {
-  parseSearchMemoryLimit(input.limit);
-  return handleMemorySearch(input);
+  try {
+    const store = getMemoryStore();
+
+    const limit = parseSearchMemoryLimit(input.limit);
+    const offset = parseSearchMemoryOffset(input.offset);
+    const query: MemoryQuery = {
+      type: input.type,
+      tags: input.tags,
+      search: input.query,
+      limit: (offset ?? 0) + (limit ?? 10),
+      minImportance: input.minImportance,
+    };
+
+    const results = selectSearchMemoryEntries(
+      selectSearchMemoryOffsetEntries(await store.query(query), offset),
+      limit ?? 10,
+    );
+
+    if (results.length === 0) {
+      return 'No memories found matching your query.';
+    }
+
+    const lines = [`Found ${results.length} memory(ies):`, ''];
+
+    for (const memory of results) {
+      lines.push(`- ${memory.id}`);
+      lines.push(`  Type: ${memory.type}`);
+      lines.push(`  Tags: ${memory.tags?.join(', ') ?? 'none'}`);
+      lines.push(`  Importance: ${memory.importance}`);
+      const preview = memory.content.length > 100
+        ? memory.content.slice(0, 100) + '...'
+        : memory.content;
+      lines.push(`  Content: ${preview}`);
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  } catch (err) {
+    return `Error searching memories: ${err instanceof Error ? err.message : String(err)}`;
+  }
 }
 
 async function handleListMemories(
