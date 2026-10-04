@@ -62,6 +62,7 @@ import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
+import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -290,7 +291,12 @@ const tools: Tool[] = [
       'Useful for surfacing the user\'s own AI history back to them.',
     inputSchema: {
       type: 'object',
-      properties: {},
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Maximum snapshots to aggregate (positive integer up to 1000; most recent first)',
+        },
+      },
     },
   },
   // ─── OpenMemory-Compatible Tools (Issue #176) ──────────────
@@ -510,6 +516,10 @@ const SearchSnapshotsInputSchema = z.object({
   type: z.enum(['memory', 'conversation', 'identity', 'knowledge']).optional(),
   limit: z.number().optional(),
   passphrase: z.string(),
+});
+
+const StatsInputSchema = z.object({
+  limit: z.number().optional(),
 });
 
 // ─── Tool Handlers ───────────────────────────────────────────
@@ -991,14 +1001,24 @@ async function handleSearchSnapshots(
   }
 }
 
-async function handleStats(): Promise<string> {
+async function handleStats(
+  input: z.infer<typeof StatsInputSchema>,
+): Promise<string> {
   const { computeStats } = await import('../commands/stats.js');
   try {
     if (!isInitialized()) {
       return 'Error: SaveState not initialized. Run `savestate init` first.';
     }
     const index = await loadIndex();
-    const stats = computeStats(index.snapshots);
+    const limit = parseSavestateStatsLimit(input.limit);
+    const snapshots = selectSavestateStatsEntries(
+      [...index.snapshots].sort(
+        (a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      ),
+      limit,
+    );
+    const stats = computeStats(snapshots);
     return JSON.stringify(stats, null, 2);
   } catch (err) {
     return `Error computing stats: ${err instanceof Error ? err.message : String(err)}`;
@@ -1181,7 +1201,8 @@ export async function startMCPServer(): Promise<void> {
           break;
         }
         case 'savestate_stats': {
-          result = await handleStats();
+          const input = StatsInputSchema.parse(args);
+          result = await handleStats(input);
           break;
         }
         // OpenMemory-Compatible Tools
