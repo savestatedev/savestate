@@ -65,6 +65,10 @@ import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memo
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
+import {
+  parseSavestateMemorySearchLimit,
+  selectSavestateMemorySearchEntries,
+} from './savestate-memory-search-limit.js';
 import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } from './savestate-memory-store-limit.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
@@ -895,7 +899,7 @@ async function handleMemorySearch(
   try {
     const store = getMemoryStore();
 
-    const limit = parseSearchMemoryLimit(input.limit);
+    const limit = parseSavestateMemorySearchLimit(input.limit);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
@@ -904,7 +908,7 @@ async function handleMemorySearch(
       minImportance: input.minImportance,
     };
 
-    const results = selectSearchMemoryEntries(await store.query(query), limit);
+    const results = selectSavestateMemorySearchEntries(await store.query(query), limit);
 
     if (results.length === 0) {
       return 'No memories found matching your query.';
@@ -1019,7 +1023,7 @@ async function handleAddMemories(
 async function handleSearchMemory(
   input: z.infer<typeof MemorySearchInputSchema>,
 ): Promise<string> {
-  // Reuse the SaveState handler
+  parseSearchMemoryLimit(input.limit);
   return handleMemorySearch(input);
 }
 

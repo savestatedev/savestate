@@ -154,7 +154,7 @@ npx @savestate/cli mcp serve
 In addition to OpenMemory-compatible tools, SaveState provides its own namespaced tools:
 
 - `savestate_memory_store` - Store a memory
-- `savestate_memory_search` - Search memories
+- `savestate_memory_search` - Search memories. `limit` is a positive integer up to 1000 (default 10).
 - `savestate_memory_delete` - Delete a memory
 
 These work identically to the OpenMemory tools but follow SaveState's naming convention.
