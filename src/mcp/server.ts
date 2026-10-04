@@ -76,6 +76,7 @@ import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savesta
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
+import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from './memories-resource-limit.js';
 import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from './snapshots-resource-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -482,7 +483,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000)',
     mimeType: 'application/json',
   },
 ];
@@ -1337,7 +1338,14 @@ async function handleReadResource(uri: string): Promise<string> {
 
     case 'memories': {
       const store = getMemoryStore();
-      const memories = await store.query({ limit: 100 });
+      const rawLimit = url.searchParams.get('limit');
+      const limit = rawLimit === null
+        ? undefined
+        : parseMemoriesResourceLimit(Number(rawLimit));
+      const memories = selectMemoriesResourceEntries(
+        await store.query({ limit: limit ?? 50 }),
+        limit ?? 50,
+      );
       const stats = store.getStats();
 
       return JSON.stringify({
