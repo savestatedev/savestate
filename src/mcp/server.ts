@@ -71,6 +71,10 @@ import {
   parseSavestateMemorySearchLimit,
   selectSavestateMemorySearchEntries,
 } from './savestate-memory-search-limit.js';
+import {
+  parseSavestateMemorySearchOffset,
+  selectSavestateMemorySearchOffsetEntries,
+} from './savestate-memory-search-offset.js';
 import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } from './savestate-memory-store-limit.js';
 import { parseSavestateRestoreLimit, selectSavestateRestoreEntries } from './savestate-restore-limit.js';
 import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './savestate-snapshot-limit.js';
@@ -277,6 +281,10 @@ const tools: Tool[] = [
         limit: {
           type: 'number',
           description: 'Maximum results to return (default: 10; positive integer up to 1000)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
         },
         minImportance: {
           type: 'number',
@@ -538,6 +546,7 @@ const MemorySearchInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
   tags: z.array(z.string()).optional(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
   minImportance: z.number().optional(),
 });
 
@@ -1001,15 +1010,19 @@ async function handleMemorySearch(
     const store = getMemoryStore();
 
     const limit = parseSavestateMemorySearchLimit(input.limit);
+    const offset = parseSavestateMemorySearchOffset(input.offset);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
       search: input.query,
-      limit: limit ?? 10,
+      limit: (offset ?? 0) + (limit ?? 10),
       minImportance: input.minImportance,
     };
 
-    const results = selectSavestateMemorySearchEntries(await store.query(query), limit);
+    const results = selectSavestateMemorySearchEntries(
+      selectSavestateMemorySearchOffsetEntries(await store.query(query), offset),
+      limit ?? 10,
+    );
 
     if (results.length === 0) {
       return 'No memories found matching your query.';
