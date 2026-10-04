@@ -63,6 +63,7 @@ import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
+import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
 
@@ -276,7 +277,7 @@ const tools: Tool[] = [
           enum: ['memory', 'conversation', 'identity', 'knowledge'],
           description: 'Optional filter by content type',
         },
-        limit: { type: 'number', description: 'Maximum results (default: 20)' },
+        limit: { type: 'number', description: 'Maximum results (default: 20; positive integer up to 1000)' },
         passphrase: { type: 'string', description: 'Decryption passphrase' },
       },
       required: ['query', 'passphrase'],
@@ -969,11 +970,15 @@ async function handleSearchSnapshots(
       return 'Error: SaveState not initialized in this directory. Run `savestate init` first.';
     }
     const config = await loadConfig();
-    const results = await searchSnapshots(input.query, config, {
-      types: input.type ? [input.type] : undefined,
-      limit: input.limit ?? 20,
-      passphrase: input.passphrase,
-    });
+    const limit = parseSearchSnapshotsLimit(input.limit);
+    const results = selectSearchSnapshotsEntries(
+      await searchSnapshots(input.query, config, {
+        types: input.type ? [input.type] : undefined,
+        limit: limit ?? 20,
+        passphrase: input.passphrase,
+      }),
+      limit,
+    );
     if (results.length === 0) return 'No matches found across snapshots.';
 
     const lines: string[] = [`Found ${results.length} match(es):`, ''];
