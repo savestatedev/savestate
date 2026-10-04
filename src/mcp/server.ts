@@ -70,6 +70,7 @@ import {
   selectSavestateMemorySearchEntries,
 } from './savestate-memory-search-limit.js';
 import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } from './savestate-memory-store-limit.js';
+import { parseSavestateRestoreLimit, selectSavestateRestoreEntries } from './savestate-restore-limit.js';
 import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './savestate-snapshot-limit.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
@@ -160,6 +161,10 @@ const tools: Tool[] = [
         passphrase: {
           type: 'string',
           description: 'Decryption passphrase. Required for restore.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of status field rows to return (positive integer up to 1000)',
         },
       },
       required: ['snapshotId', 'passphrase'],
@@ -497,6 +502,7 @@ const RestoreInputSchema = z.object({
   adapter: z.string().optional(),
   dryRun: z.boolean().optional(),
   passphrase: z.string(),
+  limit: z.number().optional(),
 });
 
 const ListInputSchema = z.object({
@@ -682,32 +688,33 @@ async function handleSnapshot(
 async function handleRestore(
   input: z.infer<typeof RestoreInputSchema>,
 ): Promise<string> {
-  if (!isInitialized()) {
-    return 'Error: SaveState not initialized. Run `savestate init` first.';
-  }
-
-  const config = await loadConfig();
-
-  // Resolve adapter
-  let adapter;
-  if (input.adapter) {
-    adapter = getAdapter(input.adapter);
-    if (!adapter) {
-      return `Error: Unknown adapter: ${input.adapter}`;
-    }
-  } else if (config.defaultAdapter) {
-    adapter = getAdapter(config.defaultAdapter);
-  } else {
-    adapter = await detectAdapter();
-  }
-
-  if (!adapter) {
-    return 'Error: No adapter detected. Specify one with the adapter parameter.';
-  }
-
-  const storage = resolveStorage(config);
-
   try {
+    const limit = parseSavestateRestoreLimit(input.limit);
+
+    if (!isInitialized()) {
+      return 'Error: SaveState not initialized. Run `savestate init` first.';
+    }
+
+    const config = await loadConfig();
+
+    let adapter;
+    if (input.adapter) {
+      adapter = getAdapter(input.adapter);
+      if (!adapter) {
+        return `Error: Unknown adapter: ${input.adapter}`;
+      }
+    } else if (config.defaultAdapter) {
+      adapter = getAdapter(config.defaultAdapter);
+    } else {
+      adapter = await detectAdapter();
+    }
+
+    if (!adapter) {
+      return 'Error: No adapter detected. Specify one with the adapter parameter.';
+    }
+
+    const storage = resolveStorage(config);
+
     const result = await restoreSnapshot(
       input.snapshotId,
       adapter,
@@ -716,22 +723,57 @@ async function handleRestore(
       { dryRun: input.dryRun },
     );
 
-    const lines = [
-      input.dryRun ? 'Dry run complete (no changes made)' : 'Restore complete!',
-      ``,
-      `Snapshot: ${result.snapshotId}`,
-      `Timestamp: ${result.timestamp}`,
-      `Platform: ${result.platform}`,
-      `Adapter: ${result.adapter}`,
+    const fields: Array<{ key: string; value: string }> = [
+      { key: 'snapshot', value: result.snapshotId },
+      { key: 'timestamp', value: result.timestamp },
+      { key: 'platform', value: result.platform },
+      { key: 'adapter', value: result.adapter },
     ];
 
     if (result.label) {
-      lines.push(`Label: ${result.label}`);
+      fields.push({ key: 'label', value: result.label });
     }
 
-    lines.push(`Identity: ${result.hasIdentity ? 'restored' : 'none'}`);
-    lines.push(`Memory entries: ${result.memoryCount}`);
-    lines.push(`Conversations: ${result.conversationCount}`);
+    fields.push({ key: 'identity', value: result.hasIdentity ? 'restored' : 'none' });
+    fields.push({ key: 'memoryEntries', value: String(result.memoryCount) });
+    fields.push({ key: 'conversations', value: String(result.conversationCount) });
+
+    const selected = selectSavestateRestoreEntries(fields, limit);
+    const lines = [
+      input.dryRun ? 'Dry run complete (no changes made)' : 'Restore complete!',
+      '',
+    ];
+
+    for (const field of selected) {
+      switch (field.key) {
+        case 'snapshot':
+          lines.push(`Snapshot: ${field.value}`);
+          break;
+        case 'timestamp':
+          lines.push(`Timestamp: ${field.value}`);
+          break;
+        case 'platform':
+          lines.push(`Platform: ${field.value}`);
+          break;
+        case 'adapter':
+          lines.push(`Adapter: ${field.value}`);
+          break;
+        case 'label':
+          lines.push(`Label: ${field.value}`);
+          break;
+        case 'identity':
+          lines.push(`Identity: ${field.value}`);
+          break;
+        case 'memoryEntries':
+          lines.push(`Memory entries: ${field.value}`);
+          break;
+        case 'conversations':
+          lines.push(`Conversations: ${field.value}`);
+          break;
+        default:
+          lines.push(`${field.key}: ${field.value}`);
+      }
+    }
 
     return lines.join('\n');
   } catch (err) {

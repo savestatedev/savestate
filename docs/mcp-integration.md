@@ -82,6 +82,7 @@ Restore state from a previous snapshot.
 | passphrase | string | ✅ | Decryption passphrase |
 | adapter | string | | Force specific adapter |
 | dryRun | boolean | | Preview without changes |
+| limit | number | | Max status field rows (positive integer up to 1000) |
 
 ### `savestate_list`
 
