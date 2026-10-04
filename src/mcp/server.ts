@@ -76,6 +76,7 @@ import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savesta
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
+import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from './snapshots-resource-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
 
@@ -475,7 +476,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://snapshots',
     name: 'Snapshots',
-    description: 'List of all available snapshots',
+    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000)',
     mimeType: 'application/json',
   },
   {
@@ -1308,6 +1309,11 @@ async function handleReadResource(uri: string): Promise<string> {
         return JSON.stringify({ error: 'SaveState not initialized' });
       }
 
+      const rawLimit = url.searchParams.get('limit');
+      const limit = rawLimit === null
+        ? undefined
+        : parseSnapshotsResourceLimit(Number(rawLimit));
+
       const index = await loadIndex();
       const entries = index.snapshots;
 
@@ -1315,9 +1321,11 @@ async function handleReadResource(uri: string): Promise<string> {
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
 
+      const selected = selectSnapshotsResourceEntries(entries, limit ?? 50);
+
       return JSON.stringify({
-        count: entries.length,
-        snapshots: entries.map((e: SnapshotIndexEntry) => ({
+        count: selected.length,
+        snapshots: selected.map((e: SnapshotIndexEntry) => ({
           id: e.id,
           timestamp: e.timestamp,
           platform: e.platform,
