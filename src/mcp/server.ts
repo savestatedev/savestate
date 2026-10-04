@@ -82,6 +82,7 @@ import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savesta
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
+import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from './memories-resource-limit.js';
 import { parseMemoriesResourceOffset, selectMemoriesResourceOffsetEntries } from './memories-resource-offset.js';
 import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from './snapshots-resource-limit.js';
@@ -329,6 +330,7 @@ const tools: Tool[] = [
           description: 'Optional filter by content type',
         },
         limit: { type: 'number', description: 'Maximum results (default: 20; positive integer up to 1000)' },
+        offset: { type: 'number', description: 'Pagination offset (non-negative integer up to 1000)' },
         passphrase: { type: 'string', description: 'Decryption passphrase' },
       },
       required: ['query', 'passphrase'],
@@ -590,6 +592,7 @@ const SearchSnapshotsInputSchema = z.object({
   query: z.string(),
   type: z.enum(['memory', 'conversation', 'identity', 'knowledge']).optional(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
   passphrase: z.string(),
 });
 
@@ -1268,13 +1271,17 @@ async function handleSearchSnapshots(
     }
     const config = await loadConfig();
     const limit = parseSearchSnapshotsLimit(input.limit);
+    const offset = parseSearchSnapshotsOffset(input.offset);
     const results = selectSearchSnapshotsEntries(
-      await searchSnapshots(input.query, config, {
-        types: input.type ? [input.type] : undefined,
-        limit: limit ?? 20,
-        passphrase: input.passphrase,
-      }),
-      limit,
+      selectSearchSnapshotsOffsetEntries(
+        await searchSnapshots(input.query, config, {
+          types: input.type ? [input.type] : undefined,
+          limit: (offset ?? 0) + (limit ?? 20),
+          passphrase: input.passphrase,
+        }),
+        offset,
+      ),
+      limit ?? 20,
     );
     if (results.length === 0) return 'No matches found across snapshots.';
 
