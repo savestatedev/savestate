@@ -1165,6 +1165,27 @@ export function formatMemoryExplainMissingJson(query: string): string {
   );
 }
 
+const DEFAULT_MEMORY_EXPLAIN_LIMIT = 5;
+const MAX_MEMORY_EXPLAIN_LIMIT = 1000;
+
+/** Parse memory explain --limit without turning user input errors into an empty result list. */
+export function parseMemoryExplainLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_EXPLAIN_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPLAIN_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N retrieval results when --limit is set. Defaults to 5 when omitted. */
+export function selectMemoryExplainEntries<T>(entries: T[], limit?: number): T[] {
+  return entries.slice(0, limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT);
+}
+
 /**
  * Explain why memories were retrieved for a query.
  * Shows detailed breakdown of scores and policy decisions.
@@ -1177,11 +1198,12 @@ export async function explainMemoryCommand(
   query: string,
   options?: {
     namespace?: string;
-    limit?: number;
+    limit?: string;
     tags?: string[];
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {
+  const limit = parseMemoryExplainLimit(options?.limit);
   const { snapshot } = await loadSnapshot(storage, passphrase);
 
   // Parse namespace from option or use default
@@ -1287,17 +1309,17 @@ export async function explainMemoryCommand(
       };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null)
-    .sort((a, b) => b.finalScore - a.finalScore)
-    .slice(0, options?.limit ?? 5);
+    .sort((a, b) => b.finalScore - a.finalScore);
+  const scoredLimited = selectMemoryExplainEntries(scored, limit);
 
   if (options?.format === 'json') {
-    if (scored.length === 0) {
+    if (scoredLimited.length === 0) {
       console.log(formatMemoryExplainMissingJson(query));
       return;
     }
     console.log(formatMemoryExplainJson(
       query,
-      scored.map((r) => ({
+      scoredLimited.map((r) => ({
         id: r.entry.id,
         score: r.finalScore,
         summary: r.explanation.summary,
@@ -1308,10 +1330,10 @@ export async function explainMemoryCommand(
 
   // Pretty print format
   console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
-  console.log(`Found ${scored.length} relevant memories:\n`);
+  console.log(`Found ${scoredLimited.length} relevant memories:\n`);
   console.log('─'.repeat(80));
 
-  for (const [index, result] of scored.entries()) {
+  for (const [index, result] of scoredLimited.entries()) {
     const { entry, scores, finalScore, explanation } = result;
     const tier = getEffectiveTier(entry);
     const pinned = entry.pinned ? ' 📌' : '';
@@ -1355,7 +1377,7 @@ export async function explainMemoryCommand(
     console.log('─'.repeat(80));
   }
 
-  if (scored.length === 0) {
+  if (scoredLimited.length === 0) {
     console.log('\n   No memories matched the query.\n');
     console.log('   Tips:');
     console.log('   • Try broader search terms');

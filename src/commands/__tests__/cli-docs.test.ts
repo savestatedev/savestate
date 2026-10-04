@@ -2678,6 +2678,17 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function formatMemoryExplainMissingJson');
   });
 
+  it('documents memory explain --limit as a bounded positive integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(memorySection).toContain('--limit');
+    expect(memorySection).toContain('Must be a positive integer up to 1000');
+    expect(memorySection).toContain('or maximum retrieval results to show on');
+    expect(memorySection).toContain('savestate memory explain "inbox preference" --limit 5');
+    expect(explainBlock).toContain(".option('-l, --limit <n>'");
+    expect(memory).toContain('export function parseMemoryExplainLimit');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');
