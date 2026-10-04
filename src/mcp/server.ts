@@ -62,6 +62,7 @@ import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
+import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './savestate-snapshot-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -115,6 +116,10 @@ const tools: Tool[] = [
         passphrase: {
           type: 'string',
           description: 'Encryption passphrase. Required for snapshot creation.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of status field rows to return (positive integer up to 1000)',
         },
       },
       required: ['passphrase'],
@@ -447,6 +452,7 @@ const SnapshotInputSchema = z.object({
   adapter: z.string().optional(),
   full: z.boolean().optional(),
   passphrase: z.string(),
+  limit: z.number().optional(),
 });
 
 const RestoreInputSchema = z.object({
@@ -517,61 +523,102 @@ const SearchSnapshotsInputSchema = z.object({
 async function handleSnapshot(
   input: z.infer<typeof SnapshotInputSchema>,
 ): Promise<string> {
-  if (!isInitialized()) {
-    return 'Error: SaveState not initialized. Run `savestate init` first.';
-  }
-
-  const config = await loadConfig();
-
-  // Resolve adapter
-  let adapter;
-  if (input.adapter) {
-    adapter = getAdapter(input.adapter);
-    if (!adapter) {
-      return `Error: Unknown adapter: ${input.adapter}`;
-    }
-  } else if (config.defaultAdapter) {
-    adapter = getAdapter(config.defaultAdapter);
-  } else {
-    adapter = await detectAdapter();
-  }
-
-  if (!adapter) {
-    return 'Error: No adapter detected. Specify one with the adapter parameter.';
-  }
-
-  const storage = resolveStorage(config);
-
   try {
+    const limit = parseSavestateSnapshotLimit(input.limit);
+
+    if (!isInitialized()) {
+      return 'Error: SaveState not initialized. Run `savestate init` first.';
+    }
+
+    const config = await loadConfig();
+
+    // Resolve adapter
+    let adapter;
+    if (input.adapter) {
+      adapter = getAdapter(input.adapter);
+      if (!adapter) {
+        return `Error: Unknown adapter: ${input.adapter}`;
+      }
+    } else if (config.defaultAdapter) {
+      adapter = getAdapter(config.defaultAdapter);
+    } else {
+      adapter = await detectAdapter();
+    }
+
+    if (!adapter) {
+      return 'Error: No adapter detected. Specify one with the adapter parameter.';
+    }
+
+    const storage = resolveStorage(config);
+
     const result = await createSnapshot(adapter, storage, input.passphrase, {
       label: input.label,
       tags: input.tags,
       full: input.full,
     });
 
-    const lines = [
-      `Snapshot created successfully!`,
-      ``,
-      `ID: ${result.snapshot.manifest.id}`,
-      `Adapter: ${adapter.name}`,
-      `Type: ${result.incremental ? 'incremental' : 'full'}`,
+    const fields: Array<{ key: string; value: string }> = [
+      { key: 'id', value: result.snapshot.manifest.id },
+      { key: 'adapter', value: adapter.name },
+      { key: 'type', value: result.incremental ? 'incremental' : 'full' },
     ];
 
     if (input.label) {
-      lines.push(`Label: ${input.label}`);
+      fields.push({ key: 'label', value: input.label });
     }
 
     if (result.incremental && result.delta) {
-      lines.push(
-        `Changes: +${result.delta.added} added, ~${result.delta.modified} modified, -${result.delta.removed} removed`,
-      );
-      lines.push(`Chain depth: ${result.delta.chainDepth}`);
+      fields.push({
+        key: 'changes',
+        value: `+${result.delta.added} added, ~${result.delta.modified} modified, -${result.delta.removed} removed`,
+      });
+      fields.push({ key: 'chainDepth', value: String(result.delta.chainDepth) });
     }
 
-    lines.push(`Files: ${result.fileCount}`);
-    lines.push(`Archive size: ${formatBytes(result.archiveSize)}`);
-    lines.push(`Encrypted size: ${formatBytes(result.encryptedSize)}`);
-    lines.push(`Storage: ${config.storage.type}`);
+    fields.push({ key: 'files', value: String(result.fileCount) });
+    fields.push({ key: 'archiveSize', value: formatBytes(result.archiveSize) });
+    fields.push({ key: 'encryptedSize', value: formatBytes(result.encryptedSize) });
+    fields.push({ key: 'storage', value: config.storage.type });
+
+    const selected = selectSavestateSnapshotEntries(fields, limit);
+    const lines = ['Snapshot created successfully!', ''];
+
+    for (const field of selected) {
+      switch (field.key) {
+        case 'id':
+          lines.push(`ID: ${field.value}`);
+          break;
+        case 'adapter':
+          lines.push(`Adapter: ${field.value}`);
+          break;
+        case 'type':
+          lines.push(`Type: ${field.value}`);
+          break;
+        case 'label':
+          lines.push(`Label: ${field.value}`);
+          break;
+        case 'changes':
+          lines.push(`Changes: ${field.value}`);
+          break;
+        case 'chainDepth':
+          lines.push(`Chain depth: ${field.value}`);
+          break;
+        case 'files':
+          lines.push(`Files: ${field.value}`);
+          break;
+        case 'archiveSize':
+          lines.push(`Archive size: ${field.value}`);
+          break;
+        case 'encryptedSize':
+          lines.push(`Encrypted size: ${field.value}`);
+          break;
+        case 'storage':
+          lines.push(`Storage: ${field.value}`);
+          break;
+        default:
+          lines.push(`${field.key}: ${field.value}`);
+      }
+    }
 
     return lines.join('\n');
   } catch (err) {
