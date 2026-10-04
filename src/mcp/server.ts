@@ -62,6 +62,7 @@ import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
+import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -255,6 +256,10 @@ const tools: Tool[] = [
         id: {
           type: 'string',
           description: 'ID of the memory to delete',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of confirmation field rows to return (positive integer up to 1000)',
         },
       },
       required: ['id'],
@@ -479,6 +484,7 @@ const MemorySearchInputSchema = z.object({
 
 const MemoryDeleteInputSchema = z.object({
   id: z.string(),
+  limit: z.number().optional(),
 });
 
 // OpenMemory-compatible schemas
@@ -810,17 +816,30 @@ async function handleMemoryDelete(
 ): Promise<string> {
   try {
     const store = getMemoryStore();
+    const limit = parseSavestateMemoryDeleteLimit(input.limit);
     const deleted = store.delete(input.id);
 
     if (!deleted) {
       return `Memory not found: ${input.id}`;
     }
 
-    return [
-      'Memory deleted successfully!',
-      '',
-      `ID: ${input.id}`,
-    ].join('\n');
+    const fields = [
+      { key: 'id', value: input.id },
+    ];
+    const selected = selectSavestateMemoryDeleteEntries(fields, limit);
+    const lines = ['Memory deleted successfully!', ''];
+
+    for (const field of selected) {
+      switch (field.key) {
+        case 'id':
+          lines.push(`ID: ${field.value}`);
+          break;
+        default:
+          lines.push(`${field.key}: ${field.value}`);
+      }
+    }
+
+    return lines.join('\n');
   } catch (err) {
     return `Error deleting memory: ${err instanceof Error ? err.message : String(err)}`;
   }
