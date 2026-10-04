@@ -59,6 +59,7 @@ import { resolveStorage } from '../storage/resolve.js';
 import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
+import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
 
@@ -373,7 +374,7 @@ const tools: Tool[] = [
         },
         limit: {
           type: 'number',
-          description: 'Maximum results (default: 50)',
+          description: 'Maximum results (default: 50; positive integer up to 1000)',
         },
         offset: {
           type: 'number',
@@ -881,14 +882,15 @@ async function handleListMemories(
   try {
     const store = getMemoryStore();
 
+    const limit = parseListMemoriesLimit(input.limit);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
-      limit: input.limit ?? 50,
+      limit: limit ?? 50,
       offset: input.offset,
     };
 
-    const results = await store.query(query);
+    const results = selectListMemoriesEntries(await store.query(query), limit);
     const stats = store.getStats();
 
     if (results.length === 0) {
