@@ -79,6 +79,7 @@ import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } fro
 import { parseSavestateRestoreLimit, selectSavestateRestoreEntries } from './savestate-restore-limit.js';
 import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './savestate-snapshot-limit.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
+import { parseSavestateStatsOffset, selectSavestateStatsOffsetEntries } from './savestate-stats-offset.js';
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchMemoryOffset, selectSearchMemoryOffsetEntries } from './search-memory-offset.js';
@@ -350,6 +351,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Maximum snapshots to aggregate (positive integer up to 1000; most recent first)',
         },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000; most recent first)',
+        },
       },
     },
   },
@@ -603,6 +608,7 @@ const SearchSnapshotsInputSchema = z.object({
 
 const StatsInputSchema = z.object({
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 // ─── Tool Handlers ───────────────────────────────────────────
@@ -1353,10 +1359,14 @@ async function handleStats(
     }
     const index = await loadIndex();
     const limit = parseSavestateStatsLimit(input.limit);
+    const offset = parseSavestateStatsOffset(input.offset);
     const snapshots = selectSavestateStatsEntries(
-      [...index.snapshots].sort(
-        (a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      selectSavestateStatsOffsetEntries(
+        [...index.snapshots].sort(
+          (a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        ),
+        offset,
       ),
       limit,
     );
