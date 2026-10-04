@@ -62,6 +62,7 @@ import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
+import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } from './savestate-memory-store-limit.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -208,6 +209,10 @@ const tools: Tool[] = [
         metadata: {
           type: 'object',
           description: 'Additional metadata to store with the memory',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of confirmation field rows to return (positive integer up to 1000)',
         },
       },
       required: ['content'],
@@ -467,6 +472,7 @@ const MemoryStoreInputSchema = z.object({
   tags: z.array(z.string()).optional(),
   importance: z.number().min(0).max(1).optional(),
   metadata: z.record(z.string(), z.any()).optional(),
+  limit: z.number().optional(),
 });
 
 const MemorySearchInputSchema = z.object({
@@ -739,6 +745,7 @@ async function handleMemoryStore(
 ): Promise<string> {
   try {
     const store = getMemoryStore();
+    const limit = parseSavestateMemoryStoreLimit(input.limit);
 
     const memory = await store.create({
       type: input.type ?? 'fact',
@@ -748,15 +755,37 @@ async function handleMemoryStore(
       metadata: input.metadata,
     });
 
-    const lines = [
-      'Memory stored successfully!',
-      '',
-      `ID: ${memory.id}`,
-      `Type: ${memory.type}`,
-      `Tags: ${memory.tags?.join(', ') ?? 'none'}`,
-      `Importance: ${memory.importance}`,
-      `Created: ${memory.createdAt}`,
+    const fields = [
+      { key: 'id', value: memory.id },
+      { key: 'type', value: memory.type },
+      { key: 'tags', value: memory.tags?.join(', ') ?? 'none' },
+      { key: 'importance', value: String(memory.importance) },
+      { key: 'created', value: memory.createdAt },
     ];
+    const selected = selectSavestateMemoryStoreEntries(fields, limit);
+    const lines = ['Memory stored successfully!', ''];
+
+    for (const field of selected) {
+      switch (field.key) {
+        case 'id':
+          lines.push(`ID: ${field.value}`);
+          break;
+        case 'type':
+          lines.push(`Type: ${field.value}`);
+          break;
+        case 'tags':
+          lines.push(`Tags: ${field.value}`);
+          break;
+        case 'importance':
+          lines.push(`Importance: ${field.value}`);
+          break;
+        case 'created':
+          lines.push(`Created: ${field.value}`);
+          break;
+        default:
+          lines.push(`${field.key}: ${field.value}`);
+      }
+    }
 
     return lines.join('\n');
   } catch (err) {
