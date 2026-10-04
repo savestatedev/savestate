@@ -97,7 +97,7 @@ Search memories by query text and filters.
 
 ### list_memories
 
-List all stored memories with optional filtering.
+List all stored memories with optional filtering. `limit` is a positive integer up to 1000 (default 50).
 
 **Input:**
 ```json
