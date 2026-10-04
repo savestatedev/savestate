@@ -63,6 +63,7 @@ import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-
 import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './delete-all-memories-limit.js';
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
+import { parseListMemoriesOffset } from './list-memories-offset.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
 import {
@@ -426,7 +427,7 @@ const tools: Tool[] = [
         },
         offset: {
           type: 'number',
-          description: 'Pagination offset',
+          description: 'Pagination offset (non-negative integer up to 1000)',
         },
       },
     },
@@ -1125,11 +1126,12 @@ async function handleListMemories(
     const store = getMemoryStore();
 
     const limit = parseListMemoriesLimit(input.limit);
+    const offset = parseListMemoriesOffset(input.offset);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
       limit: limit ?? 50,
-      offset: input.offset,
+      offset,
     };
 
     const results = selectListMemoriesEntries(await store.query(query), limit);
