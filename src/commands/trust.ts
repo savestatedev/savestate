@@ -111,6 +111,7 @@ export function selectTrustDenyAddEntries<T>(entries: T[], limit?: number): T[] 
 interface DenyListOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_TRUST_DENY_REMOVE_LIMIT = 1000;
@@ -153,6 +154,38 @@ export function parseTrustDenyListLimit(value: string | undefined): number | und
 export function selectTrustDenyListEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+const MAX_TRUST_DENY_LIST_OFFSET = 1000;
+
+/** Parse trust deny list --offset without turning user input errors into an empty denylist. */
+export function parseTrustDenyListOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_DENY_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_DENY_LIST_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N denylist entries when --offset is set. */
+export function selectTrustDenyListOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply trust deny list --offset then --limit. */
+export function applyTrustDenyListFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectTrustDenyListEntries(
+    selectTrustDenyListOffsetEntries(entries, parseTrustDenyListOffset(options.offset)),
+    parseTrustDenyListLimit(options.limit),
+  );
 }
 
 const MAX_TRUST_STATUS_LIMIT = 1000;
@@ -493,10 +526,7 @@ export async function trustDenyRemoveCommand(
 
 export async function trustDenyListCommand(options: DenyListOptions): Promise<void> {
   const store = new TrustStore();
-  const entries = selectTrustDenyListEntries(
-    store.listDenylist(),
-    parseTrustDenyListLimit(options.limit),
-  );
+  const entries = applyTrustDenyListFilters(store.listDenylist(), options);
   store.close();
 
   if (options.json) {
