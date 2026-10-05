@@ -146,6 +146,7 @@ program
   .option('--tag <tag>', 'Only check snapshots with this tag')
   .option('--label <label>', 'Only check snapshots with this label')
   .option('--limit <n>', 'Only check the N most recent snapshots')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .action(doctorCommand);
 
 // ─── savestate inspect ───────────────────────────────────────
