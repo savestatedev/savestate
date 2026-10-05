@@ -1478,6 +1478,16 @@ describe('CLI docs', () => {
     expect(evalSource).toContain('export function parseEvalReportLimit');
   });
 
+  it('documents eval report --offset as a bounded non-negative integer', () => {
+    const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
+    const evalBlock = cli.slice(cli.indexOf("command('eval <subcommand>')"), cli.indexOf("command('search <query>')"));
+    expect(evalSection).toContain('--offset');
+    expect(evalSection).toContain('Must be a non-negative integer up to 1000');
+    expect(evalSection).toContain('savestate eval report --offset 10 --limit 5');
+    expect(evalBlock).toContain(".option('--offset <n>'");
+    expect(evalSource).toContain('export function parseEvalReportOffset');
+  });
+
   it('documents eval quality --limit as a bounded positive integer', () => {
     const evalSection = docs.slice(docs.indexOf('id="eval"'), docs.indexOf('id="login"'));
     const evalBlock = cli.slice(cli.indexOf("command('eval <subcommand>')"), cli.indexOf("command('search <query>')"));

@@ -13,6 +13,7 @@ interface EvalOptions {
   threshold?: string;
   suite?: string;
   limit?: string;
+  offset?: string;
   verbose?: boolean;
 }
 
@@ -231,7 +232,7 @@ async function showReport(options: EvalOptions): Promise<void> {
   }
 
   const benchmark = new QualityBenchmark();
-  const results = selectEvalReportSuites(await benchmark.loadResults(resultsPath), parseEvalReportLimit(options.limit));
+  const results = applyEvalReportFilters(await benchmark.loadResults(resultsPath), options);
 
   if (options.json) {
     console.log(formatEvalJson(results));
@@ -399,6 +400,38 @@ export function parseEvalReportLimit(value: string | undefined): number | undefi
 export function selectEvalReportSuites<T>(suites: T[], limit?: number): T[] {
   if (limit === undefined) return suites;
   return suites.slice(0, limit);
+}
+
+const MAX_EVAL_REPORT_OFFSET = 1000;
+
+/** Parse eval report --offset without turning user input errors into an empty suite list. */
+export function parseEvalReportOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_EVAL_REPORT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_EVAL_REPORT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N report suites when --offset is set. */
+export function selectEvalReportOffsetEntries<T>(suites: T[], offset?: number): T[] {
+  if (offset === undefined) return suites;
+  return suites.slice(offset);
+}
+
+/** Apply eval report --offset then --limit. */
+export function applyEvalReportFilters<T>(
+  suites: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectEvalReportSuites(
+    selectEvalReportOffsetEntries(suites, parseEvalReportOffset(options.offset)),
+    parseEvalReportLimit(options.limit),
+  );
 }
 
 const MAX_EVAL_QUALITY_LIMIT = 1000;
