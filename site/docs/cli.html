@@ -862,7 +862,7 @@
 
     <!-- antibodies -->
     <h2 id="antibodies"><code>savestate antibodies</code></h2>
-    <p>Manage failure antibodies: reusable rules that match a tool, error, or path and suggest a safe action. Subcommands: <code>list</code>, <code>add</code>, <code>preflight</code>, <code>stats</code>. Must be a single non-empty subcommand (list, add, preflight, or stats). <code>list</code>, <code>stats</code>, <code>preflight</code>, and <code>add</code> can cap per-rule or status-field output with <code>--limit</code>. <code>list</code> can skip rules with <code>--offset</code> before <code>--limit</code>.</p>
+    <p>Manage failure antibodies: reusable rules that match a tool, error, or path and suggest a safe action. Subcommands: <code>list</code>, <code>add</code>, <code>preflight</code>, <code>stats</code>. Must be a single non-empty subcommand (list, add, preflight, or stats). <code>list</code>, <code>stats</code>, <code>preflight</code>, and <code>add</code> can cap per-rule or status-field output with <code>--limit</code>. <code>list</code> and <code>stats</code> can skip rules with <code>--offset</code> before <code>--limit</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate antibodies &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -872,8 +872,8 @@
       <tbody>
         <tr><td><code>--json</code></td><td>Emit antibody list, preflight, stats, and an add summary (id, risk, safe action, and confidence) as JSON. List output is a stable rule summary (id, risk, intervention, active, confidence, hits, overrides, and safe action). When SaveState is not initialized, <code>list --json</code> emits a missing summary (found, total, shown; omits extra fields) and <code>add --json</code> emits a missing summary (found, added, id; omits extra fields). Preflight output is a stable summary (blocked, elapsed, semantic, and warnings with rule id, risk, intervention, confidence, safe action, and reasons). When SaveState is not initialized, <code>preflight --json</code> emits a missing summary (found, blocked, elapsedMs, semanticUsed; omits extra fields). Stats output is a stable summary (counts plus per-rule hits and overrides). When SaveState is not initialized, <code>stats --json</code> emits a missing summary (found, totalRules, activeRules, retiredRules, totalHits, totalOverrides; omits extra fields). Omits extra fields. Useful for scripting.</td></tr>
         <tr><td><code>--all</code></td><td>Include retired rules in <code>list</code>. Combines with <code>--limit</code> and <code>--offset</code>.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of antibody rules to show on <code>list</code> or <code>stats</code>, or preflight warnings, or add status field rows. Must be a positive integer up to 1000. Combines with <code>--all</code> and <code>--offset</code> on <code>list</code>.</td></tr>
-        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N antibody rules on <code>list</code> before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of antibody rules to show on <code>list</code> or <code>stats</code>, or preflight warnings, or add status field rows. Must be a positive integer up to 1000. Combines with <code>--all</code> and <code>--offset</code> on <code>list</code>, and with <code>--offset</code> on <code>stats</code>.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N antibody rules on <code>list</code> or <code>stats</code> before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--tool &lt;name&gt;</code></td><td>Tool name for <code>add</code> / <code>preflight</code>. Must be a single non-empty tool name.</td></tr>
         <tr><td><code>--error-code &lt;code&gt;</code></td><td>Error code in the rule trigger or preflight context. Must be a single non-empty error code.</td></tr>
         <tr><td><code>--path-prefix &lt;prefix&gt;</code></td><td>Path prefix in the rule trigger. Must be a single non-empty path prefix.</td></tr>
@@ -917,7 +917,10 @@
 
 <span class="code-comment"># Hit counts and overrides</span>
 <span class="code-prompt">$</span> savestate antibodies stats --json
-<span class="code-prompt">$</span> savestate antibodies stats --limit 5</code></pre>
+<span class="code-prompt">$</span> savestate antibodies stats --limit 5
+
+<span class="code-comment"># Skip the first 10 stats rules, then show the next 5</span>
+<span class="code-prompt">$</span> savestate antibodies stats --offset 10 --limit 5</code></pre>
 
     <!-- schedule -->
     <h2 id="schedule"><code>savestate schedule</code></h2>

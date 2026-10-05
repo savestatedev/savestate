@@ -463,9 +463,8 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
 }
 
 async function showStats(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
-  const limit = parseAntibodiesStatsLimit(options.limit);
   const stats = await store.stats();
-  const rules = selectAntibodiesStatsRules(stats.rules, limit);
+  const rules = applyAntibodiesStatsFilters(stats.rules, options);
 
   if (options.json) {
     console.log(
@@ -582,6 +581,38 @@ export function parseAntibodiesStatsLimit(value: string | undefined): number | u
 export function selectAntibodiesStatsRules<T>(rules: T[], limit?: number): T[] {
   if (limit === undefined) return rules;
   return rules.slice(0, limit);
+}
+
+const MAX_ANTIBODIES_STATS_OFFSET = 1000;
+
+/** Parse antibodies stats --offset without turning user input errors into an empty stats view. */
+export function parseAntibodiesStatsOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_ANTIBODIES_STATS_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_ANTIBODIES_STATS_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N antibody stats rules when --offset is set. */
+export function selectAntibodiesStatsOffsetEntries<T>(rules: T[], offset?: number): T[] {
+  if (offset === undefined) return rules;
+  return rules.slice(offset);
+}
+
+/** Apply antibodies stats --offset then --limit. */
+export function applyAntibodiesStatsFilters<T>(
+  rules: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectAntibodiesStatsRules(
+    selectAntibodiesStatsOffsetEntries(rules, parseAntibodiesStatsOffset(options.offset)),
+    parseAntibodiesStatsLimit(options.limit),
+  );
 }
 
 const MAX_ANTIBODIES_PREFLIGHT_LIMIT = 1000;
@@ -808,6 +839,6 @@ function showUsage(): void {
   console.log('                             [--confidence <0..1>] [--id <rule-id>] [--limit <n>] [--json]');
   console.log('  savestate antibodies preflight [--tool <name>] [--error-code <code>] [--path <path>]');
   console.log('                                  [--tags <a,b>] [--semantic] [--limit <n>] [--json]');
-  console.log('  savestate antibodies stats [--limit <n>] [--json]');
+  console.log('  savestate antibodies stats [--limit <n>] [--offset <n>] [--json]');
   console.log();
 }
