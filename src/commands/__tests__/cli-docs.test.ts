@@ -4897,6 +4897,16 @@ describe('CLI docs', () => {
     expect(diff).toContain('export function parseDiffLimit');
   });
 
+  it('documents diff --offset as a bounded non-negative integer', () => {
+    const diffSection = docs.slice(docs.indexOf('id="diff"'), docs.indexOf('id="search"'));
+    const diffBlock = cli.slice(cli.indexOf("command('diff <a> <b>')"), cli.indexOf("command('config')"));
+    expect(diffSection).toContain('--offset');
+    expect(diffSection).toContain('Must be a non-negative integer up to 1000');
+    expect(diffSection).toContain('savestate diff latest ss-2026-01-25 --offset 10 --limit 5');
+    expect(diffBlock).toContain(".option('--offset <n>'");
+    expect(diff).toContain('export function parseDiffOffset');
+  });
+
   it('lists savestate diff in the command overview', () => {
     expect(docs).toContain('id="diff"');
     expect(docs).toContain('savestate diff');
