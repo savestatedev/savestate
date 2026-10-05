@@ -193,6 +193,7 @@ trustCmd
   .command('audit')
   .description('Show recent state-transition events')
   .option('--limit <n>', 'Number of recent events to show')
+  .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustAuditCommand);
 

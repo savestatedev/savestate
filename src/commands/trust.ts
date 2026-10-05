@@ -17,6 +17,7 @@ import type { PromotionScope, TransitionEvent, TrustMetrics, TrustState } from '
 interface TrustOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_TRUST_AUDIT_LIMIT = 1000;
@@ -32,6 +33,44 @@ export function parseTrustAuditLimit(value: string | undefined): number {
     );
   }
   return limit;
+}
+
+/** Keep the first N audit events when --limit is set. */
+export function selectTrustAuditEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
+const MAX_TRUST_AUDIT_OFFSET = 1000;
+
+/** Parse trust audit --offset without turning user input errors into an empty audit trail. */
+export function parseTrustAuditOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_AUDIT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_AUDIT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N audit events when --offset is set. */
+export function selectTrustAuditOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply trust audit --offset then --limit. */
+export function applyTrustAuditFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectTrustAuditEntries(
+    selectTrustAuditOffsetEntries(entries, parseTrustAuditOffset(options.offset)),
+    parseTrustAuditLimit(options.limit),
+  );
 }
 
 /** Parse trust deny --reason without writing a blank denylist reason. */
@@ -409,8 +448,12 @@ export async function trustStatusCommand(options: TrustOptions): Promise<void> {
 
 export async function trustAuditCommand(options: TrustOptions): Promise<void> {
   const store = new TrustStore();
+  const offset = parseTrustAuditOffset(options.offset);
   const limit = parseTrustAuditLimit(options.limit);
-  const events = store.getRecentTransitions(limit);
+  const events = applyTrustAuditFilters(
+    store.getRecentTransitions(limit + (offset ?? 0)),
+    options,
+  );
 
   if (options.json) {
     console.log(formatTrustAuditJson(events));
