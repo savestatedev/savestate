@@ -4453,6 +4453,16 @@ describe('CLI docs', () => {
     expect(restore).toContain('export function parseRestoreLimit');
   });
 
+  it('documents restore --offset as a bounded non-negative integer', () => {
+    const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
+    const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
+    expect(restoreSection).toContain('--offset');
+    expect(restoreSection).toContain('Must be a non-negative integer up to 1000');
+    expect(restoreSection).toContain('savestate restore --offset 10 --limit 5');
+    expect(restoreBlock).toContain(".option('--offset <n>'");
+    expect(restore).toContain('export function parseRestoreOffset');
+  });
+
   it('registers --json on savestate restore', () => {
     const restoreBlock = cli.slice(cli.indexOf("command('restore [snapshot-id]')"), cli.indexOf("command('list')"));
     expect(restoreBlock).toContain(".option('--json'");
