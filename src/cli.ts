@@ -259,6 +259,7 @@ program
   .option('--tag <tag>', 'Only compare snapshots with this tag')
   .option('--label <label>', 'Compare the newest snapshots with this label')
   .option('--limit <n>', 'Only consider the N most recent matching snapshots')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(diffCommand);
 

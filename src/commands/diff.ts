@@ -28,6 +28,7 @@ interface DiffOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  offset?: string;
 }
 
 const DIFF_ADAPTERS = [
@@ -163,6 +164,7 @@ export function parseDiffUntil(value: string | undefined): number | undefined {
 }
 
 const MAX_DIFF_LIMIT = 1000;
+const MAX_DIFF_OFFSET = 1000;
 
 /** Parse diff --limit without treating invalid counts as a missing snapshot. */
 export function parseDiffLimit(value: string | undefined): number | undefined {
@@ -175,6 +177,25 @@ export function parseDiffLimit(value: string | undefined): number | undefined {
     );
   }
   return limit;
+}
+
+/** Parse diff --offset without treating invalid skips as a missing snapshot. */
+export function parseDiffOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_DIFF_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_DIFF_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when diff --offset is set. */
+export function selectDiffOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
 }
 
 /** Parse diff --exclude without treating unknown ids as a missing snapshot. */
@@ -226,10 +247,10 @@ export function parseDiffLabel(value: string | undefined): string | undefined {
   return label;
 }
 
-/** Resolve diff --adapter/--exclude/--since/--until/--tag/--label/--limit (and snapshot id) to the newest matching snapshot. */
+/** Resolve diff --adapter/--exclude/--since/--until/--tag/--label/--limit/--offset (and snapshot id) to the newest matching snapshot. */
 export function resolveDiffSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
-  options: { snapshot: string; adapter?: string; exclude?: string; since?: string; until?: string; tag?: string; label?: string; limit?: string },
+  options: { snapshot: string; adapter?: string; exclude?: string; since?: string; until?: string; tag?: string; label?: string; limit?: string; offset?: string },
 ): string | undefined {
   const snapshotId = parseDiffId(options.snapshot);
   const adapter = parseDiffAdapter(options.adapter);
@@ -239,6 +260,7 @@ export function resolveDiffSnapshot(
   const tag = parseDiffTag(options.tag);
   const label = parseDiffLabel(options.label);
   const limit = parseDiffLimit(options.limit);
+  const offset = parseDiffOffset(options.offset);
   if (
     adapter === undefined &&
     exclude === undefined &&
@@ -246,7 +268,8 @@ export function resolveDiffSnapshot(
     until === undefined &&
     tag === undefined &&
     label === undefined &&
-    limit === undefined
+    limit === undefined &&
+    offset === undefined
   ) {
     return snapshotId;
   }
@@ -261,8 +284,11 @@ export function resolveDiffSnapshot(
     return true;
   });
 
-  matches = [...matches].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  matches = selectDiffOffsetEntries(
+    [...matches].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    ),
+    offset,
   );
   if (limit !== undefined) {
     matches = matches.slice(0, limit);
@@ -287,6 +313,7 @@ export async function diffCommand(
   const label = parseDiffLabel(options?.label);
   const until = parseDiffUntil(options?.until);
   const limit = parseDiffLimit(options?.limit);
+  const offset = parseDiffOffset(options?.offset);
 
   if (!options?.json) {
     console.log();
@@ -308,7 +335,8 @@ export async function diffCommand(
     until !== undefined ||
     tag !== undefined ||
     label !== undefined ||
-    limit !== undefined
+    limit !== undefined ||
+    offset !== undefined
   ) {
     const snapshots = (await loadIndex()).snapshots;
     const matchedA = resolveDiffSnapshot(snapshots, {
@@ -320,6 +348,7 @@ export async function diffCommand(
       label: options?.label,
       until: options?.until,
       limit: options?.limit,
+      offset: options?.offset,
     });
     const matchedB = resolveDiffSnapshot(snapshots, {
       snapshot: rawSnapshotB,
@@ -330,13 +359,14 @@ export async function diffCommand(
       label: options?.label,
       until: options?.until,
       limit: options?.limit,
+      offset: options?.offset,
     });
     if (!matchedA || !matchedB) {
       if (options?.json) {
         console.log(formatDiffMissingJson(snapshotA, snapshotB));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? exclude?.join(',') ?? options?.since ?? options?.until ?? options?.tag ?? label ?? options?.limit}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? exclude?.join(',') ?? options?.since ?? options?.until ?? options?.tag ?? label ?? options?.limit ?? options?.offset}`));
       process.exit(1);
     }
     snapshotA = matchedA;
