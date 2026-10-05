@@ -4226,6 +4226,16 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate list');
   });
 
+  it('documents list --offset as a bounded non-negative integer', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
+    expect(listSection).toContain('--offset');
+    expect(listSection).toContain('Must be a non-negative integer up to 1000');
+    expect(listSection).toContain('savestate list --offset 10 --limit 5');
+    expect(listBlock).toContain(".option('--offset <n>'");
+    expect(listSource).toContain('export function parseListOffset');
+  });
+
   it('documents list --since, --until, --adapter, --exclude, and --tag', () => {
     const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
     expect(listSection).toContain('--json');

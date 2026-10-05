@@ -9,6 +9,7 @@ import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 interface ListOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
   since?: string;
   until?: string;
   adapter?: string;
@@ -19,6 +20,7 @@ interface ListOptions {
 }
 
 const MAX_LIST_LIMIT = 1000;
+const MAX_LIST_OFFSET = 1000;
 const LIST_ADAPTERS = [
   'clawdbot',
   'claude-code',
@@ -42,9 +44,11 @@ export interface ListSnapshotJson {
   size: number;
 }
 
-export function formatListJson(snapshots: SnapshotIndexEntry[], limit = 50): string {
-  const records: ListSnapshotJson[] = [...snapshots]
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+export function formatListJson(snapshots: SnapshotIndexEntry[], limit = 50, offset?: number): string {
+  const records: ListSnapshotJson[] = selectListOffsetEntries(
+    [...snapshots].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    offset,
+  )
     .slice(0, limit)
     .map((snapshot) => ({
       id: snapshot.id,
@@ -88,6 +92,25 @@ export function parseListLimit(value: string | undefined): number {
     );
   }
   return limit;
+}
+
+/** Parse list --offset without turning user input errors into an unbounded skip. */
+export function parseListOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_LIST_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when list --offset is set. */
+export function selectListOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
 }
 
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
@@ -210,12 +233,13 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   const config = await loadConfig();
   const limit = parseListLimit(options.limit);
+  const offset = parseListOffset(options.offset);
   const index = await loadIndex();
 
   const filtered = applyListFilters(index.snapshots, options);
 
   if (options.json) {
-    console.log(formatListJson(filtered, limit));
+    console.log(formatListJson(filtered, limit, offset));
     return;
   }
 
@@ -237,10 +261,11 @@ export async function listCommand(options: ListOptions): Promise<void> {
     return;
   }
 
-  // Sort by timestamp descending (most recent first)
-  const sorted = [...filtered]
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, limit);
+  // Sort by timestamp descending (most recent first), then skip/limit
+  const sorted = selectListOffsetEntries(
+    [...filtered].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    offset,
+  ).slice(0, limit);
 
   // Calculate column widths
   const idWidth = Math.max(10, ...sorted.map((s) => s.id.length));

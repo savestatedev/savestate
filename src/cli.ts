@@ -101,6 +101,7 @@ program
   .description('List all snapshots')
   .option('--json', 'Output as JSON')
   .option('--limit <n>', 'Maximum number of snapshots to show')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
   .option('--adapter <id>', 'Only snapshots from this adapter')
