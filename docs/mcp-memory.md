@@ -124,13 +124,14 @@ Delete a specific memory by ID. `limit` is a positive integer up to 1000 for con
 
 ### delete_all_memories
 
-Clear all stored memories. Requires explicit confirmation. `limit` is a positive integer up to 1000.
+Clear all stored memories. Requires explicit confirmation. `limit` is a positive integer up to 1000. `offset` is a non-negative integer up to 1000.
 
 **Input:**
 ```json
 {
   "confirm": true,
-  "limit": 50
+  "limit": 50,
+  "offset": 0
 }
 ```
 
