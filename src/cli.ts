@@ -315,6 +315,7 @@ program
   .option('--threshold <0..1>', 'Confidence threshold (default: 0.7)')
   .option('--suite <name>', 'Run only a specific benchmark suite')
   .option('--limit <n>', 'Maximum number of benchmark suites to run on quality or show on report')
+  .option('--offset <n>', 'Skip the first N benchmark suites on quality (non-negative integer up to 1000)')
   .option('-v, --verbose', 'Show detailed test results')
   .action(evalCommand);
 

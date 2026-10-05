@@ -13,6 +13,7 @@ interface EvalOptions {
   threshold?: string;
   suite?: string;
   limit?: string;
+  offset?: string;
   verbose?: boolean;
 }
 
@@ -168,10 +169,9 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
 
   // Filter by suite name if specified
   const suite = parseEvalSuite(options.suite);
-  const limit = parseEvalQualityLimit(options.limit);
-  const suitesToRun = selectEvalQualitySuites(
+  const suitesToRun = applyEvalQualityFilters(
     suite ? suites.filter((s) => s.name === suite) : suites,
-    limit,
+    options,
   );
 
   if (suitesToRun.length === 0) {
@@ -422,6 +422,38 @@ export function selectEvalQualitySuites<T>(suites: T[], limit?: number): T[] {
   return suites.slice(0, limit);
 }
 
+const MAX_EVAL_QUALITY_OFFSET = 1000;
+
+/** Parse eval quality --offset without turning user input errors into an empty suite list. */
+export function parseEvalQualityOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_EVAL_QUALITY_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_EVAL_QUALITY_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N quality suites when --offset is set. */
+export function selectEvalQualityOffsetEntries<T>(suites: T[], offset?: number): T[] {
+  if (offset === undefined) return suites;
+  return suites.slice(offset);
+}
+
+/** Apply eval quality --offset then --limit. */
+export function applyEvalQualityFilters<T>(
+  suites: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectEvalQualitySuites(
+    selectEvalQualityOffsetEntries(suites, parseEvalQualityOffset(options.offset)),
+    parseEvalQualityLimit(options.limit),
+  );
+}
+
 const EVAL_SUBCOMMANDS = ['quality', 'report'] as const;
 export type EvalSubcommand = (typeof EVAL_SUBCOMMANDS)[number];
 const EVAL_SUBCOMMAND_LIST = EVAL_SUBCOMMANDS.join(', ');
@@ -518,13 +550,14 @@ function createMockRetrievalFn(): (query: string) => Promise<string[]> {
 function showUsage(): void {
   console.log(chalk.bold('Memory Quality Evaluation commands:'));
   console.log();
-  console.log('  savestate eval quality [--threshold <0..1>] [--suite <name>] [--limit <n>] [--verbose] [--json]');
+  console.log('  savestate eval quality [--threshold <0..1>] [--suite <name>] [--limit <n>] [--offset <n>] [--verbose] [--json]');
   console.log('  savestate eval report [--limit <n>] [--verbose] [--json]');
   console.log();
   console.log('Options:');
   console.log('  --threshold   Confidence threshold for pass/fail (default: 0.7)');
   console.log('  --suite       Run only a specific benchmark suite');
   console.log('  --limit       Maximum number of benchmark suites to run on quality or show on report');
+  console.log('  --offset      Skip the first N benchmark suites on quality');
   console.log('  --verbose     Show detailed test results');
   console.log('  --json        Output as JSON');
   console.log();
