@@ -248,6 +248,38 @@ export function selectTrustStatusEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+const MAX_TRUST_STATUS_OFFSET = 1000;
+
+/** Parse trust status --offset without turning user input errors into an empty metrics view. */
+export function parseTrustStatusOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_STATUS_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_STATUS_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N state or scope metric rows when --offset is set. */
+export function selectTrustStatusOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply trust status --offset then --limit. */
+export function applyTrustStatusFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectTrustStatusEntries(
+    selectTrustStatusOffsetEntries(entries, parseTrustStatusOffset(options.offset)),
+    parseTrustStatusLimit(options.limit),
+  );
+}
+
 const EMPTY_ENTRIES_BY_STATE: Record<TrustState, number> = {
   candidate: 0,
   stable: 0,
@@ -413,7 +445,8 @@ export function formatTrustDenyAddJson(result: TrustDenyAddJson): string {
 }
 
 export async function trustStatusCommand(options: TrustOptions): Promise<void> {
-  const limit = parseTrustStatusLimit(options.limit);
+  parseTrustStatusLimit(options.limit);
+  parseTrustStatusOffset(options.offset);
   const store = new TrustStore();
   const metrics = store.getMetrics();
 
@@ -427,12 +460,12 @@ export async function trustStatusCommand(options: TrustOptions): Promise<void> {
   console.log(chalk.bold('🛡  Trust Kernel'));
   console.log();
   console.log(chalk.dim('  Entries by state:'));
-  for (const [state, count] of selectTrustStatusEntries(Object.entries(metrics.entriesByState), limit)) {
+  for (const [state, count] of applyTrustStatusFilters(Object.entries(metrics.entriesByState), options)) {
     console.log(`    ${chalk.cyan(state.padEnd(12))} ${count}`);
   }
   console.log();
   console.log(chalk.dim('  Entries by scope:'));
-  for (const [scope, count] of selectTrustStatusEntries(Object.entries(metrics.entriesByScope), limit)) {
+  for (const [scope, count] of applyTrustStatusFilters(Object.entries(metrics.entriesByScope), options)) {
     console.log(`    ${chalk.cyan(scope.padEnd(12))} ${count}`);
   }
   console.log();

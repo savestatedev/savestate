@@ -186,6 +186,7 @@ trustCmd
   .command('status')
   .description('Show Trust Kernel metrics: entries by state/scope, denylist size, recent activity')
   .option('--limit <n>', 'Maximum number of state or scope metric rows to show')
+  .option('--offset <n>', 'Skip the first N state or scope metric rows (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustStatusCommand);
 

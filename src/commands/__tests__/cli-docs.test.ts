@@ -1128,6 +1128,20 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustStatusLimit');
   });
 
+  it('documents trust status --offset as a bounded non-negative integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const statusBlock = trustBlock.slice(
+      trustBlock.indexOf("command('status')"),
+      trustBlock.indexOf("command('audit')"),
+    );
+    expect(trustSection).toContain('--offset');
+    expect(trustSection).toContain('Must be a non-negative integer up to 1000');
+    expect(trustSection).toContain('savestate trust status --offset 10 --limit 5');
+    expect(statusBlock).toContain(".option('--offset <n>'");
+    expect(trust).toContain('export function parseTrustStatusOffset');
+  });
+
   it('registers --json on savestate trust audit', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const auditBlock = trustBlock.slice(
