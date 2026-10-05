@@ -18,6 +18,7 @@ interface AntibodiesOptions {
   all?: boolean;
   json?: boolean;
   limit?: string;
+  offset?: string;
   tool?: string;
   errorCode?: string;
   path?: string;
@@ -298,8 +299,7 @@ export async function antibodiesCommand(rawSubcommand: string, options: Antibodi
 }
 
 async function listRules(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
-  const limit = parseAntibodiesLimit(options.limit);
-  const rules = applyAntibodiesLimit(await store.list({ activeOnly: !options.all }), limit);
+  const rules = applyAntibodiesFilters(await store.list({ activeOnly: !options.all }), options);
 
   if (options.json) {
     console.log(
@@ -529,6 +529,38 @@ export function parseAntibodiesLimit(value: string | undefined): number | undefi
 export function applyAntibodiesLimit<T>(rules: T[], limit: number | undefined): T[] {
   if (limit === undefined) return rules;
   return rules.slice(0, limit);
+}
+
+const MAX_ANTIBODIES_OFFSET = 1000;
+
+/** Parse antibodies list --offset without turning user input errors into an empty rule list. */
+export function parseAntibodiesOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_ANTIBODIES_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_ANTIBODIES_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N antibody rules when --offset is set. */
+export function selectAntibodiesOffsetEntries<T>(rules: T[], offset?: number): T[] {
+  if (offset === undefined) return rules;
+  return rules.slice(offset);
+}
+
+/** Apply antibodies list --offset then --limit. */
+export function applyAntibodiesFilters<T>(
+  rules: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return applyAntibodiesLimit(
+    selectAntibodiesOffsetEntries(rules, parseAntibodiesOffset(options.offset)),
+    parseAntibodiesLimit(options.limit),
+  );
 }
 
 const MAX_ANTIBODIES_STATS_LIMIT = 1000;

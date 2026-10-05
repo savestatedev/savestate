@@ -293,6 +293,7 @@ program
   .option('--id <id>', 'Rule ID (for manual add)')
   .option('--all', 'Include retired rules in list')
   .option('--limit <n>', 'Maximum number of antibody rules to show on list or stats, or preflight warnings, or add status field rows')
+  .option('--offset <n>', 'Skip the first N antibody rules on list (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .option('--tool <tool>', 'Tool name in trigger/context')
   .option('--error-code <code>', 'Error code in trigger/context')
