@@ -1165,7 +1165,8 @@
       <tbody>
         <tr><td><code>--threshold &lt;0..1&gt;</code></td><td>Confidence threshold for pass/fail on <code>quality</code> (default 0.7). Must be a number between 0 and 1.</td></tr>
         <tr><td><code>--suite &lt;name&gt;</code></td><td>Run only a specific benchmark suite. Must be a single non-empty name (no commas or spaces).</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of benchmark suites to run on <code>quality</code> or show on <code>report</code>. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of benchmark suites to run on <code>quality</code> or show on <code>report</code>. Must be a positive integer up to 1000. Combines with <code>--offset</code> on <code>report</code>.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N benchmark suites on <code>report</code> before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>-v, --verbose</code></td><td>Show per-test metrics</td></tr>
         <tr><td><code>--json</code></td><td>Emit quality and report results as JSON. When SaveState is not initialized, <code>quality</code> emits a missing summary (found, suite, suiteCount, passed, total, passRate; omits extra fields). When the named suite is missing, <code>quality</code> emits a missing summary (found, suite, suiteCount, passed, total, passRate; omits extra fields). When SaveState is not initialized, <code>report</code> emits a missing summary (found, suiteCount, passed, total, passRate; omits extra fields). When no report exists, <code>report</code> emits a missing summary (found, suiteCount, passed, total, passRate; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
@@ -1182,6 +1183,9 @@
 
 <span class="code-comment"># Cap suites in the last report</span>
 <span class="code-prompt">$</span> savestate eval report --limit 5
+
+<span class="code-comment"># Skip then cap suites in the last report</span>
+<span class="code-prompt">$</span> savestate eval report --offset 10 --limit 5
 
 <span class="code-comment"># Last saved report with per-test metrics</span>
 <span class="code-prompt">$</span> savestate eval report --verbose
