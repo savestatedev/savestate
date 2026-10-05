@@ -431,6 +431,7 @@ program
   .option('--since <date>', 'Only entries after this date (ISO 8601)')
   .option('--until <date>', 'Only entries before this date (ISO 8601)')
   .option('--limit <n>', 'Maximum number of team members, audit entries, status field rows on status, or invite status field rows to show')
+  .option('--offset <n>', 'Skip the first N team members (non-negative integer up to 1000)')
   .option('--format <format>', 'Output format: csv or json', 'json')
   .action(teamCommand);
 
