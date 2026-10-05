@@ -24,6 +24,7 @@ interface InspectOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  offset?: string;
 }
 
 const INSPECT_ADAPTERS = [
@@ -193,6 +194,7 @@ export function parseInspectExclude(value: string | undefined): string[] | undef
 }
 
 const MAX_INSPECT_LIMIT = 1000;
+const MAX_INSPECT_OFFSET = 1000;
 
 /** Parse inspect --limit without treating invalid counts as a missing snapshot. */
 export function parseInspectLimit(value: string | undefined): number | undefined {
@@ -207,10 +209,29 @@ export function parseInspectLimit(value: string | undefined): number | undefined
   return limit;
 }
 
-/** Resolve inspect --adapter/--exclude/--tag/--label/--since/--until/--limit (and snapshot id) to the newest matching snapshot. */
+/** Parse inspect --offset without treating invalid skips as a missing snapshot. */
+export function parseInspectOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_INSPECT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_INSPECT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when inspect --offset is set. */
+export function selectInspectOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Resolve inspect --adapter/--exclude/--tag/--label/--since/--until/--limit/--offset (and snapshot id) to the newest matching snapshot. */
 export function resolveInspectSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; adapter?: string; exclude?: string; label?: string; tag?: string; since?: string; until?: string; limit?: string },
+  options: { snapshot?: string; adapter?: string; exclude?: string; label?: string; tag?: string; since?: string; until?: string; limit?: string; offset?: string },
 ): string | undefined {
   const snapshotId = parseInspectId(options.snapshot);
   const adapter = parseInspectAdapter(options.adapter);
@@ -220,6 +241,7 @@ export function resolveInspectSnapshot(
   const since = parseInspectSince(options.since);
   const until = parseInspectUntil(options.until);
   const limit = parseInspectLimit(options.limit);
+  const offset = parseInspectOffset(options.offset);
   if (
     adapter === undefined &&
     exclude === undefined &&
@@ -227,7 +249,8 @@ export function resolveInspectSnapshot(
     tag === undefined &&
     since === undefined &&
     until === undefined &&
-    limit === undefined
+    limit === undefined &&
+    offset === undefined
   ) {
     return snapshotId;
   }
@@ -242,8 +265,11 @@ export function resolveInspectSnapshot(
     return true;
   });
 
-  matches = [...matches].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  matches = selectInspectOffsetEntries(
+    [...matches].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    ),
+    offset,
   );
   if (limit !== undefined) {
     matches = matches.slice(0, limit);
@@ -263,6 +289,7 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   const since = parseInspectSince(options.since);
   const until = parseInspectUntil(options.until);
   const limit = parseInspectLimit(options.limit);
+  const offset = parseInspectOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -290,7 +317,8 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
     tag !== undefined ||
     since !== undefined ||
     until !== undefined ||
-    limit !== undefined
+    limit !== undefined ||
+    offset !== undefined
   ) {
     const matched = resolveInspectSnapshot((await loadIndex()).snapshots, {
       snapshot: rawSnapshotId,
@@ -301,13 +329,14 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
       since: options.since,
       until: options.until,
       limit: options.limit,
+      offset: options.offset,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatInspectMissingJson(snapshotId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options.exclude ?? label ?? tag ?? options.since ?? options.until ?? options.limit}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? options.exclude ?? label ?? tag ?? options.since ?? options.until ?? options.limit ?? options.offset}`));
       process.exit(1);
     }
     resolvedId = matched;
