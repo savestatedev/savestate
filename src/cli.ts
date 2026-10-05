@@ -383,6 +383,7 @@ program
   .option('--until <date>', 'Use the newest snapshot taken on or before this date instead of creating a new one')
   .option('--adapter <id>', 'Use the newest snapshot from this adapter instead of creating a new one')
   .option('--limit <n>', 'Only consider the N most recent matching snapshots')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--dry-run', 'Show compatibility report without making changes')
   .option('--review', 'Inspect items needing manual attention')
   .option('--resume', 'Resume an interrupted migration')
