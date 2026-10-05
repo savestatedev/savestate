@@ -4829,6 +4829,16 @@ describe('CLI docs', () => {
     expect(adapters).toContain('export function parseAdaptersLimit');
   });
 
+  it('documents adapters --offset as a bounded non-negative integer', () => {
+    const adaptersSection = docs.slice(docs.indexOf('id="adapters"'), docs.indexOf('id="export"'));
+    const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
+    expect(adaptersSection).toContain('--offset');
+    expect(adaptersSection).toContain('Must be a non-negative integer up to 1000');
+    expect(adaptersSection).toContain('savestate adapters --offset 10 --limit 5');
+    expect(adaptersBlock).toContain(".option('--offset <n>'");
+    expect(adapters).toContain('export function parseAdaptersOffset');
+  });
+
   it('lists savestate adapters in the command overview', () => {
     expect(docs).toContain('id="adapters"');
     expect(docs).toContain('savestate adapters');
