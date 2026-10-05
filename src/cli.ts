@@ -452,6 +452,7 @@ program
   .option('-p, --passphrase <pass>', 'Passphrase for verification (non-empty)')
   .option('-k, --keyfile <path>', 'Keyfile for verification (alternative to passphrase; single non-empty path)')
   .option('--limit <n>', 'Maximum number of packed components to show')
+  .option('--offset <n>', 'Skip the first N packed components (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(verifyCommand);
 

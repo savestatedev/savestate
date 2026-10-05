@@ -408,6 +408,16 @@ describe('CLI docs', () => {
     expect(verify).toContain('export function parseVerifyLimit');
   });
 
+  it('documents verify --offset as a bounded non-negative integer', () => {
+    const verifySection = docs.slice(docs.indexOf('id="verify"'), docs.indexOf('id="prune"'));
+    const verifyBlock = cli.slice(cli.indexOf("command('verify <file>')"), cli.indexOf('registerMemoryCommands'));
+    expect(verifySection).toContain('--offset');
+    expect(verifySection).toContain('Must be a non-negative integer up to 1000');
+    expect(verifySection).toContain('savestate verify agent.savestate --offset 10 --limit 5');
+    expect(verifyBlock).toContain(".option('--offset <n>'");
+    expect(verify).toContain('export function parseVerifyOffset');
+  });
+
   it('lists savestate prune in the command overview', () => {
     expect(docs).toContain('id="prune"');
     expect(docs).toContain('savestate prune');

@@ -145,6 +145,38 @@ export function selectVerifyComponents<T>(components: T[], limit?: number): T[] 
   return components.slice(0, limit);
 }
 
+const MAX_VERIFY_OFFSET = 1000;
+
+/** Parse verify --offset without turning user input errors into an empty component list. */
+export function parseVerifyOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_VERIFY_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_VERIFY_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N packed components when --offset is set. */
+export function selectVerifyOffsetEntries<T>(components: T[], offset?: number): T[] {
+  if (offset === undefined) return components;
+  return components.slice(offset);
+}
+
+/** Apply verify --offset then --limit. */
+export function applyVerifyFilters<T>(
+  components: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectVerifyComponents(
+    selectVerifyOffsetEntries(components, parseVerifyOffset(options.offset)),
+    parseVerifyLimit(options.limit),
+  );
+}
+
 export function missingPackedComponent(
   listed: readonly string[],
   packed: readonly string[],
@@ -1174,10 +1206,9 @@ export function parseVerifyPassphrase(value: string | undefined): string | undef
 
 export async function verifyCommand(
   filePath: string,
-  options: { passphrase?: string; keyfile?: string; json?: boolean; limit?: string }
+  options: { passphrase?: string; keyfile?: string; json?: boolean; limit?: string; offset?: string }
 ): Promise<void> {
   const parsedPath = parseVerifyFile(filePath);
-  const limit = parseVerifyLimit(options.limit);
 
   if (options.json) {
     try {
@@ -1208,7 +1239,7 @@ export async function verifyCommand(
 
   const result = await verifyContainer(parsedPath, keySource);
   if (result.components) {
-    result.components = selectVerifyComponents(result.components, limit);
+    result.components = applyVerifyFilters(result.components, options);
   }
   const output = formatVerifyResult(result, !!options.json);
   const exitCode = verifyExitCode(result.status);
