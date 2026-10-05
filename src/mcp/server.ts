@@ -67,6 +67,7 @@ import { parseListMemoriesOffset } from './list-memories-offset.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSavestateListOffset, selectSavestateListOffsetEntries } from './savestate-list-offset.js';
 import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
+import { parseSavestateMemoryDeleteOffset, selectSavestateMemoryDeleteOffsetEntries } from './savestate-memory-delete-offset.js';
 import {
   parseSavestateMemorySearchLimit,
   selectSavestateMemorySearchEntries,
@@ -331,6 +332,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Maximum number of confirmation field rows to return (positive integer up to 1000)',
         },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
+        },
       },
       required: ['id'],
     },
@@ -590,6 +595,7 @@ const MemorySearchInputSchema = z.object({
 const MemoryDeleteInputSchema = z.object({
   id: z.string(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 const DeleteMemoryInputSchema = z.object({
@@ -1112,6 +1118,7 @@ async function handleMemoryDelete(
   try {
     const store = getMemoryStore();
     const limit = parseSavestateMemoryDeleteLimit(input.limit);
+    const offset = parseSavestateMemoryDeleteOffset(input.offset);
     const deleted = store.delete(input.id);
 
     if (!deleted) {
@@ -1121,7 +1128,10 @@ async function handleMemoryDelete(
     const fields = [
       { key: 'id', value: input.id },
     ];
-    const selected = selectSavestateMemoryDeleteEntries(fields, limit);
+    const selected = selectSavestateMemoryDeleteEntries(
+      selectSavestateMemoryDeleteOffsetEntries(fields, offset),
+      limit,
+    );
     const lines = ['Memory deleted successfully!', ''];
 
     for (const field of selected) {
