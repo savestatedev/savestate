@@ -959,6 +959,16 @@ describe('CLI docs', () => {
     expect(migrate).toContain('export function parseMigrateLimit');
   });
 
+  it('documents migrate --offset as a bounded non-negative integer', () => {
+    const migrateSection = docs.slice(docs.indexOf('id="migrate"'), docs.indexOf('id="trust"'));
+    const migrateBlock = cli.slice(cli.indexOf("command('migrate')"), cli.indexOf("command('cloud'"));
+    expect(migrateSection).toContain('--offset');
+    expect(migrateSection).toContain('Must be a non-negative integer up to 1000');
+    expect(migrateSection).toContain('savestate migrate --from chatgpt --to claude --offset 10 --limit 5');
+    expect(migrateBlock).toContain(".option('--offset <n>'");
+    expect(migrate).toContain('export function parseMigrateOffset');
+  });
+
   it('lists savestate trust in the command overview', () => {
     expect(docs).toContain('id="trust"');
     expect(docs).toContain('savestate trust');
