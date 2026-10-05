@@ -22,6 +22,7 @@ interface RestoreOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  offset?: string;
   json?: boolean;
 }
 
@@ -185,6 +186,7 @@ export function parseRestoreLabel(value: string | undefined): string | undefined
 }
 
 const MAX_RESTORE_LIMIT = 1000;
+const MAX_RESTORE_OFFSET = 1000;
 
 /** Parse restore --limit without treating invalid counts as a missing snapshot. */
 export function parseRestoreLimit(value: string | undefined): number | undefined {
@@ -199,10 +201,29 @@ export function parseRestoreLimit(value: string | undefined): number | undefined
   return limit;
 }
 
-/** Resolve restore --adapter/--tag/--label/--since/--until/--limit (and optional snapshot id) to the newest matching snapshot. */
+/** Parse restore --offset without treating invalid skips as a missing snapshot. */
+export function parseRestoreOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_RESTORE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_RESTORE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when restore --offset is set. */
+export function selectRestoreOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Resolve restore --adapter/--tag/--label/--since/--until/--limit/--offset (and optional snapshot id) to the newest matching snapshot. */
 export function resolveRestoreSnapshot(
   snapshots: Array<{ id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] }>,
-  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string; limit?: string },
+  options: { snapshot?: string; adapter?: string; label?: string; tag?: string; since?: string; until?: string; limit?: string; offset?: string },
 ): string | undefined {
   const snapshotId = parseRestoreId(options.snapshot);
   const adapter = parseRestoreAdapter(options.adapter);
@@ -211,13 +232,15 @@ export function resolveRestoreSnapshot(
   const since = parseRestoreSince(options.since);
   const until = parseRestoreUntil(options.until);
   const limit = parseRestoreLimit(options.limit);
+  const offset = parseRestoreOffset(options.offset);
   if (
     adapter === undefined &&
     label === undefined &&
     tag === undefined &&
     since === undefined &&
     until === undefined &&
-    limit === undefined
+    limit === undefined &&
+    offset === undefined
   ) {
     return snapshotId;
   }
@@ -230,8 +253,11 @@ export function resolveRestoreSnapshot(
     if (until !== undefined && new Date(entry.timestamp).getTime() > until) return false;
     return true;
   });
-  matches = [...matches].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  matches = selectRestoreOffsetEntries(
+    [...matches].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    ),
+    offset,
   );
   if (limit !== undefined) {
     matches = matches.slice(0, limit);
@@ -290,6 +316,7 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
   const since = parseRestoreSince(options.since);
   const until = parseRestoreUntil(options.until);
   const limit = parseRestoreLimit(options.limit);
+  const offset = parseRestoreOffset(options.offset);
   let resolvedId = parseRestoreId(snapshotId);
 
   if (!options.json) {
@@ -318,7 +345,8 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
     tag !== undefined ||
     since !== undefined ||
     until !== undefined ||
-    limit !== undefined
+    limit !== undefined ||
+    offset !== undefined
   ) {
     const matched = resolveRestoreSnapshot((await loadIndex()).snapshots, {
       snapshot: snapshotId,
@@ -328,13 +356,14 @@ export async function restoreCommand(snapshotId: string | undefined, options: Re
       since: options.since,
       until: options.until,
       limit: options.limit,
+      offset: options.offset,
     });
     if (!matched) {
       if (options.json) {
         console.log(formatRestoreMissingJson(resolvedId));
         return;
       }
-      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? label ?? tag ?? options.since ?? options.until ?? options.limit}`));
+      console.log(chalk.red(`✗ Snapshot not found: ${adapter ?? label ?? tag ?? options.since ?? options.until ?? options.limit ?? options.offset}`));
       process.exit(1);
     }
     resolvedId = matched;

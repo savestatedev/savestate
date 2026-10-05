@@ -90,6 +90,7 @@ program
   .option('--tag <tag>', 'Restore the newest snapshot with this tag')
   .option('--label <label>', 'Restore the newest snapshot with this label')
   .option('--limit <n>', 'Only consider the N most recent matching snapshots')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(restoreCommand);
 
