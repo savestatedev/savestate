@@ -76,6 +76,7 @@ import {
   selectSavestateMemorySearchOffsetEntries,
 } from './savestate-memory-search-offset.js';
 import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } from './savestate-memory-store-limit.js';
+import { parseSavestateMemoryStoreOffset, selectSavestateMemoryStoreOffsetEntries } from './savestate-memory-store-offset.js';
 import { parseSavestateRestoreLimit, selectSavestateRestoreEntries } from './savestate-restore-limit.js';
 import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './savestate-snapshot-limit.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
@@ -255,6 +256,10 @@ const tools: Tool[] = [
         limit: {
           type: 'number',
           description: 'Maximum number of confirmation field rows to return (positive integer up to 1000)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
         },
       },
       required: ['content'],
@@ -552,6 +557,7 @@ const MemoryStoreInputSchema = z.object({
   importance: z.number().min(0).max(1).optional(),
   metadata: z.record(z.string(), z.any()).optional(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 const MemorySearchInputSchema = z.object({
@@ -971,6 +977,7 @@ async function handleMemoryStore(
   try {
     const store = getMemoryStore();
     const limit = parseSavestateMemoryStoreLimit(input.limit);
+    const offset = parseSavestateMemoryStoreOffset(input.offset);
 
     const memory = await store.create({
       type: input.type ?? 'fact',
@@ -987,7 +994,10 @@ async function handleMemoryStore(
       { key: 'importance', value: String(memory.importance) },
       { key: 'created', value: memory.createdAt },
     ];
-    const selected = selectSavestateMemoryStoreEntries(fields, limit);
+    const selected = selectSavestateMemoryStoreEntries(
+      selectSavestateMemoryStoreOffsetEntries(fields, offset),
+      limit,
+    );
     const lines = ['Memory stored successfully!', ''];
 
     for (const field of selected) {
