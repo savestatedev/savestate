@@ -127,6 +127,7 @@ program
   .option('--tag <tag>', 'Only snapshots tagged with this label')
   .option('--label <label>', 'Only snapshots with this label (single non-empty snapshot label)')
   .option('--limit <n>', 'Only aggregate the N most recent snapshots')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .action(statsCommand);
 
 // ─── savestate doctor ────────────────────────────────────────

@@ -3969,6 +3969,16 @@ describe('CLI docs', () => {
     expect(stats).toContain('export function parseStatsLimit');
   });
 
+  it('documents stats --offset as a bounded non-negative integer', () => {
+    const statsSection = docs.slice(docs.indexOf('id="stats"'), docs.indexOf('id="doctor"'));
+    const statsBlock = cli.slice(cli.indexOf("command('stats')"), cli.indexOf("command('doctor')"));
+    expect(statsSection).toContain('--offset');
+    expect(statsSection).toContain('Must be a non-negative integer up to 1000');
+    expect(statsSection).toContain('savestate stats --offset 10 --limit 5');
+    expect(statsBlock).toContain(".option('--offset <n>'");
+    expect(stats).toContain('export function parseStatsOffset');
+  });
+
   it('lists savestate doctor in the command overview', () => {
     expect(docs).toContain('id="doctor"');
     expect(docs).toContain('savestate doctor');

@@ -20,6 +20,7 @@ interface StatsOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  offset?: string;
 }
 
 const STATS_ADAPTERS = [
@@ -34,6 +35,7 @@ const STATS_ADAPTERS = [
 ] as const;
 const STATS_ADAPTER_LIST = STATS_ADAPTERS.join(', ');
 const MAX_STATS_LIMIT = 1000;
+const MAX_STATS_OFFSET = 1000;
 
 /** Parse stats --adapter without treating unknown ids as empty usage stats. */
 export function parseStatsAdapter(value: string | undefined): string | undefined {
@@ -151,10 +153,29 @@ export function parseStatsLimit(value: string | undefined): number | undefined {
   return limit;
 }
 
+/** Parse stats --offset without turning user input errors into an unbounded skip. */
+export function parseStatsOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_STATS_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_STATS_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when stats --offset is set. */
+export function selectStatsOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit'>,
+  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
 ): SnapshotIndexEntry[] {
   const adapter = parseStatsAdapter(options.adapter);
   const exclude = parseStatsExclude(options.exclude);
@@ -178,10 +199,15 @@ export function applyStatsFilters(
     return true;
   });
   const limit = parseStatsLimit(options.limit);
-  if (limit !== undefined) {
-    filtered = [...filtered]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
+  const offset = parseStatsOffset(options.offset);
+  if (limit !== undefined || offset !== undefined) {
+    filtered = selectStatsOffsetEntries(
+      [...filtered].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      offset,
+    );
+    if (limit !== undefined) {
+      filtered = filtered.slice(0, limit);
+    }
   }
   return filtered;
 }
@@ -255,6 +281,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsTag(options.tag);
   parseStatsLabel(options.label);
   parseStatsLimit(options.limit);
+  parseStatsOffset(options.offset);
 
   if (!options.json) {
     console.log();
