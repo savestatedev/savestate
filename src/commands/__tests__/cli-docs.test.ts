@@ -1255,6 +1255,19 @@ describe('CLI docs', () => {
     expect(team).toContain('export function parseTeamMembersLimit');
   });
 
+  it('documents team members --offset as a bounded non-negative integer', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    const teamBlock = cli.slice(
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
+    );
+    expect(teamSection).toContain('--offset');
+    expect(teamSection).toContain('Must be a non-negative integer up to 1000');
+    expect(teamSection).toContain('savestate team members --offset 10 --limit 5');
+    expect(teamBlock).toContain(".option('--offset <n>'");
+    expect(team).toContain('export function parseTeamMembersOffset');
+  });
+
   it('documents team members --json when missing', () => {
     const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
     expect(teamSection).toContain('--json');

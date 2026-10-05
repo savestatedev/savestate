@@ -3,7 +3,7 @@
  *
  * Subcommands:
  *   savestate team status                     Show your team membership
- *   savestate team members                    List team members
+ *   savestate team members [--limit] [--offset] [--json]  List team members
  *   savestate team invite <email> [--role R]  Invite a member by email
  *   savestate team audit [--since] [--until] [--limit] [--format] [--json] Stream the audit log
  */
@@ -114,6 +114,38 @@ export function selectTeamMembers<T>(members: T[], limit?: number): T[] {
   return members.slice(0, limit);
 }
 
+const MAX_TEAM_MEMBERS_OFFSET = 1000;
+
+/** Parse team members --offset without turning user input errors into an empty roster. */
+export function parseTeamMembersOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TEAM_MEMBERS_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TEAM_MEMBERS_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N team members when --offset is set. */
+export function selectTeamMembersOffsetEntries<T>(members: T[], offset?: number): T[] {
+  if (offset === undefined) return members;
+  return members.slice(offset);
+}
+
+/** Apply team members --offset then --limit. */
+export function applyTeamMembersFilters<T>(
+  members: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectTeamMembers(
+    selectTeamMembersOffsetEntries(members, parseTeamMembersOffset(options.offset)),
+    parseTeamMembersLimit(options.limit),
+  );
+}
+
 const MAX_TEAM_AUDIT_LIMIT = 1000;
 
 /** Parse team audit --limit without treating invalid counts as an unbounded audit log. */
@@ -212,6 +244,7 @@ export interface TeamCommandOptions {
   since?: string;
   until?: string;
   limit?: string;
+  offset?: string;
   format?: string;
   json?: boolean;
 }
@@ -499,7 +532,6 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
 }
 
 export async function teamMembersCommand(options: TeamCommandOptions = {}): Promise<void> {
-  const limit = parseTeamMembersLimit(options.limit);
   const result = await apiRequest('GET', '/team/members');
   if (!result.ok) {
     if (options.json) {
@@ -513,7 +545,7 @@ export async function teamMembersCommand(options: TeamCommandOptions = {}): Prom
     team: { name: string };
     members: Array<{ email: string; role: string; acceptedAt: string | null; invitedAt: string }>;
   };
-  const members = selectTeamMembers(data.members, limit);
+  const members = applyTeamMembersFilters(data.members, options);
 
   if (options.json) {
     console.log(
