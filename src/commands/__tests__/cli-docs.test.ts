@@ -1066,6 +1066,17 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustDenyListLimit');
   });
 
+  it('documents trust deny list --offset as a bounded non-negative integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const listBlock = trustBlock.slice(trustBlock.lastIndexOf("command('list')"));
+    expect(trustSection).toContain('--offset');
+    expect(trustSection).toContain('Must be a non-negative integer up to 1000');
+    expect(trustSection).toContain('savestate trust deny list --offset 10 --limit 5');
+    expect(listBlock).toContain(".option('--offset <n>'");
+    expect(trust).toContain('export function parseTrustDenyListOffset');
+  });
+
   it('documents trust status --limit as a bounded positive integer', () => {
     const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));

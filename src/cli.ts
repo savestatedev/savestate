@@ -222,6 +222,7 @@ denyCmd
   .alias('ls')
   .description('Show all denylist entries')
   .option('--limit <n>', 'Maximum number of denylist entries to show')
+  .option('--offset <n>', 'Skip the first N denylist entries (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustDenyListCommand);
 
