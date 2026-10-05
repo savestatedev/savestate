@@ -395,6 +395,7 @@
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only check snapshots tagged with this label. Must be a single non-empty snapshot tag (no commas).</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Only check snapshots with this human-readable label. Must be a single non-empty snapshot label (no commas).</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Only check the N most recent snapshots. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N snapshots after filters. Must be a non-negative integer up to 1000.</td></tr>
       </tbody>
     </table>
 
@@ -409,6 +410,9 @@
 
 <span class="code-comment"># Restrict to recent Claude Code snapshots</span>
 <span class="code-prompt">$</span> savestate doctor --adapter claude-code --limit 5 --json
+
+<span class="code-comment"># Skip the newest 10, then check 5</span>
+<span class="code-prompt">$</span> savestate doctor --offset 10 --limit 5
 
 <span class="code-comment"># Skip ChatGPT snapshots</span>
 <span class="code-prompt">$</span> savestate doctor --exclude chatgpt

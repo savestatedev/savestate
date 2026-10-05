@@ -31,9 +31,11 @@ interface DoctorOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_DOCTOR_LIMIT = 1000;
+const MAX_DOCTOR_OFFSET = 1000;
 const DOCTOR_ADAPTERS = [
   'clawdbot',
   'claude-code',
@@ -57,6 +59,25 @@ export function parseDoctorLimit(value: string | undefined): number | undefined 
     );
   }
   return limit;
+}
+
+/** Parse doctor --offset without turning user input errors into an unbounded skip. */
+export function parseDoctorOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_DOCTOR_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_DOCTOR_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when doctor --offset is set. */
+export function selectDoctorOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
 }
 
 /** Parse doctor --adapter without treating unknown ids as an empty snapshot set. */
@@ -165,7 +186,7 @@ export function parseDoctorLabel(value: string | undefined): string | undefined 
 /** Resolve doctor snapshot filters before decrypting archives. */
 export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string; tags?: string[]; label?: string }>(
   snapshots: T[],
-  options: Pick<DoctorOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit'>,
+  options: Pick<DoctorOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
 ): T[] {
   const adapter = parseDoctorAdapter(options.adapter);
   const exclude = parseDoctorExclude(options.exclude);
@@ -191,10 +212,15 @@ export function resolveDoctorSnapshots<T extends { id: string; timestamp: string
     return true;
   });
   const limit = parseDoctorLimit(options.limit);
-  if (limit !== undefined) {
-    targets = [...targets]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
+  const offset = parseDoctorOffset(options.offset);
+  if (limit !== undefined || offset !== undefined) {
+    targets = selectDoctorOffsetEntries(
+      [...targets].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      offset,
+    );
+    if (limit !== undefined) {
+      targets = targets.slice(0, limit);
+    }
   }
   return targets;
 }
@@ -256,6 +282,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   parseDoctorTag(options.tag);
   parseDoctorLabel(options.label);
   parseDoctorLimit(options.limit);
+  parseDoctorOffset(options.offset);
 
   if (!options.json) {
     console.log();

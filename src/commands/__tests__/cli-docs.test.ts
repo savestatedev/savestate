@@ -3994,7 +3994,7 @@ describe('CLI docs', () => {
     expect(docs).toContain('savestate doctor');
   });
 
-  it('documents doctor --json, --adapter, --exclude, --snapshot, --since, --until, --tag, --label, and --limit', () => {
+  it('documents doctor --json, --adapter, --exclude, --snapshot, --since, --until, --tag, --label, --limit, and --offset', () => {
     const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
     expect(doctorSection).toContain('--json');
     expect(doctorSection).toContain('--adapter');
@@ -4005,6 +4005,7 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('--tag');
     expect(doctorSection).toContain('--label');
     expect(doctorSection).toContain('--limit');
+    expect(doctorSection).toContain('--offset');
     expect(doctorSection).toContain('checksums');
     expect(doctorSection).toContain('incremental chains');
   });
@@ -4014,6 +4015,16 @@ describe('CLI docs', () => {
     expect(doctorSection).toContain('--limit');
     expect(doctorSection).toContain('positive integer up to 1000');
     expect(doctor).toContain('export function parseDoctorLimit');
+  });
+
+  it('documents doctor --offset as a bounded non-negative integer', () => {
+    const doctorSection = docs.slice(docs.indexOf('id="doctor"'), docs.indexOf('id="inspect"'));
+    const doctorBlock = cli.slice(cli.indexOf("command('doctor')"), cli.indexOf("command('inspect <snapshot-id>')"));
+    expect(doctorSection).toContain('--offset');
+    expect(doctorSection).toContain('Must be a non-negative integer up to 1000');
+    expect(doctorSection).toContain('savestate doctor --offset 10 --limit 5');
+    expect(doctorBlock).toContain(".option('--offset <n>'");
+    expect(doctor).toContain('export function parseDoctorOffset');
   });
 
   it('documents doctor --adapter as a known adapter', () => {
