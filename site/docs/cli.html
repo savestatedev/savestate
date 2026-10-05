@@ -564,6 +564,7 @@
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only search snapshots taken after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only search snapshots taken before this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20). Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N ranked results after filters before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only search snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only search snapshots with this tag. Must be a single non-empty snapshot tag (no commas).</td></tr>
@@ -577,6 +578,9 @@
 
 <span class="code-comment"># Conversations only, cap results</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --type conversation --limit 5
+
+<span class="code-comment"># Page past the first 10 ranked results</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --offset 10 --limit 5
 
 <span class="code-comment"># Skip conversations</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --exclude conversation

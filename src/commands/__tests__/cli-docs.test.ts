@@ -4701,6 +4701,18 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchLimit');
   });
 
+  it('documents search --offset as a bounded non-negative integer', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchSection).toContain('--offset');
+    expect(searchSection).toContain('Must be a non-negative integer up to 1000');
+    expect(searchSection).toContain(
+      'savestate search <span class="code-string">"cocktail recommendations"</span> --offset 10 --limit 5',
+    );
+    expect(searchBlock).toContain(".option('--offset <n>'");
+    expect(search).toContain('export function parseSearchOffset');
+  });
+
   it('documents search --adapter as a known adapter', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));

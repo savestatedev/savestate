@@ -16,6 +16,7 @@ interface SearchOptions {
   since?: string;
   until?: string;
   limit?: string;
+  offset?: string;
   snapshot?: string;
   adapter?: string;
   tag?: string;
@@ -27,6 +28,7 @@ const SEARCH_TYPES = ['memory', 'conversation', 'identity', 'knowledge'] as cons
 type SearchType = (typeof SEARCH_TYPES)[number];
 const VALID_TYPES = new Set<string>(SEARCH_TYPES);
 const MAX_SEARCH_LIMIT = 1000;
+const MAX_SEARCH_OFFSET = 1000;
 const SEARCH_TYPE_LIST = SEARCH_TYPES.join(', ');
 const SEARCH_ADAPTERS = [
   'clawdbot',
@@ -75,6 +77,25 @@ export function parseSearchLimit(value: string | undefined): number {
     );
   }
   return limit;
+}
+
+/** Parse search --offset without turning user input errors into an unbounded skip. */
+export function parseSearchOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_SEARCH_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SEARCH_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N ranked results when search --offset is set. */
+export function selectSearchOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
 }
 
 /** Parse search --type without silently dropping unknown filters or exiting the process. */
@@ -297,6 +318,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   const config = await loadConfig();
   const limit = parseSearchLimit(options.limit);
+  const offset = parseSearchOffset(options.offset);
   const types = resolveSearchType(options);
 
   let catalog: Array<{ id: string; timestamp: string }> | undefined;
@@ -328,6 +350,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     if (tag) console.log(chalk.dim(`   Tag: ${tag}`));
     if (label) console.log(chalk.dim(`   Label: ${label}`));
+    if (offset !== undefined) console.log(chalk.dim(`   Offset: ${offset}`));
     console.log();
   }
 
@@ -336,12 +359,15 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const spinner = options.json ? null : ora('Searching across snapshots...').start();
 
   try {
-    const results = await searchSnapshots(query, config, {
-      types,
-      limit,
-      snapshots,
-      passphrase,
-    });
+    const results = selectSearchOffsetEntries(
+      await searchSnapshots(query, config, {
+        types,
+        limit: offset === undefined ? limit : limit + offset,
+        snapshots,
+        passphrase,
+      }),
+      offset,
+    );
 
     spinner?.stop();
 
