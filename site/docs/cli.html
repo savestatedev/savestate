@@ -648,6 +648,7 @@
       <tbody>
         <tr><td><code>--json</code></td><td>Output adapter records as JSON. When SaveState is not initialized, emits a missing summary (found, total; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of adapters to show. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N adapters. Must be a non-negative integer up to 1000. Applied before <code>--limit</code>.</td></tr>
       </tbody>
     </table>
 
@@ -662,6 +663,9 @@
 
 <span class="code-comment"># Cap the adapter list</span>
 <span class="code-prompt">$</span> savestate adapters --limit 5
+
+<span class="code-comment"># Page the adapter list</span>
+<span class="code-prompt">$</span> savestate adapters --offset 10 --limit 5
 
 <span class="code-comment"># Scriptable JSON records</span>
 <span class="code-prompt">$</span> savestate adapters --json

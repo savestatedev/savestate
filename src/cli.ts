@@ -280,6 +280,7 @@ program
   .description('List available platform adapters')
   .option('--json', 'Output as JSON')
   .option('--limit <n>', 'Maximum number of adapters to show')
+  .option('--offset <n>', 'Skip the first N adapters (non-negative integer up to 1000)')
   .action(adaptersCommand);
 
 // ─── savestate antibodies ───────────────────────────────────

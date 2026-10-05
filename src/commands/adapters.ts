@@ -18,9 +18,11 @@ export interface AdapterListEntry {
 interface AdaptersOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_ADAPTERS_LIMIT = 1000;
+const MAX_ADAPTERS_OFFSET = 1000;
 
 /** Parse adapters --limit without turning user input errors into an empty adapter list. */
 export function parseAdaptersLimit(value: string | undefined): number | undefined {
@@ -42,6 +44,36 @@ export function selectAdapters(
 ): AdapterListEntry[] {
   if (limit === undefined) return adapters;
   return adapters.slice(0, limit);
+}
+
+/** Parse adapters --offset without turning user input errors into an empty adapter list. */
+export function parseAdaptersOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_ADAPTERS_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_ADAPTERS_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N adapters when --offset is set. */
+export function selectAdaptersOffset<T>(adapters: T[], offset?: number): T[] {
+  if (offset === undefined) return adapters;
+  return adapters.slice(offset);
+}
+
+/** Apply adapters --offset then --limit. */
+export function applyAdaptersFilters(
+  adapters: AdapterListEntry[],
+  options: { offset?: string; limit?: string },
+): AdapterListEntry[] {
+  return selectAdapters(
+    selectAdaptersOffset(adapters, parseAdaptersOffset(options.offset)),
+    parseAdaptersLimit(options.limit),
+  );
 }
 
 export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
@@ -84,8 +116,7 @@ export async function adaptersCommand(options: AdaptersOptions = {}): Promise<vo
   const spinner = options.json ? null : ora('Scanning for adapters...').start();
 
   try {
-    const limit = parseAdaptersLimit(options.limit);
-    const adapterInfos = selectAdapters(await getAdapterInfo(), limit);
+    const adapterInfos = applyAdaptersFilters(await getAdapterInfo(), options);
     spinner?.stop();
 
     if (options.json) {
