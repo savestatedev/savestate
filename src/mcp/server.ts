@@ -61,6 +61,7 @@ import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './delete-all-memories-limit.js';
+import { parseDeleteAllMemoriesOffset, selectDeleteAllMemoriesOffsetEntries } from './delete-all-memories-offset.js';
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseListMemoriesOffset } from './list-memories-offset.js';
@@ -518,6 +519,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Maximum memories to delete in this call (positive integer up to 1000)',
         },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
+        },
       },
       required: ['confirm'],
     },
@@ -626,6 +631,7 @@ const ListMemoriesInputSchema = z.object({
 const DeleteAllMemoriesInputSchema = z.object({
   confirm: z.boolean(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 const SearchSnapshotsInputSchema = z.object({
@@ -1336,8 +1342,9 @@ async function handleDeleteAllMemories(
   try {
     const store = getMemoryStore();
     const limit = parseDeleteAllMemoriesLimit(input.limit);
+    const offset = parseDeleteAllMemoriesOffset(input.offset);
 
-    if (limit === undefined) {
+    if (limit === undefined && offset === undefined) {
       const stats = store.getStats();
       const count = stats.totalEntries;
       store.clear();
@@ -1348,7 +1355,14 @@ async function handleDeleteAllMemories(
       ].join('\n');
     }
 
-    const entries = selectDeleteAllMemoriesEntries(await store.query({ limit }), limit);
+    const fetchLimit = limit === undefined ? undefined : (offset ?? 0) + limit;
+    const entries = selectDeleteAllMemoriesEntries(
+      selectDeleteAllMemoriesOffsetEntries(
+        await store.query(fetchLimit === undefined ? {} : { limit: fetchLimit }),
+        offset,
+      ),
+      limit,
+    );
     for (const memory of entries) {
       store.delete(memory.id);
     }
