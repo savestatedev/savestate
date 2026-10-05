@@ -63,6 +63,7 @@ import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-
 import { parseAddMemoriesOffset, selectAddMemoriesOffsetEntries } from './add-memories-offset.js';
 import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './delete-all-memories-limit.js';
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
+import { parseDeleteMemoryOffset, selectDeleteMemoryOffsetEntries } from './delete-memory-offset.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
 import { parseListMemoriesOffset } from './list-memories-offset.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
@@ -503,6 +504,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Maximum number of confirmation field rows to return (positive integer up to 1000)',
         },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
+        },
       },
       required: ['id'],
     },
@@ -606,6 +611,7 @@ const MemoryDeleteInputSchema = z.object({
 const DeleteMemoryInputSchema = z.object({
   id: z.string(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 // OpenMemory-compatible schemas
@@ -1308,6 +1314,7 @@ async function handleDeleteMemory(
   try {
     const store = getMemoryStore();
     const limit = parseDeleteMemoryLimit(input.limit);
+    const offset = parseDeleteMemoryOffset(input.offset);
     const deleted = store.delete(input.id);
 
     if (!deleted) {
@@ -1317,7 +1324,10 @@ async function handleDeleteMemory(
     const fields = [
       { key: 'id', value: input.id },
     ];
-    const selected = selectDeleteMemoryEntries(fields, limit);
+    const selected = selectDeleteMemoryEntries(
+      selectDeleteMemoryOffsetEntries(fields, offset),
+      limit,
+    );
     const lines = ['Memory deleted successfully!', ''];
 
     for (const field of selected) {

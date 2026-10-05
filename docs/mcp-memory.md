@@ -111,13 +111,14 @@ List all stored memories with optional filtering. `limit` is a positive integer 
 
 ### delete_memory
 
-Delete a specific memory by ID. `limit` is a positive integer up to 1000 for confirmation field rows.
+Delete a specific memory by ID. `limit` is a positive integer up to 1000 for confirmation field rows. `offset` is a non-negative integer up to 1000.
 
 **Input:**
 ```json
 {
   "id": "abc123-def456",
-  "limit": 10
+  "limit": 10,
+  "offset": 0
 }
 ```
 
