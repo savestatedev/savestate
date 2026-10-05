@@ -622,6 +622,19 @@ describe('CLI docs', () => {
     expect(antibodies).toContain('export function parseAntibodiesStatsLimit');
   });
 
+  it('documents antibodies stats --offset as a bounded non-negative integer', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    const antibodiesBlock = cli.slice(
+      cli.indexOf("command('antibodies <subcommand>')"),
+      cli.indexOf("command('eval <subcommand>')"),
+    );
+    expect(antibodiesSection).toContain('--offset');
+    expect(antibodiesSection).toContain('Must be a non-negative integer up to 1000');
+    expect(antibodiesSection).toContain('savestate antibodies stats --offset 10 --limit 5');
+    expect(antibodiesBlock).toContain(".option('--offset <n>'");
+    expect(antibodies).toContain('export function parseAntibodiesStatsOffset');
+  });
+
   it('documents antibodies preflight --limit as a bounded positive integer', () => {
     const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
     const antibodiesBlock = cli.slice(
