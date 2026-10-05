@@ -27,12 +27,14 @@ interface PruneOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  offset?: string;
   apply?: boolean;
   json?: boolean;
 }
 
 const MAX_KEEP_LAST = 1000;
 const MAX_PRUNE_LIMIT = 1000;
+const MAX_PRUNE_OFFSET = 1000;
 const PRUNE_ADAPTERS = [
   'clawdbot',
   'claude-code',
@@ -187,6 +189,25 @@ export function parsePruneLimit(value: string | undefined): number | undefined {
   return limit;
 }
 
+/** Parse prune --offset without treating invalid skips as an empty prune plan. */
+export function parsePruneOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_PRUNE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_PRUNE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when prune --offset is set. */
+export function selectPruneOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
 export interface PrunePlan {
   keep: SnapshotIndexEntry[];
   drop: SnapshotIndexEntry[];
@@ -266,6 +287,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
   parsePruneTag(options.tag);
   parsePruneLabel(options.label);
   parsePruneLimit(options.limit);
+  parsePruneOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -299,9 +321,10 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
     untilMs: parsePruneUntil(options.until),
     snapshot: parsePruneSnapshot(options.snapshot),
     tag: parsePruneTag(options.tag),
-    label: parsePruneLabel(options.label),
-    limit: parsePruneLimit(options.limit),
-  });
+      label: parsePruneLabel(options.label),
+      limit: parsePruneLimit(options.limit),
+      offset: parsePruneOffset(options.offset),
+    });
 
   if (options.json) {
     console.log(formatPruneJson(plan, !options.apply));
@@ -362,7 +385,7 @@ export async function pruneCommand(options: PruneOptions): Promise<void> {
  */
 export function planPrune(
   snapshots: SnapshotIndexEntry[],
-  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; sinceMs?: number; untilMs?: number; snapshot?: string; tag?: string; label?: string; limit?: number },
+  filters: { keepLast?: number; olderThanMs?: number; adapter?: string; exclude?: string[]; sinceMs?: number; untilMs?: number; snapshot?: string; tag?: string; label?: string; limit?: number; offset?: number },
 ): PrunePlan {
   const adapter = filters.adapter;
   const exclude = filters.exclude;
@@ -372,6 +395,7 @@ export function planPrune(
   const tag = filters.tag;
   const label = filters.label;
   const limit = filters.limit;
+  const offset = filters.offset;
   const inScope = (snapshot: SnapshotIndexEntry): boolean => {
     if (adapter !== undefined && snapshot.adapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
@@ -383,14 +407,18 @@ export function planPrune(
     return true;
   };
   let scoped = snapshots.filter(inScope);
-  if (limit !== undefined) {
-    scoped = [...scoped]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
+  if (limit !== undefined || offset !== undefined) {
+    scoped = selectPruneOffsetEntries(
+      [...scoped].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      offset,
+    );
+    if (limit !== undefined) {
+      scoped = scoped.slice(0, limit);
+    }
   }
   const scopedSet = new Set(scoped);
   const untouched =
-    adapter !== undefined || exclude !== undefined || sinceMs !== undefined || untilMs !== undefined || snapshotId !== undefined || tag !== undefined || label !== undefined || limit !== undefined
+    adapter !== undefined || exclude !== undefined || sinceMs !== undefined || untilMs !== undefined || snapshotId !== undefined || tag !== undefined || label !== undefined || limit !== undefined || offset !== undefined
       ? snapshots.filter((snapshot) => !scopedSet.has(snapshot))
       : [];
   const sorted = [...scoped].sort(

@@ -532,6 +532,16 @@ describe('CLI docs', () => {
     expect(prune).toContain('export function parsePruneLimit');
   });
 
+  it('documents prune --offset as a bounded non-negative integer', () => {
+    const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
+    const pruneBlock = cli.slice(cli.indexOf("command('prune')"), cli.indexOf("command('diff <a> <b>')"));
+    expect(pruneSection).toContain('--offset');
+    expect(pruneSection).toContain('Must be a non-negative integer up to 1000');
+    expect(pruneSection).toContain('savestate prune --keep-last 1 --offset 10 --limit 5');
+    expect(pruneBlock).toContain(".option('--offset <n>'");
+    expect(prune).toContain('export function parsePruneOffset');
+  });
+
   it('documents prune --json when missing', () => {
     const pruneSection = docs.slice(docs.indexOf('id="prune"'), docs.indexOf('id="antibodies"'));
     expect(pruneSection).toContain('--json');

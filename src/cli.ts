@@ -239,6 +239,7 @@ program
   .option('--tag <tag>', 'Only prune snapshots with this tag')
   .option('--label <label>', 'Only prune snapshots with this label')
   .option('--limit <n>', 'Only consider the N most recent snapshots')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--apply', 'Actually delete (default is dry-run)')
   .option('--json', 'Output the plan as JSON')
   .action(pruneCommand);
