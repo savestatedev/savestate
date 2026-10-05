@@ -47,6 +47,7 @@ function hasOg(html: string, property: string): boolean {
 describe('public marketing checkout CTAs', () => {
   const stripe = loadStripeConfig();
   const post = loadHtml('site/blog/when-the-chat-dies.html');
+  const compaction = loadHtml('site/blog/when-claude-code-compacts.html');
   const faq = loadHtml('site/faq.html');
   const blogIndex = loadHtml('site/blog/index.html');
   const homepage = loadHtml('site/index.html');
@@ -630,6 +631,27 @@ describe('public marketing checkout CTAs', () => {
     expect(sitemap).toContain('https://savestate.dev/blog/when-the-chat-dies');
     expect(blogIndex).toContain('/blog/when-the-chat-dies');
     expect(blogIndex).toContain('When the Chat Dies, Your Agent Still Knows');
+  });
+
+  it('lists the week 6 compaction buyer post and closes Pro at $9', () => {
+    const vercel = loadHtml('vercel.json');
+    expect(compaction).toContain('SaveState');
+    expect(compaction).toContain('Subscribe to Pro');
+    expect(compaction).toContain('$9');
+    expect(compaction).toContain('https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00');
+    expect(hrefForCta(compaction, 'compaction-nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(compaction, 'compaction-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(compaction, 'compaction-footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(compaction, 'compaction-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(compaction, 'compaction-footer-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(hrefForCta(compaction, 'compaction-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(compaction).not.toMatch(/class="btn"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn"/);
+    expect(compaction).not.toMatch(/—/);
+    expect(sitemap).toContain('https://savestate.dev/blog/when-claude-code-compacts');
+    expect(blogIndex).toContain('/blog/when-claude-code-compacts');
+    expect(blogIndex).toContain('When Claude Code Compacts, the Agent Still Knows');
+    expect(vercel).toContain('"/blog/when-claude-code-compacts"');
+    expect(vercel).toContain('"/blog/when-claude-code-compacts.html"');
   });
 
   it('lists the three buyer pages on live URL paths', () => {
