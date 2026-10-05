@@ -81,6 +81,7 @@ import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './s
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
 import { parseSavestateStatsOffset, selectSavestateStatsOffsetEntries } from './savestate-stats-offset.js';
 import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './savestate-status-limit.js';
+import { parseSavestateStatusOffset, selectSavestateStatusOffsetEntries } from './savestate-status-offset.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchMemoryOffset, selectSearchMemoryOffsetEntries } from './search-memory-offset.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
@@ -217,6 +218,10 @@ const tools: Tool[] = [
         limit: {
           type: 'number',
           description: 'Maximum number of status field rows to return (positive integer up to 1000)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
         },
       },
     },
@@ -543,6 +548,7 @@ const ListInputSchema = z.object({
 
 const StatusInputSchema = z.object({
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 const MemoryStoreInputSchema = z.object({
@@ -866,6 +872,7 @@ async function handleStatus(
 ): Promise<string> {
   try {
     const limit = parseSavestateStatusLimit(input.limit);
+    const offset = parseSavestateStatusOffset(input.offset);
     const initialized = isInitialized();
 
     if (!initialized) {
@@ -873,7 +880,10 @@ async function handleStatus(
         { key: 'status', value: 'Not initialized' },
         { key: 'hint', value: 'Run `savestate init` to set up SaveState in this directory.' },
       ];
-      const selected = selectSavestateStatusEntries(fields, limit);
+      const selected = selectSavestateStatusEntries(
+        selectSavestateStatusOffsetEntries(fields, offset),
+        limit,
+      );
       return selected.map((field) =>
         field.key === 'status' ? `SaveState Status: ${field.value}` : field.value,
       ).join('\n');
@@ -906,7 +916,10 @@ async function handleStatus(
       fields.push({ key: 'mcpAuth', value: config.mcp.auth.type });
     }
 
-    const selected = selectSavestateStatusEntries(fields, limit);
+    const selected = selectSavestateStatusEntries(
+      selectSavestateStatusOffsetEntries(fields, offset),
+      limit,
+    );
     const lines: string[] = [];
 
     for (const field of selected) {
