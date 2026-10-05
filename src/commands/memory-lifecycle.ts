@@ -73,6 +73,7 @@ export function formatMemoryLogMissingJson(id: string): string {
 }
 
 const MAX_MEMORY_LOG_LIMIT = 1000;
+const MAX_MEMORY_LOG_OFFSET = 1000;
 
 /** Parse memory log --limit without turning user input errors into an empty audit log. */
 export function parseMemoryLogLimit(value: string | undefined): number | undefined {
@@ -91,6 +92,36 @@ export function parseMemoryLogLimit(value: string | undefined): number | undefin
 export function selectMemoryLogEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+/** Parse memory log --offset without turning user input errors into an empty audit log. */
+export function parseMemoryLogOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_LOG_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_LOG_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N audit events when --offset is set. */
+export function selectMemoryLogOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory log --offset then --limit. */
+export function applyMemoryLogFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectMemoryLogEntries(
+    selectMemoryLogOffsetEntries(entries, parseMemoryLogOffset(options.offset)),
+    parseMemoryLogLimit(options.limit),
+  );
 }
 
 export interface MemoryEditJson {
@@ -658,16 +689,17 @@ export async function memoryLogCommand(
   options?: {
     format?: 'table' | 'json';
     limit?: string;
+    offset?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
   try {
-    const log = selectMemoryLogEntries(
-      await knowledgeLane.memoryAuditLog(memoryId),
-      parseMemoryLogLimit(options?.limit),
-    );
+    const log = applyMemoryLogFilters(await knowledgeLane.memoryAuditLog(memoryId), {
+      offset: options?.offset,
+      limit: options?.limit,
+    });
 
     if (options?.format === 'json') {
       if (log.length === 0) {

@@ -2337,6 +2337,16 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryLogLimit');
   });
 
+  it('documents memory log --offset as a bounded non-negative integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const logBlock = memoryCli.slice(memoryCli.indexOf("command('log"));
+    expect(memorySection).toContain('--offset');
+    expect(memorySection).toContain('Must be a non-negative integer up to 1000');
+    expect(memorySection).toContain('savestate memory log mem-123 --offset 10 --limit 5');
+    expect(logBlock).toContain(".option('--offset <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryLogOffset');
+  });
+
   it('documents memory expire --limit as a bounded positive integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const expireBlock = memoryCli.slice(memoryCli.indexOf("command('expire')"), memoryCli.indexOf("command('log"));
