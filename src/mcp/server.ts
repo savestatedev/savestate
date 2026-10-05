@@ -60,6 +60,7 @@ import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
+import { parseAddMemoriesOffset, selectAddMemoriesOffsetEntries } from './add-memories-offset.js';
 import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './delete-all-memories-limit.js';
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
@@ -419,6 +420,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Maximum memories to store in this call (positive integer up to 1000)',
         },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
+        },
       },
     },
   },
@@ -614,6 +619,7 @@ const AddMemoriesInputSchema = z.object({
   })).optional(),
   content: z.string().optional(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 const ListMemoriesInputSchema = z.object({
@@ -1159,10 +1165,14 @@ async function handleAddMemories(
     const store = getMemoryStore();
     const created: MemoryEntry[] = [];
     const limit = parseAddMemoriesLimit(input.limit);
+    const offset = parseAddMemoriesOffset(input.offset);
 
     // Handle array of memories
     if (input.memories && input.memories.length > 0) {
-      for (const mem of selectAddMemoriesEntries(input.memories, limit)) {
+      for (const mem of selectAddMemoriesEntries(
+        selectAddMemoriesOffsetEntries(input.memories, offset),
+        limit,
+      )) {
         const entry = await store.create({
           type: mem.type ?? 'fact',
           content: mem.content,
