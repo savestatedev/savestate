@@ -1695,6 +1695,16 @@ describe('CLI docs', () => {
     expect(cloud).toContain('export function parseCloudLimit');
   });
 
+  it('documents cloud --offset as a bounded non-negative integer', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team <subcommand> [args...]')"));
+    expect(cloudSection).toContain('--offset');
+    expect(cloudSection).toContain('Must be a non-negative integer up to 1000');
+    expect(cloudSection).toContain('savestate cloud push --offset 10 --limit 5');
+    expect(cloudBlock).toContain(".option('--offset <n>'");
+    expect(cloud).toContain('export function parseCloudOffset');
+  });
+
   it('documents cloud list --limit as a bounded positive integer', () => {
     const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
     const cloudBlock = cli.slice(cli.indexOf("command('cloud <subcommand>')"), cli.indexOf("command('team <subcommand> [args...]')"));

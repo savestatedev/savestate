@@ -409,6 +409,7 @@ program
   .option('--label <label>', 'Push the newest local snapshot with this label')
   .option('--tag <tag>', 'Push the newest local snapshot with this tag')
   .option('--limit <n>', 'Push up to this many newest matching local snapshots, maximum cloud list rows to show, snapshots to pull, or snapshots to delete')
+  .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--all', 'Process all snapshots')
   .option('-f, --force', 'Overwrite existing files')
   .option('--json', 'Output as JSON')

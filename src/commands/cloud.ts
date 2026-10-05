@@ -29,6 +29,7 @@ interface CloudOptions {
   label?: string;
   tag?: string;
   limit?: string;
+  offset?: string;
   all?: boolean;
   force?: boolean;
   json?: boolean;
@@ -164,6 +165,27 @@ export function parseCloudLimit(value: string | undefined): number | undefined {
   return limit;
 }
 
+const MAX_CLOUD_OFFSET = 1000;
+
+/** Parse cloud --offset without treating invalid skips as the latest snapshot. */
+export function parseCloudOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CLOUD_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshots when cloud --offset is set. */
+export function selectCloudOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
 const MAX_CLOUD_LIST_LIMIT = 1000;
 
 /** Parse cloud list --limit without turning user input errors into an empty cloud inventory. */
@@ -227,12 +249,12 @@ export function selectCloudDeleteSnapshots<T>(snapshots: T[], limit?: number): T
   return snapshots.slice(0, limit);
 }
 
-/** Resolve cloud push --adapter/--exclude/--since/--until/--label/--tag/--limit/--id/--all to the local snapshots that should upload. */
+/** Resolve cloud push --adapter/--exclude/--since/--until/--label/--tag/--limit/--offset/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] },
 >(
   snapshots: T[],
-  options: { id?: string; adapter?: string; exclude?: string; since?: string; until?: string; label?: string; tag?: string; limit?: string; all?: boolean },
+  options: { id?: string; adapter?: string; exclude?: string; since?: string; until?: string; label?: string; tag?: string; limit?: string; offset?: string; all?: boolean },
 ): T[] {
   const id = parseCloudId(options.id);
   const adapter = parseCloudAdapter(options.adapter);
@@ -242,6 +264,7 @@ export function resolveCloudPushSnapshots<
   const label = parseCloudLabel(options.label);
   const tag = parseCloudTag(options.tag);
   const limit = parseCloudLimit(options.limit);
+  const offset = parseCloudOffset(options.offset);
 
   let matches = snapshots;
   if (adapter !== undefined) {
@@ -264,17 +287,27 @@ export function resolveCloudPushSnapshots<
   }
   if (id !== undefined) {
     matches = matches.filter((entry) => entry.id === id || entry.id.startsWith(id));
-    if (limit !== undefined) {
-      return [...matches]
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, limit);
+    if (limit !== undefined || offset !== undefined) {
+      matches = selectCloudOffsetEntries(
+        [...matches].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+        offset,
+      );
+      return limit !== undefined ? matches.slice(0, limit) : matches;
     }
     return matches;
   }
-  if (limit !== undefined) {
-    return [...matches]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
+  if (limit !== undefined || offset !== undefined) {
+    matches = selectCloudOffsetEntries(
+      [...matches].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      offset,
+    );
+    if (limit !== undefined) {
+      return matches.slice(0, limit);
+    }
+    if (options.all) {
+      return matches;
+    }
+    return matches.slice(0, 1);
   }
   if (options.all) {
     return matches;
@@ -726,6 +759,7 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
     label: options.label,
     tag: options.tag,
     limit: options.limit,
+    offset: options.offset,
     all: options.all,
   });
   if ((id || adapter || exclude || since !== undefined || until !== undefined || label || tag) && toPush.length === 0) {
@@ -1159,6 +1193,7 @@ export async function cloudCommand(rawSubcommand: string, options: CloudOptions)
   parseCloudLabel(options.label);
   parseCloudTag(options.tag);
   parseCloudLimit(options.limit);
+  parseCloudOffset(options.offset);
   switch (subcommand) {
     case 'push':
       await cloudPushCommand(options);
