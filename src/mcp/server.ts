@@ -77,6 +77,7 @@ import {
 } from './savestate-memory-search-offset.js';
 import { parseSavestateMemoryStoreLimit, selectSavestateMemoryStoreEntries } from './savestate-memory-store-limit.js';
 import { parseSavestateRestoreLimit, selectSavestateRestoreEntries } from './savestate-restore-limit.js';
+import { parseSavestateRestoreOffset, selectSavestateRestoreOffsetEntries } from './savestate-restore-offset.js';
 import { parseSavestateSnapshotLimit, selectSavestateSnapshotEntries } from './savestate-snapshot-limit.js';
 import { parseSavestateStatsLimit, selectSavestateStatsEntries } from './savestate-stats-limit.js';
 import { parseSavestateStatsOffset, selectSavestateStatsOffsetEntries } from './savestate-stats-offset.js';
@@ -178,6 +179,10 @@ const tools: Tool[] = [
         limit: {
           type: 'number',
           description: 'Maximum number of status field rows to return (positive integer up to 1000)',
+        },
+        offset: {
+          type: 'number',
+          description: 'Pagination offset (non-negative integer up to 1000)',
         },
       },
       required: ['snapshotId', 'passphrase'],
@@ -533,6 +538,7 @@ const RestoreInputSchema = z.object({
   dryRun: z.boolean().optional(),
   passphrase: z.string(),
   limit: z.number().optional(),
+  offset: z.number().optional(),
 });
 
 const ListInputSchema = z.object({
@@ -724,6 +730,7 @@ async function handleRestore(
 ): Promise<string> {
   try {
     const limit = parseSavestateRestoreLimit(input.limit);
+    const offset = parseSavestateRestoreOffset(input.offset);
 
     if (!isInitialized()) {
       return 'Error: SaveState not initialized. Run `savestate init` first.';
@@ -772,7 +779,10 @@ async function handleRestore(
     fields.push({ key: 'memoryEntries', value: String(result.memoryCount) });
     fields.push({ key: 'conversations', value: String(result.conversationCount) });
 
-    const selected = selectSavestateRestoreEntries(fields, limit);
+    const selected = selectSavestateRestoreEntries(
+      selectSavestateRestoreOffsetEntries(fields, offset),
+      limit,
+    );
     const lines = [
       input.dryRun ? 'Dry run complete (no changes made)' : 'Restore complete!',
       '',
