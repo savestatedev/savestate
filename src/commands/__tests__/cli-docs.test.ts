@@ -1401,6 +1401,19 @@ describe('CLI docs', () => {
     expect(team).toContain('export function parseTeamAuditLimit');
   });
 
+  it('documents team audit --offset as a bounded non-negative integer', () => {
+    const teamSection = docs.slice(docs.indexOf('id="team"'), docs.indexOf('id="eval"'));
+    const teamBlock = cli.slice(
+      cli.indexOf("command('team <subcommand> [args...]')"),
+      cli.indexOf('registerTraceCommands(program)'),
+    );
+    expect(teamSection).toContain('--offset');
+    expect(teamSection).toContain('Must be a non-negative integer up to 1000');
+    expect(teamSection).toContain('savestate team audit --offset 10 --limit 5');
+    expect(teamBlock).toContain(".option('--offset <n>'");
+    expect(team).toContain('export function parseTeamAuditOffset');
+  });
+
   it('registers --json on savestate team audit', () => {
     const auditBlock = cli.slice(
       cli.indexOf("command('team <subcommand> [args...]')"),

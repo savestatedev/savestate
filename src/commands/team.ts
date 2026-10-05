@@ -5,7 +5,7 @@
  *   savestate team status                     Show your team membership
  *   savestate team members [--limit] [--offset] [--json]  List team members
  *   savestate team invite <email> [--role R]  Invite a member by email
- *   savestate team audit [--since] [--until] [--limit] [--format] [--json] Stream the audit log
+ *   savestate team audit [--since] [--until] [--limit] [--offset] [--format] [--json] Stream the audit log
  */
 
 import chalk from 'chalk';
@@ -165,6 +165,38 @@ export function parseTeamAuditLimit(value: string | undefined): number | undefin
 export function applyTeamAuditLimit<T>(entries: T[], limit: number | undefined): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+const MAX_TEAM_AUDIT_OFFSET = 1000;
+
+/** Parse team audit --offset without turning user input errors into an empty audit log. */
+export function parseTeamAuditOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TEAM_AUDIT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TEAM_AUDIT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N team audit entries when --offset is set. */
+export function selectTeamAuditOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply team audit --offset then --limit. */
+export function applyTeamAuditFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return applyTeamAuditLimit(
+    selectTeamAuditOffsetEntries(entries, parseTeamAuditOffset(options.offset)),
+    parseTeamAuditLimit(options.limit),
+  );
 }
 
 const MAX_TEAM_STATUS_LIMIT = 1000;
@@ -618,6 +650,7 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   const format = options.json ? 'json' : parseTeamAuditFormat(options.format);
   const since = parseTeamAuditSince(options.since);
   const until = parseTeamAuditUntil(options.until);
+  const offset = parseTeamAuditOffset(options.offset);
   const limit = parseTeamAuditLimit(options.limit);
 
   const teamRes = await apiRequest('GET', '/team');
@@ -633,7 +666,7 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
   const params = new URLSearchParams({ team_id: teamId, format });
   if (since) params.set('since', since);
   if (until) params.set('until', until);
-  if (limit !== undefined) params.set('limit', String(limit));
+  if (limit !== undefined) params.set('limit', String((offset ?? 0) + limit));
 
   const result = await apiRequest('GET', `/audit-export?${params.toString()}`, undefined, format === 'csv');
   if (!result.ok) {
@@ -661,9 +694,9 @@ export async function teamAuditCommand(options: TeamCommandOptions = {}): Promis
         metadata?: unknown;
       }>;
     };
-    const entries = applyTeamAuditLimit(
+    const entries = applyTeamAuditFilters(
       Array.isArray(body.entries) ? body.entries : [],
-      limit,
+      options,
     );
     process.stdout.write(
       formatTeamAuditJson({

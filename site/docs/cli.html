@@ -1111,8 +1111,8 @@
         <tr><td><code>--json</code></td><td>Emit team status as JSON (id, name, and role), members as JSON (email, role, and invite timestamps), invite as JSON (invited email, role, and invite timestamps), or audit as JSON (id, action, actor, resource, and timestamp). Omits event metadata. When team status is missing, emits a missing summary (found, id, name, role; omits extra fields). When team members are missing, emits a missing summary (found, name, total, shown; omits extra fields). When a team invite is missing, emits a missing summary (found, email, role; omits extra fields). When the team or audit log is missing, <code>audit --json</code> emits a missing summary (found, teamId, count, nextCursor; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Audit entries after this date. Must be an ISO 8601 date.</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Audit entries before this date. Must be an ISO 8601 date.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of team members to show on <code>members</code>, audit entries on <code>audit</code>, or status field rows on <code>status</code> or <code>invite</code>. Must be a positive integer up to 1000. On <code>audit</code>, ANDs with <code>--since</code> and <code>--until</code> when those flags are set. Combines with <code>--offset</code> on <code>members</code>.</td></tr>
-        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N team members on <code>members</code> before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of team members to show on <code>members</code>, audit entries on <code>audit</code>, or status field rows on <code>status</code> or <code>invite</code>. Must be a positive integer up to 1000. On <code>audit</code>, ANDs with <code>--since</code> and <code>--until</code> when those flags are set. Combines with <code>--offset</code> on <code>members</code> and <code>audit</code>.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N team members on <code>members</code> or audit entries on <code>audit</code> before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--format &lt;format&gt;</code></td><td>Audit output: <code>csv</code> or <code>json</code> (default <code>json</code>). Must be one of: csv, json.</td></tr>
       </tbody>
     </table>
@@ -1143,6 +1143,9 @@
 
 <span class="code-comment"># Cap the audit log</span>
 <span class="code-prompt">$</span> savestate team audit --limit 20 --json
+
+<span class="code-comment"># Skip then cap the audit log</span>
+<span class="code-prompt">$</span> savestate team audit --offset 10 --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate team audit --json</code></pre>
