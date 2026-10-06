@@ -838,6 +838,7 @@ export function formatMemoryPinMissingJson(id: string): string {
 }
 
 const MAX_MEMORY_PIN_LIMIT = 1000;
+const MAX_MEMORY_PIN_OFFSET = 1000;
 
 /** Parse memory pin --limit without turning user input errors into an empty pin. */
 export function parseMemoryPinLimit(value: string | undefined): number | undefined {
@@ -858,6 +859,36 @@ export function selectMemoryPinEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+/** Parse memory pin --offset without turning user input errors into an empty pin. */
+export function parseMemoryPinOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_PIN_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_PIN_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N pin status field rows when --offset is set. */
+export function selectMemoryPinOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory pin --offset then --limit. */
+export function applyMemoryPinFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string } = {},
+): T[] {
+  return selectMemoryPinEntries(
+    selectMemoryPinOffsetEntries(entries, parseMemoryPinOffset(options.offset)),
+    parseMemoryPinLimit(options.limit),
+  );
+}
+
 export async function pinMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -866,9 +897,11 @@ export async function pinMemoryCommand(
     snapshotId?: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   },
 ): Promise<void> {
-  const limit = parseMemoryPinLimit(options?.limit);
+  parseMemoryPinLimit(options?.limit);
+  parseMemoryPinOffset(options?.offset);
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options?.snapshotId);
 
   const entryIndex = snapshot.memory.core.findIndex((e) => e.id === memoryId);
@@ -887,7 +920,7 @@ export async function pinMemoryCommand(
       return;
     }
     const alreadyPinnedRows = [`Memory ${memoryId} is already pinned.`];
-    for (const row of selectMemoryPinEntries(alreadyPinnedRows, limit)) {
+    for (const row of applyMemoryPinFilters(alreadyPinnedRows, options ?? {})) {
       console.log(row);
     }
     return;
@@ -903,7 +936,7 @@ export async function pinMemoryCommand(
   }
 
   const rows = [`✓ Pinned memory ${memoryId}`];
-  for (const row of selectMemoryPinEntries(rows, limit)) {
+  for (const row of applyMemoryPinFilters(rows, options ?? {})) {
     console.log(row);
   }
 }
