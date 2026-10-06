@@ -198,6 +198,38 @@ export function selectMcpStatusItems<T>(items: T[], limit?: number): T[] {
   return items.slice(0, limit);
 }
 
+const MAX_MCP_STATUS_OFFSET = 1000;
+
+/** Parse mcp status --offset without turning user input errors into an empty tool list. */
+export function parseMcpStatusOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MCP_STATUS_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_STATUS_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N MCP tools or resources when --offset is set. */
+export function selectMcpStatusOffsetEntries<T>(items: T[], offset?: number): T[] {
+  if (offset === undefined) return items;
+  return items.slice(offset);
+}
+
+/** Apply mcp status --offset then --limit. */
+export function applyMcpStatusFilters<T>(
+  items: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectMcpStatusItems(
+    selectMcpStatusOffsetEntries(items, parseMcpStatusOffset(options.offset)),
+    parseMcpStatusLimit(options.limit),
+  );
+}
+
 const MAX_MCP_SERVE_LIMIT = 1000;
 
 /** Parse mcp serve --limit without turning user input errors into an empty serve. */
@@ -450,12 +482,12 @@ export function formatMcpExportMissingJson(agent: string, output: string): strin
 interface MCPStatusOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
-  const limit = parseMcpStatusLimit(options.limit);
-  const tools = selectMcpStatusItems(MCP_TOOLS, limit);
-  const resources = selectMcpStatusItems(MCP_RESOURCES, limit);
+  const tools = applyMcpStatusFilters(MCP_TOOLS, options);
+  const resources = applyMcpStatusFilters(MCP_RESOURCES, options);
   const initialized = isInitialized();
   let configured = false;
   let enabled = false;
@@ -669,6 +701,7 @@ interface McpCommandOptions {
   output?: string;
   includeSnapshots?: boolean;
   limit?: string;
+  offset?: string;
   input?: string;
   merge?: boolean;
 }
@@ -809,6 +842,7 @@ export function registerMCPCommands(program: Command): void {
     .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
     .option('--limit <n>', 'Maximum number of MCP tools and resources to show on status, memories and snapshot metadata rows on export, memories to import, or serve status field rows')
+    .option('--offset <n>', 'Skip the first N MCP tools and resources on status (non-negative integer up to 1000)')
     .option('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
