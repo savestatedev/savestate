@@ -228,6 +228,16 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseExportLimit');
   });
 
+  it('documents export --offset as a bounded non-negative integer', () => {
+    const exportSection = docs.slice(docs.indexOf('id="export"'), docs.indexOf('id="import"'));
+    const exportBlock = container.slice(container.indexOf("command('export')"), container.indexOf("command('import <file>')"));
+    expect(exportSection).toContain('--offset');
+    expect(exportSection).toContain('Must be a non-negative integer up to 1000');
+    expect(exportSection).toContain('savestate export -a my-agent -o agent.savestate --offset 10 --limit 5');
+    expect(exportBlock).toContain(".option('--offset <n>'");
+    expect(container).toContain('export function parseExportOffset');
+  });
+
   it('documents import --target, --force, and missing parent rejection', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--target');

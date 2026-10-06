@@ -600,6 +600,38 @@ export function selectExportComponents<T>(components: T[], limit?: number): T[] 
   return components.slice(0, limit);
 }
 
+const MAX_EXPORT_OFFSET = 1000;
+
+/** Parse export --offset without turning user input errors into an empty component list. */
+export function parseExportOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_EXPORT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_EXPORT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N packed components when --offset is set. */
+export function selectExportOffsetEntries<T>(components: T[], offset?: number): T[] {
+  if (offset === undefined) return components;
+  return components.slice(offset);
+}
+
+/** Apply export --offset then --limit. */
+export function applyExportFilters<T>(
+  components: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectExportComponents(
+    selectExportOffsetEntries(components, parseExportOffset(options.offset)),
+    parseExportLimit(options.limit),
+  );
+}
+
 export interface ExportMissingJson {
   found: false;
   output: string;
@@ -930,6 +962,7 @@ export interface ExportOptions {
   description?: string;
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 export interface ExportResult {
@@ -978,6 +1011,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
     let limit: number | undefined;
     try {
       limit = parseExportLimit(options.limit);
+      parseExportOffset(options.offset);
     } catch (error: any) {
       console.error(`Error: ${error.message}`);
       return { written: false, out, overwritten: false };
@@ -1195,7 +1229,7 @@ export async function exportState(options: ExportOptions): Promise<ExportResult>
       }
     }
     const shownComponents = selectContainerExportComponents(
-      selectExportComponents(validatedComponents.components, limit),
+      applyExportFilters(validatedComponents.components, options),
       limit,
     );
     if (options.json) {
@@ -1988,6 +2022,7 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
     .option('--limit <n>', 'Maximum number of packed components to show')
+    .option('--offset <n>', 'Skip the first N packed components (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
       const result = await exportState({
@@ -2007,6 +2042,7 @@ export function registerContainerCommands(program: Command) {
         description: opts.description,
         json: opts.json,
         limit: opts.limit,
+        offset: opts.offset,
       });
       if (!result.written && !result.dryRun) {
         process.exit(1);
