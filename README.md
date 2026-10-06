@@ -230,6 +230,7 @@ savestate trace show <run_id>         Show events for a trace run
 savestate trace export                Export trace as JSONL (stdout)
   --run <id>                         Export only a specific run
   --format jsonl                     Export format
+  --offset <n>                       Skip the first N runs (0–1000)
   --limit <n>                        Max runs to export (1–1000)
 ```
 
