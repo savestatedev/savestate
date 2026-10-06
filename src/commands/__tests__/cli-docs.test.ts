@@ -2970,6 +2970,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryExplainLimit');
   });
 
+  it('documents memory explain --offset as a bounded non-negative integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(memorySection).toContain('--offset');
+    expect(memorySection).toContain('Must be a non-negative integer up to 1000');
+    expect(memorySection).toContain('savestate memory explain "inbox preference" --offset 10 --limit 5');
+    expect(explainBlock).toContain(".option('--offset <n>'");
+    expect(memory).toContain('export function parseMemoryExplainOffset');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');
