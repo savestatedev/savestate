@@ -21,6 +21,7 @@ interface ScheduleOptions {
   status?: boolean;
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_SCHEDULE_DAYS = 7;
@@ -50,6 +51,7 @@ export function parseScheduleEvery(value: string): number {
 }
 
 const MAX_SCHEDULE_STATUS_LIMIT = 1000;
+const MAX_SCHEDULE_OFFSET = 1000;
 
 /** Parse schedule --limit without turning user input errors into an empty status. */
 export function parseScheduleLimit(value: string | undefined): number | undefined {
@@ -68,6 +70,36 @@ export function parseScheduleLimit(value: string | undefined): number | undefine
 export function selectScheduleStatusEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+/** Parse schedule --offset without turning user input errors into an empty status. */
+export function parseScheduleOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_SCHEDULE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SCHEDULE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N schedule status field rows when --offset is set. */
+export function selectScheduleOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply schedule --offset then --limit. */
+export function applyScheduleFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectScheduleStatusEntries(
+    selectScheduleOffsetEntries(entries, parseScheduleOffset(options.offset)),
+    parseScheduleLimit(options.limit),
+  );
 }
 
 export interface ScheduleStatus {
@@ -153,7 +185,8 @@ async function verifySubscription(): Promise<{ valid: boolean; tier?: string; er
 }
 
 export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
-  const limit = parseScheduleLimit(options.limit);
+  parseScheduleLimit(options.limit);
+  parseScheduleOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -170,7 +203,7 @@ export async function scheduleCommand(options: ScheduleOptions): Promise<void> {
 
   // Status check - allowed for everyone
   if (options.status || (!options.every && !options.disable)) {
-    await showStatus(options.json, limit);
+    await showStatus(options.json, options);
     return;
   }
 
@@ -265,13 +298,19 @@ function getScheduleStatus(): ScheduleStatus {
   return { ...base, supported: false };
 }
 
-function printScheduleStatusEntries(rows: string[], limit?: number): void {
-  for (const row of selectScheduleStatusEntries(rows, limit)) {
+function printScheduleStatusEntries(
+  rows: string[],
+  options: { offset?: string; limit?: string },
+): void {
+  for (const row of applyScheduleFilters(rows, options)) {
     console.log(row);
   }
 }
 
-async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
+async function showStatus(
+  asJson?: boolean,
+  options: { offset?: string; limit?: string } = {},
+): Promise<void> {
   const status = getScheduleStatus();
   if (asJson) {
     console.log(formatScheduleStatusJson(status));
@@ -284,7 +323,7 @@ async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
     printScheduleStatusEntries([
       chalk.yellow(`⚠ Scheduled backups not supported on ${os}`),
       chalk.dim('  Use cron manually: */360 * * * * savestate snapshot'),
-    ], limit);
+    ], options);
     console.log();
     return;
   }
@@ -293,7 +332,7 @@ async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
     printScheduleStatusEntries([
       chalk.yellow('⏸  Scheduled backups: disabled'),
       chalk.dim('  Enable with: savestate schedule --every 6h'),
-    ], limit);
+    ], options);
     console.log();
     return;
   }
@@ -305,7 +344,7 @@ async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
       `  ${chalk.dim('Interval:')}  every ${status.intervalHours}h`,
       `  ${chalk.dim('Job:')}       ${status.job}`,
       `  ${chalk.dim('Plist:')}     ${status.path}`,
-    ], limit);
+    ], options);
     console.log();
     console.log(chalk.dim('  View logs: tail -f ~/Library/Logs/savestate-autobackup.log'));
     console.log(chalk.dim('  Disable:   savestate schedule --disable'));
@@ -318,7 +357,7 @@ async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
     console.log();
     printScheduleStatusEntries([
       `  ${chalk.dim('Timer:')} ${status.job}.timer`,
-    ], limit);
+    ], options);
     console.log(chalk.dim('  View: systemctl --user status ' + LABEL + '.timer'));
     console.log(chalk.dim('  Logs: journalctl --user -u ' + LABEL));
     console.log();
@@ -329,7 +368,7 @@ async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
     printScheduleStatusEntries([
       chalk.yellow('⏸  Scheduled backups: configured but not running'),
       chalk.dim(`   Try: launchctl load ${status.path}`),
-    ], limit);
+    ], options);
     console.log();
     return;
   }
@@ -337,14 +376,14 @@ async function showStatus(asJson?: boolean, limit?: number): Promise<void> {
   if (os === 'linux') {
     printScheduleStatusEntries([
       chalk.yellow('⏸  Scheduled backups: configured but not running'),
-    ], limit);
+    ], options);
     console.log();
     return;
   }
 
   printScheduleStatusEntries([
     chalk.yellow('⏸  Scheduled backups: unknown status'),
-  ], limit);
+  ], options);
   console.log();
 }
 
