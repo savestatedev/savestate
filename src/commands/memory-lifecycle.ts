@@ -278,6 +278,7 @@ export function formatMemoryExpireMissingJson(namespace: string): string {
 }
 
 const MAX_MEMORY_EXPIRE_LIMIT = 1000;
+const MAX_MEMORY_EXPIRE_OFFSET = 1000;
 
 /** Parse memory expire --limit without turning user input errors into an empty expire list. */
 export function parseMemoryExpireLimit(value: string | undefined): number | undefined {
@@ -296,6 +297,36 @@ export function parseMemoryExpireLimit(value: string | undefined): number | unde
 export function selectExpiredMemories<T>(memories: T[], limit?: number): T[] {
   if (limit === undefined) return memories;
   return memories.slice(0, limit);
+}
+
+/** Parse memory expire --offset without turning user input errors into an empty expire list. */
+export function parseMemoryExpireOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_EXPIRE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPIRE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N expirable memories when --offset is set. */
+export function selectMemoryExpireOffsetEntries<T>(memories: T[], offset?: number): T[] {
+  if (offset === undefined) return memories;
+  return memories.slice(offset);
+}
+
+/** Apply memory expire --offset then --limit. */
+export function applyMemoryExpireFilters<T>(
+  memories: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectExpiredMemories(
+    selectMemoryExpireOffsetEntries(memories, parseMemoryExpireOffset(options.offset)),
+    parseMemoryExpireLimit(options.limit),
+  );
 }
 
 /**
@@ -596,11 +627,13 @@ export async function expireMemoriesCommand(
     dryRun?: boolean;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
-  const limit = parseMemoryExpireLimit(options.limit);
+  parseMemoryExpireOffset(options.offset);
+  parseMemoryExpireLimit(options.limit);
 
   const namespace = parseNamespace(options.namespace);
 
@@ -623,7 +656,7 @@ export async function expireMemoriesCommand(
     });
 
     const now = Date.now();
-    const expirableMemories = selectExpiredMemories(
+    const expirableMemories = applyMemoryExpireFilters(
       memories.filter((mem) => {
         if (mem.expires_at) {
           return new Date(mem.expires_at).getTime() <= now;
@@ -636,7 +669,7 @@ export async function expireMemoriesCommand(
         }
         return false;
       }),
-      limit,
+      options,
     );
 
     if (options.format === 'json') {
@@ -657,7 +690,7 @@ export async function expireMemoriesCommand(
 
   try {
     const result = await knowledgeLane.expireMemories(namespace);
-    const expiredIds = selectExpiredMemories(result.expired_ids, limit);
+    const expiredIds = applyMemoryExpireFilters(result.expired_ids, options);
 
     if (options.format === 'json') {
       console.log(formatMemoryExpireJson(options.namespace, expiredIds));
