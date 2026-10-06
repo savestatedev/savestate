@@ -9,10 +9,12 @@ import type { SaveStateConfig } from '../types.js';
 interface ConfigOptions {
   set?: string;
   limit?: string;
+  offset?: string;
   json?: boolean;
 }
 
 const MAX_CONFIG_LIMIT = 1000;
+const MAX_CONFIG_OFFSET = 1000;
 
 /** Parse config --limit without turning user input errors into an empty adapter list. */
 export function parseConfigLimit(value: string | undefined): number | undefined {
@@ -31,6 +33,36 @@ export function parseConfigLimit(value: string | undefined): number | undefined 
 export function selectConfigAdapters<T>(adapters: T[], limit?: number): T[] {
   if (limit === undefined) return adapters;
   return adapters.slice(0, limit);
+}
+
+/** Parse config --offset without turning user input errors into an empty adapter list. */
+export function parseConfigOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONFIG_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONFIG_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N configured adapters when --offset is set. */
+export function selectConfigOffsetEntries<T>(adapters: T[], offset?: number): T[] {
+  if (offset === undefined) return adapters;
+  return adapters.slice(offset);
+}
+
+/** Apply config --offset then --limit. */
+export function applyConfigFilters<T>(
+  adapters: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectConfigAdapters(
+    selectConfigOffsetEntries(adapters, parseConfigOffset(options.offset)),
+    parseConfigLimit(options.limit),
+  );
 }
 
 export function formatConfigJson(config: SaveStateConfig): string {
@@ -129,7 +161,8 @@ function setNestedValue(obj: Record<string, unknown>, path: string, rawValue: st
 }
 
 export async function configCommand(options: ConfigOptions): Promise<void> {
-  const limit = parseConfigLimit(options.limit);
+  parseConfigLimit(options.limit);
+  parseConfigOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -158,7 +191,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     return;
   }
 
-  const adapters = selectConfigAdapters(config.adapters, limit);
+  const adapters = applyConfigFilters(config.adapters, options);
 
   if (options.json) {
     console.log(formatConfigJson({ ...config, adapters }));

@@ -4945,6 +4945,16 @@ describe('CLI docs', () => {
     expect(configSource).toContain('export function parseConfigLimit');
   });
 
+  it('documents config --offset as a bounded non-negative integer', () => {
+    const configSection = docs.slice(docs.indexOf('id="config"'), docs.indexOf('id="adapters"'));
+    const configBlock = cli.slice(cli.indexOf("command('config')"), cli.indexOf("command('adapters')"));
+    expect(configSection).toContain('--offset');
+    expect(configSection).toContain('Must be a non-negative integer up to 1000');
+    expect(configSection).toContain('savestate config --offset 10 --limit 5');
+    expect(configBlock).toContain(".option('--offset <n>'");
+    expect(configSource).toContain('export function parseConfigOffset');
+  });
+
   it('registers --json on savestate adapters', () => {
     const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
     expect(adaptersBlock).toContain(".option('--json'");
