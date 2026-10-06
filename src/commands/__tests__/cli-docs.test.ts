@@ -2140,6 +2140,16 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function parseMcpStatusLimit');
   });
 
+  it('documents mcp status --offset as a bounded non-negative integer', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));
+    expect(mcpSection).toContain('--offset');
+    expect(mcpSection).toContain('Must be a non-negative integer up to 1000');
+    expect(mcpSection).toContain('savestate mcp status --offset 10 --limit 5');
+    expect(mcpBlock).toContain(".option('--offset <n>'");
+    expect(mcp).toContain('export function parseMcpStatusOffset');
+  });
+
   it('documents mcp serve --limit as a bounded positive integer', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));
