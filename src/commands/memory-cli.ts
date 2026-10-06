@@ -17,6 +17,7 @@ import {
   explainMemoryCommand,
   parseMemoryConfigLimit,
   parseMemoryConfigOffset,
+  parseMemoryListOffset,
 } from './memory.js';
 import {
   editMemoryCommand,
@@ -270,6 +271,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-p, --pinned', 'Show only pinned memories')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
+    .option('--offset <n>', 'Skip the first N memories (non-negative integer up to 1000)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
@@ -282,6 +284,7 @@ export function registerMemoryCommands(program: Command): void {
           tier: parseMemoryTier(options.tier),
           pinned: options.pinned,
           limit: parseMemoryLimit(options.limit, 20),
+          offset: parseMemoryListOffset(options.offset),
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'table',
         });

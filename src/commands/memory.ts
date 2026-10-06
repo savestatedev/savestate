@@ -405,6 +405,58 @@ function getNextLowerTier(tier: MemoryTier): MemoryTier | null {
   return null; // L3 has no lower tier
 }
 
+const MAX_MEMORY_LIST_LIMIT = 1000;
+const MAX_MEMORY_LIST_OFFSET = 1000;
+
+/** Parse memory list --limit without turning user input errors into an empty list. */
+export function parseMemoryListLimit(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_LIST_LIMIT) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_LIST_LIMIT}.`,
+    );
+  }
+  return limit;
+}
+
+/** Keep the first N memories when --limit is set. */
+export function selectMemoryListEntries<T>(entries: T[], limit?: number): T[] {
+  if (limit === undefined) return entries;
+  return entries.slice(0, limit);
+}
+
+/** Parse memory list --offset without turning user input errors into an empty list. */
+export function parseMemoryListOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_LIST_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N memories when --offset is set. */
+export function selectMemoryListOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory list --offset then --limit. */
+export function applyMemoryListFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectMemoryListEntries(
+    selectMemoryListOffsetEntries(entries, parseMemoryListOffset(options.offset)),
+    parseMemoryListLimit(options.limit),
+  );
+}
+
 /**
  * List memories with tier information.
  */
@@ -416,6 +468,7 @@ export async function listMemories(
     tier?: MemoryTier;
     pinned?: boolean;
     limit?: number;
+    offset?: number;
     format?: 'table' | 'json';
   },
 ): Promise<void> {
@@ -451,10 +504,10 @@ export async function listMemories(
     entries = entries.filter((e) => !!e.pinned === options.pinned);
   }
 
-  // Apply limit
-  if (options?.limit) {
-    entries = entries.slice(0, options.limit);
-  }
+  entries = selectMemoryListEntries(
+    selectMemoryListOffsetEntries(entries, options?.offset),
+    options?.limit,
+  );
 
   if (options?.format === 'json') {
     console.log(formatMemoryListJson(normalized.core, entries));

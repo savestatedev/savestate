@@ -2582,6 +2582,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryConfigLimit');
   });
 
+  it('documents memory list --offset as a bounded non-negative integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('--offset');
+    expect(memorySection).toContain('Must be a non-negative integer up to 1000');
+    expect(memorySection).toContain('savestate memory list --offset 10 --limit 5');
+    expect(listBlock).toContain(".option('--offset <n>'");
+    expect(memory).toContain('export function parseMemoryListOffset');
+  });
+
   it('documents memory config --offset as a bounded non-negative integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const configBlock = memoryCli.slice(memoryCli.indexOf("command('config')"), memoryCli.indexOf("command('explain"));
