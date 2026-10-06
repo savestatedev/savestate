@@ -621,6 +621,7 @@
       <tbody>
         <tr><td><code>--set &lt;key=value&gt;</code></td><td>Set a configuration value (e.g., <code>storage.type=s3</code>). Must be a non-empty key=value pair.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of adapters to show. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N adapters. Must be a non-negative integer up to 1000. Applied before <code>--limit</code>.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the current config as JSON. Omits the saved cloud API key. When SaveState is not initialized, emits a missing summary (found, version, storage, defaultAdapter; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -630,6 +631,9 @@
 
 <span class="code-comment"># Cap the adapter list</span>
 <span class="code-prompt">$</span> savestate config --limit 5
+
+<span class="code-comment"># Page the adapter list</span>
+<span class="code-prompt">$</span> savestate config --offset 10 --limit 5
 
 <span class="code-comment"># Set storage to S3</span>
 <span class="code-prompt">$</span> savestate config --set <span class="code-string">"storage.type=s3"</span>
