@@ -1044,6 +1044,7 @@ export function formatMemoryConfigMissingJson(snapshot: string): string {
 }
 
 const MAX_MEMORY_CONFIG_LIMIT = 1000;
+const MAX_MEMORY_CONFIG_OFFSET = 1000;
 
 /** Parse memory config --limit without turning user input errors into an empty config. */
 export function parseMemoryConfigLimit(value: string | undefined): number | undefined {
@@ -1064,6 +1065,36 @@ export function selectMemoryConfigEntries<T>(entries: T[], limit?: number): T[] 
   return entries.slice(0, limit);
 }
 
+/** Parse memory config --offset without turning user input errors into an empty config. */
+export function parseMemoryConfigOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_CONFIG_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_CONFIG_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N configuration setting rows when --offset is set. */
+export function selectMemoryConfigOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory config --offset then --limit. */
+export function applyMemoryConfigFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectMemoryConfigEntries(
+    selectMemoryConfigOffsetEntries(entries, parseMemoryConfigOffset(options.offset)),
+    parseMemoryConfigLimit(options.limit),
+  );
+}
+
 export async function showTierConfig(
   storage: StorageBackend,
   passphrase: string,
@@ -1071,6 +1102,7 @@ export async function showTierConfig(
     snapshotId?: string;
     format?: 'pretty' | 'json';
     limit?: number;
+    offset?: number;
   },
 ): Promise<void> {
   if (options?.format === 'json') {
@@ -1112,7 +1144,10 @@ export async function showTierConfig(
     `l3.maxAge: ${config.tiers.L3.maxAge ?? 'null'}`,
     `l3.includeInContext: ${config.tiers.L3.includeInContext}`,
   ];
-  for (const row of selectMemoryConfigEntries(rows, options?.limit)) {
+  for (const row of selectMemoryConfigEntries(
+    selectMemoryConfigOffsetEntries(rows, options?.offset),
+    options?.limit,
+  )) {
     console.log(row);
   }
 }
