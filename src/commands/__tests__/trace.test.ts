@@ -46,9 +46,9 @@ describe.sequential('trace commands', () => {
     const raw = logSpy.mock.calls
       .map((call) => call[0])
       .find((entry) => typeof entry === 'string' && entry.trim().startsWith('['));
-    const runs = JSON.parse(raw as string) as Array<{ run_id: string }>;
+    const runs = JSON.parse(raw as string) as Array<{ runId: string }>;
 
-    expect(runs.map((run) => run.run_id)).toEqual(['run-2', 'run-1']);
+    expect(runs.map((run) => run.runId)).toEqual(['run-2', 'run-1']);
   });
 
   it('trace list --json is backward compatible when trace is absent', async () => {
@@ -79,11 +79,35 @@ describe.sequential('trace commands', () => {
     const raw = logSpy.mock.calls
       .map((call) => call[0])
       .find((entry) => typeof entry === 'string' && entry.trim().startsWith('['));
-    const events = JSON.parse(raw as string) as Array<{ run_id: string; event_type: string }>;
+    const events = JSON.parse(raw as string) as Array<{ runId: string; eventType: string }>;
 
     expect(events).toHaveLength(1);
-    expect(events[0].run_id).toBe('run-show');
-    expect(events[0].event_type).toBe('tool_call');
+    expect(events[0].runId).toBe('run-show');
+    expect(events[0].eventType).toBe('tool_call');
+  });
+
+  it('trace show applies event offset before limit', async () => {
+    const store = new TraceStore({ cwd, redactSecrets: false });
+    for (const [eventType, minute] of [['message', '00'], ['tool_call', '01'], ['result', '02']] as const) {
+      await store.appendEvent('run-page', {
+        timestamp: `2026-02-21T10:${minute}:00.000Z`,
+        run_id: 'run-page',
+        adapter: 'clawdbot',
+        event_type: eventType,
+        payload: {},
+      });
+    }
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await traceShowCommand('run-page', { json: true, offset: '1', limit: '1' });
+
+    const raw = logSpy.mock.calls
+      .map((call) => call[0])
+      .find((entry) => typeof entry === 'string' && entry.trim().startsWith('['));
+    const events = JSON.parse(raw as string) as Array<{ eventType: string }>;
+
+    expect(events).toHaveLength(1);
+    expect(events[0].eventType).toBe('tool_call');
   });
 
   it('trace show exits when the run is missing', async () => {

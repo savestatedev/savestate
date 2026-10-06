@@ -15,11 +15,13 @@ import {
 interface TraceListOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 interface TraceShowOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 interface TraceExportOptions {
@@ -79,6 +81,7 @@ export function parseTraceShowRunId(value: string | undefined): string {
 }
 
 const MAX_TRACE_LIST_LIMIT = 1000;
+const MAX_TRACE_LIST_OFFSET = 1000;
 
 /** Parse trace list --limit without turning user input errors into an empty run list. */
 export function parseTraceListLimit(value: string | undefined): number | undefined {
@@ -97,6 +100,36 @@ export function parseTraceListLimit(value: string | undefined): number | undefin
 export function selectTraceRuns<T>(runs: T[], limit?: number): T[] {
   if (limit === undefined) return runs;
   return runs.slice(0, limit);
+}
+
+/** Parse trace list --offset without turning user input errors into an empty run list. */
+export function parseTraceListOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRACE_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRACE_LIST_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N trace runs when --offset is set. */
+export function selectTraceRunOffset<T>(runs: T[], offset?: number): T[] {
+  if (offset === undefined) return runs;
+  return runs.slice(offset);
+}
+
+/** Apply trace list --offset then --limit. */
+export function applyTraceListFilters<T>(
+  runs: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectTraceRuns(
+    selectTraceRunOffset(runs, parseTraceListOffset(options.offset)),
+    parseTraceListLimit(options.limit),
+  );
 }
 
 const MAX_TRACE_SHOW_LIMIT = 1000;
@@ -118,6 +151,25 @@ export function parseTraceShowLimit(value: string | undefined): number | undefin
 export function selectTraceShowEvents<T>(events: T[], limit?: number): T[] {
   if (limit === undefined) return events;
   return events.slice(0, limit);
+}
+
+/** Parse trace show --offset without turning user input errors into an empty event list. */
+export function parseTraceShowOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRACE_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRACE_LIST_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N trace events when --offset is set. */
+export function selectTraceShowOffset<T>(events: T[], offset?: number): T[] {
+  if (offset === undefined) return events;
+  return events.slice(offset);
 }
 
 const MAX_TRACE_EXPORT_LIMIT = 1000;
@@ -318,6 +370,7 @@ interface TraceCommandOptions {
   format?: string;
   run?: string;
   limit?: string;
+  offset?: string;
 }
 
 export async function traceCommand(
@@ -344,6 +397,7 @@ export function registerTraceCommands(program: Command): void {
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
     .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show, or runs to export')
+    .option('--offset <n>', 'Skip the first N trace runs (list) or events (show) (non-negative integer up to 1000)')
     .action(traceCommand);
 }
 
@@ -362,7 +416,7 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
   }
 
   const store = new TraceStore();
-  const runs = selectTraceRuns(await store.listRuns(), parseTraceListLimit(options.limit));
+  const runs = applyTraceListFilters(await store.listRuns(), options);
 
   if (options.json) {
     console.log(formatTraceRunsJson(runs));
@@ -408,6 +462,7 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
 
 export async function traceShowCommand(runId: string, options: TraceShowOptions): Promise<void> {
   runId = parseTraceShowRunId(runId);
+  const offset = parseTraceShowOffset(options.offset);
   const limit = parseTraceShowLimit(options.limit);
 
   if (!options.json) {
@@ -436,7 +491,7 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
     process.exit(1);
   }
 
-  const shown = selectTraceShowEvents(events, limit);
+  const shown = selectTraceShowEvents(selectTraceShowOffset(events, offset), limit);
 
   if (options.json) {
     console.log(formatTraceEventsJson(shown));
@@ -524,4 +579,3 @@ function formatDate(iso: string): string {
     hour12: false,
   });
 }
-
