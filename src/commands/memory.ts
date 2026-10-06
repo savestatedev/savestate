@@ -874,6 +874,7 @@ export function formatMemoryUnpinMissingJson(id: string): string {
 }
 
 const MAX_MEMORY_UNPIN_LIMIT = 1000;
+const MAX_MEMORY_UNPIN_OFFSET = 1000;
 
 /** Parse memory unpin --limit without turning user input errors into an empty unpin. */
 export function parseMemoryUnpinLimit(value: string | undefined): number | undefined {
@@ -894,6 +895,36 @@ export function selectMemoryUnpinEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+/** Parse memory unpin --offset without turning user input errors into an empty unpin. */
+export function parseMemoryUnpinOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_UNPIN_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_UNPIN_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N unpin status field rows when --offset is set. */
+export function selectMemoryUnpinOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory unpin --offset then --limit. */
+export function applyMemoryUnpinFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string } = {},
+): T[] {
+  return selectMemoryUnpinEntries(
+    selectMemoryUnpinOffsetEntries(entries, parseMemoryUnpinOffset(options.offset)),
+    parseMemoryUnpinLimit(options.limit),
+  );
+}
+
 export async function unpinMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -902,9 +933,11 @@ export async function unpinMemoryCommand(
     snapshotId?: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   },
 ): Promise<void> {
-  const limit = parseMemoryUnpinLimit(options?.limit);
+  parseMemoryUnpinLimit(options?.limit);
+  parseMemoryUnpinOffset(options?.offset);
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options?.snapshotId);
 
   const entryIndex = snapshot.memory.core.findIndex((e) => e.id === memoryId);
@@ -923,7 +956,7 @@ export async function unpinMemoryCommand(
       return;
     }
     const alreadyUnpinnedRows = [`Memory ${memoryId} is not pinned.`];
-    for (const row of selectMemoryUnpinEntries(alreadyUnpinnedRows, limit)) {
+    for (const row of applyMemoryUnpinFilters(alreadyUnpinnedRows, options ?? {})) {
       console.log(row);
     }
     return;
@@ -939,7 +972,7 @@ export async function unpinMemoryCommand(
   }
 
   const rows = [`✓ Unpinned memory ${memoryId}`];
-  for (const row of selectMemoryUnpinEntries(rows, limit)) {
+  for (const row of applyMemoryUnpinFilters(rows, options ?? {})) {
     console.log(row);
   }
 }
