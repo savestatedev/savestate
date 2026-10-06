@@ -2893,6 +2893,15 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryDeleteLimit');
   });
 
+  it('documents memory delete --offset as a bounded skip count', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const deleteBlock = memoryCli.slice(memoryCli.indexOf("command('delete"), memoryCli.indexOf("command('rollback"));
+    expect(memorySection).toContain('Skip the first N');
+    expect(memorySection).toContain('savestate memory delete mem-123 --reason "stale" --offset 1 --limit 5');
+    expect(deleteBlock).toContain(".option('--offset <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryDeleteOffset');
+  });
+
   it('documents memory rollback --limit as a bounded positive integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));

@@ -507,6 +507,7 @@ export async function editMemoryCommand(
 }
 
 const MAX_MEMORY_DELETE_LIMIT = 1000;
+const MAX_MEMORY_DELETE_OFFSET = 1000;
 
 /** Parse memory delete --limit without turning user input errors into an empty delete. */
 export function parseMemoryDeleteLimit(value: string | undefined): number | undefined {
@@ -527,6 +528,36 @@ export function selectMemoryDeleteEntries<T>(entries: T[], limit?: number): T[] 
   return entries.slice(0, limit);
 }
 
+/** Parse memory delete --offset without turning user input errors into an empty delete. */
+export function parseMemoryDeleteOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_DELETE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_DELETE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N delete status field rows when --offset is set. */
+export function selectMemoryDeleteOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory delete --offset then --limit. */
+export function applyMemoryDeleteFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string } = {},
+): T[] {
+  return selectMemoryDeleteEntries(
+    selectMemoryDeleteOffsetEntries(entries, parseMemoryDeleteOffset(options.offset)),
+    parseMemoryDeleteLimit(options.limit),
+  );
+}
+
 /**
  * Soft delete a memory with audit trail.
  */
@@ -539,9 +570,11 @@ export async function deleteMemoryCommand(
     reason: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   }
 ): Promise<void> {
-  const limit = parseMemoryDeleteLimit(options.limit);
+  parseMemoryDeleteLimit(options.limit);
+  parseMemoryDeleteOffset(options.offset);
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
@@ -560,7 +593,7 @@ export async function deleteMemoryCommand(
       `  Actor:  ${options.actorId}`,
       `\nNote: The memory is marked as deleted but retained for audit purposes.`,
     ];
-    for (const row of selectMemoryDeleteEntries(rows, limit)) {
+    for (const row of applyMemoryDeleteFilters(rows, options)) {
       console.log(row);
     }
   } catch (err) {
