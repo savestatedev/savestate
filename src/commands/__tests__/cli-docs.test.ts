@@ -2767,6 +2767,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryUnpinLimit');
   });
 
+  it('documents memory unpin --offset as a bounded non-negative integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const unpinBlock = memoryCli.slice(memoryCli.indexOf("command('unpin"), memoryCli.indexOf("command('apply-policies"));
+    expect(memorySection).toContain('--offset');
+    expect(memorySection).toContain('Must be a non-negative integer up to 1000');
+    expect(memorySection).toContain('savestate memory unpin mem-123 --offset 10 --limit 5');
+    expect(unpinBlock).toContain(".option('--offset <n>'");
+    expect(memory).toContain('export function parseMemoryUnpinOffset');
+  });
+
   it('registers --json on savestate memory apply-policies', () => {
     const applyBlock = memoryCli.slice(memoryCli.indexOf("command('apply-policies')"), memoryCli.indexOf("command('config')"));
     expect(applyBlock).toContain(".option('--json'");
