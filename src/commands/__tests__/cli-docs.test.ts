@@ -2688,6 +2688,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryPinLimit');
   });
 
+  it('documents memory pin --offset as a bounded non-negative integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const pinBlock = memoryCli.slice(memoryCli.indexOf("command('pin"), memoryCli.indexOf("command('unpin"));
+    expect(memorySection).toContain('--offset');
+    expect(memorySection).toContain('Must be a non-negative integer up to 1000');
+    expect(memorySection).toContain('savestate memory pin mem-123 --offset 10 --limit 5');
+    expect(pinBlock).toContain(".option('--offset <n>'");
+    expect(memory).toContain('export function parseMemoryPinOffset');
+  });
+
   it('documents memory pin --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
