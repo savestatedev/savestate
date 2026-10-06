@@ -2917,6 +2917,15 @@ describe('CLI docs', () => {
     expect(rollbackBlock).toContain(".option('--json'");
   });
 
+  it('documents memory rollback --offset as a bounded skip count', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
+    expect(memorySection).toContain('Skip the first N');
+    expect(memorySection).toContain('savestate memory rollback mem-123 --version 2 --offset 1 --limit 5');
+    expect(rollbackBlock).toContain(".option('--offset <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryRollbackOffset');
+  });
+
   it('documents memory rollback --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');

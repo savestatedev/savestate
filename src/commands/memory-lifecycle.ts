@@ -607,6 +607,7 @@ export async function deleteMemoryCommand(
 }
 
 const MAX_MEMORY_ROLLBACK_LIMIT = 1000;
+const MAX_MEMORY_ROLLBACK_OFFSET = 1000;
 
 /** Parse memory rollback --limit without turning user input errors into an empty rollback. */
 export function parseMemoryRollbackLimit(value: string | undefined): number | undefined {
@@ -627,6 +628,36 @@ export function selectMemoryRollbackEntries<T>(entries: T[], limit?: number): T[
   return entries.slice(0, limit);
 }
 
+/** Parse memory rollback --offset without turning user input errors into an empty rollback. */
+export function parseMemoryRollbackOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_ROLLBACK_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_ROLLBACK_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N rollback status field rows when --offset is set. */
+export function selectMemoryRollbackOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory rollback --offset then --limit. */
+export function applyMemoryRollbackFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string } = {},
+): T[] {
+  return selectMemoryRollbackEntries(
+    selectMemoryRollbackOffsetEntries(entries, parseMemoryRollbackOffset(options.offset)),
+    parseMemoryRollbackLimit(options.limit),
+  );
+}
+
 /**
  * Rollback a memory to a previous version.
  */
@@ -639,9 +670,11 @@ export async function rollbackMemoryCommand(
     actorId: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   }
 ): Promise<void> {
-  const limit = parseMemoryRollbackLimit(options.limit);
+  parseMemoryRollbackLimit(options.limit);
+  parseMemoryRollbackOffset(options.offset);
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
@@ -669,7 +702,7 @@ export async function rollbackMemoryCommand(
       `  New version:     ${restored.version}`,
       `  Content:         ${restored.content.slice(0, 50)}...`,
     ];
-    for (const row of selectMemoryRollbackEntries(rows, limit)) {
+    for (const row of applyMemoryRollbackFilters(rows, options)) {
       console.log(row);
     }
   } catch (err) {
