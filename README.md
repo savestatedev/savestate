@@ -225,6 +225,7 @@ savestate trace list                  List Askable Echoes trace runs
   --limit <n>                        Max runs to show (1–1000)
 savestate trace show <run_id>         Show events for a trace run
   --json                             Output as JSON
+  --offset <n>                       Skip the first N events (0–1000)
   --limit <n>                        Max events to show (1–1000)
 savestate trace export                Export trace as JSONL (stdout)
   --run <id>                         Export only a specific run

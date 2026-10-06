@@ -4003,6 +4003,15 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function parseTraceShowLimit');
   });
 
+  it('documents trace show --offset as a bounded non-negative integer', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    const traceBlock = trace.slice(trace.indexOf("command('trace"));
+    expect(traceSection).toContain('savestate trace show run-123 --offset 5 --limit 5');
+    expect(traceSection).toContain('or events on <code>show</code> before applying');
+    expect(traceBlock).toContain(".option('--offset <n>'");
+    expect(trace).toContain('export function parseTraceShowOffset');
+  });
+
   it('documents trace export --limit as a bounded positive integer', () => {
     const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     const traceBlock = trace.slice(trace.indexOf("command('trace"));

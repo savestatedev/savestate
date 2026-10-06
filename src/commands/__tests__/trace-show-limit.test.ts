@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseTraceShowLimit, selectTraceShowEvents } from '../trace.js';
+import {
+  parseTraceShowLimit,
+  parseTraceShowOffset,
+  selectTraceShowEvents,
+  selectTraceShowOffset,
+} from '../trace.js';
 
 describe('savestate trace show --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,30 @@ describe('savestate trace show --limit', () => {
   it('returns all events when --limit is omitted', () => {
     const events = [{ eventType: 'tool' }, { eventType: 'result' }];
     expect(selectTraceShowEvents(events, undefined)).toEqual(events);
+  });
+
+  it('accepts non-negative event offsets', () => {
+    expect(parseTraceShowOffset(undefined)).toBeUndefined();
+    expect(parseTraceShowOffset('0')).toBe(0);
+    expect(parseTraceShowOffset('12')).toBe(12);
+  });
+
+  it.each(['-1', '1.5', 'nope'])('rejects invalid event offset %s', (value) => {
+    expect(() => parseTraceShowOffset(value)).toThrow(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
+    );
+  });
+
+  it('bounds event offsets and skips events', () => {
+    expect(parseTraceShowOffset('1000')).toBe(1000);
+    expect(() => parseTraceShowOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+    expect(
+      selectTraceShowOffset(
+        [{ eventType: 'tool' }, { eventType: 'result' }, { eventType: 'error' }],
+        1,
+      ).map((event) => event.eventType),
+    ).toEqual(['result', 'error']);
   });
 });
