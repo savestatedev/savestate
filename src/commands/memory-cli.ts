@@ -328,6 +328,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-t, --to <tier>', 'Target tier (L2 or L3)', 'L3')
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--limit <n>', 'Maximum number of status field rows to show')
+    .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
       try {
@@ -341,6 +342,7 @@ export function registerMemoryCommands(program: Command): void {
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
           limit: options.limit,
+          offset: options.offset,
         });
       } catch (err) {
         handleError(err);

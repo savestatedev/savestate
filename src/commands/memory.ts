@@ -674,6 +674,7 @@ export function formatMemoryDemoteMissingJson(id: string): string {
 }
 
 const MAX_MEMORY_DEMOTE_LIMIT = 1000;
+const MAX_MEMORY_DEMOTE_OFFSET = 1000;
 
 /** Parse memory demote --limit without turning user input errors into an empty demote. */
 export function parseMemoryDemoteLimit(value: string | undefined): number | undefined {
@@ -694,6 +695,36 @@ export function selectMemoryDemoteEntries<T>(entries: T[], limit?: number): T[] 
   return entries.slice(0, limit);
 }
 
+/** Parse memory demote --offset without turning user input errors into an empty demote. */
+export function parseMemoryDemoteOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_DEMOTE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_DEMOTE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N demote status field rows when --offset is set. */
+export function selectMemoryDemoteOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory demote --offset then --limit. */
+export function applyMemoryDemoteFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectMemoryDemoteEntries(
+    selectMemoryDemoteOffsetEntries(entries, parseMemoryDemoteOffset(options.offset)),
+    parseMemoryDemoteLimit(options.limit),
+  );
+}
+
 export async function demoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -703,9 +734,11 @@ export async function demoteMemoryCommand(
     snapshotId?: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   },
 ): Promise<void> {
-  const limit = parseMemoryDemoteLimit(options.limit);
+  parseMemoryDemoteLimit(options.limit);
+  parseMemoryDemoteOffset(options.offset);
   const targetTier = options.to ?? 'L3';
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options.snapshotId);
 
@@ -735,7 +768,7 @@ export async function demoteMemoryCommand(
   const rows = [
     `✓ Demoted memory ${memoryId} from ${currentTier} to ${targetTier}`,
   ];
-  for (const row of selectMemoryDemoteEntries(rows, limit)) {
+  for (const row of applyMemoryDemoteFilters(rows, options)) {
     console.log(row);
   }
 }
