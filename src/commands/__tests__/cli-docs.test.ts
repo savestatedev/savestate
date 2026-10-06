@@ -2661,6 +2661,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryDemoteLimit');
   });
 
+  it('documents memory demote --offset as a bounded non-negative integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const demoteBlock = memoryCli.slice(memoryCli.indexOf("command('demote"), memoryCli.indexOf("command('pin"));
+    expect(memorySection).toContain('--offset');
+    expect(memorySection).toContain('Must be a non-negative integer up to 1000');
+    expect(memorySection).toContain('savestate memory demote mem-123 --offset 10 --limit 5');
+    expect(demoteBlock).toContain(".option('--offset <n>'");
+    expect(memory).toContain('export function parseMemoryDemoteOffset');
+  });
+
   it('registers --json on savestate memory demote', () => {
     const demoteBlock = memoryCli.slice(memoryCli.indexOf("command('demote"), memoryCli.indexOf("command('pin"));
     expect(demoteBlock).toContain(".option('--json'");
