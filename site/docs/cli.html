@@ -685,7 +685,7 @@
 
     <!-- export -->
     <h2 id="export"><code>savestate export</code></h2>
-    <p>Export agent state to an encrypted <code>.savestate</code> container. Loads and encrypts the selected components, then writes the archive. Prints packed components, optionally capped with <code>--limit</code>. A missing output directory is rejected before encrypting. An existing output file is refused unless <code>--force</code> is set.</p>
+    <p>Export agent state to an encrypted <code>.savestate</code> container. Loads and encrypts the selected components, then writes the archive. Prints packed components, optionally capped with <code>--limit</code>. <code>--offset</code> skips packed components before <code>--limit</code>. A missing output directory is rejected before encrypting. An existing output file is refused unless <code>--force</code> is set.</p>
     <pre><code><span class="code-prompt">$</span> savestate export -a &lt;id&gt; -o &lt;file&gt; [options]</code></pre>
 
     <table>
@@ -703,7 +703,8 @@
         <tr><td><code>-p, --passphrase &lt;pass&gt;</code></td><td>Passphrase for encryption, or <code>SAVESTATE_PASSPHRASE</code> / prompt. An empty value is rejected before encrypting.</td></tr>
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. Must be a single non-empty path. An empty path, missing file, directory, or file with no contents is rejected before encrypting.</td></tr>
         <tr><td><code>--description &lt;text&gt;</code></td><td>Optional human-readable description stored in the manifest. Must be a non-empty description.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of packed components to show. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of packed components to show. Must be a positive integer up to 1000. Combines with <code>--offset</code>.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N packed components before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the export result as JSON. Encrypts the archive. Skips progress output. When the output directory is missing, emits a missing summary (found, output, written, agent; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -719,6 +720,9 @@
 
 <span class="code-comment"># Cap packed component rows</span>
 <span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --limit 5
+
+<span class="code-comment"># Skip then cap packed components</span>
+<span class="code-prompt">$</span> savestate export -a my-agent -o agent.savestate --offset 10 --limit 5
 
 <span class="code-comment"># Missing output directory</span>
 <span class="code-prompt">$</span> savestate export -a my-agent -o missing-dir/agent.savestate --json</code></pre>
