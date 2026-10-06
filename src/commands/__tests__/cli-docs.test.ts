@@ -255,6 +255,16 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseImportLimit');
   });
 
+  it('documents import --offset as a bounded non-negative integer', () => {
+    const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
+    const importBlock = container.slice(container.indexOf("command('import <file>')"), container.indexOf("command('container')"));
+    expect(importSection).toContain('--offset');
+    expect(importSection).toContain('Must be a non-negative integer up to 1000');
+    expect(importSection).toContain('savestate import agent.savestate --offset 10 --limit 5');
+    expect(importBlock).toContain(".option('--offset <n>'");
+    expect(container).toContain('export function parseImportOffset');
+  });
+
   it('documents import --target as a single path', () => {
     const importSection = docs.slice(docs.indexOf('id="import"'), docs.indexOf('id="verify"'));
     expect(importSection).toContain('--target');

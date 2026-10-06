@@ -417,6 +417,38 @@ export function selectImportComponents<T>(components: T[], limit?: number): T[] 
   return components.slice(0, limit);
 }
 
+const MAX_IMPORT_OFFSET = 1000;
+
+/** Parse import --offset without turning user input errors into an empty component list. */
+export function parseImportOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IMPORT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IMPORT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N packed components when --offset is set. */
+export function selectImportOffsetEntries<T>(components: T[], offset?: number): T[] {
+  if (offset === undefined) return components;
+  return components.slice(offset);
+}
+
+/** Apply import --offset then --limit. */
+export function applyImportFilters<T>(
+  components: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectImportComponents(
+    selectImportOffsetEntries(components, parseImportOffset(options.offset)),
+    parseImportLimit(options.limit),
+  );
+}
+
 const MAX_CONTAINER_IMPORT_LIMIT = 1000;
 
 /** Parse container import --limit without turning user input errors into an empty component list. */
@@ -1296,6 +1328,7 @@ export interface RestoreOptions {
   force?: boolean;
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 export interface ImportResult {
@@ -1350,6 +1383,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     let limit: number | undefined;
     try {
       limit = parseImportLimit(options.limit);
+      parseImportOffset(options.offset);
     } catch (error: any) {
       console.error(`Error: ${error.message}`);
       return undefined;
@@ -1845,7 +1879,7 @@ export async function importState(options: RestoreOptions): Promise<ImportResult
     }
     const components = selected.components;
     const shownComponents = selectContainerImportComponents(
-      selectImportComponents(components, limit),
+      applyImportFilters(components, options),
       limit,
     );
     const description = optionalImportDescription(manifest.description);
@@ -2064,6 +2098,7 @@ export function registerContainerCommands(program: Command) {
     .option('--target <dir>', 'Write restored agent state to this directory (single non-empty path)')
     .option('--force', 'Overwrite an existing target file')
     .option('--limit <n>', 'Maximum number of packed components to show')
+    .option('--offset <n>', 'Skip the first N packed components (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (file, opts) => {
       const result = await importState({
@@ -2079,6 +2114,7 @@ export function registerContainerCommands(program: Command) {
         force: opts.force,
         json: opts.json,
         limit: opts.limit,
+        offset: opts.offset,
       });
       if (!result) {
         process.exit(1);
