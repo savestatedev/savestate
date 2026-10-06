@@ -4720,6 +4720,16 @@ describe('CLI docs', () => {
     expect(snapshot).toContain('export function parseSnapshotLimit');
   });
 
+  it('documents snapshot --offset as a bounded non-negative integer', () => {
+    const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
+    const snapshotBlock = cli.slice(cli.indexOf("command('snapshot')"), cli.indexOf("command('restore"));
+    expect(snapshotSection).toContain('--offset');
+    expect(snapshotSection).toContain('Must be a non-negative integer up to 1000');
+    expect(snapshotSection).toContain('savestate snapshot --offset 10 --limit 5');
+    expect(snapshotBlock).toContain(".option('--offset <n>'");
+    expect(snapshot).toContain('export function parseSnapshotOffset');
+  });
+
   it('documents snapshot --adapter as a known adapter', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--adapter');

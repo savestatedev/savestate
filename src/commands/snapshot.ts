@@ -24,10 +24,12 @@ interface SnapshotOptions {
   /** Additional metadata for state entries (key=value) - Issue #91 */
   meta?: string[];
   limit?: string;
+  offset?: string;
   json?: boolean;
 }
 
 const MAX_SNAPSHOT_LIMIT = 1000;
+const MAX_SNAPSHOT_OFFSET = 1000;
 
 /** Parse snapshot --limit without turning user input errors into an empty snapshot. */
 export function parseSnapshotLimit(value: string | undefined): number | undefined {
@@ -46,6 +48,36 @@ export function parseSnapshotLimit(value: string | undefined): number | undefine
 export function selectSnapshotEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+/** Parse snapshot --offset without turning user input errors into an empty snapshot. */
+export function parseSnapshotOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_SNAPSHOT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SNAPSHOT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N snapshot status field rows when --offset is set. */
+export function selectSnapshotOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply snapshot --offset then --limit. */
+export function applySnapshotFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectSnapshotEntries(
+    selectSnapshotOffsetEntries(entries, parseSnapshotOffset(options.offset)),
+    parseSnapshotLimit(options.limit),
+  );
 }
 
 const SNAPSHOT_ADAPTERS = [
@@ -220,7 +252,8 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
   const adapterId = parseSnapshotAdapter(options.adapter);
   const tags = parseSnapshotTags(options.tags);
   const schedule = parseSnapshotSchedule(options.schedule);
-  const limit = parseSnapshotLimit(options.limit);
+  parseSnapshotLimit(options.limit);
+  parseSnapshotOffset(options.offset);
   const stateEntries = (options.tag ?? [])
     .map((entry) => parseSnapshotTag(entry))
     .filter((entry): entry is StateEventInput => entry !== undefined);
@@ -354,7 +387,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
       rows.push(`  ${chalk.dim('State:')}      ${chalk.cyan(`${stateEventCount} event${stateEventCount === 1 ? '' : 's'}`)} recorded`);
     }
     rows.push(`  ${chalk.dim('Status:')}     ${chalk.green('✓ Encrypted & stored')}`);
-    for (const row of selectSnapshotEntries(rows, limit)) {
+    for (const row of applySnapshotFilters(rows, options)) {
       console.log(row);
     }
     console.log();

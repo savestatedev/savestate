@@ -72,6 +72,7 @@ program
   .option('--tag <entry...>', 'Record structured state entry (type:key=value with type decision, preference, error, api_response, or custom)')
   .option('--meta <entry...>', 'Additional metadata for state entries (key=value with a non-empty key and value)')
   .option('--limit <n>', 'Maximum number of status field rows to show')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(snapshotCommand);
 
