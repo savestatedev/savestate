@@ -1420,6 +1420,7 @@ export function formatMemoryExplainMissingJson(query: string): string {
 
 const DEFAULT_MEMORY_EXPLAIN_LIMIT = 5;
 const MAX_MEMORY_EXPLAIN_LIMIT = 1000;
+const MAX_MEMORY_EXPLAIN_OFFSET = 1000;
 
 /** Parse memory explain --limit without turning user input errors into an empty result list. */
 export function parseMemoryExplainLimit(value: string | undefined): number | undefined {
@@ -1439,6 +1440,36 @@ export function selectMemoryExplainEntries<T>(entries: T[], limit?: number): T[]
   return entries.slice(0, limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT);
 }
 
+/** Parse memory explain --offset without turning user input errors into an empty result list. */
+export function parseMemoryExplainOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_EXPLAIN_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPLAIN_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N retrieval results when --offset is set. */
+export function selectMemoryExplainOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory explain --offset then --limit. */
+export function applyMemoryExplainFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string } = {},
+): T[] {
+  return selectMemoryExplainEntries(
+    selectMemoryExplainOffsetEntries(entries, parseMemoryExplainOffset(options.offset)),
+    parseMemoryExplainLimit(options.limit),
+  );
+}
+
 /**
  * Explain why memories were retrieved for a query.
  * Shows detailed breakdown of scores and policy decisions.
@@ -1452,11 +1483,13 @@ export async function explainMemoryCommand(
   options?: {
     namespace?: string;
     limit?: string;
+    offset?: string;
     tags?: string[];
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {
-  const limit = parseMemoryExplainLimit(options?.limit);
+  parseMemoryExplainLimit(options?.limit);
+  parseMemoryExplainOffset(options?.offset);
   const { snapshot } = await loadSnapshot(storage, passphrase);
 
   // Parse namespace from option or use default
@@ -1563,7 +1596,7 @@ export async function explainMemoryCommand(
     })
     .filter((r): r is NonNullable<typeof r> => r !== null)
     .sort((a, b) => b.finalScore - a.finalScore);
-  const scoredLimited = selectMemoryExplainEntries(scored, limit);
+  const scoredLimited = applyMemoryExplainFilters(scored, options ?? {});
 
   if (options?.format === 'json') {
     if (scoredLimited.length === 0) {

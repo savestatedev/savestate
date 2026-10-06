@@ -466,6 +466,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Explain why memories were retrieved for a query (non-empty query)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
+    .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--json', 'Output as JSON')
     .action(async (query, options) => {
@@ -478,6 +479,7 @@ export function registerMemoryCommands(program: Command): void {
         await explainMemoryCommand(storage, passphrase, parsedQuery, {
           namespace: parseMemoryNamespace(options.namespace),
           limit: options.limit,
+          offset: options.offset,
           tags: parseMemoryTags(options.tags),
           format: options.json ? 'json' : 'pretty',
         });
