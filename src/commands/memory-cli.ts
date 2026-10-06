@@ -16,6 +16,7 @@ import {
   showTierConfig,
   explainMemoryCommand,
   parseMemoryConfigLimit,
+  parseMemoryConfigOffset,
 } from './memory.js';
 import {
   editMemoryCommand,
@@ -426,6 +427,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Show tier configuration')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--limit <n>', 'Maximum number of configuration setting rows to show')
+    .option('--offset <n>', 'Skip the first N configuration setting rows (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
@@ -437,6 +439,7 @@ export function registerMemoryCommands(program: Command): void {
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.json ? 'json' : 'pretty',
           limit: parseMemoryConfigLimit(options.limit),
+          offset: parseMemoryConfigOffset(options.offset),
         });
       } catch (err) {
         handleError(err);
