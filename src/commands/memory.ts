@@ -573,6 +573,7 @@ export function formatMemoryPromoteMissingJson(id: string): string {
 }
 
 const MAX_MEMORY_PROMOTE_LIMIT = 1000;
+const MAX_MEMORY_PROMOTE_OFFSET = 1000;
 
 /** Parse memory promote --limit without turning user input errors into an empty promote. */
 export function parseMemoryPromoteLimit(value: string | undefined): number | undefined {
@@ -593,6 +594,36 @@ export function selectMemoryPromoteEntries<T>(entries: T[], limit?: number): T[]
   return entries.slice(0, limit);
 }
 
+/** Parse memory promote --offset without turning user input errors into an empty promote. */
+export function parseMemoryPromoteOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_PROMOTE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_PROMOTE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N promote status field rows when --offset is set. */
+export function selectMemoryPromoteOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory promote --offset then --limit. */
+export function applyMemoryPromoteFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectMemoryPromoteEntries(
+    selectMemoryPromoteOffsetEntries(entries, parseMemoryPromoteOffset(options.offset)),
+    parseMemoryPromoteLimit(options.limit),
+  );
+}
+
 export async function promoteMemoryCommand(
   storage: StorageBackend,
   passphrase: string,
@@ -602,9 +633,11 @@ export async function promoteMemoryCommand(
     snapshotId?: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   },
 ): Promise<void> {
-  const limit = parseMemoryPromoteLimit(options.limit);
+  parseMemoryPromoteLimit(options.limit);
+  parseMemoryPromoteOffset(options.offset);
   const targetTier = options.to ?? 'L1';
   const { snapshot, filename } = await loadSnapshot(storage, passphrase, options.snapshotId);
 
@@ -634,7 +667,7 @@ export async function promoteMemoryCommand(
   const rows = [
     `✓ Promoted memory ${memoryId} from ${currentTier} to ${targetTier}`,
   ];
-  for (const row of selectMemoryPromoteEntries(rows, limit)) {
+  for (const row of applyMemoryPromoteFilters(rows, options)) {
     console.log(row);
   }
 }
