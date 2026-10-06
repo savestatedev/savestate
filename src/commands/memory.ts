@@ -1077,6 +1077,7 @@ export async function unpinMemoryCommand(
 }
 
 const MAX_MEMORY_APPLY_POLICIES_LIMIT = 1000;
+const MAX_MEMORY_APPLY_POLICIES_OFFSET = 1000;
 
 /** Parse memory apply-policies --limit without turning user input errors into an empty change list. */
 export function parseMemoryApplyPoliciesLimit(value: string | undefined): number | undefined {
@@ -1097,6 +1098,36 @@ export function selectMemoryApplyPoliciesChanges<T>(changes: T[], limit?: number
   return changes.slice(0, limit);
 }
 
+/** Parse memory apply-policies --offset without turning user input errors into an empty change list. */
+export function parseMemoryApplyPoliciesOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_APPLY_POLICIES_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_APPLY_POLICIES_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N tier changes when --offset is set. */
+export function selectMemoryApplyPoliciesOffsetChanges<T>(changes: T[], offset?: number): T[] {
+  if (offset === undefined) return changes;
+  return changes.slice(offset);
+}
+
+/** Apply memory apply-policies --offset then --limit. */
+export function applyMemoryApplyPoliciesFilters<T>(
+  changes: T[],
+  options: { offset?: string; limit?: string } = {},
+): T[] {
+  return selectMemoryApplyPoliciesChanges(
+    selectMemoryApplyPoliciesOffsetChanges(changes, parseMemoryApplyPoliciesOffset(options.offset)),
+    parseMemoryApplyPoliciesLimit(options.limit),
+  );
+}
+
 /**
  * Apply tier policies and show what would change.
  */
@@ -1108,9 +1139,11 @@ export async function applyPoliciesCommand(
     dryRun?: boolean;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   },
 ): Promise<void> {
-  const limit = parseMemoryApplyPoliciesLimit(options?.limit);
+  parseMemoryApplyPoliciesLimit(options?.limit);
+  parseMemoryApplyPoliciesOffset(options?.offset);
   if (options?.format === 'json') {
     const snapshotId = options.snapshotId;
     if (snapshotId && snapshotId !== 'latest') {
@@ -1132,7 +1165,7 @@ export async function applyPoliciesCommand(
   const config = snapshot.memory.tierConfig ?? DEFAULT_TIER_CONFIG;
 
   const { updated, changes } = applyTierPolicies(snapshot.memory.core, config);
-  const shown = selectMemoryApplyPoliciesChanges(changes, limit);
+  const shown = applyMemoryApplyPoliciesFilters(changes, options ?? {});
   const dryRun = options?.dryRun ?? false;
 
   if (options?.format === 'json') {

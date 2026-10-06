@@ -413,6 +413,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-s, --snapshot <id>', 'Snapshot to modify (default: latest)')
     .option('--dry-run', 'Show what would change without applying')
     .option('--limit <n>', 'Maximum number of tier changes to show')
+    .option('--offset <n>', 'Skip the first N tier changes (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
@@ -425,6 +426,7 @@ export function registerMemoryCommands(program: Command): void {
           dryRun: options.dryRun,
           format: options.json ? 'json' : 'pretty',
           limit: options.limit,
+          offset: options.offset,
         });
       } catch (err) {
         handleError(err);
