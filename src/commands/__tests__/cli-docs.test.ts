@@ -843,6 +843,16 @@ describe('CLI docs', () => {
     expect(schedule).toContain('export function parseScheduleLimit');
   });
 
+  it('documents schedule --offset as a bounded non-negative integer', () => {
+    const scheduleSection = docs.slice(docs.indexOf('id="schedule"'), docs.indexOf('id="migrate"'));
+    const scheduleBlock = cli.slice(cli.indexOf("command('schedule')"), cli.indexOf("command('migrate')"));
+    expect(scheduleSection).toContain('--offset');
+    expect(scheduleSection).toContain('Must be a non-negative integer up to 1000');
+    expect(scheduleSection).toContain('savestate schedule --offset 10 --limit 5');
+    expect(scheduleBlock).toContain(".option('--offset <n>'");
+    expect(schedule).toContain('export function parseScheduleOffset');
+  });
+
   it('lists savestate migrate in the command overview', () => {
     expect(docs).toContain('id="migrate"');
     expect(docs).toContain('savestate migrate');

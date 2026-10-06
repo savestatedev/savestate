@@ -371,6 +371,7 @@ program
   .option('-d, --disable', 'Disable scheduled backups')
   .option('-s, --status', 'Show schedule status')
   .option('--limit <n>', 'Maximum number of status field rows to show')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(scheduleCommand);
 
