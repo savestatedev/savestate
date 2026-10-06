@@ -381,6 +381,7 @@ function formatAction(action: ProvenanceEntry['action']): string {
 // that works directly with the KnowledgeLane service.
 
 const MAX_MEMORY_EDIT_LIMIT = 1000;
+const MAX_MEMORY_EDIT_OFFSET = 1000;
 
 /** Parse memory edit --limit without turning user input errors into an empty edit. */
 export function parseMemoryEditLimit(value: string | undefined): number | undefined {
@@ -401,6 +402,36 @@ export function selectMemoryEditEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+/** Parse memory edit --offset without turning user input errors into an empty edit. */
+export function parseMemoryEditOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_EDIT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EDIT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N edit status field rows when --offset is set. */
+export function selectMemoryEditOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply memory edit --offset then --limit. */
+export function applyMemoryEditFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string } = {},
+): T[] {
+  return selectMemoryEditEntries(
+    selectMemoryEditOffsetEntries(entries, parseMemoryEditOffset(options.offset)),
+    parseMemoryEditLimit(options.limit),
+  );
+}
+
 /**
  * Edit a memory's content or metadata.
  */
@@ -416,9 +447,11 @@ export async function editMemoryCommand(
     reason?: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    offset?: string;
   }
 ): Promise<void> {
-  const limit = parseMemoryEditLimit(options.limit);
+  parseMemoryEditLimit(options.limit);
+  parseMemoryEditOffset(options.offset);
   // For this implementation, we'll use a simplified checkpoint storage
   // In production, this would integrate with the full storage backend
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -460,7 +493,7 @@ export async function editMemoryCommand(
     if (options.importance !== undefined) {
       rows.push(`  Importance: ${updated.importance}`);
     }
-    for (const row of selectMemoryEditEntries(rows, limit)) {
+    for (const row of applyMemoryEditFilters(rows, options)) {
       console.log(row);
     }
   } catch (err) {

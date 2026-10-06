@@ -2842,6 +2842,16 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryEditLimit');
   });
 
+  it('documents memory edit --offset as a bounded non-negative integer', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const editBlock = memoryCli.slice(memoryCli.indexOf("command('edit"), memoryCli.indexOf("command('delete"));
+    expect(memorySection).toContain('--offset');
+    expect(memorySection).toContain('Must be a non-negative integer up to 1000');
+    expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --offset 10 --limit 5');
+    expect(editBlock).toContain(".option('--offset <n>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryEditOffset');
+  });
+
   it('documents memory edit --json when missing', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
