@@ -3073,6 +3073,16 @@ describe('CLI docs', () => {
     expect(slo).toContain('export function parseSloConfigLimit');
   });
 
+  it('documents slo --offset as a bounded non-negative integer', () => {
+    const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
+    const sloBlock = slo.slice(slo.indexOf("command('slo"));
+    expect(sloSection).toContain('--offset');
+    expect(sloSection).toContain('Must be a non-negative integer up to 1000');
+    expect(sloSection).toContain('savestate slo report --offset 10 --limit 5');
+    expect(sloBlock).toContain(".option('--offset <n>'");
+    expect(slo).toContain('export function parseSloOffset');
+  });
+
   it('documents slo --namespace as a single namespace', () => {
     const sloSection = docs.slice(docs.indexOf('id="slo"'), docs.indexOf('id="acl"'));
     expect(sloSection).toContain('--namespace');

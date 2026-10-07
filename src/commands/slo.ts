@@ -58,6 +58,20 @@ export function parseSloPeriod(value: string | undefined): number {
 }
 
 const MAX_SLO_REPORT_LIMIT = 1000;
+const MAX_SLO_OFFSET = 1000;
+
+/** Parse slo --offset without turning user input errors into an unbounded skip. */
+export function parseSloOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_SLO_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SLO_OFFSET}.`,
+    );
+  }
+  return offset;
+}
 
 /** Parse slo report --limit without turning user input errors into an empty namespace list. */
 export function parseSloReportLimit(value: string | undefined): number | undefined {
@@ -73,9 +87,9 @@ export function parseSloReportLimit(value: string | undefined): number | undefin
 }
 
 /** Keep the first N namespace compliance rows when --limit is set. */
-export function selectSloReportNamespaces<T>(rows: T[], limit?: number): T[] {
-  if (limit === undefined) return rows;
-  return rows.slice(0, limit);
+export function selectSloReportNamespaces<T>(rows: T[], limit?: number, offset?: number): T[] {
+  const start = offset ?? 0;
+  return rows.slice(start, limit === undefined ? undefined : start + limit);
 }
 
 const MAX_SLO_STATUS_LIMIT = 1000;
@@ -94,9 +108,9 @@ export function parseSloStatusLimit(value: string | undefined): number | undefin
 }
 
 /** Keep the first N status violations when --limit is set. */
-export function selectSloStatusViolations<T>(violations: T[], limit?: number): T[] {
-  if (limit === undefined) return violations;
-  return violations.slice(0, limit);
+export function selectSloStatusViolations<T>(violations: T[], limit?: number, offset?: number): T[] {
+  const start = offset ?? 0;
+  return violations.slice(start, limit === undefined ? undefined : start + limit);
 }
 
 const MAX_SLO_CONFIG_LIMIT = 1000;
@@ -115,9 +129,9 @@ export function parseSloConfigLimit(value: string | undefined): number | undefin
 }
 
 /** Keep the first N SLO config setting rows when --limit is set. */
-export function selectSloConfigEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+export function selectSloConfigEntries<T>(entries: T[], limit?: number, offset?: number): T[] {
+  const start = offset ?? 0;
+  return entries.slice(start, limit === undefined ? undefined : start + limit);
 }
 
 /** Parse slo --namespace without treating blank or comma-separated values as a namespace. */
@@ -329,6 +343,7 @@ export async function sloCommand(
     set?: string;
     period?: string;
     limit?: string;
+    offset?: string;
   },
 ): Promise<void> {
   const subcommand = parseSloSubcommand(rawSubcommand);
@@ -348,8 +363,9 @@ export async function sloCommand(
 /**
  * Show SLO compliance status for a namespace.
  */
-async function sloStatus(options: { namespace?: string; json?: boolean; limit?: string }): Promise<void> {
+async function sloStatus(options: { namespace?: string; json?: boolean; limit?: string; offset?: string }): Promise<void> {
   const limit = parseSloStatusLimit(options.limit);
+  const offset = parseSloOffset(options.offset);
   const nsString = parseSloNamespace(options.namespace) ?? 'default:default:default';
   const sloConfig = await loadSLOConfig();
 
@@ -421,7 +437,7 @@ async function sloStatus(options: { namespace?: string; json?: boolean; limit?: 
   console.log('');
 
   // Violations
-  const violations = selectSloStatusViolations(compliance.violations, limit);
+  const violations = selectSloStatusViolations(compliance.violations, limit, offset);
   if (violations.length > 0) {
     console.log(chalk.bold.red('Violations:'));
     for (const violation of violations) {
@@ -435,9 +451,10 @@ async function sloStatus(options: { namespace?: string; json?: boolean; limit?: 
 /**
  * Generate and display SLO report.
  */
-async function sloReport(options: { period?: string; json?: boolean; limit?: string }): Promise<void> {
+async function sloReport(options: { period?: string; json?: boolean; limit?: string; offset?: string }): Promise<void> {
   const periodDays = parseSloPeriod(options.period);
   const limit = parseSloReportLimit(options.limit);
+  const offset = parseSloOffset(options.offset);
   const sloConfig = await loadSLOConfig();
 
   if (!sloConfig.enabled && options.json) {
@@ -458,7 +475,7 @@ async function sloReport(options: { period?: string; json?: boolean; limit?: str
     [], // Namespace compliance
     0,  // Avg drift score
   );
-  report.namespace_compliance = selectSloReportNamespaces(report.namespace_compliance, limit);
+  report.namespace_compliance = selectSloReportNamespaces(report.namespace_compliance, limit, offset);
 
   if (options.json) {
     console.log(formatSloReportJson(report));
@@ -471,8 +488,9 @@ async function sloReport(options: { period?: string; json?: boolean; limit?: str
 /**
  * View or modify SLO configuration.
  */
-async function sloConfig(options: { set?: string; json?: boolean; limit?: string }): Promise<void> {
+async function sloConfig(options: { set?: string; json?: boolean; limit?: string; offset?: string }): Promise<void> {
   const limit = parseSloConfigLimit(options.limit);
+  const offset = parseSloOffset(options.offset);
   let config = await loadSLOConfig();
 
   const assignment = parseSloSet(options.set);
@@ -525,7 +543,7 @@ async function sloConfig(options: { set?: string; json?: boolean; limit?: string
     `Relevance Threshold: ${(config.freshness.relevance_threshold * 100).toFixed(0)}%`,
     `Recall Target: ${config.freshness.recall_target_percent}%`,
   ];
-  for (const row of selectSloConfigEntries(rows, limit)) {
+  for (const row of selectSloConfigEntries(rows, limit, offset)) {
     console.log(row);
   }
   console.log('');
@@ -556,5 +574,6 @@ export function registerSLOCommands(program: import('commander').Command): void 
     .option('--set <key=value>', 'Set a config value (non-empty key=value)')
     .option('-p, --period <duration>', 'Report period (e.g., 7d, 30d)')
     .option('--limit <n>', 'Maximum number of namespace compliance rows to show on report, or status violations, or configuration setting rows on config')
+    .option('--offset <n>', 'Skip namespace rows, status violations, or configuration setting rows before applying --limit')
     .action(sloCommand);
 }
