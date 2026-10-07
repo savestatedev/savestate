@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { applyAclOffset, formatAclListHeading, parseAclOffset } from '../acl.js';
+import {
+  applyAclOffset,
+  formatAclListEmpty,
+  formatAclListHeading,
+  parseAclOffset,
+} from '../acl.js';
 
 describe('savestate acl list --offset', () => {
   it('defaults to undefined', () => {
@@ -41,5 +46,10 @@ describe('savestate acl list --offset', () => {
   it('explains the applied page window in human-readable output', () => {
     expect(formatAclListHeading(2, 10, 5)).toBe('Found 2 commitment(s) (skipped 10, limit 5):');
     expect(formatAclListHeading(2, undefined, undefined)).toBe('Found 2 commitment(s):');
+  });
+
+  it('explains an empty page window in human-readable output', () => {
+    expect(formatAclListEmpty(10, 5)).toBe('No commitments found (skipped 10, limit 5).');
+    expect(formatAclListEmpty(undefined, undefined)).toBe('No commitments found.');
   });
 });

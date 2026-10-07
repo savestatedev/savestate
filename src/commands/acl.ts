@@ -60,6 +60,18 @@ export function formatAclListHeading(
   return `Found ${count} commitment(s)${suffix}:`;
 }
 
+export function formatAclListEmpty(
+  offset: number | undefined,
+  limit: number | undefined,
+): string {
+  const paging = [
+    offset === undefined ? undefined : `skipped ${offset}`,
+    limit === undefined ? undefined : `limit ${limit}`,
+  ].filter((value): value is string => value !== undefined);
+  const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
+  return `No commitments found${suffix}.`;
+}
+
 export function formatAclGateJson(result: AclGateResult): string {
   return JSON.stringify(
     {
@@ -500,7 +512,7 @@ async function aclList(options: AclCommandOptions = {}) {
       return;
     }
     if (commitments.length === 0) {
-      console.log('No commitments found.');
+      console.log(formatAclListEmpty(offset, limit));
       return;
     }
     console.log(`${formatAclListHeading(commitments.length, offset, limit)}\n`);
