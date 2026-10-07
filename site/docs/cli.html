@@ -1440,6 +1440,7 @@
         <tr><td><code>--weights</code></td><td>Show scoring weights on <code>config</code></td></tr>
         <tr><td><code>--budget</code></td><td>Show budget allocation on <code>config</code></td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of explain candidates to show on <code>explain</code> (default 10), or scoring weight or budget allocation rows on <code>config</code>, or RunBrief section rows on <code>compile</code>, or validation errors and warnings on <code>validate</code>. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N explain candidates on <code>explain</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit compile, explain, validate, and config results as JSON. Explain omits score breakdowns. Validate includes valid flag, errors, warnings, and coverage. When the RunBrief file is missing, <code>validate</code> emits a missing summary (found, file, valid, errors, warnings; omits extra fields). Skips progress output. Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -1451,6 +1452,7 @@
 <span class="code-comment"># Explain why candidates were included</span>
 <span class="code-prompt">$</span> savestate context explain run_abc123 --json
 <span class="code-prompt">$</span> savestate context explain run_abc123 --limit 5
+<span class="code-prompt">$</span> savestate context explain run_abc123 --offset 5 --limit 5
 
 <span class="code-comment"># Validate a saved brief</span>
 <span class="code-prompt">$</span> savestate context validate --file brief.json
@@ -1683,7 +1685,7 @@
 
     <!-- identity -->
     <h2 id="identity"><code>savestate identity</code></h2>
-    <p>Manage the workspace agent identity document at <code>.savestate/identity.json</code>. Subcommands: <code>show</code>, <code>init</code>, <code>set</code>, and <code>schema</code>. Must be a single non-empty subcommand (show, init, set, or schema). <code>show</code> prints the current identity, optionally capped with <code>--limit</code>. <code>init &lt;name&gt;</code> creates one if missing, optionally capped with <code>--limit</code>. <code>set &lt;field&gt; &lt;value&gt;</code> updates a core field or <code>metadata.&lt;key&gt;</code>, optionally capped with <code>--limit</code>. <code>schema</code> prints the JSON schema, optionally capped with <code>--limit</code>. Requires <code>savestate init</code>.</p>
+    <p>Manage the workspace agent identity document at <code>.savestate/identity.json</code>. Subcommands: <code>show</code>, <code>init</code>, <code>set</code>, and <code>schema</code>. Must be a single non-empty subcommand (show, init, set, or schema). <code>show</code> prints the current identity, optionally paged with <code>--offset</code> and capped with <code>--limit</code>. <code>init &lt;name&gt;</code> creates one if missing, optionally capped with <code>--limit</code>. <code>set &lt;field&gt; &lt;value&gt;</code> updates a core field or <code>metadata.&lt;key&gt;</code>, optionally capped with <code>--limit</code>. <code>schema</code> prints the JSON schema, optionally paged with <code>--offset</code> and capped with <code>--limit</code>. Requires <code>savestate init</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate identity &lt;subcommand&gt; [args...] [options]</code></pre>
 
     <table>
@@ -1695,6 +1697,7 @@
         <tr><td><code>&lt;field&gt;</code></td><td>Field name for <code>set</code>. Must be a single non-empty identity field (core field or <code>metadata.&lt;key&gt;</code>).</td></tr>
         <tr><td><code>&lt;value&gt;</code></td><td>Field value for <code>set</code>. Must be a non-empty identity value.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of identity tools to show on <code>show</code>, identity schema properties to show on <code>schema</code>, or status field rows on <code>init</code>, or field rows to show on <code>set</code>. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N identity tools on <code>show</code> or schema properties on <code>schema</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit an init summary as JSON on <code>init</code> (created, alreadyExists, path, name, version; omits tool config). When SaveState is not initialized, <code>init</code> emits a missing summary (found, created, alreadyExists, path, name, version; omits extra fields). Emit a set summary as JSON on <code>set</code> (updated, field, name, version; omits tool config). When SaveState is not initialized, <code>set</code> emits a missing summary (found, updated, field, name, version; omits extra fields). Emit identity as JSON on <code>show</code> (omits tool config). When SaveState is not initialized, <code>show</code> emits a missing summary (found, name, version, schemaVersion; omits extra fields). When no identity exists, <code>show</code> emits a missing summary (found, name, version, schemaVersion; omits extra fields). When no identity exists, <code>set</code> emits a missing summary (found, updated, field, name, version; omits extra fields). Emit a schema summary as JSON on <code>schema</code> (id, title, type, required fields, property names/types, additionalProperties; omits descriptions and nested tool config). When SaveState is not initialized, <code>schema</code> emits a missing summary (found, id, title, type; omits extra fields). Skips the spinner. Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -1706,6 +1709,7 @@
 <span class="code-comment"># Show the current identity</span>
 <span class="code-prompt">$</span> savestate identity show
 <span class="code-prompt">$</span> savestate identity show --limit 5
+<span class="code-prompt">$</span> savestate identity show --offset 5 --limit 5
 
 <span class="code-comment"># Update a core field or nested metadata key</span>
 <span class="code-prompt">$</span> savestate identity set tone professional
@@ -1718,6 +1722,7 @@
 
 <span class="code-comment"># Cap schema properties</span>
 <span class="code-prompt">$</span> savestate identity schema --limit 5
+<span class="code-prompt">$</span> savestate identity schema --offset 5 --limit 5
 
 <span class="code-comment"># Scripting</span>
 <span class="code-prompt">$</span> savestate identity show --json

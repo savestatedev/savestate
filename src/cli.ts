@@ -490,6 +490,7 @@ program
     .description('Manage agent identity (show, init, set, schema; single non-empty subcommand: show, init, set, or schema; init requires a single non-empty identity name; set requires a single non-empty identity field and a non-empty identity value)')
   .option('--json', 'Output as JSON')
   .option('--limit <n>', 'Maximum number of identity tools (show), schema properties (schema), status field rows (init), or field rows (set) to show')
+  .option('--offset <n>', 'Skip the first N identity tools (show) or schema properties (schema) (non-negative integer up to 1000)')
   .action(identityCommand);
 
 // ─── savestate integrity ───────────────────────────────────
