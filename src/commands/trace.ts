@@ -88,6 +88,12 @@ const MAX_TRACE_LIST_OFFSET = 1000;
 export function parseTraceListLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRACE_LIST_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRACE_LIST_LIMIT) {
     throw new Error(
@@ -106,6 +112,12 @@ export function selectTraceRuns<T>(runs: T[], limit?: number): T[] {
 /** Parse trace list --offset without turning user input errors into an empty run list. */
 export function parseTraceListOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRACE_LIST_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRACE_LIST_OFFSET) {
@@ -139,6 +151,12 @@ const MAX_TRACE_SHOW_LIMIT = 1000;
 export function parseTraceShowLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRACE_SHOW_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRACE_SHOW_LIMIT) {
     throw new Error(
@@ -157,6 +175,12 @@ export function selectTraceShowEvents<T>(events: T[], limit?: number): T[] {
 /** Parse trace show --offset without turning user input errors into an empty event list. */
 export function parseTraceShowOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRACE_LIST_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRACE_LIST_OFFSET) {
@@ -180,6 +204,12 @@ const MAX_TRACE_EXPORT_OFFSET = 1000;
 export function parseTraceExportLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRACE_EXPORT_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRACE_EXPORT_LIMIT) {
     throw new Error(
@@ -198,6 +228,12 @@ export function selectTraceExportRuns<T>(runs: T[], limit?: number): T[] {
 /** Parse trace export --offset without turning user input errors into an unbounded skip. */
 export function parseTraceExportOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRACE_EXPORT_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRACE_EXPORT_OFFSET) {

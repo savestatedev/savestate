@@ -15,7 +15,7 @@ describe('savestate memory expire --offset', () => {
     expect(parseMemoryExpireOffset('12')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryExpireOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
