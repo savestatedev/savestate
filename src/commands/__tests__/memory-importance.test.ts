@@ -9,7 +9,7 @@ describe('savestate memory edit --importance', () => {
     expect(parseMemoryImportance('1')).toBe(1);
   });
 
-  it.each(['-0.1', '1.1', 'nope', ''])('rejects invalid value %s', (value) => {
+  it.each(['-0.1', '1.1', '0x0', '1e-1', 'nope', ''])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryImportance(value)).toThrow(
       `Invalid --importance value "${value}". Expected a number between 0 and 1.`,
     );
