@@ -270,10 +270,12 @@ interface AclCommandOptions {
   approve?: boolean;
   action?: string;
   limit?: string;
+  offset?: string;
   json?: boolean;
 }
 
 const MAX_ACL_LIMIT = 1000;
+const MAX_ACL_OFFSET = 1000;
 
 /** Parse acl list --limit without turning user input errors into an empty commitment list. */
 export function parseAclLimit(value: string | undefined): number | undefined {
@@ -292,6 +294,25 @@ export function parseAclLimit(value: string | undefined): number | undefined {
 export function applyAclLimit<T>(commitments: T[], limit: number | undefined): T[] {
   if (limit === undefined) return commitments;
   return commitments.slice(0, limit);
+}
+
+/** Parse acl list --offset without turning invalid input into an unbounded skip. */
+export function parseAclOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_ACL_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_ACL_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N commitments before applying --limit. */
+export function applyAclOffset<T>(commitments: T[], offset: number | undefined): T[] {
+  if (offset === undefined) return commitments;
+  return commitments.slice(offset);
 }
 
 const MAX_ACL_VERIFY_LIMIT = 1000;
@@ -455,7 +476,10 @@ async function aclGate(options: AclCommandOptions) {
 
 async function aclList(options: AclCommandOptions = {}) {
   try {
-    const commitments = applyAclLimit(listCommitments(), parseAclLimit(options.limit));
+    const commitments = applyAclLimit(
+      applyAclOffset(listCommitments(), parseAclOffset(options.offset)),
+      parseAclLimit(options.limit),
+    );
     if (options.json) {
       console.log(formatAclListJson(commitments));
       return;
@@ -506,6 +530,7 @@ export function registerACLCommands(program: Command) {
     .option('--approve', 'Approve the commitment (default is reject)')
     .option('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify, gate, or propose')
+    .option('--offset <n>', 'Skip the first N commitments on list before applying --limit (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(aclCommand);
 }
