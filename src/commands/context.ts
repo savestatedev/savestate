@@ -96,6 +96,7 @@ export interface ContextValidateMissingJson {
 
 const DEFAULT_CONTEXT_EXPLAIN_LIMIT = 10;
 const MAX_CONTEXT_EXPLAIN_LIMIT = 1000;
+const MAX_CONTEXT_EXPLAIN_OFFSET = 1000;
 
 /** Parse context explain --limit without turning user input errors into an empty candidate list. */
 export function parseContextLimit(value: string | undefined): number | undefined {
@@ -110,9 +111,24 @@ export function parseContextLimit(value: string | undefined): number | undefined
   return limit;
 }
 
-/** Keep the first N explain candidates when --limit is set. Defaults to 10 when omitted. */
-export function selectContextCandidates<T>(candidates: T[], limit?: number): T[] {
-  return candidates.slice(0, limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT);
+/** Parse context explain --offset without turning user input errors into an unbounded skip. */
+export function parseContextOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONTEXT_EXPLAIN_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_EXPLAIN_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Page explain candidates with --offset and --limit. Defaults to the first 10 when omitted. */
+export function selectContextCandidates<T>(candidates: T[], limit?: number, offset?: number): T[] {
+  const start = offset ?? 0;
+  const end = start + (limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT);
+  return candidates.slice(start, end);
 }
 
 const MAX_CONTEXT_CONFIG_LIMIT = 1000;
@@ -240,8 +256,9 @@ export function formatContextValidateMissingJson(file: string): string {
 export function formatContextExplainJson(
   explanation: ExplanationTrace,
   limit?: number,
+  offset?: number,
 ): string {
-  const candidates = selectContextCandidates(explanation.candidates, limit).map((candidate) => ({
+  const candidates = selectContextCandidates(explanation.candidates, limit, offset).map((candidate) => ({
     id: candidate.candidate_id,
     included: candidate.included,
     score: candidate.score,
@@ -434,10 +451,12 @@ export function registerContextCommands(program: Command): void {
     .command('explain <run-id>')
     .description('Get explanation trace for a compiled context (single non-empty run id)')
     .option('--limit <n>', 'Maximum number of explain candidates to show')
+    .option('--offset <n>', 'Skip the first N explain candidates (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action((rawRunId: string, options) => {
       const runId = parseContextRunId(rawRunId);
       const limit = parseContextLimit(options.limit);
+      const offset = parseContextOffset(options.offset);
       const compiler = new ContextCompiler();
       const explanation = compiler.getExplanation(runId);
       
@@ -451,7 +470,7 @@ export function registerContextCommands(program: Command): void {
       }
       
       if (options.json) {
-        console.log(formatContextExplainJson(explanation, limit));
+        console.log(formatContextExplainJson(explanation, limit, offset));
         return;
       }
 
@@ -468,7 +487,7 @@ export function registerContextCommands(program: Command): void {
       }
       console.log('');
       console.log('🔍 Top Candidates:');
-      for (const c of selectContextCandidates(explanation.candidates, limit)) {
+      for (const c of selectContextCandidates(explanation.candidates, limit, offset)) {
         const status = c.included ? '✅' : '❌';
         console.log(`   ${status} ${c.candidate_id} (score: ${c.score.toFixed(3)})`);
         console.log(`      ${c.reason}`);

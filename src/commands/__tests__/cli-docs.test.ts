@@ -2285,6 +2285,15 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextLimit');
   });
 
+  it('documents context explain --offset as a bounded non-negative integer', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    const explainBlock = context.slice(context.indexOf("command('explain"), context.indexOf("command('validate"));
+    expect(contextSection).toContain('--offset');
+    expect(contextSection).toContain('Must be a non-negative integer up to 1000');
+    expect(explainBlock).toContain(".option('--offset <n>'");
+    expect(context).toContain('export function parseContextOffset');
+  });
+
   it('documents context validate --limit as a bounded positive integer', () => {
     const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
     const validateBlock = context.slice(context.indexOf("command('validate')"), context.indexOf("command('config')"));
