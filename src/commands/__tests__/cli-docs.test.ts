@@ -4028,7 +4028,7 @@ describe('CLI docs', () => {
     const traceBlock = trace.slice(trace.indexOf("command('trace"));
     expect(traceSection).toContain('savestate trace export --offset 5 --limit 5');
     expect(traceSection).toContain('or <code>export</code>, or events on <code>show</code>, before applying');
-    expect(traceBlock).toContain(".option('--offset <n>'");
+    expect(traceBlock).toContain('export cannot combine with --run');
     expect(trace).toContain('export function parseTraceExportOffset');
   });
 

@@ -225,6 +225,16 @@ export function applyTraceExportFilters<T>(
   );
 }
 
+/** Reject export filters whose meaning would be ambiguous for one selected run. */
+export function validateTraceExportOptions(
+  run: string | undefined,
+  offset: string | undefined,
+): void {
+  if (run !== undefined && offset !== undefined) {
+    throw new Error('Cannot use --offset with --run. Offset paginates the full trace run list.');
+  }
+}
+
 const TRACE_SUBCOMMANDS = ['list', 'show', 'export'] as const;
 export type TraceSubcommand = (typeof TRACE_SUBCOMMANDS)[number];
 const TRACE_SUBCOMMAND_LIST = TRACE_SUBCOMMANDS.join(', ');
@@ -429,7 +439,7 @@ export function registerTraceCommands(program: Command): void {
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
     .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show, or runs to export')
-    .option('--offset <n>', 'Skip the first N trace runs (list or export) or events (show) (non-negative integer up to 1000)')
+    .option('--offset <n>', 'Skip the first N trace runs (list or export) or events (show) (non-negative integer up to 1000; export cannot combine with --run)')
     .action(traceCommand);
 }
 
@@ -555,6 +565,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   const format = parseTraceExportFormat(options.format);
   const run = parseTraceRun(options.run) ?? 'all';
   const offset = parseTraceExportOffset(options.offset);
+  validateTraceExportOptions(options.run, options.offset);
 
   if (!isInitialized()) {
     if (options.json) {

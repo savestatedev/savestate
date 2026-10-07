@@ -3,6 +3,7 @@ import {
   applyTraceExportFilters,
   parseTraceExportOffset,
   selectTraceExportOffsetRuns,
+  validateTraceExportOptions,
 } from '../trace.js';
 
 describe('savestate trace export --offset', () => {
@@ -44,5 +45,13 @@ describe('savestate trace export --offset', () => {
         { offset: '1', limit: '1' },
       ).map((run) => run.runId),
     ).toEqual(['run-b']);
+  });
+
+  it('rejects offset when a specific run is selected', () => {
+    expect(() => validateTraceExportOptions('run-a', '1')).toThrow(
+      'Cannot use --offset with --run. Offset paginates the full trace run list.',
+    );
+    expect(() => validateTraceExportOptions('run-a', undefined)).not.toThrow();
+    expect(() => validateTraceExportOptions(undefined, '1')).not.toThrow();
   });
 });
