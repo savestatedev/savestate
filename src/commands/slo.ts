@@ -64,6 +64,12 @@ const MAX_SLO_OFFSET = 1000;
 export function parseSloOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SLO_OFFSET}.`,
+    );
+  }
+
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_SLO_OFFSET) {
     throw new Error(
