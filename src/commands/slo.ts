@@ -83,6 +83,12 @@ export function parseSloOffset(value: string | undefined): number | undefined {
 export function parseSloReportLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SLO_REPORT_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SLO_REPORT_LIMIT) {
     throw new Error(
@@ -104,6 +110,12 @@ const MAX_SLO_STATUS_LIMIT = 1000;
 export function parseSloStatusLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SLO_STATUS_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SLO_STATUS_LIMIT) {
     throw new Error(
@@ -124,6 +136,12 @@ const MAX_SLO_CONFIG_LIMIT = 1000;
 /** Parse slo config --limit without turning user input errors into an empty config. */
 export function parseSloConfigLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SLO_CONFIG_LIMIT}.`,
+    );
+  }
 
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SLO_CONFIG_LIMIT) {
