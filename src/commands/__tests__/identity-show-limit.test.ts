@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseIdentityShowLimit, selectIdentityShowTools } from '../identity.js';
+import {
+  parseIdentityShowLimit,
+  parseIdentityShowOffset,
+  selectIdentityShowOffsetTools,
+  selectIdentityShowTools,
+} from '../identity.js';
 
 describe('savestate identity show --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,23 @@ describe('savestate identity show --limit', () => {
   it('returns all tools when --limit is omitted', () => {
     const tools = [{ name: 'search' }, { name: 'browse' }];
     expect(selectIdentityShowTools(tools, undefined)).toEqual(tools);
+  });
+
+  it('accepts a bounded non-negative offset', () => {
+    expect(parseIdentityShowOffset(undefined)).toBeUndefined();
+    expect(parseIdentityShowOffset('0')).toBe(0);
+    expect(parseIdentityShowOffset('12')).toBe(12);
+    expect(parseIdentityShowOffset('1000')).toBe(1000);
+  });
+
+  it.each(['-1', '1.5', '1001', 'nope'])('rejects invalid offset %s', (value) => {
+    expect(() => parseIdentityShowOffset(value)).toThrow(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
+    );
+  });
+
+  it('skips tools before applying a limit', () => {
+    const tools = [{ name: 'search' }, { name: 'browse' }, { name: 'write' }];
+    expect(selectIdentityShowTools(selectIdentityShowOffsetTools(tools, 1), 1)).toEqual([{ name: 'browse' }]);
   });
 });

@@ -24,6 +24,7 @@ import type { AgentIdentity, ToolReference } from '../identity/schema.js';
 interface IdentityOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_IDENTITY_SCHEMA_LIMIT = 1000;
@@ -45,6 +46,25 @@ export function parseIdentitySchemaLimit(value: string | undefined): number | un
 export function selectIdentitySchemaProperties<T>(properties: T[], limit?: number): T[] {
   if (limit === undefined) return properties;
   return properties.slice(0, limit);
+}
+
+/** Parse identity schema --offset without turning user input errors into an empty schema. */
+export function parseIdentitySchemaOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_SCHEMA_LIMIT) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_SCHEMA_LIMIT}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N identity schema properties when --offset is set. */
+export function selectIdentitySchemaOffsetProperties<T>(properties: T[], offset?: number): T[] {
+  if (offset === undefined) return properties;
+  return properties.slice(offset);
 }
 
 /** Parse identity init name without writing a blank or comma-separated identity. */
@@ -120,6 +140,25 @@ export function parseIdentityShowLimit(value: string | undefined): number | unde
 export function selectIdentityShowTools<T>(tools: T[], limit?: number): T[] {
   if (limit === undefined) return tools;
   return tools.slice(0, limit);
+}
+
+/** Parse identity show --offset without turning user input errors into an empty identity. */
+export function parseIdentityShowOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_SHOW_LIMIT) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_SHOW_LIMIT}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N identity tools when --offset is set. */
+export function selectIdentityShowOffsetTools<T>(tools: T[], offset?: number): T[] {
+  if (offset === undefined) return tools;
+  return tools.slice(offset);
 }
 
 const MAX_IDENTITY_INIT_LIMIT = 1000;
@@ -383,7 +422,7 @@ export function formatIdentitySchemaJson(schema: {
   required?: string[];
   properties?: Record<string, unknown>;
   additionalProperties?: boolean;
-}, limit?: number): string {
+}, limit?: number, offset?: number): string {
   return JSON.stringify(
     {
       id: schema.$id ?? '',
@@ -391,13 +430,16 @@ export function formatIdentitySchemaJson(schema: {
       type: schema.type ?? 'object',
       required: [...(schema.required ?? [])],
       properties: selectIdentitySchemaProperties(
-        Object.entries(schema.properties ?? {}).map(([name, property]) => {
-          const json = toSchemaPropertyJson(name, property);
-          return {
-            name: json.name,
-            type: json.type,
-          };
-        }),
+        selectIdentitySchemaOffsetProperties(
+          Object.entries(schema.properties ?? {}).map(([name, property]) => {
+            const json = toSchemaPropertyJson(name, property);
+            return {
+              name: json.name,
+              type: json.type,
+            };
+          }),
+          offset,
+        ),
         limit,
       ),
       additionalProperties: Boolean(schema.additionalProperties),
@@ -434,7 +476,9 @@ export async function identityCommand(
 ): Promise<void> {
   const subcommand = parseIdentitySubcommand(rawSubcommand);
   const schemaLimit = subcommand === 'schema' ? parseIdentitySchemaLimit(options?.limit) : undefined;
+  const schemaOffset = subcommand === 'schema' ? parseIdentitySchemaOffset(options?.offset) : undefined;
   const showLimit = subcommand === 'show' ? parseIdentityShowLimit(options?.limit) : undefined;
+  const showOffset = subcommand === 'show' ? parseIdentityShowOffset(options?.offset) : undefined;
   const initLimit = subcommand === 'init' ? parseIdentityInitLimit(options?.limit) : undefined;
   const setLimit = subcommand === 'set' ? parseIdentitySetLimit(options?.limit) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
@@ -470,7 +514,7 @@ export async function identityCommand(
 
   switch (subcommand) {
     case 'show':
-      await showIdentity(options, showLimit);
+      await showIdentity(options, showOffset, showLimit);
       break;
     case 'init':
       await initIdentity(initName, options, initLimit);
@@ -479,7 +523,7 @@ export async function identityCommand(
       await setIdentityField(setField, setValue, options, setLimit);
       break;
     case 'schema':
-      showSchema(options, schemaLimit);
+      showSchema(options, schemaOffset, schemaLimit);
       break;
   }
 }
@@ -487,7 +531,7 @@ export async function identityCommand(
 /**
  * Display the current identity.
  */
-async function showIdentity(options?: IdentityOptions, limit?: number): Promise<void> {
+async function showIdentity(options?: IdentityOptions, offset?: number, limit?: number): Promise<void> {
   const spinner = options?.json ? null : ora('Loading identity...').start();
 
   try {
@@ -508,7 +552,7 @@ async function showIdentity(options?: IdentityOptions, limit?: number): Promise<
     spinner?.succeed('Identity loaded');
 
     const { identity } = result;
-    const tools = selectIdentityShowTools(identity.tools, limit);
+    const tools = selectIdentityShowTools(selectIdentityShowOffsetTools(identity.tools, offset), limit);
 
     if (options?.json) {
       console.log(formatIdentityJson({ ...identity, tools }));
@@ -756,7 +800,7 @@ async function setIdentityField(
 /**
  * Show the JSON schema.
  */
-function showSchema(options?: IdentityOptions, limit?: number): void {
+function showSchema(options?: IdentityOptions, offset?: number, limit?: number): void {
   const schema = getJsonSchema() as {
     $id?: string;
     title?: string;
@@ -767,12 +811,23 @@ function showSchema(options?: IdentityOptions, limit?: number): void {
   };
 
   if (options?.json) {
-    console.log(formatIdentitySchemaJson(schema, limit));
+    console.log(
+      formatIdentitySchemaJson(
+        schema,
+        limit,
+        offset,
+      ),
+    );
     return;
   }
 
   const properties = schema.properties
-    ? Object.fromEntries(selectIdentitySchemaProperties(Object.entries(schema.properties), limit))
+    ? Object.fromEntries(
+      selectIdentitySchemaProperties(
+        selectIdentitySchemaOffsetProperties(Object.entries(schema.properties), offset),
+        limit,
+      ),
+    )
     : schema.properties;
 
   console.log(chalk.bold.cyan('Agent Identity JSON Schema'));

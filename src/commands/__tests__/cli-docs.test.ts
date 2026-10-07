@@ -3333,6 +3333,19 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function parseIdentityShowLimit');
   });
 
+  it('documents identity show --offset as a bounded non-negative integer', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    const identityBlock = cli.slice(
+      cli.indexOf("command('identity <subcommand> [args...]')"),
+      cli.indexOf('program.parse()'),
+    );
+    expect(identitySection).toContain('--offset');
+    expect(identitySection).toContain('Must be a non-negative integer up to 1000');
+    expect(identitySection).toContain('savestate identity show --offset 5 --limit 5');
+    expect(identityBlock).toContain(".option('--offset <n>'");
+    expect(identity).toContain('export function parseIdentityShowOffset');
+  });
+
   it('documents identity init --limit as a bounded positive integer', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     const identityBlock = cli.slice(
@@ -3388,6 +3401,18 @@ describe('CLI docs', () => {
     expect(identitySection).toContain('savestate identity schema --limit 5');
     expect(identityBlock).toContain(".option('--limit <n>'");
     expect(identity).toContain('export function parseIdentitySchemaLimit');
+  });
+
+  it('documents identity schema --offset as a bounded non-negative integer', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    const identityBlock = cli.slice(
+      cli.indexOf("command('identity <subcommand> [args...]')"),
+      cli.indexOf('program.parse()'),
+    );
+    expect(identitySection).toContain('--offset');
+    expect(identitySection).toContain('savestate identity schema --offset 5 --limit 5');
+    expect(identityBlock).toContain(".option('--offset <n>'");
+    expect(identity).toContain('export function parseIdentitySchemaOffset');
   });
 
   it('documents identity schema --json', () => {
