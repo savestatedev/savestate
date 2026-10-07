@@ -11,7 +11,7 @@ describe('savestate context explain --limit', () => {
     expect(parseContextLimit('12')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseContextLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
@@ -29,7 +29,7 @@ describe('savestate context explain --limit', () => {
     expect(parseContextOffset('1000')).toBe(1000);
   });
 
-  it.each(['-1', '1.5', 'nope', '1001'])('rejects invalid offset %s', (value) => {
+  it.each(['-1', '1.5', '1e2', '0x10', 'nope', '1001'])('rejects invalid offset %s', (value) => {
     expect(() => parseContextOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
