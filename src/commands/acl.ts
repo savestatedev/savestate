@@ -47,6 +47,19 @@ export function formatAclListJson(commitments: Commitment[]): string {
   return JSON.stringify(commitments.map(toCommitmentJson), null, 2);
 }
 
+export function formatAclListHeading(
+  count: number,
+  offset: number | undefined,
+  limit: number | undefined,
+): string {
+  const paging = [
+    offset === undefined ? undefined : `skipped ${offset}`,
+    limit === undefined ? undefined : `limit ${limit}`,
+  ].filter((value): value is string => value !== undefined);
+  const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
+  return `Found ${count} commitment(s)${suffix}:`;
+}
+
 export function formatAclGateJson(result: AclGateResult): string {
   return JSON.stringify(
     {
@@ -476,9 +489,11 @@ async function aclGate(options: AclCommandOptions) {
 
 async function aclList(options: AclCommandOptions = {}) {
   try {
+    const offset = parseAclOffset(options.offset);
+    const limit = parseAclLimit(options.limit);
     const commitments = applyAclLimit(
-      applyAclOffset(listCommitments(), parseAclOffset(options.offset)),
-      parseAclLimit(options.limit),
+      applyAclOffset(listCommitments(), offset),
+      limit,
     );
     if (options.json) {
       console.log(formatAclListJson(commitments));
@@ -488,7 +503,7 @@ async function aclList(options: AclCommandOptions = {}) {
       console.log('No commitments found.');
       return;
     }
-    console.log(`Found ${commitments.length} commitment(s):\n`);
+    console.log(`${formatAclListHeading(commitments.length, offset, limit)}\n`);
     commitments.forEach((c) => {
       console.log(`ID: ${c.id}`);
       console.log(`  Type: ${c.type} (${c.criticality})`);
