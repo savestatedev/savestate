@@ -296,6 +296,12 @@ const MAX_MEMORY_EXPIRE_OFFSET = 1000;
 export function parseMemoryExpireLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPIRE_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_EXPIRE_LIMIT) {
     throw new Error(
@@ -314,6 +320,12 @@ export function selectExpiredMemories<T>(memories: T[], limit?: number): T[] {
 /** Parse memory expire --offset without turning user input errors into an empty expire list. */
 export function parseMemoryExpireOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPIRE_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_EXPIRE_OFFSET) {
