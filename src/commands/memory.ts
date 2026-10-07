@@ -412,6 +412,12 @@ const MAX_MEMORY_LIST_OFFSET = 1000;
 export function parseMemoryListLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_LIST_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_LIST_LIMIT) {
     throw new Error(
@@ -430,6 +436,12 @@ export function selectMemoryListEntries<T>(entries: T[], limit?: number): T[] {
 /** Parse memory list --offset without turning user input errors into an empty list. */
 export function parseMemoryListOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_LIST_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_LIST_OFFSET) {
