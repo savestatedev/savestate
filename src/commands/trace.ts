@@ -29,6 +29,7 @@ interface TraceExportOptions {
   run?: string;
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const TRACE_EXPORT_FORMATS: readonly TraceExportFormat[] = ['jsonl'];
@@ -173,6 +174,7 @@ export function selectTraceShowOffset<T>(events: T[], offset?: number): T[] {
 }
 
 const MAX_TRACE_EXPORT_LIMIT = 1000;
+const MAX_TRACE_EXPORT_OFFSET = 1000;
 
 /** Parse trace export --limit without turning user input errors into an empty export. */
 export function parseTraceExportLimit(value: string | undefined): number | undefined {
@@ -191,6 +193,46 @@ export function parseTraceExportLimit(value: string | undefined): number | undef
 export function selectTraceExportRuns<T>(runs: T[], limit?: number): T[] {
   if (limit === undefined) return runs;
   return runs.slice(0, limit);
+}
+
+/** Parse trace export --offset without turning user input errors into an unbounded skip. */
+export function parseTraceExportOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRACE_EXPORT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRACE_EXPORT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N trace runs when --offset is set on export. */
+export function selectTraceExportOffsetRuns<T>(runs: T[], offset?: number): T[] {
+  if (offset === undefined) return runs;
+  return runs.slice(offset);
+}
+
+/** Apply trace export --offset then --limit. */
+export function applyTraceExportFilters<T>(
+  runs: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectTraceExportRuns(
+    selectTraceExportOffsetRuns(runs, parseTraceExportOffset(options.offset)),
+    parseTraceExportLimit(options.limit),
+  );
+}
+
+/** Reject export filters whose meaning would be ambiguous for one selected run. */
+export function validateTraceExportOptions(
+  run: string | undefined,
+  offset: string | undefined,
+): void {
+  if (run !== undefined && offset !== undefined) {
+    throw new Error('Cannot use --offset with --run. Offset paginates the full trace run list.');
+  }
 }
 
 const TRACE_SUBCOMMANDS = ['list', 'show', 'export'] as const;
@@ -397,7 +439,7 @@ export function registerTraceCommands(program: Command): void {
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
     .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show, or runs to export')
-    .option('--offset <n>', 'Skip the first N trace runs (list) or events (show) (non-negative integer up to 1000)')
+    .option('--offset <n>', 'Skip the first N trace runs (list or export) or events (show) (non-negative integer up to 1000; export cannot combine with --run)')
     .action(traceCommand);
 }
 
@@ -522,7 +564,8 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
 export async function traceExportCommand(options: TraceExportOptions): Promise<void> {
   const format = parseTraceExportFormat(options.format);
   const run = parseTraceRun(options.run) ?? 'all';
-  const limit = parseTraceExportLimit(options.limit);
+  const offset = parseTraceExportOffset(options.offset);
+  validateTraceExportOptions(options.run, options.offset);
 
   if (!isInitialized()) {
     if (options.json) {
@@ -537,9 +580,9 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
 
   if (options.json) {
     const allRuns = await store.listRuns();
-    const runs = selectTraceExportRuns(
+    const runs = applyTraceExportFilters(
       run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
-      limit,
+      { offset: options.offset, limit: options.limit },
     );
     if (run !== 'all' && runs.length === 0) {
       console.log(formatTraceExportMissingJson(run, format));
@@ -549,16 +592,16 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
     return;
   }
 
-  if (limit === undefined) {
+  if (offset === undefined && options.limit === undefined) {
     const output = await store.export(run, format);
     process.stdout.write(output);
     return;
   }
 
   const allRuns = await store.listRuns();
-  const runs = selectTraceExportRuns(
+  const runs = applyTraceExportFilters(
     run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
-    limit,
+    { offset: options.offset, limit: options.limit },
   );
   const chunks: string[] = [];
   for (const entry of runs) {

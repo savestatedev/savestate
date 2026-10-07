@@ -4007,7 +4007,7 @@ describe('CLI docs', () => {
     const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     const traceBlock = trace.slice(trace.indexOf("command('trace"));
     expect(traceSection).toContain('savestate trace show run-123 --offset 5 --limit 5');
-    expect(traceSection).toContain('or events on <code>show</code> before applying');
+    expect(traceSection).toContain('or <code>export</code>, or events on <code>show</code>, before applying');
     expect(traceBlock).toContain(".option('--offset <n>'");
     expect(trace).toContain('export function parseTraceShowOffset');
   });
@@ -4021,6 +4021,15 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('savestate trace export --limit 5');
     expect(traceBlock).toContain(".option('--limit <n>'");
     expect(trace).toContain('export function parseTraceExportLimit');
+  });
+
+  it('documents trace export --offset as a bounded non-negative integer', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    const traceBlock = trace.slice(trace.indexOf("command('trace"));
+    expect(traceSection).toContain('savestate trace export --offset 5 --limit 5');
+    expect(traceSection).toContain('or <code>export</code>, or events on <code>show</code>, before applying');
+    expect(traceBlock).toContain('export cannot combine with --run');
+    expect(trace).toContain('export function parseTraceExportOffset');
   });
 
   it('documents trace subcommand as a single trace action', () => {
