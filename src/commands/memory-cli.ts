@@ -93,6 +93,12 @@ export function parseMemoryDemoteTo(value: string | undefined): MemoryDemoteTier
 export function parseMemoryLimit(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_LIMIT) {
     throw new Error(
@@ -104,6 +110,12 @@ export function parseMemoryLimit(value: string | undefined, fallback: number): n
 
 /** Parse a memory rollback version without silently turning bad input into NaN. */
 export function parseMemoryVersion(value: string | undefined): number {
+  if (value === undefined || !/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --version value "${value}". Expected a positive integer up to ${MAX_MEMORY_VERSION}.`,
+    );
+  }
+
   const version = Number(value);
   if (!Number.isInteger(version) || version < 1 || version > MAX_MEMORY_VERSION) {
     throw new Error(

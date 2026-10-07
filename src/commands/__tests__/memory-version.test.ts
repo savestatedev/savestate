@@ -6,7 +6,7 @@ describe('savestate memory rollback --version', () => {
     expect(parseMemoryVersion('12')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryVersion(value)).toThrow(
       `Invalid --version value "${value}". Expected a positive integer up to 1000.`,
     );
