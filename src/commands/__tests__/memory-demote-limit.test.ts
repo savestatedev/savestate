@@ -10,7 +10,7 @@ describe('savestate memory demote --limit', () => {
     expect(parseMemoryDemoteLimit('12')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '0x10', '1e2', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryDemoteLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );

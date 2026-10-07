@@ -10,7 +10,7 @@ describe('memory command --limit', () => {
     expect(parseMemoryLimit('12', 20)).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope', '1001'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '0x10', 'nope', '1001'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryLimit(value, 20)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
