@@ -15,7 +15,7 @@ describe('savestate trace show --limit', () => {
     expect(parseTraceShowLimit('12')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseTraceShowLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
@@ -48,7 +48,7 @@ describe('savestate trace show --limit', () => {
     expect(parseTraceShowOffset('12')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid event offset %s', (value) => {
+  it.each(['', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid event offset %s', (value) => {
     expect(() => parseTraceShowOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
