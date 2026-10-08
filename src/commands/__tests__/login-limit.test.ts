@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { parseLoginLimit, selectLoginEntries } from '../login.js';
+import {
+  parseLoginLimit,
+  parseLoginOffset,
+  parseLogoutOffset,
+  selectLoginEntries,
+  selectLogoutEntries,
+} from '../login.js';
 
 describe('savestate login --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +41,31 @@ describe('savestate login --limit', () => {
   it('returns all rows when --limit is omitted', () => {
     const entries = [{ id: 'account' }, { id: 'tier' }];
     expect(selectLoginEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('parses bounded offsets', () => {
+    expect(parseLoginOffset(undefined)).toBeUndefined();
+    expect(parseLoginOffset('0')).toBe(0);
+    expect(parseLoginOffset('1000')).toBe(1000);
+    expect(() => parseLoginOffset('-1')).toThrow(
+      'Invalid --offset value "-1". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseLoginOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+  });
+
+  it('applies offset before limit', () => {
+    const entries = [{ id: 'account' }, { id: 'tier' }, { id: 'features' }];
+    expect(selectLoginEntries(entries, 1, 1).map((entry) => entry.id)).toEqual(['tier']);
+  });
+
+  it('paginates logout status rows with the same bounded offset contract', () => {
+    const entries = [{ id: 'status' }, { id: 'api-key' }, { id: 'account' }];
+    expect(parseLogoutOffset('1')).toBe(1);
+    expect(selectLogoutEntries(entries, 2, 1).map((entry) => entry.id)).toEqual([
+      'api-key',
+      'account',
+    ]);
   });
 });

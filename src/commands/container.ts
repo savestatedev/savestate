@@ -611,6 +611,21 @@ export function selectContainerExportComponents<T>(components: T[], limit?: numb
   return components.slice(0, limit);
 }
 
+const MAX_CONTAINER_EXPORT_OFFSET = 1000;
+
+/** Parse container export --offset without turning user input errors into an empty component list. */
+export function parseContainerExportOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONTAINER_EXPORT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTAINER_EXPORT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
 const MAX_EXPORT_LIMIT = 1000;
 
 /** Parse export --limit without turning user input errors into an empty component list. */
@@ -2143,11 +2158,13 @@ export function registerContainerCommands(program: Command) {
     .option('--dry-run', 'Show what would be exported without writing')
     .option('--description <text>', 'Optional human-readable description for the export (non-empty)')
     .option('--limit <n>', 'Maximum number of packed components to show')
+    .option('--offset <n>', 'Skip the first N packed components (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
       try {
         opts.out = parseContainerOut(opts.out) ?? opts.out;
         parseContainerExportLimit(opts.limit);
+        parseContainerExportOffset(opts.offset);
       } catch (error: any) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
@@ -2169,6 +2186,7 @@ export function registerContainerCommands(program: Command) {
         description: opts.description,
         json: opts.json,
         limit: opts.limit,
+        offset: opts.offset,
       });
       if (!result.written && !result.dryRun) {
         process.exit(1);

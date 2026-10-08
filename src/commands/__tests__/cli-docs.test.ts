@@ -1692,6 +1692,7 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('Must be a positive integer up to 1000');
     expect(loginSection).toContain('savestate login --limit 5');
     expect(loginBlock).toContain(".option('--limit <n>'");
+    expect(loginBlock).toContain(".option('--offset <n>'");
     expect(login).toContain('export function parseLoginLimit');
   });
 
@@ -1723,6 +1724,7 @@ describe('CLI docs', () => {
     expect(logoutSection).toContain('Must be a positive integer up to 1000');
     expect(logoutSection).toContain('savestate logout --limit 5');
     expect(logoutBlock).toContain(".option('--limit <n>'");
+    expect(logoutBlock).toContain(".option('--offset <n>'");
     expect(login).toContain('export function parseLogoutLimit');
   });
 
@@ -4260,6 +4262,16 @@ describe('CLI docs', () => {
     expect(containerSection).toContain('savestate container export -a my-agent -o agent.savestate --limit 5');
     expect(containerBlock).toContain(".option('--limit <n>'");
     expect(container).toContain('export function parseContainerExportLimit');
+  });
+
+  it('documents container export --offset as a bounded non-negative integer', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    const containerBlock = container.slice(container.indexOf("command('export')"), container.indexOf("command('import')"));
+    expect(containerSection).toContain('--offset');
+    expect(containerSection).toContain('before applying');
+    expect(containerSection).toContain('savestate container export -a my-agent -o agent.savestate --offset 10 --limit 5');
+    expect(containerBlock).toContain(".option('--offset <n>'");
+    expect(container).toContain('export function parseContainerExportOffset');
   });
 
   it('documents container import --limit as a bounded positive integer', () => {
