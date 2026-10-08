@@ -170,6 +170,12 @@ const MAX_DIFF_OFFSET = 1000;
 export function parseDiffLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_DIFF_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_DIFF_LIMIT) {
     throw new Error(
@@ -182,6 +188,12 @@ export function parseDiffLimit(value: string | undefined): number | undefined {
 /** Parse diff --offset without treating invalid skips as a missing snapshot. */
 export function parseDiffOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_DIFF_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_DIFF_OFFSET) {
