@@ -16,7 +16,7 @@ describe('savestate identity schema --limit', () => {
     expect(parseIdentitySchemaLimit('12')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['', ' ', '0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseIdentitySchemaLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
@@ -50,7 +50,7 @@ describe('savestate identity schema --limit', () => {
     expect(parseIdentitySchemaOffset('1000')).toBe(1000);
   });
 
-  it.each(['-1', '1.5', '1001', 'nope'])('rejects invalid offset %s', (value) => {
+  it.each(['', ' ', '-1', '1.5', '1001', 'nope'])('rejects invalid offset %s', (value) => {
     expect(() => parseIdentitySchemaOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );

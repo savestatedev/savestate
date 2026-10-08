@@ -33,6 +33,12 @@ const MAX_IDENTITY_SCHEMA_LIMIT = 1000;
 export function parseIdentitySchemaLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_SCHEMA_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_SCHEMA_LIMIT) {
     throw new Error(
@@ -51,6 +57,12 @@ export function selectIdentitySchemaProperties<T>(properties: T[], limit?: numbe
 /** Parse identity schema --offset without turning user input errors into an empty schema. */
 export function parseIdentitySchemaOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_SCHEMA_LIMIT}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_SCHEMA_LIMIT) {
@@ -127,6 +139,12 @@ const MAX_IDENTITY_SHOW_LIMIT = 1000;
 export function parseIdentityShowLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_SHOW_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_SHOW_LIMIT) {
     throw new Error(
@@ -145,6 +163,12 @@ export function selectIdentityShowTools<T>(tools: T[], limit?: number): T[] {
 /** Parse identity show --offset without turning user input errors into an empty identity. */
 export function parseIdentityShowOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_SHOW_LIMIT}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_SHOW_LIMIT) {
@@ -167,6 +191,12 @@ const MAX_IDENTITY_INIT_LIMIT = 1000;
 export function parseIdentityInitLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_INIT_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_INIT_LIMIT) {
     throw new Error(
@@ -185,6 +215,12 @@ export function selectIdentityInitEntries<T>(entries: T[], limit?: number): T[] 
 /** Parse identity init --offset without turning user input errors into an unbounded skip. */
 export function parseIdentityInitOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_INIT_LIMIT}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_INIT_LIMIT) {
@@ -207,6 +243,12 @@ const MAX_IDENTITY_SET_LIMIT = 1000;
 export function parseIdentitySetLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_IDENTITY_SET_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_IDENTITY_SET_LIMIT) {
     throw new Error(
@@ -225,6 +267,12 @@ export function selectIdentitySetEntries<T>(entries: T[], limit?: number): T[] {
 /** Parse identity set --offset without turning user input errors into an unbounded skip. */
 export function parseIdentitySetOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_SET_LIMIT}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_SET_LIMIT) {
