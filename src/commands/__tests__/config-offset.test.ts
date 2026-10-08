@@ -15,7 +15,7 @@ describe('savestate config --offset', () => {
     expect(parseConfigOffset('12')).toBe(12);
   });
 
-  it.each(['', '   ', '-1', '1.5', '0x10', '1e2', '+1', 'nope'])(
+    it.each(['', '   ', '-1', '1.5', '0x10', '1e2', '+1', 'nope'])(
     'rejects invalid value %s',
     (value) => {
       expect(() => parseConfigOffset(value)).toThrow(
