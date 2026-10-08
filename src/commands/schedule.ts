@@ -57,6 +57,12 @@ const MAX_SCHEDULE_OFFSET = 1000;
 export function parseScheduleLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SCHEDULE_STATUS_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SCHEDULE_STATUS_LIMIT) {
     throw new Error(
@@ -75,6 +81,12 @@ export function selectScheduleStatusEntries<T>(entries: T[], limit?: number): T[
 /** Parse schedule --offset without turning user input errors into an empty status. */
 export function parseScheduleOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SCHEDULE_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_SCHEDULE_OFFSET) {

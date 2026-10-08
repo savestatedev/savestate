@@ -20,6 +20,12 @@ const MAX_LOGIN_LIMIT = 1000;
 export function parseLoginLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_LOGIN_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LOGIN_LIMIT) {
     throw new Error(
@@ -212,6 +218,12 @@ const MAX_LOGOUT_LIMIT = 1000;
 /** Parse logout --limit without turning user input errors into an empty logout. */
 export function parseLogoutLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_LOGOUT_LIMIT}.`,
+    );
+  }
 
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LOGOUT_LIMIT) {
