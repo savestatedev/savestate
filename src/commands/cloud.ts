@@ -207,6 +207,27 @@ export function selectCloudListSnapshots<T>(snapshots: T[], limit?: number): T[]
   return snapshots.slice(0, limit);
 }
 
+const MAX_CLOUD_LIST_OFFSET = 1000;
+
+/** Parse cloud list --offset without turning user input errors into an empty cloud inventory. */
+export function parseCloudListOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CLOUD_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_LIST_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N cloud snapshots before applying --limit. */
+export function selectCloudListPage<T>(snapshots: T[], limit?: number, offset?: number): T[] {
+  const page = offset === undefined ? snapshots : snapshots.slice(offset);
+  return limit === undefined ? page : page.slice(0, limit);
+}
+
 const MAX_CLOUD_PULL_LIMIT = 1000;
 
 /** Parse cloud pull --limit without turning user input errors into an empty download list. */
@@ -981,6 +1002,7 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
  */
 export async function cloudListCommand(options: CloudOptions = {}): Promise<void> {
   const limit = parseCloudListLimit(options.limit);
+  const offset = parseCloudListOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -1008,7 +1030,7 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   if (spinner) {
     spinner.text = 'Fetching cloud snapshots...';
   }
-  const snapshots = selectCloudListSnapshots(await listCloudSnapshots(), limit);
+  const snapshots = selectCloudListPage(await listCloudSnapshots(), limit, offset);
   spinner?.stop();
 
   if (options.json) {
