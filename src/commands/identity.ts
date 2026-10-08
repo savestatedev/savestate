@@ -182,6 +182,25 @@ export function selectIdentityInitEntries<T>(entries: T[], limit?: number): T[] 
   return entries.slice(0, limit);
 }
 
+/** Parse identity init --offset without turning user input errors into an unbounded skip. */
+export function parseIdentityInitOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_INIT_LIMIT) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_INIT_LIMIT}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N identity init status field rows when --offset is set. */
+export function selectIdentityInitOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
 const MAX_IDENTITY_SET_LIMIT = 1000;
 
 /** Parse identity set --limit without turning user input errors into an empty update. */
@@ -499,6 +518,7 @@ export async function identityCommand(
   const showLimit = subcommand === 'show' ? parseIdentityShowLimit(options?.limit) : undefined;
   const showOffset = subcommand === 'show' ? parseIdentityShowOffset(options?.offset) : undefined;
   const initLimit = subcommand === 'init' ? parseIdentityInitLimit(options?.limit) : undefined;
+  const initOffset = subcommand === 'init' ? parseIdentityInitOffset(options?.offset) : undefined;
   const setLimit = subcommand === 'set' ? parseIdentitySetLimit(options?.limit) : undefined;
   const setOffset = subcommand === 'set' ? parseIdentitySetOffset(options?.offset) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
@@ -537,7 +557,7 @@ export async function identityCommand(
       await showIdentity(options, showOffset, showLimit);
       break;
     case 'init':
-      await initIdentity(initName, options, initLimit);
+      await initIdentity(initName, options, initOffset, initLimit);
       break;
     case 'set':
       await setIdentityField(setField, setValue, options, setOffset, setLimit);
@@ -658,7 +678,12 @@ async function showIdentity(options?: IdentityOptions, offset?: number, limit?: 
 /**
  * Initialize a new identity.
  */
-async function initIdentity(name: string | undefined, options?: IdentityOptions, limit?: number): Promise<void> {
+async function initIdentity(
+  name: string | undefined,
+  options?: IdentityOptions,
+  offset?: number,
+  limit?: number,
+): Promise<void> {
   if (!name) {
     console.log(chalk.red('✗ Name is required'));
     console.log();
@@ -689,7 +714,7 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions,
         `${chalk.dim('  Current identity:')} ${existing.identity.name}`,
         `${chalk.dim('  To update, use:')} savestate identity set <field> <value>`,
       ];
-      for (const row of selectIdentityInitEntries(existingRows, limit)) {
+      for (const row of selectIdentityInitEntries(selectIdentityInitOffsetEntries(existingRows, offset), limit)) {
         console.log(row);
       }
       console.log();
@@ -720,7 +745,7 @@ async function initIdentity(name: string | undefined, options?: IdentityOptions,
       `  ${chalk.dim('Version:')}  ${identity.version}`,
       `  ${chalk.dim('File:')}     ${path}`,
     ];
-    for (const row of selectIdentityInitEntries(rows, limit)) {
+    for (const row of selectIdentityInitEntries(selectIdentityInitOffsetEntries(rows, offset), limit)) {
       console.log(row);
     }
     console.log();
