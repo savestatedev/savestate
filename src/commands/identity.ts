@@ -113,7 +113,9 @@ export function parseIdentityField(value: string | undefined): string {
   }
 
   const isCoreField = (CORE_IDENTITY_FIELDS as readonly string[]).includes(field);
-  const isMetadataField = field.startsWith('metadata.') && field.length > 'metadata.'.length;
+  const metadataKey = field.slice('metadata.'.length);
+  const isMetadataField =
+    field.startsWith('metadata.') && metadataKey.length > 0 && !metadataKey.includes('.');
   if (!isCoreField && !isMetadataField) {
     throw new Error(
       `Invalid field "${value}". Expected a core identity field or metadata.<key>.`,
