@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseListOffset, selectListOffsetEntries } from '../list.js';
+import { formatListPageSummary, parseListOffset, selectListOffsetEntries } from '../list.js';
 
 describe('savestate list --offset', () => {
   it('defaults to undefined', () => {
@@ -36,5 +36,11 @@ describe('savestate list --offset', () => {
   it('returns all snapshots when offset is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectListOffsetEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('reports the filtered total and offset for a human-readable page', () => {
+    expect(formatListPageSummary(12, 2, 10, 2)).toBe(
+      '(showing 2 of 12 after filters; offset 10, limit 2)',
+    );
   });
 });
