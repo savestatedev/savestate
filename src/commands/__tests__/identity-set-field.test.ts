@@ -19,6 +19,12 @@ describe('savestate identity set field', () => {
     },
   );
 
+  it.each(['unknown', 'metadata'])('rejects unsupported field %s', (value) => {
+    expect(() => parseIdentityField(value)).toThrow(
+      `Invalid field "${value}". Expected a core identity field or metadata.<key>.`,
+    );
+  });
+
   it('rejects a missing value', () => {
     expect(() => parseIdentityField(undefined)).toThrow(
       'Invalid field. Expected a single non-empty identity field.',

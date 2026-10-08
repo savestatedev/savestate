@@ -112,6 +112,14 @@ export function parseIdentityField(value: string | undefined): string {
     );
   }
 
+  const isCoreField = (CORE_IDENTITY_FIELDS as readonly string[]).includes(field);
+  const isMetadataField = field.startsWith('metadata.') && field.length > 'metadata.'.length;
+  if (!isCoreField && !isMetadataField) {
+    throw new Error(
+      `Invalid field "${value}". Expected a core identity field or metadata.<key>.`,
+    );
+  }
+
   return field;
 }
 
