@@ -44,9 +44,17 @@ export interface ListSnapshotJson {
   size: number;
 }
 
+/** Keep list pagination stable when snapshots share the same timestamp. */
+export function sortListEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
+  return [...snapshots].sort((a, b) => {
+    const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    return timestampOrder !== 0 ? timestampOrder : a.id.localeCompare(b.id);
+  });
+}
+
 export function formatListJson(snapshots: SnapshotIndexEntry[], limit = 50, offset?: number): string {
   const records: ListSnapshotJson[] = selectListOffsetEntries(
-    [...snapshots].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    sortListEntries(snapshots),
     offset,
   )
     .slice(0, limit)
@@ -284,7 +292,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   // Sort by timestamp descending (most recent first), then skip/limit
   const sorted = selectListOffsetEntries(
-    [...filtered].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    sortListEntries(filtered),
     offset,
   ).slice(0, limit);
 

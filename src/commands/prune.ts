@@ -51,6 +51,12 @@ const PRUNE_ADAPTER_LIST = PRUNE_ADAPTERS.join(', ');
 export function parseKeepLast(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --keep-last value "${value}". Expected a positive integer up to ${MAX_KEEP_LAST}.`,
+    );
+  }
+
   const keepLast = Number(value);
   if (!Number.isInteger(keepLast) || keepLast < 1 || keepLast > MAX_KEEP_LAST) {
     throw new Error(
@@ -180,6 +186,12 @@ export function parsePruneLabel(value: string | undefined): string | undefined {
 export function parsePruneLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_PRUNE_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PRUNE_LIMIT) {
     throw new Error(
@@ -192,6 +204,12 @@ export function parsePruneLimit(value: string | undefined): number | undefined {
 /** Parse prune --offset without treating invalid skips as an empty prune plan. */
 export function parsePruneOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_PRUNE_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_PRUNE_OFFSET) {
@@ -523,5 +541,4 @@ function printPlan(plan: PrunePlan): void {
     console.log();
   }
 }
-
 

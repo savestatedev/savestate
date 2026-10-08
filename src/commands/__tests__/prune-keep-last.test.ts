@@ -10,7 +10,7 @@ describe('savestate prune --keep-last', () => {
     expect(parseKeepLast('12')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseKeepLast(value)).toThrow(
       `Invalid --keep-last value "${value}". Expected a positive integer up to 1000.`,
     );
