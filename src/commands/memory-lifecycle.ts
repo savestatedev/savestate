@@ -430,8 +430,15 @@ export function selectMemoryEditEntries<T>(entries: T[], limit?: number): T[] {
 export function parseMemoryEditOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
-  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_EDIT_OFFSET) {
+  const trimmed = value.trim();
+  const offset = Number(trimmed);
+  if (
+    trimmed.length === 0 ||
+    !/^\d+$/.test(trimmed) ||
+    !Number.isInteger(offset) ||
+    offset < 0 ||
+    offset > MAX_MEMORY_EDIT_OFFSET
+  ) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EDIT_OFFSET}.`,
     );

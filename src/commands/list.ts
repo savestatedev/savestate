@@ -125,6 +125,15 @@ export function selectListOffsetEntries<T>(entries: T[], offset?: number): T[] {
   return entries.slice(offset);
 }
 
+/** Describe the visible list page without treating an offset as part of the limit. */
+export function formatListPageSummary(total: number, shown: number, offset = 0, limit = 50): string {
+  const pageEnd = Math.min(offset + limit, total);
+  if (offset > 0 || pageEnd < total) {
+    return `(showing ${shown} of ${total} after filters; offset ${offset}, limit ${limit})`;
+  }
+  return `(showing ${shown} of ${total} after filters)`;
+}
+
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
 export function parseListSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -317,8 +326,8 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   console.log();
   console.log(chalk.dim(`  ${sorted.length} snapshot${sorted.length !== 1 ? 's' : ''}`));
-  if (filtered.length > limit) {
-    console.log(chalk.dim(`  (showing ${limit} of ${filtered.length} after filters)`));
+  if (offset !== undefined || filtered.length > limit) {
+    console.log(chalk.dim(`  ${formatListPageSummary(filtered.length, sorted.length, offset, limit)}`));
   } else if (filtered.length !== index.snapshots.length) {
     console.log(chalk.dim(`  (filtered from ${index.snapshots.length} total)`));
   }
