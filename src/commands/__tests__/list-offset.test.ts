@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatListPageSummary, parseListOffset, selectListOffsetEntries } from '../list.js';
+import type { SnapshotIndexEntry } from '../../index-file.js';
+import { formatListPageSummary, parseListOffset, selectListOffsetEntries, sortListEntries } from '../list.js';
 
 describe('savestate list --offset', () => {
   it('defaults to undefined', () => {
@@ -42,5 +43,13 @@ describe('savestate list --offset', () => {
     expect(formatListPageSummary(12, 2, 10, 2)).toBe(
       '(showing 2 of 12 after filters; offset 10, limit 2)',
     );
+  });
+
+  it('uses snapshot ids to break ties for identical timestamps', () => {
+    const timestamp = '2026-10-08T12:00:00.000Z';
+    expect(sortListEntries([
+      { id: 'zeta', timestamp },
+      { id: 'alpha', timestamp },
+    ] as SnapshotIndexEntry[]).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
   });
 });
