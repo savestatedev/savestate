@@ -11,7 +11,7 @@ describe('savestate search --offset', () => {
     expect(parseSearchOffset('12')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['-1', '1.5', 'nope', '', ' 1'])('rejects invalid value %s', (value) => {
     expect(() => parseSearchOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
