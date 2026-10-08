@@ -133,6 +133,14 @@ export function parseIdentityValue(value: string | undefined): string {
   return parsed;
 }
 
+/** Read a core or dotted identity field for the human-readable confirmation. */
+export function getIdentityFieldValue(identity: AgentIdentity, field: string): unknown {
+  return field.split('.').reduce<unknown>((current, part) => {
+    if (current === null || typeof current !== 'object') return undefined;
+    return (current as Record<string, unknown>)[part];
+  }, identity);
+}
+
 const MAX_IDENTITY_SHOW_LIMIT = 1000;
 
 /** Parse identity show --limit without turning user input errors into an empty identity. */
@@ -874,7 +882,7 @@ async function setIdentityField(
 
     console.log();
 
-    const displayValue = (updated as Record<string, unknown>)[field];
+    const displayValue = getIdentityFieldValue(updated, field);
     const rows = [
       `  ${chalk.dim('Field:')}    ${field}`,
       `  ${chalk.dim('Value:')}    ${formatValue(displayValue)}`,

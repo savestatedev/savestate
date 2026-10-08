@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseIdentityField } from '../identity.js';
+import { getIdentityFieldValue, parseIdentityField } from '../identity.js';
+import type { AgentIdentity } from '../../identity/schema.js';
 
 describe('savestate identity set field', () => {
   it('accepts a single identity field', () => {
@@ -22,5 +23,15 @@ describe('savestate identity set field', () => {
     expect(() => parseIdentityField(undefined)).toThrow(
       'Invalid field. Expected a single non-empty identity field.',
     );
+  });
+
+  it('reads dotted metadata fields for confirmation output', () => {
+    const identity = {
+      metadata: { customKey: 'custom value' },
+      name: 'MyAgent',
+    } as AgentIdentity;
+
+    expect(getIdentityFieldValue(identity, 'metadata.customKey')).toBe('custom value');
+    expect(getIdentityFieldValue(identity, 'name')).toBe('MyAgent');
   });
 });
