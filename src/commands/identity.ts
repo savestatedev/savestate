@@ -203,6 +203,25 @@ export function selectIdentitySetEntries<T>(entries: T[], limit?: number): T[] {
   return entries.slice(0, limit);
 }
 
+/** Parse identity set --offset without turning user input errors into an unbounded skip. */
+export function parseIdentitySetOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IDENTITY_SET_LIMIT) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IDENTITY_SET_LIMIT}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N identity set field rows when --offset is set. */
+export function selectIdentitySetOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
 const IDENTITY_SUBCOMMANDS = ['show', 'init', 'set', 'schema'] as const;
 export type IdentitySubcommand = (typeof IDENTITY_SUBCOMMANDS)[number];
 const IDENTITY_SUBCOMMAND_LIST = IDENTITY_SUBCOMMANDS.join(', ');
@@ -481,6 +500,7 @@ export async function identityCommand(
   const showOffset = subcommand === 'show' ? parseIdentityShowOffset(options?.offset) : undefined;
   const initLimit = subcommand === 'init' ? parseIdentityInitLimit(options?.limit) : undefined;
   const setLimit = subcommand === 'set' ? parseIdentitySetLimit(options?.limit) : undefined;
+  const setOffset = subcommand === 'set' ? parseIdentitySetOffset(options?.offset) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
   const setValue = subcommand === 'set'
@@ -520,7 +540,7 @@ export async function identityCommand(
       await initIdentity(initName, options, initLimit);
       break;
     case 'set':
-      await setIdentityField(setField, setValue, options, setLimit);
+      await setIdentityField(setField, setValue, options, setOffset, setLimit);
       break;
     case 'schema':
       showSchema(options, schemaOffset, schemaLimit);
@@ -722,6 +742,7 @@ async function setIdentityField(
   field: string | undefined,
   value: string | undefined,
   options?: IdentityOptions,
+  offset?: number,
   limit?: number,
 ): Promise<void> {
   if (!field) {
@@ -786,7 +807,7 @@ async function setIdentityField(
       `  ${chalk.dim('Value:')}    ${formatValue(displayValue)}`,
       `  ${chalk.dim('Version:')}  ${updated.version}`,
     ];
-    for (const row of selectIdentitySetEntries(rows, limit)) {
+    for (const row of selectIdentitySetEntries(selectIdentitySetOffsetEntries(rows, offset), limit)) {
       console.log(row);
     }
     console.log();
