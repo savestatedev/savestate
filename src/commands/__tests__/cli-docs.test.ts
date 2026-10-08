@@ -1692,6 +1692,7 @@ describe('CLI docs', () => {
     expect(loginSection).toContain('Must be a positive integer up to 1000');
     expect(loginSection).toContain('savestate login --limit 5');
     expect(loginBlock).toContain(".option('--limit <n>'");
+    expect(loginBlock).toContain(".option('--offset <n>'");
     expect(login).toContain('export function parseLoginLimit');
   });
 
@@ -1723,6 +1724,7 @@ describe('CLI docs', () => {
     expect(logoutSection).toContain('Must be a positive integer up to 1000');
     expect(logoutSection).toContain('savestate logout --limit 5');
     expect(logoutBlock).toContain(".option('--limit <n>'");
+    expect(logoutBlock).toContain(".option('--offset <n>'");
     expect(login).toContain('export function parseLogoutLimit');
   });
 

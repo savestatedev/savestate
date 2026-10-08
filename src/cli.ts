@@ -349,6 +349,7 @@ program
   .description('Authenticate with SaveState cloud')
   .option('-k, --key <api-key>', 'API key (single non-empty key, or enter interactively)')
   .option('--limit <n>', 'Maximum number of status field rows to show')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(loginCommand);
 
@@ -358,6 +359,7 @@ program
   .command('logout')
   .description('Remove saved API key')
   .option('--limit <n>', 'Maximum number of status field rows to show')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(logoutCommand);
 

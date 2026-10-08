@@ -1235,6 +1235,7 @@
       <tbody>
         <tr><td><code>-k, --key &lt;api-key&gt;</code></td><td>API key (or enter interactively). Must be a single non-empty API key.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of status field rows to show. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N status field rows. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit the login result as JSON. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, authenticated, email, tier; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -1247,6 +1248,9 @@
 
 <span class="code-comment"># Cap status field rows</span>
 <span class="code-prompt">$</span> savestate login --limit 5
+
+<span class="code-comment"># Page status field rows</span>
+<span class="code-prompt">$</span> savestate login --offset 1 --limit 2
 
 <span class="code-comment"># Scriptable login</span>
 <span class="code-prompt">$</span> savestate login --key ss_live_... --json
@@ -1265,6 +1269,7 @@
       </thead>
       <tbody>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of status field rows to show. Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N status field rows. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--json</code></td><td>Emit logout status as JSON. Skips progress output. When SaveState is not initialized, emits a missing summary (found, loggedOut, hadKey; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
@@ -1274,6 +1279,9 @@
 
 <span class="code-comment"># Cap status field rows</span>
 <span class="code-prompt">$</span> savestate logout --limit 5
+
+<span class="code-comment"># Page status field rows</span>
+<span class="code-prompt">$</span> savestate logout --offset 1 --limit 2
 
 <span class="code-comment"># Scriptable logout status</span>
 <span class="code-prompt">$</span> savestate logout --json</code></pre>

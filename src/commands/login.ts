@@ -12,9 +12,11 @@ interface LoginOptions {
   key?: string;
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_LOGIN_LIMIT = 1000;
+const MAX_LOGIN_OFFSET = 1000;
 
 /** Parse login --limit without turning user input errors into an empty login. */
 export function parseLoginLimit(value: string | undefined): number | undefined {
@@ -35,10 +37,28 @@ export function parseLoginLimit(value: string | undefined): number | undefined {
   return limit;
 }
 
-/** Keep the first N login status field rows when --limit is set. */
-export function selectLoginEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+/** Parse login --offset without turning user input errors into an unbounded skip. */
+export function parseLoginOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_LOGIN_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_LOGIN_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_LOGIN_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Apply login status pagination in offset-then-limit order. */
+export function selectLoginEntries<T>(entries: T[], limit?: number, offset?: number): T[] {
+  return entries.slice(offset ?? 0, (offset ?? 0) + (limit ?? entries.length));
 }
 
 /** Parse login --key without treating blank or comma-separated values as an API key. */
@@ -99,6 +119,7 @@ export function formatLoginMissingJson(): string {
 
 export async function loginCommand(options: LoginOptions): Promise<void> {
   const limit = parseLoginLimit(options.limit);
+  const offset = parseLoginOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -192,7 +213,7 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
     if (account.storage.limit > 0) {
       rows.push(`  ${chalk.dim('Storage:')}  ${formatBytes(account.storage.limit)} cloud storage`);
     }
-    for (const row of selectLoginEntries(rows, limit)) {
+    for (const row of selectLoginEntries(rows, limit, offset)) {
       console.log(row);
     }
     console.log();
@@ -211,9 +232,11 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
 interface LogoutOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_LOGOUT_LIMIT = 1000;
+const MAX_LOGOUT_OFFSET = 1000;
 
 /** Parse logout --limit without turning user input errors into an empty logout. */
 export function parseLogoutLimit(value: string | undefined): number | undefined {
@@ -234,10 +257,28 @@ export function parseLogoutLimit(value: string | undefined): number | undefined 
   return limit;
 }
 
-/** Keep the first N logout status field rows when --limit is set. */
-export function selectLogoutEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+/** Parse logout --offset without turning user input errors into an unbounded skip. */
+export function parseLogoutOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_LOGOUT_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_LOGOUT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_LOGOUT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Apply logout status pagination in offset-then-limit order. */
+export function selectLogoutEntries<T>(entries: T[], limit?: number, offset?: number): T[] {
+  return entries.slice(offset ?? 0, (offset ?? 0) + (limit ?? entries.length));
 }
 
 export interface LogoutResult {
@@ -279,6 +320,7 @@ export function formatLogoutMissingJson(): string {
  */
 export async function logoutCommand(options: LogoutOptions = {}): Promise<void> {
   const limit = parseLogoutLimit(options.limit);
+  const offset = parseLogoutOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -317,7 +359,7 @@ export async function logoutCommand(options: LogoutOptions = {}): Promise<void> 
         `  ${chalk.dim('API key:')}  none`,
         `  ${chalk.dim('Account:')}  none`,
       ];
-  for (const row of selectLogoutEntries(rows, limit)) {
+  for (const row of selectLogoutEntries(rows, limit, offset)) {
     console.log(row);
   }
   console.log();
