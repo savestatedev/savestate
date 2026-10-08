@@ -43,6 +43,7 @@ export function parseConfigOffset(value: string | undefined): number | undefined
   const offset = Number(trimmed);
   if (
     trimmed.length === 0 ||
+    !/^\d+$/.test(trimmed) ||
     !Number.isInteger(offset) ||
     offset < 0 ||
     offset > MAX_CONFIG_OFFSET

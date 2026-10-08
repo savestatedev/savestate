@@ -15,11 +15,14 @@ describe('savestate config --offset', () => {
     expect(parseConfigOffset('12')).toBe(12);
   });
 
-  it.each(['', '   ', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
-    expect(() => parseConfigOffset(value)).toThrow(
-      `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
-    );
-  });
+  it.each(['', '   ', '-1', '1.5', '0x10', '1e2', '+1', 'nope'])(
+    'rejects invalid value %s',
+    (value) => {
+      expect(() => parseConfigOffset(value)).toThrow(
+        `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
+      );
+    },
+  );
 
   it('rejects values above the bounded skip count', () => {
     expect(parseConfigOffset('1000')).toBe(1000);
