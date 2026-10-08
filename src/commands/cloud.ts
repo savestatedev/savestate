@@ -249,6 +249,12 @@ export function selectCloudPullSnapshots<T>(snapshots: T[], limit?: number): T[]
   return snapshots.slice(0, limit);
 }
 
+/** Skip the first N cloud snapshots before applying --limit on pull. */
+export function selectCloudPullPage<T>(snapshots: T[], limit?: number, offset?: number): T[] {
+  const page = offset === undefined ? snapshots : snapshots.slice(offset);
+  return limit === undefined ? page : page.slice(0, limit);
+}
+
 const MAX_CLOUD_DELETE_LIMIT = 1000;
 
 /** Parse cloud delete --limit without turning user input errors into an empty delete list. */
@@ -866,6 +872,7 @@ export async function cloudPushCommand(options: CloudOptions): Promise<void> {
 export async function cloudPullCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
   const limit = parseCloudPullLimit(options.limit);
+  const offset = parseCloudOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -927,10 +934,10 @@ export async function cloudPullCommand(options: CloudOptions): Promise<void> {
       console.log(chalk.red(`Snapshot not found in cloud: ${id}`));
       process.exit(1);
     }
-  } else if (!options.all && limit === undefined) {
+  } else if (!options.all && limit === undefined && offset === undefined) {
     toPull = [cloudSnapshots[cloudSnapshots.length - 1]];
   }
-  toPull = selectCloudPullSnapshots(toPull, limit);
+  toPull = selectCloudPullPage(toPull, limit, offset);
 
   if (!options.json) {
     console.log(chalk.blue(`Pulling ${toPull.length} snapshot(s) from cloud...`));
