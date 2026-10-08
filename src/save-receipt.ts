@@ -264,6 +264,9 @@ export function logAudit(entry: SaveAuditEntry): void {
  * Get recent audit entries
  */
 export function getAuditLog(limit = 100): SaveAuditEntry[] {
+  if (!Number.isInteger(limit) || limit <= 0) {
+    return [];
+  }
   return auditLog.slice(-limit);
 }
 
