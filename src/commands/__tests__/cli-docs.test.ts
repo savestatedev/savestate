@@ -3399,6 +3399,18 @@ describe('CLI docs', () => {
     expect(identity).toContain('export function parseIdentitySetLimit');
   });
 
+  it('documents identity set --offset as a bounded non-negative integer', () => {
+    const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
+    const identityBlock = cli.slice(
+      cli.indexOf("command('identity <subcommand> [args...]')"),
+      cli.indexOf('program.parse()'),
+    );
+    expect(identitySection).toContain('field rows on <code>set</code>');
+    expect(identitySection).toContain('savestate identity set tone professional --offset 1 --limit 2');
+    expect(identityBlock).toContain(".option('--offset <n>'");
+    expect(identity).toContain('export function parseIdentitySetOffset');
+  });
+
   it('documents identity schema --limit as a bounded positive integer', () => {
     const identitySection = docs.slice(docs.indexOf('id="identity"'), docs.indexOf('id="integrity"'));
     const identityBlock = cli.slice(
