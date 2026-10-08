@@ -4264,6 +4264,16 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerExportLimit');
   });
 
+  it('documents container export --offset as a bounded non-negative integer', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    const containerBlock = container.slice(container.indexOf("command('export')"), container.indexOf("command('import')"));
+    expect(containerSection).toContain('--offset');
+    expect(containerSection).toContain('before applying');
+    expect(containerSection).toContain('savestate container export -a my-agent -o agent.savestate --offset 10 --limit 5');
+    expect(containerBlock).toContain(".option('--offset <n>'");
+    expect(container).toContain('export function parseContainerExportOffset');
+  });
+
   it('documents container import --limit as a bounded positive integer', () => {
     const containerSection = docs.slice(docs.indexOf('id="container"'));
     const containerBlock = container.slice(container.indexOf(".command('container')"));

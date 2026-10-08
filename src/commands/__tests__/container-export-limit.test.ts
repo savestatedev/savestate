@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseContainerExportLimit, selectContainerExportComponents } from '../container.js';
+import {
+  parseContainerExportLimit,
+  parseContainerExportOffset,
+  applyExportFilters,
+  selectContainerExportComponents,
+} from '../container.js';
 
 describe('savestate container export --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,30 @@ describe('savestate container export --limit', () => {
   it('returns all components when --limit is omitted', () => {
     const components = ['memory', 'tools'];
     expect(selectContainerExportComponents(components, undefined)).toEqual(components);
+  });
+});
+
+describe('savestate container export --offset', () => {
+  it('defaults to undefined', () => {
+    expect(parseContainerExportOffset(undefined)).toBeUndefined();
+  });
+
+  it('accepts non-negative integers', () => {
+    expect(parseContainerExportOffset('12')).toBe(12);
+  });
+
+  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+    expect(() => parseContainerExportOffset(value)).toThrow(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
+    );
+  });
+
+  it('skips before applying the limit', () => {
+    expect(
+      applyExportFilters(
+        ['memory', 'personality', 'tools'],
+        { offset: '1', limit: '1' },
+      ),
+    ).toEqual(['personality']);
   });
 });
