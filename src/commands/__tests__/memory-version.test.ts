@@ -4,6 +4,7 @@ import { parseMemoryVersion } from '../memory-cli.js';
 describe('savestate memory rollback --version', () => {
   it('accepts positive integers', () => {
     expect(parseMemoryVersion('12')).toBe(12);
+    expect(parseMemoryVersion(' 12 ')).toBe(12);
   });
 
   it.each(['0', '-1', '1.5', '0x10', 'nope'])('rejects invalid value %s', (value) => {

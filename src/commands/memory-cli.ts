@@ -111,13 +111,14 @@ export function parseMemoryLimit(value: string | undefined, fallback: number): n
 
 /** Parse a memory rollback version without silently turning bad input into NaN. */
 export function parseMemoryVersion(value: string | undefined): number {
-  if (value === undefined || !/^\d+$/.test(value)) {
+  const normalized = value?.trim();
+  if (normalized === undefined || !/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --version value "${value}". Expected a positive integer up to ${MAX_MEMORY_VERSION}.`,
     );
   }
 
-  const version = Number(value);
+  const version = Number(normalized);
   if (!Number.isInteger(version) || version < 1 || version > MAX_MEMORY_VERSION) {
     throw new Error(
       `Invalid --version value "${value}". Expected a positive integer up to ${MAX_MEMORY_VERSION}.`,
