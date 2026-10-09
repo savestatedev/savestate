@@ -14,6 +14,10 @@ describe('savestate trace list --offset', () => {
     expect(parseTraceListOffset('12')).toBe(12);
   });
 
+  it('accepts surrounding whitespace', () => {
+    expect(parseTraceListOffset('\t3\n')).toBe(3);
+  });
+
   it.each(['', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseTraceListOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,

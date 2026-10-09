@@ -15,6 +15,10 @@ describe('savestate trace show --limit', () => {
     expect(parseTraceShowLimit('12')).toBe(12);
   });
 
+  it('accepts surrounding whitespace', () => {
+    expect(parseTraceShowLimit(' 12 ')).toBe(12);
+  });
+
   it.each(['0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseTraceShowLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
