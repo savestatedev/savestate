@@ -38,7 +38,7 @@ const MEMORY_TIERS = ['L1', 'L2', 'L3'] as const;
 export function parseMemoryTier(value: string | undefined): MemoryTier | undefined {
   if (value === undefined) return undefined;
 
-  const tier = value.toUpperCase();
+  const tier = value.trim().toUpperCase();
   if (!MEMORY_TIERS.includes(tier as (typeof MEMORY_TIERS)[number])) {
     throw new Error(`Invalid memory tier "${value}". Expected one of L1, L2, or L3.`);
   }
