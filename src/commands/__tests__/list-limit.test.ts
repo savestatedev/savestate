@@ -8,6 +8,7 @@ describe('savestate list --limit', () => {
 
   it('accepts positive integers', () => {
     expect(parseListLimit('12')).toBe(12);
+    expect(parseListLimit(' 12 ')).toBe(12);
   });
 
   it.each(['0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {

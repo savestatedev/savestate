@@ -7,9 +7,9 @@ describe('savestate list --offset', () => {
     expect(parseListOffset(undefined)).toBeUndefined();
   });
 
-  it('accepts zero and positive integers', () => {
+  it('accepts zero, positive integers, and surrounding whitespace', () => {
     expect(parseListOffset('0')).toBe(0);
-    expect(parseListOffset('12')).toBe(12);
+    expect(parseListOffset(' 12 ')).toBe(12);
   });
 
   it.each(['-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
