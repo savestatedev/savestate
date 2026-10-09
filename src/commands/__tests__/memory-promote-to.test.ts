@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { parseMemoryPromoteTo } from '../memory-cli.js';
+import {
+  parseMemoryDemoteLimit,
+  parseMemoryDemoteOffset,
+  parseMemoryPromoteLimit,
+  parseMemoryPromoteOffset,
+} from '../memory.js';
 
 describe('savestate memory promote --to', () => {
   it('accepts known promotion tiers', () => {
@@ -18,5 +24,14 @@ describe('savestate memory promote --to', () => {
     expect(() => parseMemoryPromoteTo(undefined)).toThrow(
       'Invalid --to value. Expected one of: L1, L2.',
     );
+  });
+});
+
+describe('memory promote/demote pagination', () => {
+  it('accepts surrounding whitespace around numeric values', () => {
+    expect(parseMemoryPromoteLimit(' 12 ')).toBe(12);
+    expect(parseMemoryPromoteOffset('\t3\n')).toBe(3);
+    expect(parseMemoryDemoteLimit(' 4 ')).toBe(4);
+    expect(parseMemoryDemoteOffset(' 5 ')).toBe(5);
   });
 });

@@ -593,13 +593,14 @@ const MAX_MEMORY_PROMOTE_OFFSET = 1000;
 export function parseMemoryPromoteLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_PROMOTE_LIMIT}.`,
     );
   }
 
-  const limit = Number(value);
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_PROMOTE_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_PROMOTE_LIMIT}.`,
@@ -618,13 +619,14 @@ export function selectMemoryPromoteEntries<T>(entries: T[], limit?: number): T[]
 export function parseMemoryPromoteOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_PROMOTE_OFFSET}.`,
     );
   }
 
-  const offset = Number(value);
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_PROMOTE_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_PROMOTE_OFFSET}.`,
@@ -739,13 +741,14 @@ const MAX_MEMORY_DEMOTE_OFFSET = 1000;
 export function parseMemoryDemoteLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_DEMOTE_LIMIT}.`,
     );
   }
 
-  const limit = Number(value);
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_DEMOTE_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_DEMOTE_LIMIT}.`,
@@ -764,13 +767,14 @@ export function selectMemoryDemoteEntries<T>(entries: T[], limit?: number): T[] 
 export function parseMemoryDemoteOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_DEMOTE_OFFSET}.`,
     );
   }
 
-  const offset = Number(value);
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_DEMOTE_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_DEMOTE_OFFSET}.`,
