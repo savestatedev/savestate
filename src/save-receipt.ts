@@ -70,8 +70,24 @@ function isReceiptStore(value: unknown): value is ReceiptStore {
     return false;
   }
 
-  return (value as { receipts: unknown[] }).receipts.every(
-    (receipt) => receipt && typeof receipt === 'object' && typeof (receipt as { resource_id?: unknown }).resource_id === 'string'
+  return (value as { receipts: unknown[] }).receipts.every(isSaveReceipt);
+}
+
+function isSaveReceipt(value: unknown): value is SaveReceipt {
+  if (!value || typeof value !== 'object') return false;
+  const receipt = value as Partial<SaveReceipt>;
+  return (
+    typeof receipt.receipt_id === 'string' && receipt.receipt_id.length > 0 &&
+    typeof receipt.resource_id === 'string' && receipt.resource_id.length > 0 &&
+    (receipt.resource_type === 'snapshot' || receipt.resource_type === 'memory' || receipt.resource_type === 'checkpoint') &&
+    typeof receipt.content_hash === 'string' && /^[a-f0-9]{64}$/.test(receipt.content_hash) &&
+    typeof receipt.encrypted_hash === 'string' && /^[a-f0-9]{64}$/.test(receipt.encrypted_hash) &&
+    typeof receipt.size === 'number' && Number.isSafeInteger(receipt.size) && receipt.size >= 0 &&
+    typeof receipt.storage_location === 'string' && receipt.storage_location.length > 0 &&
+    typeof receipt.storage_backend === 'string' && receipt.storage_backend.length > 0 &&
+    typeof receipt.saved_at === 'string' && !Number.isNaN(Date.parse(receipt.saved_at)) &&
+    typeof receipt.receipt_created_at === 'string' && !Number.isNaN(Date.parse(receipt.receipt_created_at)) &&
+    typeof receipt.verified === 'boolean'
   );
 }
 

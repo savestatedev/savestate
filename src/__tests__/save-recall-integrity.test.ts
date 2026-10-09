@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdir, rm, readFile } from 'node:fs/promises';
+import { mkdir, rm, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes, createHash } from 'node:crypto';
@@ -197,6 +197,17 @@ describe('Save/Recall Integrity (Issue #126)', () => {
       const found = await findReceipt('persist-test-id', testDir);
       expect(found).not.toBeNull();
       expect(found!.receipt_id).toBe(receipt.receipt_id);
+    });
+
+    it('should ignore malformed persisted receipts', async () => {
+      await mkdir(join(testDir, '.savestate'), { recursive: true });
+      await writeFile(
+        join(testDir, '.savestate', 'save-receipts.json'),
+        JSON.stringify({ receipts: [{ resource_id: 'incomplete-receipt' }] })
+      );
+
+      expect((await loadReceipts(testDir)).receipts).toEqual([]);
+      await expect(findReceipt('incomplete-receipt', testDir)).resolves.toBeNull();
     });
   });
 
