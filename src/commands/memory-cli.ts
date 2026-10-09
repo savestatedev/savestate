@@ -162,7 +162,7 @@ export function parseMemorySnapshot(value: string | undefined): string | undefin
 export function parseMemoryTags(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
 
-  const tags = value.split(',').map((token) => token.trim());
+  const tags = [...new Set(value.split(',').map((token) => token.trim()))];
   if (tags.length === 0 || tags.some((token) => token.length === 0)) {
     throw new Error(
       `Invalid --tags value "${value}". Expected one or more non-empty memory tags (comma-separated).`,
