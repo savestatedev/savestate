@@ -15,6 +15,10 @@ describe('savestate eval report --offset', () => {
     expect(parseEvalReportOffset('12')).toBe(12);
   });
 
+  it('accepts surrounding whitespace', () => {
+    expect(parseEvalReportOffset(' 12 ')).toBe(12);
+  });
+
   it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseEvalReportOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
