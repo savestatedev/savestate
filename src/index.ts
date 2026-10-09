@@ -232,6 +232,7 @@ export {
   generateReceipt,
   storeReceipt,
   loadReceipts,
+  listReceipts,
   findReceipt,
   verifyReceipt,
   saveReceipts,

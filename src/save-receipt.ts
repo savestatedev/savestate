@@ -116,6 +116,18 @@ export async function loadReceipts(cwd?: string): Promise<ReceiptStore> {
 }
 
 /**
+ * List the most recent receipts without exposing the mutable store array.
+ */
+export async function listReceipts(limit = 100, cwd?: string): Promise<SaveReceipt[]> {
+  if (!Number.isSafeInteger(limit) || limit <= 0) {
+    return [];
+  }
+
+  const { receipts } = await loadReceipts(cwd);
+  return receipts.slice(-limit).reverse();
+}
+
+/**
  * Save receipts to storage atomically
  */
 export async function saveReceipts(store: ReceiptStore, cwd?: string): Promise<void> {
