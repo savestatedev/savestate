@@ -226,6 +226,26 @@ export {
   namespaceKey,
   DEFAULT_RANKING_WEIGHTS,
 } from './checkpoint/index.js';
+
+// Save receipts — verifiable proofs for persisted snapshots and memories
+export {
+  generateReceipt,
+  storeReceipt,
+  loadReceipts,
+  listReceipts,
+  findReceipt,
+  verifyReceipt,
+  saveReceipts,
+  logAudit,
+  getAuditLog,
+  clearAuditLog,
+} from './save-receipt.js';
+export type {
+  SaveReceipt,
+  ReceiptVerification,
+  ReceiptStore,
+  SaveAuditEntry,
+} from './save-receipt.js';
 export type {
   // Namespace
   Namespace,
