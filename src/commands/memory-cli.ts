@@ -38,7 +38,7 @@ const MEMORY_TIERS = ['L1', 'L2', 'L3'] as const;
 export function parseMemoryTier(value: string | undefined): MemoryTier | undefined {
   if (value === undefined) return undefined;
 
-  const tier = value.toUpperCase();
+  const tier = value.trim().toUpperCase();
   if (!MEMORY_TIERS.includes(tier as (typeof MEMORY_TIERS)[number])) {
     throw new Error(`Invalid memory tier "${value}". Expected one of L1, L2, or L3.`);
   }
@@ -162,7 +162,7 @@ export function parseMemorySnapshot(value: string | undefined): string | undefin
 export function parseMemoryTags(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
 
-  const tags = value.split(',').map((token) => token.trim());
+  const tags = [...new Set(value.split(',').map((token) => token.trim()))];
   if (tags.length === 0 || tags.some((token) => token.length === 0)) {
     throw new Error(
       `Invalid --tags value "${value}". Expected one or more non-empty memory tags (comma-separated).`,
@@ -191,7 +191,14 @@ export function parseMemoryNamespace(value: string | undefined): string | undefi
   if (value === undefined) return undefined;
 
   const namespace = value.trim();
-  if (namespace.length === 0 || namespace.includes(',') || /\s/.test(namespace)) {
+  const parts = namespace.split(':');
+  if (
+    namespace.length === 0 ||
+    namespace.includes(',') ||
+    /\s/.test(namespace) ||
+    (parts.length !== 3 && parts.length !== 4) ||
+    parts.some((part) => part.length === 0)
+  ) {
     throw new Error(
       `Invalid --namespace value "${value}". Expected a single non-empty namespace (org:app:agent[:user]).`,
     );
@@ -278,7 +285,14 @@ export function parseMemoryQuery(value: string | undefined): string {
 export function registerMemoryCommands(program: Command): void {
   const memory = program
     .command('memory')
-    .description('Manage multi-tier memory (L1/L2/L3) for long-running agents');
+    .description('Manage multi-tier memory (L1/L2/L3) for long-running agents')
+    .addHelpText(
+      'after',
+      '\nExamples:\n' +
+        '  $ savestate memory list --tier L1\n' +
+        '  $ savestate memory explain "preferred editor" --json\n' +
+        '  $ savestate memory log <memory-id>\n',
+    );
 
   // ─── savestate memory list ───────────────────────────────────
 

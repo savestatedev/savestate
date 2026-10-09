@@ -6,6 +6,10 @@ describe('memory tier CLI parsing', () => {
     expect(parseMemoryTier('l2')).toBe('L2');
   });
 
+  it('trims surrounding whitespace from a tier', () => {
+    expect(parseMemoryTier(' l1 ')).toBe('L1');
+  });
+
   it('reports the accepted values for invalid tiers', () => {
     expect(() => parseMemoryTier('archive')).toThrow(
       'Invalid memory tier "archive". Expected one of L1, L2, or L3.',

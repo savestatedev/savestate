@@ -12,7 +12,16 @@ describe('savestate memory --namespace', () => {
     expect(parseMemoryNamespace(' org:app:agent ')).toBe('org:app:agent');
   });
 
-  it.each(['', ' ', ',', 'org:app:agent,other', 'org app:agent'])(
+  it.each([
+    '',
+    ' ',
+    ',',
+    'org:app:agent,other',
+    'org app:agent',
+    'org:app',
+    'org::agent',
+    'org:app:agent:user:extra',
+  ])(
     'rejects invalid value %s',
     (value) => {
       expect(() => parseMemoryNamespace(value)).toThrow(

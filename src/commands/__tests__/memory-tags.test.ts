@@ -10,6 +10,7 @@ describe('savestate memory --tags', () => {
     expect(parseMemoryTags('prefs')).toEqual(['prefs']);
     expect(parseMemoryTags('important,v2')).toEqual(['important', 'v2']);
     expect(parseMemoryTags(' weekly , backup ')).toEqual(['weekly', 'backup']);
+    expect(parseMemoryTags('prefs,weekly,prefs')).toEqual(['prefs', 'weekly']);
   });
 
   it.each(['', ' ', ',', 'prefs,', ',v2', 'a,,b'])('rejects invalid value %s', (value) => {
