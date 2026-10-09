@@ -57,13 +57,15 @@ const MAX_SCHEDULE_OFFSET = 1000;
 export function parseScheduleLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SCHEDULE_STATUS_LIMIT}.`,
     );
   }
 
-  const limit = Number(value);
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SCHEDULE_STATUS_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_SCHEDULE_STATUS_LIMIT}.`,
@@ -82,13 +84,15 @@ export function selectScheduleStatusEntries<T>(entries: T[], limit?: number): T[
 export function parseScheduleOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SCHEDULE_OFFSET}.`,
     );
   }
 
-  const offset = Number(value);
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_SCHEDULE_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_SCHEDULE_OFFSET}.`,

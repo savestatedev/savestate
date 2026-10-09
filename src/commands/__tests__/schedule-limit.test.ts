@@ -10,6 +10,10 @@ describe('savestate schedule --limit', () => {
     expect(parseScheduleLimit('12')).toBe(12);
   });
 
+  it('accepts surrounding whitespace', () => {
+    expect(parseScheduleLimit(' 12 ')).toBe(12);
+  });
+
   it.each(['0', '-1', '1.5', '0x10', '1e2', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseScheduleLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
