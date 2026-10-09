@@ -156,6 +156,12 @@ const MAX_CLOUD_LIMIT = 1000;
 export function parseCloudLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_LIMIT) {
     throw new Error(
@@ -170,6 +176,12 @@ const MAX_CLOUD_OFFSET = 1000;
 /** Parse cloud --offset without treating invalid skips as the latest snapshot. */
 export function parseCloudOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CLOUD_OFFSET) {
@@ -192,6 +204,12 @@ const MAX_CLOUD_LIST_LIMIT = 1000;
 export function parseCloudListLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_LIST_LIMIT}.`,
+    );
+  }
+
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_LIST_LIMIT) {
     throw new Error(
@@ -212,6 +230,12 @@ const MAX_CLOUD_LIST_OFFSET = 1000;
 /** Parse cloud list --offset without turning user input errors into an empty cloud inventory. */
 export function parseCloudListOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_LIST_OFFSET}.`,
+    );
+  }
 
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CLOUD_LIST_OFFSET) {
