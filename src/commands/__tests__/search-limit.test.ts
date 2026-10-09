@@ -10,7 +10,12 @@ describe('savestate search --limit', () => {
     expect(parseSearchLimit('12')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope', '', ' 1'])('rejects invalid value %s', (value) => {
+  it('accepts surrounding whitespace', () => {
+    expect(parseSearchLimit(' 12 ')).toBe(12);
+    expect(parseSearchLimit(' 1')).toBe(1);
+  });
+
+  it.each(['0', '-1', '1.5', 'nope', ''])('rejects invalid value %s', (value) => {
     expect(() => parseSearchLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
