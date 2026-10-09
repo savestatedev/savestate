@@ -438,13 +438,14 @@ export function selectMemoryListEntries<T>(entries: T[], limit?: number): T[] {
 export function parseMemoryListOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_LIST_OFFSET}.`,
     );
   }
 
-  const offset = Number(value);
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_LIST_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_LIST_OFFSET}.`,

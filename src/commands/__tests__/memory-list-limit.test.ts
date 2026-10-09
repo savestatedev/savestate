@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryListLimit } from '../memory.js';
+import { parseMemoryListLimit, parseMemoryListOffset } from '../memory.js';
 
 describe('savestate memory list --limit', () => {
   it('defaults to undefined', () => {
@@ -19,5 +19,11 @@ describe('savestate memory list --limit', () => {
     expect(() => parseMemoryListLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
+  });
+});
+
+describe('savestate memory list --offset', () => {
+  it('accepts surrounding whitespace', () => {
+    expect(parseMemoryListOffset(' 12 ')).toBe(12);
   });
 });
