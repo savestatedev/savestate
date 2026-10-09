@@ -93,13 +93,14 @@ export function parseMemoryDemoteTo(value: string | undefined): MemoryDemoteTier
 export function parseMemoryLimit(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_LIMIT}.`,
     );
   }
 
-  const limit = Number(value);
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_LIMIT}.`,
