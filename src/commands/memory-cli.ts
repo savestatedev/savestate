@@ -285,7 +285,14 @@ export function parseMemoryQuery(value: string | undefined): string {
 export function registerMemoryCommands(program: Command): void {
   const memory = program
     .command('memory')
-    .description('Manage multi-tier memory (L1/L2/L3) for long-running agents');
+    .description('Manage multi-tier memory (L1/L2/L3) for long-running agents')
+    .addHelpText(
+      'after',
+      '\nExamples:\n' +
+        '  $ savestate memory list --tier L1\n' +
+        '  $ savestate memory explain "preferred editor" --json\n' +
+        '  $ savestate memory log <memory-id>\n',
+    );
 
   // ─── savestate memory list ───────────────────────────────────
 
