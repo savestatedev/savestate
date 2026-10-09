@@ -191,7 +191,14 @@ export function parseMemoryNamespace(value: string | undefined): string | undefi
   if (value === undefined) return undefined;
 
   const namespace = value.trim();
-  if (namespace.length === 0 || namespace.includes(',') || /\s/.test(namespace)) {
+  const parts = namespace.split(':');
+  if (
+    namespace.length === 0 ||
+    namespace.includes(',') ||
+    /\s/.test(namespace) ||
+    (parts.length !== 3 && parts.length !== 4) ||
+    parts.some((part) => part.length === 0)
+  ) {
     throw new Error(
       `Invalid --namespace value "${value}". Expected a single non-empty namespace (org:app:agent[:user]).`,
     );
