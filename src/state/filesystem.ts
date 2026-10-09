@@ -164,13 +164,16 @@ export class StateFilesystem {
     // Check expected version for optimistic locking
     if (input.expected_version !== undefined) {
       const existing = await this.storage.get(input.path);
-      if (existing && existing.version !== input.expected_version) {
+      // A missing path is version 0. Requiring callers to use 0 for a
+      // create keeps stale writers from silently creating a new value.
+      const currentVersion = existing?.version ?? 0;
+      if (currentVersion !== input.expected_version) {
         return {
           path: input.path,
-          version: existing.version,
-          updated_at: existing.updated_at,
+          version: currentVersion,
+          updated_at: existing?.updated_at ?? new Date().toISOString(),
           success: false,
-          error: `Version mismatch: expected ${input.expected_version}, got ${existing.version}`,
+          error: `Version mismatch: expected ${input.expected_version}, got ${currentVersion}`,
         };
       }
     }

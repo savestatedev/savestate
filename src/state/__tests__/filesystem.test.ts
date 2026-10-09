@@ -81,6 +81,30 @@ describe('StateFilesystem', () => {
       expect(result.error).toContain('Version mismatch');
     });
 
+    it('should require version zero when creating with optimistic locking', async () => {
+      const staleCreate = await fs.write({
+        path: '/test/new-lock',
+        value: 'stale',
+        writer: 'agent-1',
+        expected_version: 1,
+      });
+
+      expect(staleCreate.success).toBe(false);
+      expect(staleCreate.version).toBe(0);
+      expect(staleCreate.error).toContain('expected 1, got 0');
+      expect(await fs.get('/test/new-lock')).toBeNull();
+
+      const firstWrite = await fs.write({
+        path: '/test/new-lock',
+        value: 'fresh',
+        writer: 'agent-1',
+        expected_version: 0,
+      });
+
+      expect(firstWrite.success).toBe(true);
+      expect(firstWrite.version).toBe(1);
+    });
+
     it('should detect value types', async () => {
       await fs.write({ path: '/string', value: 'hello', writer: 's' });
       await fs.write({ path: '/number', value: 42, writer: 's' });
