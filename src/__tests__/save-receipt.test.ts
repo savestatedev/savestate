@@ -19,7 +19,19 @@ describe('loadReceipts', () => {
   });
 
   it('preserves valid receipts', async () => {
-    const receipt = { resource_id: 'memory-1', resource_type: 'memory' };
+    const receipt = {
+      receipt_id: 'receipt-1',
+      resource_id: 'memory-1',
+      resource_type: 'memory',
+      content_hash: 'a'.repeat(64),
+      encrypted_hash: 'b'.repeat(64),
+      size: 42,
+      storage_location: 'memory-1.saf.enc',
+      storage_backend: 'local',
+      saved_at: '2026-10-09T00:00:00.000Z',
+      receipt_created_at: '2026-10-09T00:00:01.000Z',
+      verified: true,
+    };
     await mkdir(join(testDir, '.savestate'), { recursive: true });
     await writeFile(join(testDir, '.savestate', 'save-receipts.json'), JSON.stringify({ receipts: [receipt] }));
 
