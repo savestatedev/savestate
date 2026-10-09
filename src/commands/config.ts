@@ -20,7 +20,14 @@ const MAX_CONFIG_OFFSET = 1000;
 export function parseConfigLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONFIG_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(trimmed);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONFIG_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONFIG_LIMIT}.`,
