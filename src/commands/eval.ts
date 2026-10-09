@@ -386,7 +386,7 @@ const MAX_EVAL_REPORT_LIMIT = 1000;
 export function parseEvalReportLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const limit = Number(value.trim());
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_EVAL_REPORT_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_EVAL_REPORT_LIMIT}.`,
@@ -407,7 +407,7 @@ const MAX_EVAL_REPORT_OFFSET = 1000;
 export function parseEvalReportOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const offset = Number(value.trim());
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_EVAL_REPORT_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_EVAL_REPORT_OFFSET}.`,
