@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { generateReceipt, verifyReceipt } from '../index.js';
+import {
+  generateReceipt,
+  verifyReceipt,
+  type ReceiptVerification,
+  type SaveReceipt,
+} from '../index.js';
 
 describe('public save receipt API', () => {
   it('exports receipt generation and verification for SDK consumers', () => {
@@ -16,7 +21,10 @@ describe('public save receipt API', () => {
       verified: true,
     });
 
-    expect(verifyReceipt(receipt, encrypted)).toMatchObject({
+    const typedReceipt: SaveReceipt = receipt;
+    const verification: ReceiptVerification = verifyReceipt(typedReceipt, encrypted);
+
+    expect(verification).toMatchObject({
       valid: true,
       actual_hash: receipt.encrypted_hash,
     });

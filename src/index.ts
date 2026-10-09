@@ -235,11 +235,15 @@ export {
   findReceipt,
   verifyReceipt,
   saveReceipts,
+  logAudit,
+  getAuditLog,
+  clearAuditLog,
 } from './save-receipt.js';
 export type {
   SaveReceipt,
   ReceiptVerification,
   ReceiptStore,
+  SaveAuditEntry,
 } from './save-receipt.js';
 export type {
   // Namespace
