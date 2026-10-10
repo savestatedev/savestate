@@ -14,6 +14,7 @@ interface ListOptions {
   offset?: string;
   since?: string;
   until?: string;
+  platform?: string;
   adapter?: string;
   exclude?: string;
   snapshot?: string;
@@ -204,6 +205,20 @@ export function parseListAdapter(value: string | undefined): string | undefined 
   );
 }
 
+/** Parse list --platform without treating blank or comma-separated values as an empty result. */
+export function parseListPlatform(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const platform = value.trim().toLowerCase();
+  if (platform.length === 0 || platform.includes(',') || /\s/.test(platform)) {
+    throw new Error(
+      `Invalid --platform value "${value}". Expected a single non-empty platform id.`,
+    );
+  }
+
+  return platform;
+}
+
 /** Parse list --exclude without treating unknown ids as an empty snapshot list. */
 export function parseListExclude(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
@@ -270,6 +285,7 @@ export function parseListLabel(value: string | undefined): string | undefined {
 export async function listCommand(options: ListOptions): Promise<void> {
   validateListDateRange(options.since, options.until);
   parseListAdapter(options.adapter);
+  parseListPlatform(options.platform);
   parseListExclude(options.exclude);
   parseListSnapshot(options.snapshot);
   parseListTag(options.tag);
@@ -373,12 +389,13 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
 export function applyListFilters(
   snapshots: SnapshotIndexEntry[],
-  options: { since?: string; until?: string; adapter?: string; exclude?: string; snapshot?: string; tag?: string; label?: string },
+  options: { since?: string; until?: string; platform?: string; adapter?: string; exclude?: string; snapshot?: string; tag?: string; label?: string },
 ): SnapshotIndexEntry[] {
   validateListDateRange(options.since, options.until);
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
   const adapter = parseListAdapter(options.adapter);
+  const platform = parseListPlatform(options.platform);
   const exclude = parseListExclude(options.exclude);
   const snapshotId = parseListSnapshot(options.snapshot);
   const tag = parseListTag(options.tag);
@@ -389,6 +406,7 @@ export function applyListFilters(
     if (since !== undefined && ts < since) return false;
     if (until !== undefined && ts > until) return false;
     if (adapter && s.adapter !== adapter) return false;
+    if (platform && s.platform.trim().toLowerCase() !== platform) return false;
     if (exclude !== undefined && exclude.includes(s.adapter)) return false;
     if (snapshotId !== undefined && s.id !== snapshotId) return false;
     if (tag && !(s.tags ?? []).includes(tag)) return false;
