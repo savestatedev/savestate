@@ -4738,6 +4738,16 @@ describe('CLI docs', () => {
     expect(listSection).toContain('savestate init');
   });
 
+  it('documents list ordering flags for table and JSON output', () => {
+    const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
+    const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
+    expect(listSection).toContain('--oldest-first');
+    expect(listSection).toContain('--reverse');
+    expect(listSection).toContain('savestate list --oldest-first --limit 5');
+    expect(listBlock).toContain(".option('--oldest-first'");
+    expect(listBlock).toContain(".option('--reverse'");
+  });
+
   it('documents list --since as an ISO 8601 date', () => {
     const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
     expect(listSection).toContain('--since');
