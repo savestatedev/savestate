@@ -108,6 +108,7 @@ program
   .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
+  .option('--platform <id>', 'Only snapshots recorded from this platform')
   .option('--adapter <id>', 'Only snapshots from this adapter')
   .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--snapshot <id>', 'Only this snapshot (single non-empty snapshot id)')

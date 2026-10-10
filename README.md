@@ -180,6 +180,7 @@ savestate restore [snapshot-id]       Restore from a snapshot (default: latest)
 savestate list                        List all snapshots
   --json                             Output as JSON
   --oldest-first                     Show snapshots from oldest to newest
+  --platform <id>                    Only snapshots recorded from this platform
   --limit <n>                        Max snapshots to show
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration
