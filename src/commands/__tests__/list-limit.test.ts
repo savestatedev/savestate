@@ -8,6 +8,7 @@ describe('savestate list --limit', () => {
 
   it('accepts positive integers', () => {
     expect(parseListLimit('12')).toBe(12);
+    expect(parseListLimit(' 12 ')).toBe(12);
   });
 
   it('accepts surrounding whitespace from scripted callers', () => {

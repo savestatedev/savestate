@@ -1,15 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
-import { formatListPageSummary, parseListOffset, selectListOffsetEntries, sortListEntries } from '../list.js';
+import {
+  formatListPageSummary,
+  parseListOffset,
+  selectListOffsetEntries,
+  sortListEntries,
+  validateListDateRange,
+} from '../list.js';
 
 describe('savestate list --offset', () => {
   it('defaults to undefined', () => {
     expect(parseListOffset(undefined)).toBeUndefined();
   });
 
-  it('accepts zero and positive integers', () => {
+  it('accepts zero, positive integers, and surrounding whitespace', () => {
     expect(parseListOffset('0')).toBe(0);
-    expect(parseListOffset('12')).toBe(12);
+    expect(parseListOffset(' 12 ')).toBe(12);
   });
 
   it('accepts surrounding whitespace from scripted callers', () => {
@@ -55,5 +61,12 @@ describe('savestate list --offset', () => {
       { id: 'zeta', timestamp },
       { id: 'alpha', timestamp },
     ] as SnapshotIndexEntry[]).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
+  });
+
+  it('rejects an inverted date range before filtering', () => {
+    expect(() => validateListDateRange('2026-10-10', '2026-10-09')).toThrow(
+      'Invalid list date range: --since (2026-10-10) must be on or before --until (2026-10-09).',
+    );
+    expect(() => validateListDateRange('2026-10-09', '2026-10-10')).not.toThrow();
   });
 });

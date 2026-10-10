@@ -165,6 +165,18 @@ export function parseListUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Reject an inverted date window before it silently produces an empty result. */
+export function validateListDateRange(since?: string, until?: string): void {
+  const sinceMs = parseListSince(since);
+  const untilMs = parseListUntil(until);
+
+  if (sinceMs !== undefined && untilMs !== undefined && sinceMs > untilMs) {
+    throw new Error(
+      `Invalid list date range: --since (${since}) must be on or before --until (${until}).`,
+    );
+  }
+}
+
 /** Parse list --adapter without treating unknown ids as an empty snapshot list. */
 export function parseListAdapter(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -243,6 +255,7 @@ export function parseListLabel(value: string | undefined): string | undefined {
 }
 
 export async function listCommand(options: ListOptions): Promise<void> {
+  validateListDateRange(options.since, options.until);
   parseListAdapter(options.adapter);
   parseListExclude(options.exclude);
   parseListSnapshot(options.snapshot);
@@ -348,6 +361,7 @@ export function applyListFilters(
   snapshots: SnapshotIndexEntry[],
   options: { since?: string; until?: string; adapter?: string; exclude?: string; snapshot?: string; tag?: string; label?: string },
 ): SnapshotIndexEntry[] {
+  validateListDateRange(options.since, options.until);
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
   const adapter = parseListAdapter(options.adapter);
