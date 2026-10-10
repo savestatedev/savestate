@@ -183,6 +183,14 @@ savestate list                        List all snapshots
   --platform <id>                    Only snapshots recorded from this platform
   --reverse                          Alias for --oldest-first
   --limit <n>                        Max snapshots to show
+savestate search <query>              Search across snapshot contents
+  --type <types>                     Limit to memory, conversation, identity, or knowledge
+  --adapter <id>                     Only search snapshots from this adapter
+  --tag <tag>                        Only search snapshots with this tag
+  --label <label>                    Only search snapshots with this label
+  --offset <n>                       Skip ranked results before applying --limit
+  --limit <n>                        Max results to show (default 20)
+  --json                             Output results as JSON
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration
   --set <key=value>                  Set a config value
