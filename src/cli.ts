@@ -102,14 +102,14 @@ program
   .alias('ls')
   .description('List all snapshots')
   .option('--json', 'Output as JSON')
-  .option('--limit <n>', 'Maximum number of snapshots to show')
+  .option('--limit <n>', 'Maximum number of snapshots to show (1–1000)')
   .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
   .option('--adapter <id>', 'Only snapshots from this adapter')
   .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--snapshot <id>', 'Only this snapshot (single non-empty snapshot id)')
-  .option('--tag <tag>', 'Only snapshots tagged with this label')
+  .option('--tag <tag>', 'Only snapshots with this tag (single non-empty snapshot tag)')
   .option('--label <label>', 'Only snapshots with this label (single non-empty snapshot label)')
   .action(listCommand);
 
