@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseContextCompileLimit, selectContextCompileEntries } from '../context.js';
+import {
+  parseContextCompileLimit,
+  parseContextCompileOffset,
+  selectContextCompileEntries,
+} from '../context.js';
 
 describe('savestate context compile --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,23 @@ describe('savestate context compile --limit', () => {
   it('returns all rows when --limit is omitted', () => {
     const entries = [{ id: 'must_know_facts' }, { id: 'active_state' }];
     expect(selectContextCompileEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('pages section rows with --offset before applying --limit', () => {
+    expect(
+      selectContextCompileEntries(
+        [{ id: 'must_know_facts' }, { id: 'active_state' }, { id: 'open_loops' }],
+        1,
+        1,
+      ).map((entry) => entry.id),
+    ).toEqual(['active_state']);
+  });
+
+  it('validates --offset as a bounded non-negative integer', () => {
+    expect(parseContextCompileOffset(undefined)).toBeUndefined();
+    expect(parseContextCompileOffset('0')).toBe(0);
+    expect(parseContextCompileOffset('1000')).toBe(1000);
+    expect(() => parseContextCompileOffset('-1')).toThrow();
+    expect(() => parseContextCompileOffset('1001')).toThrow();
   });
 });
