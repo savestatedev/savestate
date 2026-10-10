@@ -23,7 +23,7 @@ describe('savestate list --platform', () => {
   });
 
   it('keeps only snapshots with the matching recorded platform', () => {
-    const snapshots = [entry('chat', 'chatgpt'), entry('claude', 'claude')];
+    const snapshots = [entry('chat', ' ChatGPT '), entry('claude', 'claude')];
     expect(applyListFilters(snapshots, { platform: 'chatgpt' }).map((s) => s.id)).toEqual(['chat']);
   });
 });

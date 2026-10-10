@@ -406,7 +406,7 @@ export function applyListFilters(
     if (since !== undefined && ts < since) return false;
     if (until !== undefined && ts > until) return false;
     if (adapter && s.adapter !== adapter) return false;
-    if (platform && s.platform !== platform) return false;
+    if (platform && s.platform.trim().toLowerCase() !== platform) return false;
     if (exclude !== undefined && exclude.includes(s.adapter)) return false;
     if (snapshotId !== undefined && s.id !== snapshotId) return false;
     if (tag && !(s.tags ?? []).includes(tag)) return false;
