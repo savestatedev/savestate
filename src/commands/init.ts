@@ -11,9 +11,11 @@ import { getPassphrase } from '../passphrase.js';
 interface InitOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_INIT_LIMIT = 1000;
+const MAX_INIT_OFFSET = 1000;
 
 /** Parse init --limit without turning user input errors into an empty init. */
 export function parseInitLimit(value: string | undefined): number | undefined {
@@ -34,10 +36,28 @@ export function parseInitLimit(value: string | undefined): number | undefined {
   return limit;
 }
 
+/** Parse init --offset without allowing an unbounded status-row skip. */
+export function parseInitOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_INIT_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_INIT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_INIT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
 /** Keep the first N init status field rows when --limit is set. */
-export function selectInitEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+export function selectInitEntries<T>(entries: T[], limit?: number, offset = 0): T[] {
+  return entries.slice(offset, limit === undefined ? undefined : offset + limit);
 }
 
 export interface InitResult {
@@ -68,6 +88,7 @@ function passphraseHint(config: { storage: { options: Record<string, unknown> } 
 
 export async function initCommand(options: InitOptions = {}): Promise<void> {
   const limit = parseInitLimit(options.limit);
+  const offset = parseInitOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -93,7 +114,7 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
       chalk.yellow('⚠  SaveState is already initialized in this directory.'),
       chalk.dim(`   Config: ${localConfigDir()}/config.json`),
     ];
-    for (const row of selectInitEntries(rows, limit)) {
+    for (const row of selectInitEntries(rows, limit, offset)) {
       console.log(row);
     }
     return;
@@ -163,7 +184,7 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
       chalk.dim(`  ${chalk.white('savestate config')}        Configure storage & adapters`),
       chalk.dim(`  ${chalk.white('savestate adapters')}      See available platform adapters`),
     ];
-    for (const row of selectInitEntries(rows, limit)) {
+    for (const row of selectInitEntries(rows, limit, offset)) {
       console.log(row);
     }
     console.log();
