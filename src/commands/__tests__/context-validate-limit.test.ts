@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseContextValidateLimit, selectContextValidateIssues } from '../context.js';
+import {
+  parseContextValidateLimit,
+  parseContextValidateOffset,
+  selectContextValidateIssues,
+} from '../context.js';
 
 describe('savestate context validate --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,21 @@ describe('savestate context validate --limit', () => {
   it('returns all issues when --limit is omitted', () => {
     const issues = [{ id: 'missing-run-id' }, { id: 'budget-exceeded' }];
     expect(selectContextValidateIssues(issues, undefined)).toEqual(issues);
+  });
+
+  it('pages issues with --offset before applying --limit', () => {
+    const issues = [{ id: 'first' }, { id: 'second' }, { id: 'third' }];
+    expect(selectContextValidateIssues(issues, 1, 1).map((issue) => issue.id)).toEqual(['second']);
+  });
+
+  it('parses and bounds --offset', () => {
+    expect(parseContextValidateOffset(undefined)).toBeUndefined();
+    expect(parseContextValidateOffset(' 2 ')).toBe(2);
+    expect(() => parseContextValidateOffset('-1')).toThrow(
+      'Invalid --offset value "-1". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseContextValidateOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
   });
 });
