@@ -460,6 +460,18 @@ export function selectMemoryListOffsetEntries<T>(entries: T[], offset?: number):
   return entries.slice(offset);
 }
 
+/** Sort memories chronologically, keeping equal timestamps deterministic. */
+export function sortMemoryListEntries(
+  entries: MemoryEntry[],
+  oldestFirst = false,
+): MemoryEntry[] {
+  return [...entries].sort((a, b) => {
+    const createdAt = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    const chronological = Number.isNaN(createdAt) ? a.createdAt.localeCompare(b.createdAt) : createdAt;
+    return (oldestFirst ? chronological : -chronological) || a.id.localeCompare(b.id);
+  });
+}
+
 /** Apply memory list --offset then --limit. */
 export function applyMemoryListFilters<T>(
   entries: T[],
@@ -481,6 +493,7 @@ export async function listMemories(
     snapshotId?: string;
     tier?: MemoryTier;
     pinned?: boolean;
+    oldestFirst?: boolean;
     limit?: number;
     offset?: number;
     format?: 'table' | 'json';
@@ -506,7 +519,7 @@ export async function listMemories(
   const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
   const normalized = normalizeMemory(snapshot.memory);
 
-  let entries = normalized.core;
+  let entries = sortMemoryListEntries(normalized.core, options?.oldestFirst);
 
   // Filter by tier
   if (options?.tier) {
