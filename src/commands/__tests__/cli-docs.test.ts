@@ -2335,6 +2335,15 @@ describe('CLI docs', () => {
     expect(context).toContain('export function parseContextValidateLimit');
   });
 
+  it('documents context validate --offset as a bounded non-negative integer', () => {
+    const contextSection = docs.slice(docs.indexOf('id="context"'), docs.indexOf('id="memory"'));
+    const validateBlock = context.slice(context.indexOf("command('validate')"), context.indexOf("command('config')"));
+    expect(contextSection).toContain('validation errors and warnings');
+    expect(contextSection).toContain('savestate context validate --file brief.json --offset 5 --limit 5');
+    expect(validateBlock).toContain(".option('--offset <n>'");
+    expect(context).toContain('export function parseContextValidateOffset');
+  });
+
   it('registers --json on savestate context validate', () => {
     const validateBlock = context.slice(context.indexOf("command('validate')"), context.indexOf("command('config')"));
     expect(validateBlock).toContain(".option('--json'");

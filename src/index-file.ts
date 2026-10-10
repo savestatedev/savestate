@@ -100,9 +100,12 @@ export async function getLatestEntry(cwd?: string): Promise<SnapshotIndexEntry |
   const index = await loadIndex(cwd);
   if (index.snapshots.length === 0) return null;
 
-  // Sort by timestamp descending, return most recent
+  // Sort by timestamp descending, then by id so equal-time snapshots are stable.
   const sorted = [...index.snapshots].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    (a, b) => {
+      const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      return timestampOrder !== 0 ? timestampOrder : a.id.localeCompare(b.id);
+    },
   );
   return sorted[0];
 }

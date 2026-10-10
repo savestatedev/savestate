@@ -79,6 +79,12 @@ export interface ContextValidateJson {
   valid: boolean;
   errors: string[];
   warnings: string[];
+  pagination: {
+    offset: number;
+    limit: number | null;
+    totalErrors: number;
+    totalWarnings: number;
+  };
   coverage: {
     constraintsCovered: number;
     constraintsTotal: number;
@@ -187,6 +193,7 @@ export function parseContextConfigLimit(value: string | undefined): number | und
 }
 
 const MAX_CONTEXT_VALIDATE_LIMIT = 1000;
+const MAX_CONTEXT_VALIDATE_OFFSET = 1000;
 
 /** Parse context validate --limit without turning user input errors into an empty issue list. */
 export function parseContextValidateLimit(value: string | undefined): number | undefined {
@@ -222,10 +229,34 @@ export function parseContextCompileLimit(value: string | undefined): number | un
   return limit;
 }
 
-/** Keep the first N validation errors or warnings when --limit is set. */
-export function selectContextValidateIssues<T>(issues: T[], limit?: number): T[] {
-  if (limit === undefined) return issues;
-  return issues.slice(0, limit);
+/** Parse context validate --offset without turning user input into an unbounded skip. */
+export function parseContextValidateOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_VALIDATE_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONTEXT_VALIDATE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_VALIDATE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Page validation errors or warnings with --offset and --limit. */
+export function selectContextValidateIssues<T>(
+  issues: T[],
+  limit?: number,
+  offset?: number,
+): T[] {
+  const start = offset ?? 0;
+  return issues.slice(start, start + (limit ?? issues.length));
 }
 
 export function formatContextCompileJson(brief: RunBrief): string {
@@ -258,12 +289,19 @@ export function formatContextValidateJson(
   file: string,
   result: ValidationResult,
   limit?: number,
+  offset?: number,
 ): string {
   const record: ContextValidateJson = {
     file,
     valid: result.valid,
-    errors: selectContextValidateIssues(result.errors, limit),
-    warnings: selectContextValidateIssues(result.warnings, limit),
+    errors: selectContextValidateIssues(result.errors, limit, offset),
+    warnings: selectContextValidateIssues(result.warnings, limit, offset),
+    pagination: {
+      offset: offset ?? 0,
+      limit: limit ?? null,
+      totalErrors: result.errors.length,
+      totalWarnings: result.warnings.length,
+    },
     coverage: {
       constraintsCovered: result.coverage.constraints_covered,
       constraintsTotal: result.coverage.constraints_total,
@@ -536,10 +574,12 @@ export function registerContextCommands(program: Command): void {
     .description('Validate a RunBrief')
     .option('-f, --file <path>', 'Path to RunBrief JSON file (single non-empty path)')
     .option('--limit <n>', 'Maximum number of validation errors and warnings to show')
+    .option('--offset <n>', 'Skip the first N validation errors and warnings (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action((options) => {
       const filePath = parseContextFile(options.file);
       const limit = parseContextValidateLimit(options.limit);
+      const offset = parseContextValidateOffset(options.offset);
       if (!filePath) {
         console.error('Validation requires a RunBrief file (--file)');
         console.error('Usage: savestate context validate --file brief.json');
@@ -567,15 +607,15 @@ export function registerContextCommands(program: Command): void {
       const result = compiler.validate(brief);
 
       if (options.json) {
-        console.log(formatContextValidateJson(filePath, result, limit));
+        console.log(formatContextValidateJson(filePath, result, limit, offset));
         if (!result.valid) process.exit(1);
         return;
       }
 
       console.log(result.valid ? 'Valid RunBrief' : 'Invalid RunBrief');
       console.log(`File: ${filePath}`);
-      const errors = selectContextValidateIssues(result.errors, limit);
-      const warnings = selectContextValidateIssues(result.warnings, limit);
+      const errors = selectContextValidateIssues(result.errors, limit, offset);
+      const warnings = selectContextValidateIssues(result.warnings, limit, offset);
       if (errors.length > 0) {
         console.log('Errors:');
         for (const error of errors) {

@@ -229,6 +229,12 @@ describe('savestate context --json', () => {
       valid: true,
       errors: [],
       warnings: ['No must_know_facts included'],
+      pagination: {
+        offset: 0,
+        limit: null,
+        totalErrors: 0,
+        totalWarnings: 1,
+      },
       coverage: {
         constraintsCovered: 2,
         constraintsTotal: 2,
@@ -254,7 +260,41 @@ describe('savestate context --json', () => {
     expect(parsed.valid).toBe(false);
     expect(parsed.errors).toEqual(['Missing run_id', 'Budget exceeded']);
     expect(parsed.warnings).toEqual([]);
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      totalErrors: 2,
+      totalWarnings: 0,
+    });
     expect(parsed.coverage.constraintsCovered).toBe(0);
     expect(parsed.coverage.requiredFactsPresent).toBe(false);
+  });
+
+  it('reports totals and the requested page for validation JSON', () => {
+    const parsed = JSON.parse(
+      formatContextValidateJson(
+        'brief.json',
+        {
+          valid: false,
+          errors: ['e1', 'e2', 'e3'],
+          warnings: ['w1', 'w2'],
+          coverage: {
+            constraints_covered: 0,
+            constraints_total: 1,
+            required_facts_present: false,
+          },
+        },
+        1,
+        1,
+      ),
+    ) as ContextValidateJson;
+    expect(parsed.errors).toEqual(['e2']);
+    expect(parsed.warnings).toEqual(['w2']);
+    expect(parsed.pagination).toEqual({
+      offset: 1,
+      limit: 1,
+      totalErrors: 3,
+      totalWarnings: 2,
+    });
   });
 });
