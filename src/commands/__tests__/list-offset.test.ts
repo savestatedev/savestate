@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 import {
   formatListPageSummary,
+  formatListDate,
   parseListOffset,
   selectListOffsetEntries,
   sortListEntries,
@@ -83,5 +84,10 @@ describe('savestate list --offset', () => {
       'Invalid list date range: --since (2026-10-10) must be on or before --until (2026-10-09).',
     );
     expect(() => validateListDateRange('2026-10-09', '2026-10-10')).not.toThrow();
+  });
+
+  it('keeps human-readable dates distinct across years', () => {
+    expect(formatListDate('2025-01-25T09:30:00.000Z')).toContain('2025');
+    expect(formatListDate('2026-01-25T09:30:00.000Z')).toContain('2026');
   });
 });

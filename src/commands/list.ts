@@ -344,7 +344,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   // Rows
   for (const s of sorted) {
-    const date = formatDate(s.timestamp);
+    const date = formatListDate(s.timestamp);
     const label = s.label ?? chalk.dim('—');
     const size = formatBytes(s.size);
 
@@ -403,9 +403,10 @@ function parseDateOrThrow(input: string, flag: string): number {
   return ms;
 }
 
-function formatDate(iso: string): string {
+export function formatListDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString('en-US', {
+    year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
