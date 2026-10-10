@@ -2357,6 +2357,8 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('or scoring weight or budget allocation rows on');
     expect(contextSection).toContain('savestate context config --limit 5');
     expect(contextSection).toContain('savestate context config --offset 2 --limit 5');
+    expect(contextSection).toContain('config</code> shows scoring weights and budget allocation, with <code>--offset</code> skipping rows before <code>--limit</code>');
+    expect(contextSection).toContain('or scoring weight and budget allocation rows');
     expect(configBlock).toContain(".option('--limit <n>'");
     expect(configBlock).toContain(".option('--offset <n>'");
     expect(context).toContain('export function parseContextConfigLimit');
