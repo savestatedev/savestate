@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseContextConfigLimit, selectContextConfigEntries } from '../context.js';
+import {
+  parseContextConfigLimit,
+  parseContextConfigOffset,
+  selectContextConfigEntries,
+} from '../context.js';
 
 describe('savestate context config --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,26 @@ describe('savestate context config --limit', () => {
   it('returns all rows when --limit is omitted', () => {
     const entries = [{ id: 'relevance' }, { id: 'recency' }];
     expect(selectContextConfigEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('pages rows with --offset before applying --limit', () => {
+    expect(
+      selectContextConfigEntries(
+        [{ id: 'relevance' }, { id: 'recency' }, { id: 'importance' }],
+        1,
+        1,
+      ).map((entry) => entry.id),
+    ).toEqual(['recency']);
+  });
+
+  it('parses and bounds --offset', () => {
+    expect(parseContextConfigOffset(undefined)).toBeUndefined();
+    expect(parseContextConfigOffset(' 2 ')).toBe(2);
+    expect(() => parseContextConfigOffset('-1')).toThrow(
+      'Invalid --offset value "-1". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseContextConfigOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
   });
 });

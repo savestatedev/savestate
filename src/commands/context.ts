@@ -36,6 +36,12 @@ export interface ContextCompileJson {
 export interface ContextConfigJson {
   weights: ScoringWeights;
   budget: BudgetAllocation;
+  pagination: {
+    offset: number;
+    limit: number | null;
+    totalWeights: number;
+    totalBudget: number;
+  };
 }
 
 export interface ContextExplainCandidateJson {
@@ -178,6 +184,7 @@ export function selectContextCompileEntries<T>(
 }
 
 const MAX_CONTEXT_CONFIG_LIMIT = 1000;
+const MAX_CONTEXT_CONFIG_OFFSET = 1000;
 
 /** Parse context config --limit without turning user input errors into an empty config. */
 export function parseContextConfigLimit(value: string | undefined): number | undefined {
@@ -209,9 +216,29 @@ export function parseContextValidateLimit(value: string | undefined): number | u
 }
 
 /** Keep the first N scoring weight or budget allocation rows when --limit is set. */
-export function selectContextConfigEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+export function selectContextConfigEntries<T>(entries: T[], limit?: number, offset?: number): T[] {
+  const start = offset ?? 0;
+  return entries.slice(start, start + (limit ?? entries.length));
+}
+
+/** Parse context config --offset without turning user input into an unbounded skip. */
+export function parseContextConfigOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_CONFIG_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONTEXT_CONFIG_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_CONFIG_OFFSET}.`,
+    );
+  }
+  return offset;
 }
 
 const MAX_CONTEXT_COMPILE_LIMIT = 1000;
@@ -277,10 +304,22 @@ export function formatContextCompileJson(brief: RunBrief): string {
   return JSON.stringify(record, null, 2);
 }
 
-export function formatContextConfigJson(): string {
+export function formatContextConfigJson(limit?: number, offset?: number): string {
+  const weights = Object.fromEntries(
+    selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset),
+  ) as ScoringWeights;
+  const budget = Object.fromEntries(
+    selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset),
+  ) as BudgetAllocation;
   const record: ContextConfigJson = {
-    weights: DEFAULT_SCORING_WEIGHTS,
-    budget: DEFAULT_BUDGET_ALLOCATION,
+    weights,
+    budget,
+    pagination: {
+      offset: offset ?? 0,
+      limit: limit ?? null,
+      totalWeights: Object.keys(DEFAULT_SCORING_WEIGHTS).length,
+      totalBudget: Object.keys(DEFAULT_BUDGET_ALLOCATION).length,
+    },
   };
   return JSON.stringify(record, null, 2);
 }
@@ -641,17 +680,19 @@ export function registerContextCommands(program: Command): void {
     .option('--weights', 'Show scoring weights')
     .option('--budget', 'Show budget allocation')
     .option('--limit <n>', 'Maximum number of scoring weight or budget allocation rows to show')
+    .option('--offset <n>', 'Skip the first N scoring weight or budget allocation rows (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action((options) => {
       const limit = parseContextConfigLimit(options.limit);
+      const offset = parseContextConfigOffset(options.offset);
       if (options.json) {
-        console.log(formatContextConfigJson());
+        console.log(formatContextConfigJson(limit, offset));
         return;
       }
       
       if (options.weights || (!options.weights && !options.budget)) {
         console.log('⚖️ Scoring Weights:');
-        for (const [key, value] of selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit)) {
+        for (const [key, value] of selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset)) {
           console.log(`   ${key}: ${value}`);
         }
         console.log('');
@@ -659,7 +700,7 @@ export function registerContextCommands(program: Command): void {
       
       if (options.budget || (!options.weights && !options.budget)) {
         console.log('💰 Budget Allocation:');
-        for (const [key, value] of selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit)) {
+        for (const [key, value] of selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset)) {
           const percent = ((value as number) * 100).toFixed(0);
           console.log(`   ${key}: ${percent}%`);
         }

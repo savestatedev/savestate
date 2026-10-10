@@ -2356,8 +2356,11 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('Must be a positive integer up to 1000');
     expect(contextSection).toContain('or scoring weight or budget allocation rows on');
     expect(contextSection).toContain('savestate context config --limit 5');
+    expect(contextSection).toContain('savestate context config --offset 2 --limit 5');
     expect(configBlock).toContain(".option('--limit <n>'");
+    expect(configBlock).toContain(".option('--offset <n>'");
     expect(context).toContain('export function parseContextConfigLimit');
+    expect(context).toContain('export function parseContextConfigOffset');
   });
 
   it('documents context compile --limit as a bounded positive integer', () => {
