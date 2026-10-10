@@ -304,6 +304,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('List memories with tier information')
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-p, --pinned', 'Show only pinned memories')
+    .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
     .option('--offset <n>', 'Skip the first N memories (non-negative integer up to 1000)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
@@ -317,6 +318,7 @@ export function registerMemoryCommands(program: Command): void {
         await listMemories(storage, passphrase, {
           tier: parseMemoryTier(options.tier),
           pinned: options.pinned,
+          oldestFirst: options.oldestFirst,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),
           snapshotId: parseMemorySnapshot(options.snapshot),
