@@ -97,6 +97,7 @@ export interface ContextValidateMissingJson {
 const DEFAULT_CONTEXT_EXPLAIN_LIMIT = 10;
 const MAX_CONTEXT_EXPLAIN_LIMIT = 1000;
 const MAX_CONTEXT_EXPLAIN_OFFSET = 1000;
+const MAX_CONTEXT_COMPILE_OFFSET = 1000;
 
 /** Parse context explain --limit without turning user input errors into an empty candidate list. */
 export function parseContextLimit(value: string | undefined): number | undefined {
@@ -141,6 +142,33 @@ export function selectContextCandidates<T>(candidates: T[], limit?: number, offs
   const start = offset ?? 0;
   const end = start + (limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT);
   return candidates.slice(start, end);
+}
+
+/** Parse context compile --offset without turning user input into an empty section list. */
+export function parseContextCompileOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_COMPILE_OFFSET}.`,
+    );
+  }
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONTEXT_COMPILE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_COMPILE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Page RunBrief section rows with --offset and --limit. */
+export function selectContextCompileEntries<T>(
+  entries: T[],
+  limit?: number,
+  offset?: number,
+): T[] {
+  const start = offset ?? 0;
+  return entries.slice(start, start + (limit ?? entries.length));
 }
 
 const MAX_CONTEXT_CONFIG_LIMIT = 1000;
@@ -192,12 +220,6 @@ export function parseContextCompileLimit(value: string | undefined): number | un
     );
   }
   return limit;
-}
-
-/** Keep the first N RunBrief section rows when --limit is set. */
-export function selectContextCompileEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
 }
 
 /** Keep the first N validation errors or warnings when --limit is set. */
@@ -406,12 +428,14 @@ export function registerContextCommands(program: Command): void {
     .requiredOption('-t, --task <intent>', 'Task intent/description (non-empty)')
     .option('-b, --budget <tokens>', 'Token budget', '4000')
     .option('--limit <n>', 'Maximum number of RunBrief section rows to show')
+    .option('--offset <n>', 'Skip the first N RunBrief section rows (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       const compiler = new ContextCompiler();
       const agentId = parseContextAgent(options.agent);
       const task = parseContextTask(options.task);
       const limit = parseContextCompileLimit(options.limit);
+      const offset = parseContextCompileOffset(options.offset);
 
       const request: CompileRequest = {
         agent_id: agentId ?? options.agent,
@@ -453,7 +477,7 @@ export function registerContextCommands(program: Command): void {
         `   Conflicts: ${result.brief.conflicts.length}`,
         `   Citations: ${result.brief.citations.length}`,
       ];
-      for (const row of selectContextCompileEntries(sectionRows, limit)) {
+      for (const row of selectContextCompileEntries(sectionRows, limit, offset)) {
         console.log(row);
       }
     });
