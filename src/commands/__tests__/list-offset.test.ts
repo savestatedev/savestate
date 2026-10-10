@@ -3,6 +3,7 @@ import type { SnapshotIndexEntry } from '../../index-file.js';
 import {
   formatListPageSummary,
   formatListDate,
+  applyListFilters,
   parseListOffset,
   selectListOffsetEntries,
   sortListEntries,
@@ -89,5 +90,14 @@ describe('savestate list --offset', () => {
   it('keeps human-readable dates distinct across years', () => {
     expect(formatListDate('2025-01-25T09:30:00.000Z')).toContain('2025');
     expect(formatListDate('2026-01-25T09:30:00.000Z')).toContain('2026');
+  });
+
+  it('normalizes legacy adapter values for exclusions', () => {
+    const snapshots = [
+      { id: 'legacy', adapter: ' ChatGPT ', platform: 'openai', timestamp: '2026-10-10T00:00:00.000Z' },
+      { id: 'current', adapter: 'claude-web', platform: 'anthropic', timestamp: '2026-10-09T00:00:00.000Z' },
+    ] as SnapshotIndexEntry[];
+
+    expect(applyListFilters(snapshots, { exclude: 'chatgpt' }).map((entry) => entry.id)).toEqual(['current']);
   });
 });

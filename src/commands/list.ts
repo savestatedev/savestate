@@ -410,7 +410,7 @@ export function applyListFilters(
     // CLI input remains useful across those legacy entries.
     if (adapter && s.adapter.trim().toLowerCase() !== adapter) return false;
     if (platform && s.platform.trim().toLowerCase() !== platform) return false;
-    if (exclude !== undefined && exclude.includes(s.adapter)) return false;
+    if (exclude !== undefined && exclude.includes(s.adapter.trim().toLowerCase())) return false;
     if (snapshotId !== undefined && s.id !== snapshotId) return false;
     if (tag && !(s.tags ?? []).includes(tag)) return false;
     if (label !== undefined && s.label !== label) return false;
