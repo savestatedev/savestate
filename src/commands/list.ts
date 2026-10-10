@@ -8,6 +8,7 @@ import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 
 interface ListOptions {
   json?: boolean;
+  oldestFirst?: boolean;
   limit?: string;
   offset?: string;
   since?: string;
@@ -45,16 +46,25 @@ export interface ListSnapshotJson {
 }
 
 /** Keep list pagination stable when snapshots share the same timestamp. */
-export function sortListEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
+export function sortListEntries(
+  snapshots: SnapshotIndexEntry[],
+  oldestFirst = false,
+): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
     const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    return timestampOrder !== 0 ? timestampOrder : a.id.localeCompare(b.id);
+    const order = timestampOrder !== 0 ? timestampOrder : a.id.localeCompare(b.id);
+    return oldestFirst ? -order : order;
   });
 }
 
-export function formatListJson(snapshots: SnapshotIndexEntry[], limit = 50, offset?: number): string {
+export function formatListJson(
+  snapshots: SnapshotIndexEntry[],
+  limit = 50,
+  offset?: number,
+  oldestFirst = false,
+): string {
   const records: ListSnapshotJson[] = selectListOffsetEntries(
-    sortListEntries(snapshots),
+    sortListEntries(snapshots, oldestFirst),
     offset,
   )
     .slice(0, limit)
@@ -283,7 +293,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const filtered = applyListFilters(index.snapshots, options);
 
   if (options.json) {
-    console.log(formatListJson(filtered, limit, offset));
+    console.log(formatListJson(filtered, limit, offset, options.oldestFirst));
     return;
   }
 
@@ -305,9 +315,9 @@ export async function listCommand(options: ListOptions): Promise<void> {
     return;
   }
 
-  // Sort by timestamp descending (most recent first), then skip/limit
+  // Sort by timestamp, then skip/limit.
   const sorted = selectListOffsetEntries(
-    sortListEntries(filtered),
+    sortListEntries(filtered, options.oldestFirst),
     offset,
   ).slice(0, limit);
 

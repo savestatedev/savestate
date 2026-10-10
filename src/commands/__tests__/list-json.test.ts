@@ -45,4 +45,9 @@ describe('savestate list --json', () => {
   it('prints an empty array when there are no snapshots', () => {
     expect(formatListJson([])).toBe('[]');
   });
+
+  it('supports oldest-first ordering for JSON consumers', () => {
+    const parsed = JSON.parse(formatListJson([older, newer], 50, undefined, true)) as ListSnapshotJson[];
+    expect(parsed.map((snapshot) => snapshot.id)).toEqual(['ss-older', 'ss-newer']);
+  });
 });

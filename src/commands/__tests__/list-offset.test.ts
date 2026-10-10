@@ -63,6 +63,13 @@ describe('savestate list --offset', () => {
     ] as SnapshotIndexEntry[]).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
   });
 
+  it('can sort snapshots oldest first', () => {
+    expect(sortListEntries([
+      { id: 'newer', timestamp: '2026-01-02T00:00:00.000Z' },
+      { id: 'older', timestamp: '2026-01-01T00:00:00.000Z' },
+    ] as SnapshotIndexEntry[], true).map((entry) => entry.id)).toEqual(['older', 'newer']);
+  });
+
   it('rejects an inverted date range before filtering', () => {
     expect(() => validateListDateRange('2026-10-10', '2026-10-09')).toThrow(
       'Invalid list date range: --since (2026-10-10) must be on or before --until (2026-10-09).',
