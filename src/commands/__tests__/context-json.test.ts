@@ -138,6 +138,20 @@ describe('savestate context --json', () => {
     expect(parsed.weights.criticality).toBe(0.25);
     expect(parsed.budget.must_know_facts_min).toBe(0.15);
     expect(parsed.budget.citations_max).toBe(0.05);
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      totalWeights: Object.keys(parsed.weights).length,
+      totalBudget: Object.keys(parsed.budget).length,
+    });
+  });
+
+  it('applies context config pagination to JSON output', () => {
+    const parsed = JSON.parse(formatContextConfigJson(1, 1)) as ContextConfigJson;
+    expect(Object.keys(parsed.weights)).toHaveLength(1);
+    expect(Object.keys(parsed.budget)).toHaveLength(1);
+    expect(parsed.pagination.offset).toBe(1);
+    expect(parsed.pagination.limit).toBe(1);
   });
 
   it('prints explain inclusion counts as JSON', () => {
