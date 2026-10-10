@@ -209,7 +209,7 @@ export function parseListAdapter(value: string | undefined): string | undefined 
 export function parseListPlatform(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
 
-  const platform = value.trim();
+  const platform = value.trim().toLowerCase();
   if (platform.length === 0 || platform.includes(',') || /\s/.test(platform)) {
     throw new Error(
       `Invalid --platform value "${value}". Expected a single non-empty platform id.`,

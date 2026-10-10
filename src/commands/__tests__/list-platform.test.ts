@@ -13,7 +13,7 @@ const entry = (id: string, platform: string): SnapshotIndexEntry => ({
 
 describe('savestate list --platform', () => {
   it('accepts a single platform id and trims surrounding whitespace', () => {
-    expect(parseListPlatform('  chatgpt ')).toBe('chatgpt');
+    expect(parseListPlatform('  CHATGPT ')).toBe('chatgpt');
   });
 
   it('rejects blank, comma-separated, or whitespace-containing values', () => {
