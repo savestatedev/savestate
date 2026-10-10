@@ -102,6 +102,7 @@ program
   .alias('ls')
   .description('List all snapshots')
   .option('--json', 'Output as JSON')
+  .option('--oldest-first', 'Show snapshots from oldest to newest')
   .option('--limit <n>', 'Maximum number of snapshots to show (1–1000)')
   .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')

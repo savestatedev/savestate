@@ -8,6 +8,7 @@ import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 
 interface ListOptions {
   json?: boolean;
+  oldestFirst?: boolean;
   limit?: string;
   offset?: string;
   since?: string;
@@ -45,16 +46,27 @@ export interface ListSnapshotJson {
 }
 
 /** Keep list pagination stable when snapshots share the same timestamp. */
-export function sortListEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
+export function sortListEntries(
+  snapshots: SnapshotIndexEntry[],
+  oldestFirst = false,
+): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
     const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    return timestampOrder !== 0 ? timestampOrder : a.id.localeCompare(b.id);
+    if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
+    // Keep ties deterministic in both directions so pagination does not reshuffle
+    // snapshots that share a timestamp when users toggle --oldest-first.
+    return a.id.localeCompare(b.id);
   });
 }
 
-export function formatListJson(snapshots: SnapshotIndexEntry[], limit = 50, offset?: number): string {
+export function formatListJson(
+  snapshots: SnapshotIndexEntry[],
+  limit = 50,
+  offset?: number,
+  oldestFirst = false,
+): string {
   const records: ListSnapshotJson[] = selectListOffsetEntries(
-    sortListEntries(snapshots),
+    sortListEntries(snapshots, oldestFirst),
     offset,
   )
     .slice(0, limit)
@@ -283,7 +295,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const filtered = applyListFilters(index.snapshots, options);
 
   if (options.json) {
-    console.log(formatListJson(filtered, limit, offset));
+    console.log(formatListJson(filtered, limit, offset, options.oldestFirst));
     return;
   }
 
@@ -305,9 +317,9 @@ export async function listCommand(options: ListOptions): Promise<void> {
     return;
   }
 
-  // Sort by timestamp descending (most recent first), then skip/limit
+  // Sort by timestamp, then skip/limit.
   const sorted = selectListOffsetEntries(
-    sortListEntries(filtered),
+    sortListEntries(filtered, options.oldestFirst),
     offset,
   ).slice(0, limit);
 
@@ -332,7 +344,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   // Rows
   for (const s of sorted) {
-    const date = formatDate(s.timestamp);
+    const date = formatListDate(s.timestamp);
     const label = s.label ?? chalk.dim('—');
     const size = formatBytes(s.size);
 
@@ -391,9 +403,10 @@ function parseDateOrThrow(input: string, flag: string): number {
   return ms;
 }
 
-function formatDate(iso: string): string {
+export function formatListDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString('en-US', {
+    year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

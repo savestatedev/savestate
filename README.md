@@ -179,6 +179,7 @@ savestate restore [snapshot-id]       Restore from a snapshot (default: latest)
   --label <label>                    Restore the newest snapshot with this label
 savestate list                        List all snapshots
   --json                             Output as JSON
+  --oldest-first                     Show snapshots from oldest to newest
   --limit <n>                        Max snapshots to show
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration

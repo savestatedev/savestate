@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 import {
   formatListPageSummary,
+  formatListDate,
   parseListOffset,
   selectListOffsetEntries,
   sortListEntries,
@@ -63,10 +64,30 @@ describe('savestate list --offset', () => {
     ] as SnapshotIndexEntry[]).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
   });
 
+  it('can sort snapshots oldest first', () => {
+    expect(sortListEntries([
+      { id: 'newer', timestamp: '2026-01-02T00:00:00.000Z' },
+      { id: 'older', timestamp: '2026-01-01T00:00:00.000Z' },
+    ] as SnapshotIndexEntry[], true).map((entry) => entry.id)).toEqual(['older', 'newer']);
+  });
+
+  it('keeps same-timestamp ties deterministic when sorting oldest first', () => {
+    const timestamp = '2026-10-08T12:00:00.000Z';
+    expect(sortListEntries([
+      { id: 'zeta', timestamp },
+      { id: 'alpha', timestamp },
+    ] as SnapshotIndexEntry[], true).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
+  });
+
   it('rejects an inverted date range before filtering', () => {
     expect(() => validateListDateRange('2026-10-10', '2026-10-09')).toThrow(
       'Invalid list date range: --since (2026-10-10) must be on or before --until (2026-10-09).',
     );
     expect(() => validateListDateRange('2026-10-09', '2026-10-10')).not.toThrow();
+  });
+
+  it('keeps human-readable dates distinct across years', () => {
+    expect(formatListDate('2025-01-25T09:30:00.000Z')).toContain('2025');
+    expect(formatListDate('2026-01-25T09:30:00.000Z')).toContain('2026');
   });
 });
