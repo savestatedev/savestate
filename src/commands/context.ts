@@ -79,6 +79,12 @@ export interface ContextValidateJson {
   valid: boolean;
   errors: string[];
   warnings: string[];
+  pagination: {
+    offset: number;
+    limit: number | null;
+    totalErrors: number;
+    totalWarnings: number;
+  };
   coverage: {
     constraintsCovered: number;
     constraintsTotal: number;
@@ -290,6 +296,12 @@ export function formatContextValidateJson(
     valid: result.valid,
     errors: selectContextValidateIssues(result.errors, limit, offset),
     warnings: selectContextValidateIssues(result.warnings, limit, offset),
+    pagination: {
+      offset: offset ?? 0,
+      limit: limit ?? null,
+      totalErrors: result.errors.length,
+      totalWarnings: result.warnings.length,
+    },
     coverage: {
       constraintsCovered: result.coverage.constraints_covered,
       constraintsTotal: result.coverage.constraints_total,
