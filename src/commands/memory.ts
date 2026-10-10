@@ -139,15 +139,27 @@ export interface MemoryListEntryJson {
 export interface MemoryListJson {
   total: number;
   shown: number;
+  offset: number;
+  hasMore: boolean;
+  nextOffset: number | null;
   byTier: Record<MemoryTier, number>;
   pinned: number;
   entries: MemoryListEntryJson[];
 }
 
-export function formatMemoryListJson(all: MemoryEntry[], shown: MemoryEntry[]): string {
+export function formatMemoryListJson(
+  all: MemoryEntry[],
+  shown: MemoryEntry[],
+  pagination: { offset?: number; hasMore?: boolean } = {},
+): string {
+  const offset = pagination.offset ?? 0;
+  const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
   const record: MemoryListJson = {
     total: all.length,
     shown: shown.length,
+    offset,
+    hasMore,
+    nextOffset: hasMore ? offset + shown.length : null,
     byTier: countByTier(all),
     pinned: all.filter((entry) => !!entry.pinned).length,
     entries: shown.map((entry) => ({
@@ -531,13 +543,18 @@ export async function listMemories(
     entries = entries.filter((e) => !!e.pinned === options.pinned);
   }
 
+  const filteredEntries = entries;
+  const offset = options?.offset ?? 0;
   entries = selectMemoryListEntries(
-    selectMemoryListOffsetEntries(entries, options?.offset),
+    selectMemoryListOffsetEntries(filteredEntries, offset),
     options?.limit,
   );
 
   if (options?.format === 'json') {
-    console.log(formatMemoryListJson(normalized.core, entries));
+    console.log(formatMemoryListJson(normalized.core, entries, {
+      offset,
+      hasMore: offset + entries.length < filteredEntries.length,
+    }));
     return;
   }
 

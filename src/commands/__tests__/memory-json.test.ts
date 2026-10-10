@@ -23,6 +23,9 @@ describe('savestate memory --json', () => {
     const parsed = JSON.parse(formatMemoryListJson(all, [all[0], all[1]])) as MemoryListJson;
     expect(parsed.total).toBe(3);
     expect(parsed.shown).toBe(2);
+    expect(parsed.offset).toBe(0);
+    expect(parsed.hasMore).toBe(true);
+    expect(parsed.nextOffset).toBe(2);
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.entries).toEqual([
@@ -49,8 +52,26 @@ describe('savestate memory --json', () => {
     const parsed = JSON.parse(formatMemoryListJson([], [])) as MemoryListJson;
     expect(parsed.total).toBe(0);
     expect(parsed.shown).toBe(0);
+    expect(parsed.offset).toBe(0);
+    expect(parsed.hasMore).toBe(false);
+    expect(parsed.nextOffset).toBeNull();
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.entries).toEqual([]);
+  });
+
+  it('exposes the continuation offset for filtered pages', () => {
+    const all = [
+      entry({ id: 'mem-l1', content: 'first', tier: 'L1' }),
+      entry({ id: 'mem-l2', content: 'second', tier: 'L2' }),
+      entry({ id: 'mem-l3', content: 'third', tier: 'L3' }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(all, [all[1]], { offset: 1, hasMore: true }),
+    ) as MemoryListJson;
+
+    expect(parsed.offset).toBe(1);
+    expect(parsed.hasMore).toBe(true);
+    expect(parsed.nextOffset).toBe(2);
   });
 });
