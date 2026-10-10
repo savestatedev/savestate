@@ -9,6 +9,7 @@ import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 interface ListOptions {
   json?: boolean;
   oldestFirst?: boolean;
+  reverse?: boolean;
   limit?: string;
   offset?: string;
   since?: string;
@@ -293,9 +294,10 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const index = await loadIndex();
 
   const filtered = applyListFilters(index.snapshots, options);
+  const oldestFirst = Boolean(options.oldestFirst || options.reverse);
 
   if (options.json) {
-    console.log(formatListJson(filtered, limit, offset, options.oldestFirst));
+    console.log(formatListJson(filtered, limit, offset, oldestFirst));
     return;
   }
 
@@ -319,7 +321,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   // Sort by timestamp, then skip/limit.
   const sorted = selectListOffsetEntries(
-    sortListEntries(filtered, options.oldestFirst),
+    sortListEntries(filtered, oldestFirst),
     offset,
   ).slice(0, limit);
 
