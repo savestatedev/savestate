@@ -1673,9 +1673,19 @@ describe('CLI docs', () => {
     expect(init).toContain('export function parseInitLimit');
   });
 
+  it('documents init --offset as a bounded non-negative integer', () => {
+    const initSection = docs.slice(docs.indexOf('id="init"'), docs.indexOf('id="snapshot"'));
+    const initBlock = cli.slice(cli.indexOf("command('init')"), cli.indexOf("command('snapshot')"));
+    expect(initSection).toContain('--offset');
+    expect(initSection).toContain('savestate init --offset 1 --limit 5');
+    expect(initBlock).toContain(".option('--offset <n>'");
+    expect(init).toContain('export function parseInitOffset');
+  });
+
   it('documents init --json', () => {
     const initSection = docs.slice(docs.indexOf('id="init"'), docs.indexOf('id="snapshot"'));
     expect(initSection).toContain('--json');
+    expect(initSection).toContain('Cannot be combined with');
     expect(initSection).toContain('scripting');
     expect(initSection).toContain('savestate init --json');
   });

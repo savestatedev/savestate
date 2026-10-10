@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseInitLimit, selectInitEntries } from '../init.js';
+import {
+  parseInitLimit,
+  parseInitOffset,
+  selectInitEntries,
+  validateInitOutputOptions,
+} from '../init.js';
 
 describe('savestate init --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,34 @@ describe('savestate init --limit', () => {
   it('returns all rows when --limit is omitted', () => {
     const entries = [{ id: 'status' }, { id: 'config' }];
     expect(selectInitEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('parses a bounded non-negative offset', () => {
+    expect(parseInitOffset(undefined)).toBeUndefined();
+    expect(parseInitOffset('0')).toBe(0);
+    expect(parseInitOffset('1000')).toBe(1000);
+    expect(() => parseInitOffset('-1')).toThrow(
+      'Invalid --offset value "-1". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseInitOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+  });
+
+  it('skips rows before applying the limit', () => {
+    expect(
+      selectInitEntries([{ id: 'status' }, { id: 'config' }, { id: 'adapter' }], 1, 1),
+    ).toEqual([{ id: 'config' }]);
+  });
+
+  it('rejects pagination flags for the single-object JSON summary', () => {
+    expect(() => validateInitOutputOptions(true, 1)).toThrow(
+      'The --limit and --offset options cannot be used with --json.',
+    );
+    expect(() => validateInitOutputOptions(true, undefined, 1)).toThrow(
+      'The --limit and --offset options cannot be used with --json.',
+    );
+    expect(() => validateInitOutputOptions(true)).not.toThrow();
+    expect(() => validateInitOutputOptions(false, 1, 1)).not.toThrow();
   });
 });
