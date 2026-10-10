@@ -60,6 +60,13 @@ export function selectInitEntries<T>(entries: T[], limit?: number, offset = 0): 
   return entries.slice(offset, limit === undefined ? undefined : offset + limit);
 }
 
+/** JSON init output is a single summary, so pagination flags cannot apply to it. */
+export function validateInitOutputOptions(json: boolean | undefined, limit?: number, offset?: number): void {
+  if (json && (limit !== undefined || offset !== undefined)) {
+    throw new Error('The --limit and --offset options cannot be used with --json.');
+  }
+}
+
 export interface InitResult {
   initialized: boolean;
   alreadyInitialized: boolean;
@@ -89,6 +96,7 @@ function passphraseHint(config: { storage: { options: Record<string, unknown> } 
 export async function initCommand(options: InitOptions = {}): Promise<void> {
   const limit = parseInitLimit(options.limit);
   const offset = parseInitOffset(options.offset);
+  validateInitOutputOptions(options.json, limit, offset);
 
   if (!options.json) {
     console.log();

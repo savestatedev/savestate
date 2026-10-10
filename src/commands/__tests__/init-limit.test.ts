@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseInitLimit, parseInitOffset, selectInitEntries } from '../init.js';
+import {
+  parseInitLimit,
+  parseInitOffset,
+  selectInitEntries,
+  validateInitOutputOptions,
+} from '../init.js';
 
 describe('savestate init --limit', () => {
   it('defaults to undefined', () => {
@@ -53,5 +58,16 @@ describe('savestate init --limit', () => {
     expect(
       selectInitEntries([{ id: 'status' }, { id: 'config' }, { id: 'adapter' }], 1, 1),
     ).toEqual([{ id: 'config' }]);
+  });
+
+  it('rejects pagination flags for the single-object JSON summary', () => {
+    expect(() => validateInitOutputOptions(true, 1)).toThrow(
+      'The --limit and --offset options cannot be used with --json.',
+    );
+    expect(() => validateInitOutputOptions(true, undefined, 1)).toThrow(
+      'The --limit and --offset options cannot be used with --json.',
+    );
+    expect(() => validateInitOutputOptions(true)).not.toThrow();
+    expect(() => validateInitOutputOptions(false, 1, 1)).not.toThrow();
   });
 });

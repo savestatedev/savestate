@@ -136,7 +136,7 @@
       <tbody>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of status field rows to show. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first status field rows before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
-        <tr><td><code>--json</code></td><td>Emit init status as JSON. Skips the spinner and passphrase prompt. Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit init status as JSON. Skips the spinner and passphrase prompt. Cannot be combined with <code>--limit</code> or <code>--offset</code>. Useful for scripting.</td></tr>
       </tbody>
     </table>
     <pre><code><span class="code-prompt">$</span> savestate init --limit 5

@@ -1685,6 +1685,7 @@ describe('CLI docs', () => {
   it('documents init --json', () => {
     const initSection = docs.slice(docs.indexOf('id="init"'), docs.indexOf('id="snapshot"'));
     expect(initSection).toContain('--json');
+    expect(initSection).toContain('Cannot be combined with');
     expect(initSection).toContain('scripting');
     expect(initSection).toContain('savestate init --json');
   });
