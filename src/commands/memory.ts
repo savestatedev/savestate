@@ -142,6 +142,11 @@ export interface MemoryListJson {
   offset: number;
   hasMore: boolean;
   nextOffset: number | null;
+  filters: {
+    tier: MemoryTier | null;
+    pinned: boolean | null;
+    oldestFirst: boolean;
+  };
   byTier: Record<MemoryTier, number>;
   pinned: number;
   entries: MemoryListEntryJson[];
@@ -150,7 +155,11 @@ export interface MemoryListJson {
 export function formatMemoryListJson(
   all: MemoryEntry[],
   shown: MemoryEntry[],
-  pagination: { offset?: number; hasMore?: boolean } = {},
+  pagination: {
+    offset?: number;
+    hasMore?: boolean;
+    filters?: Partial<MemoryListJson['filters']>;
+  } = {},
 ): string {
   const offset = pagination.offset ?? 0;
   const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
@@ -160,6 +169,11 @@ export function formatMemoryListJson(
     offset,
     hasMore,
     nextOffset: hasMore ? offset + shown.length : null,
+    filters: {
+      tier: pagination.filters?.tier ?? null,
+      pinned: pagination.filters?.pinned ?? null,
+      oldestFirst: pagination.filters?.oldestFirst ?? false,
+    },
     byTier: countByTier(all),
     pinned: all.filter((entry) => !!entry.pinned).length,
     entries: shown.map((entry) => ({
@@ -554,6 +568,11 @@ export async function listMemories(
     console.log(formatMemoryListJson(filteredEntries, entries, {
       offset,
       hasMore: offset + entries.length < filteredEntries.length,
+      filters: {
+        tier: options?.tier,
+        pinned: options?.pinned,
+        oldestFirst: options?.oldestFirst,
+      },
     }));
     return;
   }
