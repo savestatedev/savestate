@@ -127,6 +127,17 @@ export function countByTier(memories: MemoryEntry[]): Record<MemoryTier, number>
   return counts;
 }
 
+/** Summarize the collection currently being listed, including active filters. */
+export function getMemoryListSummary(memories: MemoryEntry[]): {
+  counts: Record<MemoryTier, number>;
+  total: number;
+} {
+  return {
+    counts: countByTier(memories),
+    total: memories.length,
+  };
+}
+
 export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
@@ -578,12 +589,12 @@ export async function listMemories(
   }
 
   // Table format
-  const counts = countByTier(normalized.core);
+  const { counts, total } = getMemoryListSummary(filteredEntries);
   console.log(`\nMemory Tiers Summary:`);
   console.log(`  L1 (short-term):  ${counts.L1} items`);
   console.log(`  L2 (working set): ${counts.L2} items`);
   console.log(`  L3 (archive):     ${counts.L3} items`);
-  console.log(`  Total:            ${normalized.core.length} items\n`);
+  console.log(`  Total:            ${total} items\n`);
 
   if (entries.length === 0) {
     console.log('No memories found matching the criteria.');
