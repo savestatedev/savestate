@@ -160,6 +160,7 @@ export interface MemoryListJson {
   filters: {
     tier: MemoryTier | null;
     pinned: boolean | null;
+    source: string | null;
     oldestFirst: boolean;
   };
   byTier: Record<MemoryTier, number>;
@@ -194,6 +195,7 @@ export function formatMemoryListJson(
     filters: {
       tier: pagination.filters?.tier ?? null,
       pinned: pagination.filters?.pinned ?? null,
+      source: pagination.filters?.source ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
     },
     byTier: countByTier(all),
@@ -541,6 +543,7 @@ export async function listMemories(
     snapshotId?: string;
     tier?: MemoryTier;
     pinned?: boolean;
+    source?: string;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -579,6 +582,10 @@ export async function listMemories(
     entries = entries.filter((e) => !!e.pinned === options.pinned);
   }
 
+  if (options?.source) {
+    entries = entries.filter((e) => e.source === options.source);
+  }
+
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
   entries = selectMemoryListEntries(
@@ -594,6 +601,7 @@ export async function listMemories(
       filters: {
         tier: options?.tier,
         pinned: options?.pinned,
+        source: options?.source,
         oldestFirst: options?.oldestFirst,
       },
     }));
