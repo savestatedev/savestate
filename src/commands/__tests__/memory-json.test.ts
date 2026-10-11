@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MemoryEntry } from '../../types.js';
 import {
   formatMemoryListJson,
+  getMemoryListSummary,
   type MemoryListJson,
 } from '../memory.js';
 
@@ -14,6 +15,18 @@ function entry(partial: Partial<MemoryEntry> & Pick<MemoryEntry, 'id' | 'content
 }
 
 describe('savestate memory --json', () => {
+  it('summarizes the filtered collection for table output too', () => {
+    const filtered = [
+      entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
+      entry({ id: 'mem-l1b', content: 'another preference', tier: 'L1' }),
+    ];
+
+    expect(getMemoryListSummary(filtered)).toEqual({
+      counts: { L1: 2, L2: 0, L3: 0 },
+      total: 2,
+    });
+  });
+
   it('prints list summary and entries as JSON', () => {
     const all = [
       entry({ id: 'mem-l1', content: 'inbox preference', tier: 'L1', pinned: true }),
@@ -26,6 +39,7 @@ describe('savestate memory --json', () => {
     expect(parsed.offset).toBe(0);
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.entries).toEqual([
@@ -55,6 +69,7 @@ describe('savestate memory --json', () => {
     expect(parsed.offset).toBe(0);
     expect(parsed.hasMore).toBe(false);
     expect(parsed.nextOffset).toBeNull();
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.entries).toEqual([]);
@@ -88,5 +103,18 @@ describe('savestate memory --json', () => {
     expect(parsed.byTier).toEqual({ L1: 2, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.nextOffset).toBe(1);
+  });
+
+  it('reports active list filters for automation', () => {
+    const all = [
+      entry({ id: 'mem-l1', content: 'pinned preference', tier: 'L1', pinned: true }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(all, all, {
+        filters: { tier: 'L1', pinned: true, oldestFirst: true },
+      }),
+    ) as MemoryListJson;
+
+    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, oldestFirst: true });
   });
 });

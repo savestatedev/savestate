@@ -127,6 +127,17 @@ export function countByTier(memories: MemoryEntry[]): Record<MemoryTier, number>
   return counts;
 }
 
+/** Summarize the collection currently being listed, including active filters. */
+export function getMemoryListSummary(memories: MemoryEntry[]): {
+  counts: Record<MemoryTier, number>;
+  total: number;
+} {
+  return {
+    counts: countByTier(memories),
+    total: memories.length,
+  };
+}
+
 export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
@@ -142,6 +153,11 @@ export interface MemoryListJson {
   offset: number;
   hasMore: boolean;
   nextOffset: number | null;
+  filters: {
+    tier: MemoryTier | null;
+    pinned: boolean | null;
+    oldestFirst: boolean;
+  };
   byTier: Record<MemoryTier, number>;
   pinned: number;
   entries: MemoryListEntryJson[];
@@ -150,7 +166,11 @@ export interface MemoryListJson {
 export function formatMemoryListJson(
   all: MemoryEntry[],
   shown: MemoryEntry[],
-  pagination: { offset?: number; hasMore?: boolean } = {},
+  pagination: {
+    offset?: number;
+    hasMore?: boolean;
+    filters?: Partial<MemoryListJson['filters']>;
+  } = {},
 ): string {
   const offset = pagination.offset ?? 0;
   const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
@@ -160,6 +180,11 @@ export function formatMemoryListJson(
     offset,
     hasMore,
     nextOffset: hasMore ? offset + shown.length : null,
+    filters: {
+      tier: pagination.filters?.tier ?? null,
+      pinned: pagination.filters?.pinned ?? null,
+      oldestFirst: pagination.filters?.oldestFirst ?? false,
+    },
     byTier: countByTier(all),
     pinned: all.filter((entry) => !!entry.pinned).length,
     entries: shown.map((entry) => ({
@@ -554,17 +579,22 @@ export async function listMemories(
     console.log(formatMemoryListJson(filteredEntries, entries, {
       offset,
       hasMore: offset + entries.length < filteredEntries.length,
+      filters: {
+        tier: options?.tier,
+        pinned: options?.pinned,
+        oldestFirst: options?.oldestFirst,
+      },
     }));
     return;
   }
 
   // Table format
-  const counts = countByTier(normalized.core);
+  const { counts, total } = getMemoryListSummary(filteredEntries);
   console.log(`\nMemory Tiers Summary:`);
   console.log(`  L1 (short-term):  ${counts.L1} items`);
   console.log(`  L2 (working set): ${counts.L2} items`);
   console.log(`  L3 (archive):     ${counts.L3} items`);
-  console.log(`  Total:            ${normalized.core.length} items\n`);
+  console.log(`  Total:            ${total} items\n`);
 
   if (entries.length === 0) {
     console.log('No memories found matching the criteria.');
