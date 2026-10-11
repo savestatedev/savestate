@@ -86,6 +86,11 @@ describe('homepage checkout CTAs', () => {
     expect(homepage).not.toMatch(/\/api\/lead/);
   });
 
+  it('shows the current release and supported AI clients in the hero', () => {
+    expect(homepage).toMatch(/v0\.9\.1 — cross-snapshot search/);
+    expect(homepage).toMatch(/across ChatGPT, Claude, Gemini, Claude Code, Cursor, and Clawdbot\./);
+  });
+
   it('points dashboard subscribe CTAs at the live Payment Links', () => {
     expect(hrefForCta(dashboard, 'dashboard-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(dashboard, 'dashboard-team-checkout')).toBe(stripe.products.team.payment_link);
