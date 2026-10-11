@@ -185,6 +185,10 @@ savestate list                        List all snapshots
   --limit <n>                        Max snapshots to show
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
+  --exclude <types>                  Skip memory, conversation, identity, or knowledge
+  --since <date>                     Only search snapshots taken after an ISO 8601 date
+  --until <date>                     Only search snapshots taken before an ISO 8601 date
+  --snapshot <id>                    Search within one snapshot
   --adapter <id>                     Only search snapshots from this adapter
   --tag <tag>                        Only search snapshots with this tag
   --label <label>                    Only search snapshots with this label
