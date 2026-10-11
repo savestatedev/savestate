@@ -218,7 +218,9 @@ export async function searchSnapshots(
  * Returns a score between 0 and 1.
  */
 export function scoreMatch(query: string, content: string): number {
-  const lowerQuery = query.toLowerCase();
+  // Callers outside the CLI can pass user-entered whitespace too. Normalize it
+  // here so API and CLI searches rank the same way.
+  const lowerQuery = query.trim().toLowerCase();
   const lowerContent = content.toLowerCase();
 
   if (!lowerContent.includes(lowerQuery)) {
@@ -283,11 +285,12 @@ function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | n
 }
 
 function extractContext(query: string, content: string): string | undefined {
+  const normalizedQuery = query.trim();
   const lower = content.toLowerCase();
-  const idx = lower.indexOf(query.toLowerCase());
+  const idx = lower.indexOf(normalizedQuery.toLowerCase());
   if (idx === -1) return undefined;
   const start = Math.max(0, idx - CONTEXT_RADIUS);
-  const end = Math.min(content.length, idx + query.length + CONTEXT_RADIUS);
+  const end = Math.min(content.length, idx + normalizedQuery.length + CONTEXT_RADIUS);
   const prefix = start > 0 ? '…' : '';
   const suffix = end < content.length ? '…' : '';
   return `${prefix}${content.slice(start, end)}${suffix}`;

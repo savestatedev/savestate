@@ -125,6 +125,17 @@ describe('searchSnapshots', () => {
     expect(results).toEqual([]);
   });
 
+  it('normalizes surrounding query whitespace before scoring', async () => {
+    const snap = buildSnapshot([{ id: 'm1', content: 'cache test phrase' }]);
+    await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
+
+    const results = await searchSnapshots('  cache test  ', config, { passphrase: PASSPHRASE });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].score).toBeGreaterThan(0.9);
+    expect(results[0].context).toContain('cache test');
+  });
+
   it('returns empty result when no snapshots indexed', async () => {
     await saveIndex({ snapshots: [] });
     const results = await searchSnapshots('anything', config, { passphrase: PASSPHRASE });
