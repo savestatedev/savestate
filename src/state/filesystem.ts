@@ -100,7 +100,7 @@ export function matchesPrefix(path: string, prefix: string): boolean {
  * Simple BM25-like scoring for text matching
  */
 function tokenize(text: string): string[] {
-  return text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  return text.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
 }
 
 function bm25Score(query: string, text: string): number {

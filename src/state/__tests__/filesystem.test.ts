@@ -301,6 +301,19 @@ describe('StateFilesystem', () => {
       expect(results[0].path).toBe('/user/1/preferences/theme');
     });
 
+    it('should match Unicode words in memory content and queries', async () => {
+      await fs.write({
+        path: '/user/1/preferences/coffee',
+        value: 'Prefers café au lait',
+        writer: 'user',
+        description: 'Boisson préférée',
+      });
+
+      const results = await fs.resolve({ query: 'café' });
+
+      expect(results[0].path).toBe('/user/1/preferences/coffee');
+    });
+
     it('should include scores', async () => {
       const results = await fs.resolve({
         query: 'TypeScript',
