@@ -7,6 +7,7 @@ describe('savestate memory edit --importance', () => {
     expect(parseMemoryImportance('0')).toBe(0);
     expect(parseMemoryImportance('0.9')).toBe(0.9);
     expect(parseMemoryImportance('1')).toBe(1);
+    expect(parseMemoryImportance(' 0.75 ')).toBe(0.75);
   });
 
   it.each(['-0.1', '1.1', '0x0', '1e-1', 'nope', ''])('rejects invalid value %s', (value) => {

@@ -131,13 +131,14 @@ export function parseMemoryVersion(value: string | undefined): number {
 export function parseMemoryImportance(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(normalized)) {
     throw new Error(
       `Invalid --importance value "${value}". Expected a number between 0 and 1.`,
     );
   }
 
-  const importance = Number(value);
+  const importance = Number(normalized);
   if (!Number.isFinite(importance) || importance < 0 || importance > 1) {
     throw new Error(
       `Invalid --importance value "${value}". Expected a number between 0 and 1.`,
