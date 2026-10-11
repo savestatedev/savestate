@@ -201,7 +201,15 @@ export async function searchSnapshots(
     }
   }
 
-  results.sort((a, b) => b.score - a.score);
+  // Keep pagination stable when several matches have the same relevance.
+  // Snapshot ids are content-addressed, so they provide a deterministic final
+  // tie-breaker even when index or storage iteration order changes.
+  results.sort((a, b) =>
+    b.score - a.score ||
+    b.snapshotTimestamp.localeCompare(a.snapshotTimestamp) ||
+    a.snapshotId.localeCompare(b.snapshotId) ||
+    a.path.localeCompare(b.path),
+  );
   return results.slice(0, limit);
 }
 

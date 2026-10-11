@@ -157,6 +157,23 @@ describe('searchSnapshots', () => {
     });
     expect(results.length).toBe(3);
   });
+
+  it('orders equal-score matches deterministically', async () => {
+    const snap = buildSnapshot([
+      { id: 'z-memory', content: 'shared keyword' },
+      { id: 'a-memory', content: 'shared keyword' },
+    ]);
+    await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
+
+    const results = await searchSnapshots('shared keyword', config, {
+      passphrase: PASSPHRASE,
+    });
+
+    expect(results.map((result) => result.path)).toEqual([
+      'memory/core.json#a-memory',
+      'memory/core.json#z-memory',
+    ]);
+  });
 });
 
 describe('scoreMatch', () => {
