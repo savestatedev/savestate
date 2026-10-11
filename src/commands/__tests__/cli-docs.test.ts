@@ -174,6 +174,12 @@ const stats = readFileSync(
 );
 
 describe('CLI docs', () => {
+  it('documents memory list JSON pagination metadata', () => {
+    expect(docs).toContain('hasPrevious</code>/<code>previousOffset');
+    expect(docs).toContain('hasMore</code>/<code>nextOffset');
+    expect(docs).toContain('pass the returned offset back with <code>--offset</code>');
+  });
+
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
     expect(docs).toContain('id="import"');
