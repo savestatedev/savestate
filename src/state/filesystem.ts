@@ -100,9 +100,9 @@ export function matchesPrefix(path: string, prefix: string): boolean {
  * Simple BM25-like scoring for text matching
  */
 function tokenize(text: string): string[] {
-  // Keep combining marks attached to their base letters (for example, NFD
-  // `e\u0301`) so canonically equivalent Unicode text remains searchable.
-  return text.toLocaleLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu) ?? [];
+  // Normalize to NFD before tokenizing so composed and decomposed accents
+  // compare equally while combining marks stay attached to their base.
+  return text.normalize('NFD').toLocaleLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu) ?? [];
 }
 
 function bm25Score(query: string, text: string): number {
