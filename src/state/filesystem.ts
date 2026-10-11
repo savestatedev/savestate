@@ -99,20 +99,32 @@ export function matchesPrefix(path: string, prefix: string): boolean {
 /**
  * Simple BM25-like scoring for text matching
  */
+function tokenize(text: string): string[] {
+  // Normalize to NFD before tokenizing so composed and decomposed accents
+  // compare equally while combining marks stay attached to their base.
+  return text.normalize('NFD').toLocaleLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu) ?? [];
+}
+
 function bm25Score(query: string, text: string): number {
-  const queryTerms = query.toLowerCase().split(/\s+/);
-  const textTerms = text.toLowerCase().split(/\s+/);
+  const queryTerms = tokenize(query);
+  const textTerms = tokenize(text);
+  if (queryTerms.length === 0 || textTerms.length === 0) return 0;
+
   const textSet = new Set(textTerms);
+  const textLength = Math.log(1 + textTerms.length);
   
   let score = 0;
   for (const term of queryTerms) {
     if (textSet.has(term)) {
-      score += 1 / Math.log(1 + textTerms.length);
-    }
-    // Partial match
-    for (const textTerm of textSet) {
-      if (textTerm.includes(term) || term.includes(textTerm)) {
-        score += 0.5 / Math.log(1 + textTerms.length);
+      // An exact match is already the strongest signal; do not also count it
+      // as a partial match for every token in the document.
+      score += 1 / textLength;
+    } else {
+      // Partial match
+      for (const textTerm of textSet) {
+        if (textTerm.includes(term) || term.includes(textTerm)) {
+          score += 0.5 / textLength;
+        }
       }
     }
   }
