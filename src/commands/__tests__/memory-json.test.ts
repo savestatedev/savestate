@@ -43,7 +43,7 @@ describe('savestate memory --json', () => {
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.entries).toEqual([
@@ -75,7 +75,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasPrevious).toBe(false);
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.entries).toEqual([]);
@@ -123,11 +123,11 @@ describe('savestate memory --json', () => {
     ];
     const parsed = JSON.parse(
       formatMemoryListJson(all, all, {
-        filters: { tier: 'L1', pinned: true, oldestFirst: true },
+        filters: { tier: 'L1', pinned: true, source: 'agent', oldestFirst: true },
       }),
     ) as MemoryListJson;
 
-    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, oldestFirst: true });
+    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, source: 'agent', oldestFirst: true });
   });
 
   it('uses the page size when calculating the previous offset', () => {

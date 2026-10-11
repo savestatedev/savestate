@@ -160,6 +160,7 @@ export interface MemoryListJson {
   filters: {
     tier: MemoryTier | null;
     pinned: boolean | null;
+    source: string | null;
     oldestFirst: boolean;
   };
   byTier: Record<MemoryTier, number>;
@@ -194,6 +195,7 @@ export function formatMemoryListJson(
     filters: {
       tier: pagination.filters?.tier ?? null,
       pinned: pagination.filters?.pinned ?? null,
+      source: pagination.filters?.source ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
     },
     byTier: countByTier(all),
@@ -520,6 +522,12 @@ export function sortMemoryListEntries(
   });
 }
 
+/** Keep table output readable while still identifying the originating source. */
+export function formatMemoryListSource(source: string): string {
+  const normalized = source.replace(/\s+/g, ' ').trim();
+  return normalized.length > 18 ? `${normalized.slice(0, 15)}...` : normalized;
+}
+
 /** Apply memory list --offset then --limit. */
 export function applyMemoryListFilters<T>(
   entries: T[],
@@ -541,6 +549,7 @@ export async function listMemories(
     snapshotId?: string;
     tier?: MemoryTier;
     pinned?: boolean;
+    source?: string;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -579,6 +588,10 @@ export async function listMemories(
     entries = entries.filter((e) => !!e.pinned === options.pinned);
   }
 
+  if (options?.source) {
+    entries = entries.filter((e) => e.source === options.source);
+  }
+
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
   entries = selectMemoryListEntries(
@@ -594,6 +607,7 @@ export async function listMemories(
       filters: {
         tier: options?.tier,
         pinned: options?.pinned,
+        source: options?.source,
         oldestFirst: options?.oldestFirst,
       },
     }));
@@ -613,14 +627,15 @@ export async function listMemories(
     return;
   }
 
-  console.log('ID                                    Tier  Pinned  Content (truncated)');
+  console.log('ID                                    Tier  Pinned  Source              Content (truncated)');
   console.log('─'.repeat(80));
 
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
     const pinned = entry.pinned ? '📌' : '  ';
+    const source = formatMemoryListSource(entry.source).padEnd(18);
     const content = entry.content.slice(0, 40).replace(/\n/g, ' ');
-    console.log(`${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${content}...`);
+    console.log(`${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${content}...`);
   }
 }
 

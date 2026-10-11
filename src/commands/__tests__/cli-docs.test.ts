@@ -2524,6 +2524,13 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryTags');
   });
 
+  it('documents memory list --source as a source id filter', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--source');
+    expect(memorySection).toContain('source id');
+    expect(memoryCli).toContain('export function parseMemorySource');
+  });
+
   it('documents memory --actor as a single actor id', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--actor');
