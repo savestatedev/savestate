@@ -1622,7 +1622,7 @@ nav .container {
       <img src="logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
       <span class="nav-wordmark">SaveState</span>
     </a>
-    <ul class="nav-links">
+    <ul class="nav-links" id="site-navigation">
       <li><a href="#how-it-works">How it Works</a></li>
       <li><a href="#features">Features</a></li>
       <li><a href="#pricing">Pricing</a></li>
@@ -1633,7 +1633,7 @@ nav .container {
       <li><a href="/dashboard">Dashboard</a></li>
       <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="nav-pro-checkout">Subscribe to Pro</a></li>
     </ul>
-    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+    <button class="nav-mobile-toggle" type="button" aria-label="Open menu" aria-controls="site-navigation" aria-expanded="false">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
   </div>
@@ -2113,6 +2113,24 @@ function copyInstall(btn, text) {
     }, 2000);
   });
 }
+
+// Mobile navigation
+const menuToggle = document.querySelector('.nav-mobile-toggle');
+const siteNavigation = document.getElementById('site-navigation');
+
+function setMenuOpen(isOpen) {
+  siteNavigation.classList.toggle('show', isOpen);
+  menuToggle.setAttribute('aria-expanded', String(isOpen));
+  menuToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+}
+
+menuToggle.addEventListener('click', () => {
+  setMenuOpen(!siteNavigation.classList.contains('show'));
+});
+
+siteNavigation.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => setMenuOpen(false));
+});
 
 // Scroll reveal
 const observer = new IntersectionObserver((entries) => {
