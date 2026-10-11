@@ -223,6 +223,20 @@ export function parseSearchUntil(value: string | undefined): number | undefined 
   return ms;
 }
 
+/** Reject an inverted search date range before it can look like an empty result. */
+export function validateSearchDateRange(
+  since: number | undefined,
+  until: number | undefined,
+  rawSince?: string,
+  rawUntil?: string,
+): void {
+  if (since !== undefined && until !== undefined && since > until) {
+    throw new Error(
+      `Invalid search date range: --since (${rawSince ?? new Date(since).toISOString()}) must be on or before --until (${rawUntil ?? new Date(until).toISOString()}).`,
+    );
+  }
+}
+
 /** Parse search --tag without treating blank or comma-separated values as an empty result set. */
 export function parseSearchTag(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -259,6 +273,7 @@ export function resolveSearchSnapshots(
   const snapshotId = parseSearchSnapshot(options.snapshot);
   const since = parseSearchSince(options.since);
   const until = parseSearchUntil(options.until);
+  validateSearchDateRange(since, until, options.since, options.until);
   const adapter = parseSearchAdapter(options.adapter);
   const tag = parseSearchTag(options.tag);
   const label = parseSearchLabel(options.label);
