@@ -37,6 +37,7 @@ describe('savestate memory --json', () => {
     expect(parsed.total).toBe(3);
     expect(parsed.shown).toBe(2);
     expect(parsed.offset).toBe(0);
+    expect(parsed.limit).toBeNull();
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.filters).toEqual({ tier: null, pinned: null, oldestFirst: false });
@@ -82,10 +83,11 @@ describe('savestate memory --json', () => {
       entry({ id: 'mem-l3', content: 'third', tier: 'L3' }),
     ];
     const parsed = JSON.parse(
-      formatMemoryListJson(all, [all[1]], { offset: 1, hasMore: true }),
+      formatMemoryListJson(all, [all[1]], { offset: 1, limit: 1, hasMore: true }),
     ) as MemoryListJson;
 
     expect(parsed.offset).toBe(1);
+    expect(parsed.limit).toBe(1);
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
   });
