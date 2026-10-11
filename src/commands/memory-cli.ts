@@ -131,13 +131,14 @@ export function parseMemoryVersion(value: string | undefined): number {
 export function parseMemoryImportance(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(normalized)) {
     throw new Error(
       `Invalid --importance value "${value}". Expected a number between 0 and 1.`,
     );
   }
 
-  const importance = Number(value);
+  const importance = Number(normalized);
   if (!Number.isFinite(importance) || importance < 0 || importance > 1) {
     throw new Error(
       `Invalid --importance value "${value}". Expected a number between 0 and 1.`,
@@ -549,7 +550,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Edit a memory\'s content or metadata (single non-empty memory id)')
     .option('-c, --content <content>', 'New content for the memory (non-empty)')
     .option('-t, --tags <tags>', 'New tags (comma-separated non-empty tags)')
-    .option('-i, --importance <n>', 'New importance score (0-1)')
+    .option('-i, --importance <n>', 'New importance score (0-1, inclusive)')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .option('-r, --reason <reason>', 'Reason for the edit (non-empty)')
     .option('--limit <n>', 'Maximum number of status field rows to show')
