@@ -74,4 +74,19 @@ describe('savestate memory --json', () => {
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
   });
+
+  it('summarizes the filtered collection rather than the backing store', () => {
+    const filtered = [
+      entry({ id: 'mem-l1', content: 'pinned preference', tier: 'L1', pinned: true }),
+      entry({ id: 'mem-l1b', content: 'another preference', tier: 'L1' }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(filtered, [filtered[0]], { offset: 0, hasMore: true }),
+    ) as MemoryListJson;
+
+    expect(parsed.total).toBe(2);
+    expect(parsed.byTier).toEqual({ L1: 2, L2: 0, L3: 0 });
+    expect(parsed.pinned).toBe(1);
+    expect(parsed.nextOffset).toBe(1);
+  });
 });
