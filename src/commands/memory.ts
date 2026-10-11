@@ -152,6 +152,9 @@ export interface MemoryListJson {
   shown: number;
   offset: number;
   limit: number | null;
+  pageSize: number;
+  hasPrevious: boolean;
+  previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
   filters: {
@@ -175,12 +178,17 @@ export function formatMemoryListJson(
   } = {},
 ): string {
   const offset = pagination.offset ?? 0;
+  const hasPrevious = offset > 0;
+  const pageSize = pagination.limit ?? Math.max(1, shown.length);
   const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
   const record: MemoryListJson = {
     total: all.length,
     shown: shown.length,
     offset,
     limit: pagination.limit ?? null,
+    pageSize,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
     hasMore,
     nextOffset: hasMore ? offset + shown.length : null,
     filters: {

@@ -174,6 +174,12 @@ const stats = readFileSync(
 );
 
 describe('CLI docs', () => {
+  it('documents memory list JSON pagination metadata', () => {
+    expect(docs).toContain('hasPrevious</code>/<code>previousOffset');
+    expect(docs).toContain('hasMore</code>/<code>nextOffset');
+    expect(docs).toContain('pass the returned offset back with <code>--offset</code>');
+  });
+
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
     expect(docs).toContain('id="import"');
@@ -2434,6 +2440,14 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('20');
     expect(memorySection).toContain('pinned memories');
     expect(memorySection).toContain('Target tier');
+  });
+
+  it('documents memory list --oldest-first ordering', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--oldest-first');
+    expect(memorySection).toContain('oldest to newest');
+    expect(memorySection).toContain('savestate memory list --oldest-first --limit 5');
+    expect(memoryCli).toContain(".option('--oldest-first'");
   });
 
   it('documents memory --snapshot as a single snapshot id', () => {
