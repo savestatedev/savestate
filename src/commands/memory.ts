@@ -151,6 +151,7 @@ export interface MemoryListJson {
   total: number;
   shown: number;
   offset: number;
+  limit: number | null;
   hasMore: boolean;
   nextOffset: number | null;
   filters: {
@@ -168,6 +169,7 @@ export function formatMemoryListJson(
   shown: MemoryEntry[],
   pagination: {
     offset?: number;
+    limit?: number;
     hasMore?: boolean;
     filters?: Partial<MemoryListJson['filters']>;
   } = {},
@@ -178,6 +180,7 @@ export function formatMemoryListJson(
     total: all.length,
     shown: shown.length,
     offset,
+    limit: pagination.limit ?? null,
     hasMore,
     nextOffset: hasMore ? offset + shown.length : null,
     filters: {
@@ -578,6 +581,7 @@ export async function listMemories(
   if (options?.format === 'json') {
     console.log(formatMemoryListJson(filteredEntries, entries, {
       offset,
+      limit: options?.limit,
       hasMore: offset + entries.length < filteredEntries.length,
       filters: {
         tier: options?.tier,
