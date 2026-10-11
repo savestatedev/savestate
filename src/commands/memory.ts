@@ -551,7 +551,7 @@ export async function listMemories(
   );
 
   if (options?.format === 'json') {
-    console.log(formatMemoryListJson(normalized.core, entries, {
+    console.log(formatMemoryListJson(filteredEntries, entries, {
       offset,
       hasMore: offset + entries.length < filteredEntries.length,
     }));
