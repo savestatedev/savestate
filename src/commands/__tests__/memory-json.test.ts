@@ -38,6 +38,8 @@ describe('savestate memory --json', () => {
     expect(parsed.shown).toBe(2);
     expect(parsed.offset).toBe(0);
     expect(parsed.limit).toBeNull();
+    expect(parsed.hasPrevious).toBe(false);
+    expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.filters).toEqual({ tier: null, pinned: null, oldestFirst: false });
@@ -69,6 +71,8 @@ describe('savestate memory --json', () => {
     expect(parsed.shown).toBe(0);
     expect(parsed.offset).toBe(0);
     expect(parsed.hasMore).toBe(false);
+    expect(parsed.hasPrevious).toBe(false);
+    expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
     expect(parsed.filters).toEqual({ tier: null, pinned: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
@@ -88,6 +92,8 @@ describe('savestate memory --json', () => {
 
     expect(parsed.offset).toBe(1);
     expect(parsed.limit).toBe(1);
+    expect(parsed.hasPrevious).toBe(true);
+    expect(parsed.previousOffset).toBe(0);
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
   });
@@ -102,6 +108,8 @@ describe('savestate memory --json', () => {
     ) as MemoryListJson;
 
     expect(parsed.total).toBe(2);
+    expect(parsed.hasPrevious).toBe(false);
+    expect(parsed.previousOffset).toBeNull();
     expect(parsed.byTier).toEqual({ L1: 2, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.nextOffset).toBe(1);
@@ -118,5 +126,28 @@ describe('savestate memory --json', () => {
     ) as MemoryListJson;
 
     expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, oldestFirst: true });
+  });
+
+  it('uses the page size when calculating the previous offset', () => {
+    const all = [
+      entry({ id: 'mem-1', content: 'first' }),
+      entry({ id: 'mem-2', content: 'second' }),
+      entry({ id: 'mem-3', content: 'third' }),
+      entry({ id: 'mem-4', content: 'fourth' }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(all, [all[2], all[3]], { offset: 2, limit: 2 }),
+    ) as MemoryListJson;
+
+    expect(parsed.hasPrevious).toBe(true);
+    expect(parsed.previousOffset).toBe(0);
+  });
+
+  it('backs up by one item for an empty unbounded page', () => {
+    const parsed = JSON.parse(
+      formatMemoryListJson([{ id: 'mem-1', content: 'first' } as MemoryEntry], [], { offset: 2 }),
+    ) as MemoryListJson;
+
+    expect(parsed.previousOffset).toBe(1);
   });
 });
