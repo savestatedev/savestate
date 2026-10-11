@@ -293,6 +293,14 @@ describe('StateFilesystem', () => {
       expect(results[0].path).toContain('theme');
     });
 
+    it('should normalize punctuation in natural-language queries', async () => {
+      const results = await fs.resolve({
+        query: 'What is my theme?',
+      });
+
+      expect(results[0].path).toBe('/user/1/preferences/theme');
+    });
+
     it('should include scores', async () => {
       const results = await fs.resolve({
         query: 'TypeScript',
