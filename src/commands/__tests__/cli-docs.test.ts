@@ -2514,6 +2514,7 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--importance');
     expect(memorySection).toContain('number between 0 and 1');
+    expect(memorySection).toContain('inclusive');
     expect(memoryCli).toContain('export function parseMemoryImportance');
   });
 
