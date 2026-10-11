@@ -1507,6 +1507,7 @@
         <tr><td><code>&lt;query&gt;</code></td><td>Search text for <code>explain</code>. Must be a non-empty query.</td></tr>
         <tr><td><code>-t, --tier &lt;tier&gt;</code></td><td>Filter <code>list</code> by tier (L1, L2, L3)</td></tr>
         <tr><td><code>-p, --pinned</code></td><td>Show only pinned memories on <code>list</code></td></tr>
+        <tr><td><code>--oldest-first</code></td><td>Show memories from oldest to newest on <code>list</code> (default: newest first)</td></tr>
         <tr><td><code>-l, --limit &lt;n&gt;</code></td><td>Maximum number of memories to show on <code>list</code> (default 20), maximum audit events to show on <code>log</code>, maximum expirable memories to show on <code>expire</code>, maximum tier changes to show on <code>apply-policies</code>, or maximum configuration setting rows to show on <code>config</code>, or maximum status field rows to show on <code>promote</code>, or maximum status field rows to show on <code>demote</code>, or maximum status field rows to show on <code>pin</code>, or maximum status field rows to show on <code>unpin</code>, or maximum status field rows to show on <code>edit</code>, or maximum status field rows to show on <code>delete</code>, or maximum status field rows to show on <code>rollback</code>, or maximum retrieval results to show on <code>explain</code> (default 5). Must be a positive integer up to 1000. Combines with <code>--offset</code> on <code>list</code>, <code>log</code>, <code>expire</code>, <code>config</code>, <code>promote</code>, <code>demote</code>, <code>pin</code>, <code>unpin</code>, <code>apply-policies</code>, <code>edit</code>, <code>delete</code>, <code>rollback</code>, and <code>explain</code>.</td></tr>
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N memories on <code>list</code>, audit events on <code>log</code>, expirable memories on <code>expire</code>, configuration setting rows on <code>config</code>, status field rows on <code>promote</code>, <code>demote</code>, <code>pin</code>, <code>unpin</code>, <code>edit</code>, <code>delete</code>, or <code>rollback</code>, tier changes on <code>apply-policies</code>, or retrieval results on <code>explain</code>, before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>-s, --snapshot &lt;id&gt;</code></td><td>Snapshot to inspect or modify (default: latest). Must be a single non-empty snapshot id.</td></tr>
@@ -1529,6 +1530,7 @@
 <span class="code-comment"># Pinned memories only</span>
 <span class="code-prompt">$</span> savestate memory list --pinned --limit 5
 <span class="code-prompt">$</span> savestate memory list --offset 10 --limit 5
+<span class="code-prompt">$</span> savestate memory list --oldest-first --limit 5
 
 <span class="code-comment"># Promote a memory to faster access</span>
 <span class="code-prompt">$</span> savestate memory promote mem-123 --to L1 --json

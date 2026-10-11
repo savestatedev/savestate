@@ -2436,6 +2436,14 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('Target tier');
   });
 
+  it('documents memory list --oldest-first ordering', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--oldest-first');
+    expect(memorySection).toContain('oldest to newest');
+    expect(memorySection).toContain('savestate memory list --oldest-first --limit 5');
+    expect(memoryCli).toContain(".option('--oldest-first'");
+  });
+
   it('documents memory --snapshot as a single snapshot id', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--snapshot');
