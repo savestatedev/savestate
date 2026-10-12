@@ -154,8 +154,15 @@ export function parseStatsExclude(value: string | undefined): string[] | undefin
 export function parseStatsLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
-  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_STATS_LIMIT) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_STATS_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
+  if (limit < 1 || limit > MAX_STATS_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_STATS_LIMIT}.`,
     );
@@ -167,8 +174,15 @@ export function parseStatsLimit(value: string | undefined): number | undefined {
 export function parseStatsOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
-  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_STATS_OFFSET) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_STATS_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
+  if (offset > MAX_STATS_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_STATS_OFFSET}.`,
     );

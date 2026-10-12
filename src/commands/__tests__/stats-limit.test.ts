@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyStatsFilters, parseStatsLimit } from '../stats.js';
+import { applyStatsFilters, parseStatsLimit, parseStatsOffset } from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
@@ -16,6 +16,18 @@ function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
 }
 
 describe('savestate stats --limit', () => {
+  it.each(['1e2', '0x10', '1.5', ''])('rejects non-decimal integer %s', (value) => {
+    expect(() => parseStatsLimit(value)).toThrow(
+      `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
+    );
+  });
+
+  it.each(['1e2', '0x10', '1.5', '', '-1'])('rejects non-decimal offset %s', (value) => {
+    expect(() => parseStatsOffset(value)).toThrow(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
+    );
+  });
+
   it('leaves the snapshot set uncapped when omitted', () => {
     expect(parseStatsLimit(undefined)).toBeUndefined();
   });
