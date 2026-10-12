@@ -75,4 +75,25 @@ describe('savestate list --json', () => {
     });
     expect(parsed.entries[0]?.id).toBe('ss-older');
   });
+
+  it('includes active filters for JSON consumers', () => {
+    const parsed = JSON.parse(
+      formatListJson([older], 50, undefined, false, {
+        platform: 'chatgpt',
+        exclude: ['claude-code'],
+        label: 'weekly backup',
+      }),
+    ) as ListJson;
+
+    expect(parsed.filters).toEqual({
+      since: null,
+      until: null,
+      platform: 'chatgpt',
+      adapter: null,
+      exclude: ['claude-code'],
+      snapshot: null,
+      tag: null,
+      label: 'weekly backup',
+    });
+  });
 });

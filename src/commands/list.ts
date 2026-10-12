@@ -47,6 +47,17 @@ export interface ListSnapshotJson {
   size: number;
 }
 
+export interface ListJsonFilters {
+  since: string | null;
+  until: string | null;
+  platform: string | null;
+  adapter: string | null;
+  exclude: string[];
+  snapshot: string | null;
+  tag: string | null;
+  label: string | null;
+}
+
 export interface ListJson {
   total: number;
   shown: number;
@@ -60,6 +71,7 @@ export interface ListJson {
   hasMore: boolean;
   nextOffset: number | null;
   oldestFirst: boolean;
+  filters: ListJsonFilters;
   entries: ListSnapshotJson[];
 }
 
@@ -82,6 +94,7 @@ export function formatListJson(
   limit = 50,
   offset?: number,
   oldestFirst = false,
+  filters: Partial<ListJsonFilters> = {},
 ): string {
   const offsetValue = offset ?? 0;
   const records: ListSnapshotJson[] = selectListOffsetEntries(
@@ -115,6 +128,16 @@ export function formatListJson(
     hasMore,
     nextOffset: hasMore ? offsetValue + records.length : null,
     oldestFirst,
+    filters: {
+      since: filters.since ?? null,
+      until: filters.until ?? null,
+      platform: filters.platform ?? null,
+      adapter: filters.adapter ?? null,
+      exclude: filters.exclude ?? [],
+      snapshot: filters.snapshot ?? null,
+      tag: filters.tag ?? null,
+      label: filters.label ?? null,
+    },
     entries: records,
   };
   return JSON.stringify(result, null, 2);
@@ -348,7 +371,18 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const oldestFirst = Boolean(options.oldestFirst || options.reverse);
 
   if (options.json) {
-    console.log(formatListJson(filtered, limit, offset, oldestFirst));
+    console.log(
+      formatListJson(filtered, limit, offset, oldestFirst, {
+        since: options.since,
+        until: options.until,
+        platform: options.platform,
+        adapter: options.adapter,
+        exclude: options.exclude ? parseListExclude(options.exclude) : undefined,
+        snapshot: options.snapshot,
+        tag: options.tag,
+        label: options.label,
+      }),
+    );
     return;
   }
 
