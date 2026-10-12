@@ -216,6 +216,12 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   return `(showing ${shown} of ${total} after filters)`;
 }
 
+/** Pad the visible label text before applying terminal styling to placeholders. */
+export function formatListLabelCell(label: string | null, width: number): string {
+  if (label !== null) return label.padEnd(width);
+  return chalk.dim('—'.padEnd(width));
+}
+
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
 export function parseListSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -228,7 +234,12 @@ export function parseListSince(value: string | undefined): number | undefined {
 export function parseListUntil(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  // Date-only input is a human-facing calendar boundary. Treat it as the
+  // end of that UTC day so `--until 2026-10-12` includes that day's snapshots.
+  const normalized = value.trim();
+  const ms = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+    ? Date.parse(`${normalized}T23:59:59.999Z`)
+    : new Date(value).getTime();
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO 8601 date.`,
@@ -432,14 +443,14 @@ export async function listCommand(options: ListOptions): Promise<void> {
   // Rows
   for (const s of sorted) {
     const date = formatListDate(s.timestamp);
-    const label = s.label ?? chalk.dim('—');
+    const label = formatListLabelCell(s.label ?? null, labelWidth);
     const size = formatBytes(s.size);
 
     const row = [
       chalk.cyan(s.id.padEnd(idWidth)),
       date.padEnd(dateWidth),
       s.adapter.padEnd(adapterWidth),
-      (typeof label === 'string' ? label : label).toString().padEnd(labelWidth),
+      label,
       size.padStart(sizeWidth),
     ].join('  ');
 

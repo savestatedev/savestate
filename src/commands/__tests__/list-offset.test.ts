@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 import {
   formatListPageSummary,
+  formatListLabelCell,
   formatListDate,
   applyListFilters,
   parseListOffset,
@@ -11,6 +12,11 @@ import {
 } from '../list.js';
 
 describe('savestate list --offset', () => {
+  it('pads labels before styling an empty placeholder', () => {
+    expect(formatListLabelCell(null, 5)).toBe('—    ');
+    expect(formatListLabelCell('work', 5)).toBe('work ');
+  });
+
   it('defaults to undefined', () => {
     expect(parseListOffset(undefined)).toBeUndefined();
   });
@@ -99,5 +105,22 @@ describe('savestate list --offset', () => {
     ] as SnapshotIndexEntry[];
 
     expect(applyListFilters(snapshots, { exclude: 'chatgpt' }).map((entry) => entry.id)).toEqual(['current']);
+  });
+
+  it('treats a date-only --until value as the end of that UTC day', () => {
+    const snapshots = [
+      {
+        id: 'on-day', adapter: 'chatgpt', platform: 'openai', timestamp: '2026-10-10T23:59:59.999Z',
+        filename: 'on-day.saf.enc', size: 1,
+      },
+      {
+        id: 'next-day', adapter: 'chatgpt', platform: 'openai', timestamp: '2026-10-11T00:00:00.000Z',
+        filename: 'next-day.saf.enc', size: 1,
+      },
+    ] satisfies SnapshotIndexEntry[];
+
+    expect(applyListFilters(snapshots, { until: '2026-10-10' }).map((s) => s.id)).toEqual([
+      'on-day',
+    ]);
   });
 });

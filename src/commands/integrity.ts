@@ -36,6 +36,7 @@ interface IntegrityOptions {
   count?: string;
   status?: string;
   limit?: string;
+  offset?: string;
   policy?: string;
   force?: boolean;
   reason?: string;
@@ -44,6 +45,7 @@ interface IntegrityOptions {
 
 const MAX_INTEGRITY_COUNT = 1000;
 const MAX_INTEGRITY_LIMIT = 1000;
+const MAX_INTEGRITY_OFFSET = 1000;
 const MAX_INTEGRITY_TTL_DAYS = 365;
 
 /** Parse a honeyfact seed count without turning user input errors into an empty or NaN seed. */
@@ -161,6 +163,36 @@ export function parseIntegrityLimit(value: string | undefined): number | undefin
 export function selectIntegrityIncidents<T>(incidents: T[], limit?: number): T[] {
   if (limit === undefined) return incidents;
   return incidents.slice(0, limit);
+}
+
+/** Parse integrity incidents --offset without turning invalid skips into an unbounded query. */
+export function parseIntegrityOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_INTEGRITY_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_INTEGRITY_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_INTEGRITY_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N incidents before applying --limit. */
+export function selectIntegrityIncidentPage<T>(
+  incidents: T[],
+  offset?: number,
+  limit?: number,
+): T[] {
+  const page = offset === undefined ? incidents : incidents.slice(offset);
+  return selectIntegrityIncidents(page, limit);
 }
 
 const MAX_INTEGRITY_CONFIG_LIMIT = 1000;
@@ -1311,8 +1343,9 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const tenant_id = parseIntegrityTenant(options.tenant);
   const status = parseIntegrityIncidentStatus(options.status);
   const limit = parseIntegrityLimit(options.limit);
+  const offset = parseIntegrityOffset(options.offset);
 
-  const incidents = selectIntegrityIncidents(await getIncidents(tenant_id, status), limit);
+  const incidents = selectIntegrityIncidentPage(await getIncidents(tenant_id, status), offset, limit);
 
   if (options.json) {
     console.log(formatIntegrityIncidentsJson(incidents));
@@ -1806,6 +1839,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
     .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed, or rotate status field rows, or clear status field rows')
+    .option('--offset <n>', 'Skip the first N incidents (non-negative integer up to 1000)')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
