@@ -37,7 +37,7 @@ Think of it as **1Password for AI identity**: your data, encrypted with your key
 - 📊 **Incremental** — Like git — only captures what changed. Full history, tiny storage.
 - 💾 **Flexible storage** — Local filesystem (free) or SaveState Cloud (Pro/Team).
 - ⏰ **Scheduled backups** — Set it and forget it. Auto-snapshot on your schedule.
-- 🖥️ **CLI-first** — Built for developers. Also has a web dashboard (coming soon).
+- 🖥️ **CLI-first** — Built for developers, with a web dashboard for Pro and Team plans.
 
 ## Quick Start
 

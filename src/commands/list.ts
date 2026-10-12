@@ -47,6 +47,34 @@ export interface ListSnapshotJson {
   size: number;
 }
 
+export interface ListJsonFilters {
+  since: string | null;
+  until: string | null;
+  platform: string | null;
+  adapter: string | null;
+  exclude: string[];
+  snapshot: string | null;
+  tag: string | null;
+  label: string | null;
+}
+
+export interface ListJson {
+  total: number;
+  shown: number;
+  offset: number;
+  limit: number;
+  pageSize: number;
+  page: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  oldestFirst: boolean;
+  filters: ListJsonFilters;
+  entries: ListSnapshotJson[];
+}
+
 /** Keep list pagination stable when snapshots share the same timestamp. */
 export function sortListEntries(
   snapshots: SnapshotIndexEntry[],
@@ -66,7 +94,9 @@ export function formatListJson(
   limit = 50,
   offset?: number,
   oldestFirst = false,
+  filters: Partial<ListJsonFilters> = {},
 ): string {
+  const offsetValue = offset ?? 0;
   const records: ListSnapshotJson[] = selectListOffsetEntries(
     sortListEntries(snapshots, oldestFirst),
     offset,
@@ -82,7 +112,35 @@ export function formatListJson(
       filename: snapshot.filename,
       size: snapshot.size,
     }));
-  return JSON.stringify(records, null, 2);
+  const hasPrevious = offsetValue > 0;
+  const hasMore = offsetValue + records.length < snapshots.length;
+  const totalPages = Math.ceil(snapshots.length / limit);
+  const result: ListJson = {
+    total: snapshots.length,
+    shown: records.length,
+    offset: offsetValue,
+    limit,
+    pageSize: limit,
+    page: Math.floor(offsetValue / limit) + 1,
+    totalPages,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offsetValue - limit) : null,
+    hasMore,
+    nextOffset: hasMore ? offsetValue + records.length : null,
+    oldestFirst,
+    filters: {
+      since: filters.since ?? null,
+      until: filters.until ?? null,
+      platform: filters.platform ?? null,
+      adapter: filters.adapter ?? null,
+      exclude: filters.exclude ?? [],
+      snapshot: filters.snapshot ?? null,
+      tag: filters.tag ?? null,
+      label: filters.label ?? null,
+    },
+    entries: records,
+  };
+  return JSON.stringify(result, null, 2);
 }
 
 export interface ListMissingJson {
@@ -313,7 +371,18 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const oldestFirst = Boolean(options.oldestFirst || options.reverse);
 
   if (options.json) {
-    console.log(formatListJson(filtered, limit, offset, oldestFirst));
+    console.log(
+      formatListJson(filtered, limit, offset, oldestFirst, {
+        since: options.since,
+        until: options.until,
+        platform: options.platform,
+        adapter: options.adapter,
+        exclude: options.exclude ? parseListExclude(options.exclude) : undefined,
+        snapshot: options.snapshot,
+        tag: options.tag,
+        label: options.label,
+      }),
+    );
     return;
   }
 
