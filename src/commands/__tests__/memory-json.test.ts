@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MemoryEntry } from '../../types.js';
 import {
   formatMemoryListJson,
+  filterMemoryListByNamespace,
   getMemoryListSummary,
   type MemoryListJson,
 } from '../memory.js';
@@ -15,6 +16,17 @@ function entry(partial: Partial<MemoryEntry> & Pick<MemoryEntry, 'id' | 'content
 }
 
 describe('savestate memory --json', () => {
+  it('filters entries by their metadata namespace', () => {
+    const entries = [
+      entry({ id: 'mem-a', content: 'a', metadata: { namespace: 'org:app:agent' } }),
+      entry({ id: 'mem-b', content: 'b', metadata: { namespace: 'org:app:other' } }),
+      entry({ id: 'mem-c', content: 'c' }),
+    ];
+
+    expect(filterMemoryListByNamespace(entries, 'org:app:agent').map(({ id }) => id)).toEqual(['mem-a']);
+    expect(filterMemoryListByNamespace(entries)).toBe(entries);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
@@ -43,7 +55,7 @@ describe('savestate memory --json', () => {
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.entries).toEqual([
@@ -75,7 +87,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasPrevious).toBe(false);
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.entries).toEqual([]);
@@ -123,11 +135,11 @@ describe('savestate memory --json', () => {
     ];
     const parsed = JSON.parse(
       formatMemoryListJson(all, all, {
-        filters: { tier: 'L1', pinned: true, source: 'agent', oldestFirst: true },
+        filters: { tier: 'L1', pinned: true, source: 'agent', namespace: 'org:app:agent', oldestFirst: true },
       }),
     ) as MemoryListJson;
 
-    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, source: 'agent', oldestFirst: true });
+    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, source: 'agent', namespace: 'org:app:agent', oldestFirst: true });
   });
 
   it('uses the page size when calculating the previous offset', () => {

@@ -320,6 +320,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-p, --pinned', 'Show only pinned memories')
     .option('--source <id>', 'Filter by source id')
+    .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
     .option('--offset <n>', 'Skip the first N memories (non-negative integer up to 1000)')
@@ -335,6 +336,7 @@ export function registerMemoryCommands(program: Command): void {
           tier: parseMemoryTier(options.tier),
           pinned: options.pinned,
           source: parseMemorySource(options.source),
+          namespace: parseMemoryNamespace(options.namespace),
           oldestFirst: options.oldestFirst,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),
