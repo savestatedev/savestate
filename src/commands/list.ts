@@ -75,6 +75,20 @@ export interface ListJson {
   entries: ListSnapshotJson[];
 }
 
+/** Keep JSON filter metadata aligned with the values used by the filter parser. */
+export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): ListJsonFilters {
+  return {
+    since: filters.since?.trim() ?? null,
+    until: filters.until?.trim() ?? null,
+    platform: filters.platform?.trim().toLowerCase() ?? null,
+    adapter: filters.adapter?.trim().toLowerCase() ?? null,
+    exclude: filters.exclude?.map((adapter) => adapter.trim().toLowerCase()) ?? [],
+    snapshot: filters.snapshot?.trim() ?? null,
+    tag: filters.tag?.trim() ?? null,
+    label: filters.label?.trim() ?? null,
+  };
+}
+
 /** Keep list pagination stable when snapshots share the same timestamp. */
 export function sortListEntries(
   snapshots: SnapshotIndexEntry[],
@@ -128,16 +142,7 @@ export function formatListJson(
     hasMore,
     nextOffset: hasMore ? offsetValue + records.length : null,
     oldestFirst,
-    filters: {
-      since: filters.since ?? null,
-      until: filters.until ?? null,
-      platform: filters.platform ?? null,
-      adapter: filters.adapter ?? null,
-      exclude: filters.exclude ?? [],
-      snapshot: filters.snapshot ?? null,
-      tag: filters.tag ?? null,
-      label: filters.label ?? null,
-    },
+    filters: normalizeListJsonFilters(filters),
     entries: records,
   };
   return JSON.stringify(result, null, 2);
@@ -492,8 +497,8 @@ export function applyListFilters(
     if (platform && s.platform.trim().toLowerCase() !== platform) return false;
     if (exclude !== undefined && exclude.includes(s.adapter.trim().toLowerCase())) return false;
     if (snapshotId !== undefined && s.id !== snapshotId) return false;
-    if (tag && !(s.tags ?? []).includes(tag)) return false;
-    if (label !== undefined && s.label !== label) return false;
+    if (tag && !(s.tags ?? []).some((value) => value.trim() === tag)) return false;
+    if (label !== undefined && s.label?.trim() !== label) return false;
     return true;
   });
 }

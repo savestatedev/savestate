@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatListJson, type ListJson } from '../list.js';
+import { formatListJson, normalizeListJsonFilters, type ListJson } from '../list.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 const older: SnapshotIndexEntry = {
@@ -94,6 +94,28 @@ describe('savestate list --json', () => {
       snapshot: null,
       tag: null,
       label: 'weekly backup',
+    });
+  });
+
+  it('normalizes filter metadata to the values used for matching', () => {
+    expect(normalizeListJsonFilters({
+      since: ' 2026-01-01 ',
+      until: ' 2026-01-31T23:59:59Z ',
+      platform: ' OpenAI ',
+      adapter: ' ChatGPT ',
+      exclude: [' Claude-Code '],
+      snapshot: ' ss-1 ',
+      tag: ' weekly ',
+      label: ' pre-update ',
+    })).toEqual({
+      since: '2026-01-01',
+      until: '2026-01-31T23:59:59Z',
+      platform: 'openai',
+      adapter: 'chatgpt',
+      exclude: ['claude-code'],
+      snapshot: 'ss-1',
+      tag: 'weekly',
+      label: 'pre-update',
     });
   });
 });
