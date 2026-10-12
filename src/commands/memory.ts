@@ -144,6 +144,7 @@ export interface MemoryListEntryJson {
   pinned: boolean;
   source: string;
   createdAt: string;
+  updatedAt?: string;
   content: string;
 }
 
@@ -206,6 +207,7 @@ export function formatMemoryListJson(
       pinned: !!entry.pinned,
       source: entry.source,
       createdAt: entry.createdAt,
+      ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       content: entry.content,
     })),
   };
