@@ -25,6 +25,17 @@ interface AdaptersOptions {
 const MAX_ADAPTERS_LIMIT = 1000;
 const MAX_ADAPTERS_OFFSET = 1000;
 
+/** Reject an empty platform filter instead of making a typo look like no adapters exist. */
+export function parseAdaptersPlatform(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const platform = value.trim();
+  if (platform.length === 0) {
+    throw new Error('Invalid --platform value. Expected a non-empty platform ID.');
+  }
+  return platform;
+}
+
 /** Parse adapters --limit without turning user input errors into an empty adapter list. */
 export function parseAdaptersLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -94,7 +105,7 @@ export function applyAdaptersFilters(
 ): AdapterListEntry[] {
   return selectAdapters(
     selectAdaptersOffset(
-      selectAdaptersPlatform(adapters, options.platform),
+      selectAdaptersPlatform(adapters, parseAdaptersPlatform(options.platform)),
       parseAdaptersOffset(options.offset),
     ),
     parseAdaptersLimit(options.limit),
