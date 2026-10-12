@@ -52,4 +52,16 @@ describe('savestate stats --json', () => {
     expect(parsed.topTags).toEqual([]);
     expect(parsed.storage).toEqual({ type: 'local' });
   });
+
+  it('orders equally used tags alphabetically for stable output', () => {
+    const parsed = JSON.parse(formatStatsJson([
+      { ...older, tags: ['zebra', 'alpha'] },
+      { ...newer, tags: ['alpha', 'zebra'] },
+    ], 'local')) as StatsJson;
+
+    expect(parsed.topTags).toEqual([
+      { tag: 'alpha', count: 2 },
+      { tag: 'zebra', count: 2 },
+    ]);
+  });
 });

@@ -77,6 +77,16 @@ export function parseStatsUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Reject an inverted date range before it silently produces empty stats. */
+export function validateStatsDateRange(
+  since: number | undefined,
+  until: number | undefined,
+): void {
+  if (since !== undefined && until !== undefined && since > until) {
+    throw new Error('Invalid stats date range: --since must be on or before --until.');
+  }
+}
+
 /** Parse stats --tag without treating blank or comma-separated values as empty usage stats. */
 export function parseStatsTag(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -144,8 +154,15 @@ export function parseStatsExclude(value: string | undefined): string[] | undefin
 export function parseStatsLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
-  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_STATS_LIMIT) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_STATS_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
+  if (limit < 1 || limit > MAX_STATS_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_STATS_LIMIT}.`,
     );
@@ -157,8 +174,15 @@ export function parseStatsLimit(value: string | undefined): number | undefined {
 export function parseStatsOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
-  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_STATS_OFFSET) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_STATS_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
+  if (offset > MAX_STATS_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_STATS_OFFSET}.`,
     );
@@ -172,6 +196,15 @@ export function selectStatsOffsetEntries<T>(entries: T[], offset?: number): T[] 
   return entries.slice(offset);
 }
 
+/** Keep stats pagination stable when snapshots share a timestamp. */
+export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
+  return [...snapshots].sort((a, b) => {
+    const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    if (timestampOrder !== 0) return timestampOrder;
+    return a.id.localeCompare(b.id);
+  });
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
@@ -182,6 +215,7 @@ export function applyStatsFilters(
   const snapshotId = parseStatsSnapshot(options.snapshot);
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
+  validateStatsDateRange(since, until);
   const tag = parseStatsTag(options.tag);
   const label = parseStatsLabel(options.label);
   let filtered = snapshots.filter((snapshot) => {
@@ -202,7 +236,7 @@ export function applyStatsFilters(
   const offset = parseStatsOffset(options.offset);
   if (limit !== undefined || offset !== undefined) {
     filtered = selectStatsOffsetEntries(
-      [...filtered].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      sortStatsEntries(filtered),
       offset,
     );
     if (limit !== undefined) {
@@ -276,8 +310,9 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsAdapter(options.adapter);
   parseStatsExclude(options.exclude);
   parseStatsSnapshot(options.snapshot);
-  parseStatsSince(options.since);
-  parseStatsUntil(options.until);
+  const since = parseStatsSince(options.since);
+  const until = parseStatsUntil(options.until);
+  validateStatsDateRange(since, until);
   parseStatsTag(options.tag);
   parseStatsLabel(options.label);
   parseStatsLimit(options.limit);
@@ -417,7 +452,7 @@ export function computeStats(snapshots: SnapshotIndexEntry[]): ComputedStats {
   }
 
   const topTags = [...tagCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 5);
 
   const spanMs = new Date(latest).getTime() - new Date(first).getTime();
