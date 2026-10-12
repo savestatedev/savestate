@@ -5335,6 +5335,14 @@ describe('CLI docs', () => {
     expect(adapters).toContain('export function parseAdaptersOffset');
   });
 
+  it('documents adapters --platform filtering', () => {
+    const adaptersSection = docs.slice(docs.indexOf('id="adapters"'), docs.indexOf('id="export"'));
+    const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
+    expect(adaptersSection).toContain('--platform &lt;id&gt;');
+    expect(adaptersSection).toContain('savestate adapters --platform claude');
+    expect(adaptersBlock).toContain(".option('--platform <id>'");
+  });
+
   it('lists savestate adapters in the command overview', () => {
     expect(docs).toContain('id="adapters"');
     expect(docs).toContain('savestate adapters');
