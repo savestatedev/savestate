@@ -224,6 +224,19 @@ export function parseMemoryNamespace(value: string | undefined): string | undefi
   return namespace;
 }
 
+/** Resolve the mutually exclusive memory list pin filters. */
+export function parseMemoryPinnedFilter(
+  pinned: boolean | undefined,
+  unpinned: boolean | undefined,
+): boolean | undefined {
+  if (pinned && unpinned) {
+    throw new Error('The --pinned and --unpinned options cannot be used together.');
+  }
+  if (pinned) return true;
+  if (unpinned) return false;
+  return undefined;
+}
+
 /** Parse memory --reason without writing a blank audit reason. */
 export function parseMemoryReason(value: string | undefined): string {
   if (value === undefined) {
@@ -319,6 +332,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('List memories with tier information')
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-p, --pinned', 'Show only pinned memories')
+    .option('--unpinned', 'Show only unpinned memories')
     .option('--source <id>', 'Filter by source id')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
@@ -334,7 +348,7 @@ export function registerMemoryCommands(program: Command): void {
 
         await listMemories(storage, passphrase, {
           tier: parseMemoryTier(options.tier),
-          pinned: options.pinned,
+          pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
           namespace: parseMemoryNamespace(options.namespace),
           oldestFirst: options.oldestFirst,

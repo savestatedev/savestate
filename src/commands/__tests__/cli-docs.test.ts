@@ -2432,9 +2432,11 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate init');
   });
 
-  it('documents memory list --pinned, --limit, and promote --to', () => {
+  it('documents memory list pin filters, --limit, and promote --to', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--pinned');
+    expect(memorySection).toContain('--unpinned');
+    expect(memorySection).toContain('mutually exclusive');
     expect(memorySection).toContain('--limit');
     expect(memorySection).toContain('--to');
     expect(memorySection).toContain('20');

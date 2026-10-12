@@ -42,7 +42,13 @@ describe('savestate memory --json', () => {
   it('prints list summary and entries as JSON', () => {
     const all = [
       entry({ id: 'mem-l1', content: 'inbox preference', tier: 'L1', pinned: true }),
-      entry({ id: 'mem-l2', content: 'working note', tier: 'L2', source: 'agent' }),
+      entry({
+        id: 'mem-l2',
+        content: 'working note',
+        tier: 'L2',
+        source: 'agent',
+        updatedAt: '2026-09-02T12:00:00.000Z',
+      }),
       entry({ id: 'mem-l3', content: 'archive fact', createdAt: '2026-08-01T00:00:00.000Z' }),
     ];
     const parsed = JSON.parse(formatMemoryListJson(all, [all[0], all[1]])) as MemoryListJson;
@@ -73,6 +79,7 @@ describe('savestate memory --json', () => {
         pinned: false,
         source: 'agent',
         createdAt: '2026-09-01T00:00:00.000Z',
+        updatedAt: '2026-09-02T12:00:00.000Z',
         content: 'working note',
       },
     ]);
