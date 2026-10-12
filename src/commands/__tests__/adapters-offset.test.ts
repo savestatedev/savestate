@@ -3,6 +3,7 @@ import {
   applyAdaptersFilters,
   parseAdaptersOffset,
   selectAdaptersOffset,
+  selectAdaptersPlatform,
   type AdapterListEntry,
 } from '../adapters.js';
 
@@ -26,7 +27,7 @@ describe('savestate adapters --offset', () => {
     expect(parseAdaptersOffset('12')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseAdaptersOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
@@ -64,5 +65,23 @@ describe('savestate adapters --offset', () => {
         { offset: '1', limit: '1' },
       ).map((entry) => entry.id),
     ).toEqual(['chatgpt']);
+  });
+
+  it('filters adapters by platform before pagination', () => {
+    expect(
+      applyAdaptersFilters(
+        [
+          adapter({ id: 'chatgpt', platform: 'chatgpt' }),
+          adapter({ id: 'claude-web', platform: 'claude' }),
+          adapter({ id: 'claude-code', platform: 'claude' }),
+        ],
+        { platform: 'claude', offset: '1', limit: '1' },
+      ).map((entry) => entry.id),
+    ).toEqual(['claude-code']);
+  });
+
+  it('returns all adapters when platform is omitted', () => {
+    const adapters = [adapter({ id: 'a1' }), adapter({ id: 'a2' })];
+    expect(selectAdaptersPlatform(adapters, undefined)).toEqual(adapters);
   });
 });

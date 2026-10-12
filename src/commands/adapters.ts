@@ -19,14 +19,32 @@ interface AdaptersOptions {
   json?: boolean;
   limit?: string;
   offset?: string;
+  platform?: string;
 }
 
 const MAX_ADAPTERS_LIMIT = 1000;
 const MAX_ADAPTERS_OFFSET = 1000;
 
+/** Reject an empty platform filter instead of making a typo look like no adapters exist. */
+export function parseAdaptersPlatform(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const platform = value.trim();
+  if (platform.length === 0) {
+    throw new Error('Invalid --platform value. Expected a non-empty platform ID.');
+  }
+  return platform;
+}
+
 /** Parse adapters --limit without turning user input errors into an empty adapter list. */
 export function parseAdaptersLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_ADAPTERS_LIMIT}.`,
+    );
+  }
 
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ADAPTERS_LIMIT) {
@@ -50,6 +68,12 @@ export function selectAdapters(
 export function parseAdaptersOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_ADAPTERS_OFFSET}.`,
+    );
+  }
+
   const offset = Number(value);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_ADAPTERS_OFFSET) {
     throw new Error(
@@ -65,13 +89,25 @@ export function selectAdaptersOffset<T>(adapters: T[], offset?: number): T[] {
   return adapters.slice(offset);
 }
 
+/** Keep adapters reported by a specific platform when --platform is set. */
+export function selectAdaptersPlatform(
+  adapters: AdapterListEntry[],
+  platform?: string,
+): AdapterListEntry[] {
+  if (platform === undefined) return adapters;
+  return adapters.filter((adapter) => adapter.platform === platform);
+}
+
 /** Apply adapters --offset then --limit. */
 export function applyAdaptersFilters(
   adapters: AdapterListEntry[],
-  options: { offset?: string; limit?: string },
+  options: { offset?: string; limit?: string; platform?: string },
 ): AdapterListEntry[] {
   return selectAdapters(
-    selectAdaptersOffset(adapters, parseAdaptersOffset(options.offset)),
+    selectAdaptersOffset(
+      selectAdaptersPlatform(adapters, parseAdaptersPlatform(options.platform)),
+      parseAdaptersOffset(options.offset),
+    ),
     parseAdaptersLimit(options.limit),
   );
 }
