@@ -19,6 +19,7 @@ interface AdaptersOptions {
   json?: boolean;
   limit?: string;
   offset?: string;
+  platform?: string;
 }
 
 const MAX_ADAPTERS_LIMIT = 1000;
@@ -77,13 +78,25 @@ export function selectAdaptersOffset<T>(adapters: T[], offset?: number): T[] {
   return adapters.slice(offset);
 }
 
+/** Keep adapters reported by a specific platform when --platform is set. */
+export function selectAdaptersPlatform(
+  adapters: AdapterListEntry[],
+  platform?: string,
+): AdapterListEntry[] {
+  if (platform === undefined) return adapters;
+  return adapters.filter((adapter) => adapter.platform === platform);
+}
+
 /** Apply adapters --offset then --limit. */
 export function applyAdaptersFilters(
   adapters: AdapterListEntry[],
-  options: { offset?: string; limit?: string },
+  options: { offset?: string; limit?: string; platform?: string },
 ): AdapterListEntry[] {
   return selectAdapters(
-    selectAdaptersOffset(adapters, parseAdaptersOffset(options.offset)),
+    selectAdaptersOffset(
+      selectAdaptersPlatform(adapters, options.platform),
+      parseAdaptersOffset(options.offset),
+    ),
     parseAdaptersLimit(options.limit),
   );
 }
