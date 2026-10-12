@@ -181,8 +181,16 @@ savestate list                        List all snapshots
   --json                             Output as JSON
   --oldest-first                     Show snapshots from oldest to newest
   --platform <id>                    Only snapshots recorded from this platform
+  --adapter <id>                     Only snapshots recorded by this adapter
+  --exclude <ids>                    Exclude snapshots from comma-separated adapters
+  --since <date>                     Only snapshots taken after an ISO 8601 date
+  --until <date>                     Only snapshots taken before an ISO 8601 date
+  --snapshot <id>                    Show one snapshot by ID
+  --tag <tag>                        Only snapshots with this tag
+  --label <label>                    Only snapshots with this label
   --reverse                          Alias for --oldest-first
   --limit <n>                        Max snapshots to show
+  --offset <n>                       Skip snapshots before applying --limit
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
   --exclude <types>                  Skip memory, conversation, identity, or knowledge
