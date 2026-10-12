@@ -497,8 +497,8 @@ export function applyListFilters(
     if (platform && s.platform.trim().toLowerCase() !== platform) return false;
     if (exclude !== undefined && exclude.includes(s.adapter.trim().toLowerCase())) return false;
     if (snapshotId !== undefined && s.id !== snapshotId) return false;
-    if (tag && !(s.tags ?? []).includes(tag)) return false;
-    if (label !== undefined && s.label !== label) return false;
+    if (tag && !(s.tags ?? []).some((value) => value.trim() === tag)) return false;
+    if (label !== undefined && s.label?.trim() !== label) return false;
     return true;
   });
 }

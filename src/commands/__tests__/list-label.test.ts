@@ -44,6 +44,15 @@ describe('savestate list --label', () => {
     ).toEqual(['keep']);
   });
 
+  it('matches labels from legacy indexes with surrounding whitespace', () => {
+    expect(
+      applyListFilters(
+        [entry({ id: 'legacy', adapter: 'chatgpt', label: ' Pre-update backup ' })],
+        { label: 'Pre-update backup' },
+      ).map((snapshot) => snapshot.id),
+    ).toEqual(['legacy']);
+  });
+
   it('ANDs --adapter with --label', () => {
     expect(
       applyListFilters(
