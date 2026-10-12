@@ -78,8 +78,8 @@ export interface ListJson {
 /** Keep JSON filter metadata aligned with the values used by the filter parser. */
 export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): ListJsonFilters {
   return {
-    since: filters.since ?? null,
-    until: filters.until ?? null,
+    since: filters.since?.trim() ?? null,
+    until: filters.until?.trim() ?? null,
     platform: filters.platform?.trim().toLowerCase() ?? null,
     adapter: filters.adapter?.trim().toLowerCase() ?? null,
     exclude: filters.exclude?.map((adapter) => adapter.trim().toLowerCase()) ?? [],

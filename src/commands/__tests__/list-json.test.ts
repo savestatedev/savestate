@@ -99,6 +99,8 @@ describe('savestate list --json', () => {
 
   it('normalizes filter metadata to the values used for matching', () => {
     expect(normalizeListJsonFilters({
+      since: ' 2026-01-01 ',
+      until: ' 2026-01-31T23:59:59Z ',
       platform: ' OpenAI ',
       adapter: ' ChatGPT ',
       exclude: [' Claude-Code '],
@@ -106,8 +108,8 @@ describe('savestate list --json', () => {
       tag: ' weekly ',
       label: ' pre-update ',
     })).toEqual({
-      since: null,
-      until: null,
+      since: '2026-01-01',
+      until: '2026-01-31T23:59:59Z',
       platform: 'openai',
       adapter: 'chatgpt',
       exclude: ['claude-code'],
