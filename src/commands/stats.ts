@@ -196,6 +196,15 @@ export function selectStatsOffsetEntries<T>(entries: T[], offset?: number): T[] 
   return entries.slice(offset);
 }
 
+/** Keep stats pagination stable when snapshots share a timestamp. */
+export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
+  return [...snapshots].sort((a, b) => {
+    const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    if (timestampOrder !== 0) return timestampOrder;
+    return a.id.localeCompare(b.id);
+  });
+}
+
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
@@ -227,7 +236,7 @@ export function applyStatsFilters(
   const offset = parseStatsOffset(options.offset);
   if (limit !== undefined || offset !== undefined) {
     filtered = selectStatsOffsetEntries(
-      [...filtered].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      sortStatsEntries(filtered),
       offset,
     );
     if (limit !== undefined) {

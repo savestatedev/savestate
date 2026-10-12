@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyStatsFilters, parseStatsLimit, parseStatsOffset } from '../stats.js';
+import { applyStatsFilters, parseStatsLimit, parseStatsOffset, sortStatsEntries } from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
@@ -60,6 +60,15 @@ describe('savestate stats --limit', () => {
         { limit: '2' },
       ).map((snapshot) => snapshot.id),
     ).toEqual(['new', 'mid']);
+  });
+
+  it('orders equal-timestamp snapshots by id for stable pagination', () => {
+    expect(
+      sortStatsEntries([
+        entry({ id: 'ss-z' }),
+        entry({ id: 'ss-a' }),
+      ]).map((snapshot) => snapshot.id),
+    ).toEqual(['ss-a', 'ss-z']);
   });
 
   it('ANDs --adapter with --limit', () => {
