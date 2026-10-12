@@ -161,6 +161,7 @@ export interface MemoryListJson {
     tier: MemoryTier | null;
     pinned: boolean | null;
     source: string | null;
+    namespace: string | null;
     oldestFirst: boolean;
   };
   byTier: Record<MemoryTier, number>;
@@ -196,6 +197,7 @@ export function formatMemoryListJson(
       tier: pagination.filters?.tier ?? null,
       pinned: pagination.filters?.pinned ?? null,
       source: pagination.filters?.source ?? null,
+      namespace: pagination.filters?.namespace ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
     },
     byTier: countByTier(all),
@@ -230,6 +232,15 @@ export function formatMemoryListMissingJson(snapshot: string): string {
     null,
     2,
   );
+}
+
+/** Keep only memories assigned to a namespace in their metadata. */
+export function filterMemoryListByNamespace(
+  entries: MemoryEntry[],
+  namespace?: string,
+): MemoryEntry[] {
+  if (namespace === undefined) return entries;
+  return entries.filter((entry) => entry.metadata?.namespace === namespace);
 }
 
 /**
@@ -550,6 +561,7 @@ export async function listMemories(
     tier?: MemoryTier;
     pinned?: boolean;
     source?: string;
+    namespace?: string;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -592,6 +604,8 @@ export async function listMemories(
     entries = entries.filter((e) => e.source === options.source);
   }
 
+  entries = filterMemoryListByNamespace(entries, options?.namespace);
+
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
   entries = selectMemoryListEntries(
@@ -608,6 +622,7 @@ export async function listMemories(
         tier: options?.tier,
         pinned: options?.pinned,
         source: options?.source,
+        namespace: options?.namespace,
         oldestFirst: options?.oldestFirst,
       },
     }));
