@@ -216,6 +216,12 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   return `(showing ${shown} of ${total} after filters)`;
 }
 
+/** Pad the visible label text before applying terminal styling to placeholders. */
+export function formatListLabelCell(label: string | null, width: number): string {
+  if (label !== null) return label.padEnd(width);
+  return chalk.dim('—'.padEnd(width));
+}
+
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
 export function parseListSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -437,14 +443,14 @@ export async function listCommand(options: ListOptions): Promise<void> {
   // Rows
   for (const s of sorted) {
     const date = formatListDate(s.timestamp);
-    const label = s.label ?? chalk.dim('—');
+    const label = formatListLabelCell(s.label ?? null, labelWidth);
     const size = formatBytes(s.size);
 
     const row = [
       chalk.cyan(s.id.padEnd(idWidth)),
       date.padEnd(dateWidth),
       s.adapter.padEnd(adapterWidth),
-      (typeof label === 'string' ? label : label).toString().padEnd(labelWidth),
+      label,
       size.padStart(sizeWidth),
     ].join('  ');
 

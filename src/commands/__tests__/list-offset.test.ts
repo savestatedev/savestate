@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 import {
   formatListPageSummary,
+  formatListLabelCell,
   formatListDate,
   applyListFilters,
   parseListOffset,
@@ -11,6 +12,11 @@ import {
 } from '../list.js';
 
 describe('savestate list --offset', () => {
+  it('pads labels before styling an empty placeholder', () => {
+    expect(formatListLabelCell(null, 5)).toBe('—    ');
+    expect(formatListLabelCell('work', 5)).toBe('work ');
+  });
+
   it('defaults to undefined', () => {
     expect(parseListOffset(undefined)).toBeUndefined();
   });
