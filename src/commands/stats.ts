@@ -77,6 +77,16 @@ export function parseStatsUntil(value: string | undefined): number | undefined {
   return ms;
 }
 
+/** Reject an inverted date range before it silently produces empty stats. */
+export function validateStatsDateRange(
+  since: number | undefined,
+  until: number | undefined,
+): void {
+  if (since !== undefined && until !== undefined && since > until) {
+    throw new Error('Invalid stats date range: --since must be on or before --until.');
+  }
+}
+
 /** Parse stats --tag without treating blank or comma-separated values as empty usage stats. */
 export function parseStatsTag(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -182,6 +192,7 @@ export function applyStatsFilters(
   const snapshotId = parseStatsSnapshot(options.snapshot);
   const since = parseStatsSince(options.since);
   const until = parseStatsUntil(options.until);
+  validateStatsDateRange(since, until);
   const tag = parseStatsTag(options.tag);
   const label = parseStatsLabel(options.label);
   let filtered = snapshots.filter((snapshot) => {
@@ -276,8 +287,9 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   parseStatsAdapter(options.adapter);
   parseStatsExclude(options.exclude);
   parseStatsSnapshot(options.snapshot);
-  parseStatsSince(options.since);
-  parseStatsUntil(options.until);
+  const since = parseStatsSince(options.since);
+  const until = parseStatsUntil(options.until);
+  validateStatsDateRange(since, until);
   parseStatsTag(options.tag);
   parseStatsLabel(options.label);
   parseStatsLimit(options.limit);

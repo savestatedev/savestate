@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyStatsFilters, parseStatsUntil } from '../stats.js';
+import { applyStatsFilters, parseStatsUntil, validateStatsDateRange } from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
@@ -16,6 +16,20 @@ function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
 }
 
 describe('savestate stats --until', () => {
+  it('rejects an inverted --since/--until range', () => {
+    expect(() => validateStatsDateRange(
+      new Date('2026-05-01T00:00:00Z').getTime(),
+      new Date('2026-04-01T00:00:00Z').getTime(),
+    )).toThrow('Invalid stats date range: --since must be on or before --until.');
+  });
+
+  it('allows equal date boundaries', () => {
+    expect(() => validateStatsDateRange(
+      new Date('2026-04-01T00:00:00Z').getTime(),
+      new Date('2026-04-01T00:00:00Z').getTime(),
+    )).not.toThrow();
+  });
+
   it('leaves the cutoff unset when omitted', () => {
     expect(parseStatsUntil(undefined)).toBeUndefined();
   });
