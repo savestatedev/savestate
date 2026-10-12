@@ -44,7 +44,13 @@ describe('savestate list --json', () => {
   });
 
   it('prints an empty array when there are no snapshots', () => {
-    expect(JSON.parse(formatListJson([]))).toMatchObject({ total: 0, shown: 0, entries: [] });
+    expect(JSON.parse(formatListJson([]))).toMatchObject({
+      total: 0,
+      shown: 0,
+      page: 1,
+      totalPages: 0,
+      entries: [],
+    });
   });
 
   it('supports oldest-first ordering for JSON consumers', () => {
@@ -60,6 +66,8 @@ describe('savestate list --json', () => {
       offset: 1,
       limit: 1,
       pageSize: 1,
+      page: 2,
+      totalPages: 2,
       hasPrevious: true,
       previousOffset: 0,
       hasMore: false,

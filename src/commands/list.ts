@@ -53,6 +53,8 @@ export interface ListJson {
   offset: number;
   limit: number;
   pageSize: number;
+  page: number;
+  totalPages: number;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
@@ -99,12 +101,15 @@ export function formatListJson(
     }));
   const hasPrevious = offsetValue > 0;
   const hasMore = offsetValue + records.length < snapshots.length;
+  const totalPages = Math.ceil(snapshots.length / limit);
   const result: ListJson = {
     total: snapshots.length,
     shown: records.length,
     offset: offsetValue,
     limit,
     pageSize: limit,
+    page: Math.floor(offsetValue / limit) + 1,
+    totalPages,
     hasPrevious,
     previousOffset: hasPrevious ? Math.max(0, offsetValue - limit) : null,
     hasMore,
