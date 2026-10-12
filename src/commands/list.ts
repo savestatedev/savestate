@@ -47,6 +47,20 @@ export interface ListSnapshotJson {
   size: number;
 }
 
+export interface ListJson {
+  total: number;
+  shown: number;
+  offset: number;
+  limit: number;
+  pageSize: number;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  oldestFirst: boolean;
+  entries: ListSnapshotJson[];
+}
+
 /** Keep list pagination stable when snapshots share the same timestamp. */
 export function sortListEntries(
   snapshots: SnapshotIndexEntry[],
@@ -67,6 +81,7 @@ export function formatListJson(
   offset?: number,
   oldestFirst = false,
 ): string {
+  const offsetValue = offset ?? 0;
   const records: ListSnapshotJson[] = selectListOffsetEntries(
     sortListEntries(snapshots, oldestFirst),
     offset,
@@ -82,7 +97,22 @@ export function formatListJson(
       filename: snapshot.filename,
       size: snapshot.size,
     }));
-  return JSON.stringify(records, null, 2);
+  const hasPrevious = offsetValue > 0;
+  const hasMore = offsetValue + records.length < snapshots.length;
+  const result: ListJson = {
+    total: snapshots.length,
+    shown: records.length,
+    offset: offsetValue,
+    limit,
+    pageSize: limit,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offsetValue - limit) : null,
+    hasMore,
+    nextOffset: hasMore ? offsetValue + records.length : null,
+    oldestFirst,
+    entries: records,
+  };
+  return JSON.stringify(result, null, 2);
 }
 
 export interface ListMissingJson {
