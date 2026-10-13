@@ -576,6 +576,14 @@ export function formatMemoryListLastAccessed(lastAccessedAt: string | undefined)
   return Number.isNaN(timestamp.getTime()) ? '—' : timestamp.toISOString().slice(0, 10);
 }
 
+/** Truncate table previews without adding an ellipsis to already-short content. */
+export function formatMemoryListContent(content: string, maxLength = 40): string {
+  const normalized = content.replace(/\n/g, ' ');
+  return normalized.length > maxLength
+    ? `${normalized.slice(0, maxLength)}...`
+    : normalized;
+}
+
 /** Keep the table shape stable across paginated memory list results. */
 export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
   return entries.some((entry) => typeof entry.metadata?.namespace === 'string');
@@ -701,10 +709,10 @@ export async function listMemories(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     ).padEnd(24);
     const lastAccessed = formatMemoryListLastAccessed(entry.lastAccessedAt).padEnd(10);
-    const content = entry.content.slice(0, 40).replace(/\n/g, ' ');
+    const content = formatMemoryListContent(entry.content);
     console.log(showNamespace
-      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${lastAccessed}  ${content}...`
-      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${lastAccessed}  ${content}...`);
+      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${lastAccessed}  ${content}`
+      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${lastAccessed}  ${content}`);
   }
 }
 
