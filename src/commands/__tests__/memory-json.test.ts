@@ -66,7 +66,9 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
+    expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.pinned).toBe(1);
+    expect(parsed.shownPinned).toBe(1);
     expect(parsed.entries).toEqual([
       {
         id: 'mem-l1',
@@ -102,7 +104,9 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBeNull();
     expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
+    expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
+    expect(parsed.shownPinned).toBe(0);
     expect(parsed.entries).toEqual([]);
   });
 
@@ -140,6 +144,19 @@ describe('savestate memory --json', () => {
     expect(parsed.byTier).toEqual({ L1: 2, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.nextOffset).toBe(1);
+  });
+
+  it('reports pinned counts for both the filtered collection and page', () => {
+    const all = [
+      entry({ id: 'mem-page', content: 'page result' }),
+      entry({ id: 'mem-next', content: 'next result', pinned: true }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(all, [all[0]], { offset: 0, limit: 1, hasMore: true }),
+    ) as MemoryListJson;
+
+    expect(parsed.pinned).toBe(1);
+    expect(parsed.shownPinned).toBe(0);
   });
 
   it('reports active list filters for automation', () => {

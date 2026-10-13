@@ -169,7 +169,9 @@ export interface MemoryListJson {
     oldestFirst: boolean;
   };
   byTier: Record<MemoryTier, number>;
+  shownByTier: Record<MemoryTier, number>;
   pinned: number;
+  shownPinned: number;
   entries: MemoryListEntryJson[];
 }
 
@@ -210,7 +212,9 @@ export function formatMemoryListJson(
       oldestFirst: pagination.filters?.oldestFirst ?? false,
     },
     byTier: countByTier(all),
+    shownByTier: countByTier(shown),
     pinned: all.filter((entry) => !!entry.pinned).length,
+    shownPinned: shown.filter((entry) => !!entry.pinned).length,
     entries: shown.map((entry) => ({
       id: entry.id,
       tier: getEffectiveTier(entry),
