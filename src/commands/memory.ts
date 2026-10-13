@@ -146,6 +146,7 @@ export interface MemoryListEntryJson {
   namespace: string | null;
   createdAt: string;
   updatedAt?: string;
+  lastAccessedAt?: string;
   content: string;
 }
 
@@ -218,6 +219,7 @@ export function formatMemoryListJson(
         : null,
       createdAt: entry.createdAt,
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
+      ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),
       content: entry.content,
     })),
   };

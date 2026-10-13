@@ -49,6 +49,7 @@ describe('savestate memory --json', () => {
         source: 'agent',
         metadata: { namespace: 'org:app:agent' },
         updatedAt: '2026-09-02T12:00:00.000Z',
+        lastAccessedAt: '2026-09-03T08:30:00.000Z',
       }),
       entry({ id: 'mem-l3', content: 'archive fact', createdAt: '2026-08-01T00:00:00.000Z' }),
     ];
@@ -83,6 +84,7 @@ describe('savestate memory --json', () => {
         namespace: 'org:app:agent',
         createdAt: '2026-09-01T00:00:00.000Z',
         updatedAt: '2026-09-02T12:00:00.000Z',
+        lastAccessedAt: '2026-09-03T08:30:00.000Z',
         content: 'working note',
       },
     ]);
