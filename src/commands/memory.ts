@@ -153,6 +153,7 @@ export interface MemoryListEntryJson {
 export interface MemoryListJson {
   found: true;
   empty: boolean;
+  emptyReason: 'collection' | 'page' | null;
   total: number;
   shown: number;
   offset: number;
@@ -198,6 +199,7 @@ export function formatMemoryListJson(
   const record: MemoryListJson = {
     found: true,
     empty: shown.length === 0,
+    emptyReason: shown.length > 0 ? null : all.length === 0 ? 'collection' : 'page',
     total: all.length,
     shown: shown.length,
     offset,
