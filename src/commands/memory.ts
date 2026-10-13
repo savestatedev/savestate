@@ -616,12 +616,12 @@ export function formatMemoryListEmptyState(
   offset: number,
 ): string {
   if (matchingCount === 0) {
-    return 'No memories found matching the criteria.';
+    return 'No memories found matching the criteria. Try adjusting the filters.';
   }
 
   return `No memories shown: offset ${offset} is beyond ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
-  }.`;
+  }. Try a smaller --offset.`;
 }
 
 /**
