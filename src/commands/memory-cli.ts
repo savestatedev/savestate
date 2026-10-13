@@ -336,6 +336,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--source <id>', 'Filter by source id')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
+    .option('--reverse', 'Alias for --oldest-first')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
     .option('--offset <n>', 'Skip the first N memories (non-negative integer up to 1000)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
@@ -351,7 +352,7 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
           namespace: parseMemoryNamespace(options.namespace),
-          oldestFirst: options.oldestFirst,
+          oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),
           snapshotId: parseMemorySnapshot(options.snapshot),

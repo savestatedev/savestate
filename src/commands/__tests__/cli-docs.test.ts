@@ -2448,9 +2448,12 @@ describe('CLI docs', () => {
   it('documents memory list --oldest-first ordering', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--oldest-first');
+    expect(memorySection).toContain('--reverse');
     expect(memorySection).toContain('oldest to newest');
     expect(memorySection).toContain('savestate memory list --oldest-first --limit 5');
+    expect(memorySection).toContain('savestate memory list --reverse --limit 5');
     expect(memoryCli).toContain(".option('--oldest-first'");
+    expect(memoryCli).toContain(".option('--reverse'");
   });
 
   it('documents memory --snapshot as a single snapshot id', () => {
