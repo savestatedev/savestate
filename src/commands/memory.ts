@@ -545,6 +545,12 @@ export function formatMemoryListSource(source: string): string {
   return normalized.length > 18 ? `${normalized.slice(0, 15)}...` : normalized;
 }
 
+/** Keep namespace labels readable in the human-facing memory table. */
+export function formatMemoryListNamespace(namespace: string | undefined): string {
+  if (!namespace) return '';
+  return namespace.length > 24 ? `${namespace.slice(0, 21)}...` : namespace;
+}
+
 /** Apply memory list --offset then --limit. */
 export function applyMemoryListFilters<T>(
   entries: T[],
@@ -648,15 +654,23 @@ export async function listMemories(
     return;
   }
 
-  console.log('ID                                    Tier  Pinned  Source              Content (truncated)');
-  console.log('─'.repeat(80));
+  const showNamespace = entries.some((entry) => typeof entry.metadata?.namespace === 'string');
+  console.log(showNamespace
+    ? 'ID                                    Tier  Pinned  Source              Namespace                    Content (truncated)'
+    : 'ID                                    Tier  Pinned  Source              Content (truncated)');
+  console.log('─'.repeat(showNamespace ? 108 : 80));
 
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
     const pinned = entry.pinned ? '📌' : '  ';
     const source = formatMemoryListSource(entry.source).padEnd(18);
+    const namespace = formatMemoryListNamespace(
+      typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
+    ).padEnd(24);
     const content = entry.content.slice(0, 40).replace(/\n/g, ' ');
-    console.log(`${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${content}...`);
+    console.log(showNamespace
+      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${content}...`
+      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${content}...`);
   }
 }
 
