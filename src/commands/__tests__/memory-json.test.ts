@@ -67,6 +67,7 @@ describe('savestate memory --json', () => {
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
+    expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
@@ -108,6 +109,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasPrevious).toBe(false);
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
+    expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
@@ -212,6 +214,7 @@ describe('savestate memory --json', () => {
 
     expect(parsed.previousOffset).toBe(1);
     expect(parsed.emptyReason).toBe('page');
+    expect(parsed.suggestedOffset).toBe(0);
   });
 
   it('advances empty bounded pages by their requested page size', () => {
@@ -224,5 +227,6 @@ describe('savestate memory --json', () => {
     ) as MemoryListJson;
 
     expect(parsed.nextOffset).toBe(12);
+    expect(parsed.suggestedOffset).toBe(0);
   });
 });

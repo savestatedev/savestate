@@ -163,6 +163,8 @@ export interface MemoryListJson {
   previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
+  /** Nearest page containing entries when a stale offset returns an empty page. */
+  suggestedOffset: number | null;
   filters: {
     tier: MemoryTier | null;
     pinned: boolean | null;
@@ -196,6 +198,10 @@ export function formatMemoryListJson(
   // sparse offset. Advance by the requested page size so clients do not loop
   // forever on the same continuation offset.
   const continuationStep = shown.length > 0 ? shown.length : pageSize;
+  const emptyPage = shown.length === 0 && all.length > 0;
+  const suggestedOffset = emptyPage
+    ? Math.floor((all.length - 1) / pageSize) * pageSize
+    : null;
   const record: MemoryListJson = {
     found: true,
     empty: shown.length === 0,
@@ -209,6 +215,7 @@ export function formatMemoryListJson(
     previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
     hasMore,
     nextOffset: hasMore ? offset + continuationStep : null,
+    suggestedOffset,
     filters: {
       tier: pagination.filters?.tier ?? null,
       pinned: pagination.filters?.pinned ?? null,
@@ -610,6 +617,20 @@ export function applyMemoryListFilters<T>(
   );
 }
 
+/** Explain why a human-facing memory list has no rows to show. */
+export function formatMemoryListEmptyState(
+  matchingCount: number,
+  offset: number,
+): string {
+  if (matchingCount === 0) {
+    return 'No memories found matching the criteria. Try adjusting the filters.';
+  }
+
+  return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
+    matchingCount === 1 ? 'memory' : 'memories'
+  }. Try --offset 0 or a smaller --offset.`;
+}
+
 /**
  * List memories with tier information.
  */
@@ -701,7 +722,7 @@ export async function listMemories(
   console.log(`  Total:            ${total} items\n`);
 
   if (entries.length === 0) {
-    console.log('No memories found matching the criteria.');
+    console.log(formatMemoryListEmptyState(filteredEntries.length, offset));
     return;
   }
 
