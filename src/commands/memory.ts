@@ -551,6 +551,11 @@ export function formatMemoryListNamespace(namespace: string | undefined): string
   return namespace.length > 24 ? `${namespace.slice(0, 21)}...` : namespace;
 }
 
+/** Keep the table shape stable across paginated memory list results. */
+export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
+  return entries.some((entry) => typeof entry.metadata?.namespace === 'string');
+}
+
 /** Apply memory list --offset then --limit. */
 export function applyMemoryListFilters<T>(
   entries: T[],
@@ -654,7 +659,7 @@ export async function listMemories(
     return;
   }
 
-  const showNamespace = entries.some((entry) => typeof entry.metadata?.namespace === 'string');
+  const showNamespace = shouldShowMemoryListNamespace(filteredEntries);
   console.log(showNamespace
     ? 'ID                                    Tier  Pinned  Source              Namespace                    Content (truncated)'
     : 'ID                                    Tier  Pinned  Source              Content (truncated)');
