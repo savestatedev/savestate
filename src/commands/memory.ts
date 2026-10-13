@@ -547,7 +547,7 @@ export function formatMemoryListSource(source: string): string {
 
 /** Keep namespace labels readable in the human-facing memory table. */
 export function formatMemoryListNamespace(namespace: string | undefined): string {
-  if (!namespace) return '';
+  if (!namespace) return '—';
   return namespace.length > 24 ? `${namespace.slice(0, 21)}...` : namespace;
 }
 
