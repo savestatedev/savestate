@@ -610,6 +610,20 @@ export function applyMemoryListFilters<T>(
   );
 }
 
+/** Explain why a human-facing memory list has no rows to show. */
+export function formatMemoryListEmptyState(
+  matchingCount: number,
+  offset: number,
+): string {
+  if (matchingCount === 0) {
+    return 'No memories found matching the criteria.';
+  }
+
+  return `No memories shown: offset ${offset} is beyond ${matchingCount} matching ${
+    matchingCount === 1 ? 'memory' : 'memories'
+  }.`;
+}
+
 /**
  * List memories with tier information.
  */
@@ -701,7 +715,7 @@ export async function listMemories(
   console.log(`  Total:            ${total} items\n`);
 
   if (entries.length === 0) {
-    console.log('No memories found matching the criteria.');
+    console.log(formatMemoryListEmptyState(filteredEntries.length, offset));
     return;
   }
 
