@@ -143,7 +143,7 @@ export interface MemoryListEntryJson {
   tier: MemoryTier;
   pinned: boolean;
   source: string;
-  namespace?: string;
+  namespace: string | null;
   createdAt: string;
   updatedAt?: string;
   content: string;
@@ -209,9 +209,9 @@ export function formatMemoryListJson(
       tier: getEffectiveTier(entry),
       pinned: !!entry.pinned,
       source: entry.source,
-      ...(typeof entry.metadata?.namespace === 'string'
-        ? { namespace: entry.metadata.namespace }
-        : {}),
+      namespace: typeof entry.metadata?.namespace === 'string'
+        ? entry.metadata.namespace
+        : null,
       createdAt: entry.createdAt,
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       content: entry.content,
@@ -547,7 +547,7 @@ export function formatMemoryListSource(source: string): string {
 
 /** Keep namespace labels readable in the human-facing memory table. */
 export function formatMemoryListNamespace(namespace: string | undefined): string {
-  if (!namespace) return '';
+  if (!namespace) return '—';
   return namespace.length > 24 ? `${namespace.slice(0, 21)}...` : namespace;
 }
 
