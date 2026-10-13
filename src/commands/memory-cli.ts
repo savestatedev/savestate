@@ -309,6 +309,11 @@ export function parseMemoryQuery(value: string | undefined): string {
   return query;
 }
 
+/** Parse the optional memory list content filter without rejecting its omission. */
+export function parseMemoryContentFilter(value: string | undefined): string | undefined {
+  return value === undefined ? undefined : parseMemoryContent(value);
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -353,7 +358,7 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
           namespace: parseMemoryNamespace(options.namespace),
-          content: parseMemoryQuery(options.content),
+          content: parseMemoryContentFilter(options.content),
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),
