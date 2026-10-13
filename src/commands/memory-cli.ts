@@ -335,6 +335,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--unpinned', 'Show only unpinned memories')
     .option('--source <id>', 'Filter by source id')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
+    .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
@@ -352,6 +353,7 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
           namespace: parseMemoryNamespace(options.namespace),
+          content: parseMemoryQuery(options.content),
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),

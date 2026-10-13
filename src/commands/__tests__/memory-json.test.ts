@@ -3,6 +3,7 @@ import type { MemoryEntry } from '../../types.js';
 import {
   formatMemoryListJson,
   filterMemoryListByNamespace,
+  filterMemoryListByContent,
   getMemoryListSummary,
   type MemoryListJson,
 } from '../memory.js';
@@ -63,7 +64,7 @@ describe('savestate memory --json', () => {
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.entries).toEqual([
@@ -99,7 +100,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasPrevious).toBe(false);
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.entries).toEqual([]);
@@ -151,7 +152,19 @@ describe('savestate memory --json', () => {
       }),
     ) as MemoryListJson;
 
-    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, source: 'agent', namespace: 'org:app:agent', oldestFirst: true });
+    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, oldestFirst: true });
+  });
+
+  it('filters content case-insensitively and reports the active filter', () => {
+    const entries = [
+      entry({ id: 'mem-a', content: 'Preferred EDITOR: vim' }),
+      entry({ id: 'mem-b', content: 'Preferred shell: zsh' }),
+    ];
+    expect(filterMemoryListByContent(entries, 'editor').map(({ id }) => id)).toEqual(['mem-a']);
+    const parsed = JSON.parse(formatMemoryListJson(entries, [entries[0]], {
+      filters: { content: 'editor' },
+    })) as MemoryListJson;
+    expect(parsed.filters.content).toBe('editor');
   });
 
   it('uses the page size when calculating the previous offset', () => {

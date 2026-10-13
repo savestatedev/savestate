@@ -165,6 +165,7 @@ export interface MemoryListJson {
     pinned: boolean | null;
     source: string | null;
     namespace: string | null;
+    content: string | null;
     oldestFirst: boolean;
   };
   byTier: Record<MemoryTier, number>;
@@ -205,6 +206,7 @@ export function formatMemoryListJson(
       pinned: pagination.filters?.pinned ?? null,
       source: pagination.filters?.source ?? null,
       namespace: pagination.filters?.namespace ?? null,
+      content: pagination.filters?.content ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
     },
     byTier: countByTier(all),
@@ -253,6 +255,16 @@ export function filterMemoryListByNamespace(
 ): MemoryEntry[] {
   if (namespace === undefined) return entries;
   return entries.filter((entry) => entry.metadata?.namespace === namespace);
+}
+
+/** Keep memories whose content includes the requested case-insensitive text. */
+export function filterMemoryListByContent(
+  entries: MemoryEntry[],
+  content?: string,
+): MemoryEntry[] {
+  if (content === undefined) return entries;
+  const query = content.toLocaleLowerCase();
+  return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
 }
 
 /**
@@ -592,6 +604,7 @@ export async function listMemories(
     pinned?: boolean;
     source?: string;
     namespace?: string;
+    content?: string;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -635,6 +648,7 @@ export async function listMemories(
   }
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
+  entries = filterMemoryListByContent(entries, options?.content);
 
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
@@ -653,6 +667,7 @@ export async function listMemories(
         pinned: options?.pinned,
         source: options?.source,
         namespace: options?.namespace,
+        content: options?.content,
         oldestFirst: options?.oldestFirst,
       },
     }));
