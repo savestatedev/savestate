@@ -10,10 +10,10 @@ describe('savestate memory list human empty state', () => {
 
   it('explains when an offset skips past matching memories', () => {
     expect(formatMemoryListEmptyState(1, 1)).toBe(
-      'No memories shown: offset 1 is beyond 1 matching memory. Try a smaller --offset.',
+      'No memories shown: offset 1 skips past 1 matching memory. Try --offset 0 or a smaller --offset.',
     );
     expect(formatMemoryListEmptyState(3, 5)).toBe(
-      'No memories shown: offset 5 is beyond 3 matching memories. Try a smaller --offset.',
+      'No memories shown: offset 5 skips past 3 matching memories. Try --offset 0 or a smaller --offset.',
     );
   });
 });

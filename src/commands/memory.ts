@@ -619,9 +619,9 @@ export function formatMemoryListEmptyState(
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }
 
-  return `No memories shown: offset ${offset} is beyond ${matchingCount} matching ${
+  return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
-  }. Try a smaller --offset.`;
+  }. Try --offset 0 or a smaller --offset.`;
 }
 
 /**
