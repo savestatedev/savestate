@@ -66,6 +66,7 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
+    expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.entries).toEqual([
       {
@@ -102,6 +103,7 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBeNull();
     expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
+    expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.entries).toEqual([]);
   });
