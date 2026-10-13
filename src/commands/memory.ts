@@ -163,6 +163,8 @@ export interface MemoryListJson {
   previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
+  /** Nearest page containing entries when a stale offset returns an empty page. */
+  suggestedOffset: number | null;
   filters: {
     tier: MemoryTier | null;
     pinned: boolean | null;
@@ -196,6 +198,10 @@ export function formatMemoryListJson(
   // sparse offset. Advance by the requested page size so clients do not loop
   // forever on the same continuation offset.
   const continuationStep = shown.length > 0 ? shown.length : pageSize;
+  const emptyPage = shown.length === 0 && all.length > 0;
+  const suggestedOffset = emptyPage
+    ? Math.floor((all.length - 1) / pageSize) * pageSize
+    : null;
   const record: MemoryListJson = {
     found: true,
     empty: shown.length === 0,
@@ -209,6 +215,7 @@ export function formatMemoryListJson(
     previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
     hasMore,
     nextOffset: hasMore ? offset + continuationStep : null,
+    suggestedOffset,
     filters: {
       tier: pagination.filters?.tier ?? null,
       pinned: pagination.filters?.pinned ?? null,
