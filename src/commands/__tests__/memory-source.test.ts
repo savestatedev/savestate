@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseMemorySource } from '../memory-cli.js';
-import { formatMemoryListSource } from '../memory.js';
+import { formatMemoryListLastAccessed, formatMemoryListSource } from '../memory.js';
 
 describe('savestate memory list --source', () => {
   it('trims a single source id', () => {
@@ -20,5 +20,13 @@ describe('memory list table source display', () => {
     expect(formatMemoryListSource('claude-code')).toBe('claude-code');
     expect(formatMemoryListSource('  a source with spaces  ')).toBe('a source with s...');
     expect(formatMemoryListSource('openai-assistants-production')).toBe('openai-assistan...');
+  });
+});
+
+describe('memory list table access display', () => {
+  it('formats valid access timestamps and handles missing or invalid values', () => {
+    expect(formatMemoryListLastAccessed('2026-09-03T08:30:00.000Z')).toBe('2026-09-03');
+    expect(formatMemoryListLastAccessed(undefined)).toBe('—');
+    expect(formatMemoryListLastAccessed('not-a-date')).toBe('—');
   });
 });

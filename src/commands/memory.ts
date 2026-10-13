@@ -557,6 +557,13 @@ export function formatMemoryListNamespace(namespace: string | undefined): string
   return namespace.length > 24 ? `${namespace.slice(0, 21)}...` : namespace;
 }
 
+/** Keep access timestamps compact and predictable in the human-facing table. */
+export function formatMemoryListLastAccessed(lastAccessedAt: string | undefined): string {
+  if (!lastAccessedAt) return '—';
+  const timestamp = new Date(lastAccessedAt);
+  return Number.isNaN(timestamp.getTime()) ? '—' : timestamp.toISOString().slice(0, 10);
+}
+
 /** Keep the table shape stable across paginated memory list results. */
 export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
   return entries.some((entry) => typeof entry.metadata?.namespace === 'string');
@@ -667,9 +674,9 @@ export async function listMemories(
 
   const showNamespace = shouldShowMemoryListNamespace(filteredEntries);
   console.log(showNamespace
-    ? 'ID                                    Tier  Pinned  Source              Namespace                    Content (truncated)'
-    : 'ID                                    Tier  Pinned  Source              Content (truncated)');
-  console.log('─'.repeat(showNamespace ? 108 : 80));
+    ? 'ID                                    Tier  Pinned  Source              Namespace                    Accessed    Content (truncated)'
+    : 'ID                                    Tier  Pinned  Source              Accessed    Content (truncated)');
+  console.log('─'.repeat(showNamespace ? 120 : 92));
 
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
@@ -678,10 +685,11 @@ export async function listMemories(
     const namespace = formatMemoryListNamespace(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     ).padEnd(24);
+    const lastAccessed = formatMemoryListLastAccessed(entry.lastAccessedAt).padEnd(10);
     const content = entry.content.slice(0, 40).replace(/\n/g, ' ');
     console.log(showNamespace
-      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${content}...`
-      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${content}...`);
+      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${lastAccessed}  ${content}...`
+      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${lastAccessed}  ${content}...`);
   }
 }
 
