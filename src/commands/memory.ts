@@ -143,7 +143,7 @@ export interface MemoryListEntryJson {
   tier: MemoryTier;
   pinned: boolean;
   source: string;
-  namespace?: string;
+  namespace: string | null;
   createdAt: string;
   updatedAt?: string;
   content: string;
@@ -209,9 +209,9 @@ export function formatMemoryListJson(
       tier: getEffectiveTier(entry),
       pinned: !!entry.pinned,
       source: entry.source,
-      ...(typeof entry.metadata?.namespace === 'string'
-        ? { namespace: entry.metadata.namespace }
-        : {}),
+      namespace: typeof entry.metadata?.namespace === 'string'
+        ? entry.metadata.namespace
+        : null,
       createdAt: entry.createdAt,
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       content: entry.content,
