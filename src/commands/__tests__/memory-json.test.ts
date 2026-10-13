@@ -56,6 +56,7 @@ describe('savestate memory --json', () => {
     ];
     const parsed = JSON.parse(formatMemoryListJson(all, [all[0], all[1]])) as MemoryListJson;
     expect(parsed.found).toBe(true);
+    expect(parsed.empty).toBe(false);
     expect(parsed.total).toBe(3);
     expect(parsed.shown).toBe(2);
     expect(parsed.offset).toBe(0);
@@ -97,6 +98,7 @@ describe('savestate memory --json', () => {
   it('records empty lists with zero counts', () => {
     const parsed = JSON.parse(formatMemoryListJson([], [])) as MemoryListJson;
     expect(parsed.found).toBe(true);
+    expect(parsed.empty).toBe(true);
     expect(parsed.total).toBe(0);
     expect(parsed.shown).toBe(0);
     expect(parsed.offset).toBe(0);
