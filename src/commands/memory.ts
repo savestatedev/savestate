@@ -185,6 +185,10 @@ export function formatMemoryListJson(
   const hasPrevious = offset > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
   const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
+  // An empty page can still have more results when callers provide a stale or
+  // sparse offset. Advance by the requested page size so clients do not loop
+  // forever on the same continuation offset.
+  const continuationStep = shown.length > 0 ? shown.length : pageSize;
   const record: MemoryListJson = {
     total: all.length,
     shown: shown.length,
@@ -194,7 +198,7 @@ export function formatMemoryListJson(
     hasPrevious,
     previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
     hasMore,
-    nextOffset: hasMore ? offset + shown.length : null,
+    nextOffset: hasMore ? offset + continuationStep : null,
     filters: {
       tier: pagination.filters?.tier ?? null,
       pinned: pagination.filters?.pinned ?? null,

@@ -173,4 +173,16 @@ describe('savestate memory --json', () => {
 
     expect(parsed.previousOffset).toBe(1);
   });
+
+  it('advances empty bounded pages by their requested page size', () => {
+    const parsed = JSON.parse(
+      formatMemoryListJson(
+        [{ id: 'mem-1', content: 'first' } as MemoryEntry],
+        [],
+        { offset: 2, limit: 10, hasMore: true },
+      ),
+    ) as MemoryListJson;
+
+    expect(parsed.nextOffset).toBe(12);
+  });
 });
