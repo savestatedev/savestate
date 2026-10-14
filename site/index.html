@@ -175,6 +175,25 @@ body {
   line-height: 1.6;
 }
 
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--blue);
+  color: #001218;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 /* Dot grid background */
 body::before {
   content: '';
@@ -533,6 +552,33 @@ nav .container {
   color: var(--text-muted);
   font-family: var(--mono);
   font-size: 12px;
+}
+
+.hero-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: -42px auto 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(13, 13, 24, 0.8);
+  color: var(--text-muted);
+  font: 12px var(--mono);
+}
+
+.hero-install code {
+  color: inherit;
+}
+
+.hero-install .copy-btn {
+  margin: -10px -14px -10px 2px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.hero-install::before {
+  content: '$';
+  color: var(--blue);
 }
 
 /* Terminal */
@@ -1615,6 +1661,8 @@ nav .container {
 </head>
 <body>
 
+<a class="skip-link" href="#hero">Skip to main content</a>
+
 <!-- ==================== NAV ==================== -->
 <nav>
   <div class="container">
@@ -1668,8 +1716,18 @@ nav .container {
       <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="btn btn-secondary" data-cta="hero-team-checkout">
         Team is $29/month
       </a>
+      <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-secondary" data-cta="hero-free-start" target="_blank" rel="noopener">
+        Start free with the CLI
+      </a>
     </div>
-    <p class="hero-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>. Card today — no waitlist.</p>
+    <p class="hero-fulfillment">Start free with the CLI, or get an API key by email after you subscribe. Then <code>savestate login</code>. No waitlist.</p>
+    <div class="hero-install">
+      <code>npm install -g @savestate/cli</code>
+      <button class="copy-btn" type="button" aria-label="Copy the SaveState CLI install command" onclick="copyInstall(this, 'npm install -g @savestate/cli')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+    </div>
 
     <!-- Animated Terminal -->
     <div class="terminal">

@@ -91,6 +91,12 @@ describe('homepage checkout CTAs', () => {
     expect(homepage).toMatch(/across ChatGPT, Claude, Gemini, Claude Code, Cursor, and Clawdbot\./);
   });
 
+  it('makes the hero free CLI install command copyable', () => {
+    expect(homepage).toMatch(/class="hero-install"[\s\S]*npm install -g @savestate\/cli/);
+    expect(homepage).toMatch(/aria-label="Copy the SaveState CLI install command"/);
+    expect(homepage).toMatch(/copyInstall\(this, 'npm install -g @savestate\/cli'\)/);
+  });
+
   it('points dashboard subscribe CTAs at the live Payment Links', () => {
     expect(hrefForCta(dashboard, 'dashboard-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(dashboard, 'dashboard-team-checkout')).toBe(stripe.products.team.payment_link);
