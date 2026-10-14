@@ -3,6 +3,7 @@ import {
   applyTeamStatusFilters,
   parseTeamStatusOffset,
   selectTeamStatusOffsetEntries,
+  validateTeamStatusOptions,
 } from '../team.js';
 
 describe('savestate team status --offset', () => {
@@ -33,5 +34,11 @@ describe('savestate team status --offset', () => {
   it('returns all rows when offset is omitted', () => {
     const entries = [{ id: 'team' }, { id: 'id' }];
     expect(selectTeamStatusOffsetEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('validates pagination options without needing status rows', () => {
+    expect(() => validateTeamStatusOptions({ offset: '1', limit: '2' })).not.toThrow();
+    expect(() => validateTeamStatusOptions({ offset: 'bad' })).toThrow(/Invalid --offset/);
+    expect(() => validateTeamStatusOptions({ limit: '0' })).toThrow(/Invalid --limit/);
   });
 });

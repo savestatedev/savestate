@@ -252,6 +252,12 @@ export function applyTeamStatusFilters<T>(
   );
 }
 
+/** Validate team status pagination before making the API request. */
+export function validateTeamStatusOptions(options: { offset?: string; limit?: string }): void {
+  parseTeamStatusOffset(options.offset);
+  parseTeamStatusLimit(options.limit);
+}
+
 const MAX_TEAM_INVITE_LIMIT = 1000;
 
 /** Parse team invite --limit without turning user input errors into an empty invite. */
@@ -560,6 +566,7 @@ export async function apiRequest(
 
 export async function teamStatusCommand(options: TeamCommandOptions = {}): Promise<void> {
   const statusOptions = { offset: options.offset, limit: options.limit };
+  validateTeamStatusOptions(statusOptions);
   const result = await apiRequest('GET', '/team');
   if (!result.ok) {
     if (options.json) {
