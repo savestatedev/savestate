@@ -208,7 +208,13 @@ export function parseSearchSince(value: string | undefined): number | undefined 
 export function parseSearchUntil(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  // Date-only input is a human-facing calendar boundary. Include the full
+  // UTC day, matching snapshot list filtering and avoiding a surprising
+  // midnight cutoff for `search --until 2026-10-12`.
+  const normalized = value.trim();
+  const ms = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+    ? Date.parse(`${normalized}T23:59:59.999Z`)
+    : new Date(value).getTime();
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO 8601 date.`,

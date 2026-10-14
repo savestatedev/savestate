@@ -7,7 +7,9 @@ describe('savestate search --until', () => {
   });
 
   it('accepts ISO 8601 dates', () => {
-    expect(parseSearchUntil('2026-04-01')).toBe(new Date('2026-04-01').getTime());
+    expect(parseSearchUntil('2026-04-01')).toBe(
+      new Date('2026-04-01T23:59:59.999Z').getTime(),
+    );
     expect(parseSearchUntil('2026-04-01T00:00:00Z')).toBe(
       new Date('2026-04-01T00:00:00Z').getTime(),
     );
@@ -32,6 +34,18 @@ describe('savestate search --until', () => {
         { until: '2026-04-01' },
       ),
     ).toEqual(['old']);
+  });
+
+  it('treats a date-only cutoff as the end of that UTC day', () => {
+    expect(
+      resolveSearchSnapshots(
+        [
+          { id: 'on-day', timestamp: '2026-04-01T23:59:59.999Z' },
+          { id: 'next-day', timestamp: '2026-04-02T00:00:00.000Z' },
+        ],
+        { until: '2026-04-01' },
+      ),
+    ).toEqual(['on-day']);
   });
 
   it('ANDs --snapshot with --until', () => {
