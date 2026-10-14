@@ -19,6 +19,7 @@ type SearchType = 'memory' | 'conversation' | 'identity' | 'knowledge';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 1000;
+const MAX_OFFSET = 1000;
 const CONTEXT_RADIUS = 60;
 
 /**
@@ -64,6 +65,8 @@ export interface SearchOptions {
   types?: SearchType[];
   /** Maximum number of results */
   limit?: number;
+  /** Number of ranked results to skip before applying the limit */
+  offset?: number;
   /** Decryption passphrase (overrides SAVESTATE_PASSPHRASE) */
   passphrase?: string;
 }
@@ -72,6 +75,14 @@ function resolveSearchLimit(value: number | undefined): number {
   if (value === undefined) return DEFAULT_LIMIT;
   if (!Number.isInteger(value) || value < 1 || value > MAX_LIMIT) {
     throw new Error(`Invalid search limit ${String(value)}. Expected an integer from 1 to ${MAX_LIMIT}.`);
+  }
+  return value;
+}
+
+function resolveSearchOffset(value: number | undefined): number {
+  if (value === undefined) return 0;
+  if (!Number.isInteger(value) || value < 0 || value > MAX_OFFSET) {
+    throw new Error(`Invalid search offset ${String(value)}. Expected an integer from 0 to ${MAX_OFFSET}.`);
   }
   return value;
 }
@@ -93,6 +104,7 @@ export async function searchSnapshots(
   if (!query || query.trim().length === 0) return [];
 
   const limit = resolveSearchLimit(options?.limit);
+  const offset = resolveSearchOffset(options?.offset);
   const types = options?.types;
   const passphrase = options?.passphrase ?? process.env.SAVESTATE_PASSPHRASE;
   if (!passphrase) {
@@ -219,7 +231,7 @@ export async function searchSnapshots(
     a.snapshotId.localeCompare(b.snapshotId) ||
     a.path.localeCompare(b.path),
   );
-  return results.slice(0, limit);
+  return results.slice(offset, offset + limit);
 }
 
 /**

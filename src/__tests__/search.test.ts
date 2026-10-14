@@ -169,6 +169,34 @@ describe('searchSnapshots', () => {
     expect(results.length).toBe(3);
   });
 
+  it('skips ranked results before applying the limit', async () => {
+    const memories = Array.from({ length: 5 }, (_, i) => ({
+      id: `m${i}`,
+      content: `entry ${i} contains widget keyword`,
+    }));
+    await createSnapshot(new FakeAdapter(buildSnapshot(memories)), storage, PASSPHRASE);
+
+    const results = await searchSnapshots('widget', config, {
+      passphrase: PASSPHRASE,
+      offset: 2,
+      limit: 2,
+    });
+
+    expect(results.map((result) => result.content)).toEqual([
+      'entry 2 contains widget keyword',
+      'entry 3 contains widget keyword',
+    ]);
+  });
+
+  it.each([-1, 1.5, 1001, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects invalid API offsets (%s)',
+    async (offset) => {
+      await expect(
+        searchSnapshots('widget', config, { passphrase: PASSPHRASE, offset }),
+      ).rejects.toThrow(`Invalid search offset ${String(offset)}`);
+    },
+  );
+
   it.each([0, -1, 1.5, 1001, Number.NaN, Number.POSITIVE_INFINITY])(
     'rejects invalid API limits (%s)',
     async (limit) => {
