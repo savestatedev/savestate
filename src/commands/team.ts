@@ -2,7 +2,7 @@
  * savestate team — Team management commands (Team tier)
  *
  * Subcommands:
- *   savestate team status                     Show your team membership
+ *   savestate team status [--limit] [--offset] Show your team membership
  *   savestate team members [--limit] [--offset] [--json]  List team members
  *   savestate team invite <email> [--role R]  Invite a member by email
  *   savestate team audit [--since] [--until] [--limit] [--offset] [--format] [--json] Stream the audit log
@@ -40,7 +40,15 @@ export function parseTeamInviteEmail(value: string | undefined): string {
   }
 
   const email = value.trim();
-  if (email.length === 0 || email.includes(',') || /\s/.test(email) || !email.includes('@')) {
+  const atIndex = email.indexOf('@');
+  if (
+    email.length === 0 ||
+    email.includes(',') ||
+    /\s/.test(email) ||
+    atIndex <= 0 ||
+    atIndex === email.length - 1 ||
+    email.indexOf('@', atIndex + 1) !== -1
+  ) {
     throw new Error(
       `Invalid email "${value}". Expected a single non-empty email address.`,
     );
@@ -146,6 +154,12 @@ export function applyTeamMembersFilters<T>(
   );
 }
 
+/** Validate team members pagination before making the API request. */
+export function validateTeamMembersOptions(options: { offset?: string; limit?: string }): void {
+  parseTeamMembersOffset(options.offset);
+  parseTeamMembersLimit(options.limit);
+}
+
 const MAX_TEAM_AUDIT_LIMIT = 1000;
 
 /** Parse team audit --limit without treating invalid counts as an unbounded audit log. */
@@ -218,6 +232,44 @@ export function parseTeamStatusLimit(value: string | undefined): number | undefi
 export function selectTeamStatusEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+const MAX_TEAM_STATUS_OFFSET = 1000;
+
+/** Parse team status --offset without turning user input errors into an empty status. */
+export function parseTeamStatusOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TEAM_STATUS_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TEAM_STATUS_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N team status field rows when --offset is set. */
+export function selectTeamStatusOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply team status --offset then --limit. */
+export function applyTeamStatusFilters<T>(
+  entries: T[],
+  options: { offset?: string; limit?: string },
+): T[] {
+  return selectTeamStatusEntries(
+    selectTeamStatusOffsetEntries(entries, parseTeamStatusOffset(options.offset)),
+    parseTeamStatusLimit(options.limit),
+  );
+}
+
+/** Validate team status pagination before making the API request. */
+export function validateTeamStatusOptions(options: { offset?: string; limit?: string }): void {
+  parseTeamStatusOffset(options.offset);
+  parseTeamStatusLimit(options.limit);
 }
 
 const MAX_TEAM_INVITE_LIMIT = 1000;
@@ -527,7 +579,8 @@ export async function apiRequest(
 // ─── Subcommands ─────────────────────────────────────────────
 
 export async function teamStatusCommand(options: TeamCommandOptions = {}): Promise<void> {
-  const limit = parseTeamStatusLimit(options.limit);
+  const statusOptions = { offset: options.offset, limit: options.limit };
+  validateTeamStatusOptions(statusOptions);
   const result = await apiRequest('GET', '/team');
   if (!result.ok) {
     if (options.json) {
@@ -557,13 +610,14 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
     `${chalk.dim('  Created: ')} ${new Date(data.team.createdAt).toLocaleString()}`,
   ];
   console.log();
-  for (const row of selectTeamStatusEntries(rows, limit)) {
+  for (const row of applyTeamStatusFilters(rows, statusOptions)) {
     console.log(row);
   }
   console.log();
 }
 
 export async function teamMembersCommand(options: TeamCommandOptions = {}): Promise<void> {
+  validateTeamMembersOptions({ offset: options.offset, limit: options.limit });
   const result = await apiRequest('GET', '/team/members');
   if (!result.ok) {
     if (options.json) {
