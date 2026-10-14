@@ -8,13 +8,19 @@ describe('savestate memory list table pagination summary', () => {
 
   it('describes bounded pages', () => {
     expect(formatMemoryListPageSummary(7, 3, 3, 3)).toBe(
-      '(showing 3 of 7 matching memories; offset 3, limit 3)',
+      '(showing 3 of 7 matching memories; offset 3, limit 3; next offset 6)',
     );
   });
 
   it('describes an unbounded page that starts after an offset', () => {
     expect(formatMemoryListPageSummary(7, 4, 3)).toBe(
       '(showing 4 of 7 matching memories; offset 3)',
+    );
+  });
+
+  it('points to the next unbounded page when rows remain', () => {
+    expect(formatMemoryListPageSummary(7, 2, 3)).toBe(
+      '(showing 2 of 7 matching memories; offset 3; next offset 5)',
     );
   });
 });

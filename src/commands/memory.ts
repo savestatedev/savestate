@@ -650,7 +650,10 @@ export function formatMemoryListPageSummary(
   if (offset === 0 && pageEnd === total) return '';
 
   const pageDescription = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
-  return `(showing ${shown} of ${total} matching memories; ${pageDescription})`;
+  const hasNextPage = pageEnd < total;
+  const nextOffset = limit === undefined ? pageEnd : offset + limit;
+  const continuation = hasNextPage ? `; next offset ${nextOffset}` : '';
+  return `(showing ${shown} of ${total} matching memories; ${pageDescription}${continuation})`;
 }
 
 /**
