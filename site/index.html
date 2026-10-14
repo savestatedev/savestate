@@ -2163,13 +2163,36 @@ nav .container {
 <!-- ==================== SCRIPTS ==================== -->
 <script>
 // Copy button
-function copyInstall(btn, text) {
-  navigator.clipboard.writeText(text || 'npm install -g @savestate/cli').then(() => {
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const fallback = document.createElement('textarea');
+  fallback.value = text;
+  fallback.setAttribute('readonly', '');
+  fallback.style.position = 'fixed';
+  fallback.style.opacity = '0';
+  document.body.appendChild(fallback);
+  fallback.select();
+  const copied = document.execCommand('copy');
+  fallback.remove();
+  if (!copied) throw new Error('Copy command was rejected');
+}
+
+async function copyInstall(btn, text) {
+  const command = text || 'npm install -g @savestate/cli';
+  try {
+    await copyText(command);
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
     setTimeout(() => {
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
     }, 2000);
-  });
+  } catch {
+    btn.textContent = 'Select and copy';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  }
 }
 
 // Mobile navigation
