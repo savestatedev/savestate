@@ -639,6 +639,20 @@ export function formatMemoryListEmptyState(
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
+/** Describe the visible memory page when filters or pagination hide entries. */
+export function formatMemoryListPageSummary(
+  total: number,
+  shown: number,
+  offset = 0,
+  limit?: number,
+): string {
+  const pageEnd = Math.min(offset + shown, total);
+  if (offset === 0 && pageEnd === total) return '';
+
+  const pageDescription = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  return `(showing ${shown} of ${total} matching memories; ${pageDescription})`;
+}
+
 /**
  * List memories with tier information.
  */
@@ -728,6 +742,9 @@ export async function listMemories(
   console.log(`  L2 (working set): ${counts.L2} items`);
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
+
+  const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
+  if (pageSummary) console.log(`${pageSummary}\n`);
 
   if (entries.length === 0) {
     console.log(formatMemoryListEmptyState(filteredEntries.length, offset, options?.limit));
