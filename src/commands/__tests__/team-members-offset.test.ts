@@ -3,6 +3,7 @@ import {
   applyTeamMembersFilters,
   parseTeamMembersOffset,
   selectTeamMembersOffsetEntries,
+  validateTeamMembersOptions,
 } from '../team.js';
 
 describe('savestate team members --offset', () => {
@@ -49,5 +50,11 @@ describe('savestate team members --offset', () => {
         { offset: '1', limit: '1' },
       ).map((member) => member.email),
     ).toEqual(['c@d.co']);
+  });
+
+  it('validates pagination options without needing member rows', () => {
+    expect(() => validateTeamMembersOptions({ offset: '1', limit: '2' })).not.toThrow();
+    expect(() => validateTeamMembersOptions({ offset: 'bad' })).toThrow(/Invalid --offset/);
+    expect(() => validateTeamMembersOptions({ limit: '0' })).toThrow(/Invalid --limit/);
   });
 });

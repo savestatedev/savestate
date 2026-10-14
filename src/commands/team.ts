@@ -154,6 +154,12 @@ export function applyTeamMembersFilters<T>(
   );
 }
 
+/** Validate team members pagination before making the API request. */
+export function validateTeamMembersOptions(options: { offset?: string; limit?: string }): void {
+  parseTeamMembersOffset(options.offset);
+  parseTeamMembersLimit(options.limit);
+}
+
 const MAX_TEAM_AUDIT_LIMIT = 1000;
 
 /** Parse team audit --limit without treating invalid counts as an unbounded audit log. */
@@ -611,6 +617,7 @@ export async function teamStatusCommand(options: TeamCommandOptions = {}): Promi
 }
 
 export async function teamMembersCommand(options: TeamCommandOptions = {}): Promise<void> {
+  validateTeamMembersOptions({ offset: options.offset, limit: options.limit });
   const result = await apiRequest('GET', '/team/members');
   if (!result.ok) {
     if (options.json) {
