@@ -621,14 +621,16 @@ export function applyMemoryListFilters<T>(
 export function formatMemoryListEmptyState(
   matchingCount: number,
   offset: number,
+  limit = 20,
 ): string {
   if (matchingCount === 0) {
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }
 
+  const suggestedOffset = Math.floor((matchingCount - 1) / limit) * limit;
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
-  }. Try --offset 0 or a smaller --offset.`;
+  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 /**
@@ -722,7 +724,7 @@ export async function listMemories(
   console.log(`  Total:            ${total} items\n`);
 
   if (entries.length === 0) {
-    console.log(formatMemoryListEmptyState(filteredEntries.length, offset));
+    console.log(formatMemoryListEmptyState(filteredEntries.length, offset, options?.limit));
     return;
   }
 
