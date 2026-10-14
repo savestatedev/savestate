@@ -23,6 +23,7 @@ SaveState is the cross-platform memory layer you control. One encrypted, searcha
 npx savestate init                     # one-time: encryption + storage
 npx savestate snapshot                 # capture state from any platform
 npx savestate search "cocktail recs"   # full-text across every snapshot
+npx savestate search "cocktail recs" --offset 20 --limit 20  # fetch the next result page
 npx savestate restore latest --to claude  # move state between platforms
 npx savestate mcp                      # serve memory to Claude Code / Cursor / Codex
 ```
@@ -203,6 +204,10 @@ savestate search <query>              Search across snapshot contents
   --offset <n>                       Skip ranked results before applying --limit
   --limit <n>                        Max results to show (default 20)
   --json                             Output results as JSON
+
+Search results are ranked consistently across snapshots, so `--offset` can be
+combined with `--limit` to page through results. Both values are bounded to
+1000; the default page size is 20.
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration
   --set <key=value>                  Set a config value
