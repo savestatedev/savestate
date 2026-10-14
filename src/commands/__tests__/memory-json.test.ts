@@ -244,4 +244,21 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBe(12);
     expect(parsed.suggestedOffset).toBe(0);
   });
+
+  it('advances sparse bounded pages by their requested page size', () => {
+    const entries = [
+      { id: 'mem-1', content: 'first' },
+      { id: 'mem-2', content: 'second' },
+      { id: 'mem-3', content: 'third' },
+    ] as MemoryEntry[];
+    const parsed = JSON.parse(
+      formatMemoryListJson(entries, [entries[0], entries[1], entries[2]], {
+        offset: 10,
+        limit: 10,
+        hasMore: true,
+      }),
+    ) as MemoryListJson;
+
+    expect(parsed.nextOffset).toBe(20);
+  });
 });
