@@ -18,6 +18,7 @@ import { createHash } from 'node:crypto';
 type SearchType = 'memory' | 'conversation' | 'identity' | 'knowledge';
 
 const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 1000;
 const CONTEXT_RADIUS = 60;
 
 /**
@@ -67,6 +68,14 @@ export interface SearchOptions {
   passphrase?: string;
 }
 
+function resolveSearchLimit(value: number | undefined): number {
+  if (value === undefined) return DEFAULT_LIMIT;
+  if (!Number.isInteger(value) || value < 1 || value > MAX_LIMIT) {
+    throw new Error(`Invalid search limit ${String(value)}. Expected an integer from 1 to ${MAX_LIMIT}.`);
+  }
+  return value;
+}
+
 /**
  * Search across all snapshots for matching content.
  *
@@ -83,7 +92,7 @@ export async function searchSnapshots(
 ): Promise<SearchResult[]> {
   if (!query || query.trim().length === 0) return [];
 
-  const limit = options?.limit ?? DEFAULT_LIMIT;
+  const limit = resolveSearchLimit(options?.limit);
   const types = options?.types;
   const passphrase = options?.passphrase ?? process.env.SAVESTATE_PASSPHRASE;
   if (!passphrase) {
