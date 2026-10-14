@@ -60,6 +60,7 @@ describe('savestate memory --json', () => {
     expect(parsed.emptyReason).toBeNull();
     expect(parsed.total).toBe(3);
     expect(parsed.shown).toBe(2);
+    expect(parsed.remaining).toBe(1);
     expect(parsed.offset).toBe(0);
     expect(parsed.limit).toBeNull();
     expect(parsed.pageSize).toBe(2);
@@ -104,6 +105,7 @@ describe('savestate memory --json', () => {
     expect(parsed.emptyReason).toBe('collection');
     expect(parsed.total).toBe(0);
     expect(parsed.shown).toBe(0);
+    expect(parsed.remaining).toBe(0);
     expect(parsed.offset).toBe(0);
     expect(parsed.hasMore).toBe(false);
     expect(parsed.hasPrevious).toBe(false);
@@ -130,6 +132,7 @@ describe('savestate memory --json', () => {
 
     expect(parsed.offset).toBe(1);
     expect(parsed.limit).toBe(1);
+    expect(parsed.remaining).toBe(1);
     expect(parsed.pageSize).toBe(1);
     expect(parsed.hasPrevious).toBe(true);
     expect(parsed.previousOffset).toBe(0);
@@ -213,6 +216,7 @@ describe('savestate memory --json', () => {
     ) as MemoryListJson;
 
     expect(parsed.previousOffset).toBe(1);
+    expect(parsed.remaining).toBe(0);
     expect(parsed.emptyReason).toBe('page');
     expect(parsed.suggestedOffset).toBe(0);
   });

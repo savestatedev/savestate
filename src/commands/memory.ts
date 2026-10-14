@@ -156,6 +156,8 @@ export interface MemoryListJson {
   emptyReason: 'collection' | 'page' | null;
   total: number;
   shown: number;
+  /** Number of matching entries after this page. */
+  remaining: number;
   offset: number;
   limit: number | null;
   pageSize: number;
@@ -198,6 +200,7 @@ export function formatMemoryListJson(
   // contains fewer entries, so clients do not revisit entries on continuation.
   // Unbounded pages use the number returned as their natural step.
   const continuationStep = pagination.limit ?? Math.max(1, shown.length);
+  const remaining = Math.max(0, all.length - offset - shown.length);
   const emptyPage = shown.length === 0 && all.length > 0;
   const suggestedOffset = emptyPage
     ? pagination.limit === undefined
@@ -210,6 +213,7 @@ export function formatMemoryListJson(
     emptyReason: shown.length > 0 ? null : all.length === 0 ? 'collection' : 'page',
     total: all.length,
     shown: shown.length,
+    remaining,
     offset,
     limit: pagination.limit ?? null,
     pageSize,
