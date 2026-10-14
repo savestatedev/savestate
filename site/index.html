@@ -535,6 +535,24 @@ nav .container {
   font-size: 12px;
 }
 
+.hero-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: -42px auto 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(13, 13, 24, 0.8);
+  color: var(--text-muted);
+  font: 12px var(--mono);
+}
+
+.hero-install::before {
+  content: '$';
+  color: var(--blue);
+}
+
 /* Terminal */
 .terminal {
   max-width: 640px;
@@ -1673,6 +1691,7 @@ nav .container {
       </a>
     </div>
     <p class="hero-fulfillment">Start free with the CLI, or get an API key by email after you subscribe. Then <code>savestate login</code>. No waitlist.</p>
+    <code class="hero-install">npm install -g @savestate/cli</code>
 
     <!-- Animated Terminal -->
     <div class="terminal">
