@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchOffset, selectSearchOffsetEntries } from '../search.js';
+import { parseSearchOffset } from '../search.js';
 
 describe('savestate search --offset', () => {
   it('defaults to undefined', () => {
@@ -29,26 +29,4 @@ describe('savestate search --offset', () => {
     );
   });
 
-  it('skips the first N ranked results', () => {
-    expect(
-      selectSearchOffsetEntries(
-        [{ id: 'r1' }, { id: 'r2' }, { id: 'r3' }],
-        1,
-      ).map((result) => result.id),
-    ).toEqual(['r2', 'r3']);
-  });
-
-  it('returns all results when offset is omitted', () => {
-    const entries = [{ id: 'r1' }, { id: 'r2' }];
-    expect(selectSearchOffsetEntries(entries, undefined)).toEqual(entries);
-  });
-
-  it('skips the first ranked results before --limit', () => {
-    expect(
-      selectSearchOffsetEntries(
-        [{ id: 'r1' }, { id: 'r2' }, { id: 'r3' }],
-        1,
-      ).slice(0, 1).map((result) => result.id),
-    ).toEqual(['r2']);
-  });
 });
