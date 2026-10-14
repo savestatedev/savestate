@@ -40,7 +40,15 @@ export function parseTeamInviteEmail(value: string | undefined): string {
   }
 
   const email = value.trim();
-  if (email.length === 0 || email.includes(',') || /\s/.test(email) || !email.includes('@')) {
+  const atIndex = email.indexOf('@');
+  if (
+    email.length === 0 ||
+    email.includes(',') ||
+    /\s/.test(email) ||
+    atIndex <= 0 ||
+    atIndex === email.length - 1 ||
+    email.indexOf('@', atIndex + 1) !== -1
+  ) {
     throw new Error(
       `Invalid email "${value}". Expected a single non-empty email address.`,
     );
