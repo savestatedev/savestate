@@ -2203,10 +2203,21 @@ function setMenuOpen(isOpen) {
   siteNavigation.classList.toggle('show', isOpen);
   menuToggle.setAttribute('aria-expanded', String(isOpen));
   menuToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+  if (isOpen) {
+    siteNavigation.querySelector('a')?.focus();
+  } else if (document.activeElement !== menuToggle) {
+    menuToggle.focus();
+  }
 }
 
 menuToggle.addEventListener('click', () => {
   setMenuOpen(!siteNavigation.classList.contains('show'));
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && siteNavigation.classList.contains('show')) {
+    setMenuOpen(false);
+  }
 });
 
 siteNavigation.querySelectorAll('a').forEach(link => {
