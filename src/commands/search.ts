@@ -106,12 +106,6 @@ export function parseSearchOffset(value: string | undefined): number | undefined
   return offset;
 }
 
-/** Skip the first N ranked results when search --offset is set. */
-export function selectSearchOffsetEntries<T>(entries: T[], offset?: number): T[] {
-  if (offset === undefined) return entries;
-  return entries.slice(offset);
-}
-
 /** Parse search --type without silently dropping unknown filters or exiting the process. */
 export function parseSearchType(
   value: string | undefined,
@@ -388,15 +382,13 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const spinner = options.json ? null : ora('Searching across snapshots...').start();
 
   try {
-    const results = selectSearchOffsetEntries(
-      await searchSnapshots(query, config, {
-        types,
-        limit: offset === undefined ? limit : limit + offset,
-        snapshots,
-        passphrase,
-      }),
+    const results = await searchSnapshots(query, config, {
+      types,
+      limit,
       offset,
-    );
+      snapshots,
+      passphrase,
+    });
 
     spinner?.stop();
 
