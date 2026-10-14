@@ -169,6 +169,15 @@ describe('searchSnapshots', () => {
     expect(results.length).toBe(3);
   });
 
+  it.each([0, -1, 1.5, 1001, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects invalid API limits (%s)',
+    async (limit) => {
+      await expect(
+        searchSnapshots('widget', config, { passphrase: PASSPHRASE, limit }),
+      ).rejects.toThrow(`Invalid search limit ${String(limit)}`);
+    },
+  );
+
   it('orders equal-score matches deterministically', async () => {
     const snap = buildSnapshot([
       { id: 'z-memory', content: 'shared keyword' },
