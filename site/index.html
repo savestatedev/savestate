@@ -175,6 +175,25 @@ body {
   line-height: 1.6;
 }
 
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--blue);
+  color: #001218;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 /* Dot grid background */
 body::before {
   content: '';
@@ -1632,6 +1651,8 @@ nav .container {
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+
+<a class="skip-link" href="#hero">Skip to main content</a>
 
 <!-- ==================== NAV ==================== -->
 <nav>
