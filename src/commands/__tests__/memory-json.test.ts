@@ -217,6 +217,21 @@ describe('savestate memory --json', () => {
     expect(parsed.suggestedOffset).toBe(0);
   });
 
+  it('suggests the start for an empty unbounded page with multiple entries', () => {
+    const parsed = JSON.parse(
+      formatMemoryListJson(
+        [
+          { id: 'mem-1', content: 'first' },
+          { id: 'mem-2', content: 'second' },
+        ] as MemoryEntry[],
+        [],
+        { offset: 2 },
+      ),
+    ) as MemoryListJson;
+
+    expect(parsed.suggestedOffset).toBe(0);
+  });
+
   it('advances empty bounded pages by their requested page size', () => {
     const parsed = JSON.parse(
       formatMemoryListJson(

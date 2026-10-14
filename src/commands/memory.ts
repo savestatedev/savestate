@@ -200,7 +200,9 @@ export function formatMemoryListJson(
   const continuationStep = shown.length > 0 ? shown.length : pageSize;
   const emptyPage = shown.length === 0 && all.length > 0;
   const suggestedOffset = emptyPage
-    ? Math.floor((all.length - 1) / pageSize) * pageSize
+    ? pagination.limit === undefined
+      ? 0
+      : Math.floor((all.length - 1) / pageSize) * pageSize
     : null;
   const record: MemoryListJson = {
     found: true,
