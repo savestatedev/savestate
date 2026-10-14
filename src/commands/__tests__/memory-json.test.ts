@@ -60,6 +60,7 @@ describe('savestate memory --json', () => {
     expect(parsed.emptyReason).toBeNull();
     expect(parsed.total).toBe(3);
     expect(parsed.shown).toBe(2);
+    expect(parsed.remaining).toBe(1);
     expect(parsed.offset).toBe(0);
     expect(parsed.limit).toBeNull();
     expect(parsed.pageSize).toBe(2);
@@ -104,6 +105,7 @@ describe('savestate memory --json', () => {
     expect(parsed.emptyReason).toBe('collection');
     expect(parsed.total).toBe(0);
     expect(parsed.shown).toBe(0);
+    expect(parsed.remaining).toBe(0);
     expect(parsed.offset).toBe(0);
     expect(parsed.hasMore).toBe(false);
     expect(parsed.hasPrevious).toBe(false);
@@ -130,6 +132,7 @@ describe('savestate memory --json', () => {
 
     expect(parsed.offset).toBe(1);
     expect(parsed.limit).toBe(1);
+    expect(parsed.remaining).toBe(1);
     expect(parsed.pageSize).toBe(1);
     expect(parsed.hasPrevious).toBe(true);
     expect(parsed.previousOffset).toBe(0);
@@ -213,7 +216,23 @@ describe('savestate memory --json', () => {
     ) as MemoryListJson;
 
     expect(parsed.previousOffset).toBe(1);
+    expect(parsed.remaining).toBe(0);
     expect(parsed.emptyReason).toBe('page');
+    expect(parsed.suggestedOffset).toBe(0);
+  });
+
+  it('suggests the start for an empty unbounded page with multiple entries', () => {
+    const parsed = JSON.parse(
+      formatMemoryListJson(
+        [
+          { id: 'mem-1', content: 'first' },
+          { id: 'mem-2', content: 'second' },
+        ] as MemoryEntry[],
+        [],
+        { offset: 2 },
+      ),
+    ) as MemoryListJson;
+
     expect(parsed.suggestedOffset).toBe(0);
   });
 
@@ -228,5 +247,22 @@ describe('savestate memory --json', () => {
 
     expect(parsed.nextOffset).toBe(12);
     expect(parsed.suggestedOffset).toBe(0);
+  });
+
+  it('advances sparse bounded pages by their requested page size', () => {
+    const entries = [
+      { id: 'mem-1', content: 'first' },
+      { id: 'mem-2', content: 'second' },
+      { id: 'mem-3', content: 'third' },
+    ] as MemoryEntry[];
+    const parsed = JSON.parse(
+      formatMemoryListJson(entries, [entries[0], entries[1], entries[2]], {
+        offset: 10,
+        limit: 10,
+        hasMore: true,
+      }),
+    ) as MemoryListJson;
+
+    expect(parsed.nextOffset).toBe(20);
   });
 });

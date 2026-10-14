@@ -156,6 +156,8 @@ export interface MemoryListJson {
   emptyReason: 'collection' | 'page' | null;
   total: number;
   shown: number;
+  /** Number of matching entries after this page. */
+  remaining: number;
   offset: number;
   limit: number | null;
   pageSize: number;
@@ -194,13 +196,16 @@ export function formatMemoryListJson(
   const hasPrevious = offset > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
   const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
-  // An empty page can still have more results when callers provide a stale or
-  // sparse offset. Advance by the requested page size so clients do not loop
-  // forever on the same continuation offset.
-  const continuationStep = shown.length > 0 ? shown.length : pageSize;
+  // Advance bounded pages by their requested size, even when a sparse page
+  // contains fewer entries, so clients do not revisit entries on continuation.
+  // Unbounded pages use the number returned as their natural step.
+  const continuationStep = pagination.limit ?? Math.max(1, shown.length);
+  const remaining = Math.max(0, all.length - offset - shown.length);
   const emptyPage = shown.length === 0 && all.length > 0;
   const suggestedOffset = emptyPage
-    ? Math.floor((all.length - 1) / pageSize) * pageSize
+    ? pagination.limit === undefined
+      ? 0
+      : Math.floor((all.length - 1) / pageSize) * pageSize
     : null;
   const record: MemoryListJson = {
     found: true,
@@ -208,6 +213,7 @@ export function formatMemoryListJson(
     emptyReason: shown.length > 0 ? null : all.length === 0 ? 'collection' : 'page',
     total: all.length,
     shown: shown.length,
+    remaining,
     offset,
     limit: pagination.limit ?? null,
     pageSize,
