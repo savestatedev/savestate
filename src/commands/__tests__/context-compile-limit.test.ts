@@ -58,6 +58,7 @@ describe('savestate context compile --limit', () => {
   it('validates --offset as a bounded non-negative integer', () => {
     expect(parseContextCompileOffset(undefined)).toBeUndefined();
     expect(parseContextCompileOffset('0')).toBe(0);
+    expect(parseContextCompileOffset(' 2 ')).toBe(2);
     expect(parseContextCompileOffset('1000')).toBe(1000);
     expect(() => parseContextCompileOffset('-1')).toThrow();
     expect(() => parseContextCompileOffset('1001')).toThrow();

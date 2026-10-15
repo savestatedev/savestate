@@ -30,6 +30,7 @@ describe('savestate context explain --limit', () => {
 
   it('accepts a bounded non-negative offset', () => {
     expect(parseContextOffset('12')).toBe(12);
+    expect(parseContextOffset(' 12 ')).toBe(12);
     expect(parseContextOffset('1000')).toBe(1000);
   });
 
