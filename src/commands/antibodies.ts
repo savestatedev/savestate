@@ -870,7 +870,7 @@ function showUsage(): void {
   console.log('                             [--tags <a,b>] [--risk <level>] [--safe-action <type>]');
   console.log('                             [--confidence <0..1>] [--id <rule-id>] [--limit <n>] [--json]');
   console.log('  savestate antibodies preflight [--tool <name>] [--error-code <code>] [--path <path>]');
-  console.log('                                  [--tags <a,b>] [--semantic] [--limit <n>] [--json]');
+  console.log('                                  [--tags <a,b>] [--semantic] [--offset <n>] [--limit <n>] [--json]');
   console.log('  savestate antibodies stats [--limit <n>] [--offset <n>] [--json]');
   console.log();
 }

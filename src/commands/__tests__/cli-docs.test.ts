@@ -683,6 +683,7 @@ describe('CLI docs', () => {
     expect(antibodiesSection).toContain('or preflight warnings');
     expect(antibodiesSection).toContain('savestate antibodies preflight --limit 5');
     expect(antibodiesBlock).toContain(".option('--limit <n>'");
+    expect(antibodies).toContain('[--semantic] [--offset <n>] [--limit <n>] [--json]');
     expect(antibodies).toContain('export function parseAntibodiesPreflightLimit');
   });
 
