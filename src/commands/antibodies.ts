@@ -54,6 +54,7 @@ export interface AntibodiesPreflightJson {
   blocked: boolean;
   elapsedMs: number;
   semanticUsed: boolean;
+  matchedRuleIds: string[];
   warnings: AntibodiesPreflightWarningJson[];
 }
 
@@ -63,6 +64,7 @@ export function formatAntibodiesPreflightJson(result: AntibodiesPreflightJson): 
       blocked: result.blocked,
       elapsedMs: result.elapsedMs,
       semanticUsed: result.semanticUsed,
+      matchedRuleIds: [...result.matchedRuleIds],
       warnings: result.warnings.map((warning) => ({
         ruleId: warning.ruleId,
         risk: warning.risk,
@@ -433,6 +435,7 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
         blocked: result.blocked,
         elapsedMs: result.elapsed_ms,
         semanticUsed: result.semantic_used,
+        matchedRuleIds: [...result.matched_rule_ids],
         warnings: warnings.map((warning) => ({
           ruleId: warning.rule_id,
           risk: warning.risk,
@@ -870,7 +873,7 @@ function showUsage(): void {
   console.log('                             [--tags <a,b>] [--risk <level>] [--safe-action <type>]');
   console.log('                             [--confidence <0..1>] [--id <rule-id>] [--limit <n>] [--json]');
   console.log('  savestate antibodies preflight [--tool <name>] [--error-code <code>] [--path <path>]');
-  console.log('                                  [--tags <a,b>] [--semantic] [--limit <n>] [--json]');
+  console.log('                                  [--tags <a,b>] [--semantic] [--offset <n>] [--limit <n>] [--json]');
   console.log('  savestate antibodies stats [--limit <n>] [--offset <n>] [--json]');
   console.log();
 }
