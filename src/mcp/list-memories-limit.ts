@@ -17,3 +17,20 @@ export function selectListMemoriesEntries<T>(entries: T[], limit?: number): T[] 
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
 }
+
+/** Format a compact page summary for MCP clients and humans reading the tool response. */
+export function formatListMemoriesPageSummary(
+  shown: number,
+  total: number,
+  offset: number | undefined,
+  hasMore: boolean,
+): string {
+  const start = offset ?? 0;
+  const more = hasMore ? `; next offset ${start + shown}; more available` : '';
+  return `Memories (${shown} shown of ${total} total, starting at ${start}${more}):`;
+}
+
+/** Explain an empty page without losing the caller's pagination position. */
+export function formatListMemoriesEmptyPage(total: number, offset: number | undefined): string {
+  return `No memories found at offset ${offset ?? 0}. Total stored: ${total}`;
+}

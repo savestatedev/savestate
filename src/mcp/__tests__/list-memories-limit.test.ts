@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseListMemoriesLimit, selectListMemoriesEntries } from '../list-memories-limit.js';
+import {
+  formatListMemoriesEmptyPage,
+  formatListMemoriesPageSummary,
+  parseListMemoriesLimit,
+  selectListMemoriesEntries,
+} from '../list-memories-limit.js';
 
 describe('MCP list_memories limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,23 @@ describe('MCP list_memories limit', () => {
   it('returns all memories when limit is omitted', () => {
     const entries = [{ id: 'm1' }, { id: 'm2' }];
     expect(selectListMemoriesEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('summarizes page position and continuation state', () => {
+    expect(formatListMemoriesPageSummary(2, 5, 2, true)).toBe(
+      'Memories (2 shown of 5 total, starting at 2; next offset 4; more available):',
+    );
+    expect(formatListMemoriesPageSummary(1, 1, undefined, false)).toBe(
+      'Memories (1 shown of 1 total, starting at 0):',
+    );
+  });
+
+  it('keeps the requested offset visible for an empty page', () => {
+    expect(formatListMemoriesEmptyPage(5, 8)).toBe(
+      'No memories found at offset 8. Total stored: 5',
+    );
+    expect(formatListMemoriesEmptyPage(0, undefined)).toBe(
+      'No memories found at offset 0. Total stored: 0',
+    );
   });
 });
