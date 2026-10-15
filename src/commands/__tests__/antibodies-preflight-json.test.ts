@@ -5,6 +5,7 @@ const result: AntibodiesPreflightJson & { secret?: string } = {
   blocked: false,
   elapsedMs: 12,
   semanticUsed: true,
+  matchedRuleIds: ['ab-write-eacces', 'ab-retry'],
   warnings: [
     {
       ruleId: 'ab-write-eacces',
@@ -37,6 +38,7 @@ describe('savestate antibodies preflight --json', () => {
       blocked: false,
       elapsedMs: 12,
       semanticUsed: true,
+      matchedRuleIds: ['ab-write-eacces', 'ab-retry'],
       warnings: [
         {
           ruleId: 'ab-write-eacces',
@@ -58,7 +60,7 @@ describe('savestate antibodies preflight --json', () => {
     });
     expect(parsed.secret).toBeUndefined();
     expect(parsed.apiKey).toBeUndefined();
-    expect(parsed.matchedRuleIds).toBeUndefined();
+    expect(parsed.matchedRuleIds).toEqual(['ab-write-eacces', 'ab-retry']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
 
@@ -68,11 +70,12 @@ describe('savestate antibodies preflight --json', () => {
         blocked: false,
         elapsedMs: 0,
         semanticUsed: false,
+        matchedRuleIds: [],
         warnings: [],
       }),
     ) as AntibodiesPreflightJson;
     expect(parsed.warnings).toEqual([]);
     expect(parsed.blocked).toBe(false);
-    expect(Object.keys(parsed).sort()).toEqual(['blocked', 'elapsedMs', 'semanticUsed', 'warnings']);
+    expect(Object.keys(parsed).sort()).toEqual(['blocked', 'elapsedMs', 'matchedRuleIds', 'semanticUsed', 'warnings']);
   });
 });
