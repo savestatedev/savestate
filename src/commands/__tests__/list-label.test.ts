@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
-import { applyListFilters, parseListLabel } from '../list.js';
+import { applyListFilters, formatListLabelCell, normalizeListLabel, parseListLabel } from '../list.js';
 
 function entry(
   partial: Pick<SnapshotIndexEntry, 'id' | 'adapter'> & Partial<SnapshotIndexEntry>,
@@ -51,6 +51,12 @@ describe('savestate list --label', () => {
         { label: 'Pre-update backup' },
       ).map((snapshot) => snapshot.id),
     ).toEqual(['legacy']);
+  });
+
+  it('normalizes legacy whitespace for list output', () => {
+    expect(normalizeListLabel('  Pre-update backup  ')).toBe('Pre-update backup');
+    expect(normalizeListLabel('   ')).toBeNull();
+    expect(formatListLabelCell('  backup  ', 10)).toBe('backup    ');
   });
 
   it('ANDs --adapter with --label', () => {
