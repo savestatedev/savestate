@@ -233,6 +233,11 @@ export function normalizeListLabel(label: string | null | undefined): string | n
   return label.trim();
 }
 
+/** Size the label column from the text users actually see. */
+export function getListLabelWidth(snapshots: SnapshotIndexEntry[]): number {
+  return Math.max(5, ...snapshots.map((snapshot) => normalizeListLabel(snapshot.label)?.length ?? 0));
+}
+
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
 export function parseListSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -436,7 +441,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const idWidth = Math.max(10, ...sorted.map((s) => s.id.length));
   const dateWidth = 20;
   const adapterWidth = Math.max(7, ...sorted.map((s) => s.adapter.length));
-  const labelWidth = Math.max(5, ...sorted.map((s) => (s.label ?? '').length));
+  const labelWidth = getListLabelWidth(sorted);
   const sizeWidth = 10;
 
   // Header

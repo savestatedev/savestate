@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
-import { applyListFilters, formatListLabelCell, normalizeListLabel, parseListLabel } from '../list.js';
+import {
+  applyListFilters,
+  formatListLabelCell,
+  getListLabelWidth,
+  normalizeListLabel,
+  parseListLabel,
+} from '../list.js';
 
 function entry(
   partial: Pick<SnapshotIndexEntry, 'id' | 'adapter'> & Partial<SnapshotIndexEntry>,
@@ -57,6 +63,10 @@ describe('savestate list --label', () => {
     expect(normalizeListLabel('  Pre-update backup  ')).toBe('Pre-update backup');
     expect(normalizeListLabel('   ')).toBeNull();
     expect(formatListLabelCell('  backup  ', 10)).toBe('backup    ');
+  });
+
+  it('sizes the label column from normalized labels', () => {
+    expect(getListLabelWidth([entry({ id: 'legacy', adapter: 'chatgpt', label: '  backup  ' })])).toBe(6);
   });
 
   it('ANDs --adapter with --label', () => {
