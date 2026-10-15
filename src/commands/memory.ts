@@ -280,7 +280,11 @@ export function filterMemoryListByNamespace(
   namespace?: string,
 ): MemoryEntry[] {
   if (namespace === undefined) return entries;
-  return entries.filter((entry) => entry.metadata?.namespace === namespace);
+  const normalizedNamespace = namespace.trim();
+  return entries.filter((entry) =>
+    typeof entry.metadata?.namespace === 'string' &&
+    entry.metadata.namespace.trim() === normalizedNamespace,
+  );
 }
 
 /** Keep memories whose content includes the requested case-insensitive text. */
