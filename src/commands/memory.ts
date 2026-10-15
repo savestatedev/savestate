@@ -239,9 +239,12 @@ export function formatMemoryListJson(
       tier: getEffectiveTier(entry),
       pinned: !!entry.pinned,
       source: entry.source,
-      namespace: typeof entry.metadata?.namespace === 'string'
-        ? entry.metadata.namespace
-        : null,
+      namespace: (() => {
+        const namespace = typeof entry.metadata?.namespace === 'string'
+          ? entry.metadata.namespace.trim()
+          : '';
+        return namespace || null;
+      })(),
       createdAt: entry.createdAt,
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),

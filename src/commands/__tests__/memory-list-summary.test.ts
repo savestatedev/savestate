@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatMemoryListJson,
   formatMemoryListNamespace,
   formatMemoryListPageSummary,
   shouldShowMemoryListNamespace,
@@ -22,6 +23,18 @@ describe('savestate memory list namespace display', () => {
   it('trims namespace labels before displaying them', () => {
     expect(formatMemoryListNamespace('  org:app:agent  ')).toBe('org:app:agent');
     expect(formatMemoryListNamespace('   ')).toBe('—');
+  });
+
+  it('normalizes namespace labels in JSON output', () => {
+    const output = JSON.parse(formatMemoryListJson(
+      [memory('  org:app:agent  '), memory('   ')],
+      [memory('  org:app:agent  '), memory('   ')],
+    ));
+
+    expect(output.entries.map((entry: { namespace: string | null }) => entry.namespace)).toEqual([
+      'org:app:agent',
+      null,
+    ]);
   });
 });
 
