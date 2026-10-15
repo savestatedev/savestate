@@ -26,6 +26,6 @@ export function formatListMemoriesPageSummary(
   hasMore: boolean,
 ): string {
   const start = offset ?? 0;
-  const more = hasMore ? '; more available' : '';
+  const more = hasMore ? `; next offset ${start + shown}; more available` : '';
   return `Memories (${shown} shown of ${total} total, starting at ${start}${more}):`;
 }
