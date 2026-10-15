@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatListMemoriesEmptyPage,
   formatListMemoriesPageSummary,
   parseListMemoriesLimit,
   selectListMemoriesEntries,
@@ -47,6 +48,15 @@ describe('MCP list_memories limit', () => {
     );
     expect(formatListMemoriesPageSummary(1, 1, undefined, false)).toBe(
       'Memories (1 shown of 1 total, starting at 0):',
+    );
+  });
+
+  it('keeps the requested offset visible for an empty page', () => {
+    expect(formatListMemoriesEmptyPage(5, 8)).toBe(
+      'No memories found at offset 8. Total stored: 5',
+    );
+    expect(formatListMemoriesEmptyPage(0, undefined)).toBe(
+      'No memories found at offset 0. Total stored: 0',
     );
   });
 });

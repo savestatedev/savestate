@@ -66,6 +66,7 @@ import { parseDeleteAllMemoriesOffset, selectDeleteAllMemoriesOffsetEntries } fr
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseDeleteMemoryOffset, selectDeleteMemoryOffsetEntries } from './delete-memory-offset.js';
 import {
+  formatListMemoriesEmptyPage,
   formatListMemoriesPageSummary,
   parseListMemoriesLimit,
   selectListMemoriesEntries,
@@ -1297,7 +1298,7 @@ async function handleListMemories(
     const stats = store.getStats();
 
     if (results.length === 0) {
-      return `No memories found. Total stored: ${stats.totalEntries}`;
+      return formatListMemoriesEmptyPage(stats.totalEntries, offset);
     }
 
     const lines = [

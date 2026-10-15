@@ -29,3 +29,8 @@ export function formatListMemoriesPageSummary(
   const more = hasMore ? `; next offset ${start + shown}; more available` : '';
   return `Memories (${shown} shown of ${total} total, starting at ${start}${more}):`;
 }
+
+/** Explain an empty page without losing the caller's pagination position. */
+export function formatListMemoriesEmptyPage(total: number, offset: number | undefined): string {
+  return `No memories found at offset ${offset ?? 0}. Total stored: ${total}`;
+}
