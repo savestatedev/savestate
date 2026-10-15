@@ -686,6 +686,18 @@ describe('CLI docs', () => {
     expect(antibodies).toContain('export function parseAntibodiesPreflightLimit');
   });
 
+  it('documents antibodies preflight --offset as a bounded non-negative integer', () => {
+    const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
+    const antibodiesBlock = cli.slice(
+      cli.indexOf("command('antibodies <subcommand>')"),
+      cli.indexOf("command('eval <subcommand>')"),
+    );
+    expect(antibodiesSection).toContain('warnings on <code>preflight</code>');
+    expect(antibodiesSection).toContain('savestate antibodies preflight --offset 10 --limit 5');
+    expect(antibodiesBlock).toContain(".option('--offset <n>'");
+    expect(antibodies).toContain('export function parseAntibodiesPreflightOffset');
+  });
+
   it('documents antibodies add --limit as a bounded positive integer', () => {
     const antibodiesSection = docs.slice(docs.indexOf('id="antibodies"'), docs.indexOf('id="schedule"'));
     const antibodiesBlock = cli.slice(
