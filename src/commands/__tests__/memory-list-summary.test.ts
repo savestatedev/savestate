@@ -29,8 +29,10 @@ describe('savestate memory list namespace display', () => {
     const output = JSON.parse(formatMemoryListJson(
       [memory('  org:app:agent  '), memory('   ')],
       [memory('  org:app:agent  '), memory('   ')],
+      { snapshot: 'ss-2026-01-01' },
     ));
 
+    expect(output.snapshot).toBe('ss-2026-01-01');
     expect(output.entries.map((entry: { namespace: string | null }) => entry.namespace)).toEqual([
       'org:app:agent',
       null,

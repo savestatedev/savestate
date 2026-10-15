@@ -152,6 +152,7 @@ export interface MemoryListEntryJson {
 
 export interface MemoryListJson {
   found: true;
+  snapshot: string;
   empty: boolean;
   emptyReason: 'collection' | 'page' | null;
   total: number;
@@ -186,6 +187,7 @@ export function formatMemoryListJson(
   all: MemoryEntry[],
   shown: MemoryEntry[],
   pagination: {
+    snapshot?: string;
     offset?: number;
     limit?: number;
     hasMore?: boolean;
@@ -209,6 +211,7 @@ export function formatMemoryListJson(
     : null;
   const record: MemoryListJson = {
     found: true,
+    snapshot: pagination.snapshot ?? 'latest',
     empty: shown.length === 0,
     emptyReason: shown.length > 0 ? null : all.length === 0 ? 'collection' : 'page',
     total: all.length,
@@ -736,6 +739,7 @@ export async function listMemories(
 
   if (options?.format === 'json') {
     console.log(formatMemoryListJson(filteredEntries, entries, {
+      snapshot: snapshot.manifest.id,
       offset,
       limit: options?.limit,
       hasMore: offset + entries.length < filteredEntries.length,
