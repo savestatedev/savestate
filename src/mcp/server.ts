@@ -470,7 +470,8 @@ const tools: Tool[] = [
     name: 'list_memories',
     description:
       'List all stored memories. Compatible with OpenMemory MCP API. ' +
-      'Returns memories with optional filtering.',
+      'Returns memories with optional filtering. The summary includes the starting offset; ' +
+      'when more results are available it includes the next offset to request.',
     inputSchema: {
       type: 'object',
       properties: {
