@@ -51,4 +51,8 @@ describe('memory list table content display', () => {
   it('flattens CRLF, tabs, and repeated whitespace', () => {
     expect(formatMemoryListContent('\r\n\tline one\r\n\tline   two  ')).toBe('line one line two');
   });
+
+  it('does not split astral Unicode characters when truncating', () => {
+    expect(formatMemoryListContent('😀😀😀', 2)).toBe('😀😀...');
+  });
 });
