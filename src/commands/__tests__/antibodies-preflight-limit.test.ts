@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseAntibodiesPreflightLimit, selectAntibodiesPreflightWarnings } from '../antibodies.js';
+import {
+  parseAntibodiesPreflightLimit,
+  parseAntibodiesPreflightOffset,
+  selectAntibodiesPreflightOffset,
+  selectAntibodiesPreflightWarnings,
+} from '../antibodies.js';
 
 describe('savestate antibodies preflight --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,32 @@ describe('savestate antibodies preflight --limit', () => {
   it('returns all warnings when --limit is omitted', () => {
     const warnings = [{ ruleId: 'ab-write' }, { ruleId: 'ab-retry' }];
     expect(selectAntibodiesPreflightWarnings(warnings, undefined)).toEqual(warnings);
+  });
+
+  it('accepts bounded non-negative offsets', () => {
+    expect(parseAntibodiesPreflightOffset(undefined)).toBeUndefined();
+    expect(parseAntibodiesPreflightOffset('0')).toBe(0);
+    expect(parseAntibodiesPreflightOffset('12')).toBe(12);
+    expect(parseAntibodiesPreflightOffset('1000')).toBe(1000);
+  });
+
+  it.each(['', '-1', '1.5', 'nope'])('rejects invalid offset %s', (value) => {
+    expect(() => parseAntibodiesPreflightOffset(value)).toThrow(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
+    );
+  });
+
+  it('rejects offsets above the bounded warning count', () => {
+    expect(() => parseAntibodiesPreflightOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+  });
+
+  it('skips warnings before applying --limit', () => {
+    const warnings = [{ ruleId: 'ab-write' }, { ruleId: 'ab-retry' }, { ruleId: 'ab-probe' }];
+    expect(selectAntibodiesPreflightOffset(warnings, 1).map((warning) => warning.ruleId)).toEqual([
+      'ab-retry',
+      'ab-probe',
+    ]);
   });
 });

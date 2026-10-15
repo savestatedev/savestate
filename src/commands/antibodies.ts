@@ -409,6 +409,7 @@ async function addRule(store: AntibodyStore, options: AntibodiesOptions): Promis
 
 async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): Promise<void> {
   const limit = parseAntibodiesPreflightLimit(options.limit);
+  const offset = parseAntibodiesPreflightOffset(options.offset);
   const context: PreflightContext = {
     tool: parseAntibodiesTool(options.tool),
     error_code: parseAntibodiesErrorCode(options.errorCode),
@@ -421,7 +422,10 @@ async function runPreflight(store: AntibodyStore, options: AntibodiesOptions): P
   });
 
   const result = await engine.preflight(context);
-  const warnings = selectAntibodiesPreflightWarnings(result.warnings, limit);
+  const warnings = selectAntibodiesPreflightWarnings(
+    selectAntibodiesPreflightOffset(result.warnings, offset),
+    limit,
+  );
 
   if (options.json) {
     console.log(
@@ -634,6 +638,34 @@ export function parseAntibodiesPreflightLimit(value: string | undefined): number
 export function selectAntibodiesPreflightWarnings<T>(warnings: T[], limit?: number): T[] {
   if (limit === undefined) return warnings;
   return warnings.slice(0, limit);
+}
+
+const MAX_ANTIBODIES_PREFLIGHT_OFFSET = 1000;
+
+/** Parse antibodies preflight --offset without turning user input into an unbounded skip. */
+export function parseAntibodiesPreflightOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_ANTIBODIES_PREFLIGHT_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_ANTIBODIES_PREFLIGHT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_ANTIBODIES_PREFLIGHT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N preflight warnings before applying --limit. */
+export function selectAntibodiesPreflightOffset<T>(warnings: T[], offset?: number): T[] {
+  if (offset === undefined) return warnings;
+  return warnings.slice(offset);
 }
 
 const MAX_ANTIBODIES_ADD_LIMIT = 1000;
