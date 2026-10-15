@@ -43,6 +43,11 @@ describe('savestate list --json', () => {
     expect(parsed.entries[0]?.tags).toEqual([]);
   });
 
+  it('trims legacy label whitespace in JSON entries', () => {
+    const parsed = JSON.parse(formatListJson([{ ...older, label: '  pre-update  ' }])) as ListJson;
+    expect(parsed.entries[0]?.label).toBe('pre-update');
+  });
+
   it('prints an empty array when there are no snapshots', () => {
     expect(JSON.parse(formatListJson([]))).toMatchObject({
       total: 0,

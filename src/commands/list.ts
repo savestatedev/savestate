@@ -121,7 +121,7 @@ export function formatListJson(
       timestamp: snapshot.timestamp,
       platform: snapshot.platform,
       adapter: snapshot.adapter,
-      label: snapshot.label ?? null,
+      label: normalizeListLabel(snapshot.label),
       tags: snapshot.tags ?? [],
       filename: snapshot.filename,
       size: snapshot.size,
@@ -223,8 +223,19 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
 
 /** Pad the visible label text before applying terminal styling to placeholders. */
 export function formatListLabelCell(label: string | null, width: number): string {
-  if (label !== null) return label.padEnd(width);
+  if (label !== null) return label.trim().padEnd(width);
   return chalk.dim('—'.padEnd(width));
+}
+
+/** Keep legacy label whitespace out of machine-readable list output too. */
+export function normalizeListLabel(label: string | null | undefined): string | null {
+  if (label === undefined || label.trim().length === 0) return null;
+  return label.trim();
+}
+
+/** Size the label column from the text users actually see. */
+export function getListLabelWidth(snapshots: SnapshotIndexEntry[]): number {
+  return Math.max(5, ...snapshots.map((snapshot) => normalizeListLabel(snapshot.label)?.length ?? 0));
 }
 
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
@@ -430,7 +441,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const idWidth = Math.max(10, ...sorted.map((s) => s.id.length));
   const dateWidth = 20;
   const adapterWidth = Math.max(7, ...sorted.map((s) => s.adapter.length));
-  const labelWidth = Math.max(5, ...sorted.map((s) => (s.label ?? '').length));
+  const labelWidth = getListLabelWidth(sorted);
   const sizeWidth = 10;
 
   // Header
@@ -448,7 +459,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   // Rows
   for (const s of sorted) {
     const date = formatListDate(s.timestamp);
-    const label = formatListLabelCell(s.label ?? null, labelWidth);
+    const label = formatListLabelCell(normalizeListLabel(s.label), labelWidth);
     const size = formatBytes(s.size);
 
     const row = [
