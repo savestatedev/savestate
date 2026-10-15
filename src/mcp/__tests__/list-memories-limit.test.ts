@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseListMemoriesLimit, selectListMemoriesEntries } from '../list-memories-limit.js';
+import {
+  formatListMemoriesPageSummary,
+  parseListMemoriesLimit,
+  selectListMemoriesEntries,
+} from '../list-memories-limit.js';
 
 describe('MCP list_memories limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,14 @@ describe('MCP list_memories limit', () => {
   it('returns all memories when limit is omitted', () => {
     const entries = [{ id: 'm1' }, { id: 'm2' }];
     expect(selectListMemoriesEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('summarizes page position and continuation state', () => {
+    expect(formatListMemoriesPageSummary(2, 5, 2, true)).toBe(
+      'Memories (2 shown of 5 total, starting at 2; more available):',
+    );
+    expect(formatListMemoriesPageSummary(1, 1, undefined, false)).toBe(
+      'Memories (1 shown of 1 total, starting at 0):',
+    );
   });
 });

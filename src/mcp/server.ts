@@ -65,7 +65,11 @@ import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './d
 import { parseDeleteAllMemoriesOffset, selectDeleteAllMemoriesOffsetEntries } from './delete-all-memories-offset.js';
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseDeleteMemoryOffset, selectDeleteMemoryOffsetEntries } from './delete-memory-offset.js';
-import { parseListMemoriesLimit, selectListMemoriesEntries } from './list-memories-limit.js';
+import {
+  formatListMemoriesPageSummary,
+  parseListMemoriesLimit,
+  selectListMemoriesEntries,
+} from './list-memories-limit.js';
 import { parseListMemoriesOffset } from './list-memories-offset.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
 import { parseSavestateListOffset, selectSavestateListOffsetEntries } from './savestate-list-offset.js';
@@ -1277,14 +1281,18 @@ async function handleListMemories(
 
     const limit = parseListMemoriesLimit(input.limit);
     const offset = parseListMemoriesOffset(input.offset);
+    const pageLimit = limit ?? 50;
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
-      limit: limit ?? 50,
+      // Fetch one sentinel row so the response can tell callers whether to continue.
+      limit: pageLimit + 1,
       offset,
     };
 
-    const results = selectListMemoriesEntries(await store.query(query), limit);
+    const queried = await store.query(query);
+    const hasMore = queried.length > pageLimit;
+    const results = selectListMemoriesEntries(queried, pageLimit);
     const stats = store.getStats();
 
     if (results.length === 0) {
@@ -1292,7 +1300,7 @@ async function handleListMemories(
     }
 
     const lines = [
-      `Memories (${results.length} of ${stats.totalEntries} total):`,
+      formatListMemoriesPageSummary(results.length, stats.totalEntries, offset, hasMore),
       '',
     ];
 
