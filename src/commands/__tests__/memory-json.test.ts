@@ -28,6 +28,15 @@ describe('savestate memory --json', () => {
     expect(filterMemoryListByNamespace(entries)).toBe(entries);
   });
 
+  it('matches namespaces after trimming legacy metadata and filter input', () => {
+    const entries = [
+      entry({ id: 'mem-padded', content: 'padded', metadata: { namespace: '  org:app:agent  ' } }),
+      entry({ id: 'mem-other', content: 'other', metadata: { namespace: 'org:app:other' } }),
+    ];
+
+    expect(filterMemoryListByNamespace(entries, ' org:app:agent ')).toEqual([entries[0]]);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
