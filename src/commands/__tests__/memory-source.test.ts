@@ -49,6 +49,6 @@ describe('memory list table content display', () => {
   });
 
   it('flattens CRLF, tabs, and repeated whitespace', () => {
-    expect(formatMemoryListContent('line one\r\n\tline   two')).toBe('line one line two');
+    expect(formatMemoryListContent('\r\n\tline one\r\n\tline   two  ')).toBe('line one line two');
   });
 });

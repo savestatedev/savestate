@@ -602,7 +602,7 @@ export function formatMemoryListLastAccessed(lastAccessedAt: string | undefined)
 /** Truncate table previews without adding an ellipsis to already-short content. */
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
-  const normalized = content.replace(/\s+/g, ' ');
+  const normalized = content.replace(/\s+/g, ' ').trim();
   return normalized.length > maxLength
     ? `${normalized.slice(0, maxLength)}...`
     : normalized;
