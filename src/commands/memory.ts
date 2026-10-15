@@ -588,8 +588,9 @@ export function formatMemoryListSource(source: string): string {
 
 /** Keep namespace labels readable in the human-facing memory table. */
 export function formatMemoryListNamespace(namespace: string | undefined): string {
-  if (!namespace) return '—';
-  return namespace.length > 24 ? `${namespace.slice(0, 21)}...` : namespace;
+  const normalized = namespace?.trim();
+  if (!normalized) return '—';
+  return normalized.length > 24 ? `${normalized.slice(0, 21)}...` : normalized;
 }
 
 /** Keep access timestamps compact and predictable in the human-facing table. */
@@ -610,7 +611,11 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
 
 /** Keep the table shape stable across paginated memory list results. */
 export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
-  return entries.some((entry) => typeof entry.metadata?.namespace === 'string');
+  return entries.some(
+    (entry) =>
+      typeof entry.metadata?.namespace === 'string' &&
+      entry.metadata.namespace.trim().length > 0,
+  );
 }
 
 /** Apply memory list --offset then --limit. */
