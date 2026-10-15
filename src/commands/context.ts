@@ -115,13 +115,14 @@ const MAX_CONTEXT_COMPILE_OFFSET = 1000;
 export function parseContextLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_EXPLAIN_LIMIT}.`,
     );
   }
 
-  const limit = Number(value);
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_EXPLAIN_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_EXPLAIN_LIMIT}.`,
@@ -134,13 +135,14 @@ export function parseContextLimit(value: string | undefined): number | undefined
 export function parseContextOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_EXPLAIN_OFFSET}.`,
     );
   }
 
-  const offset = Number(value);
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONTEXT_EXPLAIN_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_EXPLAIN_OFFSET}.`,
@@ -159,12 +161,14 @@ export function selectContextCandidates<T>(candidates: T[], limit?: number, offs
 /** Parse context compile --offset without turning user input into an empty section list. */
 export function parseContextCompileOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
-  if (!/^\d+$/.test(value)) {
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_COMPILE_OFFSET}.`,
     );
   }
-  const offset = Number(value);
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CONTEXT_COMPILE_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CONTEXT_COMPILE_OFFSET}.`,
@@ -190,7 +194,8 @@ const MAX_CONTEXT_CONFIG_OFFSET = 1000;
 export function parseContextConfigLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_CONFIG_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_CONFIG_LIMIT}.`,
@@ -206,7 +211,8 @@ const MAX_CONTEXT_VALIDATE_OFFSET = 1000;
 export function parseContextValidateLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_VALIDATE_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_VALIDATE_LIMIT}.`,
@@ -247,7 +253,8 @@ const MAX_CONTEXT_COMPILE_LIMIT = 1000;
 export function parseContextCompileLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_COMPILE_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_COMPILE_LIMIT}.`,

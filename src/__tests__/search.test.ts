@@ -94,6 +94,15 @@ describe('searchSnapshots', () => {
     expect(results[0].score).toBeGreaterThan(0);
   });
 
+  it('includes context for partial-word matches', async () => {
+    const snap = buildSnapshot([{ id: 'm1', content: 'User loves Italian food and cocktails' }]);
+    await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
+
+    const results = await searchSnapshots('cocktail', config, { passphrase: PASSPHRASE });
+
+    expect(results[0].context).toContain('cocktails');
+  });
+
   it('searches identity personality content', async () => {
     const snap = buildSnapshot([], 'I am a senior engineer who values clarity above all.');
     const adapter = new FakeAdapter(snap);

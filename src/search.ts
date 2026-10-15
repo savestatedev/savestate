@@ -308,10 +308,21 @@ function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | n
 function extractContext(query: string, content: string): string | undefined {
   const normalizedQuery = query.trim();
   const lower = content.toLowerCase();
-  const idx = lower.indexOf(normalizedQuery.toLowerCase());
+  let idx = lower.indexOf(normalizedQuery.toLowerCase());
+  let matchLength = normalizedQuery.length;
+  if (idx === -1) {
+    // scoreMatch also supports partial word matches; anchor context to the
+    // first matching query word so those results remain useful to callers.
+    const word = normalizedQuery.split(/\s+/).find((candidate) =>
+      lower.includes(candidate.toLowerCase()),
+    );
+    if (!word) return undefined;
+    idx = lower.indexOf(word.toLowerCase());
+    matchLength = word.length;
+  }
   if (idx === -1) return undefined;
   const start = Math.max(0, idx - CONTEXT_RADIUS);
-  const end = Math.min(content.length, idx + normalizedQuery.length + CONTEXT_RADIUS);
+  const end = Math.min(content.length, idx + matchLength + CONTEXT_RADIUS);
   const prefix = start > 0 ? '…' : '';
   const suffix = end < content.length ? '…' : '';
   return `${prefix}${content.slice(start, end)}${suffix}`;
