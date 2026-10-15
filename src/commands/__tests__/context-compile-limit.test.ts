@@ -14,6 +14,10 @@ describe('savestate context compile --limit', () => {
     expect(parseContextCompileLimit('12')).toBe(12);
   });
 
+  it('accepts surrounding whitespace', () => {
+    expect(parseContextCompileLimit(' 12 ')).toBe(12);
+  });
+
   it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseContextCompileLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
