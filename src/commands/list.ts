@@ -75,6 +75,17 @@ export interface ListJson {
   entries: ListSnapshotJson[];
 }
 
+/** Keep JSON tag values stable when older indexes contain surrounding whitespace. */
+export function normalizeListJsonTags(tags?: string[]): string[] {
+  return (tags ?? []).map((tag) => tag.trim()).filter(Boolean);
+}
+
+/** Keep JSON labels stable when older indexes contain surrounding whitespace. */
+export function normalizeListJsonLabel(label?: string | null): string | null {
+  const normalized = label?.trim() ?? '';
+  return normalized.length > 0 ? normalized : null;
+}
+
 /** Keep JSON filter metadata aligned with the values used by the filter parser. */
 export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): ListJsonFilters {
   return {
@@ -121,8 +132,8 @@ export function formatListJson(
       timestamp: snapshot.timestamp,
       platform: snapshot.platform,
       adapter: snapshot.adapter,
-      label: normalizeListLabel(snapshot.label),
-      tags: snapshot.tags ?? [],
+      label: normalizeListJsonLabel(snapshot.label),
+      tags: normalizeListJsonTags(snapshot.tags),
       filename: snapshot.filename,
       size: snapshot.size,
     }));

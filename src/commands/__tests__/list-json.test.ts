@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatListJson, normalizeListJsonFilters, type ListJson } from '../list.js';
+import {
+  formatListJson,
+  normalizeListJsonLabel,
+  normalizeListJsonFilters,
+  normalizeListJsonTags,
+  type ListJson,
+} from '../list.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 const older: SnapshotIndexEntry = {
@@ -43,9 +49,25 @@ describe('savestate list --json', () => {
     expect(parsed.entries[0]?.tags).toEqual([]);
   });
 
-  it('trims legacy label whitespace in JSON entries', () => {
-    const parsed = JSON.parse(formatListJson([{ ...older, label: '  pre-update  ' }])) as ListJson;
+  it('normalizes legacy tag whitespace for JSON consumers', () => {
+    const parsed = JSON.parse(formatListJson([{
+      ...newer,
+      tags: [' weekly ', '  ', 'project '],
+    }])) as ListJson;
+
+    expect(parsed.entries[0]?.tags).toEqual(['weekly', 'project']);
+    expect(normalizeListJsonTags(undefined)).toEqual([]);
+  });
+
+  it('normalizes legacy label whitespace for JSON consumers', () => {
+    const parsed = JSON.parse(formatListJson([{
+      ...newer,
+      label: '  pre-update  ',
+    }])) as ListJson;
+
     expect(parsed.entries[0]?.label).toBe('pre-update');
+    expect(normalizeListJsonLabel('  ')).toBeNull();
+    expect(normalizeListJsonLabel(undefined)).toBeNull();
   });
 
   it('prints an empty array when there are no snapshots', () => {
