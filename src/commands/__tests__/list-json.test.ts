@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatListJson, normalizeListJsonFilters, type ListJson } from '../list.js';
+import {
+  formatListJson,
+  normalizeListJsonFilters,
+  normalizeListJsonTags,
+  type ListJson,
+} from '../list.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 const older: SnapshotIndexEntry = {
@@ -41,6 +46,16 @@ describe('savestate list --json', () => {
     expect(parsed.entries[0]?.id).toBe('ss-older');
     expect(parsed.entries[0]?.label).toBeNull();
     expect(parsed.entries[0]?.tags).toEqual([]);
+  });
+
+  it('normalizes legacy tag whitespace for JSON consumers', () => {
+    const parsed = JSON.parse(formatListJson([{
+      ...newer,
+      tags: [' weekly ', '  ', 'project '],
+    }])) as ListJson;
+
+    expect(parsed.entries[0]?.tags).toEqual(['weekly', 'project']);
+    expect(normalizeListJsonTags(undefined)).toEqual([]);
   });
 
   it('prints an empty array when there are no snapshots', () => {
