@@ -2695,6 +2695,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryListOffset');
   });
 
+  it('documents memory list --since as a creation cutoff', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('--since');
+    expect(memorySection).toContain('on or after');
+    expect(memorySection).toContain('savestate memory list --since 2026-10-01');
+    expect(listBlock).toContain(".option('--since <date>'");
+    expect(memoryCli).toContain('export function parseMemoryListSince');
+  });
+
   it('documents memory config --offset as a bounded non-negative integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const configBlock = memoryCli.slice(memoryCli.indexOf("command('config')"), memoryCli.indexOf("command('explain"));

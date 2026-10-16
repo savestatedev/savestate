@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MemoryEntry } from '../../types.js';
 import {
   formatMemoryListJson,
+  filterMemoryListByCreatedSince,
   filterMemoryListByNamespace,
   filterMemoryListByContent,
   getMemoryListSummary,
@@ -79,7 +80,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.suggestedOffset).toBeNull();
-    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, until: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.pinned).toBe(1);
@@ -139,7 +140,7 @@ describe('savestate memory --json', () => {
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
     expect(parsed.suggestedOffset).toBeNull();
-    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, until: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
@@ -207,7 +208,7 @@ describe('savestate memory --json', () => {
       }),
     ) as MemoryListJson;
 
-    expect(parsed.filters).toEqual({ tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, until: null, oldestFirst: true });
+    expect(parsed.filters).toEqual({ tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, until: null, since: null, oldestFirst: true });
   });
 
   it('filters content case-insensitively and reports the active filter', () => {
@@ -228,6 +229,22 @@ describe('savestate memory --json', () => {
       filters: { until: '2026-10-01' },
     })) as MemoryListJson;
     expect(parsed.filters.until).toBe('2026-10-01');
+  });
+
+  it('filters by creation start and reports the active filter', () => {
+    const entries = [
+      entry({ id: 'mem-old', content: 'old', createdAt: '2026-09-30T23:59:59.999Z' }),
+      entry({ id: 'mem-day', content: 'day', createdAt: '2026-10-01T00:00:00.000Z' }),
+      entry({ id: 'mem-new', content: 'new', createdAt: '2026-10-02T00:00:00.000Z' }),
+    ];
+    expect(filterMemoryListByCreatedSince(entries, '2026-10-01').map(({ id }) => id)).toEqual([
+      'mem-day',
+      'mem-new',
+    ]);
+    const parsed = JSON.parse(formatMemoryListJson(entries.slice(1), entries.slice(1), {
+      filters: { since: '2026-10-01' },
+    })) as MemoryListJson;
+    expect(parsed.filters.since).toBe('2026-10-01');
   });
 
   it('uses the page size when calculating the previous offset', () => {

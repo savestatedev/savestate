@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { parseMemoryListSince } from '../memory-cli.js';
 import { parseMemoryListLimit, parseMemoryListOffset } from '../memory.js';
 
 describe('savestate memory list --limit', () => {
@@ -25,5 +26,19 @@ describe('savestate memory list --limit', () => {
 describe('savestate memory list --offset', () => {
   it('accepts surrounding whitespace', () => {
     expect(parseMemoryListOffset(' 12 ')).toBe(12);
+  });
+});
+
+describe('savestate memory list --since', () => {
+  it('accepts date-only and timestamp values', () => {
+    expect(parseMemoryListSince(' 2026-10-01 ')).toBe('2026-10-01');
+    expect(parseMemoryListSince('2026-10-01T12:00:00Z')).toBe('2026-10-01T12:00:00Z');
+    expect(parseMemoryListSince(undefined)).toBeUndefined();
+  });
+
+  it.each(['   ', 'not-a-date'])('rejects invalid value %s', (value) => {
+    expect(() => parseMemoryListSince(value)).toThrow(
+      `Invalid --since value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
   });
 });
