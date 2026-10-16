@@ -14,6 +14,7 @@ import type {
   Memory,
   MemoryEntry,
   MemoryFreshnessClass,
+  MemoryFreshnessState,
   MemoryStaleBehavior,
   MemoryTier,
   MemoryTierConfig,
@@ -263,6 +264,7 @@ export interface MemoryListJson {
   suggestedOffset: number | null;
   filters: {
     tier: MemoryTier | null;
+    freshness: MemoryFreshnessState | null;
     pinned: boolean | null;
     source: string | null;
     namespace: string | null;
@@ -320,6 +322,7 @@ export function formatMemoryListJson(
     suggestedOffset,
     filters: {
       tier: pagination.filters?.tier ?? null,
+      freshness: pagination.filters?.freshness ?? null,
       pinned: pagination.filters?.pinned ?? null,
       source: pagination.filters?.source ?? null,
       namespace: pagination.filters?.namespace ?? null,
@@ -392,6 +395,16 @@ export function filterMemoryListByContent(
   if (content === undefined) return entries;
   const query = content.toLocaleLowerCase();
   return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+}
+
+/** Keep memories in the requested freshness state. */
+export function filterMemoryListByFreshness(
+  entries: MemoryEntry[],
+  freshness?: MemoryFreshnessState,
+  now = new Date(),
+): MemoryEntry[] {
+  if (freshness === undefined) return entries;
+  return entries.filter((entry) => getMemoryFreshness(entry, now).state === freshness);
 }
 
 /**
@@ -785,6 +798,7 @@ export async function listMemories(
     source?: string;
     namespace?: string;
     content?: string;
+    freshness?: MemoryFreshnessState;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -829,6 +843,7 @@ export async function listMemories(
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);
+  entries = filterMemoryListByFreshness(entries, options?.freshness);
 
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
@@ -845,6 +860,7 @@ export async function listMemories(
       hasMore: offset + entries.length < filteredEntries.length,
       filters: {
         tier: options?.tier,
+        freshness: options?.freshness,
         pinned: options?.pinned,
         source: options?.source,
         namespace: options?.namespace,

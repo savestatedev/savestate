@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemorySource } from '../memory-cli.js';
+import { parseMemoryFreshness, parseMemorySource } from '../memory-cli.js';
 import {
   formatMemoryListContent,
   formatMemoryListFreshness,
@@ -16,6 +16,19 @@ describe('savestate memory list --source', () => {
   it.each(['', '   ', 'claude code', 'user,agent'])('rejects invalid source %j', (value) => {
     expect(() => parseMemorySource(value)).toThrow(
       `Invalid --source value "${value}". Expected a single non-empty source id.`,
+    );
+  });
+});
+
+describe('savestate memory list --freshness', () => {
+  it.each(['active', 'stale', 'needs_confirmation'])('accepts %s', (value) => {
+    expect(parseMemoryFreshness(value)).toBe(value);
+  });
+
+  it('normalizes case and rejects unknown states', () => {
+    expect(parseMemoryFreshness(' STALE ')).toBe('stale');
+    expect(() => parseMemoryFreshness('expired')).toThrow(
+      'Invalid --freshness value "expired". Expected one of active, stale, or needs_confirmation.',
     );
   });
 });

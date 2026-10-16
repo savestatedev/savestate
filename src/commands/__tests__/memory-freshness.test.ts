@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MemoryEntry } from '../../types.js';
 import {
   DEFAULT_MEMORY_FRESHNESS_PROFILES,
+  filterMemoryListByFreshness,
   getMemoryFreshness,
 } from '../memory.js';
 
@@ -52,5 +53,17 @@ describe('memory freshness profiles', () => {
   it('fails closed for invalid verification timestamps', () => {
     expect(getMemoryFreshness(entry({ lastVerifiedAt: 'not-a-timestamp' }), now).state)
       .toBe('needs_confirmation');
+  });
+
+  it('filters list results by resolved freshness state', () => {
+    const entries = [
+      entry({ id: 'active', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' }),
+      entry({ id: 'stale', freshnessClass: 'medium', lastVerifiedAt: '2026-10-08T11:00:00.000Z' }),
+      entry({ id: 'confirm', freshnessClass: 'medium', lastVerifiedAt: '2026-09-01T11:00:00.000Z' }),
+    ];
+
+    expect(filterMemoryListByFreshness(entries, 'stale', now).map(({ id }) => id)).toEqual(['stale']);
+    expect(filterMemoryListByFreshness(entries, 'needs_confirmation', now).map(({ id }) => id))
+      .toEqual(['confirm']);
   });
 });

@@ -18,6 +18,7 @@ import {
   parseMemoryConfigLimit,
   parseMemoryConfigOffset,
   parseMemoryListOffset,
+  type MemoryFreshnessState,
 } from './memory.js';
 import {
   editMemoryCommand,
@@ -33,6 +34,21 @@ import type { MemoryTier } from '../types.js';
 const MAX_MEMORY_LIMIT = 1000;
 const MAX_MEMORY_VERSION = 1000;
 const MEMORY_TIERS = ['L1', 'L2', 'L3'] as const;
+const MEMORY_FRESHNESS_STATES = ['active', 'stale', 'needs_confirmation'] as const;
+
+/** Parse memory --freshness with the same state names returned by JSON output. */
+export function parseMemoryFreshness(value: string | undefined): MemoryFreshnessState | undefined {
+  if (value === undefined) return undefined;
+
+  const freshness = value.trim().toLowerCase();
+  if ((MEMORY_FRESHNESS_STATES as readonly string[]).includes(freshness)) {
+    return freshness as MemoryFreshnessState;
+  }
+
+  throw new Error(
+    `Invalid --freshness value "${value}". Expected one of active, stale, or needs_confirmation.`,
+  );
+}
 
 /** Parse a memory tier with a clear CLI error instead of a downstream lookup failure. */
 export function parseMemoryTier(value: string | undefined): MemoryTier | undefined {
@@ -341,6 +357,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--source <id>', 'Filter by source id')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--content <text>', 'Filter by case-insensitive content substring')
+    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
@@ -359,6 +376,7 @@ export function registerMemoryCommands(program: Command): void {
           source: parseMemorySource(options.source),
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
+          freshness: parseMemoryFreshness(options.freshness),
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),

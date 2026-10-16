@@ -79,7 +79,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.suggestedOffset).toBeNull();
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.pinned).toBe(1);
@@ -139,7 +139,7 @@ describe('savestate memory --json', () => {
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
     expect(parsed.suggestedOffset).toBeNull();
-    expect(parsed.filters).toEqual({ tier: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
@@ -203,11 +203,11 @@ describe('savestate memory --json', () => {
     ];
     const parsed = JSON.parse(
       formatMemoryListJson(all, all, {
-        filters: { tier: 'L1', pinned: true, source: 'agent', namespace: 'org:app:agent', oldestFirst: true },
+        filters: { tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', oldestFirst: true },
       }),
     ) as MemoryListJson;
 
-    expect(parsed.filters).toEqual({ tier: 'L1', pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, oldestFirst: true });
+    expect(parsed.filters).toEqual({ tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, oldestFirst: true });
   });
 
   it('filters content case-insensitively and reports the active filter', () => {
