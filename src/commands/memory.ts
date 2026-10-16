@@ -1921,16 +1921,39 @@ export interface MemoryExplainResultJson {
 export interface MemoryExplainJson {
   query: string;
   shown: number;
+  pagination: MemoryExplainPaginationJson;
   results: MemoryExplainResultJson[];
+}
+
+export interface MemoryExplainPaginationJson {
+  offset: number;
+  limit: number | null;
+  total: number;
+  pageSize: number;
+  hasMore: boolean;
+  nextOffset: number | null;
 }
 
 export function formatMemoryExplainJson(
   query: string,
   results: Array<{ id: string; score: number; summary: string }>,
+  pagination: Partial<MemoryExplainPaginationJson> = {},
 ): string {
+  const offset = pagination.offset ?? 0;
+  const total = pagination.total ?? results.length;
+  const pageSize = pagination.pageSize ?? pagination.limit ?? Math.max(1, results.length);
+  const hasMore = pagination.hasMore ?? offset + results.length < total;
   const record: MemoryExplainJson = {
     query,
     shown: results.length,
+    pagination: {
+      offset,
+      limit: pagination.limit ?? null,
+      total,
+      pageSize,
+      hasMore,
+      nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
+    },
     results: results.map((result) => ({
       id: result.id,
       score: result.score,
@@ -1944,15 +1967,31 @@ export interface MemoryExplainMissingJson {
   found: false;
   query: string;
   shown: 0;
+  pagination: MemoryExplainPaginationJson;
   results: null;
 }
 
-export function formatMemoryExplainMissingJson(query: string): string {
+export function formatMemoryExplainMissingJson(
+  query: string,
+  pagination: Partial<MemoryExplainPaginationJson> = {},
+): string {
+  const offset = pagination.offset ?? 0;
+  const total = pagination.total ?? 0;
+  const pageSize = pagination.pageSize ?? pagination.limit ?? 1;
+  const hasMore = pagination.hasMore ?? offset < total;
   return JSON.stringify(
     {
       found: false,
       query,
       shown: 0,
+      pagination: {
+        offset,
+        limit: pagination.limit ?? null,
+        total,
+        pageSize,
+        hasMore,
+        nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
+      },
       results: null,
     },
     null,
@@ -1968,7 +2007,14 @@ const MAX_MEMORY_EXPLAIN_OFFSET = 1000;
 export function parseMemoryExplainLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPLAIN_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_EXPLAIN_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPLAIN_LIMIT}.`,
@@ -1986,7 +2032,14 @@ export function selectMemoryExplainEntries<T>(entries: T[], limit?: number): T[]
 export function parseMemoryExplainOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPLAIN_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_EXPLAIN_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPLAIN_OFFSET}.`,
@@ -2031,8 +2084,8 @@ export async function explainMemoryCommand(
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {
-  parseMemoryExplainLimit(options?.limit);
-  parseMemoryExplainOffset(options?.offset);
+  const limit = parseMemoryExplainLimit(options?.limit);
+  const offset = parseMemoryExplainOffset(options?.offset);
   const { snapshot } = await loadSnapshot(storage, passphrase);
 
   // For this demo, we search the memory entries in the snapshot
@@ -2130,10 +2183,16 @@ export async function explainMemoryCommand(
     .filter((r): r is NonNullable<typeof r> => r !== null)
     .sort((a, b) => b.finalScore - a.finalScore);
   const scoredLimited = applyMemoryExplainFilters(scored, options ?? {});
+  const pagination = {
+    offset: offset ?? 0,
+    limit: limit ?? null,
+    total: scored.length,
+    pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
+  };
 
   if (options?.format === 'json') {
     if (scoredLimited.length === 0) {
-      console.log(formatMemoryExplainMissingJson(query));
+      console.log(formatMemoryExplainMissingJson(query, pagination));
       return;
     }
     console.log(formatMemoryExplainJson(
@@ -2143,6 +2202,7 @@ export async function explainMemoryCommand(
         score: r.finalScore,
         summary: r.explanation.summary,
       })),
+      pagination,
     ));
     return;
   }

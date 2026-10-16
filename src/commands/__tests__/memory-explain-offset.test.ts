@@ -13,9 +13,10 @@ describe('savestate memory explain --offset', () => {
   it('accepts zero and positive integers', () => {
     expect(parseMemoryExplainOffset('0')).toBe(0);
     expect(parseMemoryExplainOffset('12')).toBe(12);
+    expect(parseMemoryExplainOffset(' 12 ')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['-1', '1.5', '1e2', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryExplainOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );

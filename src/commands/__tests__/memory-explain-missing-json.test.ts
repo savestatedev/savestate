@@ -18,12 +18,20 @@ describe('savestate memory explain --json when missing', () => {
       found: false,
       query: 'inbox preference',
       shown: 0,
+      pagination: {
+        offset: 0,
+        limit: null,
+        total: 0,
+        pageSize: 1,
+        hasMore: false,
+        nextOffset: null,
+      },
       results: null,
     });
     expect(parsed.content).toBeUndefined();
     expect(parsed.previous_content).toBeUndefined();
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['found', 'query', 'results', 'shown']);
+    expect(Object.keys(parsed).sort()).toEqual(['found', 'pagination', 'query', 'results', 'shown']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
 });

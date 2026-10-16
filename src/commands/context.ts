@@ -31,6 +31,12 @@ export interface ContextCompileJson {
   conflicts: number;
   unknowns: number;
   citations: number;
+  sections: Array<{ id: string; count: number }>;
+  pagination: {
+    offset: number;
+    limit: number | null;
+    totalSections: number;
+  };
 }
 
 export interface ContextConfigJson {
@@ -195,6 +201,11 @@ export function parseContextConfigLimit(value: string | undefined): number | und
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_CONFIG_LIMIT}.`,
+    );
+  }
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_CONFIG_LIMIT) {
     throw new Error(
@@ -212,6 +223,11 @@ export function parseContextValidateLimit(value: string | undefined): number | u
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_VALIDATE_LIMIT}.`,
+    );
+  }
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_VALIDATE_LIMIT) {
     throw new Error(
@@ -254,6 +270,11 @@ export function parseContextCompileLimit(value: string | undefined): number | un
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_COMPILE_LIMIT}.`,
+    );
+  }
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_COMPILE_LIMIT) {
     throw new Error(
@@ -293,7 +314,20 @@ export function selectContextValidateIssues<T>(
   return issues.slice(start, start + (limit ?? issues.length));
 }
 
-export function formatContextCompileJson(brief: RunBrief): string {
+export function formatContextCompileJson(
+  brief: RunBrief,
+  limit?: number,
+  offset?: number,
+): string {
+  const sectionRows = [
+    { id: 'must_know_facts', count: brief.must_know_facts.length },
+    { id: 'active_state', count: Object.keys(brief.active_state).length },
+    { id: 'open_loops', count: brief.open_loops.length },
+    { id: 'constraints', count: brief.constraints.length },
+    { id: 'recent_decisions', count: brief.recent_decisions.length },
+    { id: 'conflicts', count: brief.conflicts.length },
+    { id: 'citations', count: brief.citations.length },
+  ];
   const record: ContextCompileJson = {
     runId: brief.run_id,
     compiledAt: brief.compiled_at,
@@ -307,6 +341,12 @@ export function formatContextCompileJson(brief: RunBrief): string {
     conflicts: brief.conflicts.length,
     unknowns: brief.unknowns.length,
     citations: brief.citations.length,
+    sections: selectContextCompileEntries(sectionRows, limit, offset),
+    pagination: {
+      offset: offset ?? 0,
+      limit: limit ?? null,
+      totalSections: sectionRows.length,
+    },
   };
   return JSON.stringify(record, null, 2);
 }
@@ -541,7 +581,7 @@ export function registerContextCommands(program: Command): void {
       const result = await compiler.compile(request, candidates);
 
       if (options.json) {
-        console.log(formatContextCompileJson(result.brief));
+        console.log(formatContextCompileJson(result.brief, limit, offset));
         return;
       }
 
