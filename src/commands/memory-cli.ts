@@ -233,6 +233,20 @@ export function parseMemoryListSince(value: string | undefined): string | undefi
   return since;
 }
 
+/** Reject an impossible memory creation range before loading encrypted storage. */
+export function validateMemoryListDateRange(
+  since: string | undefined,
+  until: string | undefined,
+): void {
+  if (since === undefined || until === undefined) return;
+
+  if (Date.parse(since) > Date.parse(until)) {
+    throw new Error(
+      `Invalid memory date range: --since (${since}) must be on or before --until (${until}).`,
+    );
+  }
+}
+
 /** Parse memory --actor without treating blank or comma-separated ids as an audit actor. */
 export function parseMemoryActor(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -397,6 +411,9 @@ export function registerMemoryCommands(program: Command): void {
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
+        const until = parseMemoryListUntil(options.until);
+        const since = parseMemoryListSince(options.since);
+        validateMemoryListDateRange(since, until);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -405,11 +422,11 @@ export function registerMemoryCommands(program: Command): void {
           tier: parseMemoryTier(options.tier),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
-          until: parseMemoryListUntil(options.until),
+          until,
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
           tags: parseMemoryTags(options.tags),
-          since: parseMemoryListSince(options.since),
+          since,
           freshness: parseMemoryFreshness(options.freshness),
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
