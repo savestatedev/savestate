@@ -414,9 +414,10 @@ export function filterMemoryListByTags(
   tags?: string[],
 ): MemoryEntry[] {
   if (tags === undefined) return entries;
+  const normalizedTags = tags.map((tag) => tag.trim().toLocaleLowerCase());
   return entries.filter((entry) => {
-    const entryTags = getMemoryListTags(entry);
-    return tags.every((tag) => entryTags.includes(tag));
+    const entryTags = getMemoryListTags(entry).map((tag) => tag.toLocaleLowerCase());
+    return normalizedTags.every((tag) => entryTags.includes(tag));
   });
 }
 
