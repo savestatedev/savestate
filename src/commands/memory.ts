@@ -398,6 +398,16 @@ export function filterMemoryListByNamespace(
   );
 }
 
+/** Keep memories captured by the requested source id, ignoring letter case. */
+export function filterMemoryListBySource(
+  entries: MemoryEntry[],
+  source?: string,
+): MemoryEntry[] {
+  if (source === undefined) return entries;
+  const normalizedSource = source.trim().toLocaleLowerCase();
+  return entries.filter((entry) => entry.source.trim().toLocaleLowerCase() === normalizedSource);
+}
+
 /** Keep memories whose content includes the requested case-insensitive text. */
 export function filterMemoryListByContent(
   entries: MemoryEntry[],
@@ -929,9 +939,7 @@ export async function listMemories(
     entries = entries.filter((e) => !!e.pinned === options.pinned);
   }
 
-  if (options?.source) {
-    entries = entries.filter((e) => e.source === options.source);
-  }
+  entries = filterMemoryListBySource(entries, options?.source);
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);

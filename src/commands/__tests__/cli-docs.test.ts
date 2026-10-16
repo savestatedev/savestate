@@ -2550,6 +2550,7 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--source');
     expect(memorySection).toContain('source id');
+    expect(memorySection).toContain('matching is case-insensitive');
     expect(memoryCli).toContain('export function parseMemorySource');
   });
 

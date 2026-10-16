@@ -6,6 +6,7 @@ import {
   formatMemoryListLastAccessed,
   formatMemoryListSource,
   formatMemoryListTags,
+  filterMemoryListBySource,
   shouldShowMemoryListTags,
 } from '../memory.js';
 
@@ -19,6 +20,16 @@ describe('savestate memory list --source', () => {
     expect(() => parseMemorySource(value)).toThrow(
       `Invalid --source value "${value}". Expected a single non-empty source id.`,
     );
+  });
+
+  it('matches source ids case-insensitively', () => {
+    const entries = [
+      { id: 'claude', content: 'a', source: 'Claude-Code', createdAt: '2026-09-01T00:00:00.000Z' },
+      { id: 'chatgpt', content: 'b', source: 'chatgpt', createdAt: '2026-09-01T00:00:00.000Z' },
+    ];
+
+    expect(filterMemoryListBySource(entries, ' claude-code ').map(({ id }) => id)).toEqual(['claude']);
+    expect(filterMemoryListBySource(entries)).toBe(entries);
   });
 });
 
