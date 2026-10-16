@@ -181,7 +181,15 @@ export function parseMemorySnapshot(value: string | undefined): string | undefin
 export function parseMemoryTags(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
 
-  const tags = [...new Set(value.split(',').map((token) => token.trim()))];
+  const tags: string[] = [];
+  const seen = new Set<string>();
+  for (const token of value.split(',').map((part) => part.trim())) {
+    const normalized = token.toLocaleLowerCase();
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      tags.push(token);
+    }
+  }
   if (tags.length === 0 || tags.some((token) => token.length === 0)) {
     throw new Error(
       `Invalid --tags value "${value}". Expected one or more non-empty memory tags (comma-separated).`,
@@ -231,6 +239,33 @@ export function parseMemoryListSince(value: string | undefined): string | undefi
   }
 
   return since;
+}
+
+/** Reject an impossible memory creation range before loading encrypted storage. */
+export function validateMemoryListDateRange(
+  since: string | undefined,
+  until: string | undefined,
+): void {
+  if (since === undefined || until === undefined) return;
+
+  // Keep validation consistent with filtering: a date-only --until includes
+  // the entire UTC calendar day, while a date-only --since starts at midnight.
+  const sinceBoundary = Date.parse(
+    /^\d{4}-\d{2}-\d{2}$/.test(since)
+      ? `${since}T00:00:00.000Z`
+      : since,
+  );
+  const untilBoundary = Date.parse(
+    /^\d{4}-\d{2}-\d{2}$/.test(until)
+      ? `${until}T23:59:59.999Z`
+      : until,
+  );
+
+  if (sinceBoundary > untilBoundary) {
+    throw new Error(
+      `Invalid memory date range: --since (${since}) must be on or before --until (${until}).`,
+    );
+  }
 }
 
 /** Parse memory --actor without treating blank or comma-separated ids as an audit actor. */
@@ -397,6 +432,9 @@ export function registerMemoryCommands(program: Command): void {
     .option('--json', 'Output as JSON')
     .action(async (options) => {
       try {
+        const until = parseMemoryListUntil(options.until);
+        const since = parseMemoryListSince(options.since);
+        validateMemoryListDateRange(since, until);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -405,11 +443,11 @@ export function registerMemoryCommands(program: Command): void {
           tier: parseMemoryTier(options.tier),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
-          until: parseMemoryListUntil(options.until),
+          until,
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
           tags: parseMemoryTags(options.tags),
-          since: parseMemoryListSince(options.since),
+          since,
           freshness: parseMemoryFreshness(options.freshness),
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
