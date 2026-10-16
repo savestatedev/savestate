@@ -2550,7 +2550,11 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--source');
     expect(memorySection).toContain('source id');
+    expect(memorySection).toContain('matching is case-insensitive');
     expect(memoryCli).toContain('export function parseMemorySource');
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(explainBlock).toContain(".option('--source <id>'");
+    expect(memoryCli).toContain('source: parseMemorySource(options.source)');
   });
 
   it('documents memory list --tags as an all-tags filter', () => {

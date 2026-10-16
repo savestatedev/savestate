@@ -398,6 +398,16 @@ export function filterMemoryListByNamespace(
   );
 }
 
+/** Keep memories captured by the requested source id, ignoring letter case. */
+export function filterMemoryListBySource(
+  entries: MemoryEntry[],
+  source?: string,
+): MemoryEntry[] {
+  if (source === undefined) return entries;
+  const normalizedSource = source.trim().toLocaleLowerCase();
+  return entries.filter((entry) => entry.source.trim().toLocaleLowerCase() === normalizedSource);
+}
+
 /** Keep memories whose content includes the requested case-insensitive text. */
 export function filterMemoryListByContent(
   entries: MemoryEntry[],
@@ -419,6 +429,24 @@ export function filterMemoryListByTags(
     const entryTags = getMemoryListTags(entry).map((tag) => tag.toLocaleLowerCase());
     return normalizedTags.every((tag) => entryTags.includes(tag));
   });
+}
+
+/** Apply the shared scope filters used by memory explain retrieval. */
+export function filterMemoryExplainEntries(
+  entries: MemoryEntry[],
+  options: {
+    namespace?: string;
+    source?: string;
+    tags?: string[];
+  } = {},
+): MemoryEntry[] {
+  return filterMemoryListByTags(
+    filterMemoryListBySource(
+      filterMemoryListByNamespace(entries, options.namespace),
+      options.source,
+    ),
+    options.tags,
+  );
 }
 
 /** Normalize legacy tag metadata before filtering or serializing it. */
@@ -929,9 +957,7 @@ export async function listMemories(
     entries = entries.filter((e) => !!e.pinned === options.pinned);
   }
 
-  if (options?.source) {
-    entries = entries.filter((e) => e.source === options.source);
-  }
+  entries = filterMemoryListBySource(entries, options?.source);
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);
@@ -1998,6 +2024,7 @@ export async function explainMemoryCommand(
   query: string,
   options?: {
     namespace?: string;
+    source?: string;
     limit?: string;
     offset?: string;
     tags?: string[];
@@ -2008,13 +2035,10 @@ export async function explainMemoryCommand(
   parseMemoryExplainOffset(options?.offset);
   const { snapshot } = await loadSnapshot(storage, passphrase);
 
-  // Parse namespace from option or use default
-  const namespace = parseNamespace(options?.namespace);
-
   // For this demo, we search the memory entries in the snapshot
   // In a full implementation, this would use the checkpoint storage searchMemories
   const normalized = normalizeMemory(snapshot.memory);
-  const entries = normalized.core;
+  const entries = filterMemoryExplainEntries(normalized.core, options);
 
   // Simple relevance scoring for demonstration
   const queryLower = query.toLowerCase();
@@ -2022,8 +2046,8 @@ export async function explainMemoryCommand(
     .map((entry) => {
       const contentLower = entry.content.toLowerCase();
       // Access tags from metadata if available
-      const entryTags = (entry.metadata?.tags as string[] | undefined) ?? [];
-      const tagMatch = entryTags.some((t: string) => t.toLowerCase().includes(queryLower));
+      const entryTags = getMemoryListTags(entry);
+      const tagMatch = entryTags.some((tag) => tag.toLowerCase().includes(queryLower));
 
       // Calculate simple relevance score
       let semanticScore = 0;
@@ -2039,13 +2063,6 @@ export async function explainMemoryCommand(
       }
 
       if (semanticScore === 0) return null;
-
-      // Apply tag filter
-      if (options?.tags && options.tags.length > 0) {
-        if (!options.tags.every((t) => entryTags.includes(t))) {
-          return null;
-        }
-      }
 
       // Calculate other scores
       const tier = getEffectiveTier(entry);
@@ -2186,18 +2203,6 @@ export async function explainMemoryCommand(
     console.log('   • Check if memories exist with `savestate memory list`');
     console.log('   • Verify the namespace is correct\n');
   }
-}
-
-function parseNamespace(ns?: string): { org_id: string; app_id: string; agent_id: string } {
-  if (!ns) {
-    return { org_id: 'default', app_id: 'default', agent_id: 'default' };
-  }
-  const parts = ns.split(':');
-  return {
-    org_id: parts[0] ?? 'default',
-    app_id: parts[1] ?? 'default',
-    agent_id: parts[2] ?? 'default',
-  };
 }
 
 function generateSummary(entry: MemoryEntry, semanticScore: number, query: string): string {
