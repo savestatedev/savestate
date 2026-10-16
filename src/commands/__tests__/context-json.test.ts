@@ -115,6 +115,16 @@ describe('savestate context --json', () => {
     expect(parsed.conflicts).toBe(1);
     expect(parsed.unknowns).toBe(1);
     expect(parsed.citations).toBe(1);
+    expect(parsed.sections).toEqual([
+      { id: 'must_know_facts', count: 2 },
+      { id: 'active_state', count: 1 },
+      { id: 'open_loops', count: 1 },
+      { id: 'constraints', count: 1 },
+      { id: 'recent_decisions', count: 1 },
+      { id: 'conflicts', count: 1 },
+      { id: 'citations', count: 1 },
+    ]);
+    expect(parsed.pagination).toEqual({ offset: 0, limit: null, totalSections: 7 });
   });
 
   it('records empty sections as 0', () => {
@@ -130,6 +140,25 @@ describe('savestate context --json', () => {
     expect(parsed.citations).toBe(0);
     expect(parsed.tokenCount).toBe(0);
     expect(parsed.budgetRemaining).toBe(4000);
+  });
+
+  it('pages compile sections and records pagination metadata', () => {
+    const parsed = JSON.parse(
+      formatContextCompileJson(
+        brief({
+          must_know_facts: [{ id: 'f1' } as never],
+          open_loops: [{ id: 'l1' } as never],
+          constraints: [{ id: 'c1' } as never],
+        }),
+        2,
+        1,
+      ),
+    ) as ContextCompileJson;
+    expect(parsed.sections).toEqual([
+      { id: 'active_state', count: 0 },
+      { id: 'open_loops', count: 1 },
+    ]);
+    expect(parsed.pagination).toEqual({ offset: 1, limit: 2, totalSections: 7 });
   });
 
   it('prints scoring weights and budget allocation as JSON', () => {
