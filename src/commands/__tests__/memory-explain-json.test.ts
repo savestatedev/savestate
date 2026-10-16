@@ -27,6 +27,14 @@ describe('savestate memory explain --json', () => {
     expect(parsed).toEqual({
       query: 'inbox preference',
       shown: 2,
+      pagination: {
+        offset: 0,
+        limit: null,
+        total: 2,
+        pageSize: 2,
+        hasMore: false,
+        nextOffset: null,
+      },
       results: [
         {
           id: 'mem-123',
@@ -50,7 +58,34 @@ describe('savestate memory explain --json', () => {
     expect(parsed).toEqual({
       query: 'unknown query',
       shown: 0,
+      pagination: {
+        offset: 0,
+        limit: null,
+        total: 0,
+        pageSize: 1,
+        hasMore: false,
+        nextOffset: null,
+      },
       results: [],
+    });
+  });
+
+  it('reports continuation metadata for a paged result', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [{ id: 'mem-3', score: 0.4, summary: 'Another match.' }],
+        { offset: 2, limit: 1, total: 4 },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.pagination).toEqual({
+      offset: 2,
+      limit: 1,
+      total: 4,
+      pageSize: 1,
+      hasMore: true,
+      nextOffset: 3,
     });
   });
 });
