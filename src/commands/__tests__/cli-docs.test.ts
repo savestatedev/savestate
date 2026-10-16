@@ -2553,6 +2553,18 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemorySource');
   });
 
+  it('documents memory list --tags as an all-tags filter', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('--tags');
+    expect(memorySection).toContain('every requested metadata tag');
+    expect(memorySection).toContain('normalized tags');
+    expect(memorySection).toContain('filters.tags');
+    expect(memorySection).toContain('savestate memory list --tags work,urgent');
+    expect(listBlock).toContain(".option('--tags <tags>'");
+    expect(memoryCli).toContain('parseMemoryTags(options.tags)');
+  });
+
   it('documents memory list --until as an ISO-8601 creation cutoff', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--until');
