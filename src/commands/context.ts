@@ -195,6 +195,11 @@ export function parseContextConfigLimit(value: string | undefined): number | und
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_CONFIG_LIMIT}.`,
+    );
+  }
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_CONFIG_LIMIT) {
     throw new Error(
@@ -212,6 +217,11 @@ export function parseContextValidateLimit(value: string | undefined): number | u
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_VALIDATE_LIMIT}.`,
+    );
+  }
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_VALIDATE_LIMIT) {
     throw new Error(
@@ -254,6 +264,11 @@ export function parseContextCompileLimit(value: string | undefined): number | un
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CONTEXT_COMPILE_LIMIT}.`,
+    );
+  }
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CONTEXT_COMPILE_LIMIT) {
     throw new Error(
