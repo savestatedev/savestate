@@ -2551,6 +2551,15 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemorySource');
   });
 
+  it('documents memory list --until as an ISO-8601 creation cutoff', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--until');
+    expect(memorySection).toContain('full UTC day');
+    expect(memorySection).toContain('savestate memory list --until 2026-10-01');
+    expect(memoryCli).toContain(".option('--until <date>'");
+    expect(memoryCli).toContain('export function parseMemoryListUntil');
+  });
+
   it('documents memory --actor as a single actor id', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--actor');

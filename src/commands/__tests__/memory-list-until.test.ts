@@ -1,0 +1,37 @@
+import { describe, expect, it } from 'vitest';
+import type { MemoryEntry } from '../../types.js';
+import { filterMemoryListByCreatedUntil } from '../memory.js';
+import { parseMemoryListUntil } from '../memory-cli.js';
+
+function entry(id: string, createdAt: string): MemoryEntry {
+  return { id, content: id, source: 'test', createdAt };
+}
+
+describe('savestate memory list --until', () => {
+  it('accepts ISO dates and trims surrounding whitespace', () => {
+    expect(parseMemoryListUntil(' 2026-10-01 ')).toBe('2026-10-01');
+    expect(parseMemoryListUntil(undefined)).toBeUndefined();
+  });
+
+  it('rejects blank and invalid dates', () => {
+    expect(() => parseMemoryListUntil('   ')).toThrow(
+      'Invalid --until value "   ". Expected an ISO-8601 date or timestamp.',
+    );
+    expect(() => parseMemoryListUntil('not-a-date')).toThrow(
+      'Invalid --until value "not-a-date". Expected an ISO-8601 date or timestamp.',
+    );
+  });
+
+  it('includes the full day for a date-only cutoff', () => {
+    const entries = [
+      entry('before', '2026-09-30T23:59:59.999Z'),
+      entry('same-day', '2026-10-01T18:00:00.000Z'),
+      entry('after', '2026-10-02T00:00:00.000Z'),
+    ];
+
+    expect(filterMemoryListByCreatedUntil(entries, '2026-10-01').map(({ id }) => id)).toEqual([
+      'before',
+      'same-day',
+    ]);
+  });
+});

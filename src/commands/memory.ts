@@ -269,6 +269,7 @@ export interface MemoryListJson {
     source: string | null;
     namespace: string | null;
     content: string | null;
+    until: string | null;
     oldestFirst: boolean;
   };
   byTier: Record<MemoryTier, number>;
@@ -327,6 +328,7 @@ export function formatMemoryListJson(
       source: pagination.filters?.source ?? null,
       namespace: pagination.filters?.namespace ?? null,
       content: pagination.filters?.content ?? null,
+      until: pagination.filters?.until ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
     },
     byTier: countByTier(all),
@@ -395,6 +397,29 @@ export function filterMemoryListByContent(
   if (content === undefined) return entries;
   const query = content.toLocaleLowerCase();
   return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+}
+
+/** Keep memories created on or before the requested timestamp. */
+export function filterMemoryListByCreatedUntil(
+  entries: MemoryEntry[],
+  until?: string,
+): MemoryEntry[] {
+  if (until === undefined) return entries;
+
+  const normalized = until.trim();
+  // A date-only value represents the full UTC calendar day for a human-facing
+  // inclusive cutoff, matching the behavior of other CLI --until filters.
+  const threshold = Date.parse(
+    /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+      ? `${normalized}T23:59:59.999Z`
+      : normalized,
+  );
+  if (Number.isNaN(threshold)) return entries;
+
+  return entries.filter((entry) => {
+    const createdAt = Date.parse(entry.createdAt);
+    return !Number.isNaN(createdAt) && createdAt <= threshold;
+  });
 }
 
 /** Keep memories in the requested freshness state. */
@@ -798,6 +823,7 @@ export async function listMemories(
     source?: string;
     namespace?: string;
     content?: string;
+    until?: string;
     freshness?: MemoryFreshnessState;
     oldestFirst?: boolean;
     limit?: number;
@@ -843,6 +869,7 @@ export async function listMemories(
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);
+  entries = filterMemoryListByCreatedUntil(entries, options?.until);
   entries = filterMemoryListByFreshness(entries, options?.freshness);
 
   const filteredEntries = entries;
@@ -865,6 +892,7 @@ export async function listMemories(
         source: options?.source,
         namespace: options?.namespace,
         content: options?.content,
+        until: options?.until,
         oldestFirst: options?.oldestFirst,
       },
     }));
