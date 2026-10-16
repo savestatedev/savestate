@@ -13,6 +13,9 @@ import { createInterface } from 'node:readline';
 import type {
   Memory,
   MemoryEntry,
+  MemoryFreshnessClass,
+  MemoryFreshnessState,
+  MemoryStaleBehavior,
   MemoryTier,
   MemoryTierConfig,
   MemoryTierPolicy,
@@ -61,6 +64,96 @@ export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
     },
   ],
 };
+
+const DAY_SECONDS = 24 * 60 * 60;
+
+export interface MemoryFreshnessProfile {
+  freshnessClass: MemoryFreshnessClass;
+  softTtlSeconds: number | null;
+  hardTtlSeconds: number | null;
+  staleBehavior: MemoryStaleBehavior;
+}
+
+/** Starter profiles from the freshness-aware knowledge slots design. */
+export const DEFAULT_MEMORY_FRESHNESS_PROFILES: Record<MemoryFreshnessClass, MemoryFreshnessProfile> = {
+  static: {
+    freshnessClass: 'static',
+    softTtlSeconds: null,
+    hardTtlSeconds: null,
+    staleBehavior: 'warn',
+  },
+  slow: {
+    freshnessClass: 'slow',
+    softTtlSeconds: 30 * DAY_SECONDS,
+    hardTtlSeconds: 180 * DAY_SECONDS,
+    staleBehavior: 'warn',
+  },
+  medium: {
+    freshnessClass: 'medium',
+    softTtlSeconds: 7 * DAY_SECONDS,
+    hardTtlSeconds: 30 * DAY_SECONDS,
+    staleBehavior: 'warn',
+  },
+  fast: {
+    freshnessClass: 'fast',
+    softTtlSeconds: 6 * 60 * 60,
+    hardTtlSeconds: DAY_SECONDS,
+    staleBehavior: 'hide',
+  },
+};
+
+export type MemoryFreshnessState = 'active' | 'stale' | 'needs_confirmation';
+
+export interface MemoryFreshness {
+  class: MemoryFreshnessClass;
+  state: MemoryFreshnessState;
+  softTtlSeconds: number | null;
+  hardTtlSeconds: number | null;
+  staleBehavior: MemoryStaleBehavior;
+  lastVerifiedAt: string;
+  verificationSource?: string;
+}
+
+/** Resolve freshness from explicit entry metadata while keeping old snapshots usable. */
+export function getMemoryFreshness(
+  entry: MemoryEntry,
+  now = new Date(),
+): MemoryFreshness {
+  const requestedClass = entry.freshnessClass;
+  const freshnessClass = requestedClass && requestedClass in DEFAULT_MEMORY_FRESHNESS_PROFILES
+    ? requestedClass
+    : 'slow';
+  const defaults = DEFAULT_MEMORY_FRESHNESS_PROFILES[freshnessClass];
+  const softTtlSeconds = entry.softTtlSeconds !== undefined
+    ? entry.softTtlSeconds
+    : defaults.softTtlSeconds;
+  const hardTtlSeconds = entry.hardTtlSeconds !== undefined
+    ? entry.hardTtlSeconds
+    : defaults.hardTtlSeconds;
+  const lastVerifiedAt = entry.lastVerifiedAt ?? entry.updatedAt ?? entry.createdAt;
+  const verifiedAt = new Date(lastVerifiedAt).getTime();
+  const ageSeconds = Number.isFinite(verifiedAt)
+    ? Math.max(0, (now.getTime() - verifiedAt) / 1000)
+    : Number.POSITIVE_INFINITY;
+
+  const state: MemoryFreshnessState = !Number.isFinite(verifiedAt)
+    ? 'needs_confirmation'
+    : hardTtlSeconds !== null && ageSeconds >= hardTtlSeconds
+      ? 'needs_confirmation'
+      : softTtlSeconds !== null && ageSeconds >= softTtlSeconds
+        ? 'stale'
+        : 'active';
+
+  return {
+    class: freshnessClass,
+    state,
+    softTtlSeconds,
+    hardTtlSeconds,
+    staleBehavior: entry.staleBehavior ?? defaults.staleBehavior,
+    lastVerifiedAt,
+    ...(entry.verificationSource ? { verificationSource: entry.verificationSource } : {}),
+  };
+}
 
 /**
  * Get the effective tier of a memory entry (defaults to L3 for backward compatibility).
@@ -148,6 +241,7 @@ export interface MemoryListEntryJson {
   updatedAt?: string;
   lastAccessedAt?: string;
   content: string;
+  freshness: MemoryFreshness;
 }
 
 export interface MemoryListJson {
@@ -170,6 +264,7 @@ export interface MemoryListJson {
   suggestedOffset: number | null;
   filters: {
     tier: MemoryTier | null;
+    freshness: MemoryFreshnessState | null;
     pinned: boolean | null;
     source: string | null;
     namespace: string | null;
@@ -227,6 +322,7 @@ export function formatMemoryListJson(
     suggestedOffset,
     filters: {
       tier: pagination.filters?.tier ?? null,
+      freshness: pagination.filters?.freshness ?? null,
       pinned: pagination.filters?.pinned ?? null,
       source: pagination.filters?.source ?? null,
       namespace: pagination.filters?.namespace ?? null,
@@ -252,6 +348,7 @@ export function formatMemoryListJson(
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),
       content: entry.content,
+      freshness: getMemoryFreshness(entry),
     })),
   };
   return JSON.stringify(record, null, 2);
@@ -298,6 +395,16 @@ export function filterMemoryListByContent(
   if (content === undefined) return entries;
   const query = content.toLocaleLowerCase();
   return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+}
+
+/** Keep memories in the requested freshness state. */
+export function filterMemoryListByFreshness(
+  entries: MemoryEntry[],
+  freshness?: MemoryFreshnessState,
+  now = new Date(),
+): MemoryEntry[] {
+  if (freshness === undefined) return entries;
+  return entries.filter((entry) => getMemoryFreshness(entry, now).state === freshness);
 }
 
 /**
@@ -610,6 +717,12 @@ export function formatMemoryListLastAccessed(lastAccessedAt: string | undefined)
   return Number.isNaN(timestamp.getTime()) ? '—' : timestamp.toISOString().slice(0, 10);
 }
 
+/** Show freshness state compactly in the human-facing memory table. */
+export function formatMemoryListFreshness(entry: MemoryEntry, now = new Date()): string {
+  const state = getMemoryFreshness(entry, now).state;
+  return state === 'needs_confirmation' ? 'confirm' : state;
+}
+
 /** Truncate table previews without adding an ellipsis to already-short content. */
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
@@ -685,6 +798,7 @@ export async function listMemories(
     source?: string;
     namespace?: string;
     content?: string;
+    freshness?: MemoryFreshnessState;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -729,6 +843,7 @@ export async function listMemories(
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);
+  entries = filterMemoryListByFreshness(entries, options?.freshness);
 
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
@@ -745,6 +860,7 @@ export async function listMemories(
       hasMore: offset + entries.length < filteredEntries.length,
       filters: {
         tier: options?.tier,
+        freshness: options?.freshness,
         pinned: options?.pinned,
         source: options?.source,
         namespace: options?.namespace,
@@ -773,9 +889,9 @@ export async function listMemories(
 
   const showNamespace = shouldShowMemoryListNamespace(filteredEntries);
   console.log(showNamespace
-    ? 'ID                                    Tier  Pinned  Source              Namespace                    Accessed    Content (truncated)'
-    : 'ID                                    Tier  Pinned  Source              Accessed    Content (truncated)');
-  console.log('─'.repeat(showNamespace ? 120 : 92));
+    ? 'ID                                    Tier  Pinned  Source              Namespace                    Freshness  Accessed    Content (truncated)'
+    : 'ID                                    Tier  Pinned  Source              Freshness  Accessed    Content (truncated)');
+  console.log('─'.repeat(showNamespace ? 132 : 104));
 
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
@@ -784,11 +900,12 @@ export async function listMemories(
     const namespace = formatMemoryListNamespace(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     ).padEnd(24);
+    const freshness = formatMemoryListFreshness(entry).padEnd(10);
     const lastAccessed = formatMemoryListLastAccessed(entry.lastAccessedAt).padEnd(10);
     const content = formatMemoryListContent(entry.content);
     console.log(showNamespace
-      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${lastAccessed}  ${content}`
-      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${lastAccessed}  ${content}`);
+      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${freshness}  ${lastAccessed}  ${content}`
+      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${freshness}  ${lastAccessed}  ${content}`);
   }
 }
 

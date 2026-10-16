@@ -108,6 +108,11 @@ export interface FileManifestEntry {
  */
 export type MemoryTier = 'L1' | 'L2' | 'L3';
 
+/** Freshness profiles used to keep time-sensitive memory visible and honest. */
+export type MemoryFreshnessClass = 'static' | 'slow' | 'medium' | 'fast';
+
+export type MemoryStaleBehavior = 'warn' | 'hide' | 'block';
+
 export interface Memory {
   /** Platform memory entries (ChatGPT memories, Claude memory, etc.) */
   core: MemoryEntry[];
@@ -180,6 +185,18 @@ export interface MemoryEntry {
   demotedAt?: string;
   /** Previous tier before last promotion/demotion */
   previousTier?: MemoryTier;
+  /** Freshness profile for this memory (defaults to the slow profile). */
+  freshnessClass?: MemoryFreshnessClass;
+  /** Soft freshness threshold in seconds; null means no aging threshold. */
+  softTtlSeconds?: number | null;
+  /** Hard freshness threshold in seconds; null means the memory never expires. */
+  hardTtlSeconds?: number | null;
+  /** ISO 8601 timestamp when this memory was last verified. */
+  lastVerifiedAt?: string;
+  /** Source used for the last verification. */
+  verificationSource?: string;
+  /** Retrieval behavior after the hard freshness threshold. */
+  staleBehavior?: MemoryStaleBehavior;
 }
 
 export interface KnowledgeDocument {
