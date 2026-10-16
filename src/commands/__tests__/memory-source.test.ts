@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryFreshness, parseMemorySource } from '../memory-cli.js';
+import { parseMemoryFreshness, parseMemorySource, parseMemoryTags } from '../memory-cli.js';
 import {
   formatMemoryListContent,
   formatMemoryListCreatedAt,
@@ -31,6 +31,12 @@ describe('savestate memory list --source', () => {
 
     expect(filterMemoryListBySource(entries, ' claude-code ').map(({ id }) => id)).toEqual(['claude']);
     expect(filterMemoryListBySource(entries)).toBe(entries);
+  });
+});
+
+describe('savestate memory list --tags', () => {
+  it('deduplicates tags case-insensitively while preserving first spelling', () => {
+    expect(parseMemoryTags(' Work,urgent,work, URGENT ')).toEqual(['Work', 'urgent']);
   });
 });
 
