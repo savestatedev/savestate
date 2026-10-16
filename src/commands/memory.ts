@@ -1968,7 +1968,14 @@ const MAX_MEMORY_EXPLAIN_OFFSET = 1000;
 export function parseMemoryExplainLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPLAIN_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_EXPLAIN_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPLAIN_LIMIT}.`,
@@ -1986,7 +1993,14 @@ export function selectMemoryExplainEntries<T>(entries: T[], limit?: number): T[]
 export function parseMemoryExplainOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPLAIN_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_EXPLAIN_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPLAIN_OFFSET}.`,

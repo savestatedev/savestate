@@ -8,9 +8,10 @@ describe('savestate memory explain --limit', () => {
 
   it('accepts positive integers', () => {
     expect(parseMemoryExplainLimit('12')).toBe(12);
+    expect(parseMemoryExplainLimit(' 12 ')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '1e2', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryExplainLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
