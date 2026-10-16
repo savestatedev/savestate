@@ -110,6 +110,7 @@ export interface MemoryFreshness {
   hardTtlSeconds: number | null;
   staleBehavior: MemoryStaleBehavior;
   lastVerifiedAt: string;
+  verificationSource?: string;
 }
 
 /** Resolve freshness from explicit entry metadata while keeping old snapshots usable. */
@@ -149,6 +150,7 @@ export function getMemoryFreshness(
     hardTtlSeconds,
     staleBehavior: entry.staleBehavior ?? defaults.staleBehavior,
     lastVerifiedAt,
+    ...(entry.verificationSource ? { verificationSource: entry.verificationSource } : {}),
   };
 }
 

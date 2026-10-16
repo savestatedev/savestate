@@ -60,6 +60,7 @@ describe('savestate memory --json', () => {
         metadata: { namespace: 'org:app:agent' },
         updatedAt: '2026-09-02T12:00:00.000Z',
         lastAccessedAt: '2026-09-03T08:30:00.000Z',
+        verificationSource: 'profile-sync',
       }),
       entry({ id: 'mem-l3', content: 'archive fact', createdAt: '2026-08-01T00:00:00.000Z' }),
     ];
@@ -118,6 +119,7 @@ describe('savestate memory --json', () => {
           hardTtlSeconds: 15552000,
           staleBehavior: 'warn',
           lastVerifiedAt: '2026-09-02T12:00:00.000Z',
+          verificationSource: 'profile-sync',
         },
       },
     ]);
