@@ -330,6 +330,20 @@ export function parseMemoryContentFilter(value: string | undefined): string | un
   return value === undefined ? undefined : parseMemoryContent(value);
 }
 
+/** Parse memory --since as an ISO-8601 creation cutoff. */
+export function parseMemoryListSince(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const since = value.trim();
+  if (since.length === 0 || Number.isNaN(Date.parse(since))) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+
+  return since;
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -357,6 +371,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--source <id>', 'Filter by source id')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--content <text>', 'Filter by case-insensitive content substring')
+    .option('--since <date>', 'Show memories created on or after an ISO-8601 date')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
@@ -376,6 +391,7 @@ export function registerMemoryCommands(program: Command): void {
           source: parseMemorySource(options.source),
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
+          since: parseMemoryListSince(options.since),
           freshness: parseMemoryFreshness(options.freshness),
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
