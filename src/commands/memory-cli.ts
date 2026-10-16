@@ -386,6 +386,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--until <date>', 'Show memories created on or before an ISO-8601 date')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--content <text>', 'Filter by case-insensitive content substring')
+    .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
     .option('--since <date>', 'Show memories created on or after an ISO-8601 date')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
@@ -407,6 +408,7 @@ export function registerMemoryCommands(program: Command): void {
           until: parseMemoryListUntil(options.until),
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
+          tags: parseMemoryTags(options.tags),
           since: parseMemoryListSince(options.since),
           freshness: parseMemoryFreshness(options.freshness),
           oldestFirst: options.oldestFirst || options.reverse,

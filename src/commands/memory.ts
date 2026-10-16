@@ -240,6 +240,7 @@ export interface MemoryListEntryJson {
   createdAt: string;
   updatedAt?: string;
   lastAccessedAt?: string;
+  tags?: string[];
   content: string;
   freshness: MemoryFreshness;
 }
@@ -269,6 +270,7 @@ export interface MemoryListJson {
     source: string | null;
     namespace: string | null;
     content: string | null;
+    tags: string[] | null;
     until: string | null;
     since: string | null;
     oldestFirst: boolean;
@@ -329,6 +331,7 @@ export function formatMemoryListJson(
       source: pagination.filters?.source ?? null,
       namespace: pagination.filters?.namespace ?? null,
       content: pagination.filters?.content ?? null,
+      tags: pagination.filters?.tags ?? null,
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
@@ -351,6 +354,10 @@ export function formatMemoryListJson(
       createdAt: entry.createdAt,
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),
+      ...(() => {
+        const tags = getMemoryListTags(entry);
+        return tags.length > 0 ? { tags } : {};
+      })(),
       content: entry.content,
       freshness: getMemoryFreshness(entry),
     })),
@@ -399,6 +406,28 @@ export function filterMemoryListByContent(
   if (content === undefined) return entries;
   const query = content.toLocaleLowerCase();
   return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+}
+
+/** Keep memories containing every requested metadata tag. */
+export function filterMemoryListByTags(
+  entries: MemoryEntry[],
+  tags?: string[],
+): MemoryEntry[] {
+  if (tags === undefined) return entries;
+  const normalizedTags = tags.map((tag) => tag.trim().toLocaleLowerCase());
+  return entries.filter((entry) => {
+    const entryTags = getMemoryListTags(entry).map((tag) => tag.toLocaleLowerCase());
+    return normalizedTags.every((tag) => entryTags.includes(tag));
+  });
+}
+
+/** Normalize legacy tag metadata before filtering or serializing it. */
+export function getMemoryListTags(entry: MemoryEntry): string[] {
+  const tags = entry.metadata?.tags;
+  if (!Array.isArray(tags)) return [];
+  return [...new Set(tags.filter((tag): tag is string => typeof tag === 'string')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0))];
 }
 
 /** Keep memories created on or before the requested timestamp. */
@@ -779,6 +808,14 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
     : normalized;
 }
 
+/** Keep tag labels readable in the human-facing memory table. */
+export function formatMemoryListTags(entry: MemoryEntry, maxLength = 24): string {
+  const tags = getMemoryListTags(entry).join(', ');
+  return tags.length > maxLength
+    ? `${Array.from(tags).slice(0, maxLength - 3).join('')}...`
+    : tags || '—';
+}
+
 /** Keep the table shape stable across paginated memory list results. */
 export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
   return entries.some(
@@ -786,6 +823,11 @@ export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
       typeof entry.metadata?.namespace === 'string' &&
       entry.metadata.namespace.trim().length > 0,
   );
+}
+
+/** Keep the table compact when no memory has tags to display. */
+export function shouldShowMemoryListTags(entries: MemoryEntry[]): boolean {
+  return entries.some((entry) => getMemoryListTags(entry).length > 0);
 }
 
 /** Apply memory list --offset then --limit. */
@@ -845,6 +887,7 @@ export async function listMemories(
     source?: string;
     namespace?: string;
     content?: string;
+    tags?: string[];
     until?: string;
     since?: string;
     freshness?: MemoryFreshnessState;
@@ -892,6 +935,7 @@ export async function listMemories(
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);
+  entries = filterMemoryListByTags(entries, options?.tags);
   entries = filterMemoryListByCreatedUntil(entries, options?.until);
   entries = filterMemoryListByCreatedSince(entries, options?.since);
   entries = filterMemoryListByFreshness(entries, options?.freshness);
@@ -916,6 +960,7 @@ export async function listMemories(
         source: options?.source,
         namespace: options?.namespace,
         content: options?.content,
+        tags: options?.tags,
         since: options?.since,
         until: options?.until,
         oldestFirst: options?.oldestFirst,
@@ -941,10 +986,20 @@ export async function listMemories(
   }
 
   const showNamespace = shouldShowMemoryListNamespace(filteredEntries);
-  console.log(showNamespace
-    ? 'ID                                    Tier  Pinned  Source              Namespace                    Freshness  Accessed    Content (truncated)'
-    : 'ID                                    Tier  Pinned  Source              Freshness  Accessed    Content (truncated)');
-  console.log('─'.repeat(showNamespace ? 132 : 104));
+  const showTags = shouldShowMemoryListTags(filteredEntries);
+  const tableColumns = [
+    'ID                                    ',
+    'Tier',
+    'Pinned',
+    'Source              ',
+    ...(showNamespace ? ['Namespace                    '] : []),
+    ...(showTags ? ['Tags                    '] : []),
+    'Freshness ',
+    'Accessed   ',
+    'Content (truncated)',
+  ];
+  console.log(tableColumns.join('  '));
+  console.log('─'.repeat(tableColumns.join('  ').length));
 
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
@@ -953,12 +1008,21 @@ export async function listMemories(
     const namespace = formatMemoryListNamespace(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     ).padEnd(24);
+    const tags = formatMemoryListTags(entry).padEnd(24);
     const freshness = formatMemoryListFreshness(entry).padEnd(10);
     const lastAccessed = formatMemoryListLastAccessed(entry.lastAccessedAt).padEnd(10);
     const content = formatMemoryListContent(entry.content);
-    console.log(showNamespace
-      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${freshness}  ${lastAccessed}  ${content}`
-      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${freshness}  ${lastAccessed}  ${content}`);
+    console.log([
+      entry.id.padEnd(36),
+      tier,
+      pinned,
+      source,
+      ...(showNamespace ? [namespace] : []),
+      ...(showTags ? [tags] : []),
+      freshness,
+      lastAccessed,
+      content,
+    ].join('  '));
   }
 }
 

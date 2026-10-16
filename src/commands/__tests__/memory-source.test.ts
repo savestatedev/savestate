@@ -5,6 +5,8 @@ import {
   formatMemoryListFreshness,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
+  formatMemoryListTags,
+  shouldShowMemoryListTags,
 } from '../memory.js';
 
 describe('savestate memory list --source', () => {
@@ -82,5 +84,41 @@ describe('memory list table content display', () => {
 
   it('does not split astral Unicode characters when truncating', () => {
     expect(formatMemoryListContent('😀😀😀', 2)).toBe('😀😀...');
+  });
+});
+
+describe('memory list table tag display', () => {
+  it('normalizes and truncates tags for compact rows', () => {
+    expect(formatMemoryListTags({
+      id: 'mem-tags',
+      content: 'tagged',
+      source: 'user',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      metadata: { tags: [' work ', 'urgent', 'urgent'] },
+    })).toBe('work, urgent');
+    expect(formatMemoryListTags({
+      id: 'mem-long-tags',
+      content: 'tagged',
+      source: 'user',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      metadata: { tags: ['abcdefghijklmnop', 'urgent'] },
+    }, 12)).toBe('abcdefghi...');
+    expect(formatMemoryListTags({
+      id: 'mem-no-tags',
+      content: 'untagged',
+      source: 'user',
+      createdAt: '2026-09-01T00:00:00.000Z',
+    })).toBe('—');
+  });
+
+  it('shows the tags column only when the collection contains tags', () => {
+    const base = {
+      id: 'mem',
+      content: 'memory',
+      source: 'user',
+      createdAt: '2026-09-01T00:00:00.000Z',
+    };
+    expect(shouldShowMemoryListTags([base])).toBe(false);
+    expect(shouldShowMemoryListTags([{ ...base, metadata: { tags: ['work'] } }])).toBe(true);
   });
 });
