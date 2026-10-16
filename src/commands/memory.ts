@@ -2016,13 +2016,10 @@ export async function explainMemoryCommand(
   parseMemoryExplainOffset(options?.offset);
   const { snapshot } = await loadSnapshot(storage, passphrase);
 
-  // Parse namespace from option or use default
-  const namespace = parseNamespace(options?.namespace);
-
   // For this demo, we search the memory entries in the snapshot
   // In a full implementation, this would use the checkpoint storage searchMemories
   const normalized = normalizeMemory(snapshot.memory);
-  const entries = normalized.core;
+  const entries = filterMemoryListByNamespace(normalized.core, options?.namespace);
 
   // Simple relevance scoring for demonstration
   const queryLower = query.toLowerCase();
@@ -2194,18 +2191,6 @@ export async function explainMemoryCommand(
     console.log('   • Check if memories exist with `savestate memory list`');
     console.log('   • Verify the namespace is correct\n');
   }
-}
-
-function parseNamespace(ns?: string): { org_id: string; app_id: string; agent_id: string } {
-  if (!ns) {
-    return { org_id: 'default', app_id: 'default', agent_id: 'default' };
-  }
-  const parts = ns.split(':');
-  return {
-    org_id: parts[0] ?? 'default',
-    app_id: parts[1] ?? 'default',
-    agent_id: parts[2] ?? 'default',
-  };
 }
 
 function generateSummary(entry: MemoryEntry, semanticScore: number, query: string): string {
