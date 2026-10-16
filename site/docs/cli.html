@@ -1517,6 +1517,7 @@
         <tr><td><code>-p, --pinned</code></td><td>Show only pinned memories on <code>list</code></td></tr>
         <tr><td><code>--unpinned</code></td><td>Show only unpinned memories on <code>list</code>; mutually exclusive with <code>--pinned</code></td></tr>
         <tr><td><code>--source &lt;id&gt;</code></td><td>Show only memories captured from this source id on <code>list</code></td></tr>
+        <tr><td><code>--until &lt;date&gt;</code></td><td>Show only memories created on or before this ISO-8601 date or timestamp on <code>list</code>; date-only values include the full UTC day</td></tr>
         <tr><td><code>-n, --namespace &lt;ns&gt;</code></td><td>Show only memories whose metadata namespace matches <code>org:app:agent[:user]</code> on <code>list</code>, <code>explain</code>, and <code>expire</code>. Must be a single non-empty namespace.</td></tr>
         <tr><td><code>--content &lt;text&gt;</code></td><td>Show only memories whose content includes this text, case-insensitively. Must be non-empty.</td></tr>
         <tr><td><code>--oldest-first</code></td><td>Show memories from oldest to newest on <code>list</code> (default: newest first)</td></tr>
@@ -1543,6 +1544,7 @@
 <span class="code-prompt">$</span> savestate memory list --pinned --limit 5
 <span class="code-prompt">$</span> savestate memory list --unpinned --limit 5
 <span class="code-prompt">$</span> savestate memory list --content "preferred editor"
+<span class="code-prompt">$</span> savestate memory list --until 2026-10-01
 <span class="code-prompt">$</span> savestate memory list --offset 10 --limit 5
 <span class="code-prompt">$</span> savestate memory list --oldest-first --limit 5
 <span class="code-prompt">$</span> savestate memory list --reverse --limit 5
