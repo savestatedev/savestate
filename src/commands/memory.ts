@@ -269,6 +269,7 @@ export interface MemoryListJson {
     source: string | null;
     namespace: string | null;
     content: string | null;
+    since: string | null;
     oldestFirst: boolean;
   };
   byTier: Record<MemoryTier, number>;
@@ -327,6 +328,7 @@ export function formatMemoryListJson(
       source: pagination.filters?.source ?? null,
       namespace: pagination.filters?.namespace ?? null,
       content: pagination.filters?.content ?? null,
+      since: pagination.filters?.since ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
     },
     byTier: countByTier(all),
@@ -395,6 +397,20 @@ export function filterMemoryListByContent(
   if (content === undefined) return entries;
   const query = content.toLocaleLowerCase();
   return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+}
+
+/** Keep memories created on or after the requested timestamp. */
+export function filterMemoryListByCreatedSince(
+  entries: MemoryEntry[],
+  since?: string,
+): MemoryEntry[] {
+  if (since === undefined) return entries;
+  const threshold = Date.parse(since);
+  if (Number.isNaN(threshold)) return entries;
+  return entries.filter((entry) => {
+    const createdAt = Date.parse(entry.createdAt);
+    return !Number.isNaN(createdAt) && createdAt >= threshold;
+  });
 }
 
 /** Keep memories in the requested freshness state. */
@@ -798,6 +814,7 @@ export async function listMemories(
     source?: string;
     namespace?: string;
     content?: string;
+    since?: string;
     freshness?: MemoryFreshnessState;
     oldestFirst?: boolean;
     limit?: number;
@@ -843,6 +860,7 @@ export async function listMemories(
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);
+  entries = filterMemoryListByCreatedSince(entries, options?.since);
   entries = filterMemoryListByFreshness(entries, options?.freshness);
 
   const filteredEntries = entries;
@@ -865,6 +883,7 @@ export async function listMemories(
         source: options?.source,
         namespace: options?.namespace,
         content: options?.content,
+        since: options?.since,
         oldestFirst: options?.oldestFirst,
       },
     }));

@@ -2553,6 +2553,15 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemorySource');
   });
 
+  it('documents memory list --since as an ISO-8601 creation filter', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('--since');
+    expect(memorySection).toContain('ISO-8601');
+    expect(memorySection).toContain('savestate memory list --since 2026-10-01');
+    expect(memoryCli).toContain(".option('--since <date>'");
+    expect(memoryCli).toContain('export function parseMemoryListSince');
+  });
+
   it('documents memory --actor as a single actor id', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--actor');

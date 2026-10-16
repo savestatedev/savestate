@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryFreshness, parseMemorySource } from '../memory-cli.js';
+import { parseMemoryFreshness, parseMemoryListSince, parseMemorySource } from '../memory-cli.js';
 import {
   formatMemoryListContent,
   formatMemoryListFreshness,
@@ -29,6 +29,22 @@ describe('savestate memory list --freshness', () => {
     expect(parseMemoryFreshness(' STALE ')).toBe('stale');
     expect(() => parseMemoryFreshness('expired')).toThrow(
       'Invalid --freshness value "expired". Expected one of active, stale, or needs_confirmation.',
+    );
+  });
+});
+
+describe('savestate memory list --since', () => {
+  it('accepts ISO dates and trims surrounding whitespace', () => {
+    expect(parseMemoryListSince(' 2026-10-01 ')).toBe('2026-10-01');
+    expect(parseMemoryListSince(undefined)).toBeUndefined();
+  });
+
+  it('rejects blank and invalid dates', () => {
+    expect(() => parseMemoryListSince('   ')).toThrow(
+      'Invalid --since value "   ". Expected an ISO-8601 date or timestamp.',
+    );
+    expect(() => parseMemoryListSince('not-a-date')).toThrow(
+      'Invalid --since value "not-a-date". Expected an ISO-8601 date or timestamp.',
     );
   });
 });

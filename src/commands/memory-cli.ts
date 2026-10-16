@@ -205,6 +205,20 @@ export function parseMemorySource(value: string | undefined): string | undefined
   return source;
 }
 
+/** Parse memory --since as an ISO-8601 creation timestamp. */
+export function parseMemoryListSince(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const since = value.trim();
+  if (since.length === 0 || Number.isNaN(Date.parse(since))) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+
+  return since;
+}
+
 /** Parse memory --actor without treating blank or comma-separated ids as an audit actor. */
 export function parseMemoryActor(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -355,6 +369,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-p, --pinned', 'Show only pinned memories')
     .option('--unpinned', 'Show only unpinned memories')
     .option('--source <id>', 'Filter by source id')
+    .option('--since <date>', 'Show memories created on or after an ISO-8601 date')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
@@ -374,6 +389,7 @@ export function registerMemoryCommands(program: Command): void {
           tier: parseMemoryTier(options.tier),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
+          since: parseMemoryListSince(options.since),
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
           freshness: parseMemoryFreshness(options.freshness),
