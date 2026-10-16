@@ -2442,6 +2442,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--dry-run');
     expect(memorySection).toContain('--reason');
     expect(memorySection).toContain('--namespace');
+    expect(memorySection).toContain('--freshness');
+    expect(memorySection).toContain('needs_confirmation');
     expect(memorySection).toContain('L1/L2/L3');
     expect(memorySection).toContain('savestate init');
   });
