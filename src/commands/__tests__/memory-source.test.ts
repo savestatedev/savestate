@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseMemoryFreshness, parseMemorySource } from '../memory-cli.js';
 import {
   formatMemoryListContent,
+  formatMemoryListCreatedAt,
   formatMemoryListFreshness,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
@@ -59,6 +60,13 @@ describe('memory list table access display', () => {
     expect(formatMemoryListLastAccessed('2026-09-03T08:30:00.000Z')).toBe('2026-09-03');
     expect(formatMemoryListLastAccessed(undefined)).toBe('—');
     expect(formatMemoryListLastAccessed('not-a-date')).toBe('—');
+  });
+});
+
+describe('memory list table creation display', () => {
+  it('formats valid creation timestamps and handles invalid values', () => {
+    expect(formatMemoryListCreatedAt('2026-09-03T08:30:00.000Z')).toBe('2026-09-03');
+    expect(formatMemoryListCreatedAt('not-a-date')).toBe('—');
   });
 });
 

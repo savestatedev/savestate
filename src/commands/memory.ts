@@ -821,6 +821,12 @@ export function formatMemoryListLastAccessed(lastAccessedAt: string | undefined)
   return Number.isNaN(timestamp.getTime()) ? '—' : timestamp.toISOString().slice(0, 10);
 }
 
+/** Keep creation dates compact and predictable in the human-facing table. */
+export function formatMemoryListCreatedAt(createdAt: string): string {
+  const timestamp = new Date(createdAt);
+  return Number.isNaN(timestamp.getTime()) ? '—' : timestamp.toISOString().slice(0, 10);
+}
+
 /** Show freshness state compactly in the human-facing memory table. */
 export function formatMemoryListFreshness(entry: MemoryEntry, now = new Date()): string {
   const state = getMemoryFreshness(entry, now).state;
@@ -1021,6 +1027,7 @@ export async function listMemories(
     ...(showNamespace ? ['Namespace                    '] : []),
     ...(showTags ? ['Tags                    '] : []),
     'Freshness ',
+    'Created   ',
     'Accessed   ',
     'Content (truncated)',
   ];
@@ -1036,6 +1043,7 @@ export async function listMemories(
     ).padEnd(24);
     const tags = formatMemoryListTags(entry).padEnd(24);
     const freshness = formatMemoryListFreshness(entry).padEnd(10);
+    const createdAt = formatMemoryListCreatedAt(entry.createdAt).padEnd(10);
     const lastAccessed = formatMemoryListLastAccessed(entry.lastAccessedAt).padEnd(10);
     const content = formatMemoryListContent(entry.content);
     console.log([
@@ -1046,6 +1054,7 @@ export async function listMemories(
       ...(showNamespace ? [namespace] : []),
       ...(showTags ? [tags] : []),
       freshness,
+      createdAt,
       lastAccessed,
       content,
     ].join('  '));
