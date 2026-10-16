@@ -431,6 +431,24 @@ export function filterMemoryListByTags(
   });
 }
 
+/** Apply the shared scope filters used by memory explain retrieval. */
+export function filterMemoryExplainEntries(
+  entries: MemoryEntry[],
+  options: {
+    namespace?: string;
+    source?: string;
+    tags?: string[];
+  } = {},
+): MemoryEntry[] {
+  return filterMemoryListByTags(
+    filterMemoryListBySource(
+      filterMemoryListByNamespace(entries, options.namespace),
+      options.source,
+    ),
+    options.tags,
+  );
+}
+
 /** Normalize legacy tag metadata before filtering or serializing it. */
 export function getMemoryListTags(entry: MemoryEntry): string[] {
   const tags = entry.metadata?.tags;
@@ -2020,10 +2038,7 @@ export async function explainMemoryCommand(
   // For this demo, we search the memory entries in the snapshot
   // In a full implementation, this would use the checkpoint storage searchMemories
   const normalized = normalizeMemory(snapshot.memory);
-  const entries = filterMemoryListBySource(
-    filterMemoryListByNamespace(normalized.core, options?.namespace),
-    options?.source,
-  );
+  const entries = filterMemoryExplainEntries(normalized.core, options);
 
   // Simple relevance scoring for demonstration
   const queryLower = query.toLowerCase();
@@ -2031,8 +2046,8 @@ export async function explainMemoryCommand(
     .map((entry) => {
       const contentLower = entry.content.toLowerCase();
       // Access tags from metadata if available
-      const entryTags = (entry.metadata?.tags as string[] | undefined) ?? [];
-      const tagMatch = entryTags.some((t: string) => t.toLowerCase().includes(queryLower));
+      const entryTags = getMemoryListTags(entry);
+      const tagMatch = entryTags.some((tag) => tag.toLowerCase().includes(queryLower));
 
       // Calculate simple relevance score
       let semanticScore = 0;
@@ -2048,13 +2063,6 @@ export async function explainMemoryCommand(
       }
 
       if (semanticScore === 0) return null;
-
-      // Apply tag filter
-      if (options?.tags && options.tags.length > 0) {
-        if (!options.tags.every((t) => entryTags.includes(t))) {
-          return null;
-        }
-      }
 
       // Calculate other scores
       const tier = getEffectiveTier(entry);
