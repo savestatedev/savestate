@@ -44,4 +44,11 @@ describe('savestate memory list --until', () => {
     );
     expect(() => validateMemoryListDateRange('2026-10-09', '2026-10-10')).not.toThrow();
   });
+
+  it('allows a timestamp within an inclusive date-only until day', () => {
+    expect(() => validateMemoryListDateRange(
+      '2026-10-01T12:00:00Z',
+      '2026-10-01',
+    )).not.toThrow();
+  });
 });

@@ -240,7 +240,20 @@ export function validateMemoryListDateRange(
 ): void {
   if (since === undefined || until === undefined) return;
 
-  if (Date.parse(since) > Date.parse(until)) {
+  // Keep validation consistent with filtering: a date-only --until includes
+  // the entire UTC calendar day, while a date-only --since starts at midnight.
+  const sinceBoundary = Date.parse(
+    /^\d{4}-\d{2}-\d{2}$/.test(since)
+      ? `${since}T00:00:00.000Z`
+      : since,
+  );
+  const untilBoundary = Date.parse(
+    /^\d{4}-\d{2}-\d{2}$/.test(until)
+      ? `${until}T23:59:59.999Z`
+      : until,
+  );
+
+  if (sinceBoundary > untilBoundary) {
     throw new Error(
       `Invalid memory date range: --since (${since}) must be on or before --until (${until}).`,
     );
