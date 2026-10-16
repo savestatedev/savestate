@@ -240,6 +240,7 @@ export interface MemoryListEntryJson {
   createdAt: string;
   updatedAt?: string;
   lastAccessedAt?: string;
+  tags?: string[];
   content: string;
   freshness: MemoryFreshness;
 }
@@ -269,6 +270,7 @@ export interface MemoryListJson {
     source: string | null;
     namespace: string | null;
     content: string | null;
+    tags: string[] | null;
     until: string | null;
     since: string | null;
     oldestFirst: boolean;
@@ -329,6 +331,7 @@ export function formatMemoryListJson(
       source: pagination.filters?.source ?? null,
       namespace: pagination.filters?.namespace ?? null,
       content: pagination.filters?.content ?? null,
+      tags: pagination.filters?.tags ?? null,
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
@@ -351,6 +354,10 @@ export function formatMemoryListJson(
       createdAt: entry.createdAt,
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),
+      ...(() => {
+        const tags = getMemoryListTags(entry);
+        return tags.length > 0 ? { tags } : {};
+      })(),
       content: entry.content,
       freshness: getMemoryFreshness(entry),
     })),
@@ -399,6 +406,27 @@ export function filterMemoryListByContent(
   if (content === undefined) return entries;
   const query = content.toLocaleLowerCase();
   return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+}
+
+/** Keep memories containing every requested metadata tag. */
+export function filterMemoryListByTags(
+  entries: MemoryEntry[],
+  tags?: string[],
+): MemoryEntry[] {
+  if (tags === undefined) return entries;
+  return entries.filter((entry) => {
+    const entryTags = getMemoryListTags(entry);
+    return tags.every((tag) => entryTags.includes(tag));
+  });
+}
+
+/** Normalize legacy tag metadata before filtering or serializing it. */
+export function getMemoryListTags(entry: MemoryEntry): string[] {
+  const tags = entry.metadata?.tags;
+  if (!Array.isArray(tags)) return [];
+  return [...new Set(tags.filter((tag): tag is string => typeof tag === 'string')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0))];
 }
 
 /** Keep memories created on or before the requested timestamp. */
@@ -845,6 +873,7 @@ export async function listMemories(
     source?: string;
     namespace?: string;
     content?: string;
+    tags?: string[];
     until?: string;
     since?: string;
     freshness?: MemoryFreshnessState;
@@ -892,6 +921,7 @@ export async function listMemories(
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
   entries = filterMemoryListByContent(entries, options?.content);
+  entries = filterMemoryListByTags(entries, options?.tags);
   entries = filterMemoryListByCreatedUntil(entries, options?.until);
   entries = filterMemoryListByCreatedSince(entries, options?.since);
   entries = filterMemoryListByFreshness(entries, options?.freshness);
@@ -916,6 +946,7 @@ export async function listMemories(
         source: options?.source,
         namespace: options?.namespace,
         content: options?.content,
+        tags: options?.tags,
         since: options?.since,
         until: options?.until,
         oldestFirst: options?.oldestFirst,
