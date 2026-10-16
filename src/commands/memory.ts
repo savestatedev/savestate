@@ -702,6 +702,12 @@ export function formatMemoryListLastAccessed(lastAccessedAt: string | undefined)
   return Number.isNaN(timestamp.getTime()) ? '—' : timestamp.toISOString().slice(0, 10);
 }
 
+/** Show freshness state compactly in the human-facing memory table. */
+export function formatMemoryListFreshness(entry: MemoryEntry, now = new Date()): string {
+  const state = getMemoryFreshness(entry, now).state;
+  return state === 'needs_confirmation' ? 'confirm' : state;
+}
+
 /** Truncate table previews without adding an ellipsis to already-short content. */
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
@@ -865,9 +871,9 @@ export async function listMemories(
 
   const showNamespace = shouldShowMemoryListNamespace(filteredEntries);
   console.log(showNamespace
-    ? 'ID                                    Tier  Pinned  Source              Namespace                    Accessed    Content (truncated)'
-    : 'ID                                    Tier  Pinned  Source              Accessed    Content (truncated)');
-  console.log('─'.repeat(showNamespace ? 120 : 92));
+    ? 'ID                                    Tier  Pinned  Source              Namespace                    Freshness  Accessed    Content (truncated)'
+    : 'ID                                    Tier  Pinned  Source              Freshness  Accessed    Content (truncated)');
+  console.log('─'.repeat(showNamespace ? 132 : 104));
 
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
@@ -876,11 +882,12 @@ export async function listMemories(
     const namespace = formatMemoryListNamespace(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     ).padEnd(24);
+    const freshness = formatMemoryListFreshness(entry).padEnd(10);
     const lastAccessed = formatMemoryListLastAccessed(entry.lastAccessedAt).padEnd(10);
     const content = formatMemoryListContent(entry.content);
     console.log(showNamespace
-      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${lastAccessed}  ${content}`
-      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${lastAccessed}  ${content}`);
+      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${freshness}  ${lastAccessed}  ${content}`
+      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${freshness}  ${lastAccessed}  ${content}`);
   }
 }
 

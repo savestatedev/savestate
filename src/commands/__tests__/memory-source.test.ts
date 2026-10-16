@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseMemorySource } from '../memory-cli.js';
 import {
   formatMemoryListContent,
+  formatMemoryListFreshness,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
 } from '../memory.js';
@@ -32,6 +33,20 @@ describe('memory list table access display', () => {
     expect(formatMemoryListLastAccessed('2026-09-03T08:30:00.000Z')).toBe('2026-09-03');
     expect(formatMemoryListLastAccessed(undefined)).toBe('—');
     expect(formatMemoryListLastAccessed('not-a-date')).toBe('—');
+  });
+});
+
+describe('memory list table freshness display', () => {
+  it('formats active and confirmation states compactly', () => {
+    const now = new Date('2026-10-15T12:00:00.000Z');
+    expect(formatMemoryListFreshness({
+      id: 'fresh', content: 'fresh', source: 'test', createdAt: '2026-10-15T11:00:00.000Z',
+      freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z',
+    }, now)).toBe('active');
+    expect(formatMemoryListFreshness({
+      id: 'old', content: 'old', source: 'test', createdAt: '2026-08-01T00:00:00.000Z',
+      freshnessClass: 'medium', lastVerifiedAt: '2026-09-01T00:00:00.000Z',
+    }, now)).toBe('confirm');
   });
 });
 
