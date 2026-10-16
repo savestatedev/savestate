@@ -92,6 +92,14 @@ describe('savestate memory --json', () => {
         namespace: null,
         createdAt: '2026-09-01T00:00:00.000Z',
         content: 'inbox preference',
+        freshness: {
+          class: 'slow',
+          state: 'stale',
+          softTtlSeconds: 2592000,
+          hardTtlSeconds: 15552000,
+          staleBehavior: 'warn',
+          lastVerifiedAt: '2026-09-01T00:00:00.000Z',
+        },
       },
       {
         id: 'mem-l2',
@@ -103,6 +111,14 @@ describe('savestate memory --json', () => {
         updatedAt: '2026-09-02T12:00:00.000Z',
         lastAccessedAt: '2026-09-03T08:30:00.000Z',
         content: 'working note',
+        freshness: {
+          class: 'slow',
+          state: 'stale',
+          softTtlSeconds: 2592000,
+          hardTtlSeconds: 15552000,
+          staleBehavior: 'warn',
+          lastVerifiedAt: '2026-09-02T12:00:00.000Z',
+        },
       },
     ]);
   });

@@ -13,6 +13,8 @@ import { createInterface } from 'node:readline';
 import type {
   Memory,
   MemoryEntry,
+  MemoryFreshnessClass,
+  MemoryStaleBehavior,
   MemoryTier,
   MemoryTierConfig,
   MemoryTierPolicy,
@@ -61,6 +63,94 @@ export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
     },
   ],
 };
+
+const DAY_SECONDS = 24 * 60 * 60;
+
+export interface MemoryFreshnessProfile {
+  freshnessClass: MemoryFreshnessClass;
+  softTtlSeconds: number | null;
+  hardTtlSeconds: number | null;
+  staleBehavior: MemoryStaleBehavior;
+}
+
+/** Starter profiles from the freshness-aware knowledge slots design. */
+export const DEFAULT_MEMORY_FRESHNESS_PROFILES: Record<MemoryFreshnessClass, MemoryFreshnessProfile> = {
+  static: {
+    freshnessClass: 'static',
+    softTtlSeconds: null,
+    hardTtlSeconds: null,
+    staleBehavior: 'warn',
+  },
+  slow: {
+    freshnessClass: 'slow',
+    softTtlSeconds: 30 * DAY_SECONDS,
+    hardTtlSeconds: 180 * DAY_SECONDS,
+    staleBehavior: 'warn',
+  },
+  medium: {
+    freshnessClass: 'medium',
+    softTtlSeconds: 7 * DAY_SECONDS,
+    hardTtlSeconds: 30 * DAY_SECONDS,
+    staleBehavior: 'warn',
+  },
+  fast: {
+    freshnessClass: 'fast',
+    softTtlSeconds: 6 * 60 * 60,
+    hardTtlSeconds: DAY_SECONDS,
+    staleBehavior: 'hide',
+  },
+};
+
+export type MemoryFreshnessState = 'active' | 'stale' | 'needs_confirmation';
+
+export interface MemoryFreshness {
+  class: MemoryFreshnessClass;
+  state: MemoryFreshnessState;
+  softTtlSeconds: number | null;
+  hardTtlSeconds: number | null;
+  staleBehavior: MemoryStaleBehavior;
+  lastVerifiedAt: string;
+}
+
+/** Resolve freshness from explicit entry metadata while keeping old snapshots usable. */
+export function getMemoryFreshness(
+  entry: MemoryEntry,
+  now = new Date(),
+): MemoryFreshness {
+  const requestedClass = entry.freshnessClass;
+  const freshnessClass = requestedClass && requestedClass in DEFAULT_MEMORY_FRESHNESS_PROFILES
+    ? requestedClass
+    : 'slow';
+  const defaults = DEFAULT_MEMORY_FRESHNESS_PROFILES[freshnessClass];
+  const softTtlSeconds = entry.softTtlSeconds !== undefined
+    ? entry.softTtlSeconds
+    : defaults.softTtlSeconds;
+  const hardTtlSeconds = entry.hardTtlSeconds !== undefined
+    ? entry.hardTtlSeconds
+    : defaults.hardTtlSeconds;
+  const lastVerifiedAt = entry.lastVerifiedAt ?? entry.updatedAt ?? entry.createdAt;
+  const verifiedAt = new Date(lastVerifiedAt).getTime();
+  const ageSeconds = Number.isFinite(verifiedAt)
+    ? Math.max(0, (now.getTime() - verifiedAt) / 1000)
+    : Number.POSITIVE_INFINITY;
+
+  const state: MemoryFreshnessState = !Number.isFinite(verifiedAt)
+    ? 'needs_confirmation'
+    : hardTtlSeconds !== null && ageSeconds >= hardTtlSeconds
+      ? 'needs_confirmation'
+      : softTtlSeconds !== null && ageSeconds >= softTtlSeconds
+        ? 'stale'
+        : 'active';
+
+  return {
+    class: freshnessClass,
+    state,
+    softTtlSeconds,
+    hardTtlSeconds,
+    staleBehavior: entry.staleBehavior ?? defaults.staleBehavior,
+    lastVerifiedAt,
+  };
+}
 
 /**
  * Get the effective tier of a memory entry (defaults to L3 for backward compatibility).
@@ -148,6 +238,7 @@ export interface MemoryListEntryJson {
   updatedAt?: string;
   lastAccessedAt?: string;
   content: string;
+  freshness: MemoryFreshness;
 }
 
 export interface MemoryListJson {
@@ -252,6 +343,7 @@ export function formatMemoryListJson(
       ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
       ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),
       content: entry.content,
+      freshness: getMemoryFreshness(entry),
     })),
   };
   return JSON.stringify(record, null, 2);
