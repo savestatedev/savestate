@@ -807,6 +807,14 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
     : normalized;
 }
 
+/** Keep tag labels readable in the human-facing memory table. */
+export function formatMemoryListTags(entry: MemoryEntry, maxLength = 24): string {
+  const tags = getMemoryListTags(entry).join(', ');
+  return tags.length > maxLength
+    ? `${Array.from(tags).slice(0, maxLength - 3).join('')}...`
+    : tags || '—';
+}
+
 /** Keep the table shape stable across paginated memory list results. */
 export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
   return entries.some(
@@ -814,6 +822,11 @@ export function shouldShowMemoryListNamespace(entries: MemoryEntry[]): boolean {
       typeof entry.metadata?.namespace === 'string' &&
       entry.metadata.namespace.trim().length > 0,
   );
+}
+
+/** Keep the table compact when no memory has tags to display. */
+export function shouldShowMemoryListTags(entries: MemoryEntry[]): boolean {
+  return entries.some((entry) => getMemoryListTags(entry).length > 0);
 }
 
 /** Apply memory list --offset then --limit. */
@@ -972,10 +985,20 @@ export async function listMemories(
   }
 
   const showNamespace = shouldShowMemoryListNamespace(filteredEntries);
-  console.log(showNamespace
-    ? 'ID                                    Tier  Pinned  Source              Namespace                    Freshness  Accessed    Content (truncated)'
-    : 'ID                                    Tier  Pinned  Source              Freshness  Accessed    Content (truncated)');
-  console.log('─'.repeat(showNamespace ? 132 : 104));
+  const showTags = shouldShowMemoryListTags(filteredEntries);
+  const tableColumns = [
+    'ID                                    ',
+    'Tier',
+    'Pinned',
+    'Source              ',
+    ...(showNamespace ? ['Namespace                    '] : []),
+    ...(showTags ? ['Tags                    '] : []),
+    'Freshness ',
+    'Accessed   ',
+    'Content (truncated)',
+  ];
+  console.log(tableColumns.join('  '));
+  console.log('─'.repeat(tableColumns.join('  ').length));
 
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
@@ -984,12 +1007,21 @@ export async function listMemories(
     const namespace = formatMemoryListNamespace(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     ).padEnd(24);
+    const tags = formatMemoryListTags(entry).padEnd(24);
     const freshness = formatMemoryListFreshness(entry).padEnd(10);
     const lastAccessed = formatMemoryListLastAccessed(entry.lastAccessedAt).padEnd(10);
     const content = formatMemoryListContent(entry.content);
-    console.log(showNamespace
-      ? `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${namespace}  ${freshness}  ${lastAccessed}  ${content}`
-      : `${entry.id.padEnd(36)}  ${tier}   ${pinned}      ${source}  ${freshness}  ${lastAccessed}  ${content}`);
+    console.log([
+      entry.id.padEnd(36),
+      tier,
+      pinned,
+      source,
+      ...(showNamespace ? [namespace] : []),
+      ...(showTags ? [tags] : []),
+      freshness,
+      lastAccessed,
+      content,
+    ].join('  '));
   }
 }
 
