@@ -2006,6 +2006,7 @@ export async function explainMemoryCommand(
   query: string,
   options?: {
     namespace?: string;
+    source?: string;
     limit?: string;
     offset?: string;
     tags?: string[];
@@ -2019,7 +2020,10 @@ export async function explainMemoryCommand(
   // For this demo, we search the memory entries in the snapshot
   // In a full implementation, this would use the checkpoint storage searchMemories
   const normalized = normalizeMemory(snapshot.memory);
-  const entries = filterMemoryListByNamespace(normalized.core, options?.namespace);
+  const entries = filterMemoryListBySource(
+    filterMemoryListByNamespace(normalized.core, options?.namespace),
+    options?.source,
+  );
 
   // Simple relevance scoring for demonstration
   const queryLower = query.toLowerCase();
