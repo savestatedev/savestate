@@ -256,6 +256,14 @@ export function formatMemoryListFreshnessSummary(
   return `${counts.active} active, ${counts.stale} stale, ${counts.needs_confirmation} confirmation needed`;
 }
 
+/** Format freshness totals for the rows visible on a paginated table page. */
+export function formatMemoryListPageFreshnessSummary(
+  memories: MemoryEntry[],
+  now = new Date(),
+): string {
+  return `Page Freshness: ${formatMemoryListFreshnessSummary(memories, now)}`;
+}
+
 export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
@@ -1044,7 +1052,12 @@ export async function listMemories(
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
-  if (pageSummary) console.log(`${pageSummary}\n`);
+  if (pageSummary) {
+    console.log(`${pageSummary}`);
+    if (entries.length > 0) {
+      console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}\n`);
+    }
+  }
 
   if (entries.length === 0) {
     console.log(formatMemoryListEmptyState(filteredEntries.length, offset, options?.limit));
