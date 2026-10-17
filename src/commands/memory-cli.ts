@@ -218,7 +218,7 @@ export function parseMemoryListUntil(value: string | undefined): string | undefi
   if (value === undefined) return undefined;
 
   const until = value.trim();
-  if (until.length === 0 || Number.isNaN(Date.parse(until))) {
+  if (!isIsoMemoryDateOrTimestamp(until)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO-8601 date or timestamp.`,
     );
@@ -232,13 +232,21 @@ export function parseMemoryListSince(value: string | undefined): string | undefi
   if (value === undefined) return undefined;
 
   const since = value.trim();
-  if (since.length === 0 || Number.isNaN(Date.parse(since))) {
+  if (!isIsoMemoryDateOrTimestamp(since)) {
     throw new Error(
       `Invalid --since value "${value}". Expected an ISO-8601 date or timestamp.`,
     );
   }
 
   return since;
+}
+
+/** Keep date filters portable across runtimes by accepting only ISO-8601 forms. */
+function isIsoMemoryDateOrTimestamp(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
+    return false;
+  }
+  return !Number.isNaN(Date.parse(value));
 }
 
 /** Reject an impossible memory creation range before loading encrypted storage. */
