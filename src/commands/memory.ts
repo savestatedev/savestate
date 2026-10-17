@@ -14,7 +14,6 @@ import type {
   Memory,
   MemoryEntry,
   MemoryFreshnessClass,
-  MemoryFreshnessState,
   MemoryStaleBehavior,
   MemoryTier,
   MemoryTierConfig,
@@ -1042,7 +1041,6 @@ export async function listMemories(
         since: options?.since,
         until: options?.until,
         oldestFirst: options?.oldestFirst,
-        now: freshnessNow,
       },
     }));
     return;

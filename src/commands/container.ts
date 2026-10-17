@@ -19,6 +19,10 @@ export const INCLUDE_PATHS = ['personality', 'memory', 'tools', 'preferences', '
 
 export type IncludePath = (typeof INCLUDE_PATHS)[number];
 
+function isIncludePath(value: string): value is IncludePath {
+  return INCLUDE_PATHS.some((path) => path === value);
+}
+
 export interface ComponentSelection {
   personality: boolean;
   memory: boolean;
@@ -40,7 +44,7 @@ export function validateIncludedComponents(
   const seen = new Set<string>();
   const components: IncludePath[] = [];
   for (const entry of value) {
-    if (typeof entry !== 'string' || !INCLUDE_PATHS.includes(entry as IncludePath)) {
+    if (typeof entry !== 'string' || !isIncludePath(entry)) {
       const label = typeof entry === 'string' ? entry : JSON.stringify(entry);
       return {
         error: `Error: Unknown component: ${label}. Allowed: ${INCLUDE_PATHS.join(', ')}.`,
@@ -75,7 +79,7 @@ export function validateExcludedComponents(
   const seen = new Set<string>();
   const excluded: IncludePath[] = [];
   for (const entry of value) {
-    if (typeof entry !== 'string' || !INCLUDE_PATHS.includes(entry as IncludePath)) {
+    if (typeof entry !== 'string' || !isIncludePath(entry)) {
       const label = typeof entry === 'string' ? entry : JSON.stringify(entry);
       return {
         error: `Error: Unknown excluded path: ${label}. Allowed: ${INCLUDE_PATHS.join(', ')}.`,

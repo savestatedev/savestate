@@ -256,7 +256,7 @@ export function formatListLabelCell(label: string | null, width: number): string
 
 /** Keep legacy label whitespace out of machine-readable list output too. */
 export function normalizeListLabel(label: string | null | undefined): string | null {
-  if (label === undefined || label.trim().length === 0) return null;
+  if (label === undefined || label === null || label.trim().length === 0) return null;
   return label.trim();
 }
 
