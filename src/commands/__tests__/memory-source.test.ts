@@ -4,6 +4,7 @@ import {
   formatMemoryListContent,
   formatMemoryListCreatedAt,
   formatMemoryListFreshness,
+  formatMemoryListFreshnessSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
   formatMemoryListTags,
@@ -87,6 +88,15 @@ describe('memory list table freshness display', () => {
       id: 'old', content: 'old', source: 'test', createdAt: '2026-08-01T00:00:00.000Z',
       freshnessClass: 'medium', lastVerifiedAt: '2026-09-01T00:00:00.000Z',
     }, now)).toBe('confirm');
+  });
+
+  it('summarizes freshness states for the matching collection', () => {
+    const now = new Date('2026-10-15T12:00:00.000Z');
+    expect(formatMemoryListFreshnessSummary([
+      { id: 'active', content: 'active', source: 'test', createdAt: '2026-10-15T11:00:00.000Z', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' },
+      { id: 'stale', content: 'stale', source: 'test', createdAt: '2026-10-10T00:00:00.000Z', freshnessClass: 'medium', lastVerifiedAt: '2026-10-08T11:00:00.000Z' },
+      { id: 'confirm', content: 'confirm', source: 'test', createdAt: '2026-08-01T00:00:00.000Z', freshnessClass: 'medium', lastVerifiedAt: '2026-09-01T00:00:00.000Z' },
+    ], now)).toBe('1 active, 1 stale, 1 confirmation needed');
   });
 });
 

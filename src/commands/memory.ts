@@ -247,6 +247,15 @@ export function getMemoryListSummary(memories: MemoryEntry[]): {
   };
 }
 
+/** Format freshness totals for the human-facing list summary. */
+export function formatMemoryListFreshnessSummary(
+  memories: MemoryEntry[],
+  now = new Date(),
+): string {
+  const counts = countByFreshness(memories, now);
+  return `${counts.active} active, ${counts.stale} stale, ${counts.needs_confirmation} confirmation needed`;
+}
+
 export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
@@ -1032,6 +1041,7 @@ export async function listMemories(
   console.log(`  L2 (working set): ${counts.L2} items`);
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
+  console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
   if (pageSummary) console.log(`${pageSummary}\n`);
