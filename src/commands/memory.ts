@@ -919,8 +919,14 @@ export function formatMemoryListEmptyState(
   matchingCount: number,
   offset: number,
   limit = 20,
+  collectionEmpty = false,
+  snapshotId?: string,
 ): string {
   if (matchingCount === 0) {
+    if (collectionEmpty) {
+      const snapshotLabel = snapshotId ? ` in snapshot ${snapshotId}` : ' in this snapshot';
+      return `No memories found${snapshotLabel}. Capture or import memories to populate this list.`;
+    }
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }
 
@@ -1060,7 +1066,13 @@ export async function listMemories(
   }
 
   if (entries.length === 0) {
-    console.log(formatMemoryListEmptyState(filteredEntries.length, offset, options?.limit));
+    console.log(formatMemoryListEmptyState(
+      filteredEntries.length,
+      offset,
+      options?.limit,
+      normalized.core.length === 0,
+      snapshot.manifest.id,
+    ));
     return;
   }
 
