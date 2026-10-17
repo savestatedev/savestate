@@ -1504,11 +1504,7 @@ async function handleReadResource(uri: string): Promise<string> {
         : parseSnapshotsResourceLimit(Number(rawLimit));
 
       const index = await loadIndex();
-      const entries = index.snapshots;
-
-      entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
+      const entries = sortSavestateListEntries(index.snapshots);
 
       const skipped = selectSnapshotsResourceOffsetEntries(entries, offset);
       const selected = selectSnapshotsResourceEntries(skipped, limit ?? 50);
