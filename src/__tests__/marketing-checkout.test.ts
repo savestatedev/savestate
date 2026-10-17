@@ -654,6 +654,35 @@ describe('public marketing checkout CTAs', () => {
     expect(vercel).toContain('"/blog/when-claude-code-compacts.html"');
   });
 
+  it('lists the Claude Code crash restore how-to with real CLI output and one Pro CTA', () => {
+    const html = loadHtml('site/blog/how-to-restore-a-claude-code-project-after-a-crash.html');
+    const vercel = loadHtml('vercel.json');
+    expect(html).toContain('<title>How to Restore a Claude Code Project After a Crash | SaveState</title>');
+    expect(html).toContain('Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.1, including the missing-passphrase error and the fix.');
+    expect(html).toContain('<link rel="canonical" href="https://savestate.dev/blog/how-to-restore-a-claude-code-project-after-a-crash">');
+    expect(html).toContain('<script defer src="/_vercel/insights/script.js"></script>');
+    expect(html).toContain('ss-2026-10-17T21-40-56-vpigps');
+    expect(html).toContain('2026-10-17T21:40:56.245Z');
+    expect(html).toContain('No passphrase available. Set SAVESTATE_PASSPHRASE environment variable or run in an interactive terminal.');
+    expect(html).toContain('invoice-replay-7');
+    expect(html).toContain('CORRUPTED AFTER CRASH');
+    expect(html).toContain('Restoring from snapshot: latest');
+    expect(html).toContain('identity/personality.md');
+    const proLinks = html.match(/https:\/\/buy\.stripe\.com\/aFa00j5E4ees8hf3kp2ZO00/g) ?? [];
+    expect(proLinks).toHaveLength(1);
+    expect(html).not.toContain(stripe.products.team.payment_link);
+    expect(hrefForCta(html, 'restore-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(html, 'restore-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(html).not.toMatch(/class="btn"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn"/);
+    const withoutPre = html.replace(/<pre[\s\S]*?<\/pre>/g, '');
+    expect(withoutPre).not.toMatch(/—/);
+    expect(sitemap).toContain('https://savestate.dev/blog/how-to-restore-a-claude-code-project-after-a-crash');
+    expect(blogIndex).toContain('/blog/how-to-restore-a-claude-code-project-after-a-crash');
+    expect(blogIndex).toContain('How to Restore a Claude Code Project After a Crash');
+    expect(vercel).toContain('"/blog/how-to-restore-a-claude-code-project-after-a-crash"');
+    expect(vercel).toContain('"/blog/how-to-restore-a-claude-code-project-after-a-crash.html"');
+  });
+
   it('lists the three buyer pages on live URL paths', () => {
     expect(sitemap).toContain('https://savestate.dev/cursor');
     expect(sitemap).toContain('https://savestate.dev/claude-code');
