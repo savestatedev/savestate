@@ -73,7 +73,11 @@ import {
 } from './list-memories-limit.js';
 import { parseListMemoriesOffset } from './list-memories-offset.js';
 import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
-import { parseSavestateListOffset, selectSavestateListOffsetEntries } from './savestate-list-offset.js';
+import {
+  parseSavestateListOffset,
+  selectSavestateListOffsetEntries,
+  sortSavestateListEntries,
+} from './savestate-list-offset.js';
 import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
 import { parseSavestateMemoryDeleteOffset, selectSavestateMemoryDeleteOffsetEntries } from './savestate-memory-delete-offset.js';
 import {
@@ -894,9 +898,7 @@ async function handleList(
     }
 
     // Sort by timestamp (newest first)
-    entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    entries = sortSavestateListEntries(entries);
 
     const offset = parseSavestateListOffset(input.offset);
     entries = selectSavestateListOffsetEntries(entries, offset);
