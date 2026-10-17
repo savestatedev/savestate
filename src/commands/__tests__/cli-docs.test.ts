@@ -179,6 +179,7 @@ describe('CLI docs', () => {
     expect(docs).toContain('hasMore</code>/<code>nextOffset');
     expect(docs).toContain('pass the returned offset back with <code>--offset</code>');
     expect(docs).toContain('namespace (a string or <code>null</code>)');
+    expect(docs).toContain('byFreshness</code> and <code>shownByFreshness');
   });
 
   it('lists savestate export and import in the command overview', () => {

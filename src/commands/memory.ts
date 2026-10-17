@@ -220,6 +220,22 @@ export function countByTier(memories: MemoryEntry[]): Record<MemoryTier, number>
   return counts;
 }
 
+/** Count memories by freshness state for JSON consumers. */
+export function countByFreshness(
+  memories: MemoryEntry[],
+  now = new Date(),
+): Record<MemoryFreshnessState, number> {
+  const counts: Record<MemoryFreshnessState, number> = {
+    active: 0,
+    stale: 0,
+    needs_confirmation: 0,
+  };
+  for (const memory of memories) {
+    counts[getMemoryFreshness(memory, now).state]++;
+  }
+  return counts;
+}
+
 /** Summarize the collection currently being listed, including active filters. */
 export function getMemoryListSummary(memories: MemoryEntry[]): {
   counts: Record<MemoryTier, number>;
@@ -277,6 +293,8 @@ export interface MemoryListJson {
   };
   byTier: Record<MemoryTier, number>;
   shownByTier: Record<MemoryTier, number>;
+  byFreshness: Record<MemoryFreshnessState, number>;
+  shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: number;
   shownPinned: number;
   entries: MemoryListEntryJson[];
@@ -338,6 +356,8 @@ export function formatMemoryListJson(
     },
     byTier: countByTier(all),
     shownByTier: countByTier(shown),
+    byFreshness: countByFreshness(all),
+    shownByFreshness: countByFreshness(shown),
     pinned: all.filter((entry) => !!entry.pinned).length,
     shownPinned: shown.filter((entry) => !!entry.pinned).length,
     entries: shown.map((entry) => ({
