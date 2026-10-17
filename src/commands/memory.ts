@@ -916,8 +916,8 @@ export function formatMemoryListEmptyState(
 ): string {
   if (matchingCount === 0) {
     if (collectionEmpty) {
-      const snapshotLabel = snapshotId ? ` ${snapshotId}` : '';
-      return `No memories found in this snapshot${snapshotLabel}. Capture or import memories to populate this list.`;
+      const snapshotLabel = snapshotId ? ` in snapshot ${snapshotId}` : ' in this snapshot';
+      return `No memories found${snapshotLabel}. Capture or import memories to populate this list.`;
     }
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }

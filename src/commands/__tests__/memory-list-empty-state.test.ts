@@ -14,7 +14,7 @@ describe('savestate memory list human empty state', () => {
     );
 
     expect(formatMemoryListEmptyState(0, 0, 20, true, 'ss-empty-2026-10-17')).toBe(
-      'No memories found in this snapshot ss-empty-2026-10-17. Capture or import memories to populate this list.',
+      'No memories found in snapshot ss-empty-2026-10-17. Capture or import memories to populate this list.',
     );
   });
 
