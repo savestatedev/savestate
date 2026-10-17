@@ -112,6 +112,34 @@ export function applyAdaptersFilters(
   );
 }
 
+/** Describe the visible adapter page so interactive users can recover from a stale offset. */
+export function formatAdaptersPageSummary(
+  total: number,
+  shown: number,
+  offset = 0,
+  limit?: number,
+): string {
+  if (offset > 0 || (limit !== undefined && shown < total)) {
+    const pageOptions = [`offset ${offset}`];
+    if (limit !== undefined) pageOptions.push(`limit ${limit}`);
+    return `(showing ${shown} of ${total} after filters; ${pageOptions.join(', ')})`;
+  }
+  return `(showing ${shown} of ${total} after filters)`;
+}
+
+/** Show result context whenever adapters output has been narrowed by a user option. */
+export function shouldShowAdaptersPageSummary(options: {
+  platform?: string;
+  offset?: string;
+  limit?: string;
+}): boolean {
+  return (
+    options.platform !== undefined ||
+    options.offset !== undefined ||
+    options.limit !== undefined
+  );
+}
+
 export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
   return JSON.stringify(adapters, null, 2);
 }
@@ -152,7 +180,15 @@ export async function adaptersCommand(options: AdaptersOptions = {}): Promise<vo
   const spinner = options.json ? null : ora('Scanning for adapters...').start();
 
   try {
-    const adapterInfos = applyAdaptersFilters(await getAdapterInfo(), options);
+    const allAdapterInfos = await getAdapterInfo();
+    const platform = parseAdaptersPlatform(options.platform);
+    const offset = parseAdaptersOffset(options.offset);
+    const limit = parseAdaptersLimit(options.limit);
+    const filteredAdapterInfos = selectAdaptersPlatform(allAdapterInfos, platform);
+    const adapterInfos = selectAdapters(
+      selectAdaptersOffset(filteredAdapterInfos, offset),
+      limit,
+    );
     spinner?.stop();
 
     if (options.json) {
@@ -172,6 +208,10 @@ export async function adaptersCommand(options: AdaptersOptions = {}): Promise<vo
         console.log(`    ID: ${info.id}  |  Platform: ${info.platform}  |  ${detected}`);
         console.log();
       }
+    }
+
+    if (shouldShowAdaptersPageSummary(options)) {
+      console.log(chalk.dim(`  ${formatAdaptersPageSummary(filteredAdapterInfos.length, adapterInfos.length, offset, limit)}`));
     }
 
     console.log(chalk.dim('  Built-in adapters:'));
