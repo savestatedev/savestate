@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 import {
+  formatListEmptyState,
   formatListPageSummary,
   formatListLabelCell,
   formatListDate,
@@ -61,6 +62,13 @@ describe('savestate list --offset', () => {
     expect(formatListPageSummary(12, 2, 10, 2)).toBe(
       '(showing 2 of 12 after filters; offset 10, limit 2)',
     );
+  });
+
+  it('suggests the nearest page when an offset skips past all matches', () => {
+    expect(formatListEmptyState(12, 12, 5)).toBe(
+      'No snapshots shown: offset 12 skips past 12 matching snapshots. Try --offset 10 to open the nearest available page.',
+    );
+    expect(formatListEmptyState(1, 50, 50)).toContain('1 matching snapshot.');
   });
 
   it('uses snapshot ids to break ties for identical timestamps', () => {
