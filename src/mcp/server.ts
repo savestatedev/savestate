@@ -1461,10 +1461,7 @@ async function handleStats(
     const offset = parseSavestateStatsOffset(input.offset);
     const snapshots = selectSavestateStatsEntries(
       selectSavestateStatsOffsetEntries(
-        [...index.snapshots].sort(
-          (a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-        ),
+        sortSavestateListEntries(index.snapshots),
         offset,
       ),
       limit,
