@@ -26,6 +26,12 @@ describe('savestate memory list --until', () => {
     expect(() => parseMemoryListSince('10/01/2026')).toThrow(
       'Invalid --since value "10/01/2026". Expected an ISO-8601 date or timestamp.',
     );
+    expect(() => parseMemoryListUntil('2026-02-30')).toThrow(
+      'Invalid --until value "2026-02-30". Expected an ISO-8601 date or timestamp.',
+    );
+    expect(() => parseMemoryListSince('2026-02-30T12:00:00Z')).toThrow(
+      'Invalid --since value "2026-02-30T12:00:00Z". Expected an ISO-8601 date or timestamp.',
+    );
   });
 
   it('accepts ISO timestamps with timezone and fractional seconds', () => {
