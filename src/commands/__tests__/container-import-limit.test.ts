@@ -52,7 +52,7 @@ describe('savestate container import --limit', () => {
     ).toEqual(['personality']);
   });
 
-  it.each(['-1', '1.5', '1001', 'nope'])('rejects invalid offsets %s', (value) => {
+  it.each(['', '-1', '1.5', '0x10', '1e2', '1001', 'nope'])('rejects invalid offsets %s', (value) => {
     expect(() => parseImportOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
