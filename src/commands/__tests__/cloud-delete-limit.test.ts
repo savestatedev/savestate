@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   parseCloudDeleteLimit,
   parseCloudDeleteOffset,
+  formatCloudDeleteEmptyState,
   selectCloudDeletePage,
   selectCloudDeleteSnapshots,
 } from '../cloud.js';
@@ -74,5 +75,11 @@ describe('savestate cloud delete --offset', () => {
         1,
       ).map((snapshot) => snapshot.id),
     ).toEqual(['mid']);
+  });
+
+  it('explains when an offset skips past all matching snapshots', () => {
+    expect(formatCloudDeleteEmptyState(3, 3)).toBe(
+      'No snapshots selected: --offset 3 skips past 3 matching snapshots.',
+    );
   });
 });

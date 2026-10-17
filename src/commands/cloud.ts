@@ -327,6 +327,14 @@ export function selectCloudDeletePage<T>(snapshots: T[], limit?: number, offset?
   return limit === undefined ? page : page.slice(0, limit);
 }
 
+/** Explain why a destructive page selected no snapshots without prompting for confirmation. */
+export function formatCloudDeleteEmptyState(matchingCount: number, offset?: number): string {
+  if (offset === undefined) return 'No snapshots selected for deletion.';
+
+  const noun = matchingCount === 1 ? 'snapshot' : 'snapshots';
+  return `No snapshots selected: --offset ${offset} skips past ${matchingCount} matching ${noun}.`;
+}
+
 /** Resolve cloud push --adapter/--exclude/--since/--until/--label/--tag/--limit/--offset/--id/--all to the local snapshots that should upload. */
 export function resolveCloudPushSnapshots<
   T extends { id: string; timestamp: string; adapter?: string; label?: string; tags?: string[] },
@@ -1201,7 +1209,18 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
       process.exit(1);
     }
   }
+  const matchingSnapshotCount = toDelete.length;
   toDelete = selectCloudDeletePage(toDelete, limit, offset);
+
+  if (toDelete.length === 0) {
+    const message = formatCloudDeleteEmptyState(matchingSnapshotCount, offset);
+    if (options.json) {
+      console.log(formatCloudDeleteJson({ deleted: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
+      return;
+    }
+    console.log(chalk.yellow(message));
+    return;
+  }
 
   // Confirm deletion (JSON mode is non-interactive)
   if (!options.force && !options.json) {
