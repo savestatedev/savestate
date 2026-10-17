@@ -20,6 +20,23 @@ describe('savestate memory list --until', () => {
     expect(() => parseMemoryListUntil('not-a-date')).toThrow(
       'Invalid --until value "not-a-date". Expected an ISO-8601 date or timestamp.',
     );
+    expect(() => parseMemoryListUntil('10/01/2026')).toThrow(
+      'Invalid --until value "10/01/2026". Expected an ISO-8601 date or timestamp.',
+    );
+    expect(() => parseMemoryListSince('10/01/2026')).toThrow(
+      'Invalid --since value "10/01/2026". Expected an ISO-8601 date or timestamp.',
+    );
+    expect(() => parseMemoryListUntil('2026-02-30')).toThrow(
+      'Invalid --until value "2026-02-30". Expected an ISO-8601 date or timestamp.',
+    );
+    expect(() => parseMemoryListSince('2026-02-30T12:00:00Z')).toThrow(
+      'Invalid --since value "2026-02-30T12:00:00Z". Expected an ISO-8601 date or timestamp.',
+    );
+  });
+
+  it('accepts ISO timestamps with timezone and fractional seconds', () => {
+    expect(parseMemoryListSince('2026-10-01T12:34:56.789Z')).toBe('2026-10-01T12:34:56.789Z');
+    expect(parseMemoryListUntil('2026-10-01T12:34+05:30')).toBe('2026-10-01T12:34+05:30');
   });
 
   it('includes the full day for a date-only cutoff', () => {

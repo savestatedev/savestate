@@ -218,7 +218,7 @@ export function parseMemoryListUntil(value: string | undefined): string | undefi
   if (value === undefined) return undefined;
 
   const until = value.trim();
-  if (until.length === 0 || Number.isNaN(Date.parse(until))) {
+  if (!isIsoMemoryDateOrTimestamp(until)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO-8601 date or timestamp.`,
     );
@@ -232,13 +232,44 @@ export function parseMemoryListSince(value: string | undefined): string | undefi
   if (value === undefined) return undefined;
 
   const since = value.trim();
-  if (since.length === 0 || Number.isNaN(Date.parse(since))) {
+  if (!isIsoMemoryDateOrTimestamp(since)) {
     throw new Error(
       `Invalid --since value "${value}". Expected an ISO-8601 date or timestamp.`,
     );
   }
 
   return since;
+}
+
+/** Keep date filters portable across runtimes by accepting only ISO-8601 forms. */
+function isIsoMemoryDateOrTimestamp(value: string): boolean {
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const timestamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value);
+  if (!dateOnly && !timestamp) {
+    return false;
+  }
+
+  // Date.parse normalizes impossible calendar dates such as February 30.
+  // Validate the calendar portion before relying on it for filtering.
+  return isValidIsoCalendarDate(value.slice(0, 10)) && !Number.isNaN(Date.parse(value));
+}
+
+function isValidIsoCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1) return false;
+
+  const daysInMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30,
+    31, 31, 30, 31, 30, 31];
+  return day <= daysInMonth[month - 1];
+}
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
 
 /** Reject an impossible memory creation range before loading encrypted storage. */
@@ -418,11 +449,11 @@ export function registerMemoryCommands(program: Command): void {
     .option('-p, --pinned', 'Show only pinned memories')
     .option('--unpinned', 'Show only unpinned memories')
     .option('--source <id>', 'Filter by source id')
-    .option('--until <date>', 'Show memories created on or before an ISO-8601 date')
+    .option('--until <date>', 'Show memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
-    .option('--since <date>', 'Show memories created on or after an ISO-8601 date')
+    .option('--since <date>', 'Show memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')

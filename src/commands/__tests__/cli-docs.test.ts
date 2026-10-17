@@ -2575,6 +2575,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('full UTC day');
     expect(memorySection).toContain('savestate memory list --until 2026-10-01');
     expect(memoryCli).toContain(".option('--until <date>'");
+    expect(memoryCli).toContain('ISO-8601 date or timestamp');
     expect(memoryCli).toContain('export function parseMemoryListUntil');
   });
 
@@ -2720,6 +2721,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('on or after');
     expect(memorySection).toContain('savestate memory list --since 2026-10-01');
     expect(listBlock).toContain(".option('--since <date>'");
+    expect(memoryCli).toContain('ISO-8601 date or timestamp');
+    expect(memoryCli).toContain('date-only values start at 00:00 UTC');
     expect(memoryCli).toContain('export function parseMemoryListSince');
   });
 
