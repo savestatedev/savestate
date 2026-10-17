@@ -87,10 +87,24 @@ jobs:
   update-homebrew:
     runs-on: ubuntu-latest
     needs: publish-npm
-    if: vars.HOMEBREW_TAP_TOKEN != '' || secrets.HOMEBREW_TAP_TOKEN != ''
+    # secrets is rejected in a job-level if. That fails the whole workflow
+    # before any job starts: Unrecognized named-value: 'secrets'.
+    env:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      HOMEBREW_TAP_VAR: ${{ vars.HOMEBREW_TAP_TOKEN }}
     steps:
+      - name: Skip when no Homebrew tap token is configured
+        id: gate
+        run: |
+          if [ -n "$HOMEBREW_TAP_TOKEN" ] || [ -n "$HOMEBREW_TAP_VAR" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "No HOMEBREW_TAP_TOKEN secret or variable. Skipping Homebrew tap update."
+          fi
       - name: Get tarball SHA256
         id: sha
+        if: steps.gate.outputs.enabled == 'true'
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           TARBALL_URL="https://registry.npmjs.org/@savestate/cli/-/cli-${VERSION}.tgz"
@@ -101,11 +115,13 @@ jobs:
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
           echo "url=$TARBALL_URL" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.enabled == 'true'
         with:
           repository: savestatedev/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
       - name: Update formula
+        if: steps.gate.outputs.enabled == 'true'
         run: |
           cat > homebrew-tap/Formula/savestate.rb << EOF
           class Savestate < Formula
@@ -128,6 +144,7 @@ jobs:
           end
           EOF
       - name: Push formula update
+        if: steps.gate.outputs.enabled == 'true'
         run: |
           cd homebrew-tap
           git config user.name "github-actions[bot]"

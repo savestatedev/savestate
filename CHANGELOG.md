@@ -4,6 +4,19 @@
 
 ---
 
+## [0.9.1] - unreleased
+
+Prepared, not published. Do not tag, npm publish, or submit the registry packet until David Hurley approves.
+
+### MCP registry
+- `@savestate/cli` `mcpName` is `io.github.savestatedev/memory`, the official registry server name.
+- `server.json` server version and npm package version are 0.9.1, matching `package.json`.
+
+### CI
+- The release workflow no longer fails validation before any job starts. The Homebrew job referenced `secrets` in a job-level `if`, which GitHub rejects with `Unrecognized named-value: 'secrets'` and records as a failed run with zero jobs. The token is read from the job environment, and the tap update skips when neither the secret nor the repository variable is set.
+
+---
+
 ## [0.9.0] - 2026-02-27
 
 ### 🔒 Privacy Controls (#117)
