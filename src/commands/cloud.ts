@@ -281,6 +281,27 @@ export function selectCloudPullPage<T>(snapshots: T[], limit?: number, offset?: 
 
 const MAX_CLOUD_DELETE_LIMIT = 1000;
 
+const MAX_CLOUD_DELETE_OFFSET = 1000;
+
+/** Parse cloud delete --offset without turning invalid skips into a full delete. */
+export function parseCloudDeleteOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_DELETE_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CLOUD_DELETE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_DELETE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
 /** Parse cloud delete --limit without turning user input errors into an empty delete list. */
 export function parseCloudDeleteLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -298,6 +319,20 @@ export function parseCloudDeleteLimit(value: string | undefined): number | undef
 export function selectCloudDeleteSnapshots<T>(snapshots: T[], limit?: number): T[] {
   if (limit === undefined) return snapshots;
   return snapshots.slice(0, limit);
+}
+
+/** Skip the first N matching cloud snapshots before applying --limit on delete. */
+export function selectCloudDeletePage<T>(snapshots: T[], limit?: number, offset?: number): T[] {
+  const page = offset === undefined ? snapshots : snapshots.slice(offset);
+  return limit === undefined ? page : page.slice(0, limit);
+}
+
+/** Explain why a destructive page selected no snapshots without prompting for confirmation. */
+export function formatCloudDeleteEmptyState(matchingCount: number, offset?: number): string {
+  if (offset === undefined) return 'No snapshots selected for deletion.';
+
+  const noun = matchingCount === 1 ? 'snapshot' : 'snapshots';
+  return `No snapshots selected: --offset ${offset} skips past ${matchingCount} matching ${noun}.`;
 }
 
 /** Resolve cloud push --adapter/--exclude/--since/--until/--label/--tag/--limit/--offset/--id/--all to the local snapshots that should upload. */
@@ -1111,6 +1146,7 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
 export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
   const id = parseCloudId(options.id);
   const limit = parseCloudDeleteLimit(options.limit);
+  const offset = parseCloudDeleteOffset(options.offset);
 
   if (!options.json) {
     console.log();
@@ -1173,7 +1209,18 @@ export async function cloudDeleteCommand(options: CloudOptions): Promise<void> {
       process.exit(1);
     }
   }
-  toDelete = selectCloudDeleteSnapshots(toDelete, limit);
+  const matchingSnapshotCount = toDelete.length;
+  toDelete = selectCloudDeletePage(toDelete, limit, offset);
+
+  if (toDelete.length === 0) {
+    const message = formatCloudDeleteEmptyState(matchingSnapshotCount, offset);
+    if (options.json) {
+      console.log(formatCloudDeleteJson({ deleted: 0, failed: 0, all: Boolean(options.all), snapshots: [] }));
+      return;
+    }
+    console.log(chalk.yellow(message));
+    return;
+  }
 
   // Confirm deletion (JSON mode is non-interactive)
   if (!options.force && !options.json) {
