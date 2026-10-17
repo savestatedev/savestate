@@ -18,7 +18,7 @@ SOM-Contact: hello@savestate.dev
 # Agent discovery (JSON/text — not homepage HTML)
 # /llms.txt — required floor (capability, install, MCP, auth, pay, 402+claim)
 # /agents.md — longer playbook (hosted MCP + claim URL)
-# /server.json — registry name dev.savestate/memory
+# /server.json — registry name io.github.savestatedev/memory
 # /api/mcp — hosted MCP (Bearer)
 # /openapi.json — HTTP API + 402 schema
 # POST /v1/keys → 402 pay_url + claim_url

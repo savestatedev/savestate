@@ -31,7 +31,7 @@ describe('agent discovery files', () => {
     expect(packet.$schema).toBe(
       'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json',
     );
-    expect(packet.name).toBe('dev.savestate/memory');
+    expect(packet.name).toBe('io.github.savestatedev/memory');
     expect((packet.description as string).length).toBeLessThanOrEqual(100);
     expect(packet.websiteUrl).toBe('https://savestate.dev/llms.txt');
     const pkg = (
@@ -65,13 +65,14 @@ describe('agent discovery files', () => {
       'npx -y @savestate/cli mcp',
     );
     const npm = parseJson('package.json');
-    expect(npm.mcpName).toBe('io.github.savestatedev/cli');
+    expect(npm.mcpName).toBe('io.github.savestatedev/memory');
+    expect(npm.mcpName).toBe(packet.name);
     expect(npm.version).toBe('0.9.1');
   });
 
   it('keeps the leftover well-known card renamed to memory, not as the primary', () => {
     const card = parseJson('site/.well-known/mcp.json');
-    expect(card.name).toBe('dev.savestate/memory');
+    expect(card.name).toBe('io.github.savestatedev/memory');
     expect(card.pay_url).toBe(PRO);
     expect(card.websiteUrl).toBe('https://savestate.dev/agents.md');
     expect(card).not.toHaveProperty('glama');
@@ -122,7 +123,7 @@ describe('agent discovery files', () => {
     expect(llms).toContain('npm install -g @savestate/cli');
     expect(llms).toContain('https://savestate.dev/agents.md');
     expect(llms).toContain('https://savestate.dev/api/mcp');
-    expect(llms).toContain('dev.savestate/memory');
+    expect(llms).toContain('io.github.savestatedev/memory');
     expect(llms).toContain('npx -y @savestate/cli mcp');
     expect(llms).toMatch(/Auth/i);
     expect(llms).toContain('POST https://savestate.dev/v1/keys');
@@ -159,7 +160,7 @@ describe('agent discovery files', () => {
     expect(agents).toContain('claim_url');
     expect(agents).toContain(PRO);
     expect(agents).toContain('https://savestate.dev/api/mcp');
-    expect(agents).toContain('dev.savestate/memory');
+    expect(agents).toContain('io.github.savestatedev/memory');
     expect(agents).toContain('npx -y @savestate/cli mcp');
     expect(agents).toMatch(/OAuth authorization-code is not shipped|not an OAuth authorize/i);
     expect(agents).toMatch(/MPP/);

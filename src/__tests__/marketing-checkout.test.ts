@@ -621,7 +621,7 @@ describe('public marketing checkout CTAs', () => {
       expect(hasOg(html, 'twitter:card')).toBe(true);
       expect(hasOg(html, 'twitter:title')).toBe(true);
     }
-    expect(homepage).toMatch(/When the chat dies, your agent still knows/);
+    expect(homepage).toMatch(/When the chat dies, your agent still knows/i);
     expect(post).toMatch(/Claude Code/);
     expect(post).toMatch(/Cursor/);
     expect(post).toMatch(/Clawdbot/);
@@ -688,11 +688,11 @@ describe('public marketing checkout CTAs', () => {
     expect(mcp).toContain('SaveState');
     expect(mcp).toContain('savestate.dev');
     expect(mcp).toContain(stripe.products.pro.payment_link);
-    expect(mcp).toContain('SaveState MCP — encrypted portable memory for agents');
+    expect(mcp).toContain('SaveState MCP: encrypted portable memory for agents');
     expect(agentMemory).toContain('SaveState');
     expect(agentMemory).toContain('savestate.dev');
     expect(agentMemory).toContain(stripe.products.pro.payment_link);
-    expect(agentMemory).toContain('SaveState — agent memory that survives the chat');
+    expect(agentMemory).toContain('SaveState: agent memory that survives the chat');
   });
 
   it('lists the Codex listing page on the live URL path', () => {

@@ -4,7 +4,7 @@ In-repo install packet for Cursor, Claude Code, and ChatGPT/Codex.
 
 **Official marketplace submit needs David Hurley's account.** These files are prep. Do not invent a listing URL. There is none yet.
 
-- Registry name: `dev.savestate/memory`
+- Registry name: `io.github.savestatedev/memory`
 - Playbook: https://savestate.dev/agents.md
 - Hosted MCP: https://savestate.dev/api/mcp
 - Local: `npx -y @savestate/cli mcp`

@@ -25,7 +25,7 @@ npx -y @savestate/cli mcp
 ```
 
 Official registry packet (stdio package + Streamable HTTP remote): https://savestate.dev/server.json
-Name: `dev.savestate/memory`. Ownership: `mcpName` in `@savestate/cli` package.json.
+Name: `io.github.savestatedev/memory`. Ownership: `mcpName` in `@savestate/cli` package.json.
 
 Hosted Streamable HTTP remote: `https://savestate.dev/api/mcp`
 POST JSON-RPC. Bearer required. Missing/bad key → 401. GET SSE is not offered (405).
