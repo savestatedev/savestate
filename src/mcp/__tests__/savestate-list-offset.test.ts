@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseSavestateListOffset, selectSavestateListOffsetEntries } from '../savestate-list-offset.js';
+import {
+  parseSavestateListOffset,
+  selectSavestateListOffsetEntries,
+  sortSavestateListEntries,
+} from '../savestate-list-offset.js';
 
 describe('MCP savestate_list offset', () => {
   it('defaults to undefined', () => {
@@ -36,5 +40,16 @@ describe('MCP savestate_list offset', () => {
   it('returns all snapshots when offset is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectSavestateListOffsetEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('breaks equal-timestamp ties by snapshot id without mutating the input', () => {
+    const timestamp = '2026-10-17T12:00:00.000Z';
+    const entries = [
+      { id: 'zeta', timestamp },
+      { id: 'alpha', timestamp },
+    ];
+
+    expect(sortSavestateListEntries(entries).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
+    expect(entries.map((entry) => entry.id)).toEqual(['zeta', 'alpha']);
   });
 });

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseSavestateListLimit, selectSavestateListEntries } from '../savestate-list-limit.js';
+import {
+  formatSavestateListEmptyPage,
+  formatSavestateListPageSummary,
+  parseSavestateListLimit,
+  selectSavestateListEntries,
+} from '../savestate-list-limit.js';
 
 describe('MCP savestate_list limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,23 @@ describe('MCP savestate_list limit', () => {
   it('returns all snapshots when limit is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectSavestateListEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('summarizes page position and continuation state', () => {
+    expect(formatSavestateListPageSummary(2, 5, 2, true)).toBe(
+      'Snapshots (2 shown of 5 total, starting at 2; next offset 4; more available):',
+    );
+    expect(formatSavestateListPageSummary(1, 1, undefined, false)).toBe(
+      'Snapshots (1 shown of 1 total, starting at 0):',
+    );
+  });
+
+  it('keeps the requested offset visible for an empty page', () => {
+    expect(formatSavestateListEmptyPage(5, 8)).toBe(
+      'No snapshots found at offset 8. Total stored: 5',
+    );
+    expect(formatSavestateListEmptyPage(0, undefined)).toBe(
+      'No snapshots found at offset 0. Total stored: 0',
+    );
   });
 });

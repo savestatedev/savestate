@@ -72,8 +72,17 @@ import {
   selectListMemoriesEntries,
 } from './list-memories-limit.js';
 import { parseListMemoriesOffset } from './list-memories-offset.js';
-import { parseSavestateListLimit, selectSavestateListEntries } from './savestate-list-limit.js';
-import { parseSavestateListOffset, selectSavestateListOffsetEntries } from './savestate-list-offset.js';
+import {
+  formatSavestateListEmptyPage,
+  formatSavestateListPageSummary,
+  parseSavestateListLimit,
+  selectSavestateListEntries,
+} from './savestate-list-limit.js';
+import {
+  parseSavestateListOffset,
+  selectSavestateListOffsetEntries,
+  sortSavestateListEntries,
+} from './savestate-list-offset.js';
 import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
 import { parseSavestateMemoryDeleteOffset, selectSavestateMemoryDeleteOffsetEntries } from './savestate-memory-delete-offset.js';
 import {
@@ -208,7 +217,8 @@ const tools: Tool[] = [
     name: 'savestate_list',
     description:
       'List available snapshots with their metadata. ' +
-      'Shows ID, timestamp, platform, label, and size.',
+      'Shows ID, timestamp, platform, label, and size. ' +
+      'The summary includes the total count and next offset when more results are available.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -894,9 +904,8 @@ async function handleList(
     }
 
     // Sort by timestamp (newest first)
-    entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    entries = sortSavestateListEntries(entries);
+    const totalEntries = entries.length;
 
     const offset = parseSavestateListOffset(input.offset);
     entries = selectSavestateListOffsetEntries(entries, offset);
@@ -904,10 +913,19 @@ async function handleList(
     entries = selectSavestateListEntries(entries, limit ?? 10);
 
     if (entries.length === 0) {
-      return 'No snapshots found.';
+      return formatSavestateListEmptyPage(totalEntries, offset);
     }
 
-    const lines = [`Found ${entries.length} snapshot(s):`, ``];
+    const start = offset ?? 0;
+    const lines = [
+      formatSavestateListPageSummary(
+        entries.length,
+        totalEntries,
+        offset,
+        start + entries.length < totalEntries,
+      ),
+      '',
+    ];
 
     for (const entry of entries) {
       const date = new Date(entry.timestamp).toLocaleString();
@@ -1459,10 +1477,7 @@ async function handleStats(
     const offset = parseSavestateStatsOffset(input.offset);
     const snapshots = selectSavestateStatsEntries(
       selectSavestateStatsOffsetEntries(
-        [...index.snapshots].sort(
-          (a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-        ),
+        sortSavestateListEntries(index.snapshots),
         offset,
       ),
       limit,
@@ -1502,11 +1517,7 @@ async function handleReadResource(uri: string): Promise<string> {
         : parseSnapshotsResourceLimit(Number(rawLimit));
 
       const index = await loadIndex();
-      const entries = index.snapshots;
-
-      entries.sort((a: SnapshotIndexEntry, b: SnapshotIndexEntry) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
+      const entries = sortSavestateListEntries(index.snapshots);
 
       const skipped = selectSnapshotsResourceOffsetEntries(entries, offset);
       const selected = selectSnapshotsResourceEntries(skipped, limit ?? 50);

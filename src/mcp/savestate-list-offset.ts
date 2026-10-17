@@ -17,3 +17,13 @@ export function selectSavestateListOffsetEntries<T>(entries: T[], offset?: numbe
   if (offset === undefined) return entries;
   return entries.slice(offset);
 }
+
+/** Keep MCP snapshot pagination stable when snapshots share a timestamp. */
+export function sortSavestateListEntries<T extends { id: string; timestamp: string }>(
+  entries: T[],
+): T[] {
+  return [...entries].sort((a, b) => {
+    const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    return timestampOrder !== 0 ? timestampOrder : a.id.localeCompare(b.id);
+  });
+}
