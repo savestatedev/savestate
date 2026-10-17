@@ -5417,7 +5417,7 @@ describe('CLI docs', () => {
     const adaptersSection = docs.slice(docs.indexOf('id="adapters"'), docs.indexOf('id="export"'));
     const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
     expect(adaptersSection).toContain('--platform &lt;id&gt;');
-    expect(adaptersSection).toContain('savestate adapters --platform claude');
+    expect(adaptersSection).toContain('savestate adapters --platform claude-code');
     expect(adaptersBlock).toContain(".option('--platform <id>'");
   });
 

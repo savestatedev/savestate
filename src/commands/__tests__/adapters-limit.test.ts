@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseAdaptersLimit, selectAdapters } from '../adapters.js';
+import {
+  formatAdaptersPageSummary,
+  parseAdaptersLimit,
+  selectAdapters,
+  shouldShowAdaptersPageSummary,
+} from '../adapters.js';
 
 describe('savestate adapters --limit', () => {
   it('defaults to undefined', () => {
@@ -42,5 +47,22 @@ describe('savestate adapters --limit', () => {
       { id: 'chatgpt', name: 'ChatGPT', platform: 'chatgpt', version: '1', detected: false },
     ];
     expect(selectAdapters(adapters, undefined)).toEqual(adapters);
+  });
+
+  it('summarizes a bounded page for interactive users', () => {
+    expect(formatAdaptersPageSummary(6, 2, 2, 2)).toBe(
+      '(showing 2 of 6 after filters; offset 2, limit 2)',
+    );
+  });
+
+  it('summarizes an offset-only page without inventing a limit', () => {
+    expect(formatAdaptersPageSummary(6, 4, 2)).toBe(
+      '(showing 4 of 6 after filters; offset 2)',
+    );
+  });
+
+  it('shows result context for a platform-only filter', () => {
+    expect(shouldShowAdaptersPageSummary({ platform: 'claude-code' })).toBe(true);
+    expect(shouldShowAdaptersPageSummary({})).toBe(false);
   });
 });
