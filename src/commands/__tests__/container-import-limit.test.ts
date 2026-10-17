@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseContainerImportLimit, selectContainerImportComponents } from '../container.js';
+import {
+  parseContainerImportLimit,
+  parseImportOffset,
+  selectContainerImportComponents,
+  selectImportOffsetEntries,
+} from '../container.js';
 
 describe('savestate container import --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +40,21 @@ describe('savestate container import --limit', () => {
   it('returns all components when --limit is omitted', () => {
     const components = ['memory', 'tools'];
     expect(selectContainerImportComponents(components, undefined)).toEqual(components);
+  });
+
+  it('supports bounded offsets before applying the limit', () => {
+    expect(parseImportOffset(' 1 ')).toBe(1);
+    expect(
+      selectContainerImportComponents(
+        selectImportOffsetEntries(['memory', 'personality', 'tools'], 1),
+        1,
+      ),
+    ).toEqual(['personality']);
+  });
+
+  it.each(['-1', '1.5', '1001', 'nope'])('rejects invalid offsets %s', (value) => {
+    expect(() => parseImportOffset(value)).toThrow(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
+    );
   });
 });
