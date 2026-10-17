@@ -675,7 +675,7 @@
 
     <pre><code><span class="code-prompt">$</span> savestate adapters
 <span class="code-output">ID                  NAME                  PLATFORM          DETECTED</span>
-<span class="code-output">clawdbot            Clawdbot              clawdbot          ✓</span>
+<span class="code-output">clawdbot            Clawdbot              openclaw          ✓</span>
 <span class="code-output">claude-code         Claude Code           claude-code       ✗</span>
 <span class="code-output">claude-web          Claude Web (claude.ai) claude-web        ✗</span>
 <span class="code-output">openai-assistants   OpenAI Assistants     openai-assistants  ✗</span>
@@ -686,7 +686,7 @@
 <span class="code-prompt">$</span> savestate adapters --limit 5
 
 <span class="code-comment"># Show adapters for one platform</span>
-<span class="code-prompt">$</span> savestate adapters --platform claude
+<span class="code-prompt">$</span> savestate adapters --platform claude-code
 
 <span class="code-comment"># Page the adapter list</span>
 <span class="code-prompt">$</span> savestate adapters --offset 10 --limit 5
