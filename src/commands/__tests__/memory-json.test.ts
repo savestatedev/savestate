@@ -7,6 +7,7 @@ import {
   filterMemoryListByContent,
   filterMemoryListByTags,
   getMemoryListSummary,
+  countByFreshness,
   type MemoryListJson,
 } from '../memory.js';
 
@@ -67,6 +68,40 @@ describe('savestate memory --json', () => {
     });
   });
 
+  it('counts freshness states using the same reference time as entry serialization', () => {
+    const now = new Date('2026-10-01T00:00:00.000Z');
+    const entries = [
+      entry({ id: 'mem-active', content: 'active', lastVerifiedAt: '2026-09-30T00:00:00.000Z' }),
+      entry({ id: 'mem-stale', content: 'stale', lastVerifiedAt: '2026-09-01T00:00:00.000Z' }),
+      entry({ id: 'mem-confirm', content: 'confirm', lastVerifiedAt: '2026-01-01T00:00:00.000Z' }),
+    ];
+
+    expect(countByFreshness(entries, now)).toEqual({
+      active: 1,
+      stale: 1,
+      needs_confirmation: 1,
+    });
+  });
+
+  it('keeps freshness counts and entries consistent at a TTL boundary', () => {
+    const now = new Date('2026-10-15T12:00:00.000Z');
+    const entryAtBoundary = entry({
+      id: 'mem-boundary',
+      content: 'boundary',
+      freshnessClass: 'fast',
+      lastVerifiedAt: '2026-10-14T12:00:00.000Z',
+    });
+
+    const parsed = JSON.parse(formatMemoryListJson(
+      [entryAtBoundary],
+      [entryAtBoundary],
+      { now },
+    )) as MemoryListJson;
+
+    expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 1 });
+    expect(parsed.entries[0].freshness.state).toBe('needs_confirmation');
+  });
+
   it('prints list summary and entries as JSON', () => {
     const all = [
       entry({ id: 'mem-l1', content: 'inbox preference', tier: 'L1', pinned: true }),
@@ -100,6 +135,8 @@ describe('savestate memory --json', () => {
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
+    expect(parsed.byFreshness).toEqual({ active: 0, stale: 3, needs_confirmation: 0 });
+    expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 2, needs_confirmation: 0 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.shownPinned).toBe(1);
     expect(parsed.entries).toEqual([
@@ -160,6 +197,8 @@ describe('savestate memory --json', () => {
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
+    expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
+    expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.shownPinned).toBe(0);
     expect(parsed.entries).toEqual([]);

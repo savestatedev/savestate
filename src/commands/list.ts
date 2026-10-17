@@ -223,6 +223,22 @@ export function selectListOffsetEntries<T>(entries: T[], offset?: number): T[] {
   return entries.slice(offset);
 }
 
+/** Explain how to recover when a stale list offset skips past every match. */
+export function formatListEmptyState(
+  matchingCount: number,
+  offset: number,
+  limit = 50,
+): string {
+  if (matchingCount === 0) {
+    return 'No snapshots found matching the criteria. Try adjusting the filters.';
+  }
+
+  const suggestedOffset = Math.floor((matchingCount - 1) / limit) * limit;
+  return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
+    matchingCount === 1 ? 'snapshot' : 'snapshots'
+  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+}
+
 /** Describe the visible list page without treating an offset as part of the limit. */
 export function formatListPageSummary(total: number, shown: number, offset = 0, limit = 50): string {
   const pageEnd = Math.min(offset + limit, total);
@@ -438,6 +454,12 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   if (filtered.length === 0) {
     console.log(chalk.dim('  No snapshots match those filters.'));
+    console.log();
+    return;
+  }
+
+  if (offset !== undefined && offset >= filtered.length) {
+    console.log(chalk.dim(`  ${formatListEmptyState(filtered.length, offset, limit)}`));
     console.log();
     return;
   }

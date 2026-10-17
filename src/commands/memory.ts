@@ -220,6 +220,22 @@ export function countByTier(memories: MemoryEntry[]): Record<MemoryTier, number>
   return counts;
 }
 
+/** Count memories by freshness state for JSON consumers. */
+export function countByFreshness(
+  memories: MemoryEntry[],
+  now = new Date(),
+): Record<MemoryFreshnessState, number> {
+  const counts: Record<MemoryFreshnessState, number> = {
+    active: 0,
+    stale: 0,
+    needs_confirmation: 0,
+  };
+  for (const memory of memories) {
+    counts[getMemoryFreshness(memory, now).state]++;
+  }
+  return counts;
+}
+
 /** Summarize the collection currently being listed, including active filters. */
 export function getMemoryListSummary(memories: MemoryEntry[]): {
   counts: Record<MemoryTier, number>;
@@ -229,6 +245,15 @@ export function getMemoryListSummary(memories: MemoryEntry[]): {
     counts: countByTier(memories),
     total: memories.length,
   };
+}
+
+/** Format freshness totals for the human-facing list summary. */
+export function formatMemoryListFreshnessSummary(
+  memories: MemoryEntry[],
+  now = new Date(),
+): string {
+  const counts = countByFreshness(memories, now);
+  return `${counts.active} active, ${counts.stale} stale, ${counts.needs_confirmation} confirmation needed`;
 }
 
 export interface MemoryListEntryJson {
@@ -277,6 +302,8 @@ export interface MemoryListJson {
   };
   byTier: Record<MemoryTier, number>;
   shownByTier: Record<MemoryTier, number>;
+  byFreshness: Record<MemoryFreshnessState, number>;
+  shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: number;
   shownPinned: number;
   entries: MemoryListEntryJson[];
@@ -291,8 +318,10 @@ export function formatMemoryListJson(
     limit?: number;
     hasMore?: boolean;
     filters?: Partial<MemoryListJson['filters']>;
+    now?: Date;
   } = {},
 ): string {
+  const now = pagination.now ?? new Date();
   const offset = pagination.offset ?? 0;
   const hasPrevious = offset > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
@@ -338,6 +367,8 @@ export function formatMemoryListJson(
     },
     byTier: countByTier(all),
     shownByTier: countByTier(shown),
+    byFreshness: countByFreshness(all, now),
+    shownByFreshness: countByFreshness(shown, now),
     pinned: all.filter((entry) => !!entry.pinned).length,
     shownPinned: shown.filter((entry) => !!entry.pinned).length,
     entries: shown.map((entry) => ({
@@ -359,7 +390,7 @@ export function formatMemoryListJson(
         return tags.length > 0 ? { tags } : {};
       })(),
       content: entry.content,
-      freshness: getMemoryFreshness(entry),
+      freshness: getMemoryFreshness(entry, now),
     })),
   };
   return JSON.stringify(record, null, 2);
@@ -970,7 +1001,8 @@ export async function listMemories(
   entries = filterMemoryListByTags(entries, options?.tags);
   entries = filterMemoryListByCreatedUntil(entries, options?.until);
   entries = filterMemoryListByCreatedSince(entries, options?.since);
-  entries = filterMemoryListByFreshness(entries, options?.freshness);
+  const freshnessNow = new Date();
+  entries = filterMemoryListByFreshness(entries, options?.freshness, freshnessNow);
 
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
@@ -996,6 +1028,7 @@ export async function listMemories(
         since: options?.since,
         until: options?.until,
         oldestFirst: options?.oldestFirst,
+        now: freshnessNow,
       },
     }));
     return;
@@ -1008,6 +1041,7 @@ export async function listMemories(
   console.log(`  L2 (working set): ${counts.L2} items`);
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
+  console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
   if (pageSummary) console.log(`${pageSummary}\n`);
