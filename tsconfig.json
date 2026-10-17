@@ -17,5 +17,11 @@
     "newLine": "lf"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "api",
+    "src/**/__tests__/**",
+    "src/**/*.test.ts"
+  ]
 }
