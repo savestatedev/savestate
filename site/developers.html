@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Developers | SaveState</title>
+<meta name="description" content="Clean-install setup for SaveState. Use npx @savestate/cli, set SAVESTATE_PASSPHRASE, then snapshot and restore a project.">
+<link rel="canonical" href="https://savestate.dev/developers">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/docs/style.css">
+</head>
+<body>
+
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="/logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Developers</span>
+  </div>
+  <div class="header-right">
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" data-cta="developers-npm-secondary">npm</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Setup</span>
+    <ul class="sidebar-nav">
+      <li><a href="#install" class="active">Install</a></li>
+      <li><a href="#passphrase">Passphrase</a></li>
+      <li><a href="#save">Save</a></li>
+      <li><a href="#restore">Restore</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">More</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs">Getting started</a></li>
+      <li><a href="/docs/cli.html">CLI reference</a></li>
+      <li><a href="/mcp">MCP</a></li>
+    </ul>
+  </div>
+</aside>
+
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Developer setup</h1>
+    <p class="subtitle">A clean install: one passphrase, one snapshot, one restore.</p>
+    <p>These commands work on a machine that does not already have SaveState installed. Longer reference: <a href="/docs">Getting Started</a>.</p>
+
+    <h2 id="install">Install</h2>
+    <p>The npm package is <code>@savestate/cli</code>. There is no unscoped <code>savestate</code> package, so <code>npx savestate init</code> fails with npm E404. After a global install, the binary name is <code>savestate</code>.</p>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-prompt">$</span> npm install -g @savestate/cli
+<span class="code-comment"># or, without a global install:</span>
+<span class="code-prompt">$</span> npx @savestate/cli --version</code></pre>
+    </div>
+
+    <h2 id="passphrase">Set SAVESTATE_PASSPHRASE</h2>
+    <p><code>SAVESTATE_PASSPHRASE</code> is required before you snapshot or restore. It must be at least 8 characters. SaveState derives the AES-256-GCM key from it and does not write the passphrase to disk.</p>
+    <p><code>init</code> does not prompt when stdin is not a terminal. If the variable is unset, a later <code>snapshot</code> in that same non-interactive shell exits with <code>No passphrase available. Set SAVESTATE_PASSPHRASE environment variable or run in an interactive terminal.</code> An interactive terminal prompts only when the variable is missing.</p>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-prompt">$</span> export SAVESTATE_PASSPHRASE="your-passphrase"
+<span class="code-prompt">$</span> npx @savestate/cli init
+<span class="code-success">✔</span> <span class="code-output">Created .savestate/ directory</span>
+<span class="code-success">✔</span> <span class="code-output">Detected platform: Claude Code</span>
+<span class="code-output">  Your snapshots will be encrypted with a passphrase.</span>
+<span class="code-output">  You can also set SAVESTATE_PASSPHRASE env var.</span>
+<span class="code-success">✓</span> <span class="code-output">SaveState initialized!</span></code></pre>
+    </div>
+
+    <p>Run this in the project you want to capture. A directory with <code>CLAUDE.md</code> or <code>.claude/</code> is detected as Claude Code. Init still succeeds if nothing is detected; pass <code>--adapter</code> on snapshot in that case. Config lands in <code>.savestate/config.json</code>. Local archives stay in that project under <code>.savestate/</code>.</p>
+
+    <div class="callout callout-warn">
+      <span class="callout-label">Important:</span> If you lose the passphrase, snapshots cannot be decrypted. There is no password reset.
+    </div>
+
+    <h2 id="save">Save the project</h2>
+    <p>With the passphrase still exported, take one snapshot. This example is a Claude Code project:</p>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-prompt">$</span> npx @savestate/cli snapshot --label first
+<span class="code-success">✔</span> <span class="code-output">Full snapshot created!</span>
+<span class="code-output">  ID:         ss-2026-10-17T13-23-14-tcb4ee</span>
+<span class="code-output">  Adapter:    Claude Code</span>
+<span class="code-output">  Type:       full</span>
+<span class="code-output">  Label:      first</span>
+<span class="code-output">  Storage:    local</span>
+<span class="code-output">  Status:     Encrypted &amp; stored</span>
+<span class="code-prompt">$</span> npx @savestate/cli list</code></pre>
+    </div>
+
+    <p><code>list</code> prints the new snapshot id. Keep that shell's <code>SAVESTATE_PASSPHRASE</code> for the restore.</p>
+
+    <h2 id="restore">Restore it</h2>
+    <p>Edit or delete <code>CLAUDE.md</code>, then restore the latest snapshot:</p>
+
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-bar-title">Terminal</span>
+      </div>
+      <pre><code><span class="code-prompt">$</span> npx @savestate/cli restore latest
+<span class="code-success">✔</span> <span class="code-output">Restore complete!</span>
+<span class="code-output">  Identity:      restored</span>
+<span class="code-output">  Memory:        0 entries restored</span>
+<span class="code-output">  Conversations: 0 indexed</span>
+<span class="code-output">  Your AI state has been restored.</span>
+<span class="code-output">  Existing files were backed up with .bak extension.</span></code></pre>
+    </div>
+
+    <p><code>CLAUDE.md</code> matches the snapshot again. The file you changed is kept as <code>CLAUDE.md.bak</code>. Use <code>npx @savestate/cli restore &lt;id&gt;</code> for a specific snapshot.</p>
+
+    <h2 id="next">Next</h2>
+    <ul>
+      <li><a href="/docs/cli.html">CLI reference</a> for flags on snapshot, list, search, and restore.</li>
+      <li><a href="/docs/mcp.html">MCP server</a> if you want Claude Code or Cursor to call the archive.</li>
+      <li><a href="/docs">Getting started</a> for Homebrew, the shell installer, and storage options.</li>
+    </ul>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span><a href="/docs">Docs</a></span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

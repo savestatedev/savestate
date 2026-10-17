@@ -77,7 +77,7 @@ describe('hosted MCP /api/mcp', () => {
       docs: string;
       transport: string;
     };
-    expect(body.name).toBe('dev.savestate/memory');
+    expect(body.name).toBe('io.github.savestatedev/memory');
     expect(body.keys).toBe('https://savestate.dev/v1/keys');
     expect(body.agents).toBe('https://savestate.dev/agents.md');
     expect(body.llms).toBe('https://savestate.dev/llms.txt');
@@ -133,7 +133,7 @@ describe('hosted MCP /api/mcp', () => {
     );
     expect(res.statusCode).toBe(200);
     const body = res.body as { result: { serverInfo: { name: string } } };
-    expect(body.result.serverInfo.name).toBe('dev.savestate/memory');
+    expect(body.result.serverInfo.name).toBe('io.github.savestatedev/memory');
     expect(res.headers['Mcp-Session-Id']).toMatch(/^[0-9a-f-]{36}$/i);
   });
 

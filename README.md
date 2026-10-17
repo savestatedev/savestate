@@ -20,12 +20,13 @@ Worse: even within a single platform, "memory" is shallow. 1M-token context wind
 SaveState is the cross-platform memory layer you control. One encrypted, searchable, portable archive for everything your AIs know about you.
 
 ```bash
-npx savestate init                     # one-time: encryption + storage
-npx savestate snapshot                 # capture state from any platform
-npx savestate search "cocktail recs"   # full-text across every snapshot
-npx savestate search "cocktail recs" --offset 20 --limit 20  # fetch the next result page
-npx savestate restore latest --to claude  # move state between platforms
-npx savestate mcp                      # serve memory to Claude Code / Cursor / Codex
+export SAVESTATE_PASSPHRASE="your-passphrase"   # required, 8+ characters; never stored
+npx @savestate/cli init                          # one-time: encryption + storage
+npx @savestate/cli snapshot                      # capture state from any platform
+npx @savestate/cli search "cocktail recs"        # full-text across every snapshot
+npx @savestate/cli search "cocktail recs" --offset 20 --limit 20  # next result page
+npx @savestate/cli restore latest --to claude    # move state between platforms
+npx @savestate/cli mcp                           # serve memory to Claude Code / Cursor / Codex
 ```
 
 Think of it as **1Password for AI identity**: your data, encrypted with your keys, portable across every platform — backup is just one of the things you can do with it.
@@ -43,20 +44,26 @@ Think of it as **1Password for AI identity**: your data, encrypted with your key
 ## Quick Start
 
 ```bash
-# Install globally
-npm install -g savestate
+# Install globally. The package name is @savestate/cli.
+# `npm install -g savestate` and `npx savestate` are not published (npm E404).
+npm install -g @savestate/cli
 
-# Initialize in your AI workspace
+# Passphrase is required for snapshot and restore (at least 8 characters).
+# init does not prompt when stdin is not a terminal, and it never stores this value.
+export SAVESTATE_PASSPHRASE="your-passphrase"
+
+# Initialize in your AI workspace (a Claude Code project with CLAUDE.md works)
 cd ~/my-ai-workspace
 savestate init
 
-# Take your first snapshot
-savestate snapshot
+# Save the project
+savestate snapshot --label first
 
-# List all snapshots
+# List snapshots
 savestate list
 
-# Restore from a snapshot
+# After CLAUDE.md changes, put the saved copy back.
+# The edited file is kept as CLAUDE.md.bak.
 savestate restore latest
 ```
 

@@ -14,7 +14,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAccountByApiKey, initDb } from './lib/db.js';
 import { parseJsonBody, setCors } from './lib/http.js';
 
-const SERVER_NAME = 'dev.savestate/memory';
+const SERVER_NAME = 'io.github.savestatedev/memory';
 const PROTOCOL_VERSION = '2025-03-26';
 const STDIO = 'npx -y @savestate/cli mcp';
 
