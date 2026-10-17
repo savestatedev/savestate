@@ -423,7 +423,14 @@ const MAX_IMPORT_OFFSET = 1000;
 export function parseImportOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IMPORT_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_IMPORT_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_IMPORT_OFFSET}.`,
@@ -2207,10 +2214,12 @@ export function registerContainerCommands(program: Command) {
     .option('--target <dir>', 'Write restored agent state to this directory (single non-empty path)')
     .option('--force', 'Overwrite an existing target file')
     .option('--limit <n>', 'Maximum number of packed components to show')
+    .option('--offset <n>', 'Skip the first N packed components (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (opts) => {
       try {
         parseContainerImportLimit(opts.limit);
+        parseImportOffset(opts.offset);
       } catch (error: any) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
@@ -2228,6 +2237,7 @@ export function registerContainerCommands(program: Command) {
         force: opts.force,
         json: opts.json,
         limit: opts.limit,
+        offset: opts.offset,
       });
       if (!result) {
         process.exit(1);

@@ -4399,6 +4399,15 @@ describe('CLI docs', () => {
     expect(container).toContain('export function parseContainerImportLimit');
   });
 
+  it('documents container import --offset as a bounded non-negative integer', () => {
+    const containerSection = docs.slice(docs.indexOf('id="container"'));
+    const containerBlock = container.slice(container.indexOf(".command('container')"));
+    expect(containerSection).toContain('--offset');
+    expect(containerSection).toContain('savestate container import --in agent.savestate --offset 10 --limit 5');
+    expect(containerBlock).toContain(".option('--offset <n>'");
+    expect(container).toContain('parseImportOffset(opts.offset)');
+  });
+
   it('documents container --agent as a single agent id', () => {
     const containerSection = docs.slice(docs.indexOf('id="container"'));
     expect(containerSection).toContain('--agent');
