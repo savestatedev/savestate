@@ -911,8 +911,12 @@ export function formatMemoryListEmptyState(
   matchingCount: number,
   offset: number,
   limit = 20,
+  collectionEmpty = false,
 ): string {
   if (matchingCount === 0) {
+    if (collectionEmpty) {
+      return 'No memories found in this snapshot. Capture or import memories to populate this list.';
+    }
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }
 
@@ -1047,7 +1051,12 @@ export async function listMemories(
   if (pageSummary) console.log(`${pageSummary}\n`);
 
   if (entries.length === 0) {
-    console.log(formatMemoryListEmptyState(filteredEntries.length, offset, options?.limit));
+    console.log(formatMemoryListEmptyState(
+      filteredEntries.length,
+      offset,
+      options?.limit,
+      normalized.core.length === 0,
+    ));
     return;
   }
 
