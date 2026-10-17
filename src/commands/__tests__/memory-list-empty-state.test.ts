@@ -12,6 +12,10 @@ describe('savestate memory list human empty state', () => {
     expect(formatMemoryListEmptyState(0, 0, 20, true)).toBe(
       'No memories found in this snapshot. Capture or import memories to populate this list.',
     );
+
+    expect(formatMemoryListEmptyState(0, 0, 20, true, 'ss-empty-2026-10-17')).toBe(
+      'No memories found in this snapshot ss-empty-2026-10-17. Capture or import memories to populate this list.',
+    );
   });
 
   it('explains when an offset skips past matching memories', () => {

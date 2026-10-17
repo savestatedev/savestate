@@ -912,10 +912,12 @@ export function formatMemoryListEmptyState(
   offset: number,
   limit = 20,
   collectionEmpty = false,
+  snapshotId?: string,
 ): string {
   if (matchingCount === 0) {
     if (collectionEmpty) {
-      return 'No memories found in this snapshot. Capture or import memories to populate this list.';
+      const snapshotLabel = snapshotId ? ` ${snapshotId}` : '';
+      return `No memories found in this snapshot${snapshotLabel}. Capture or import memories to populate this list.`;
     }
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }
@@ -1056,6 +1058,7 @@ export async function listMemories(
       offset,
       options?.limit,
       normalized.core.length === 0,
+      snapshot.manifest.id,
     ));
     return;
   }
