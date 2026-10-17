@@ -309,8 +309,10 @@ export function formatMemoryListJson(
     limit?: number;
     hasMore?: boolean;
     filters?: Partial<MemoryListJson['filters']>;
+    now?: Date;
   } = {},
 ): string {
+  const now = pagination.now ?? new Date();
   const offset = pagination.offset ?? 0;
   const hasPrevious = offset > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
@@ -356,8 +358,8 @@ export function formatMemoryListJson(
     },
     byTier: countByTier(all),
     shownByTier: countByTier(shown),
-    byFreshness: countByFreshness(all),
-    shownByFreshness: countByFreshness(shown),
+    byFreshness: countByFreshness(all, now),
+    shownByFreshness: countByFreshness(shown, now),
     pinned: all.filter((entry) => !!entry.pinned).length,
     shownPinned: shown.filter((entry) => !!entry.pinned).length,
     entries: shown.map((entry) => ({
@@ -379,7 +381,7 @@ export function formatMemoryListJson(
         return tags.length > 0 ? { tags } : {};
       })(),
       content: entry.content,
-      freshness: getMemoryFreshness(entry),
+      freshness: getMemoryFreshness(entry, now),
     })),
   };
   return JSON.stringify(record, null, 2);
@@ -990,7 +992,8 @@ export async function listMemories(
   entries = filterMemoryListByTags(entries, options?.tags);
   entries = filterMemoryListByCreatedUntil(entries, options?.until);
   entries = filterMemoryListByCreatedSince(entries, options?.since);
-  entries = filterMemoryListByFreshness(entries, options?.freshness);
+  const freshnessNow = new Date();
+  entries = filterMemoryListByFreshness(entries, options?.freshness, freshnessNow);
 
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
@@ -1016,6 +1019,7 @@ export async function listMemories(
         since: options?.since,
         until: options?.until,
         oldestFirst: options?.oldestFirst,
+        now: freshnessNow,
       },
     }));
     return;

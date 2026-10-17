@@ -83,6 +83,25 @@ describe('savestate memory --json', () => {
     });
   });
 
+  it('keeps freshness counts and entries consistent at a TTL boundary', () => {
+    const now = new Date('2026-10-15T12:00:00.000Z');
+    const entryAtBoundary = entry({
+      id: 'mem-boundary',
+      content: 'boundary',
+      freshnessClass: 'fast',
+      lastVerifiedAt: '2026-10-14T12:00:00.000Z',
+    });
+
+    const parsed = JSON.parse(formatMemoryListJson(
+      [entryAtBoundary],
+      [entryAtBoundary],
+      { now },
+    )) as MemoryListJson;
+
+    expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 1 });
+    expect(parsed.entries[0].freshness.state).toBe('needs_confirmation');
+  });
+
   it('prints list summary and entries as JSON', () => {
     const all = [
       entry({ id: 'mem-l1', content: 'inbox preference', tier: 'L1', pinned: true }),
