@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatAdaptersPageSummary, parseAdaptersLimit, selectAdapters } from '../adapters.js';
+import {
+  formatAdaptersPageSummary,
+  parseAdaptersLimit,
+  selectAdapters,
+  shouldShowAdaptersPageSummary,
+} from '../adapters.js';
 
 describe('savestate adapters --limit', () => {
   it('defaults to undefined', () => {
@@ -54,5 +59,10 @@ describe('savestate adapters --limit', () => {
     expect(formatAdaptersPageSummary(6, 4, 2)).toBe(
       '(showing 4 of 6 after filters; offset 2)',
     );
+  });
+
+  it('shows result context for a platform-only filter', () => {
+    expect(shouldShowAdaptersPageSummary({ platform: 'claude-code' })).toBe(true);
+    expect(shouldShowAdaptersPageSummary({})).toBe(false);
   });
 });

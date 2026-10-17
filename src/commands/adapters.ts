@@ -127,6 +127,19 @@ export function formatAdaptersPageSummary(
   return `(showing ${shown} of ${total} after filters)`;
 }
 
+/** Show result context whenever adapters output has been narrowed by a user option. */
+export function shouldShowAdaptersPageSummary(options: {
+  platform?: string;
+  offset?: string;
+  limit?: string;
+}): boolean {
+  return (
+    options.platform !== undefined ||
+    options.offset !== undefined ||
+    options.limit !== undefined
+  );
+}
+
 export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
   return JSON.stringify(adapters, null, 2);
 }
@@ -197,7 +210,7 @@ export async function adaptersCommand(options: AdaptersOptions = {}): Promise<vo
       }
     }
 
-    if (options.offset !== undefined || options.limit !== undefined) {
+    if (shouldShowAdaptersPageSummary(options)) {
       console.log(chalk.dim(`  ${formatAdaptersPageSummary(filteredAdapterInfos.length, adapterInfos.length, offset, limit)}`));
     }
 
