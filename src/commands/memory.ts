@@ -2026,6 +2026,7 @@ export interface MemoryExplainResultJson {
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
+  freshness: MemoryFreshnessState;
 }
 
 export interface MemoryExplainJson {
@@ -2085,7 +2086,14 @@ export function formatMemoryExplainEmptyMessage(total: number): string {
 
 export function formatMemoryExplainJson(
   query: string,
-  results: Array<{ id: string; score: number; summary: string; pinned: boolean; tier: MemoryTier }>,
+  results: Array<{
+    id: string;
+    score: number;
+    summary: string;
+    pinned: boolean;
+    tier: MemoryTier;
+    freshness: MemoryFreshnessState;
+  }>,
   pagination: Partial<MemoryExplainPaginationJson> = {},
   filters?: MemoryExplainFiltersJson,
 ): string {
@@ -2110,6 +2118,7 @@ export function formatMemoryExplainJson(
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
+      freshness: result.freshness,
     })),
   };
   if (filters && Object.keys(filters).length > 0) record.filters = filters;
@@ -2381,6 +2390,7 @@ export async function explainMemoryCommand(
         summary: r.explanation.summary,
         pinned: !!r.entry.pinned,
         tier: getEffectiveTier(r.entry),
+        freshness: getMemoryFreshness(r.entry).state,
       })),
       pagination,
       getMemoryExplainFilters(options),

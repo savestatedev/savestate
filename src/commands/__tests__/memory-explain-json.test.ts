@@ -14,6 +14,7 @@ describe('savestate memory explain --json', () => {
           summary: 'Strong match for "inbox preference" in active short-term memory.',
           pinned: true,
           tier: 'L1',
+          freshness: 'active',
         },
         {
           id: 'mem-456',
@@ -21,6 +22,7 @@ describe('savestate memory explain --json', () => {
           summary: 'Partial match for query in working memory.',
           pinned: false,
           tier: 'L2',
+          freshness: 'stale',
         },
       ]),
     ) as MemoryExplainJson & {
@@ -46,6 +48,7 @@ describe('savestate memory explain --json', () => {
           summary: 'Strong match for "inbox preference" in active short-term memory.',
           pinned: true,
           tier: 'L1',
+          freshness: 'active',
         },
         {
           id: 'mem-456',
@@ -53,6 +56,7 @@ describe('savestate memory explain --json', () => {
           summary: 'Partial match for query in working memory.',
           pinned: false,
           tier: 'L2',
+          freshness: 'stale',
         },
       ],
     });
@@ -82,7 +86,7 @@ describe('savestate memory explain --json', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
         'inbox preference',
-        [{ id: 'mem-3', score: 0.4, summary: 'Another match.', pinned: false, tier: 'L3' }],
+        [{ id: 'mem-3', score: 0.4, summary: 'Another match.', pinned: false, tier: 'L3', freshness: 'needs_confirmation' }],
         { offset: 2, limit: 1, total: 4 },
       ),
     ) as MemoryExplainJson;

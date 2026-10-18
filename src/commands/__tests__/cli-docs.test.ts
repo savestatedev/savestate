@@ -3120,6 +3120,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
     expect(memorySection).toContain("each result's <code>pinned</code> state");
+    expect(memorySection).toContain("each result's <code>pinned</code> state, effective <code>tier</code>, and current <code>freshness</code> state");
     expect(memorySection).toContain('savestate memory explain "inbox preference" --json');
   });
 
