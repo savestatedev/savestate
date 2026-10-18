@@ -34,4 +34,16 @@ describe('savestate memory explain --json when missing', () => {
     expect(Object.keys(parsed).sort()).toEqual(['found', 'pagination', 'query', 'results', 'shown']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
+
+  it('preserves the freshness filter when no results match', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainMissingJson(
+        'inbox preference',
+        {},
+        { freshness: 'stale' },
+      ),
+    ) as MemoryExplainMissingJson;
+
+    expect(parsed.filters).toEqual({ freshness: 'stale' });
+  });
 });

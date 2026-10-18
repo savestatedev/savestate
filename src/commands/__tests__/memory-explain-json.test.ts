@@ -88,4 +88,17 @@ describe('savestate memory explain --json', () => {
       nextOffset: 3,
     });
   });
+
+  it('includes an active freshness filter for JSON consumers', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { total: 0 },
+        { freshness: 'needs_confirmation' },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.filters).toEqual({ freshness: 'needs_confirmation' });
+  });
 });

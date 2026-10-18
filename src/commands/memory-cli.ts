@@ -667,6 +667,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
+    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--json', 'Output as JSON')
     .action(async (query, options) => {
       try {
@@ -681,6 +682,7 @@ export function registerMemoryCommands(program: Command): void {
           limit: options.limit,
           offset: options.offset,
           tags: parseMemoryTags(options.tags),
+          freshness: parseMemoryFreshness(options.freshness),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
