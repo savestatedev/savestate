@@ -3119,7 +3119,18 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--json');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
+    expect(memorySection).toContain("each result's <code>pinned</code> state");
     expect(memorySection).toContain('savestate memory explain "inbox preference" --json');
+  });
+
+  it('documents memory explain pin filters', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(memorySection).toContain('scope retrieval explanations to pinned memories');
+    expect(memorySection).toContain('scope retrieval explanations to unpinned memories');
+    expect(explainBlock).toContain(".option('-p, --pinned'");
+    expect(explainBlock).toContain(".option('--unpinned'");
+    expect(memoryCli).toContain('parseMemoryPinnedFilter(options.pinned, options.unpinned)');
   });
 
   it('documents memory explain --json when missing', () => {
