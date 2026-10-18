@@ -73,4 +73,13 @@ describe('savestate memory explain freshness filter', () => {
 
     expect(filterMemoryExplainEntries(entries, { pinned: true })).toEqual([entries[0]]);
   });
+
+  it('keeps only unpinned memories when requested', () => {
+    const entries = [
+      { id: 'pinned', content: 'editor preference', source: 'user', createdAt: '2026-10-17T23:00:00.000Z', pinned: true },
+      { id: 'unpinned', content: 'editor preference', source: 'user', createdAt: '2026-10-17T23:00:00.000Z', pinned: false },
+    ];
+
+    expect(filterMemoryExplainEntries(entries, { pinned: false })).toEqual([entries[1]]);
+  });
 });
