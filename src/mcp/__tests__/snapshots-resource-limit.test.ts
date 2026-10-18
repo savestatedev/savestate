@@ -53,6 +53,7 @@ describe('MCP savestate://snapshots limit', () => {
       total: 4,
       offset: 1,
       nextOffset: 3,
+      nextUri: 'savestate://snapshots?offset=3&limit=2',
       entries: [{ id: 's2' }, { id: 's3' }],
     });
   });
@@ -63,6 +64,7 @@ describe('MCP savestate://snapshots limit', () => {
       total: 2,
       offset: 1,
       nextOffset: null,
+      nextUri: null,
     });
   });
 });

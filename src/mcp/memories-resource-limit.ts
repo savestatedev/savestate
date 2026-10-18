@@ -5,6 +5,7 @@ export interface MemoriesResourcePage<T> {
   total: number;
   offset: number;
   nextOffset: number | null;
+  nextUri: string | null;
   entries: T[];
 }
 
@@ -32,9 +33,11 @@ export function buildMemoriesResourcePage<T>(
   total: number,
   offset: number | undefined,
   limit: number | undefined,
+  resourceUri = 'savestate://memories',
 ): MemoriesResourcePage<T> {
   const start = offset ?? 0;
-  const selected = selectMemoriesResourceEntries(entries.slice(start), limit ?? 50);
+  const pageSize = limit ?? 50;
+  const selected = selectMemoriesResourceEntries(entries.slice(start), pageSize);
   const nextOffset = start + selected.length < total
     ? start + selected.length
     : null;
@@ -44,6 +47,7 @@ export function buildMemoriesResourcePage<T>(
     total,
     offset: start,
     nextOffset,
+    nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,
     entries: selected,
   };
 }

@@ -1526,6 +1526,7 @@ async function handleReadResource(uri: string): Promise<string> {
         total: page.total,
         offset: page.offset,
         nextOffset: page.nextOffset,
+        nextUri: page.nextUri,
         snapshots: page.entries.map((e: SnapshotIndexEntry) => ({
           id: e.id,
           timestamp: e.timestamp,
@@ -1555,6 +1556,7 @@ async function handleReadResource(uri: string): Promise<string> {
         total: page.total,
         offset: page.offset,
         nextOffset: page.nextOffset,
+        nextUri: page.nextUri,
         byType: stats.byType,
         memories: page.entries.map(m => ({
           id: m.id,

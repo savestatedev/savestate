@@ -5,6 +5,7 @@ export interface SnapshotsResourcePage<T> {
   total: number;
   offset: number;
   nextOffset: number | null;
+  nextUri: string | null;
   entries: T[];
 }
 
@@ -31,9 +32,11 @@ export function buildSnapshotsResourcePage<T>(
   entries: T[],
   offset: number | undefined,
   limit: number | undefined,
+  resourceUri = 'savestate://snapshots',
 ): SnapshotsResourcePage<T> {
   const start = offset ?? 0;
-  const selected = selectSnapshotsResourceEntries(entries.slice(start), limit ?? 50);
+  const pageSize = limit ?? 50;
+  const selected = selectSnapshotsResourceEntries(entries.slice(start), pageSize);
   const nextOffset = start + selected.length < entries.length
     ? start + selected.length
     : null;
@@ -43,6 +46,7 @@ export function buildSnapshotsResourcePage<T>(
     total: entries.length,
     offset: start,
     nextOffset,
+    nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,
     entries: selected,
   };
 }
