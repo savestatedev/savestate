@@ -478,16 +478,24 @@ export function filterMemoryExplainEntries(
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
+    since?: string;
+    until?: string;
     now?: Date;
   } = {},
 ): MemoryEntry[] {
   const scoped = filterMemoryListByFreshness(
-    filterMemoryListByTags(
-      filterMemoryListBySource(
-        filterMemoryListByNamespace(entries, options.namespace),
-        options.source,
+    filterMemoryListByCreatedSince(
+      filterMemoryListByCreatedUntil(
+        filterMemoryListByTags(
+          filterMemoryListBySource(
+            filterMemoryListByNamespace(entries, options.namespace),
+            options.source,
+          ),
+          options.tags,
+        ),
+        options.until,
       ),
-      options.tags,
+      options.since,
     ),
     options.freshness,
     options.now,
@@ -567,6 +575,8 @@ export function formatMemoryExplainFilterMatches(
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
+    since?: string;
+    until?: string;
   } = {},
 ): string[] {
   const filters: string[] = [];
@@ -575,6 +585,8 @@ export function formatMemoryExplainFilterMatches(
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
   if (options.pinned !== undefined) filters.push(`pinned=${options.pinned}`);
+  if (options.since !== undefined) filters.push(`since=${options.since}`);
+  if (options.until !== undefined) filters.push(`until=${options.until}`);
   return filters;
 }
 
@@ -585,6 +597,8 @@ export function formatMemoryExplainFilterSummary(
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
+    since?: string;
+    until?: string;
   } = {},
 ): string | undefined {
   const filters = formatMemoryExplainFilterMatches(options);
@@ -2054,6 +2068,8 @@ export interface MemoryExplainFiltersJson {
   tags?: string[];
   freshness?: MemoryFreshnessState;
   pinned?: boolean;
+  since?: string;
+  until?: string;
 }
 
 export interface MemoryExplainPaginationJson {
@@ -2181,6 +2197,8 @@ export function getMemoryExplainFilters(options?: {
   tags?: string[];
   freshness?: MemoryFreshnessState;
   pinned?: boolean;
+  since?: string;
+  until?: string;
 }): MemoryExplainFiltersJson | undefined {
   if (!options) return undefined;
 
@@ -2190,6 +2208,8 @@ export function getMemoryExplainFilters(options?: {
   if (options.tags !== undefined) filters.tags = options.tags;
   if (options.freshness !== undefined) filters.freshness = options.freshness;
   if (options.pinned !== undefined) filters.pinned = options.pinned;
+  if (options.since !== undefined) filters.since = options.since;
+  if (options.until !== undefined) filters.until = options.until;
   return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
@@ -2277,6 +2297,8 @@ export async function explainMemoryCommand(
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
+    since?: string;
+    until?: string;
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {

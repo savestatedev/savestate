@@ -3167,6 +3167,16 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryExplainOffset');
   });
 
+  it('documents memory explain creation-date filters', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(memorySection).toContain('on <code>list</code> or <code>explain</code>');
+    expect(memorySection).toContain('savestate memory explain "inbox preference" --since 2026-10-01 --until 2026-10-18');
+    expect(explainBlock).toContain(".option('--since <date>'");
+    expect(explainBlock).toContain(".option('--until <date>'");
+    expect(memoryCli).toContain('validateMemoryListDateRange(since, until)');
+  });
+
   it('lists savestate slo in the command overview', () => {
     expect(docs).toContain('id="slo"');
     expect(docs).toContain('savestate slo');

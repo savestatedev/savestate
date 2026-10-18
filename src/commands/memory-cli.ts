@@ -666,6 +666,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--source <id>', 'Source id to search (matching is case-insensitive)')
     .option('-p, --pinned', 'Filter to pinned memories')
     .option('--unpinned', 'Filter to unpinned memories')
+    .option('--until <date>', 'Search memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
+    .option('--since <date>', 'Search memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
@@ -674,6 +676,9 @@ export function registerMemoryCommands(program: Command): void {
     .action(async (query, options) => {
       try {
         const parsedQuery = parseMemoryQuery(query);
+        const until = parseMemoryListUntil(options.until);
+        const since = parseMemoryListSince(options.since);
+        validateMemoryListDateRange(since, until);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -682,6 +687,8 @@ export function registerMemoryCommands(program: Command): void {
           namespace: parseMemoryNamespace(options.namespace),
           source: parseMemorySource(options.source),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
+          until,
+          since,
           limit: options.limit,
           offset: options.offset,
           tags: parseMemoryTags(options.tags),
