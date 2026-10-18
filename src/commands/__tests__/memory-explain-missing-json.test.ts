@@ -46,4 +46,26 @@ describe('savestate memory explain --json when missing', () => {
 
     expect(parsed.filters).toEqual({ freshness: 'stale' });
   });
+
+  it('preserves every active scope filter when no results match', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainMissingJson(
+        'inbox preference',
+        {},
+        {
+          namespace: 'org:app:agent',
+          source: 'claude',
+          tags: ['personal'],
+          freshness: 'needs_confirmation',
+        },
+      ),
+    ) as MemoryExplainMissingJson;
+
+    expect(parsed.filters).toEqual({
+      namespace: 'org:app:agent',
+      source: 'claude',
+      tags: ['personal'],
+      freshness: 'needs_confirmation',
+    });
+  });
 });

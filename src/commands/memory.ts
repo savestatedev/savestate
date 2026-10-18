@@ -555,11 +555,33 @@ export function filterMemoryListByFreshness(
   return entries.filter((entry) => getMemoryFreshness(entry, now).state === freshness);
 }
 
-/** Describe the optional freshness scope for the human-facing explain output. */
+/** Describe active scope filters for the human-facing explain output. */
+export function formatMemoryExplainFilterMatches(
+  options: {
+    namespace?: string;
+    source?: string;
+    tags?: string[];
+    freshness?: MemoryFreshnessState;
+  } = {},
+): string[] {
+  const filters: string[] = [];
+  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
+  if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
+  if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
+  return filters;
+}
+
 export function formatMemoryExplainFilterSummary(
-  freshness?: MemoryFreshnessState,
+  options: {
+    namespace?: string;
+    source?: string;
+    tags?: string[];
+    freshness?: MemoryFreshnessState;
+  } = {},
 ): string | undefined {
-  return freshness === undefined ? undefined : `freshness=${freshness}`;
+  const filters = formatMemoryExplainFilterMatches(options);
+  return filters.length > 0 ? filters.join(', ') : undefined;
 }
 
 /**
@@ -2006,6 +2028,9 @@ export interface MemoryExplainJson {
 }
 
 export interface MemoryExplainFiltersJson {
+  namespace?: string;
+  source?: string;
+  tags?: string[];
   freshness?: MemoryFreshnessState;
 }
 
@@ -2041,6 +2066,13 @@ export function formatMemoryExplainPrettySummary(
   return `Showing ${first}-${last} of ${total} relevant memories.${continuation}`;
 }
 
+/** Keep the empty-state message aligned with whether the collection or page is empty. */
+export function formatMemoryExplainEmptyMessage(total: number): string {
+  return total === 0
+    ? 'No memories matched the query.'
+    : 'No memories are visible on this page.';
+}
+
 export function formatMemoryExplainJson(
   query: string,
   results: Array<{ id: string; score: number; summary: string }>,
@@ -2068,7 +2100,7 @@ export function formatMemoryExplainJson(
       summary: result.summary,
     })),
   };
-  if (filters?.freshness !== undefined) record.filters = filters;
+  if (filters && Object.keys(filters).length > 0) record.filters = filters;
   return JSON.stringify(record, null, 2);
 }
 
@@ -2104,8 +2136,25 @@ export function formatMemoryExplainMissingJson(
     },
     results: null,
   };
-  if (filters?.freshness !== undefined) record.filters = filters;
+  if (filters && Object.keys(filters).length > 0) record.filters = filters;
   return JSON.stringify(record, null, 2);
+}
+
+/** Preserve every active explain scope filter for JSON consumers. */
+export function getMemoryExplainFilters(options?: {
+  namespace?: string;
+  source?: string;
+  tags?: string[];
+  freshness?: MemoryFreshnessState;
+}): MemoryExplainFiltersJson | undefined {
+  if (!options) return undefined;
+
+  const filters: MemoryExplainFiltersJson = {};
+  if (options.namespace !== undefined) filters.namespace = options.namespace;
+  if (options.source !== undefined) filters.source = options.source;
+  if (options.tags !== undefined) filters.tags = options.tags;
+  if (options.freshness !== undefined) filters.freshness = options.freshness;
+  return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
 const DEFAULT_MEMORY_EXPLAIN_LIMIT = 5;
@@ -2277,7 +2326,7 @@ export async function explainMemoryCommand(
               `importance weight: 0.20`,
               `recency_decay weight: 0.10`,
             ],
-            filters_matched: options?.tags ? [`tags: [${options.tags.join(', ')}]`] : [],
+            filters_matched: formatMemoryExplainFilterMatches(options),
             boosts_applied: [
               ...(semanticScore > 0.7 ? [`strong semantic match (${semanticScore.toFixed(2)})`] : []),
               ...(importance > 0.7 ? [`high importance (${importance.toFixed(2)})`] : []),
@@ -2302,9 +2351,11 @@ export async function explainMemoryCommand(
 
   if (options?.format === 'json') {
     if (scoredLimited.length === 0) {
-      console.log(formatMemoryExplainMissingJson(query, pagination, {
-        freshness: options?.freshness,
-      }));
+      console.log(formatMemoryExplainMissingJson(
+        query,
+        pagination,
+        getMemoryExplainFilters(options),
+      ));
       return;
     }
     console.log(formatMemoryExplainJson(
@@ -2315,14 +2366,14 @@ export async function explainMemoryCommand(
         summary: r.explanation.summary,
       })),
       pagination,
-      { freshness: options?.freshness },
+      getMemoryExplainFilters(options),
     ));
     return;
   }
 
   // Pretty print format
   console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
-  const filterSummary = formatMemoryExplainFilterSummary(options?.freshness);
+  const filterSummary = formatMemoryExplainFilterSummary(options);
   if (filterSummary) {
     console.log(`   Filter: ${filterSummary}\n`);
   }
@@ -2377,7 +2428,7 @@ export async function explainMemoryCommand(
   }
 
   if (scoredLimited.length === 0) {
-    console.log('\n   No memories matched the query.\n');
+    console.log(`\n   ${formatMemoryExplainEmptyMessage(scored.length)}\n`);
     console.log('   Tips:');
     console.log('   • Try broader search terms');
     console.log('   • Check if memories exist with `savestate memory list`');

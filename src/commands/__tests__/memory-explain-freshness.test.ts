@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   filterMemoryExplainEntries,
+  formatMemoryExplainFilterMatches,
   formatMemoryExplainFilterSummary,
 } from '../memory.js';
 
@@ -31,9 +32,34 @@ describe('savestate memory explain freshness filter', () => {
   });
 
   it('summarizes the active freshness scope for pretty output', () => {
-    expect(formatMemoryExplainFilterSummary('needs_confirmation')).toBe(
+    expect(formatMemoryExplainFilterSummary({ freshness: 'needs_confirmation' })).toBe(
       'freshness=needs_confirmation',
     );
     expect(formatMemoryExplainFilterSummary()).toBeUndefined();
+  });
+
+  it('summarizes every active scope filter for pretty output', () => {
+    expect(formatMemoryExplainFilterSummary({
+      namespace: 'org:app:agent',
+      source: 'chatgpt',
+      tags: ['work', 'urgent'],
+      freshness: 'active',
+    })).toBe(
+      'namespace=org:app:agent, source=chatgpt, tags=[work, urgent], freshness=active',
+    );
+  });
+
+  it('reports every active scope filter in the explanation trace', () => {
+    expect(formatMemoryExplainFilterMatches({
+      namespace: 'org:app:agent',
+      source: 'chatgpt',
+      tags: ['work', 'urgent'],
+      freshness: 'active',
+    })).toEqual([
+      'namespace=org:app:agent',
+      'source=chatgpt',
+      'tags=[work, urgent]',
+      'freshness=active',
+    ]);
   });
 });
