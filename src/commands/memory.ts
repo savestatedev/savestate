@@ -476,14 +476,20 @@ export function filterMemoryExplainEntries(
     namespace?: string;
     source?: string;
     tags?: string[];
+    freshness?: MemoryFreshnessState;
+    now?: Date;
   } = {},
 ): MemoryEntry[] {
-  return filterMemoryListByTags(
-    filterMemoryListBySource(
-      filterMemoryListByNamespace(entries, options.namespace),
-      options.source,
+  return filterMemoryListByFreshness(
+    filterMemoryListByTags(
+      filterMemoryListBySource(
+        filterMemoryListByNamespace(entries, options.namespace),
+        options.source,
+      ),
+      options.tags,
     ),
-    options.tags,
+    options.freshness,
+    options.now,
   );
 }
 
@@ -2147,6 +2153,7 @@ export async function explainMemoryCommand(
     limit?: string;
     offset?: string;
     tags?: string[];
+    freshness?: MemoryFreshnessState;
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {
