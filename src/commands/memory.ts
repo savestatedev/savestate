@@ -2045,6 +2045,7 @@ export async function showTierConfig(
 
 export interface MemoryExplainResultJson {
   id: string;
+  createdAt?: string;
   score: number;
   summary: string;
   pinned: boolean;
@@ -2115,6 +2116,7 @@ export function formatMemoryExplainJson(
   query: string,
   results: Array<{
     id: string;
+    createdAt?: string;
     score: number;
     summary: string;
     pinned: boolean;
@@ -2141,6 +2143,7 @@ export function formatMemoryExplainJson(
     },
     results: results.map((result) => ({
       id: result.id,
+      createdAt: result.createdAt,
       score: result.score,
       summary: result.summary,
       pinned: result.pinned,
@@ -2423,6 +2426,7 @@ export async function explainMemoryCommand(
         const freshness = getMemoryFreshness(r.entry);
         return {
           id: r.entry.id,
+          createdAt: r.entry.createdAt,
           score: r.finalScore,
           summary: r.explanation.summary,
           pinned: !!r.entry.pinned,

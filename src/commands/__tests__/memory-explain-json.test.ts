@@ -10,6 +10,7 @@ describe('savestate memory explain --json', () => {
       formatMemoryExplainJson('inbox preference', [
         {
           id: 'mem-123',
+          createdAt: '2026-10-17T12:00:00.000Z',
           score: 0.82,
           summary: 'Strong match for "inbox preference" in active short-term memory.',
           pinned: true,
@@ -18,6 +19,7 @@ describe('savestate memory explain --json', () => {
         },
         {
           id: 'mem-456',
+          createdAt: '2026-10-16T08:30:00.000Z',
           score: 0.41,
           summary: 'Partial match for query in working memory.',
           pinned: false,
@@ -44,6 +46,7 @@ describe('savestate memory explain --json', () => {
       results: [
         {
           id: 'mem-123',
+          createdAt: '2026-10-17T12:00:00.000Z',
           score: 0.82,
           summary: 'Strong match for "inbox preference" in active short-term memory.',
           pinned: true,
@@ -52,6 +55,7 @@ describe('savestate memory explain --json', () => {
         },
         {
           id: 'mem-456',
+          createdAt: '2026-10-16T08:30:00.000Z',
           score: 0.41,
           summary: 'Partial match for query in working memory.',
           pinned: false,

@@ -3119,6 +3119,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--json');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
+    expect(memorySection).toContain('<code>createdAt</code>');
     expect(memorySection).toContain("each result's <code>pinned</code> state");
     expect(memorySection).toContain("each result's current <code>freshness</code> state");
     expect(memorySection).toContain("results also include <code>pinned</code> state and effective <code>tier</code>");
