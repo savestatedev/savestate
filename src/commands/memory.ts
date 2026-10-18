@@ -555,11 +555,21 @@ export function filterMemoryListByFreshness(
   return entries.filter((entry) => getMemoryFreshness(entry, now).state === freshness);
 }
 
-/** Describe the optional freshness scope for the human-facing explain output. */
+/** Describe active scope filters for the human-facing explain output. */
 export function formatMemoryExplainFilterSummary(
-  freshness?: MemoryFreshnessState,
+  options: {
+    namespace?: string;
+    source?: string;
+    tags?: string[];
+    freshness?: MemoryFreshnessState;
+  } = {},
 ): string | undefined {
-  return freshness === undefined ? undefined : `freshness=${freshness}`;
+  const filters: string[] = [];
+  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
+  if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
+  if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
+  return filters.length > 0 ? filters.join(', ') : undefined;
 }
 
 /**
@@ -2344,7 +2354,7 @@ export async function explainMemoryCommand(
 
   // Pretty print format
   console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
-  const filterSummary = formatMemoryExplainFilterSummary(options?.freshness);
+  const filterSummary = formatMemoryExplainFilterSummary(options);
   if (filterSummary) {
     console.log(`   Filter: ${filterSummary}\n`);
   }
