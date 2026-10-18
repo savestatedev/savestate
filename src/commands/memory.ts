@@ -1994,7 +1994,12 @@ export interface MemoryExplainJson {
   query: string;
   shown: number;
   pagination: MemoryExplainPaginationJson;
+  filters?: MemoryExplainFiltersJson;
   results: MemoryExplainResultJson[];
+}
+
+export interface MemoryExplainFiltersJson {
+  freshness?: MemoryFreshnessState;
 }
 
 export interface MemoryExplainPaginationJson {
@@ -2010,6 +2015,7 @@ export function formatMemoryExplainJson(
   query: string,
   results: Array<{ id: string; score: number; summary: string }>,
   pagination: Partial<MemoryExplainPaginationJson> = {},
+  filters?: MemoryExplainFiltersJson,
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
@@ -2032,6 +2038,7 @@ export function formatMemoryExplainJson(
       summary: result.summary,
     })),
   };
+  if (filters?.freshness !== undefined) record.filters = filters;
   return JSON.stringify(record, null, 2);
 }
 
@@ -2040,35 +2047,35 @@ export interface MemoryExplainMissingJson {
   query: string;
   shown: 0;
   pagination: MemoryExplainPaginationJson;
+  filters?: MemoryExplainFiltersJson;
   results: null;
 }
 
 export function formatMemoryExplainMissingJson(
   query: string,
   pagination: Partial<MemoryExplainPaginationJson> = {},
+  filters?: MemoryExplainFiltersJson,
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
   const pageSize = pagination.pageSize ?? pagination.limit ?? 1;
   const hasMore = pagination.hasMore ?? offset < total;
-  return JSON.stringify(
-    {
-      found: false,
-      query,
-      shown: 0,
-      pagination: {
-        offset,
-        limit: pagination.limit ?? null,
-        total,
-        pageSize,
-        hasMore,
-        nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
-      },
-      results: null,
+  const record: MemoryExplainMissingJson = {
+    found: false,
+    query,
+    shown: 0,
+    pagination: {
+      offset,
+      limit: pagination.limit ?? null,
+      total,
+      pageSize,
+      hasMore,
+      nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
-    null,
-    2,
-  );
+    results: null,
+  };
+  if (filters?.freshness !== undefined) record.filters = filters;
+  return JSON.stringify(record, null, 2);
 }
 
 const DEFAULT_MEMORY_EXPLAIN_LIMIT = 5;
@@ -2265,7 +2272,9 @@ export async function explainMemoryCommand(
 
   if (options?.format === 'json') {
     if (scoredLimited.length === 0) {
-      console.log(formatMemoryExplainMissingJson(query, pagination));
+      console.log(formatMemoryExplainMissingJson(query, pagination, {
+        freshness: options?.freshness,
+      }));
       return;
     }
     console.log(formatMemoryExplainJson(
@@ -2276,6 +2285,7 @@ export async function explainMemoryCommand(
         summary: r.explanation.summary,
       })),
       pagination,
+      { freshness: options?.freshness },
     ));
     return;
   }
