@@ -2036,6 +2036,8 @@ export interface MemoryExplainResultJson {
   pinned: boolean;
   tier: MemoryTier;
   freshness: MemoryFreshnessState;
+  freshnessClass?: MemoryFreshnessClass;
+  lastVerifiedAt?: string;
 }
 
 export interface MemoryExplainJson {
@@ -2128,6 +2130,8 @@ export function formatMemoryExplainJson(
       pinned: result.pinned,
       tier: result.tier,
       freshness: result.freshness,
+      freshnessClass: result.freshnessClass,
+      lastVerifiedAt: result.lastVerifiedAt,
     })),
   };
   if (filters && Object.keys(filters).length > 0) record.filters = filters;
@@ -2393,14 +2397,19 @@ export async function explainMemoryCommand(
     }
     console.log(formatMemoryExplainJson(
       query,
-      scoredLimited.map((r) => ({
-        id: r.entry.id,
-        score: r.finalScore,
-        summary: r.explanation.summary,
-        pinned: !!r.entry.pinned,
-        tier: getEffectiveTier(r.entry),
-        freshness: getMemoryFreshness(r.entry).state,
-      })),
+      scoredLimited.map((r) => {
+        const freshness = getMemoryFreshness(r.entry);
+        return {
+          id: r.entry.id,
+          score: r.finalScore,
+          summary: r.explanation.summary,
+          pinned: !!r.entry.pinned,
+          tier: getEffectiveTier(r.entry),
+          freshness: freshness.state,
+          freshnessClass: freshness.class,
+          lastVerifiedAt: freshness.lastVerifiedAt,
+        };
+      }),
       pagination,
       getMemoryExplainFilters(options),
     ));

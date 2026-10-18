@@ -114,6 +114,27 @@ describe('savestate memory explain --json', () => {
     expect(parsed.filters).toEqual({ freshness: 'needs_confirmation' });
   });
 
+  it('includes the freshness profile and verification timestamp when provided', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        summary: 'Strong match for "inbox preference" in active short-term memory.',
+        pinned: true,
+        tier: 'L1',
+        freshness: 'stale',
+        freshnessClass: 'fast',
+        lastVerifiedAt: '2026-10-17T12:00:00.000Z',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]).toMatchObject({
+      freshness: 'stale',
+      freshnessClass: 'fast',
+      lastVerifiedAt: '2026-10-17T12:00:00.000Z',
+    });
+  });
+
   it('includes every active scope filter for JSON consumers', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
