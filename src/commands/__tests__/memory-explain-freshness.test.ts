@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { filterMemoryExplainEntries } from '../memory.js';
+import {
+  filterMemoryExplainEntries,
+  formatMemoryExplainFilterSummary,
+} from '../memory.js';
 
 describe('savestate memory explain freshness filter', () => {
   it('keeps only memories in the requested freshness state', () => {
@@ -25,5 +28,12 @@ describe('savestate memory explain freshness filter', () => {
 
     expect(filterMemoryExplainEntries(entries, { freshness: 'active', now })).toEqual([entries[0]]);
     expect(filterMemoryExplainEntries(entries, { freshness: 'stale', now })).toEqual([entries[1]]);
+  });
+
+  it('summarizes the active freshness scope for pretty output', () => {
+    expect(formatMemoryExplainFilterSummary('needs_confirmation')).toBe(
+      'freshness=needs_confirmation',
+    );
+    expect(formatMemoryExplainFilterSummary()).toBeUndefined();
   });
 });

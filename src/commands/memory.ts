@@ -555,6 +555,13 @@ export function filterMemoryListByFreshness(
   return entries.filter((entry) => getMemoryFreshness(entry, now).state === freshness);
 }
 
+/** Describe the optional freshness scope for the human-facing explain output. */
+export function formatMemoryExplainFilterSummary(
+  freshness?: MemoryFreshnessState,
+): string | undefined {
+  return freshness === undefined ? undefined : `freshness=${freshness}`;
+}
+
 /**
  * Promote a memory entry to a higher tier.
  */
@@ -2292,6 +2299,10 @@ export async function explainMemoryCommand(
 
   // Pretty print format
   console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
+  const filterSummary = formatMemoryExplainFilterSummary(options?.freshness);
+  if (filterSummary) {
+    console.log(`   Filter: ${filterSummary}\n`);
+  }
   console.log(`Found ${scoredLimited.length} relevant memories:\n`);
   console.log('─'.repeat(80));
 
