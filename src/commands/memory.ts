@@ -913,6 +913,15 @@ export function formatMemoryListFreshness(entry: MemoryEntry, now = new Date()):
   return state === 'needs_confirmation' ? 'confirm' : state;
 }
 
+/** Show the full freshness state in a human-facing memory explanation. */
+export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date()): string {
+  const freshness = getMemoryFreshness(entry, now);
+  const state = freshness.state === 'needs_confirmation'
+    ? 'needs confirmation'
+    : freshness.state;
+  return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)})`;
+}
+
 /** Truncate table previews without adding an ellipsis to already-short content. */
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
@@ -2026,6 +2035,9 @@ export interface MemoryExplainResultJson {
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
+  freshness: MemoryFreshnessState;
+  freshnessClass?: MemoryFreshnessClass;
+  lastVerifiedAt?: string;
 }
 
 export interface MemoryExplainJson {
@@ -2085,7 +2097,14 @@ export function formatMemoryExplainEmptyMessage(total: number): string {
 
 export function formatMemoryExplainJson(
   query: string,
-  results: Array<{ id: string; score: number; summary: string; pinned: boolean; tier: MemoryTier }>,
+  results: Array<{
+    id: string;
+    score: number;
+    summary: string;
+    pinned: boolean;
+    tier: MemoryTier;
+    freshness: MemoryFreshnessState;
+  }>,
   pagination: Partial<MemoryExplainPaginationJson> = {},
   filters?: MemoryExplainFiltersJson,
 ): string {
@@ -2110,6 +2129,9 @@ export function formatMemoryExplainJson(
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
+      freshness: result.freshness,
+      freshnessClass: result.freshnessClass,
+      lastVerifiedAt: result.lastVerifiedAt,
     })),
   };
   if (filters && Object.keys(filters).length > 0) record.filters = filters;
@@ -2375,13 +2397,19 @@ export async function explainMemoryCommand(
     }
     console.log(formatMemoryExplainJson(
       query,
-      scoredLimited.map((r) => ({
-        id: r.entry.id,
-        score: r.finalScore,
-        summary: r.explanation.summary,
-        pinned: !!r.entry.pinned,
-        tier: getEffectiveTier(r.entry),
-      })),
+      scoredLimited.map((r) => {
+        const freshness = getMemoryFreshness(r.entry);
+        return {
+          id: r.entry.id,
+          score: r.finalScore,
+          summary: r.explanation.summary,
+          pinned: !!r.entry.pinned,
+          tier: getEffectiveTier(r.entry),
+          freshness: freshness.state,
+          freshnessClass: freshness.class,
+          lastVerifiedAt: freshness.lastVerifiedAt,
+        };
+      }),
       pagination,
       getMemoryExplainFilters(options),
     ));
@@ -2407,6 +2435,7 @@ export async function explainMemoryCommand(
 
     console.log(`\n#${(offset ?? 0) + index + 1} ${entry.id}${pinned}`);
     console.log(`   Tier: ${tier} | Final Score: ${(finalScore * 100).toFixed(1)}%`);
+    console.log(`   Freshness: ${formatMemoryExplainFreshness(entry)}`);
     console.log(`   Content: ${entry.content.slice(0, 60).replace(/\n/g, ' ')}...`);
     console.log();
 
