@@ -556,6 +556,22 @@ export function filterMemoryListByFreshness(
 }
 
 /** Describe active scope filters for the human-facing explain output. */
+export function formatMemoryExplainFilterMatches(
+  options: {
+    namespace?: string;
+    source?: string;
+    tags?: string[];
+    freshness?: MemoryFreshnessState;
+  } = {},
+): string[] {
+  const filters: string[] = [];
+  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
+  if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
+  if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
+  return filters;
+}
+
 export function formatMemoryExplainFilterSummary(
   options: {
     namespace?: string;
@@ -564,11 +580,7 @@ export function formatMemoryExplainFilterSummary(
     freshness?: MemoryFreshnessState;
   } = {},
 ): string | undefined {
-  const filters: string[] = [];
-  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
-  if (options.source !== undefined) filters.push(`source=${options.source}`);
-  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
-  if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
+  const filters = formatMemoryExplainFilterMatches(options);
   return filters.length > 0 ? filters.join(', ') : undefined;
 }
 
@@ -2314,7 +2326,7 @@ export async function explainMemoryCommand(
               `importance weight: 0.20`,
               `recency_decay weight: 0.10`,
             ],
-            filters_matched: options?.tags ? [`tags: [${options.tags.join(', ')}]`] : [],
+            filters_matched: formatMemoryExplainFilterMatches(options),
             boosts_applied: [
               ...(semanticScore > 0.7 ? [`strong semantic match (${semanticScore.toFixed(2)})`] : []),
               ...(importance > 0.7 ? [`high importance (${importance.toFixed(2)})`] : []),

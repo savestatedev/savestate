@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   filterMemoryExplainEntries,
+  formatMemoryExplainFilterMatches,
   formatMemoryExplainFilterSummary,
 } from '../memory.js';
 
@@ -46,5 +47,19 @@ describe('savestate memory explain freshness filter', () => {
     })).toBe(
       'namespace=org:app:agent, source=chatgpt, tags=[work, urgent], freshness=active',
     );
+  });
+
+  it('reports every active scope filter in the explanation trace', () => {
+    expect(formatMemoryExplainFilterMatches({
+      namespace: 'org:app:agent',
+      source: 'chatgpt',
+      tags: ['work', 'urgent'],
+      freshness: 'active',
+    })).toEqual([
+      'namespace=org:app:agent',
+      'source=chatgpt',
+      'tags=[work, urgent]',
+      'freshness=active',
+    ]);
   });
 });
