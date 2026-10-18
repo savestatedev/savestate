@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyMemoryExplainFilters,
+  formatMemoryExplainPrettySummary,
   parseMemoryExplainOffset,
   selectMemoryExplainOffsetEntries,
 } from '../memory.js';
@@ -50,5 +51,18 @@ describe('savestate memory explain --offset', () => {
         { offset: '1', limit: '1' },
       ).map((entry) => entry.id),
     ).toEqual(['m2']);
+  });
+
+  it('summarizes a visible page and its continuation', () => {
+    expect(formatMemoryExplainPrettySummary(2, 5, { offset: 2, pageSize: 2 })).toBe(
+      'Showing 3-4 of 5 relevant memories. Next page: use --offset 4 --limit 2.',
+    );
+  });
+
+  it('distinguishes an empty page from no matching memories', () => {
+    expect(formatMemoryExplainPrettySummary(0, 5, { offset: 10 })).toContain(
+      'No memories on this page',
+    );
+    expect(formatMemoryExplainPrettySummary(0, 0)).toBe('No memories matched the query.');
   });
 });

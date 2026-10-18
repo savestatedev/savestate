@@ -2000,6 +2000,29 @@ export interface MemoryExplainPaginationJson {
   nextOffset: number | null;
 }
 
+/** Describe the visible page so human output remains useful with --offset/--limit. */
+export function formatMemoryExplainPrettySummary(
+  shown: number,
+  total: number,
+  options: { offset?: number; pageSize?: number } = {},
+): string {
+  const offset = options.offset ?? 0;
+  const pageSize = options.pageSize ?? DEFAULT_MEMORY_EXPLAIN_LIMIT;
+
+  if (total === 0) return 'No memories matched the query.';
+  if (shown === 0) {
+    return `No memories on this page (offset ${offset}; ${total} relevant memories matched). ` +
+      'Try a smaller --offset value.';
+  }
+
+  const first = offset + 1;
+  const last = offset + shown;
+  const continuation = last < total
+    ? ` Next page: use --offset ${last} --limit ${pageSize}.`
+    : '';
+  return `Showing ${first}-${last} of ${total} relevant memories.${continuation}`;
+}
+
 export function formatMemoryExplainJson(
   query: string,
   results: Array<{ id: string; score: number; summary: string }>,
@@ -2275,7 +2298,10 @@ export async function explainMemoryCommand(
 
   // Pretty print format
   console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
-  console.log(`Found ${scoredLimited.length} relevant memories:\n`);
+  console.log(`${formatMemoryExplainPrettySummary(scoredLimited.length, scored.length, {
+    offset: offset ?? 0,
+    pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
+  })}\n`);
   console.log('─'.repeat(80));
 
   for (const [index, result] of scoredLimited.entries()) {
@@ -2283,7 +2309,7 @@ export async function explainMemoryCommand(
     const tier = getEffectiveTier(entry);
     const pinned = entry.pinned ? ' 📌' : '';
 
-    console.log(`\n#${index + 1} ${entry.id}${pinned}`);
+    console.log(`\n#${(offset ?? 0) + index + 1} ${entry.id}${pinned}`);
     console.log(`   Tier: ${tier} | Final Score: ${(finalScore * 100).toFixed(1)}%`);
     console.log(`   Content: ${entry.content.slice(0, 60).replace(/\n/g, ' ')}...`);
     console.log();
