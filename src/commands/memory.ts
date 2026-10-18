@@ -477,10 +477,11 @@ export function filterMemoryExplainEntries(
     source?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
+    pinned?: boolean;
     now?: Date;
   } = {},
 ): MemoryEntry[] {
-  return filterMemoryListByFreshness(
+  const scoped = filterMemoryListByFreshness(
     filterMemoryListByTags(
       filterMemoryListBySource(
         filterMemoryListByNamespace(entries, options.namespace),
@@ -491,6 +492,9 @@ export function filterMemoryExplainEntries(
     options.freshness,
     options.now,
   );
+  return options.pinned === undefined
+    ? scoped
+    : scoped.filter((entry) => !!entry.pinned === options.pinned);
 }
 
 /** Normalize legacy tag metadata before filtering or serializing it. */
@@ -562,6 +566,7 @@ export function formatMemoryExplainFilterMatches(
     source?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
+    pinned?: boolean;
   } = {},
 ): string[] {
   const filters: string[] = [];
@@ -569,6 +574,7 @@ export function formatMemoryExplainFilterMatches(
   if (options.source !== undefined) filters.push(`source=${options.source}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
+  if (options.pinned !== undefined) filters.push(`pinned=${options.pinned}`);
   return filters;
 }
 
@@ -578,6 +584,7 @@ export function formatMemoryExplainFilterSummary(
     source?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
+    pinned?: boolean;
   } = {},
 ): string | undefined {
   const filters = formatMemoryExplainFilterMatches(options);
@@ -2032,6 +2039,7 @@ export interface MemoryExplainFiltersJson {
   source?: string;
   tags?: string[];
   freshness?: MemoryFreshnessState;
+  pinned?: boolean;
 }
 
 export interface MemoryExplainPaginationJson {
@@ -2146,6 +2154,7 @@ export function getMemoryExplainFilters(options?: {
   source?: string;
   tags?: string[];
   freshness?: MemoryFreshnessState;
+  pinned?: boolean;
 }): MemoryExplainFiltersJson | undefined {
   if (!options) return undefined;
 
@@ -2154,6 +2163,7 @@ export function getMemoryExplainFilters(options?: {
   if (options.source !== undefined) filters.source = options.source;
   if (options.tags !== undefined) filters.tags = options.tags;
   if (options.freshness !== undefined) filters.freshness = options.freshness;
+  if (options.pinned !== undefined) filters.pinned = options.pinned;
   return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
@@ -2240,6 +2250,7 @@ export async function explainMemoryCommand(
     offset?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
+    pinned?: boolean;
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {

@@ -113,6 +113,7 @@ describe('savestate memory explain --json', () => {
           source: 'chatgpt',
           tags: ['work', 'urgent'],
           freshness: 'active',
+          pinned: true,
         },
       ),
     ) as MemoryExplainJson;
@@ -122,6 +123,7 @@ describe('savestate memory explain --json', () => {
       source: 'chatgpt',
       tags: ['work', 'urgent'],
       freshness: 'active',
+      pinned: true,
     });
   });
 });
