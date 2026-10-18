@@ -913,6 +913,11 @@ export function formatMemoryListFreshness(entry: MemoryEntry, now = new Date()):
   return state === 'needs_confirmation' ? 'confirm' : state;
 }
 
+/** Show the full freshness state in a human-facing memory explanation. */
+export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date()): string {
+  return getMemoryFreshness(entry, now).state;
+}
+
 /** Truncate table previews without adding an ellipsis to already-short content. */
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
@@ -2417,6 +2422,7 @@ export async function explainMemoryCommand(
 
     console.log(`\n#${(offset ?? 0) + index + 1} ${entry.id}${pinned}`);
     console.log(`   Tier: ${tier} | Final Score: ${(finalScore * 100).toFixed(1)}%`);
+    console.log(`   Freshness: ${formatMemoryExplainFreshness(entry)}`);
     console.log(`   Content: ${entry.content.slice(0, 60).replace(/\n/g, ' ')}...`);
     console.log();
 
