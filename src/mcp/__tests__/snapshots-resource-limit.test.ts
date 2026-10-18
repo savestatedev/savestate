@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from '../snapshots-resource-limit.js';
+import {
+  buildSnapshotsResourcePage,
+  parseSnapshotsResourceLimit,
+  selectSnapshotsResourceEntries,
+} from '../snapshots-resource-limit.js';
 
 describe('MCP savestate://snapshots limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,30 @@ describe('MCP savestate://snapshots limit', () => {
   it('returns all snapshots when limit is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectSnapshotsResourceEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('reports total and the next offset for a partial page', () => {
+    const page = buildSnapshotsResourcePage(
+      [{ id: 's1' }, { id: 's2' }, { id: 's3' }, { id: 's4' }],
+      1,
+      2,
+    );
+
+    expect(page).toEqual({
+      count: 2,
+      total: 4,
+      offset: 1,
+      nextOffset: 3,
+      entries: [{ id: 's2' }, { id: 's3' }],
+    });
+  });
+
+  it('uses a null next offset on the final page', () => {
+    expect(buildSnapshotsResourcePage([{ id: 's1' }, { id: 's2' }], 1, 2)).toMatchObject({
+      count: 1,
+      total: 2,
+      offset: 1,
+      nextOffset: null,
+    });
   });
 });

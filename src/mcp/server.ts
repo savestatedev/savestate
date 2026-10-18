@@ -109,8 +109,8 @@ import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './searc
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from './memories-resource-limit.js';
 import { parseMemoriesResourceOffset, selectMemoriesResourceOffsetEntries } from './memories-resource-offset.js';
-import { parseSnapshotsResourceLimit, selectSnapshotsResourceEntries } from './snapshots-resource-limit.js';
-import { parseSnapshotsResourceOffset, selectSnapshotsResourceOffsetEntries } from './snapshots-resource-offset.js';
+import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
+import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
 
@@ -561,7 +561,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://snapshots',
     name: 'Snapshots',
-    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000)',
+    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, offset, and nextOffset for pagination.',
     mimeType: 'application/json',
   },
   {
@@ -1519,12 +1519,14 @@ async function handleReadResource(uri: string): Promise<string> {
       const index = await loadIndex();
       const entries = sortSavestateListEntries(index.snapshots);
 
-      const skipped = selectSnapshotsResourceOffsetEntries(entries, offset);
-      const selected = selectSnapshotsResourceEntries(skipped, limit ?? 50);
+      const page = buildSnapshotsResourcePage(entries, offset, limit);
 
       return JSON.stringify({
-        count: selected.length,
-        snapshots: selected.map((e: SnapshotIndexEntry) => ({
+        count: page.count,
+        total: page.total,
+        offset: page.offset,
+        nextOffset: page.nextOffset,
+        snapshots: page.entries.map((e: SnapshotIndexEntry) => ({
           id: e.id,
           timestamp: e.timestamp,
           platform: e.platform,
