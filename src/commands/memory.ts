@@ -2006,6 +2006,9 @@ export interface MemoryExplainJson {
 }
 
 export interface MemoryExplainFiltersJson {
+  namespace?: string;
+  source?: string;
+  tags?: string[];
   freshness?: MemoryFreshnessState;
 }
 
@@ -2068,7 +2071,7 @@ export function formatMemoryExplainJson(
       summary: result.summary,
     })),
   };
-  if (filters?.freshness !== undefined) record.filters = filters;
+  if (filters && Object.keys(filters).length > 0) record.filters = filters;
   return JSON.stringify(record, null, 2);
 }
 
@@ -2104,8 +2107,25 @@ export function formatMemoryExplainMissingJson(
     },
     results: null,
   };
-  if (filters?.freshness !== undefined) record.filters = filters;
+  if (filters && Object.keys(filters).length > 0) record.filters = filters;
   return JSON.stringify(record, null, 2);
+}
+
+/** Preserve every active explain scope filter for JSON consumers. */
+export function getMemoryExplainFilters(options?: {
+  namespace?: string;
+  source?: string;
+  tags?: string[];
+  freshness?: MemoryFreshnessState;
+}): MemoryExplainFiltersJson | undefined {
+  if (!options) return undefined;
+
+  const filters: MemoryExplainFiltersJson = {};
+  if (options.namespace !== undefined) filters.namespace = options.namespace;
+  if (options.source !== undefined) filters.source = options.source;
+  if (options.tags !== undefined) filters.tags = options.tags;
+  if (options.freshness !== undefined) filters.freshness = options.freshness;
+  return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
 const DEFAULT_MEMORY_EXPLAIN_LIMIT = 5;
@@ -2302,9 +2322,11 @@ export async function explainMemoryCommand(
 
   if (options?.format === 'json') {
     if (scoredLimited.length === 0) {
-      console.log(formatMemoryExplainMissingJson(query, pagination, {
-        freshness: options?.freshness,
-      }));
+      console.log(formatMemoryExplainMissingJson(
+        query,
+        pagination,
+        getMemoryExplainFilters(options),
+      ));
       return;
     }
     console.log(formatMemoryExplainJson(
@@ -2315,7 +2337,7 @@ export async function explainMemoryCommand(
         summary: r.explanation.summary,
       })),
       pagination,
-      { freshness: options?.freshness },
+      getMemoryExplainFilters(options),
     ));
     return;
   }

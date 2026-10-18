@@ -101,4 +101,27 @@ describe('savestate memory explain --json', () => {
 
     expect(parsed.filters).toEqual({ freshness: 'needs_confirmation' });
   });
+
+  it('includes every active scope filter for JSON consumers', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        {},
+        {
+          namespace: 'org:app:agent',
+          source: 'chatgpt',
+          tags: ['work', 'urgent'],
+          freshness: 'active',
+        },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.filters).toEqual({
+      namespace: 'org:app:agent',
+      source: 'chatgpt',
+      tags: ['work', 'urgent'],
+      freshness: 'active',
+    });
+  });
 });
