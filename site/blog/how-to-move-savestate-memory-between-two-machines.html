@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Move SaveState Memory Between Two Machines | SaveState</title>
+<meta name="description" content="Move SaveState memory between two machines with npx @savestate/cli. Real init, snapshot, restore, and search output from version 0.9.1, including the missing archive and the copy that fixes it.">
+<meta name="keywords" content="SaveState two machines, move AI memory, encrypted snapshot, npx @savestate/cli, CLAUDE.md">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/blog/how-to-move-savestate-memory-between-two-machines">
+<meta property="og:title" content="How to Move SaveState Memory Between Two Machines">
+<meta property="og:description" content="Move SaveState memory between two machines with npx @savestate/cli. Real init, snapshot, restore, and search output from version 0.9.1, including the missing archive and the copy that fixes it.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta property="og:site_name" content="SaveState">
+<meta property="article:published_time" content="2026-10-18">
+<meta property="article:author" content="SaveState">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://savestate.dev/blog/how-to-move-savestate-memory-between-two-machines">
+<meta name="twitter:title" content="How to Move SaveState Memory Between Two Machines">
+<meta name="twitter:description" content="Move SaveState memory between two machines with npx @savestate/cli. Real init, snapshot, restore, and search output from version 0.9.1, including the missing archive and the copy that fixes it.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://savestate.dev/blog/how-to-move-savestate-memory-between-two-machines">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Move SaveState Memory Between Two Machines",
+  "description": "Move SaveState memory between two machines with npx @savestate/cli. Real init, snapshot, restore, and search output from version 0.9.1, including the missing archive and the copy that fixes it.",
+  "image": "https://savestate.dev/og-image.png",
+  "datePublished": "2026-10-18",
+  "dateModified": "2026-10-18",
+  "author": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://savestate.dev/logo.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://savestate.dev/blog/how-to-move-savestate-memory-between-two-machines"
+  }
+}
+</script>
+
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links { display: none; }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a { padding: 12px 0; font-size: 16px; }
+  .nav-links.show .btn-nav { margin-top: 8px; text-align: center; }
+}
+
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header { margin-bottom: 48px; }
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li { margin-bottom: 8px; }
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a { color: var(--blue); text-decoration: none; }
+.article-content a:hover { text-decoration: underline; }
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover { transform: translateY(-2px); text-decoration: none; }
+
+.cta-secondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cta-fulfillment {
+  margin-top: 16px;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.cta-fulfillment code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">October 18, 2026</div>
+      <h1>How to Move SaveState Memory Between Two Machines</h1>
+      <p class="subtitle">The ciphertext stays in that computer's home directory until you copy the file.</p>
+    </header>
+
+    <div class="article-content">
+      <p>Two computers do not share <code>~/.savestate</code>. This walk-through uses two temp <code>HOME</code> directories, <code>/tmp/savestate-two-machines/machine-a</code> and <code>/tmp/savestate-two-machines/machine-b</code>, each with its own project. Machine A is the desk. Machine B is the laptop.</p>
+      <p>The commands were <code>npx --no-install @savestate/cli</code>, linked to the SaveState CLI built from this repository at version 0.9.1, so these transcripts come from this repository. After you install the package, the same subcommands are <code>npx @savestate/cli</code>. The passphrase <code>desk-to-laptop-demo</code> exists only for this temp project.</p>
+      <p>For the adapter, see <a href="/claude-code">Claude Code</a>. Snapshots are a <a href="/docs/format.html">SaveState Archive</a>, encrypted with AES-256-GCM before they are stored. <code>savestate cloud push</code> is the remote move, and it requires a Pro or Team login. This session had no API key, so the move that worked was a copy of the local <code>.saf.enc</code> file.</p>
+
+      <h2>Snapshot on the desk</h2>
+      <p>Commands in this section ran in <code>/tmp/savestate-two-machines/machine-a/project</code>. <code>CLAUDE.md</code> was:</p>
+      <pre><code># Ferry
+
+The laptop handoff token is ferry-token-9.
+Keep the billing note from the desk machine.
+Restore this file on the second machine before the next deploy.</code></pre>
+      <pre><code>$ export HOME=/tmp/savestate-two-machines/machine-a
+$ export SAVESTATE_PASSPHRASE='desk-to-laptop-demo'
+$ npx --no-install @savestate/cli --version
+0.9.1</code></pre>
+      <pre><code>$ npx --no-install @savestate/cli init
+
+⚡ SaveState — Time Machine for AI
+
+- Initializing SaveState...
+✔ Created .savestate/ directory
+- Detecting platform...
+✔ Detected platform: Claude Code
+
+  Your snapshots will be encrypted with a passphrase.
+  You can also set SAVESTATE_PASSPHRASE env var.
+
+
+✓ SaveState initialized!
+
+  Next steps:
+  savestate snapshot      Capture your first snapshot
+  savestate config        Configure storage &amp; adapters
+  savestate adapters      See available platform adapters
+</code></pre>
+      <p>Init writes an absolute storage path from <code>HOME</code>:</p>
+      <pre><code>$ grep path .savestate/config.json
+      "path": "/tmp/savestate-two-machines/machine-a/.savestate",</code></pre>
+      <pre><code>$ npx --no-install @savestate/cli snapshot --label desk
+
+- Extracting state via Claude Code adapter...
+✔ Full snapshot created!
+
+  ID:         ss-2026-10-18T21-36-23-7w2fps
+  Adapter:    Claude Code
+  Type:       full
+  Label:      desk
+  Files:      10 files in archive
+  Archive:    1.3 KB
+  Encrypted:  1.4 KB
+  Storage:    local
+  Status:     ✓ Encrypted &amp; stored
+
+  Restore with: savestate restore ss-2026-10-18T21-36-23-7w2fps
+</code></pre>
+      <pre><code>$ npx --no-install @savestate/cli list
+
+📋 Snapshots
+   Storage: local
+
+  ID                             Date                  Adapter      Label        Size
+  ───────────────────────────────────────────────────────────────────────────────────
+  ss-2026-10-18T21-36-23-7w2fps  Oct 18, 2026, 21:36   claude-code  desk       1.4 KB
+
+  1 snapshot
+</code></pre>
+      <p>The encrypted file is in the home directory, not in the project:</p>
+      <pre><code>$ ls -l /tmp/savestate-two-machines/machine-a/.savestate
+total 4
+-rw-r--r-- 1 ubuntu ubuntu 1405 Oct 18 21:36 ss-2026-10-18T21-36-23-7w2fps.saf.enc</code></pre>
+      <p>That archive is <code>ss-2026-10-18T21-36-23-7w2fps</code>. Ten files, 1405 bytes, encrypted, stored under machine A's home.</p>
+
+      <h2>Init the laptop on its own home</h2>
+      <p>Machine B's project started as a different file, <code>LAPTOP FILE BEFORE RESTORE</code>. Commands ran in <code>/tmp/savestate-two-machines/machine-b/project</code> with <code>HOME</code> set to <code>/tmp/savestate-two-machines/machine-b</code>. The passphrase stayed <code>desk-to-laptop-demo</code>. Init again so this project's config points at machine B.</p>
+      <pre><code>$ npx --no-install @savestate/cli init
+
+⚡ SaveState — Time Machine for AI
+
+- Initializing SaveState...
+✔ Created .savestate/ directory
+- Detecting platform...
+✔ Detected platform: Claude Code
+
+  Your snapshots will be encrypted with a passphrase.
+  You can also set SAVESTATE_PASSPHRASE env var.
+
+
+✓ SaveState initialized!
+
+  Next steps:
+  savestate snapshot      Capture your first snapshot
+  savestate config        Configure storage &amp; adapters
+  savestate adapters      See available platform adapters
+</code></pre>
+      <pre><code>$ grep path .savestate/config.json
+      "path": "/tmp/savestate-two-machines/machine-b/.savestate",</code></pre>
+      <p>Copying machine A's project directory would keep machine A's absolute path. On a second computer that path is not the snapshot. Init on the laptop writes the laptop's home instead.</p>
+
+      <h2>Cloud push does not run without a login</h2>
+      <p><code>cloud push</code> is how a Pro or Team account sends the local snapshot to SaveState cloud, where the other machine can pull it. This CLI was not logged in. The command ran back on machine A, where the snapshot exists. It exits 1 and uploads nothing.</p>
+      <pre><code>$ npx --no-install @savestate/cli cloud push
+
+- Verifying subscription...
+✖ Subscription required
+
+  Not logged in. Run `savestate login` first.</code></pre>
+      <p>Pro cloud storage is the remote path. It is not required for this move. The ciphertext is already a file on the desk.</p>
+
+      <h2>The index is not the archive</h2>
+      <p><code>list</code>, <code>restore</code> with no id, and <code>search</code> read <code>.savestate/index.json</code> in the project. The ciphertext is <code>ss-2026-10-18T21-36-23-7w2fps.saf.enc</code> in the storage path. Init does not create <code>$HOME/.savestate</code>. That directory appears when a snapshot is written. Copying the archive into a missing directory fails:</p>
+      <pre><code>$ cp -v /tmp/savestate-two-machines/machine-a/.savestate/ss-2026-10-18T21-36-23-7w2fps.saf.enc /tmp/savestate-two-machines/machine-b/.savestate/
+cp: cannot create regular file '/tmp/savestate-two-machines/machine-b/.savestate/': Not a directory
+'/tmp/savestate-two-machines/machine-a/.savestate/ss-2026-10-18T21-36-23-7w2fps.saf.enc' -> '/tmp/savestate-two-machines/machine-b/.savestate/'</code></pre>
+      <p>The index copy succeeds. <code>list</code> then prints a snapshot the laptop cannot open:</p>
+      <pre><code>$ cp -v /tmp/savestate-two-machines/machine-a/project/.savestate/index.json /tmp/savestate-two-machines/machine-b/project/.savestate/index.json
+'/tmp/savestate-two-machines/machine-a/project/.savestate/index.json' -> '/tmp/savestate-two-machines/machine-b/project/.savestate/index.json'</code></pre>
+      <pre><code>$ npx --no-install @savestate/cli list
+
+📋 Snapshots
+   Storage: local
+
+  ID                             Date                  Adapter      Label        Size
+  ───────────────────────────────────────────────────────────────────────────────────
+  ss-2026-10-18T21-36-23-7w2fps  Oct 18, 2026, 21:36   claude-code  desk       1.4 KB
+
+  1 snapshot
+</code></pre>
+      <p><code>restore</code> exits 1. The index names a file that is not in machine B's storage.</p>
+      <pre><code>$ npx --no-install @savestate/cli restore
+
+🔄 Restoring from snapshot: latest
+
+- Retrieving and decrypting snapshot...
+
+✗ Restore failed
+Snapshot not found in storage: ss-2026-10-18T21-36-23-7w2fps.saf.enc
+Looked in storage backend: local</code></pre>
+      <pre><code>$ npx --no-install @savestate/cli search ferry-token-9
+
+🔍 Searching: "ferry-token-9"
+
+- Searching across snapshots...
+  No matches found.</code></pre>
+      <pre><code>$ cat CLAUDE.md.bak
+cat: CLAUDE.md.bak: No such file or directory
+
+$ cat CLAUDE.md
+LAPTOP FILE BEFORE RESTORE</code></pre>
+
+      <h2>Create the directory, then copy the ciphertext</h2>
+      <pre><code>$ ls -ld /tmp/savestate-two-machines/machine-b/.savestate
+ls: cannot access '/tmp/savestate-two-machines/machine-b/.savestate': No such file or directory
+
+$ mkdir -p /tmp/savestate-two-machines/machine-b/.savestate
+$ cp -v /tmp/savestate-two-machines/machine-a/.savestate/ss-2026-10-18T21-36-23-7w2fps.saf.enc /tmp/savestate-two-machines/machine-b/.savestate/
+'/tmp/savestate-two-machines/machine-a/.savestate/ss-2026-10-18T21-36-23-7w2fps.saf.enc' -> '/tmp/savestate-two-machines/machine-b/.savestate/ss-2026-10-18T21-36-23-7w2fps.saf.enc'
+
+$ ls -l /tmp/savestate-two-machines/machine-b/.savestate
+total 4
+-rw-r--r-- 1 ubuntu ubuntu 1405 Oct 18 21:36 ss-2026-10-18T21-36-23-7w2fps.saf.enc</code></pre>
+      <p><code>restore</code> with no id selects the newest snapshot in the index. The passphrase is still <code>desk-to-laptop-demo</code>.</p>
+      <pre><code>$ npx --no-install @savestate/cli restore
+
+🔄 Restoring from snapshot: latest
+
+- Retrieving and decrypting snapshot...
+✔ Restore complete!
+
+  Snapshot:      ss-2026-10-18T21-36-23-7w2fps
+  Timestamp:     2026-10-18T21:36:23.166Z
+  Platform:      claude-code
+  Adapter:       claude-code
+  Label:         desk
+  Identity:      ✓ restored
+  Memory:        0 entries restored
+  Conversations: 0 indexed
+
+  ✓ Your AI state has been restored.
+  Existing files were backed up with .bak extension.
+</code></pre>
+      <pre><code>$ cat CLAUDE.md.bak
+LAPTOP FILE BEFORE RESTORE
+
+$ cat CLAUDE.md
+# Ferry
+
+The laptop handoff token is ferry-token-9.
+Keep the billing note from the desk machine.
+Restore this file on the second machine before the next deploy.</code></pre>
+
+      <h2>Search on the laptop finds the handoff token</h2>
+      <pre><code>$ npx --no-install @savestate/cli search ferry-token-9
+
+🔍 Searching: "ferry-token-9"
+
+- Searching across snapshots...
+  1 result:
+
+  ss-2026-10-18T 2026-10-18 identity     (91%)
+    --- CLAUDE.md ---
+# Ferry
+
+The laptop handoff token is ferry-token-9.
+Keep the billing note from the desk machine.
+Restore this …
+    identity/personality.md
+</code></pre>
+      <p>One hit, in <code>identity/personality.md</code>, score 91%. The token <code>ferry-token-9</code> was encrypted on machine A and decrypted on machine B. Same passphrase, same snapshot id, different home directory.</p>
+
+      <div class="cta-box">
+        <h3>Pro is $9/mo.</h3>
+        <p>Cloud storage so the next machine can pull the snapshot instead of copying the file. Card today. No waitlist.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="move-pro-checkout">Subscribe to Pro, $9/mo</a>
+        <p class="cta-fulfillment">After you pay, your API key is emailed. Then <code>savestate login</code>.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="move-npm-secondary">Prefer the CLI first? Install from npm</a>
+      </div>
+
+      <hr>
+
+      <p><em>Questions? See the <a href="/faq.html">FAQ</a> or open an issue on <a href="https://github.com/savestatedev/savestate">GitHub</a>.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

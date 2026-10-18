@@ -683,6 +683,40 @@ describe('public marketing checkout CTAs', () => {
     expect(vercel).toContain('"/blog/how-to-restore-a-claude-code-project-after-a-crash.html"');
   });
 
+  it('lists the two-machine move how-to with real CLI output and one Pro CTA', () => {
+    const html = loadHtml('site/blog/how-to-move-savestate-memory-between-two-machines.html');
+    const developers = loadHtml('site/developers.html');
+    const vercel = loadHtml('vercel.json');
+    expect(html).toContain('<title>How to Move SaveState Memory Between Two Machines | SaveState</title>');
+    expect(html).toContain('Move SaveState memory between two machines with npx @savestate/cli. Real init, snapshot, restore, and search output from version 0.9.1, including the missing archive and the copy that fixes it.');
+    expect(html).toContain('<link rel="canonical" href="https://savestate.dev/blog/how-to-move-savestate-memory-between-two-machines">');
+    expect(html).toContain('<script defer src="/_vercel/insights/script.js"></script>');
+    expect(html).toContain('ss-2026-10-18T21-36-23-7w2fps');
+    expect(html).toContain('2026-10-18T21:36:23.166Z');
+    expect(html).toContain('Not logged in. Run `savestate login` first.');
+    expect(html).toContain('Snapshot not found in storage: ss-2026-10-18T21-36-23-7w2fps.saf.enc');
+    expect(html).toContain("cp: cannot create regular file '/tmp/savestate-two-machines/machine-b/.savestate/': Not a directory");
+    expect(html).toContain('ferry-token-9');
+    expect(html).toContain('LAPTOP FILE BEFORE RESTORE');
+    expect(html).toContain('identity/personality.md');
+    expect(html).toContain('/tmp/savestate-two-machines/machine-a/.savestate');
+    expect(html).toContain('/tmp/savestate-two-machines/machine-b/.savestate');
+    const proLinks = html.match(/https:\/\/buy\.stripe\.com\/aFa00j5E4ees8hf3kp2ZO00/g) ?? [];
+    expect(proLinks).toHaveLength(1);
+    expect(html).not.toContain(stripe.products.team.payment_link);
+    expect(hrefForCta(html, 'move-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(html, 'move-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(html).not.toMatch(/class="btn"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn"/);
+    const withoutPre = html.replace(/<pre[\s\S]*?<\/pre>/g, '');
+    expect(withoutPre).not.toMatch(/—/);
+    expect(sitemap).toContain('https://savestate.dev/blog/how-to-move-savestate-memory-between-two-machines');
+    expect(blogIndex).toContain('/blog/how-to-move-savestate-memory-between-two-machines');
+    expect(blogIndex).toContain('How to Move SaveState Memory Between Two Machines');
+    expect(vercel).toContain('"/blog/how-to-move-savestate-memory-between-two-machines"');
+    expect(vercel).toContain('"/blog/how-to-move-savestate-memory-between-two-machines.html"');
+    expect(developers).toContain('href="/blog/how-to-move-savestate-memory-between-two-machines"');
+  });
+
   it('lists the three buyer pages on live URL paths', () => {
     expect(sitemap).toContain('https://savestate.dev/cursor');
     expect(sitemap).toContain('https://savestate.dev/claude-code');
