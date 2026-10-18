@@ -915,7 +915,11 @@ export function formatMemoryListFreshness(entry: MemoryEntry, now = new Date()):
 
 /** Show the full freshness state in a human-facing memory explanation. */
 export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date()): string {
-  return getMemoryFreshness(entry, now).state;
+  const freshness = getMemoryFreshness(entry, now);
+  const state = freshness.state === 'needs_confirmation'
+    ? 'needs confirmation'
+    : freshness.state;
+  return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)})`;
 }
 
 /** Truncate table previews without adding an ellipsis to already-short content. */

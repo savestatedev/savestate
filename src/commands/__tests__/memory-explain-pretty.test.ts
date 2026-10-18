@@ -12,7 +12,7 @@ describe('savestate memory explain pretty freshness', () => {
     };
 
     expect(formatMemoryExplainFreshness(entry, new Date('2026-10-18T00:00:00.000Z'))).toBe(
-      'needs_confirmation',
+      'needs confirmation (fast; verified 2026-10-01)',
     );
   });
 });
