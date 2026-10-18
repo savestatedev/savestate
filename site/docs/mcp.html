@@ -132,8 +132,8 @@
 
     <h2 id="resources">Resources</h2>
     <ul>
-      <li><code>savestate://snapshots</code> — JSON list of snapshots in the local index. Default 50; <code>?limit=</code> is a positive integer up to 1000. <code>?offset=</code> is a non-negative integer up to 1000.</li>
-      <li><code>savestate://memories</code> — Live memory entries from the SQLite store (default 50; <code>?limit=</code> is a positive integer up to 1000). <code>?offset=</code> is a non-negative integer up to 1000.</li>
+      <li><code>savestate://snapshots</code> — JSON list of snapshots in the local index. Default 50; <code>?limit=</code> is a positive integer up to 1000. <code>?offset=</code> is a non-negative integer up to 1000. The response includes <code>total</code>, <code>offset</code>, <code>nextOffset</code>, and a ready-to-read <code>nextUri</code> when another page exists.</li>
+      <li><code>savestate://memories</code> — Live memory entries from the SQLite store (default 50; <code>?limit=</code> is a positive integer up to 1000). <code>?offset=</code> is a non-negative integer up to 1000. The response includes <code>total</code>, <code>offset</code>, <code>nextOffset</code>, and a ready-to-read <code>nextUri</code> when another page exists.</li>
     </ul>
 
     <h2 id="passphrase">Passphrase handling</h2>
