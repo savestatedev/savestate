@@ -2282,6 +2282,27 @@ export function applyMemoryExplainFilters<T>(
   );
 }
 
+/** Keep equal-score explain pages deterministic across archive iteration order. */
+export function sortMemoryExplainResults<T extends {
+  entry: Pick<MemoryEntry, 'createdAt' | 'id'>;
+  finalScore: number;
+}>(results: T[]): T[] {
+  return [...results].sort((a, b) => {
+    const scoreOrder = b.finalScore - a.finalScore;
+    if (scoreOrder !== 0) return scoreOrder;
+
+    const aCreatedAt = Date.parse(a.entry.createdAt);
+    const bCreatedAt = Date.parse(b.entry.createdAt);
+    if (Number.isFinite(aCreatedAt) && Number.isFinite(bCreatedAt) && aCreatedAt !== bCreatedAt) {
+      return bCreatedAt - aCreatedAt;
+    }
+    if (Number.isFinite(aCreatedAt) !== Number.isFinite(bCreatedAt)) {
+      return Number.isFinite(bCreatedAt) ? 1 : -1;
+    }
+    return a.entry.id.localeCompare(b.entry.id);
+  });
+}
+
 /**
  * Explain why memories were retrieved for a query.
  * Shows detailed breakdown of scores and policy decisions.
@@ -2401,13 +2422,13 @@ export async function explainMemoryCommand(
         },
       };
     })
-    .filter((r): r is NonNullable<typeof r> => r !== null)
-    .sort((a, b) => b.finalScore - a.finalScore);
-  const scoredLimited = applyMemoryExplainFilters(scored, options ?? {});
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+  const sorted = sortMemoryExplainResults(scored);
+  const scoredLimited = applyMemoryExplainFilters(sorted, options ?? {});
   const pagination = {
     offset: offset ?? 0,
     limit: limit ?? null,
-    total: scored.length,
+    total: sorted.length,
     pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
   };
 
@@ -2448,7 +2469,7 @@ export async function explainMemoryCommand(
   if (filterSummary) {
     console.log(`   Filter: ${filterSummary}\n`);
   }
-  console.log(`${formatMemoryExplainPrettySummary(scoredLimited.length, scored.length, {
+  console.log(`${formatMemoryExplainPrettySummary(scoredLimited.length, sorted.length, {
     offset: offset ?? 0,
     pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
   })}\n`);
@@ -2500,7 +2521,7 @@ export async function explainMemoryCommand(
   }
 
   if (scoredLimited.length === 0) {
-    console.log(`\n   ${formatMemoryExplainEmptyMessage(scored.length)}\n`);
+    console.log(`\n   ${formatMemoryExplainEmptyMessage(sorted.length)}\n`);
     console.log('   Tips:');
     console.log('   • Try broader search terms');
     console.log('   • Check if memories exist with `savestate memory list`');
