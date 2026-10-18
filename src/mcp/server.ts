@@ -107,8 +107,8 @@ import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memo
 import { parseSearchMemoryOffset, selectSearchMemoryOffsetEntries } from './search-memory-offset.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
-import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from './memories-resource-limit.js';
-import { parseMemoriesResourceOffset, selectMemoriesResourceOffsetEntries } from './memories-resource-offset.js';
+import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
+import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
 import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
 
@@ -567,7 +567,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000)',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, offset, and nextOffset for pagination.',
     mimeType: 'application/json',
   },
 ];
@@ -1546,20 +1546,17 @@ async function handleReadResource(uri: string): Promise<string> {
       const limit = rawLimit === null
         ? undefined
         : parseMemoriesResourceLimit(Number(rawLimit));
-      const memories = selectMemoriesResourceEntries(
-        selectMemoriesResourceOffsetEntries(
-          await store.query({ limit: (offset ?? 0) + (limit ?? 50) }),
-          offset,
-        ),
-        limit ?? 50,
-      );
+      const entries = await store.query({ limit: (offset ?? 0) + (limit ?? 50) });
       const stats = store.getStats();
+      const page = buildMemoriesResourcePage(entries, stats.totalEntries, offset, limit);
 
       return JSON.stringify({
-        count: memories.length,
-        total: stats.totalEntries,
+        count: page.count,
+        total: page.total,
+        offset: page.offset,
+        nextOffset: page.nextOffset,
         byType: stats.byType,
-        memories: memories.map(m => ({
+        memories: page.entries.map(m => ({
           id: m.id,
           type: m.type,
           content: m.content,

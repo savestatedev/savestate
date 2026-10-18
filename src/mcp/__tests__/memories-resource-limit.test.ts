@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoriesResourceLimit, selectMemoriesResourceEntries } from '../memories-resource-limit.js';
+import {
+  buildMemoriesResourcePage,
+  parseMemoriesResourceLimit,
+  selectMemoriesResourceEntries,
+} from '../memories-resource-limit.js';
 
 describe('MCP savestate://memories limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,31 @@ describe('MCP savestate://memories limit', () => {
   it('returns all memories when limit is omitted', () => {
     const entries = [{ id: 'm1' }, { id: 'm2' }];
     expect(selectMemoriesResourceEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('reports total and the next offset for a partial page', () => {
+    const page = buildMemoriesResourcePage(
+      [{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }, { id: 'm4' }],
+      4,
+      1,
+      2,
+    );
+
+    expect(page).toEqual({
+      count: 2,
+      total: 4,
+      offset: 1,
+      nextOffset: 3,
+      entries: [{ id: 'm2' }, { id: 'm3' }],
+    });
+  });
+
+  it('uses a null next offset on the final page', () => {
+    expect(buildMemoriesResourcePage([{ id: 'm1' }, { id: 'm2' }], 2, 1, 2)).toMatchObject({
+      count: 1,
+      total: 2,
+      offset: 1,
+      nextOffset: null,
+    });
   });
 });
