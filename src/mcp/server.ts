@@ -561,13 +561,13 @@ const resources: Resource[] = [
   {
     uri: 'savestate://snapshots',
     name: 'Snapshots',
-    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, offset, and nextOffset for pagination.',
+    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, offset, nextOffset, and nextUri for pagination.',
     mimeType: 'application/json',
   },
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, offset, and nextOffset for pagination.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, offset, nextOffset, and nextUri for pagination.',
     mimeType: 'application/json',
   },
 ];
