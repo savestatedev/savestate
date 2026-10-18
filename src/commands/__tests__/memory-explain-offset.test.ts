@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyMemoryExplainFilters,
+  formatMemoryExplainEmptyMessage,
   formatMemoryExplainPrettySummary,
   parseMemoryExplainOffset,
   selectMemoryExplainOffsetEntries,
@@ -64,5 +65,7 @@ describe('savestate memory explain --offset', () => {
       'No memories on this page',
     );
     expect(formatMemoryExplainPrettySummary(0, 0)).toBe('No memories matched the query.');
+    expect(formatMemoryExplainEmptyMessage(5)).toBe('No memories are visible on this page.');
+    expect(formatMemoryExplainEmptyMessage(0)).toBe('No memories matched the query.');
   });
 });

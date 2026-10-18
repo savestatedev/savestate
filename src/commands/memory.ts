@@ -2054,6 +2054,13 @@ export function formatMemoryExplainPrettySummary(
   return `Showing ${first}-${last} of ${total} relevant memories.${continuation}`;
 }
 
+/** Keep the empty-state message aligned with whether the collection or page is empty. */
+export function formatMemoryExplainEmptyMessage(total: number): string {
+  return total === 0
+    ? 'No memories matched the query.'
+    : 'No memories are visible on this page.';
+}
+
 export function formatMemoryExplainJson(
   query: string,
   results: Array<{ id: string; score: number; summary: string }>,
@@ -2409,7 +2416,7 @@ export async function explainMemoryCommand(
   }
 
   if (scoredLimited.length === 0) {
-    console.log('\n   No memories matched the query.\n');
+    console.log(`\n   ${formatMemoryExplainEmptyMessage(scored.length)}\n`);
     console.log('   Tips:');
     console.log('   • Try broader search terms');
     console.log('   • Check if memories exist with `savestate memory list`');
