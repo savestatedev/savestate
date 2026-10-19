@@ -51,8 +51,15 @@ export interface ContextConfigJson {
   pagination: {
     offset: number;
     limit: number | null;
+    shownWeights: number;
+    shownBudget: number;
     totalWeights: number;
     totalBudget: number;
+    hasMoreWeights: boolean;
+    hasMoreBudget: boolean;
+    nextOffset: number | null;
+    previousOffset: number | null;
+    suggestedOffset: number | null;
   };
 }
 
@@ -418,20 +425,42 @@ export function formatContextCompilePaginationMessages(
 }
 
 export function formatContextConfigJson(limit?: number, offset?: number): string {
+  const weightEntries = selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset);
+  const budgetEntries = selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset);
+  const totalWeights = Object.keys(DEFAULT_SCORING_WEIGHTS).length;
+  const totalBudget = Object.keys(DEFAULT_BUDGET_ALLOCATION).length;
+  const pageOffset = offset ?? 0;
+  const pageSize = limit ?? Math.max(totalWeights, totalBudget);
+  const hasMoreWeights = pageOffset + weightEntries.length < totalWeights;
+  const hasMoreBudget = pageOffset + budgetEntries.length < totalBudget;
+  const hasMore = hasMoreWeights || hasMoreBudget;
+  const previousOffset = limit !== undefined && pageOffset > 0
+    ? Math.max(0, pageOffset - limit)
+    : null;
+  const suggestedOffset = !hasMore && weightEntries.length === 0 && budgetEntries.length === 0
+    ? Math.floor((Math.max(totalWeights, totalBudget) - 1) / pageSize) * pageSize
+    : null;
   const weights = Object.fromEntries(
-    selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset),
+    weightEntries,
   ) as ScoringWeights;
   const budget = Object.fromEntries(
-    selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset),
+    budgetEntries,
   ) as BudgetAllocation;
   const record: ContextConfigJson = {
     weights,
     budget,
     pagination: {
-      offset: offset ?? 0,
+      offset: pageOffset,
       limit: limit ?? null,
-      totalWeights: Object.keys(DEFAULT_SCORING_WEIGHTS).length,
-      totalBudget: Object.keys(DEFAULT_BUDGET_ALLOCATION).length,
+      shownWeights: weightEntries.length,
+      shownBudget: budgetEntries.length,
+      totalWeights,
+      totalBudget,
+      hasMoreWeights,
+      hasMoreBudget,
+      nextOffset: hasMore ? pageOffset + pageSize : null,
+      previousOffset,
+      suggestedOffset,
     },
   };
   return JSON.stringify(record, null, 2);

@@ -222,8 +222,15 @@ describe('savestate context --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
+      shownWeights: Object.keys(parsed.weights).length,
+      shownBudget: Object.keys(parsed.budget).length,
       totalWeights: Object.keys(parsed.weights).length,
       totalBudget: Object.keys(parsed.budget).length,
+      hasMoreWeights: false,
+      hasMoreBudget: false,
+      nextOffset: null,
+      previousOffset: null,
+      suggestedOffset: null,
     });
   });
 
@@ -233,6 +240,27 @@ describe('savestate context --json', () => {
     expect(Object.keys(parsed.budget)).toHaveLength(1);
     expect(parsed.pagination.offset).toBe(1);
     expect(parsed.pagination.limit).toBe(1);
+    expect(parsed.pagination.shownWeights).toBe(1);
+    expect(parsed.pagination.shownBudget).toBe(1);
+    expect(parsed.pagination.totalWeights).toBeGreaterThan(1);
+    expect(parsed.pagination.totalBudget).toBeGreaterThan(1);
+    expect(parsed.pagination.hasMoreWeights).toBe(true);
+    expect(parsed.pagination.hasMoreBudget).toBe(true);
+    expect(parsed.pagination.nextOffset).toBe(2);
+    expect(parsed.pagination.previousOffset).toBe(0);
+  });
+
+  it('suggests the last config page for a stale offset', () => {
+    const parsed = JSON.parse(formatContextConfigJson(2, 1000)) as ContextConfigJson;
+    expect(parsed.weights).toEqual({});
+    expect(parsed.budget).toEqual({});
+    expect(parsed.pagination.shownWeights).toBe(0);
+    expect(parsed.pagination.shownBudget).toBe(0);
+    expect(parsed.pagination.hasMoreWeights).toBe(false);
+    expect(parsed.pagination.hasMoreBudget).toBe(false);
+    expect(parsed.pagination.nextOffset).toBeNull();
+    expect(parsed.pagination.previousOffset).toBe(998);
+    expect(parsed.pagination.suggestedOffset).toBe(6);
   });
 
   it('prints explain inclusion counts as JSON', () => {
