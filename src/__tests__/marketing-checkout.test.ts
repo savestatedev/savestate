@@ -637,7 +637,8 @@ describe('public marketing checkout CTAs', () => {
     expect(pricing).toContain('https://savestate.dev/pricing');
     expect(hrefForCta(pricing, 'pricing-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(pricing, 'pricing-team-checkout')).toBe(stripe.products.team.payment_link);
-    expect(pricing).toMatch(/POST https:\/\/savestate\.dev\/v1\/keys/);
+    expect(pricing).toContain('POST <code>https://savestate.dev/v1/keys</code>');
+    expect(pricing).toMatch(/HTTP 402/);
     expect(pricing).toMatch(/pay_url/);
     expect(pricing).toMatch(/claim_url/);
     expect(pricing).not.toMatch(/API key is emailed/);
