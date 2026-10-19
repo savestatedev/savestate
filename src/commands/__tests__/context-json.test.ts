@@ -218,6 +218,15 @@ describe('savestate context --json', () => {
     expect(parsed.budget.mustKnowFacts).toBe(600);
     expect(parsed.budget.openLoops).toBe(300);
     expect(parsed.shown).toBe(3);
+    expect(parsed.emptyReason).toBeNull();
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      total: 3,
+      pageSize: 3,
+      hasMore: false,
+      nextOffset: null,
+    });
     expect(parsed.candidates).toEqual([
       { id: 'c1', included: true, score: 0.91, reason: 'must-know' },
       { id: 'c2', included: true, score: 0.72, reason: 'open loop' },
@@ -233,6 +242,15 @@ describe('savestate context --json', () => {
     expect(empty.included).toBe(0);
     expect(empty.excluded).toBe(0);
     expect(empty.shown).toBe(0);
+    expect(empty.emptyReason).toBe('collection');
+    expect(empty.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      total: 0,
+      pageSize: 0,
+      hasMore: false,
+      nextOffset: null,
+    });
     expect(empty.candidates).toEqual([]);
     expect(empty.budget.citations).toBe(0);
 
@@ -252,6 +270,52 @@ describe('savestate context --json', () => {
     expect(many.candidates).toHaveLength(10);
     expect(many.candidates[0].id).toBe('c1');
     expect(many.candidates[9].id).toBe('c10');
+  });
+
+  it('reports continuation and empty-page state for paged explanations', () => {
+    const paged = JSON.parse(
+      formatContextExplainJson(
+        explanation({
+          total_candidates: 5,
+          candidates: Array.from({ length: 5 }, (_, index) =>
+            candidate({ candidate_id: `c${index + 1}` }),
+          ),
+        }),
+        2,
+        2,
+      ),
+    ) as ContextExplainJson;
+    expect(paged.emptyReason).toBeNull();
+    expect(paged.pagination).toEqual({
+      offset: 2,
+      limit: 2,
+      total: 5,
+      pageSize: 2,
+      hasMore: true,
+      nextOffset: 4,
+    });
+
+    const emptyPage = JSON.parse(
+      formatContextExplainJson(
+        explanation({
+          total_candidates: 5,
+          candidates: Array.from({ length: 5 }, (_, index) =>
+            candidate({ candidate_id: `c${index + 1}` }),
+          ),
+        }),
+        2,
+        6,
+      ),
+    ) as ContextExplainJson;
+    expect(emptyPage.emptyReason).toBe('page');
+    expect(emptyPage.pagination).toEqual({
+      offset: 6,
+      limit: 2,
+      total: 5,
+      pageSize: 0,
+      hasMore: false,
+      nextOffset: null,
+    });
   });
 
   it('prints validate coverage as JSON', () => {
