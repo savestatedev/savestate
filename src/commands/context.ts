@@ -106,6 +106,8 @@ export interface ContextValidateJson {
     limit: number | null;
     totalErrors: number;
     totalWarnings: number;
+    hasMore: boolean;
+    nextOffset: number | null;
   };
   coverage: {
     constraintsCovered: number;
@@ -113,6 +115,8 @@ export interface ContextValidateJson {
     requiredFactsPresent: boolean;
   };
 }
+
+export type ContextValidatePagination = ContextValidateJson['pagination'];
 
 export interface ContextValidateMissingJson {
   found: false;
@@ -387,17 +391,13 @@ export function formatContextValidateJson(
   limit?: number,
   offset?: number,
 ): string {
+  const pagination = getContextValidatePagination(result, limit, offset);
   const record: ContextValidateJson = {
     file,
     valid: result.valid,
     errors: selectContextValidateIssues(result.errors, limit, offset),
     warnings: selectContextValidateIssues(result.warnings, limit, offset),
-    pagination: {
-      offset: offset ?? 0,
-      limit: limit ?? null,
-      totalErrors: result.errors.length,
-      totalWarnings: result.warnings.length,
-    },
+    pagination,
     coverage: {
       constraintsCovered: result.coverage.constraints_covered,
       constraintsTotal: result.coverage.constraints_total,
@@ -405,6 +405,24 @@ export function formatContextValidateJson(
     },
   };
   return JSON.stringify(record, null, 2);
+}
+
+export function getContextValidatePagination(
+  result: ValidationResult,
+  limit?: number,
+  offset?: number,
+): ContextValidatePagination {
+  const pageOffset = offset ?? 0;
+  const totalIssues = Math.max(result.errors.length, result.warnings.length);
+  const hasMore = limit !== undefined && pageOffset + limit < totalIssues;
+  return {
+    offset: pageOffset,
+    limit: limit ?? null,
+    totalErrors: result.errors.length,
+    totalWarnings: result.warnings.length,
+    hasMore,
+    nextOffset: hasMore ? pageOffset + limit : null,
+  };
 }
 
 export function formatContextValidateMissingJson(file: string): string {
@@ -745,6 +763,10 @@ export function registerContextCommands(program: Command): void {
         for (const warning of warnings) {
           console.log(`  ${warning}`);
         }
+      }
+      const pagination = getContextValidatePagination(result, limit, offset);
+      if (pagination.hasMore) {
+        console.log(`More validation issues available; rerun with --offset ${pagination.nextOffset}.`);
       }
       console.log(
         `Coverage: constraints ${result.coverage.constraints_covered}/${result.coverage.constraints_total}, required facts ${result.coverage.required_facts_present ? 'present' : 'missing'}`,
