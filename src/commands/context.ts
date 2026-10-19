@@ -108,6 +108,8 @@ export interface ContextValidateJson {
     totalWarnings: number;
     hasMore: boolean;
     nextOffset: number | null;
+    previousOffset: number | null;
+    suggestedOffset: number | null;
   };
   coverage: {
     constraintsCovered: number;
@@ -415,6 +417,14 @@ export function getContextValidatePagination(
   const pageOffset = offset ?? 0;
   const totalIssues = Math.max(result.errors.length, result.warnings.length);
   const hasMore = limit !== undefined && pageOffset + limit < totalIssues;
+  const previousOffset =
+    limit !== undefined && pageOffset > 0 ? Math.max(0, pageOffset - limit) : null;
+  const suggestedOffset =
+    pageOffset >= totalIssues && totalIssues > 0
+      ? limit === undefined
+        ? 0
+        : Math.floor((totalIssues - 1) / limit) * limit
+      : null;
   return {
     offset: pageOffset,
     limit: limit ?? null,
@@ -422,7 +432,29 @@ export function getContextValidatePagination(
     totalWarnings: result.warnings.length,
     hasMore,
     nextOffset: hasMore ? pageOffset + limit : null,
+    previousOffset,
+    suggestedOffset,
   };
+}
+
+export function formatContextValidatePaginationMessages(
+  pagination: ContextValidatePagination,
+): string[] {
+  const messages: string[] = [];
+  if (pagination.hasMore && pagination.nextOffset !== null) {
+    messages.push(`More validation issues available; rerun with --offset ${pagination.nextOffset}.`);
+  }
+  if (pagination.previousOffset !== null) {
+    messages.push(
+      `Earlier validation issues available; rerun with --offset ${pagination.previousOffset}.`,
+    );
+  }
+  if (pagination.suggestedOffset !== null) {
+    messages.push(
+      `No validation issues found at this offset; rerun with --offset ${pagination.suggestedOffset}.`,
+    );
+  }
+  return messages;
 }
 
 export function formatContextValidateMissingJson(file: string): string {
@@ -453,6 +485,7 @@ export function formatContextExplainJson(
   const pageOffset = offset ?? 0;
   const hasMore = pageOffset + candidates.length < explanation.total_candidates;
   const pageSize = limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT;
+  const previousOffset = pageOffset > 0 ? Math.max(0, pageOffset - pageSize) : null;
   const suggestedOffset =
     candidates.length === 0 && explanation.total_candidates > 0
       ? Math.floor((explanation.total_candidates - 1) / pageSize) * pageSize
@@ -487,11 +520,38 @@ export function formatContextExplainJson(
       pageSize: candidates.length,
       hasMore,
       nextOffset: hasMore ? pageOffset + candidates.length : null,
+      previousOffset,
       suggestedOffset,
     },
     candidates,
   };
   return JSON.stringify(record, null, 2);
+}
+
+export function formatContextExplainPaginationMessages(
+  explanation: ExplanationTrace,
+  limit?: number,
+  offset?: number,
+): string[] {
+  const pageOffset = offset ?? 0;
+  const pageSize = limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT;
+  const shown = selectContextCandidates(explanation.candidates, limit, offset).length;
+  const hasMore = pageOffset + shown < explanation.total_candidates;
+  const messages: string[] = [];
+
+  if (hasMore) {
+    messages.push(`More explanation candidates available; rerun with --offset ${pageOffset + shown}.`);
+  }
+  if (pageOffset > 0) {
+    messages.push(`Earlier explanation candidates available; rerun with --offset ${Math.max(0, pageOffset - pageSize)}.`);
+  }
+  if (shown === 0 && explanation.total_candidates > 0) {
+    const suggestedOffset = Math.floor((explanation.total_candidates - 1) / pageSize) * pageSize;
+    messages.push(
+      `No explanation candidates found at this offset; rerun with --offset ${suggestedOffset}.`,
+    );
+  }
+  return messages;
 }
 
 export function formatContextExplainMissingJson(runId: string): string {
@@ -702,6 +762,9 @@ export function registerContextCommands(program: Command): void {
         console.log(`   ${status} ${c.candidate_id} (score: ${c.score.toFixed(3)})`);
         console.log(`      ${c.reason}`);
       }
+      for (const message of formatContextExplainPaginationMessages(explanation, limit, offset)) {
+        console.log(message);
+      }
     });
 
   // Validate command
@@ -765,8 +828,8 @@ export function registerContextCommands(program: Command): void {
         }
       }
       const pagination = getContextValidatePagination(result, limit, offset);
-      if (pagination.hasMore) {
-        console.log(`More validation issues available; rerun with --offset ${pagination.nextOffset}.`);
+      for (const message of formatContextValidatePaginationMessages(pagination)) {
+        console.log(message);
       }
       console.log(
         `Coverage: constraints ${result.coverage.constraints_covered}/${result.coverage.constraints_total}, required facts ${result.coverage.required_facts_present ? 'present' : 'missing'}`,

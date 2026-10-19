@@ -2422,6 +2422,7 @@ describe('CLI docs', () => {
     expect(contextSection).toContain('valid flag');
     expect(contextSection).toContain('hasMore');
     expect(contextSection).toContain('nextOffset');
+    expect(contextSection).toContain('previousOffset');
     expect(contextSection).toContain('savestate context validate --file brief.json --json');
   });
 

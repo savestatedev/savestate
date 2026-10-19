@@ -4,6 +4,7 @@ import {
   formatContextCompileJson,
   formatContextConfigJson,
   formatContextExplainJson,
+  formatContextExplainPaginationMessages,
   formatContextValidateJson,
   getContextValidatePagination,
   type ContextCompileJson,
@@ -227,6 +228,7 @@ describe('savestate context --json', () => {
       pageSize: 3,
       hasMore: false,
       nextOffset: null,
+      previousOffset: null,
       suggestedOffset: null,
     });
     expect(parsed.candidates).toEqual([
@@ -252,6 +254,7 @@ describe('savestate context --json', () => {
       pageSize: 0,
       hasMore: false,
       nextOffset: null,
+      previousOffset: null,
       suggestedOffset: null,
     });
     expect(empty.candidates).toEqual([]);
@@ -296,6 +299,7 @@ describe('savestate context --json', () => {
       pageSize: 2,
       hasMore: true,
       nextOffset: 4,
+      previousOffset: 0,
       suggestedOffset: null,
     });
 
@@ -319,8 +323,24 @@ describe('savestate context --json', () => {
       pageSize: 0,
       hasMore: false,
       nextOffset: null,
+      previousOffset: 4,
       suggestedOffset: 4,
     });
+  });
+
+  it('formats navigation hints for human-readable explanations', () => {
+    const trace = explanation({
+      total_candidates: 5,
+      candidates: Array.from({ length: 5 }, (_, index) => candidate({ candidate_id: `c${index + 1}` })),
+    });
+    expect(formatContextExplainPaginationMessages(trace, 2, 2)).toEqual([
+      'More explanation candidates available; rerun with --offset 4.',
+      'Earlier explanation candidates available; rerun with --offset 0.',
+    ]);
+    expect(formatContextExplainPaginationMessages(trace, 2, 6)).toEqual([
+      'Earlier explanation candidates available; rerun with --offset 4.',
+      'No explanation candidates found at this offset; rerun with --offset 4.',
+    ]);
   });
 
   it('prints validate coverage as JSON', () => {
@@ -348,6 +368,8 @@ describe('savestate context --json', () => {
         totalWarnings: 1,
         hasMore: false,
         nextOffset: null,
+        previousOffset: null,
+        suggestedOffset: null,
       },
       coverage: {
         constraintsCovered: 2,
@@ -381,6 +403,8 @@ describe('savestate context --json', () => {
       totalWarnings: 0,
       hasMore: false,
       nextOffset: null,
+      previousOffset: null,
+      suggestedOffset: null,
     });
     expect(parsed.coverage.constraintsCovered).toBe(0);
     expect(parsed.coverage.requiredFactsPresent).toBe(false);
@@ -413,6 +437,8 @@ describe('savestate context --json', () => {
       totalWarnings: 2,
       hasMore: true,
       nextOffset: 2,
+      previousOffset: 0,
+      suggestedOffset: null,
     });
   });
 
@@ -439,6 +465,30 @@ describe('savestate context --json', () => {
       totalWarnings: 2,
       hasMore: true,
       nextOffset: 2,
+      previousOffset: 0,
+      suggestedOffset: null,
     });
+  });
+
+  it('suggests the last validation page for a stale offset', () => {
+    const parsed = JSON.parse(
+      formatContextValidateJson(
+        'brief.json',
+        {
+          valid: false,
+          errors: ['e1', 'e2', 'e3', 'e4', 'e5'],
+          warnings: [],
+          coverage: {
+            constraints_covered: 0,
+            constraints_total: 0,
+            required_facts_present: false,
+          },
+        },
+        2,
+        8,
+      ),
+    ) as ContextValidateJson;
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.pagination.suggestedOffset).toBe(4);
   });
 });

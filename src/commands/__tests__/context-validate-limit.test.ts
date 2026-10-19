@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatContextValidatePaginationMessages,
   parseContextValidateLimit,
   parseContextValidateOffset,
   selectContextValidateIssues,
@@ -59,5 +60,38 @@ describe('savestate context validate --limit', () => {
     expect(() => parseContextValidateOffset('1001')).toThrow(
       'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
     );
+  });
+
+  it('formats available next and previous pages for human output', () => {
+    expect(
+      formatContextValidatePaginationMessages({
+        offset: 5,
+        limit: 5,
+        totalErrors: 12,
+        totalWarnings: 0,
+        hasMore: true,
+        nextOffset: 10,
+        previousOffset: 0,
+        suggestedOffset: null,
+      }),
+    ).toEqual([
+      'More validation issues available; rerun with --offset 10.',
+      'Earlier validation issues available; rerun with --offset 0.',
+    ]);
+  });
+
+  it('formats a recovery hint for an exhausted offset', () => {
+    expect(
+      formatContextValidatePaginationMessages({
+        offset: 8,
+        limit: 2,
+        totalErrors: 5,
+        totalWarnings: 0,
+        hasMore: false,
+        nextOffset: null,
+        previousOffset: 6,
+        suggestedOffset: 4,
+      }),
+    ).toContain('No validation issues found at this offset; rerun with --offset 4.');
   });
 });
