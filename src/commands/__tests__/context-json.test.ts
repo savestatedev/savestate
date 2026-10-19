@@ -193,6 +193,21 @@ describe('savestate context --json', () => {
     ]);
   });
 
+  it('keeps the requested page size when an offset is past the last section', () => {
+    const parsed = JSON.parse(formatContextCompileJson(brief(), 2, 8)) as ContextCompileJson;
+    expect(parsed.sections).toEqual([]);
+    expect(parsed.pagination).toEqual({
+      offset: 8,
+      limit: 2,
+      pageSize: 2,
+      totalSections: 7,
+      hasMore: false,
+      nextOffset: null,
+      previousOffset: 6,
+      suggestedOffset: 6,
+    });
+  });
+
   it('prints scoring weights and budget allocation as JSON', () => {
     const parsed = JSON.parse(formatContextConfigJson()) as ContextConfigJson;
     expect(parsed.weights.relevance).toBe(0.3);

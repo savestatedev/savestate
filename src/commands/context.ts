@@ -378,7 +378,7 @@ export function formatContextCompileJson(
     pagination: {
       offset: pageOffset,
       limit: limit ?? null,
-      pageSize: sections.length,
+      pageSize,
       totalSections: sectionRows.length,
       hasMore,
       nextOffset: hasMore ? pageOffset + sections.length : null,
