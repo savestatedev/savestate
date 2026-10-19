@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing | SaveState</title>
+<meta name="description" content="SaveState pricing: the CLI is free. Pro is $9/mo. Team is $29/mo. After you pay, claim the API key from claim_url.">
+<link rel="canonical" href="https://savestate.dev/pricing">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://savestate.dev/pricing">
+<meta property="og:title" content="Pricing | SaveState">
+<meta property="og:description" content="The CLI is free. Pro is $9/mo. Team is $29/mo. After you pay, claim the API key from claim_url.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta property="og:site_name" content="SaveState">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://savestate.dev/pricing">
+<meta name="twitter:title" content="Pricing | SaveState">
+<meta name="twitter:description" content="The CLI is free. Pro is $9/mo. Team is $29/mo. After you pay, claim the API key from claim_url.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/docs/style.css">
+</head>
+<body>
+
+<header class="docs-header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="header-logo">
+      <img src="/logo.png" alt="SaveState" width="26" height="26">
+      <span>SaveState</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-docs-label">Pricing</span>
+  </div>
+  <div class="header-right">
+    <a href="/">Home</a>
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@savestate/cli" target="_blank" rel="noopener" data-cta="pricing-npm-secondary">npm</a>
+    <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" data-cta="pricing-nav-pro-checkout">Subscribe to Pro</a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="docs-sidebar" id="sidebar">
+  <a href="/" class="sidebar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to savestate.dev
+  </a>
+  <div class="sidebar-section">
+    <span class="sidebar-label">Plans</span>
+    <ul class="sidebar-nav">
+      <li><a href="#plans" class="active">Free, Pro, Team</a></li>
+      <li><a href="#claim">Claim the API key</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label">More</span>
+    <ul class="sidebar-nav">
+      <li><a href="/docs">Getting started</a></li>
+      <li><a href="/llms.txt">llms.txt</a></li>
+      <li><a href="/docs/mcp.html">MCP server</a></li>
+    </ul>
+  </div>
+</aside>
+
+<main class="docs-main">
+  <div class="docs-content">
+    <h1>Pricing</h1>
+    <p class="subtitle">The CLI is open source and always free. Pro and Team unlock cloud features.</p>
+
+    <div class="pricing-grid" id="plans">
+      <div class="price-card">
+        <div class="tier">Free</div>
+        <div class="amount">$0</div>
+        <div class="period">forever</div>
+        <ul>
+          <li>CLI tool (open source)</li>
+          <li>Local storage</li>
+          <li>Manual snapshots</li>
+          <li>Full and incremental backups</li>
+          <li>AES-256-GCM encryption</li>
+          <li>1 platform adapter</li>
+        </ul>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="btn btn-secondary btn-full" data-cta="pricing-free-start" target="_blank" rel="noopener">Get Started Free</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="popular-badge">Most Popular</div>
+        <div class="tier">Pro</div>
+        <div class="amount">$9<span>/mo</span></div>
+        <div class="period">billed monthly</div>
+        <ul>
+          <li><strong>Everything in Free</strong></li>
+          <li>Scheduled auto-backups</li>
+          <li>Cloud storage (10 GB)</li>
+          <li>All 6 platform adapters</li>
+          <li>Search across snapshots</li>
+          <li>Web dashboard</li>
+          <li>Email alerts on failures</li>
+        </ul>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn btn-primary btn-full" data-cta="pricing-pro-checkout">Subscribe to Pro</a>
+      </div>
+
+      <div class="price-card">
+        <div class="tier">Team</div>
+        <div class="amount">$29<span>/mo</span></div>
+        <div class="period">billed monthly</div>
+        <ul>
+          <li><strong>Everything in Pro</strong></li>
+          <li>Shared snapshots across the team</li>
+          <li>Audit log export (CSV / JSON)</li>
+          <li>Role-based access (owner / admin / member / viewer)</li>
+          <li>Priority support</li>
+          <li>Custom adapters</li>
+          <li>Coming soon: role-scoped decryption</li>
+        </ul>
+        <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="btn btn-secondary btn-full" data-cta="pricing-team-checkout">Subscribe to Team</a>
+      </div>
+    </div>
+
+    <h2 id="claim">Claim the API key</h2>
+    <p>After you pay, claim the API key yourself from the claim URL. Then <code>savestate login</code>. Card today. No waitlist.</p>
+    <ol>
+      <li>POST <code>https://savestate.dev/v1/keys</code> with an empty JSON body. The response is HTTP 402 and always includes <code>pay_url</code> and <code>claim_url</code>.</li>
+      <li>Open <code>pay_url</code>. That is Stripe Checkout for Pro at $9/mo. The Team Payment Link is $29/mo.</li>
+      <li>Poll <code>claim_url</code>. Unpaid stays 402. Processing is 202. Issued is 200 once, with <code>api_key</code>. Store that key. Claimed is 409. Expired is 410.</li>
+      <li>Send <code>Authorization: Bearer &lt;api_key&gt;</code>, or run <code>savestate login</code>.</li>
+    </ol>
+    <p>Local snapshot, search, and MCP (<code>npx -y @savestate/cli mcp</code>) stay free and do not need an API key.</p>
+
+    <p style="margin-top: 28px;">
+      <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn btn-primary" data-cta="pricing-footer-pro-checkout">Subscribe to Pro</a>
+      <a href="https://buy.stripe.com/8x27sLc2s4DSapn4ot2ZO01" class="btn btn-secondary" data-cta="pricing-footer-team-checkout">Subscribe to Team</a>
+    </p>
+  </div>
+
+  <footer class="docs-footer">
+    <span>MIT Licensed · <a href="https://github.com/savestatedev/savestate">SaveState on GitHub</a></span>
+    <span><a href="/docs">Docs</a></span>
+  </footer>
+</main>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
