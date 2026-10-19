@@ -227,6 +227,7 @@ describe('savestate context --json', () => {
       pageSize: 3,
       hasMore: false,
       nextOffset: null,
+      previousOffset: null,
       suggestedOffset: null,
     });
     expect(parsed.candidates).toEqual([
@@ -252,6 +253,7 @@ describe('savestate context --json', () => {
       pageSize: 0,
       hasMore: false,
       nextOffset: null,
+      previousOffset: null,
       suggestedOffset: null,
     });
     expect(empty.candidates).toEqual([]);
@@ -296,6 +298,7 @@ describe('savestate context --json', () => {
       pageSize: 2,
       hasMore: true,
       nextOffset: 4,
+      previousOffset: 0,
       suggestedOffset: null,
     });
 
@@ -319,6 +322,7 @@ describe('savestate context --json', () => {
       pageSize: 0,
       hasMore: false,
       nextOffset: null,
+      previousOffset: 4,
       suggestedOffset: 4,
     });
   });
@@ -348,6 +352,7 @@ describe('savestate context --json', () => {
         totalWarnings: 1,
         hasMore: false,
         nextOffset: null,
+        previousOffset: null,
       },
       coverage: {
         constraintsCovered: 2,
@@ -381,6 +386,7 @@ describe('savestate context --json', () => {
       totalWarnings: 0,
       hasMore: false,
       nextOffset: null,
+      previousOffset: null,
     });
     expect(parsed.coverage.constraintsCovered).toBe(0);
     expect(parsed.coverage.requiredFactsPresent).toBe(false);
@@ -413,6 +419,7 @@ describe('savestate context --json', () => {
       totalWarnings: 2,
       hasMore: true,
       nextOffset: 2,
+      previousOffset: 0,
     });
   });
 
@@ -439,6 +446,7 @@ describe('savestate context --json', () => {
       totalWarnings: 2,
       hasMore: true,
       nextOffset: 2,
+      previousOffset: 0,
     });
   });
 });

@@ -108,6 +108,7 @@ export interface ContextValidateJson {
     totalWarnings: number;
     hasMore: boolean;
     nextOffset: number | null;
+    previousOffset: number | null;
   };
   coverage: {
     constraintsCovered: number;
@@ -415,6 +416,8 @@ export function getContextValidatePagination(
   const pageOffset = offset ?? 0;
   const totalIssues = Math.max(result.errors.length, result.warnings.length);
   const hasMore = limit !== undefined && pageOffset + limit < totalIssues;
+  const previousOffset =
+    limit !== undefined && pageOffset > 0 ? Math.max(0, pageOffset - limit) : null;
   return {
     offset: pageOffset,
     limit: limit ?? null,
@@ -422,6 +425,7 @@ export function getContextValidatePagination(
     totalWarnings: result.warnings.length,
     hasMore,
     nextOffset: hasMore ? pageOffset + limit : null,
+    previousOffset,
   };
 }
 
@@ -453,6 +457,7 @@ export function formatContextExplainJson(
   const pageOffset = offset ?? 0;
   const hasMore = pageOffset + candidates.length < explanation.total_candidates;
   const pageSize = limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT;
+  const previousOffset = pageOffset > 0 ? Math.max(0, pageOffset - pageSize) : null;
   const suggestedOffset =
     candidates.length === 0 && explanation.total_candidates > 0
       ? Math.floor((explanation.total_candidates - 1) / pageSize) * pageSize
@@ -487,6 +492,7 @@ export function formatContextExplainJson(
       pageSize: candidates.length,
       hasMore,
       nextOffset: hasMore ? pageOffset + candidates.length : null,
+      previousOffset,
       suggestedOffset,
     },
     candidates,
