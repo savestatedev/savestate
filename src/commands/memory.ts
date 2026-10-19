@@ -2434,6 +2434,15 @@ export async function explainMemoryCommand(
 
   if (options?.format === 'json') {
     if (scoredLimited.length === 0) {
+      if (sorted.length > 0) {
+        console.log(formatMemoryExplainJson(
+          query,
+          [],
+          pagination,
+          getMemoryExplainFilters(options),
+        ));
+        return;
+      }
       console.log(formatMemoryExplainMissingJson(
         query,
         pagination,

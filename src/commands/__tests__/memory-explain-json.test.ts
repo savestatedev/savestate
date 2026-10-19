@@ -105,6 +105,31 @@ describe('savestate memory explain --json', () => {
     });
   });
 
+  it('keeps an empty offset page distinct from no matching memories', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { offset: 4, limit: 2, total: 4 },
+      ),
+    ) as MemoryExplainJson & { found?: unknown };
+
+    expect(parsed).toEqual({
+      query: 'inbox preference',
+      shown: 0,
+      pagination: {
+        offset: 4,
+        limit: 2,
+        total: 4,
+        pageSize: 2,
+        hasMore: false,
+        nextOffset: null,
+      },
+      results: [],
+    });
+    expect(parsed.found).toBeUndefined();
+  });
+
   it('includes an active freshness filter for JSON consumers', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
