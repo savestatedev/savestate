@@ -3121,6 +3121,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('retrieval scores');
     expect(memorySection).toContain('<code>emptyReason</code>');
     expect(memorySection).toContain('<code>emptyReason: page</code>');
+    expect(memorySection).toContain('<code>suggestedOffset</code>');
     expect(memorySection).toContain('<code>createdAt</code>');
     expect(memorySection).toContain("each result's <code>pinned</code> state");
     expect(memorySection).toContain("each result's current <code>freshness</code> state");

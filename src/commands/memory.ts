@@ -2059,6 +2059,8 @@ export interface MemoryExplainJson {
   query: string;
   shown: number;
   emptyReason: 'collection' | 'page' | null;
+  /** Nearest page containing entries when a stale offset returns an empty page. */
+  suggestedOffset: number | null;
   pagination: MemoryExplainPaginationJson;
   filters?: MemoryExplainFiltersJson;
   results: MemoryExplainResultJson[];
@@ -2131,10 +2133,14 @@ export function formatMemoryExplainJson(
   const total = pagination.total ?? results.length;
   const pageSize = pagination.pageSize ?? pagination.limit ?? Math.max(1, results.length);
   const hasMore = pagination.hasMore ?? offset + results.length < total;
+  const suggestedOffset = results.length === 0 && total > 0
+    ? Math.floor((total - 1) / pageSize) * pageSize
+    : null;
   const record: MemoryExplainJson = {
     query,
     shown: results.length,
     emptyReason: results.length > 0 ? null : total === 0 ? 'collection' : 'page',
+    suggestedOffset,
     pagination: {
       offset,
       limit: pagination.limit ?? null,
@@ -2164,6 +2170,7 @@ export interface MemoryExplainMissingJson {
   query: string;
   shown: 0;
   emptyReason: 'collection';
+  suggestedOffset: null;
   pagination: MemoryExplainPaginationJson;
   filters?: MemoryExplainFiltersJson;
   results: null;
@@ -2183,6 +2190,7 @@ export function formatMemoryExplainMissingJson(
     query,
     shown: 0,
     emptyReason: 'collection',
+    suggestedOffset: null,
     pagination: {
       offset,
       limit: pagination.limit ?? null,
