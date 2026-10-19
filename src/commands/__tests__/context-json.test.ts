@@ -118,20 +118,22 @@ describe('savestate context --json', () => {
     expect(parsed.conflicts).toBe(1);
     expect(parsed.unknowns).toBe(1);
     expect(parsed.citations).toBe(1);
+    expect(parsed.shown).toBe(8);
     expect(parsed.sections).toEqual([
       { id: 'must_know_facts', count: 2 },
       { id: 'active_state', count: 1 },
       { id: 'open_loops', count: 1 },
       { id: 'constraints', count: 1 },
       { id: 'recent_decisions', count: 1 },
+      { id: 'unknowns', count: 1 },
       { id: 'conflicts', count: 1 },
       { id: 'citations', count: 1 },
     ]);
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
-      pageSize: 7,
-      totalSections: 7,
+      pageSize: 8,
+      totalSections: 8,
       hasMore: false,
       nextOffset: null,
       previousOffset: null,
@@ -152,6 +154,7 @@ describe('savestate context --json', () => {
     expect(parsed.citations).toBe(0);
     expect(parsed.tokenCount).toBe(0);
     expect(parsed.budgetRemaining).toBe(4000);
+    expect(parsed.shown).toBe(8);
   });
 
   it('pages compile sections and records pagination metadata', () => {
@@ -170,11 +173,12 @@ describe('savestate context --json', () => {
       { id: 'active_state', count: 0 },
       { id: 'open_loops', count: 1 },
     ]);
+    expect(parsed.shown).toBe(2);
     expect(parsed.pagination).toEqual({
       offset: 1,
       limit: 2,
       pageSize: 2,
-      totalSections: 7,
+      totalSections: 8,
       hasMore: true,
       nextOffset: 3,
       previousOffset: 0,
@@ -183,11 +187,11 @@ describe('savestate context --json', () => {
   });
 
   it('formats compile navigation hints for human output', () => {
-    expect(formatContextCompilePaginationMessages(7, 2, 2)).toEqual([
+    expect(formatContextCompilePaginationMessages(8, 2, 2)).toEqual([
       'More RunBrief sections available; rerun with --offset 4.',
       'Earlier RunBrief sections available; rerun with --offset 0.',
     ]);
-    expect(formatContextCompilePaginationMessages(7, 2, 8)).toEqual([
+    expect(formatContextCompilePaginationMessages(8, 2, 8)).toEqual([
       'Earlier RunBrief sections available; rerun with --offset 6.',
       'No RunBrief sections found at this offset; rerun with --offset 6.',
     ]);
@@ -196,11 +200,12 @@ describe('savestate context --json', () => {
   it('keeps the requested page size when an offset is past the last section', () => {
     const parsed = JSON.parse(formatContextCompileJson(brief(), 2, 8)) as ContextCompileJson;
     expect(parsed.sections).toEqual([]);
+    expect(parsed.shown).toBe(0);
     expect(parsed.pagination).toEqual({
       offset: 8,
       limit: 2,
       pageSize: 2,
-      totalSections: 7,
+      totalSections: 8,
       hasMore: false,
       nextOffset: null,
       previousOffset: 6,
@@ -217,8 +222,15 @@ describe('savestate context --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
+      shownWeights: Object.keys(parsed.weights).length,
+      shownBudget: Object.keys(parsed.budget).length,
       totalWeights: Object.keys(parsed.weights).length,
       totalBudget: Object.keys(parsed.budget).length,
+      hasMoreWeights: false,
+      hasMoreBudget: false,
+      nextOffset: null,
+      previousOffset: null,
+      suggestedOffset: null,
     });
   });
 
@@ -228,6 +240,27 @@ describe('savestate context --json', () => {
     expect(Object.keys(parsed.budget)).toHaveLength(1);
     expect(parsed.pagination.offset).toBe(1);
     expect(parsed.pagination.limit).toBe(1);
+    expect(parsed.pagination.shownWeights).toBe(1);
+    expect(parsed.pagination.shownBudget).toBe(1);
+    expect(parsed.pagination.totalWeights).toBeGreaterThan(1);
+    expect(parsed.pagination.totalBudget).toBeGreaterThan(1);
+    expect(parsed.pagination.hasMoreWeights).toBe(true);
+    expect(parsed.pagination.hasMoreBudget).toBe(true);
+    expect(parsed.pagination.nextOffset).toBe(2);
+    expect(parsed.pagination.previousOffset).toBe(0);
+  });
+
+  it('suggests the last config page for a stale offset', () => {
+    const parsed = JSON.parse(formatContextConfigJson(2, 1000)) as ContextConfigJson;
+    expect(parsed.weights).toEqual({});
+    expect(parsed.budget).toEqual({});
+    expect(parsed.pagination.shownWeights).toBe(0);
+    expect(parsed.pagination.shownBudget).toBe(0);
+    expect(parsed.pagination.hasMoreWeights).toBe(false);
+    expect(parsed.pagination.hasMoreBudget).toBe(false);
+    expect(parsed.pagination.nextOffset).toBeNull();
+    expect(parsed.pagination.previousOffset).toBe(998);
+    expect(parsed.pagination.suggestedOffset).toBe(6);
   });
 
   it('prints explain inclusion counts as JSON', () => {
@@ -365,7 +398,7 @@ describe('savestate context --json', () => {
       offset: 6,
       limit: 2,
       total: 5,
-      pageSize: 0,
+      pageSize: 2,
       hasMore: false,
       nextOffset: null,
       previousOffset: 4,
