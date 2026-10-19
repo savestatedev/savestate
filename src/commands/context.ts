@@ -429,6 +429,21 @@ export function getContextValidatePagination(
   };
 }
 
+export function formatContextValidatePaginationMessages(
+  pagination: ContextValidatePagination,
+): string[] {
+  const messages: string[] = [];
+  if (pagination.hasMore && pagination.nextOffset !== null) {
+    messages.push(`More validation issues available; rerun with --offset ${pagination.nextOffset}.`);
+  }
+  if (pagination.previousOffset !== null) {
+    messages.push(
+      `Earlier validation issues available; rerun with --offset ${pagination.previousOffset}.`,
+    );
+  }
+  return messages;
+}
+
 export function formatContextValidateMissingJson(file: string): string {
   return JSON.stringify(
     {
@@ -771,8 +786,8 @@ export function registerContextCommands(program: Command): void {
         }
       }
       const pagination = getContextValidatePagination(result, limit, offset);
-      if (pagination.hasMore) {
-        console.log(`More validation issues available; rerun with --offset ${pagination.nextOffset}.`);
+      for (const message of formatContextValidatePaginationMessages(pagination)) {
+        console.log(message);
       }
       console.log(
         `Coverage: constraints ${result.coverage.constraints_covered}/${result.coverage.constraints_total}, required facts ${result.coverage.required_facts_present ? 'present' : 'missing'}`,
