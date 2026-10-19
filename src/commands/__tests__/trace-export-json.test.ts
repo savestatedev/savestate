@@ -30,6 +30,7 @@ describe('savestate trace export --json', () => {
       payload?: unknown;
     };
     expect(parsed).toEqual({
+      found: true,
       format: 'jsonl',
       run: 'all',
       runCount: 1,
@@ -67,6 +68,7 @@ describe('savestate trace export --json', () => {
   it('records empty export defaults without extra fields', () => {
     const parsed = JSON.parse(formatTraceExportJson({})) as TraceExportJson;
     expect(parsed.format).toBe('jsonl');
+    expect(parsed.found).toBe(true);
     expect(parsed.run).toBe('all');
     expect(parsed.runCount).toBe(0);
     expect(parsed.eventCount).toBe(0);
@@ -84,6 +86,7 @@ describe('savestate trace export --json', () => {
     expect(Object.keys(parsed).sort()).toEqual([
       'eventCount',
       'format',
+      'found',
       'pagination',
       'run',
       'runCount',

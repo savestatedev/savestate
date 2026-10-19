@@ -391,6 +391,7 @@ export function formatTraceShowMissingJson(runId: string): string {
 }
 
 export interface TraceExportJson {
+  found: true;
   format: string;
   run: string;
   runCount: number;
@@ -463,6 +464,7 @@ export function formatTraceExportJson(input: {
     : null;
   return JSON.stringify(
     {
+      found: true,
       format: input.format ?? 'jsonl',
       run: input.run ?? 'all',
       runCount: runs.length,
