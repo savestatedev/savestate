@@ -277,6 +277,8 @@ describe('savestate context --json', () => {
         limit: null,
         totalErrors: 0,
         totalWarnings: 1,
+        hasMore: false,
+        nextOffset: null,
       },
       coverage: {
         constraintsCovered: 2,
@@ -308,6 +310,8 @@ describe('savestate context --json', () => {
       limit: null,
       totalErrors: 2,
       totalWarnings: 0,
+      hasMore: false,
+      nextOffset: null,
     });
     expect(parsed.coverage.constraintsCovered).toBe(0);
     expect(parsed.coverage.requiredFactsPresent).toBe(false);
@@ -338,6 +342,8 @@ describe('savestate context --json', () => {
       limit: 1,
       totalErrors: 3,
       totalWarnings: 2,
+      hasMore: true,
+      nextOffset: 2,
     });
   });
 });

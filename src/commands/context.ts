@@ -96,6 +96,8 @@ export interface ContextValidateJson {
     limit: number | null;
     totalErrors: number;
     totalWarnings: number;
+    hasMore: boolean;
+    nextOffset: number | null;
   };
   coverage: {
     constraintsCovered: number;
@@ -377,16 +379,21 @@ export function formatContextValidateJson(
   limit?: number,
   offset?: number,
 ): string {
+  const pageOffset = offset ?? 0;
+  const totalIssues = Math.max(result.errors.length, result.warnings.length);
+  const hasMore = limit !== undefined && pageOffset + limit < totalIssues;
   const record: ContextValidateJson = {
     file,
     valid: result.valid,
     errors: selectContextValidateIssues(result.errors, limit, offset),
     warnings: selectContextValidateIssues(result.warnings, limit, offset),
     pagination: {
-      offset: offset ?? 0,
+      offset: pageOffset,
       limit: limit ?? null,
       totalErrors: result.errors.length,
       totalWarnings: result.warnings.length,
+      hasMore,
+      nextOffset: hasMore ? pageOffset + limit : null,
     },
     coverage: {
       constraintsCovered: result.coverage.constraints_covered,
