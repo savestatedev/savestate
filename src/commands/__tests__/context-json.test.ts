@@ -226,6 +226,7 @@ describe('savestate context --json', () => {
       pageSize: 3,
       hasMore: false,
       nextOffset: null,
+      suggestedOffset: null,
     });
     expect(parsed.candidates).toEqual([
       { id: 'c1', included: true, score: 0.91, reason: 'must-know' },
@@ -250,6 +251,7 @@ describe('savestate context --json', () => {
       pageSize: 0,
       hasMore: false,
       nextOffset: null,
+      suggestedOffset: null,
     });
     expect(empty.candidates).toEqual([]);
     expect(empty.budget.citations).toBe(0);
@@ -293,6 +295,7 @@ describe('savestate context --json', () => {
       pageSize: 2,
       hasMore: true,
       nextOffset: 4,
+      suggestedOffset: null,
     });
 
     const emptyPage = JSON.parse(
@@ -315,6 +318,7 @@ describe('savestate context --json', () => {
       pageSize: 0,
       hasMore: false,
       nextOffset: null,
+      suggestedOffset: 4,
     });
   });
 

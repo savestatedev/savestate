@@ -82,6 +82,7 @@ export interface ContextExplainJson {
     pageSize: number;
     hasMore: boolean;
     nextOffset: number | null;
+    suggestedOffset: number | null;
   };
   candidates: ContextExplainCandidateJson[];
 }
@@ -433,6 +434,11 @@ export function formatContextExplainJson(
   }));
   const pageOffset = offset ?? 0;
   const hasMore = pageOffset + candidates.length < explanation.total_candidates;
+  const pageSize = limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT;
+  const suggestedOffset =
+    candidates.length === 0 && explanation.total_candidates > 0
+      ? Math.floor((explanation.total_candidates - 1) / pageSize) * pageSize
+      : null;
   const record: ContextExplainJson = {
     runId: explanation.run_id,
     compiledAt: explanation.compiled_at,
@@ -463,6 +469,7 @@ export function formatContextExplainJson(
       pageSize: candidates.length,
       hasMore,
       nextOffset: hasMore ? pageOffset + candidates.length : null,
+      suggestedOffset,
     },
     candidates,
   };
