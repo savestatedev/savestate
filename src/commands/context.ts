@@ -35,6 +35,7 @@ export interface ContextCompileJson {
   pagination: {
     offset: number;
     limit: number | null;
+    pageSize: number;
     totalSections: number;
     hasMore: boolean;
     nextOffset: number | null;
@@ -377,6 +378,7 @@ export function formatContextCompileJson(
     pagination: {
       offset: pageOffset,
       limit: limit ?? null,
+      pageSize: sections.length,
       totalSections: sectionRows.length,
       hasMore,
       nextOffset: hasMore ? pageOffset + sections.length : null,

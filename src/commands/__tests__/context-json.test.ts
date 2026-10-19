@@ -130,6 +130,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
+      pageSize: 7,
       totalSections: 7,
       hasMore: false,
       nextOffset: null,
@@ -172,6 +173,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 1,
       limit: 2,
+      pageSize: 2,
       totalSections: 7,
       hasMore: true,
       nextOffset: 3,
