@@ -74,8 +74,11 @@ describe('homepage checkout CTAs', () => {
   });
 
   it('tells a paying stranger how fulfillment works after checkout', () => {
-    expect(homepage).toMatch(/After you pay, your API key is emailed/);
+    expect(homepage).toMatch(/claim the API key yourself/);
+    expect(homepage).toMatch(/POST \/v1\/keys returns 402 with pay_url and claim_url; poll claim_url/);
     expect(homepage).toMatch(/savestate login/);
+    expect(homepage).not.toMatch(/API key is emailed/);
+    expect(homepage).not.toMatch(/API key by email/);
   });
 
   it('does not keep a Pro waitlist on the homepage', () => {

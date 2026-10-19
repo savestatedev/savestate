@@ -627,6 +627,23 @@ describe('public marketing checkout CTAs', () => {
     expect(post).toMatch(/Clawdbot/);
   });
 
+  it('lists /pricing as a page in the sitemap, with no redirect', () => {
+    const vercel = JSON.parse(loadHtml('vercel.json')) as {
+      redirects?: Array<{ source: string }>;
+    };
+    expect((vercel.redirects ?? []).some((entry) => entry.source === '/pricing')).toBe(false);
+    expect(sitemap).toContain('<loc>https://savestate.dev/pricing</loc>');
+    const pricing = loadHtml('site/pricing.html');
+    expect(pricing).toContain('https://savestate.dev/pricing');
+    expect(hrefForCta(pricing, 'pricing-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(pricing, 'pricing-team-checkout')).toBe(stripe.products.team.payment_link);
+    expect(pricing).toMatch(/POST https:\/\/savestate\.dev\/v1\/keys/);
+    expect(pricing).toMatch(/pay_url/);
+    expect(pricing).toMatch(/claim_url/);
+    expect(pricing).not.toMatch(/API key is emailed/);
+    expect(pricing).not.toMatch(/—/);
+  });
+
   it('lists the buyer post on the live URL path after merge', () => {
     expect(sitemap).toContain('https://savestate.dev/blog/when-the-chat-dies');
     expect(blogIndex).toContain('/blog/when-the-chat-dies');

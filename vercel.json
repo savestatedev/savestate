@@ -3,7 +3,6 @@
   "outputDirectory": "site",
   "buildCommand": "npx ts-node scripts/generate-blog-index.ts",
   "redirects": [
-    { "source": "/pricing", "destination": "/#pricing", "permanent": false },
     { "source": "/login", "destination": "/dashboard", "permanent": false }
   ],
   "rewrites": [
