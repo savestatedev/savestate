@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ExplanationTrace, RunBrief } from '../../context/index.js';
 import {
   formatContextCompileJson,
+  formatContextCompilePaginationMessages,
   formatContextConfigJson,
   formatContextExplainJson,
   formatContextExplainPaginationMessages,
@@ -126,7 +127,16 @@ describe('savestate context --json', () => {
       { id: 'conflicts', count: 1 },
       { id: 'citations', count: 1 },
     ]);
-    expect(parsed.pagination).toEqual({ offset: 0, limit: null, totalSections: 7 });
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      pageSize: 7,
+      totalSections: 7,
+      hasMore: false,
+      nextOffset: null,
+      previousOffset: null,
+      suggestedOffset: null,
+    });
   });
 
   it('records empty sections as 0', () => {
@@ -160,7 +170,42 @@ describe('savestate context --json', () => {
       { id: 'active_state', count: 0 },
       { id: 'open_loops', count: 1 },
     ]);
-    expect(parsed.pagination).toEqual({ offset: 1, limit: 2, totalSections: 7 });
+    expect(parsed.pagination).toEqual({
+      offset: 1,
+      limit: 2,
+      pageSize: 2,
+      totalSections: 7,
+      hasMore: true,
+      nextOffset: 3,
+      previousOffset: 0,
+      suggestedOffset: null,
+    });
+  });
+
+  it('formats compile navigation hints for human output', () => {
+    expect(formatContextCompilePaginationMessages(7, 2, 2)).toEqual([
+      'More RunBrief sections available; rerun with --offset 4.',
+      'Earlier RunBrief sections available; rerun with --offset 0.',
+    ]);
+    expect(formatContextCompilePaginationMessages(7, 2, 8)).toEqual([
+      'Earlier RunBrief sections available; rerun with --offset 6.',
+      'No RunBrief sections found at this offset; rerun with --offset 6.',
+    ]);
+  });
+
+  it('keeps the requested page size when an offset is past the last section', () => {
+    const parsed = JSON.parse(formatContextCompileJson(brief(), 2, 8)) as ContextCompileJson;
+    expect(parsed.sections).toEqual([]);
+    expect(parsed.pagination).toEqual({
+      offset: 8,
+      limit: 2,
+      pageSize: 2,
+      totalSections: 7,
+      hasMore: false,
+      nextOffset: null,
+      previousOffset: 6,
+      suggestedOffset: 6,
+    });
   });
 
   it('prints scoring weights and budget allocation as JSON', () => {

@@ -35,7 +35,12 @@ export interface ContextCompileJson {
   pagination: {
     offset: number;
     limit: number | null;
+    pageSize: number;
     totalSections: number;
+    hasMore: boolean;
+    nextOffset: number | null;
+    previousOffset: number | null;
+    suggestedOffset: number | null;
   };
 }
 
@@ -344,6 +349,18 @@ export function formatContextCompileJson(
     { id: 'conflicts', count: brief.conflicts.length },
     { id: 'citations', count: brief.citations.length },
   ];
+  const pageOffset = offset ?? 0;
+  const sections = selectContextCompileEntries(sectionRows, limit, offset);
+  const pageSize = limit ?? sectionRows.length;
+  const hasMore = pageOffset + sections.length < sectionRows.length;
+  const previousOffset = limit !== undefined && pageOffset > 0
+    ? Math.max(0, pageOffset - pageSize)
+    : null;
+  const suggestedOffset = pageOffset >= sectionRows.length && sectionRows.length > 0
+    ? limit === undefined
+      ? 0
+      : Math.floor((sectionRows.length - 1) / pageSize) * pageSize
+    : null;
   const record: ContextCompileJson = {
     runId: brief.run_id,
     compiledAt: brief.compiled_at,
@@ -357,14 +374,44 @@ export function formatContextCompileJson(
     conflicts: brief.conflicts.length,
     unknowns: brief.unknowns.length,
     citations: brief.citations.length,
-    sections: selectContextCompileEntries(sectionRows, limit, offset),
+    sections,
     pagination: {
-      offset: offset ?? 0,
+      offset: pageOffset,
       limit: limit ?? null,
+      pageSize,
       totalSections: sectionRows.length,
+      hasMore,
+      nextOffset: hasMore ? pageOffset + sections.length : null,
+      previousOffset,
+      suggestedOffset,
     },
   };
   return JSON.stringify(record, null, 2);
+}
+
+export function formatContextCompilePaginationMessages(
+  totalSections: number,
+  limit?: number,
+  offset?: number,
+): string[] {
+  const pageOffset = offset ?? 0;
+  const pageSize = limit ?? totalSections;
+  const shown = selectContextCompileEntries(Array.from({ length: totalSections }), limit, offset).length;
+  const messages: string[] = [];
+
+  if (pageOffset + shown < totalSections) {
+    messages.push(`More RunBrief sections available; rerun with --offset ${pageOffset + shown}.`);
+  }
+  if (limit !== undefined && pageOffset > 0) {
+    messages.push(`Earlier RunBrief sections available; rerun with --offset ${Math.max(0, pageOffset - pageSize)}.`);
+  }
+  if (shown === 0 && totalSections > 0) {
+    const suggestedOffset = limit === undefined
+      ? 0
+      : Math.floor((totalSections - 1) / pageSize) * pageSize;
+    messages.push(`No RunBrief sections found at this offset; rerun with --offset ${suggestedOffset}.`);
+  }
+  return messages;
 }
 
 export function formatContextConfigJson(limit?: number, offset?: number): string {
@@ -713,6 +760,9 @@ export function registerContextCommands(program: Command): void {
       ];
       for (const row of selectContextCompileEntries(sectionRows, limit, offset)) {
         console.log(row);
+      }
+      for (const message of formatContextCompilePaginationMessages(sectionRows.length, limit, offset)) {
+        console.log(message);
       }
     });
 
