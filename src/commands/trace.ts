@@ -405,6 +405,7 @@ export interface TraceExportPaginationJson {
   limit: number | null;
   total: number;
   shown: number;
+  emptyReason: 'collection' | 'page' | null;
   hasMore: boolean;
   nextOffset: number | null;
   previousOffset: number | null;
@@ -455,6 +456,11 @@ export function formatTraceExportJson(input: {
   const offset = input.offset ?? 0;
   const limit = input.limit ?? null;
   const total = input.total ?? runs.length;
+  const emptyReason = runs.length > 0
+    ? null
+    : total === 0
+      ? 'collection'
+      : 'page';
   const hasMore = limit !== null && offset + runs.length < total;
   const previousOffset = limit !== null && offset > 0
     ? Math.max(0, offset - limit)
@@ -474,6 +480,7 @@ export function formatTraceExportJson(input: {
         limit,
         total,
         shown: runs.length,
+        emptyReason,
         hasMore,
         nextOffset: hasMore ? offset + runs.length : null,
         previousOffset,
