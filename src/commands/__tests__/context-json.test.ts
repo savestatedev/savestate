@@ -118,6 +118,7 @@ describe('savestate context --json', () => {
     expect(parsed.conflicts).toBe(1);
     expect(parsed.unknowns).toBe(1);
     expect(parsed.citations).toBe(1);
+    expect(parsed.shown).toBe(8);
     expect(parsed.sections).toEqual([
       { id: 'must_know_facts', count: 2 },
       { id: 'active_state', count: 1 },
@@ -153,6 +154,7 @@ describe('savestate context --json', () => {
     expect(parsed.citations).toBe(0);
     expect(parsed.tokenCount).toBe(0);
     expect(parsed.budgetRemaining).toBe(4000);
+    expect(parsed.shown).toBe(8);
   });
 
   it('pages compile sections and records pagination metadata', () => {
@@ -171,6 +173,7 @@ describe('savestate context --json', () => {
       { id: 'active_state', count: 0 },
       { id: 'open_loops', count: 1 },
     ]);
+    expect(parsed.shown).toBe(2);
     expect(parsed.pagination).toEqual({
       offset: 1,
       limit: 2,
@@ -197,6 +200,7 @@ describe('savestate context --json', () => {
   it('keeps the requested page size when an offset is past the last section', () => {
     const parsed = JSON.parse(formatContextCompileJson(brief(), 2, 8)) as ContextCompileJson;
     expect(parsed.sections).toEqual([]);
+    expect(parsed.shown).toBe(0);
     expect(parsed.pagination).toEqual({
       offset: 8,
       limit: 2,

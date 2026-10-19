@@ -31,6 +31,7 @@ export interface ContextCompileJson {
   conflicts: number;
   unknowns: number;
   citations: number;
+  shown: number;
   sections: Array<{ id: string; count: number }>;
   pagination: {
     offset: number;
@@ -375,6 +376,7 @@ export function formatContextCompileJson(
     conflicts: brief.conflicts.length,
     unknowns: brief.unknowns.length,
     citations: brief.citations.length,
+    shown: sections.length,
     sections,
     pagination: {
       offset: pageOffset,
