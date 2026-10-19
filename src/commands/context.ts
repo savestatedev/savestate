@@ -534,11 +534,16 @@ export function formatContextExplainJson(
   }));
   const pageOffset = offset ?? 0;
   const hasMore = pageOffset + candidates.length < explanation.total_candidates;
-  const pageSize = limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT;
-  const previousOffset = pageOffset > 0 ? Math.max(0, pageOffset - pageSize) : null;
+  // Preserve an explicit page size on empty pages so clients can calculate the
+  // suggested recovery offset from the request they made.
+  const pageSize = limit ?? candidates.length;
+  const navigationPageSize = limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT;
+  const previousOffset = pageOffset > 0
+    ? Math.max(0, pageOffset - navigationPageSize)
+    : null;
   const suggestedOffset =
     candidates.length === 0 && explanation.total_candidates > 0
-      ? Math.floor((explanation.total_candidates - 1) / pageSize) * pageSize
+      ? Math.floor((explanation.total_candidates - 1) / navigationPageSize) * navigationPageSize
       : null;
   const record: ContextExplainJson = {
     runId: explanation.run_id,
@@ -567,7 +572,7 @@ export function formatContextExplainJson(
       offset: pageOffset,
       limit: limit ?? null,
       total: explanation.total_candidates,
-      pageSize: candidates.length,
+      pageSize,
       hasMore,
       nextOffset: hasMore ? pageOffset + candidates.length : null,
       previousOffset,

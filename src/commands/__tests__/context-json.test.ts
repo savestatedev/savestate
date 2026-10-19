@@ -370,7 +370,7 @@ describe('savestate context --json', () => {
       offset: 6,
       limit: 2,
       total: 5,
-      pageSize: 0,
+      pageSize: 2,
       hasMore: false,
       nextOffset: null,
       previousOffset: 4,
