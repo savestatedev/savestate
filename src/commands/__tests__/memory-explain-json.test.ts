@@ -35,6 +35,8 @@ describe('savestate memory explain --json', () => {
     expect(parsed).toEqual({
       query: 'inbox preference',
       shown: 2,
+      emptyReason: null,
+      suggestedOffset: null,
       pagination: {
         offset: 0,
         limit: null,
@@ -74,6 +76,8 @@ describe('savestate memory explain --json', () => {
     expect(parsed).toEqual({
       query: 'unknown query',
       shown: 0,
+      emptyReason: 'collection',
+      suggestedOffset: null,
       pagination: {
         offset: 0,
         limit: null,
@@ -103,6 +107,33 @@ describe('savestate memory explain --json', () => {
       hasMore: true,
       nextOffset: 3,
     });
+  });
+
+  it('keeps an empty offset page distinct from no matching memories', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { offset: 4, limit: 2, total: 4 },
+      ),
+    ) as MemoryExplainJson & { found?: unknown };
+
+    expect(parsed).toEqual({
+      query: 'inbox preference',
+      shown: 0,
+      emptyReason: 'page',
+      suggestedOffset: 2,
+      pagination: {
+        offset: 4,
+        limit: 2,
+        total: 4,
+        pageSize: 2,
+        hasMore: false,
+        nextOffset: null,
+      },
+      results: [],
+    });
+    expect(parsed.found).toBeUndefined();
   });
 
   it('includes an active freshness filter for JSON consumers', () => {

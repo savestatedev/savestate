@@ -3119,6 +3119,9 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--json');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
+    expect(memorySection).toContain('<code>emptyReason</code>');
+    expect(memorySection).toContain('<code>emptyReason: page</code>');
+    expect(memorySection).toContain('<code>suggestedOffset</code>');
     expect(memorySection).toContain('<code>createdAt</code>');
     expect(memorySection).toContain("each result's <code>pinned</code> state");
     expect(memorySection).toContain("each result's current <code>freshness</code> state");
@@ -3142,7 +3145,8 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
     expect(memorySection).toContain('scripting');
-    expect(memorySection).toContain('found, query, shown');
+    expect(memorySection).toContain('<code>found: false</code>');
+    expect(memorySection).toContain('<code>emptyReason: collection</code>');
     expect(memorySection).toContain('savestate memory explain "inbox preference" --json');
     expect(memory).toContain('export function formatMemoryExplainMissingJson');
   });
