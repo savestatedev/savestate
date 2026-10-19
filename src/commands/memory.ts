@@ -2058,6 +2058,7 @@ export interface MemoryExplainResultJson {
 export interface MemoryExplainJson {
   query: string;
   shown: number;
+  emptyReason: 'collection' | 'page' | null;
   pagination: MemoryExplainPaginationJson;
   filters?: MemoryExplainFiltersJson;
   results: MemoryExplainResultJson[];
@@ -2133,6 +2134,7 @@ export function formatMemoryExplainJson(
   const record: MemoryExplainJson = {
     query,
     shown: results.length,
+    emptyReason: results.length > 0 ? null : total === 0 ? 'collection' : 'page',
     pagination: {
       offset,
       limit: pagination.limit ?? null,
@@ -2161,6 +2163,7 @@ export interface MemoryExplainMissingJson {
   found: false;
   query: string;
   shown: 0;
+  emptyReason: 'collection';
   pagination: MemoryExplainPaginationJson;
   filters?: MemoryExplainFiltersJson;
   results: null;
@@ -2179,6 +2182,7 @@ export function formatMemoryExplainMissingJson(
     found: false,
     query,
     shown: 0,
+    emptyReason: 'collection',
     pagination: {
       offset,
       limit: pagination.limit ?? null,

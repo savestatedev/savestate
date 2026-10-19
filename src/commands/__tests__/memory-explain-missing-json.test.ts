@@ -18,6 +18,7 @@ describe('savestate memory explain --json when missing', () => {
       found: false,
       query: 'inbox preference',
       shown: 0,
+      emptyReason: 'collection',
       pagination: {
         offset: 0,
         limit: null,
@@ -31,7 +32,7 @@ describe('savestate memory explain --json when missing', () => {
     expect(parsed.content).toBeUndefined();
     expect(parsed.previous_content).toBeUndefined();
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['found', 'pagination', 'query', 'results', 'shown']);
+    expect(Object.keys(parsed).sort()).toEqual(['emptyReason', 'found', 'pagination', 'query', 'results', 'shown']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
 

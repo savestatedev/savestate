@@ -35,6 +35,7 @@ describe('savestate memory explain --json', () => {
     expect(parsed).toEqual({
       query: 'inbox preference',
       shown: 2,
+      emptyReason: null,
       pagination: {
         offset: 0,
         limit: null,
@@ -74,6 +75,7 @@ describe('savestate memory explain --json', () => {
     expect(parsed).toEqual({
       query: 'unknown query',
       shown: 0,
+      emptyReason: 'collection',
       pagination: {
         offset: 0,
         limit: null,
@@ -117,6 +119,7 @@ describe('savestate memory explain --json', () => {
     expect(parsed).toEqual({
       query: 'inbox preference',
       shown: 0,
+      emptyReason: 'page',
       pagination: {
         offset: 4,
         limit: 2,
