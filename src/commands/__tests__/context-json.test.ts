@@ -4,6 +4,7 @@ import {
   formatContextCompileJson,
   formatContextConfigJson,
   formatContextExplainJson,
+  formatContextExplainPaginationMessages,
   formatContextValidateJson,
   getContextValidatePagination,
   type ContextCompileJson,
@@ -325,6 +326,21 @@ describe('savestate context --json', () => {
       previousOffset: 4,
       suggestedOffset: 4,
     });
+  });
+
+  it('formats navigation hints for human-readable explanations', () => {
+    const trace = explanation({
+      total_candidates: 5,
+      candidates: Array.from({ length: 5 }, (_, index) => candidate({ candidate_id: `c${index + 1}` })),
+    });
+    expect(formatContextExplainPaginationMessages(trace, 2, 2)).toEqual([
+      'More explanation candidates available; rerun with --offset 4.',
+      'Earlier explanation candidates available; rerun with --offset 0.',
+    ]);
+    expect(formatContextExplainPaginationMessages(trace, 2, 6)).toEqual([
+      'Earlier explanation candidates available; rerun with --offset 4.',
+      'No explanation candidates found at this offset; rerun with --offset 4.',
+    ]);
   });
 
   it('prints validate coverage as JSON', () => {

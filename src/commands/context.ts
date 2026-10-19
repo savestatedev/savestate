@@ -528,6 +528,32 @@ export function formatContextExplainJson(
   return JSON.stringify(record, null, 2);
 }
 
+export function formatContextExplainPaginationMessages(
+  explanation: ExplanationTrace,
+  limit?: number,
+  offset?: number,
+): string[] {
+  const pageOffset = offset ?? 0;
+  const pageSize = limit ?? DEFAULT_CONTEXT_EXPLAIN_LIMIT;
+  const shown = selectContextCandidates(explanation.candidates, limit, offset).length;
+  const hasMore = pageOffset + shown < explanation.total_candidates;
+  const messages: string[] = [];
+
+  if (hasMore) {
+    messages.push(`More explanation candidates available; rerun with --offset ${pageOffset + shown}.`);
+  }
+  if (pageOffset > 0) {
+    messages.push(`Earlier explanation candidates available; rerun with --offset ${Math.max(0, pageOffset - pageSize)}.`);
+  }
+  if (shown === 0 && explanation.total_candidates > 0) {
+    const suggestedOffset = Math.floor((explanation.total_candidates - 1) / pageSize) * pageSize;
+    messages.push(
+      `No explanation candidates found at this offset; rerun with --offset ${suggestedOffset}.`,
+    );
+  }
+  return messages;
+}
+
 export function formatContextExplainMissingJson(runId: string): string {
   return JSON.stringify(
     {
@@ -735,6 +761,9 @@ export function registerContextCommands(program: Command): void {
         const status = c.included ? '✅' : '❌';
         console.log(`   ${status} ${c.candidate_id} (score: ${c.score.toFixed(3)})`);
         console.log(`      ${c.reason}`);
+      }
+      for (const message of formatContextExplainPaginationMessages(explanation, limit, offset)) {
+        console.log(message);
       }
     });
 
