@@ -34,6 +34,16 @@ describe('savestate trace export --json', () => {
       run: 'all',
       runCount: 1,
       eventCount: 2,
+      pagination: {
+        offset: 0,
+        limit: null,
+        total: 1,
+        shown: 1,
+        hasMore: false,
+        nextOffset: null,
+        previousOffset: null,
+        suggestedOffset: null,
+      },
       runs: [
         {
           runId: 'run-123',
@@ -60,13 +70,66 @@ describe('savestate trace export --json', () => {
     expect(parsed.run).toBe('all');
     expect(parsed.runCount).toBe(0);
     expect(parsed.eventCount).toBe(0);
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      total: 0,
+      shown: 0,
+      hasMore: false,
+      nextOffset: null,
+      previousOffset: null,
+      suggestedOffset: null,
+    });
     expect(parsed.runs).toEqual([]);
     expect(Object.keys(parsed).sort()).toEqual([
       'eventCount',
       'format',
+      'pagination',
       'run',
       'runCount',
       'runs',
     ]);
+  });
+
+  it('reports recovery offsets for a bounded export page', () => {
+    const parsed = JSON.parse(formatTraceExportJson({
+      format: 'jsonl',
+      run: 'all',
+      runs: [run],
+      offset: 2,
+      limit: 1,
+      total: 4,
+    })) as TraceExportJson;
+
+    expect(parsed.pagination).toEqual({
+      offset: 2,
+      limit: 1,
+      total: 4,
+      shown: 1,
+      hasMore: true,
+      nextOffset: 3,
+      previousOffset: 1,
+      suggestedOffset: null,
+    });
+  });
+
+  it('suggests the last valid page when a bounded export is empty', () => {
+    const parsed = JSON.parse(formatTraceExportJson({
+      runs: [],
+      offset: 9,
+      limit: 3,
+      total: 8,
+    })) as TraceExportJson;
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 9,
+      limit: 3,
+      total: 8,
+      shown: 0,
+      hasMore: false,
+      nextOffset: null,
+      previousOffset: 6,
+      suggestedOffset: 6,
+    });
   });
 });

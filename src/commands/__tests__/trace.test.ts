@@ -157,4 +157,47 @@ describe.sequential('trace commands', () => {
     expect(runLines).toHaveLength(1);
     expect(JSON.parse(runLines[0]) as { run_id: string }).toMatchObject({ run_id: 'run-2' });
   });
+
+  it('trace export --json reports pagination recovery metadata', async () => {
+    const store = new TraceStore({ cwd, redactSecrets: false });
+    for (const [runId, minute] of [['run-1', '00'], ['run-2', '01'], ['run-3', '02']] as const) {
+      await store.appendEvent(runId, {
+        timestamp: `2026-02-21T10:${minute}:00.000Z`,
+        run_id: runId,
+        adapter: 'clawdbot',
+        event_type: 'message',
+        payload: {},
+      });
+    }
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await traceExportCommand({ json: true, offset: '1', limit: '1' });
+
+    const raw = logSpy.mock.calls
+      .map((call) => call[0])
+      .find((entry) => typeof entry === 'string' && entry.trim().startsWith('{'));
+    const parsed = JSON.parse(raw as string) as {
+      pagination: {
+        offset: number;
+        limit: number | null;
+        total: number;
+        shown: number;
+        hasMore: boolean;
+        nextOffset: number | null;
+        previousOffset: number | null;
+      };
+      runs: Array<{ runId: string }>;
+    };
+
+    expect(parsed.runs.map((run) => run.runId)).toEqual(['run-2']);
+    expect(parsed.pagination).toMatchObject({
+      offset: 1,
+      limit: 1,
+      total: 3,
+      shown: 1,
+      hasMore: true,
+      nextOffset: 2,
+      previousOffset: 0,
+    });
+  });
 });
