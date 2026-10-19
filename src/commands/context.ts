@@ -346,6 +346,7 @@ export function formatContextCompileJson(
     { id: 'open_loops', count: brief.open_loops.length },
     { id: 'constraints', count: brief.constraints.length },
     { id: 'recent_decisions', count: brief.recent_decisions.length },
+    { id: 'unknowns', count: brief.unknowns.length },
     { id: 'conflicts', count: brief.conflicts.length },
     { id: 'citations', count: brief.citations.length },
   ];
@@ -755,6 +756,7 @@ export function registerContextCommands(program: Command): void {
         `   Open Loops: ${result.brief.open_loops.length}`,
         `   Constraints: ${result.brief.constraints.length}`,
         `   Recent Decisions: ${result.brief.recent_decisions.length}`,
+        `   Unknowns: ${result.brief.unknowns.length}`,
         `   Conflicts: ${result.brief.conflicts.length}`,
         `   Citations: ${result.brief.citations.length}`,
       ];

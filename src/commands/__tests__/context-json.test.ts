@@ -124,14 +124,15 @@ describe('savestate context --json', () => {
       { id: 'open_loops', count: 1 },
       { id: 'constraints', count: 1 },
       { id: 'recent_decisions', count: 1 },
+      { id: 'unknowns', count: 1 },
       { id: 'conflicts', count: 1 },
       { id: 'citations', count: 1 },
     ]);
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
-      pageSize: 7,
-      totalSections: 7,
+      pageSize: 8,
+      totalSections: 8,
       hasMore: false,
       nextOffset: null,
       previousOffset: null,
@@ -174,7 +175,7 @@ describe('savestate context --json', () => {
       offset: 1,
       limit: 2,
       pageSize: 2,
-      totalSections: 7,
+      totalSections: 8,
       hasMore: true,
       nextOffset: 3,
       previousOffset: 0,
@@ -183,11 +184,11 @@ describe('savestate context --json', () => {
   });
 
   it('formats compile navigation hints for human output', () => {
-    expect(formatContextCompilePaginationMessages(7, 2, 2)).toEqual([
+    expect(formatContextCompilePaginationMessages(8, 2, 2)).toEqual([
       'More RunBrief sections available; rerun with --offset 4.',
       'Earlier RunBrief sections available; rerun with --offset 0.',
     ]);
-    expect(formatContextCompilePaginationMessages(7, 2, 8)).toEqual([
+    expect(formatContextCompilePaginationMessages(8, 2, 8)).toEqual([
       'Earlier RunBrief sections available; rerun with --offset 6.',
       'No RunBrief sections found at this offset; rerun with --offset 6.',
     ]);
@@ -200,7 +201,7 @@ describe('savestate context --json', () => {
       offset: 8,
       limit: 2,
       pageSize: 2,
-      totalSections: 7,
+      totalSections: 8,
       hasMore: false,
       nextOffset: null,
       previousOffset: 6,
