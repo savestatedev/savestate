@@ -109,6 +109,7 @@ export interface ContextValidateJson {
     hasMore: boolean;
     nextOffset: number | null;
     previousOffset: number | null;
+    suggestedOffset: number | null;
   };
   coverage: {
     constraintsCovered: number;
@@ -418,6 +419,12 @@ export function getContextValidatePagination(
   const hasMore = limit !== undefined && pageOffset + limit < totalIssues;
   const previousOffset =
     limit !== undefined && pageOffset > 0 ? Math.max(0, pageOffset - limit) : null;
+  const suggestedOffset =
+    pageOffset >= totalIssues && totalIssues > 0
+      ? limit === undefined
+        ? 0
+        : Math.floor((totalIssues - 1) / limit) * limit
+      : null;
   return {
     offset: pageOffset,
     limit: limit ?? null,
@@ -426,6 +433,7 @@ export function getContextValidatePagination(
     hasMore,
     nextOffset: hasMore ? pageOffset + limit : null,
     previousOffset,
+    suggestedOffset,
   };
 }
 
@@ -439,6 +447,11 @@ export function formatContextValidatePaginationMessages(
   if (pagination.previousOffset !== null) {
     messages.push(
       `Earlier validation issues available; rerun with --offset ${pagination.previousOffset}.`,
+    );
+  }
+  if (pagination.suggestedOffset !== null) {
+    messages.push(
+      `No validation issues found at this offset; rerun with --offset ${pagination.suggestedOffset}.`,
     );
   }
   return messages;

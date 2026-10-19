@@ -353,6 +353,7 @@ describe('savestate context --json', () => {
         hasMore: false,
         nextOffset: null,
         previousOffset: null,
+        suggestedOffset: null,
       },
       coverage: {
         constraintsCovered: 2,
@@ -387,6 +388,7 @@ describe('savestate context --json', () => {
       hasMore: false,
       nextOffset: null,
       previousOffset: null,
+      suggestedOffset: null,
     });
     expect(parsed.coverage.constraintsCovered).toBe(0);
     expect(parsed.coverage.requiredFactsPresent).toBe(false);
@@ -420,6 +422,7 @@ describe('savestate context --json', () => {
       hasMore: true,
       nextOffset: 2,
       previousOffset: 0,
+      suggestedOffset: null,
     });
   });
 
@@ -447,6 +450,29 @@ describe('savestate context --json', () => {
       hasMore: true,
       nextOffset: 2,
       previousOffset: 0,
+      suggestedOffset: null,
     });
+  });
+
+  it('suggests the last validation page for a stale offset', () => {
+    const parsed = JSON.parse(
+      formatContextValidateJson(
+        'brief.json',
+        {
+          valid: false,
+          errors: ['e1', 'e2', 'e3', 'e4', 'e5'],
+          warnings: [],
+          coverage: {
+            constraints_covered: 0,
+            constraints_total: 0,
+            required_facts_present: false,
+          },
+        },
+        2,
+        8,
+      ),
+    ) as ContextValidateJson;
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.pagination.suggestedOffset).toBe(4);
   });
 });
