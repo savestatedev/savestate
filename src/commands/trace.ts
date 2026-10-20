@@ -14,12 +14,14 @@ import {
 
 interface TraceListOptions {
   json?: boolean;
+  jsonSummary?: boolean;
   limit?: string;
   offset?: string;
 }
 
 interface TraceShowOptions {
   json?: boolean;
+  jsonSummary?: boolean;
   limit?: string;
   offset?: string;
 }
@@ -349,6 +351,46 @@ export interface TraceEventJson {
   tags: string[];
 }
 
+export interface TracePaginationJson {
+  offset: number;
+  limit: number | null;
+  total: number;
+  shown: number;
+  emptyReason: 'collection' | 'page' | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  suggestedOffset: number | null;
+}
+
+function getTracePagination(
+  total: number,
+  shown: number,
+  offset: number,
+  limit: number | undefined,
+): TracePaginationJson {
+  const pageLimit = limit ?? null;
+  const hasMore = pageLimit !== null && offset + shown < total;
+  const previousOffset = pageLimit !== null && offset > 0
+    ? Math.max(0, offset - pageLimit)
+    : null;
+  return {
+    offset,
+    limit: pageLimit,
+    total,
+    shown,
+    emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page',
+    hasMore,
+    nextOffset: hasMore ? offset + shown : null,
+    hasPrevious: previousOffset !== null,
+    previousOffset,
+    suggestedOffset: pageLimit !== null && shown === 0 && total > 0
+      ? Math.floor((total - 1) / pageLimit) * pageLimit
+      : null,
+  };
+}
+
 function toRunJson(run: TraceRunIndexEntry): TraceRunJson {
   return {
     runId: run.run_id,
@@ -394,6 +436,46 @@ export function formatTraceListMissingJson(): string {
 
 export function formatTraceEventsJson(events: TraceEvent[]): string {
   return JSON.stringify(events.map(toEventJson), null, 2);
+}
+
+export function formatTraceListSummaryJson(input: {
+  runs: TraceRunIndexEntry[];
+  offset?: number;
+  limit?: number;
+  total?: number;
+}): string {
+  const runs = input.runs.map(toRunJson);
+  return JSON.stringify({
+    found: true,
+    runs,
+    pagination: getTracePagination(
+      input.total ?? runs.length,
+      runs.length,
+      input.offset ?? 0,
+      input.limit,
+    ),
+  }, null, 2);
+}
+
+export function formatTraceShowSummaryJson(input: {
+  runId: string;
+  events: TraceEvent[];
+  offset?: number;
+  limit?: number;
+  total?: number;
+}): string {
+  const events = input.events.map(toEventJson);
+  return JSON.stringify({
+    found: true,
+    runId: input.runId,
+    events,
+    pagination: getTracePagination(
+      input.total ?? events.length,
+      events.length,
+      input.offset ?? 0,
+      input.limit,
+    ),
+  }, null, 2);
 }
 
 export interface TraceShowMissingJson {
@@ -523,6 +605,7 @@ export function formatTraceExportJson(input: {
 
 interface TraceCommandOptions {
   json?: boolean;
+  jsonSummary?: boolean;
   format?: string;
   run?: string;
   limit?: string;
@@ -550,6 +633,7 @@ export function registerTraceCommands(program: Command): void {
     .command('trace <subcommand> [args...]')
     .description('Inspect Askable Echoes trace runs (list, show, export; single non-empty subcommand: list, show, or export; show requires a single non-empty run id)')
     .option('--json', 'Output as JSON')
+    .option('--json-summary', 'Output paginated trace list/show JSON with navigation metadata')
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
     .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show, or runs to export')
@@ -558,12 +642,12 @@ export function registerTraceCommands(program: Command): void {
 }
 
 export async function traceListCommand(options: TraceListOptions): Promise<void> {
-  if (!options.json) {
+  if (!options.json && !options.jsonSummary) {
     console.log();
   }
 
   if (!isInitialized()) {
-    if (options.json) {
+    if (options.json || options.jsonSummary) {
       console.log(formatTraceListMissingJson());
       return;
     }
@@ -575,7 +659,17 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
   const allRuns = await store.listRuns();
   const offset = parseTraceListOffset(options.offset) ?? 0;
   const limit = parseTraceListLimit(options.limit);
-  const runs = selectTraceRuns(selectTraceRunOffset(allRuns, offset), limit);
+  const runs = applyTraceListFilters(allRuns, options);
+
+  if (options.jsonSummary) {
+    console.log(formatTraceListSummaryJson({
+      runs,
+      offset: parseTraceListOffset(options.offset),
+      limit: parseTraceListLimit(options.limit),
+      total: allRuns.length,
+    }));
+    return;
+  }
 
   if (options.json) {
     console.log(formatTraceRunsJson(runs));
@@ -633,12 +727,12 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
   const offset = parseTraceShowOffset(options.offset);
   const limit = parseTraceShowLimit(options.limit);
 
-  if (!options.json) {
+  if (!options.json && !options.jsonSummary) {
     console.log();
   }
 
   if (!isInitialized()) {
-    if (options.json) {
+    if (options.json || options.jsonSummary) {
       console.log(formatTraceShowMissingJson(runId));
       return;
     }
@@ -650,7 +744,7 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
   const events = await store.getRun(runId);
 
   if (events.length === 0) {
-    if (options.json) {
+    if (options.json || options.jsonSummary) {
       console.log(formatTraceShowMissingJson(runId));
       return;
     }
@@ -660,6 +754,17 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
   }
 
   const shown = selectTraceShowEvents(selectTraceShowOffset(events, offset), limit);
+
+  if (options.jsonSummary) {
+    console.log(formatTraceShowSummaryJson({
+      runId,
+      events: shown,
+      offset,
+      limit,
+      total: events.length,
+    }));
+    return;
+  }
 
   if (options.json) {
     console.log(formatTraceEventsJson(shown));

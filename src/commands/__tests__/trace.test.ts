@@ -63,6 +63,39 @@ describe.sequential('trace commands', () => {
     expect(runs).toEqual([]);
   });
 
+  it('trace list --json-summary exposes page navigation', async () => {
+    const store = new TraceStore({ cwd, redactSecrets: false });
+    for (const [runId, minute] of [['run-1', '00'], ['run-2', '01'], ['run-3', '02']] as const) {
+      await store.appendEvent(runId, {
+        timestamp: `2026-02-21T10:${minute}:00.000Z`,
+        run_id: runId,
+        adapter: 'clawdbot',
+        event_type: 'message',
+        payload: {},
+      });
+    }
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await traceListCommand({ jsonSummary: true, offset: '1', limit: '1' });
+
+    const raw = logSpy.mock.calls
+      .map((call) => call[0])
+      .find((entry) => typeof entry === 'string' && entry.trim().startsWith('{'));
+    const parsed = JSON.parse(raw as string) as {
+      runs: Array<{ runId: string }>;
+      pagination: { total: number; shown: number; hasMore: boolean; nextOffset: number | null; previousOffset: number | null };
+    };
+
+    expect(parsed.runs.map((run) => run.runId)).toEqual(['run-2']);
+    expect(parsed.pagination).toMatchObject({
+      total: 3,
+      shown: 1,
+      hasMore: true,
+      nextOffset: 2,
+      previousOffset: 0,
+    });
+  });
+
   it('trace show --json returns events for a run', async () => {
     const store = new TraceStore({ cwd, redactSecrets: false });
     await store.appendEvent('run-show', {
@@ -108,6 +141,33 @@ describe.sequential('trace commands', () => {
 
     expect(events).toHaveLength(1);
     expect(events[0].eventType).toBe('tool_call');
+  });
+
+  it('trace show --json-summary suggests a valid offset for an empty page', async () => {
+    const store = new TraceStore({ cwd, redactSecrets: false });
+    for (const [eventType, minute] of [['message', '00'], ['tool_call', '01'], ['result', '02']] as const) {
+      await store.appendEvent('run-summary', {
+        timestamp: `2026-02-21T10:${minute}:00.000Z`,
+        run_id: 'run-summary',
+        adapter: 'clawdbot',
+        event_type: eventType,
+        payload: {},
+      });
+    }
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await traceShowCommand('run-summary', { jsonSummary: true, offset: '10', limit: '2' });
+
+    const raw = logSpy.mock.calls
+      .map((call) => call[0])
+      .find((entry) => typeof entry === 'string' && entry.trim().startsWith('{'));
+    const parsed = JSON.parse(raw as string) as {
+      events: unknown[];
+      pagination: { emptyReason: string; suggestedOffset: number | null };
+    };
+
+    expect(parsed.events).toEqual([]);
+    expect(parsed.pagination).toMatchObject({ emptyReason: 'page', suggestedOffset: 2 });
   });
 
   it('trace show exits when the run is missing', async () => {
