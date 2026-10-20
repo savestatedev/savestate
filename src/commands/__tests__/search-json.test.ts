@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { formatSearchResultsJson } from '../search.js';
+import {
+  formatSearchResultsJson,
+  formatSearchMissingSummaryJson,
+  formatSearchResultsSummaryJson,
+} from '../search.js';
 import type { SearchResult } from '../../types.js';
 
 const match: SearchResult = {
@@ -24,5 +28,91 @@ describe('savestate search --json', () => {
 
   it('prints an empty array when there are no matches', () => {
     expect(formatSearchResultsJson([])).toBe('[]');
+  });
+
+  it('prints pagination metadata without changing the result fields', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match],
+        offset: 10,
+        limit: 5,
+      }),
+    ) as {
+      found: boolean;
+      query: string;
+      results: SearchResult[];
+      pagination: Record<string, unknown>;
+    };
+
+    expect(parsed.found).toBe(true);
+    expect(parsed.query).toBe('cocktail recommendations');
+    expect(parsed.results).toEqual([match]);
+    expect(parsed.pagination).toEqual({
+      offset: 10,
+      limit: 5,
+      shown: 1,
+      emptyReason: null,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 5,
+    });
+  });
+
+  it('points full pages at the next and previous offsets', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail',
+        results: [match, match],
+        offset: 10,
+        limit: 2,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      hasMore: true,
+      nextOffset: 12,
+      hasPrevious: true,
+      previousOffset: 8,
+    });
+  });
+
+  it('identifies an empty collection separately from an exhausted page', () => {
+    const firstPage = JSON.parse(
+      formatSearchResultsSummaryJson({ query: 'missing', results: [] }),
+    ) as { pagination: Record<string, unknown> };
+    const laterPage = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'missing',
+        results: [],
+        offset: 10,
+        limit: 5,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(firstPage.pagination.emptyReason).toBe('collection');
+    expect(laterPage.pagination.emptyReason).toBe('page');
+  });
+
+  it('keeps the summary envelope complete for missing snapshots', () => {
+    const parsed = JSON.parse(
+      formatSearchMissingSummaryJson('missing', 'ss-missing', 5, 2),
+    ) as {
+      found: boolean;
+      pagination: Record<string, unknown>;
+    };
+
+    expect(parsed.found).toBe(false);
+    expect(parsed.pagination).toMatchObject({
+      offset: 5,
+      limit: 2,
+      shown: 0,
+      emptyReason: 'collection',
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 3,
+    });
   });
 });

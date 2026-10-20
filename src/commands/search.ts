@@ -22,6 +22,7 @@ interface SearchOptions {
   tag?: string;
   label?: string;
   json?: boolean;
+  jsonSummary?: boolean;
 }
 
 const SEARCH_TYPES = ['memory', 'conversation', 'identity', 'knowledge'] as const;
@@ -44,6 +45,58 @@ const SEARCH_ADAPTER_LIST = SEARCH_ADAPTERS.join(', ');
 
 export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
+}
+
+export interface SearchSummaryPagination {
+  offset: number;
+  limit: number;
+  shown: number;
+  emptyReason: 'collection' | 'page' | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+}
+
+export interface SearchSummaryJson {
+  found: boolean;
+  query: string;
+  results: SearchResult[];
+  pagination: SearchSummaryPagination;
+}
+
+/** Keep paginated search navigation machine-readable without changing --json arrays. */
+export function formatSearchResultsSummaryJson(input: {
+  query: string;
+  results: SearchResult[];
+  offset?: number;
+  limit?: number;
+}): string {
+  const offset = input.offset ?? 0;
+  const limit = input.limit ?? 20;
+  const shown = input.results.length;
+  const hasMore = shown === limit && offset < MAX_SEARCH_OFFSET;
+  return JSON.stringify(
+    {
+      found: true,
+      query: input.query,
+      results: input.results,
+      pagination: {
+        offset,
+        limit,
+        shown,
+        emptyReason: shown === 0 ? (offset > 0 ? 'page' : 'collection') : null,
+        hasMore,
+        nextOffset: hasMore
+          ? Math.min(MAX_SEARCH_OFFSET, offset + shown)
+          : null,
+        hasPrevious: offset > 0,
+        previousOffset: offset > 0 ? Math.max(0, offset - limit) : null,
+      },
+    } satisfies SearchSummaryJson,
+    null,
+    2,
+  );
 }
 
 /** Explain how to continue or recover from a paginated interactive search. */
@@ -84,6 +137,34 @@ export function formatSearchMissingJson(query: string, snapshot: string): string
       query,
       snapshot,
       count: 0,
+    },
+    null,
+    2,
+  );
+}
+
+export function formatSearchMissingSummaryJson(
+  query: string,
+  snapshot: string,
+  offset = 0,
+  limit = 20,
+): string {
+  return JSON.stringify(
+    {
+      found: false,
+      query,
+      snapshot,
+      results: [],
+      pagination: {
+        offset,
+        limit,
+        shown: 0,
+        emptyReason: 'collection',
+        hasMore: false,
+        nextOffset: null,
+        hasPrevious: offset > 0,
+        previousOffset: offset > 0 ? Math.max(0, offset - limit) : null,
+      },
     },
     null,
     2,
@@ -368,13 +449,19 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const tag = parseSearchTag(options.tag);
   const label = parseSearchLabel(options.label);
 
-  if (!options.json) {
+  const jsonOutput = options.json || options.jsonSummary;
+
+  if (!jsonOutput) {
     console.log();
   }
 
   if (!isInitialized()) {
-    if (options.json) {
-      console.log(formatSearchMissingJson(query, snapshotId ?? ''));
+    if (jsonOutput) {
+      const limit = parseSearchLimit(options.limit);
+      const offset = parseSearchOffset(options.offset) ?? 0;
+      console.log(options.jsonSummary
+        ? formatSearchMissingSummaryJson(query, snapshotId ?? '', offset, limit)
+        : formatSearchMissingJson(query, snapshotId ?? ''));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -390,8 +477,12 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   if (snapshotId) {
     const entry = await findEntry(snapshotId);
     if (!entry || (adapter && entry.adapter !== adapter)) {
-      if (options.json) {
-        console.log(formatSearchMissingJson(query, snapshotId));
+      if (jsonOutput) {
+        const limit = parseSearchLimit(options.limit);
+        const offset = parseSearchOffset(options.offset) ?? 0;
+        console.log(options.jsonSummary
+          ? formatSearchMissingSummaryJson(query, snapshotId, offset, limit)
+          : formatSearchMissingJson(query, snapshotId));
         return;
       }
       console.log(chalk.red(`✗ Snapshot not found: ${snapshotId}`));
@@ -421,7 +512,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   const passphrase = await getPassphrase();
 
-  const spinner = options.json ? null : ora('Searching across snapshots...').start();
+  const spinner = jsonOutput ? null : ora('Searching across snapshots...').start();
 
   try {
     const results = await searchSnapshots(query, config, {
@@ -434,8 +525,10 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
     spinner?.stop();
 
-    if (options.json) {
-      console.log(formatSearchResultsJson(results));
+    if (jsonOutput) {
+      console.log(options.jsonSummary
+        ? formatSearchResultsSummaryJson({ query, results, offset, limit })
+        : formatSearchResultsJson(results));
       return;
     }
 
