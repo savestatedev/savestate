@@ -41,6 +41,18 @@ describe('savestate search --offset', () => {
     );
   });
 
+  it('caps the next-page hint at the maximum offset', () => {
+    expect(formatSearchPageHint(20, 995, 20)).toBe(
+      'More matches may be available; try --offset 1000 (maximum).',
+    );
+  });
+
+  it('does not suggest an invalid page past the maximum offset', () => {
+    expect(formatSearchPageHint(20, 1000, 20)).toBe(
+      'Reached maximum searchable offset 1000; no later page is available.',
+    );
+  });
+
   it('does not add a hint for a partial first page', () => {
     expect(formatSearchPageHint(3, 0, 5)).toBeUndefined();
   });

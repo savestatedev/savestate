@@ -56,7 +56,16 @@ export function formatSearchPageHint(
     return `No matches found at offset ${offset}. Try --offset ${Math.max(0, offset - limit)}.`;
   }
   if (shown === limit) {
-    return `More matches may be available; try --offset ${offset + shown}.`;
+    if (offset >= MAX_SEARCH_OFFSET) {
+      return `Reached maximum searchable offset ${MAX_SEARCH_OFFSET}; no later page is available.`;
+    }
+
+    const nextOffset = offset + shown;
+    if (nextOffset > MAX_SEARCH_OFFSET) {
+      return `More matches may be available; try --offset ${MAX_SEARCH_OFFSET} (maximum).`;
+    }
+
+    return `More matches may be available; try --offset ${nextOffset}.`;
   }
   return undefined;
 }
