@@ -391,11 +391,26 @@ export function formatTraceShowMissingJson(runId: string): string {
 }
 
 export interface TraceExportJson {
+  found: true;
   format: string;
   run: string;
   runCount: number;
   eventCount: number;
+  pagination: TraceExportPaginationJson;
   runs: TraceRunJson[];
+}
+
+export interface TraceExportPaginationJson {
+  offset: number;
+  limit: number | null;
+  total: number;
+  shown: number;
+  emptyReason: 'collection' | 'page' | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  suggestedOffset: number | null;
 }
 
 export interface TraceExportMissingJson {
@@ -424,6 +439,9 @@ export function formatTraceExportJson(input: {
   format?: string;
   run?: string;
   runs?: TraceRunIndexEntry[];
+  offset?: number;
+  limit?: number;
+  total?: number;
 }): string {
   const runs = (input.runs ?? []).map((run) => {
     const json = toRunJson(run);
@@ -436,12 +454,40 @@ export function formatTraceExportJson(input: {
       tags: json.tags,
     };
   });
+  const offset = input.offset ?? 0;
+  const limit = input.limit ?? null;
+  const total = input.total ?? runs.length;
+  const emptyReason = runs.length > 0
+    ? null
+    : total === 0
+      ? 'collection'
+      : 'page';
+  const hasMore = limit !== null && offset + runs.length < total;
+  const previousOffset = limit !== null && offset > 0
+    ? Math.max(0, offset - limit)
+    : null;
+  const suggestedOffset = limit !== null && runs.length === 0 && total > 0
+    ? Math.floor((total - 1) / limit) * limit
+    : null;
   return JSON.stringify(
     {
+      found: true,
       format: input.format ?? 'jsonl',
       run: input.run ?? 'all',
       runCount: runs.length,
       eventCount: runs.reduce((sum, run) => sum + run.eventCount, 0),
+      pagination: {
+        offset,
+        limit,
+        total,
+        shown: runs.length,
+        emptyReason,
+        hasMore,
+        nextOffset: hasMore ? offset + runs.length : null,
+        hasPrevious: previousOffset !== null,
+        previousOffset,
+        suggestedOffset,
+      },
       runs,
     },
     null,
@@ -630,7 +676,14 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
       console.log(formatTraceExportMissingJson(run, format));
       return;
     }
-    console.log(formatTraceExportJson({ format, run, runs }));
+    console.log(formatTraceExportJson({
+      format,
+      run,
+      runs,
+      offset,
+      limit: options.limit === undefined ? undefined : parseTraceExportLimit(options.limit),
+      total: run === 'all' ? allRuns.length : allRuns.filter((entry) => entry.run_id === run).length,
+    }));
     return;
   }
 

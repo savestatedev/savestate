@@ -30,10 +30,23 @@ describe('savestate trace export --json', () => {
       payload?: unknown;
     };
     expect(parsed).toEqual({
+      found: true,
       format: 'jsonl',
       run: 'all',
       runCount: 1,
       eventCount: 2,
+      pagination: {
+        offset: 0,
+        limit: null,
+        total: 1,
+        shown: 1,
+        emptyReason: null,
+        hasMore: false,
+        nextOffset: null,
+        hasPrevious: false,
+        previousOffset: null,
+        suggestedOffset: null,
+      },
       runs: [
         {
           runId: 'run-123',
@@ -57,16 +70,77 @@ describe('savestate trace export --json', () => {
   it('records empty export defaults without extra fields', () => {
     const parsed = JSON.parse(formatTraceExportJson({})) as TraceExportJson;
     expect(parsed.format).toBe('jsonl');
+    expect(parsed.found).toBe(true);
     expect(parsed.run).toBe('all');
     expect(parsed.runCount).toBe(0);
     expect(parsed.eventCount).toBe(0);
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: false,
+      previousOffset: null,
+      suggestedOffset: null,
+    });
     expect(parsed.runs).toEqual([]);
     expect(Object.keys(parsed).sort()).toEqual([
       'eventCount',
       'format',
+      'found',
+      'pagination',
       'run',
       'runCount',
       'runs',
     ]);
+  });
+
+  it('reports recovery offsets for a bounded export page', () => {
+    const parsed = JSON.parse(formatTraceExportJson({
+      format: 'jsonl',
+      run: 'all',
+      runs: [run],
+      offset: 2,
+      limit: 1,
+      total: 4,
+    })) as TraceExportJson;
+
+    expect(parsed.pagination).toEqual({
+      offset: 2,
+      limit: 1,
+      total: 4,
+      shown: 1,
+      emptyReason: null,
+      hasMore: true,
+      nextOffset: 3,
+      hasPrevious: true,
+      previousOffset: 1,
+      suggestedOffset: null,
+    });
+  });
+
+  it('suggests the last valid page when a bounded export is empty', () => {
+    const parsed = JSON.parse(formatTraceExportJson({
+      runs: [],
+      offset: 9,
+      limit: 3,
+      total: 8,
+    })) as TraceExportJson;
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 9,
+      limit: 3,
+      total: 8,
+      shown: 0,
+      emptyReason: 'page',
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 6,
+      suggestedOffset: 6,
+    });
   });
 });
