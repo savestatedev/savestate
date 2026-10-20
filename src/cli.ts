@@ -345,6 +345,7 @@ program
   .option('--tag <tag>', 'Only search snapshots with this tag')
   .option('--label <label>', 'Only search snapshots with this label')
   .option('--json', 'Output as JSON')
+  .option('--json-summary', 'Output paginated JSON with navigation metadata')
   .action(searchCommand);
 
 // ─── savestate login ─────────────────────────────────────────
