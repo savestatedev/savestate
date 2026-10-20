@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { TraceEvent, TraceRunIndexEntry } from '../../trace/index.js';
 import {
   formatTraceEventsJson,
+  formatTraceListSummaryJson,
   formatTraceRunsJson,
+  formatTraceShowSummaryJson,
   type TraceEventJson,
   type TraceRunJson,
 } from '../trace.js';
@@ -90,5 +92,36 @@ describe('savestate trace --json', () => {
     expect(parsedEvent[0].eventType).toBe('checkpoint');
     expect(formatTraceRunsJson([])).toBe('[]');
     expect(formatTraceEventsJson([])).toBe('[]');
+  });
+
+  it('adds navigation metadata to paginated summaries', () => {
+    const list = JSON.parse(formatTraceListSummaryJson({
+      runs: [run],
+      offset: 2,
+      limit: 1,
+      total: 4,
+    })) as { pagination: Record<string, unknown> };
+    expect(list.pagination).toEqual({
+      offset: 2,
+      limit: 1,
+      total: 4,
+      shown: 1,
+      emptyReason: null,
+      hasMore: true,
+      nextOffset: 3,
+      hasPrevious: true,
+      previousOffset: 1,
+      suggestedOffset: null,
+    });
+
+    const show = JSON.parse(formatTraceShowSummaryJson({
+      runId: 'run-123',
+      events: [event],
+      offset: 0,
+      limit: 1,
+      total: 2,
+    })) as { pagination: Record<string, unknown> };
+    expect(show.pagination.hasMore).toBe(true);
+    expect(show.pagination.nextOffset).toBe(1);
   });
 });

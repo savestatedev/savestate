@@ -26,4 +26,28 @@ describe('savestate trace list --json when missing', () => {
     expect(Object.keys(parsed).sort()).toEqual(['found', 'shown', 'total']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
+
+  it('keeps pagination metadata for --json-summary when missing', () => {
+    const parsed = JSON.parse(formatTraceListMissingJson(true)) as {
+      found: boolean;
+      runs: unknown[];
+      pagination: Record<string, unknown>;
+    };
+    expect(parsed).toEqual({
+      found: false,
+      runs: [],
+      pagination: {
+        offset: 0,
+        limit: null,
+        total: 0,
+        shown: 0,
+        emptyReason: 'collection',
+        hasMore: false,
+        nextOffset: null,
+        hasPrevious: false,
+        previousOffset: null,
+        suggestedOffset: null,
+      },
+    });
+  });
 });
