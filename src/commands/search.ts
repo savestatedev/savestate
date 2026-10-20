@@ -46,6 +46,21 @@ export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
 }
 
+/** Explain how to continue or recover from a paginated interactive search. */
+export function formatSearchPageHint(
+  shown: number,
+  offset = 0,
+  limit = 20,
+): string | undefined {
+  if (shown === 0 && offset > 0) {
+    return `No matches found at offset ${offset}. Try --offset ${Math.max(0, offset - limit)}.`;
+  }
+  if (shown === limit) {
+    return `More matches may be available; try --offset ${offset + shown}.`;
+  }
+  return undefined;
+}
+
 export interface SearchMissingJson {
   found: false;
   query: string;
@@ -416,7 +431,8 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     }
 
     if (results.length === 0) {
-      console.log(chalk.dim('  No matches found.'));
+      const hint = formatSearchPageHint(results.length, offset, limit);
+      console.log(chalk.dim(`  ${hint ?? 'No matches found.'}`));
       console.log();
       return;
     }
@@ -426,6 +442,11 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
     for (const r of results) {
       printResult(r);
+    }
+
+    const hint = formatSearchPageHint(results.length, offset, limit);
+    if (hint) {
+      console.log(chalk.dim(`  ${hint}`));
     }
   } catch (err) {
     if (spinner) {

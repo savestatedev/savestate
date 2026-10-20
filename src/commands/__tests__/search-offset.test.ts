@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchOffset } from '../search.js';
+import { formatSearchPageHint, parseSearchOffset } from '../search.js';
 
 describe('savestate search --offset', () => {
   it('defaults to undefined', () => {
@@ -27,6 +27,22 @@ describe('savestate search --offset', () => {
     expect(() => parseSearchOffset('1001')).toThrow(
       'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
     );
+  });
+
+  it('suggests the next page when the result page is full', () => {
+    expect(formatSearchPageHint(5, 10, 5)).toBe(
+      'More matches may be available; try --offset 15.',
+    );
+  });
+
+  it('suggests the previous page when an offset has no results', () => {
+    expect(formatSearchPageHint(0, 10, 5)).toBe(
+      'No matches found at offset 10. Try --offset 5.',
+    );
+  });
+
+  it('does not add a hint for a partial first page', () => {
+    expect(formatSearchPageHint(3, 0, 5)).toBeUndefined();
   });
 
 });
