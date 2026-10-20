@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatSearchResultsJson,
+  formatSearchMissingSummaryJson,
   formatSearchResultsSummaryJson,
 } from '../search.js';
 import type { SearchResult } from '../../types.js';
@@ -92,5 +93,26 @@ describe('savestate search --json', () => {
 
     expect(firstPage.pagination.emptyReason).toBe('collection');
     expect(laterPage.pagination.emptyReason).toBe('page');
+  });
+
+  it('keeps the summary envelope complete for missing snapshots', () => {
+    const parsed = JSON.parse(
+      formatSearchMissingSummaryJson('missing', 'ss-missing', 5, 2),
+    ) as {
+      found: boolean;
+      pagination: Record<string, unknown>;
+    };
+
+    expect(parsed.found).toBe(false);
+    expect(parsed.pagination).toMatchObject({
+      offset: 5,
+      limit: 2,
+      shown: 0,
+      emptyReason: 'collection',
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 3,
+    });
   });
 });

@@ -47,20 +47,22 @@ export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
 }
 
+export interface SearchSummaryPagination {
+  offset: number;
+  limit: number;
+  shown: number;
+  emptyReason: 'collection' | 'page' | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+}
+
 export interface SearchSummaryJson {
-  found: true;
+  found: boolean;
   query: string;
   results: SearchResult[];
-  pagination: {
-    offset: number;
-    limit: number;
-    shown: number;
-    emptyReason: 'collection' | 'page' | null;
-    hasMore: boolean;
-    nextOffset: number | null;
-    hasPrevious: boolean;
-    previousOffset: number | null;
-  };
+  pagination: SearchSummaryPagination;
 }
 
 /** Keep paginated search navigation machine-readable without changing --json arrays. */
@@ -157,6 +159,7 @@ export function formatSearchMissingSummaryJson(
         offset,
         limit,
         shown: 0,
+        emptyReason: 'collection',
         hasMore: false,
         nextOffset: null,
         hasPrevious: offset > 0,
