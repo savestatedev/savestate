@@ -280,9 +280,19 @@ export function parseListUntil(value: string | undefined): number | undefined {
   // Date-only input is a human-facing calendar boundary. Treat it as the
   // end of that UTC day so `--until 2026-10-12` includes that day's snapshots.
   const normalized = value.trim();
-  const ms = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
-    ? Date.parse(`${normalized}T23:59:59.999Z`)
-    : new Date(value).getTime();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  let ms: number;
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    const endOfDay = new Date(`${normalized}T23:59:59.999Z`);
+    const isValidCalendarDate =
+      endOfDay.getUTCFullYear() === Number(year) &&
+      endOfDay.getUTCMonth() + 1 === Number(month) &&
+      endOfDay.getUTCDate() === Number(day);
+    ms = isValidCalendarDate ? endOfDay.getTime() : Number.NaN;
+  } else {
+    ms = new Date(value).getTime();
+  }
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO 8601 date.`,

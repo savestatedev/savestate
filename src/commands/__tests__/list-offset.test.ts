@@ -7,6 +7,7 @@ import {
   formatListDate,
   applyListFilters,
   parseListOffset,
+  parseListUntil,
   selectListOffsetEntries,
   sortListEntries,
   validateListDateRange,
@@ -130,5 +131,11 @@ describe('savestate list --offset', () => {
     expect(applyListFilters(snapshots, { until: '2026-10-10' }).map((s) => s.id)).toEqual([
       'on-day',
     ]);
+  });
+
+  it('rejects impossible date-only --until values', () => {
+    expect(() => parseListUntil('2026-02-30')).toThrow(
+      'Invalid --until value "2026-02-30". Expected an ISO 8601 date.',
+    );
   });
 });
