@@ -622,6 +622,9 @@ describe('public marketing checkout CTAs', () => {
       expect(hasOg(html, 'twitter:title')).toBe(true);
     }
     expect(homepage).toMatch(/When the chat dies, your agent still knows/i);
+    expect(homepage).toContain('"softwareVersion": "0.9.0"');
+    expect(homepage).toContain('v0.9.0: cross-snapshot search, MCP memory tools, fitness scoring');
+    expect(homepage).not.toContain('0.9.1');
     expect(post).toMatch(/Claude Code/);
     expect(post).toMatch(/Cursor/);
     expect(post).toMatch(/Clawdbot/);
@@ -676,7 +679,7 @@ describe('public marketing checkout CTAs', () => {
     const html = loadHtml('site/blog/how-to-restore-a-claude-code-project-after-a-crash.html');
     const vercel = loadHtml('vercel.json');
     expect(html).toContain('<title>How to Restore a Claude Code Project After a Crash | SaveState</title>');
-    expect(html).toContain('Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.1, including the missing-passphrase error and the fix.');
+    expect(html).toContain('Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.0, including the missing-passphrase error and the fix.');
     expect(html).toContain('<link rel="canonical" href="https://savestate.dev/blog/how-to-restore-a-claude-code-project-after-a-crash">');
     expect(html).toContain('<script defer src="/_vercel/insights/script.js"></script>');
     expect(html).toContain('ss-2026-10-17T21-40-56-vpigps');
@@ -706,7 +709,7 @@ describe('public marketing checkout CTAs', () => {
     const developers = loadHtml('site/developers.html');
     const vercel = loadHtml('vercel.json');
     expect(html).toContain('<title>How to Move SaveState Memory Between Two Machines | SaveState</title>');
-    expect(html).toContain('Move SaveState memory between two machines with npx @savestate/cli. Real init, snapshot, restore, and search output from version 0.9.1, including the missing archive and the copy that fixes it.');
+    expect(html).toContain('Move SaveState memory between two machines with npx @savestate/cli. Real init, snapshot, restore, and search output from version 0.9.0, including the missing archive and the copy that fixes it.');
     expect(html).toContain('<link rel="canonical" href="https://savestate.dev/blog/how-to-move-savestate-memory-between-two-machines">');
     expect(html).toContain('<script defer src="/_vercel/insights/script.js"></script>');
     expect(html).toContain('ss-2026-10-18T21-36-23-7w2fps');
@@ -768,6 +771,8 @@ describe('public marketing checkout CTAs', () => {
     expect(hrefForCta(html, 'setup-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
     expect(html).not.toMatch(/class="btn"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn"/);
     expect(html).not.toMatch(/—/);
+    const llms = loadHtml('site/llms.txt');
+    expect(llms).toContain('https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine');
     expect(sitemap).toContain('https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine');
     expect(blogIndex).toContain('/blog/how-to-set-up-savestate-on-a-fresh-machine');
     expect(blogIndex).toContain('How to Set Up SaveState on a Fresh Machine');

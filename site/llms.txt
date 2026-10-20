@@ -80,6 +80,10 @@ https://savestate.dev/openai
 https://savestate.dev/claude
 https://savestate.dev/pricing
 
+## Guides
+
+https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine
+
 ## Specs
 
 https://savestate.dev/openapi.json
