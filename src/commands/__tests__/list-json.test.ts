@@ -103,6 +103,19 @@ describe('savestate list --json', () => {
     expect(parsed.entries[0]?.id).toBe('ss-older');
   });
 
+  it('suggests the nearest page when an offset is past the filtered list', () => {
+    const parsed = JSON.parse(formatListJson([older, newer], 1, 5)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      total: 2,
+      shown: 0,
+      offset: 5,
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: 1,
+    });
+  });
+
   it('includes active filters for JSON consumers', () => {
     const parsed = JSON.parse(
       formatListJson([older], 50, undefined, false, {
