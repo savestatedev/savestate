@@ -33,6 +33,7 @@ describe('savestate list --json', () => {
     const parsed = JSON.parse(formatListJson([older, newer])) as ListJson;
     expect(parsed.total).toBe(2);
     expect(parsed.shown).toBe(2);
+    expect(parsed.emptyReason).toBeNull();
     expect(parsed.entries[0]?.id).toBe('ss-newer');
     expect(parsed.entries[0]?.label).toBe('pre-update');
     expect(parsed.entries[0]?.tags).toEqual(['weekly']);
@@ -74,6 +75,7 @@ describe('savestate list --json', () => {
     expect(JSON.parse(formatListJson([]))).toMatchObject({
       total: 0,
       shown: 0,
+      emptyReason: 'collection',
       page: 1,
       totalPages: 0,
       entries: [],
@@ -90,6 +92,7 @@ describe('savestate list --json', () => {
     expect(parsed).toMatchObject({
       total: 2,
       shown: 1,
+      emptyReason: null,
       offset: 1,
       limit: 1,
       pageSize: 1,
@@ -101,6 +104,20 @@ describe('savestate list --json', () => {
       nextOffset: null,
     });
     expect(parsed.entries[0]?.id).toBe('ss-older');
+  });
+
+  it('suggests the nearest page when an offset is past the filtered list', () => {
+    const parsed = JSON.parse(formatListJson([older, newer], 1, 5)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      total: 2,
+      shown: 0,
+      emptyReason: 'page',
+      offset: 5,
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: 1,
+    });
   });
 
   it('includes active filters for JSON consumers', () => {

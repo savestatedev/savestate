@@ -61,6 +61,7 @@ export interface ListJsonFilters {
 export interface ListJson {
   total: number;
   shown: number;
+  emptyReason: 'collection' | 'page' | null;
   offset: number;
   limit: number;
   pageSize: number;
@@ -70,6 +71,7 @@ export interface ListJson {
   previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
+  suggestedOffset: number | null;
   oldestFirst: boolean;
   filters: ListJsonFilters;
   entries: ListSnapshotJson[];
@@ -139,10 +141,19 @@ export function formatListJson(
     }));
   const hasPrevious = offsetValue > 0;
   const hasMore = offsetValue + records.length < snapshots.length;
+  const emptyReason = records.length > 0
+    ? null
+    : snapshots.length === 0
+      ? 'collection'
+      : 'page';
+  const suggestedOffset = records.length === 0 && snapshots.length > 0
+    ? Math.floor((snapshots.length - 1) / limit) * limit
+    : null;
   const totalPages = Math.ceil(snapshots.length / limit);
   const result: ListJson = {
     total: snapshots.length,
     shown: records.length,
+    emptyReason,
     offset: offsetValue,
     limit,
     pageSize: limit,
@@ -152,6 +163,7 @@ export function formatListJson(
     previousOffset: hasPrevious ? Math.max(0, offsetValue - limit) : null,
     hasMore,
     nextOffset: hasMore ? offsetValue + records.length : null,
+    suggestedOffset,
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
     entries: records,

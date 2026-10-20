@@ -287,7 +287,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit snapshot records as JSON, newest first. Does not decrypt archives. When SaveState is not initialized, emits a missing summary (found, total, storage; omits extra fields). Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit snapshot records as JSON, newest first, with total/shown counts, page navigation metadata, <code>emptyReason</code>, and <code>suggestedOffset</code> for recovering from a stale page. <code>emptyReason</code> is <code>collection</code> when no snapshots match, <code>page</code> when the offset is past the filtered collection, or <code>null</code> when entries are shown. <code>suggestedOffset</code> is the nearest page offset when the requested page is empty, or <code>null</code> when the collection is empty or the page has entries. Does not decrypt archives. When SaveState is not initialized, emits a missing summary (found, total, storage; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--oldest-first</code></td><td>Show snapshots from oldest to newest. Applies to table and JSON output.</td></tr>
         <tr><td><code>--reverse</code></td><td>Alias for <code>--oldest-first</code>; show snapshots from oldest to newest.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of snapshots to show (default 50). Must be a positive integer up to 1000.</td></tr>
