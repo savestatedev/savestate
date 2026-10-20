@@ -25,4 +25,30 @@ describe('savestate trace show --json when missing', () => {
     expect(Object.keys(parsed).sort()).toEqual(['adapter', 'eventCount', 'found', 'runId']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
+
+  it('keeps pagination metadata for --json-summary when missing', () => {
+    const parsed = JSON.parse(formatTraceShowMissingJson('run-123', true, 5, 2)) as {
+      found: boolean;
+      runId: string;
+      events: unknown[];
+      pagination: Record<string, unknown>;
+    };
+    expect(parsed).toEqual({
+      found: false,
+      runId: 'run-123',
+      events: [],
+      pagination: {
+        offset: 5,
+        limit: 2,
+        total: 0,
+        shown: 0,
+        emptyReason: 'collection',
+        hasMore: false,
+        nextOffset: null,
+        hasPrevious: true,
+        previousOffset: 3,
+        suggestedOffset: null,
+      },
+    });
+  });
 });

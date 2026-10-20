@@ -422,7 +422,23 @@ export interface TraceListMissingJson {
   shown: 0;
 }
 
-export function formatTraceListMissingJson(): string {
+export function formatTraceListMissingJson(
+  summary = false,
+  offset = 0,
+  limit?: number,
+): string {
+  if (summary) {
+    return JSON.stringify(
+      {
+        found: false,
+        runs: [],
+        pagination: getTracePagination(0, 0, offset, limit),
+      },
+      null,
+      2,
+    );
+  }
+
   return JSON.stringify(
     {
       found: false,
@@ -485,7 +501,25 @@ export interface TraceShowMissingJson {
   eventCount: 0;
 }
 
-export function formatTraceShowMissingJson(runId: string): string {
+export function formatTraceShowMissingJson(
+  runId: string,
+  summary = false,
+  offset = 0,
+  limit?: number,
+): string {
+  if (summary) {
+    return JSON.stringify(
+      {
+        found: false,
+        runId,
+        events: [],
+        pagination: getTracePagination(0, 0, offset, limit),
+      },
+      null,
+      2,
+    );
+  }
+
   return JSON.stringify(
     {
       found: false,
@@ -642,13 +676,17 @@ export function registerTraceCommands(program: Command): void {
 }
 
 export async function traceListCommand(options: TraceListOptions): Promise<void> {
+  const offset = parseTraceListOffset(options.offset);
+  const limit = parseTraceListLimit(options.limit);
   if (!options.json && !options.jsonSummary) {
     console.log();
   }
 
   if (!isInitialized()) {
     if (options.json || options.jsonSummary) {
-      console.log(formatTraceListMissingJson());
+      console.log(options.jsonSummary
+        ? formatTraceListMissingJson(true, offset ?? 0, limit)
+        : formatTraceListMissingJson());
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -657,15 +695,13 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
 
   const store = new TraceStore();
   const allRuns = await store.listRuns();
-  const offset = parseTraceListOffset(options.offset) ?? 0;
-  const limit = parseTraceListLimit(options.limit);
   const runs = applyTraceListFilters(allRuns, options);
 
   if (options.jsonSummary) {
     console.log(formatTraceListSummaryJson({
       runs,
-      offset: parseTraceListOffset(options.offset),
-      limit: parseTraceListLimit(options.limit),
+      offset,
+      limit,
       total: allRuns.length,
     }));
     return;
@@ -733,7 +769,9 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
 
   if (!isInitialized()) {
     if (options.json || options.jsonSummary) {
-      console.log(formatTraceShowMissingJson(runId));
+      console.log(options.jsonSummary
+        ? formatTraceShowMissingJson(runId, true, offset, limit)
+        : formatTraceShowMissingJson(runId));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -745,7 +783,9 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
 
   if (events.length === 0) {
     if (options.json || options.jsonSummary) {
-      console.log(formatTraceShowMissingJson(runId));
+      console.log(options.jsonSummary
+        ? formatTraceShowMissingJson(runId, true, offset, limit)
+        : formatTraceShowMissingJson(runId));
       return;
     }
     console.log(chalk.red(`✗ Trace run not found: ${runId}`));
