@@ -1872,7 +1872,7 @@
 
     <!-- trace -->
     <h2 id="trace"><code>savestate trace</code></h2>
-    <p>Inspect Askable Echoes trace runs: an append-only ledger of tool calls, results, checkpoints, and errors. Subcommands: <code>list</code>, <code>show</code>, and <code>export</code>. Must be a single non-empty subcommand (list, show, or export). <code>list</code>, <code>show</code>, and <code>export</code> can page through runs or events with <code>--offset</code> and cap output with <code>--limit</code>. Requires <code>savestate init</code>. Runs are stored under <code>.savestate/traces</code>.</p>
+    <p>Inspect Askable Echoes trace runs: an append-only ledger of tool calls, results, checkpoints, and errors. Subcommands: <code>list</code>, <code>show</code>, and <code>export</code>. Must be a single non-empty subcommand (list, show, or export). <code>list</code>, <code>show</code>, and <code>export</code> can page through runs or events with <code>--offset</code> and cap output with <code>--limit</code>. Human-readable <code>list</code> and <code>show</code> output reports the current page, next/previous offsets, and the nearest valid offset when a page is stale. Requires <code>savestate init</code>. Runs are stored under <code>.savestate/traces</code>.</p>
     <pre><code><span class="code-prompt">$</span> savestate trace &lt;subcommand&gt; [options]</code></pre>
 
     <table>

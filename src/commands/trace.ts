@@ -147,6 +147,32 @@ export function applyTraceListFilters<T>(
   );
 }
 
+/** Describe a trace page so interactive users can continue or recover pagination. */
+export function formatTracePaginationHint(
+  noun: string,
+  shown: number,
+  total: number,
+  offset = 0,
+  limit?: number,
+): string {
+  if (offset === 0 && limit === undefined && shown === total) return '';
+
+  const page = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const hints = [`Showing ${shown} of ${total} ${noun} (${page})`];
+
+  if (limit !== undefined && offset + shown < total) {
+    hints.push(`next offset ${offset + shown}`);
+  }
+  if (limit !== undefined && offset > 0) {
+    hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+  }
+  if (limit !== undefined && shown === 0 && total > 0) {
+    hints.push(`try offset ${Math.floor((total - 1) / limit) * limit}`);
+  }
+
+  return `${hints.join('; ')}.`;
+}
+
 const MAX_TRACE_SHOW_LIMIT = 1000;
 
 /** Parse trace show --limit without turning user input errors into an empty event list. */
@@ -546,7 +572,10 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
   }
 
   const store = new TraceStore();
-  const runs = applyTraceListFilters(await store.listRuns(), options);
+  const allRuns = await store.listRuns();
+  const offset = parseTraceListOffset(options.offset) ?? 0;
+  const limit = parseTraceListLimit(options.limit);
+  const runs = selectTraceRuns(selectTraceRunOffset(allRuns, offset), limit);
 
   if (options.json) {
     console.log(formatTraceRunsJson(runs));
@@ -557,7 +586,13 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
   console.log();
 
   if (runs.length === 0) {
-    console.log(chalk.dim('  No trace runs found in .savestate/traces.'));
+    console.log(chalk.dim(
+      allRuns.length === 0
+        ? '  No trace runs found in .savestate/traces.'
+        : '  No trace runs found at this page.',
+    ));
+    const hint = formatTracePaginationHint('trace runs', runs.length, allRuns.length, offset, limit);
+    if (hint) console.log(chalk.dim(`  ${hint}`));
     console.log();
     return;
   }
@@ -586,6 +621,9 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
     ].join('  ');
     console.log(`  ${row}`);
   }
+
+  const hint = formatTracePaginationHint('trace runs', runs.length, allRuns.length, offset, limit);
+  if (hint) console.log(chalk.dim(`  ${hint}`));
 
   console.log();
 }
@@ -645,6 +683,15 @@ export async function traceShowCommand(runId: string, options: TraceShowOptions)
       }
     }
   }
+
+  const hint = formatTracePaginationHint(
+    'trace events',
+    shown.length,
+    events.length,
+    offset ?? 0,
+    limit,
+  );
+  if (hint) console.log(chalk.dim(`  ${hint}`));
 
   console.log();
 }
