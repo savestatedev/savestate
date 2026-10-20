@@ -184,6 +184,7 @@ describe.sequential('trace commands', () => {
         shown: number;
         hasMore: boolean;
         nextOffset: number | null;
+        hasPrevious: boolean;
         previousOffset: number | null;
       };
       runs: Array<{ runId: string }>;
@@ -197,6 +198,7 @@ describe.sequential('trace commands', () => {
       shown: 1,
       hasMore: true,
       nextOffset: 2,
+      hasPrevious: true,
       previousOffset: 0,
     });
   });

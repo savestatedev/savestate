@@ -408,6 +408,7 @@ export interface TraceExportPaginationJson {
   emptyReason: 'collection' | 'page' | null;
   hasMore: boolean;
   nextOffset: number | null;
+  hasPrevious: boolean;
   previousOffset: number | null;
   suggestedOffset: number | null;
 }
@@ -483,6 +484,7 @@ export function formatTraceExportJson(input: {
         emptyReason,
         hasMore,
         nextOffset: hasMore ? offset + runs.length : null,
+        hasPrevious: previousOffset !== null,
         previousOffset,
         suggestedOffset,
       },

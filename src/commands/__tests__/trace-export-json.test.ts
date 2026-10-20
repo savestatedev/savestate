@@ -43,6 +43,7 @@ describe('savestate trace export --json', () => {
         emptyReason: null,
         hasMore: false,
         nextOffset: null,
+        hasPrevious: false,
         previousOffset: null,
         suggestedOffset: null,
       },
@@ -81,6 +82,7 @@ describe('savestate trace export --json', () => {
       emptyReason: 'collection',
       hasMore: false,
       nextOffset: null,
+      hasPrevious: false,
       previousOffset: null,
       suggestedOffset: null,
     });
@@ -114,6 +116,7 @@ describe('savestate trace export --json', () => {
       emptyReason: null,
       hasMore: true,
       nextOffset: 3,
+      hasPrevious: true,
       previousOffset: 1,
       suggestedOffset: null,
     });
@@ -135,6 +138,7 @@ describe('savestate trace export --json', () => {
       emptyReason: 'page',
       hasMore: false,
       nextOffset: null,
+      hasPrevious: true,
       previousOffset: 6,
       suggestedOffset: 6,
     });
