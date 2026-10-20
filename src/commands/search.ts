@@ -55,6 +55,7 @@ export interface SearchSummaryJson {
     offset: number;
     limit: number;
     shown: number;
+    emptyReason: 'collection' | 'page' | null;
     hasMore: boolean;
     nextOffset: number | null;
     hasPrevious: boolean;
@@ -82,6 +83,7 @@ export function formatSearchResultsSummaryJson(input: {
         offset,
         limit,
         shown,
+        emptyReason: shown === 0 ? (offset > 0 ? 'page' : 'collection') : null,
         hasMore,
         nextOffset: hasMore
           ? Math.min(MAX_SEARCH_OFFSET, offset + shown)

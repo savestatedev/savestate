@@ -51,6 +51,7 @@ describe('savestate search --json', () => {
       offset: 10,
       limit: 5,
       shown: 1,
+      emptyReason: null,
       hasMore: false,
       nextOffset: null,
       hasPrevious: true,
@@ -74,5 +75,22 @@ describe('savestate search --json', () => {
       hasPrevious: true,
       previousOffset: 8,
     });
+  });
+
+  it('identifies an empty collection separately from an exhausted page', () => {
+    const firstPage = JSON.parse(
+      formatSearchResultsSummaryJson({ query: 'missing', results: [] }),
+    ) as { pagination: Record<string, unknown> };
+    const laterPage = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'missing',
+        results: [],
+        offset: 10,
+        limit: 5,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(firstPage.pagination.emptyReason).toBe('collection');
+    expect(laterPage.pagination.emptyReason).toBe('page');
   });
 });
