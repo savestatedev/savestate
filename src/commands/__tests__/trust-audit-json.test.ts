@@ -53,11 +53,42 @@ describe('savestate trust audit --json', () => {
     expect(parsed.events[1]?.metadata).toBeUndefined();
     expect(parsed.apiKey).toBeUndefined();
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: 50,
+      total: 2,
+      shown: 2,
+      hasMore: false,
+      nextOffset: null,
+    });
   });
 
   it('records an empty audit log without extra fields', () => {
     const parsed = JSON.parse(formatTrustAuditJson([])) as TrustAuditJson;
     expect(parsed.events).toEqual([]);
-    expect(Object.keys(parsed).sort()).toEqual(['events']);
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: 50,
+      total: 0,
+      shown: 0,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
+  it('reports continuation metadata for paged JSON output', () => {
+    const parsed = JSON.parse(
+      formatTrustAuditJson(events, { offset: '1', limit: '1' }),
+    ) as TrustAuditJson;
+
+    expect(parsed.events.map((event) => event.id)).toEqual(['evt-2']);
+    expect(parsed.pagination).toEqual({
+      offset: 1,
+      limit: 1,
+      total: 2,
+      shown: 1,
+      hasMore: false,
+      nextOffset: null,
+    });
   });
 });

@@ -477,12 +477,37 @@ export interface TrustAuditEventJson {
 
 export interface TrustAuditJson {
   events: TrustAuditEventJson[];
+  pagination: {
+    offset: number;
+    limit: number | null;
+    total: number;
+    shown: number;
+    hasMore: boolean;
+    nextOffset: number | null;
+  };
 }
 
-export function formatTrustAuditJson(events: TransitionEvent[]): string {
+export function formatTrustAuditJson(
+  events: TransitionEvent[],
+  options: Pick<TrustOptions, 'limit' | 'offset'> = {},
+): string {
+  const page = applyTrustAuditFilters(events, options);
+  const offset = parseTrustAuditOffset(options.offset) ?? 0;
+  const limit = parseTrustAuditLimit(options.limit);
+  const pagination = {
+    offset,
+    limit,
+    total: events.length,
+    shown: page.length,
+    hasMore: offset + page.length < events.length,
+    nextOffset: offset + page.length < events.length
+      ? offset + limit
+      : null,
+  };
+
   return JSON.stringify(
     {
-      events: events.map((event) => ({
+      events: page.map((event) => ({
         id: event.id,
         entryId: event.entryId,
         fromState: event.fromState,
@@ -491,6 +516,7 @@ export function formatTrustAuditJson(events: TransitionEvent[]): string {
         actor: event.actor,
         timestamp: event.timestamp,
       })),
+      pagination,
     },
     null,
     2,
@@ -554,13 +580,11 @@ export async function trustAuditCommand(options: TrustOptions): Promise<void> {
   const store = new TrustStore();
   const offset = parseTrustAuditOffset(options.offset);
   const limit = parseTrustAuditLimit(options.limit);
-  const events = applyTrustAuditFilters(
-    store.getRecentTransitions(limit + (offset ?? 0)),
-    options,
-  );
+  const allEvents = store.getRecentTransitions(MAX_TRUST_AUDIT_LIMIT);
+  const events = applyTrustAuditFilters(allEvents, options);
 
   if (options.json) {
-    console.log(formatTrustAuditJson(events));
+    console.log(formatTrustAuditJson(allEvents, options));
     store.close();
     return;
   }
