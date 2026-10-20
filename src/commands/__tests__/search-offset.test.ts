@@ -31,19 +31,19 @@ describe('savestate search --offset', () => {
 
   it('suggests the next page when the result page is full', () => {
     expect(formatSearchPageHint(5, 10, 5)).toBe(
-      'More matches may be available; try --offset 15.',
+      'More matches may be available; try --offset 15 --limit 5.',
     );
   });
 
   it('suggests the previous page when an offset has no results', () => {
     expect(formatSearchPageHint(0, 10, 5)).toBe(
-      'No matches found at offset 10. Try --offset 5.',
+      'No matches found at offset 10. Try --offset 5 --limit 5.',
     );
   });
 
   it('caps the next-page hint at the maximum offset', () => {
     expect(formatSearchPageHint(20, 995, 20)).toBe(
-      'More matches may be available; try --offset 1000 (maximum).',
+      'More matches may be available; try --offset 1000 --limit 20 (maximum).',
     );
   });
 

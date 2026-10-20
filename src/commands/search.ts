@@ -53,7 +53,7 @@ export function formatSearchPageHint(
   limit = 20,
 ): string | undefined {
   if (shown === 0 && offset > 0) {
-    return `No matches found at offset ${offset}. Try --offset ${Math.max(0, offset - limit)}.`;
+    return `No matches found at offset ${offset}. Try --offset ${Math.max(0, offset - limit)} --limit ${limit}.`;
   }
   if (shown === limit) {
     if (offset >= MAX_SEARCH_OFFSET) {
@@ -62,10 +62,10 @@ export function formatSearchPageHint(
 
     const nextOffset = offset + shown;
     if (nextOffset > MAX_SEARCH_OFFSET) {
-      return `More matches may be available; try --offset ${MAX_SEARCH_OFFSET} (maximum).`;
+      return `More matches may be available; try --offset ${MAX_SEARCH_OFFSET} --limit ${limit} (maximum).`;
     }
 
-    return `More matches may be available; try --offset ${nextOffset}.`;
+    return `More matches may be available; try --offset ${nextOffset} --limit ${limit}.`;
   }
   return undefined;
 }
