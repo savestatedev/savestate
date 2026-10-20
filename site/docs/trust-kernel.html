@@ -157,7 +157,7 @@
 
   Denylist size    7
 </code></pre>
-    <p>Pass <code>--json</code> for machine output (suitable for cron + alerting):</p>
+    <p>Pass <code>--json</code> for machine output (suitable for cron + alerting). Status, audit, and denylist JSON responses include pagination metadata; when <code>hasMore</code> is true, pass <code>nextOffset</code> back with <code>--offset</code> to read the next page:</p>
     <pre><code>$ savestate trust status --json
 {
   "entriesByState": { "candidate": 14, "stable": 208, "rejected": 6, "quarantined": 0, "revoked": 2 },
@@ -194,7 +194,7 @@
     id: c4f2b1d9-9c01-4f12-9e3d-7e9b8f1a23c6
     reason: Held for review: low-confidence tag "external-claim"
 </code></pre>
-    <p>Flags: <code>--limit n</code> (default 50), <code>--json</code> for raw events.</p>
+    <p>Flags: <code>--limit n</code> (default 50), <code>--offset n</code> to skip events, and <code>--json</code> for events plus pagination metadata (<code>offset</code>, <code>limit</code>, <code>total</code>, <code>shown</code>, <code>hasMore</code>, and <code>nextOffset</code>).</p>
 
     <h2 id="programmatic">Programmatic usage</h2>
     <p>Wiring a <code>WriteGate</code> into the <code>MemoryStore</code> is the supported path for surfacing rejections back to the caller. Rejected writes raise <code>TrustGateRejection</code>; the error carries the gate's blockers list so you can show the user exactly why the write was refused.</p>
