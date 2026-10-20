@@ -127,7 +127,7 @@
 <span class="code-success">✓</span> <span class="code-output">SaveState initialized!</span></code></pre>
     </div>
 
-    <p>That writes <code>.savestate/config.json</code> in the project. Local snapshots are stored under <code>.savestate/</code>, not in a home-directory vault. The "Detected platform" line appears when an adapter matches (here, a <code>CLAUDE.md</code> or <code>.claude/</code> directory).</p>
+    <p>That writes <code>.savestate/config.json</code> in the project and sets <code>storage.options.path</code> to <code>~/.savestate</code>. The encrypted archive is <code>&lt;snapshot-id&gt;.saf.enc</code> in that directory. The project also gets <code>.savestate/index.json</code>, which lists those archives. The "Detected platform" line appears when an adapter matches (here, a <code>CLAUDE.md</code> or <code>.claude/</code> directory).</p>
 
     <div class="callout callout-warn">
       <span class="callout-label">Important:</span> If you lose the passphrase, snapshots cannot be decrypted. There is no password reset.
@@ -166,9 +166,14 @@
 
     <h2 id="list">Listing Snapshots</h2>
     <pre><code><span class="code-prompt">$</span> npx @savestate/cli list
-<span class="code-output">ID                             PLATFORM      SIZE     DATE</span>
-<span class="code-output">ss-2026-01-27T15-00-00-a3f2k9  claude-code   12.4 KB  2026-01-27</span>
-<span class="code-output">ss-2026-01-26T09-30-00-b7c1m4  clawdbot      48.2 KB  2026-01-26</span></code></pre>
+<span class="code-output">📋 Snapshots</span>
+<span class="code-output">   Storage: local</span>
+<span class="code-output"></span>
+<span class="code-output">  ID                             Date                  Adapter      Label        Size</span>
+<span class="code-output">  ss-2026-10-20T13-43-36-6w3qby  Oct 20, 13:43         claude-code  first      1.2 KB</span>
+<span class="code-output"></span>
+<span class="code-output">  1 snapshot</span></code></pre>
+    <p>Columns are ID, Date, Adapter, Label, and Size. Date is local time. Id, label, and size come from the snapshot you saved.</p>
 
     <h2 id="first-restore">Restoring</h2>
     <p>Change or delete <code>CLAUDE.md</code>, then put the saved copy back. <code>SAVESTATE_PASSPHRASE</code> must still be set to the same value:</p>

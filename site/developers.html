@@ -97,7 +97,7 @@
 <span class="code-success">✓</span> <span class="code-output">SaveState initialized!</span></code></pre>
     </div>
 
-    <p>Run this in the project you want to capture. A directory with <code>CLAUDE.md</code> or <code>.claude/</code> is detected as Claude Code. Init still succeeds if nothing is detected; pass <code>--adapter</code> on snapshot in that case. Config lands in <code>.savestate/config.json</code>. Local archives stay in that project under <code>.savestate/</code>.</p>
+    <p>Run this in the project you want to capture. A directory with <code>CLAUDE.md</code> or <code>.claude/</code> is detected as Claude Code. Init still succeeds if nothing is detected; pass <code>--adapter</code> on snapshot in that case. Config lands in <code>.savestate/config.json</code>. <code>init</code> sets <code>storage.options.path</code> to <code>~/.savestate</code>, and the encrypted archive is <code>&lt;snapshot-id&gt;.saf.enc</code> there. <code>.savestate/index.json</code> in the project lists it.</p>
 
     <div class="callout callout-warn">
       <span class="callout-label">Important:</span> If you lose the passphrase, snapshots cannot be decrypted. There is no password reset.

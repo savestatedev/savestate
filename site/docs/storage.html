@@ -84,7 +84,7 @@
     </div>
 
     <h2 id="local">Local Storage (Default)</h2>
-    <p>By default, snapshots are stored at <code>~/.savestate/snapshots/</code>. No configuration needed.</p>
+    <p>By default, <code>savestate init</code> sets the local storage path to <code>~/.savestate</code>. Each snapshot is an encrypted <code>&lt;snapshot-id&gt;.saf.enc</code> file in that directory. Project config and the snapshot index stay in the project's <code>.savestate/</code> directory.</p>
 
     <h3>Config</h3>
     <pre><code><span class="code-comment">// .savestate/config.json</span>
