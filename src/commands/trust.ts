@@ -295,8 +295,8 @@ const EMPTY_ENTRIES_BY_SCOPE: Record<PromotionScope, number> = {
 };
 
 export interface TrustJson {
-  entriesByState: Record<TrustState, number>;
-  entriesByScope: Record<PromotionScope, number>;
+  entriesByState: Partial<Record<TrustState, number>>;
+  entriesByScope: Partial<Record<PromotionScope, number>>;
   promotionsLastHour: number;
   rejectionsLastHour: number;
   denylistSize: number;
@@ -304,12 +304,45 @@ export interface TrustJson {
   writeGateP95Ms: number;
   actionGateP95Ms: number;
   criticalBreaches: number;
+  pagination: {
+    offset: number;
+    limit: number | null;
+    state: { total: number; shown: number; hasMore: boolean; nextOffset: number | null };
+    scope: { total: number; shown: number; hasMore: boolean; nextOffset: number | null };
+  };
 }
 
-export function formatTrustJson(metrics: TrustMetrics): string {
+function formatTrustMetricPage<T extends string>(
+  entries: Record<T, number>,
+  options: Pick<TrustOptions, 'limit' | 'offset'>,
+): { values: Partial<Record<T, number>>; total: number; shown: number; hasMore: boolean; nextOffset: number | null } {
+  const offset = parseTrustStatusOffset(options.offset) ?? 0;
+  const limit = parseTrustStatusLimit(options.limit);
+  const page = applyTrustStatusFilters(Object.entries(entries), options);
+  const values = Object.fromEntries(page) as Partial<Record<T, number>>;
+  const hasMore = offset + page.length < Object.keys(entries).length;
+
+  return {
+    values,
+    total: Object.keys(entries).length,
+    shown: page.length,
+    hasMore,
+    nextOffset: hasMore ? offset + (limit ?? page.length) : null,
+  };
+}
+
+export function formatTrustJson(
+  metrics: TrustMetrics,
+  options: Pick<TrustOptions, 'limit' | 'offset'> = {},
+): string {
+  const state = formatTrustMetricPage(metrics.entriesByState, options);
+  const scope = formatTrustMetricPage(metrics.entriesByScope, options);
+  const offset = parseTrustStatusOffset(options.offset) ?? 0;
+  const limit = parseTrustStatusLimit(options.limit);
+  const filtered = options.offset !== undefined || options.limit !== undefined;
   const record: TrustJson = {
-    entriesByState: { ...EMPTY_ENTRIES_BY_STATE, ...metrics.entriesByState },
-    entriesByScope: { ...EMPTY_ENTRIES_BY_SCOPE, ...metrics.entriesByScope },
+    entriesByState: filtered ? state.values : { ...EMPTY_ENTRIES_BY_STATE, ...state.values },
+    entriesByScope: filtered ? scope.values : { ...EMPTY_ENTRIES_BY_SCOPE, ...scope.values },
     promotionsLastHour: metrics.promotionsLastHour,
     rejectionsLastHour: metrics.rejectionsLastHour,
     denylistSize: metrics.denylistSize,
@@ -317,6 +350,22 @@ export function formatTrustJson(metrics: TrustMetrics): string {
     writeGateP95Ms: metrics.writeGateP95Ms,
     actionGateP95Ms: metrics.actionGateP95Ms,
     criticalBreaches: metrics.criticalBreaches,
+    pagination: {
+      offset,
+      limit: limit ?? null,
+      state: {
+        total: state.total,
+        shown: state.shown,
+        hasMore: state.hasMore,
+        nextOffset: state.nextOffset,
+      },
+      scope: {
+        total: scope.total,
+        shown: scope.shown,
+        hasMore: scope.hasMore,
+        nextOffset: scope.nextOffset,
+      },
+    },
   };
   return JSON.stringify(record, null, 2);
 }
@@ -451,7 +500,7 @@ export async function trustStatusCommand(options: TrustOptions): Promise<void> {
   const metrics = store.getMetrics();
 
   if (options.json) {
-    console.log(formatTrustJson(metrics));
+    console.log(formatTrustJson(metrics, options));
     store.close();
     return;
   }
