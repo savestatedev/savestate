@@ -339,7 +339,7 @@
         <tr><th>Flag</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>--json</code></td><td>Emit usage statistics as JSON. Does not decrypt archives. When SaveState is not initialized, emits a missing summary (found, total, totalBytes, first, latest, storage; omits extra fields). Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit usage statistics as JSON, including pagination metadata (total matching snapshots, shown, offset, limit, emptyReason, and next/previous page offsets). Does not decrypt archives. When SaveState is not initialized, emits a missing summary (found, total, totalBytes, first, latest, storage; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--exclude &lt;ids&gt;</code></td><td>Skip snapshots from these adapters. Must be one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Only this snapshot. Must be a single non-empty snapshot id.</td></tr>

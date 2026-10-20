@@ -39,6 +39,17 @@ describe('savestate stats --json', () => {
       { tag: 'weekly', count: 1 },
     ]);
     expect(parsed.storage).toEqual({ type: 'local' });
+    expect(parsed.pagination).toEqual({
+      total: 2,
+      shown: 2,
+      offset: 0,
+      limit: null,
+      emptyReason: null,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+    });
   });
 
   it('records empty snapshot stats with null first and latest', () => {
@@ -51,6 +62,34 @@ describe('savestate stats --json', () => {
     expect(parsed.cadenceHours).toBeNull();
     expect(parsed.topTags).toEqual([]);
     expect(parsed.storage).toEqual({ type: 'local' });
+    expect(parsed.pagination.emptyReason).toBe('collection');
+  });
+
+  it('preserves page navigation metadata for aggregate JSON', () => {
+    const parsed = JSON.parse(formatStatsJson([newer], 'local', {
+      total: 3,
+      shown: 1,
+      offset: 1,
+      limit: 1,
+      emptyReason: null,
+      hasPrevious: true,
+      previousOffset: 0,
+      hasMore: true,
+      nextOffset: 2,
+    })) as StatsJson;
+
+    expect(parsed.total).toBe(1);
+    expect(parsed.pagination).toEqual({
+      total: 3,
+      shown: 1,
+      offset: 1,
+      limit: 1,
+      emptyReason: null,
+      hasPrevious: true,
+      previousOffset: 0,
+      hasMore: true,
+      nextOffset: 2,
+    });
   });
 
   it('orders equally used tags alphabetically for stable output', () => {

@@ -236,28 +236,7 @@ export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
   options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
 ): SnapshotIndexEntry[] {
-  const adapter = parseStatsAdapter(options.adapter);
-  const exclude = parseStatsExclude(options.exclude);
-  const snapshotId = parseStatsSnapshot(options.snapshot);
-  const since = parseStatsSince(options.since);
-  const until = parseStatsUntil(options.until);
-  validateStatsDateRange(since, until);
-  const tag = parseStatsTag(options.tag);
-  const label = parseStatsLabel(options.label);
-  let filtered = snapshots.filter((snapshot) => {
-    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
-    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
-    if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
-    if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
-      return false;
-    }
-    if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) {
-      return false;
-    }
-    if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
-    if (label !== undefined && snapshot.label !== label) return false;
-    return true;
-  });
+  let filtered = filterStatsEntries(snapshots, options);
   const limit = parseStatsLimit(options.limit);
   const offset = parseStatsOffset(options.offset);
   if (limit !== undefined || offset !== undefined) {
@@ -286,9 +265,36 @@ export interface StatsJson {
   tagCount: number;
   topTags: Array<{ tag: string; count: number }>;
   storage: { type: string };
+  pagination: StatsPagination;
 }
 
-export function formatStatsJson(snapshots: SnapshotIndexEntry[], storageType: string): string {
+export interface StatsPagination {
+  total: number;
+  shown: number;
+  offset: number;
+  limit: number | null;
+  emptyReason: 'collection' | 'page' | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+}
+
+export function formatStatsJson(
+  snapshots: SnapshotIndexEntry[],
+  storageType: string,
+  pagination: StatsPagination = {
+    total: snapshots.length,
+    shown: snapshots.length,
+    offset: 0,
+    limit: null,
+    emptyReason: snapshots.length === 0 ? 'collection' : null,
+    hasPrevious: false,
+    previousOffset: null,
+    hasMore: false,
+    nextOffset: null,
+  },
+): string {
   const stats = computeStats(snapshots);
   const record: StatsJson = {
     total: stats.total,
@@ -304,6 +310,7 @@ export function formatStatsJson(snapshots: SnapshotIndexEntry[], storageType: st
     tagCount: stats.tagCount,
     topTags: stats.topTags.map(([tag, count]) => ({ tag, count })),
     storage: { type: storageType },
+    pagination,
   };
   return JSON.stringify(record, null, 2);
 }
@@ -359,10 +366,27 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
 
   const config = await loadConfig();
   const index = await loadIndex();
+  const matching = filterStatsEntries(index.snapshots, options);
   const filtered = applyStatsFilters(index.snapshots, options);
 
   if (options.json) {
-    console.log(formatStatsJson(filtered, config.storage.type));
+    const offset = parseStatsOffset(options.offset) ?? 0;
+    const limit = parseStatsLimit(options.limit) ?? null;
+    const hasPrevious = offset > 0;
+    const hasMore = limit !== null && offset + filtered.length < matching.length;
+    console.log(formatStatsJson(filtered, config.storage.type, {
+      total: matching.length,
+      shown: filtered.length,
+      offset,
+      limit,
+      emptyReason: filtered.length > 0 ? null : matching.length === 0 ? 'collection' : 'page',
+      hasPrevious,
+      previousOffset: hasPrevious
+        ? Math.max(0, offset - (limit ?? Math.max(filtered.length, 1)))
+        : null,
+      hasMore,
+      nextOffset: hasMore ? offset + filtered.length : null,
+    }));
     return;
   }
 
@@ -422,6 +446,32 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   }
 
   console.log();
+}
+
+/** Apply non-paginating stats filters so JSON can report the page's total. */
+function filterStatsEntries(
+  snapshots: SnapshotIndexEntry[],
+  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label'>,
+): SnapshotIndexEntry[] {
+  const adapter = parseStatsAdapter(options.adapter);
+  const exclude = parseStatsExclude(options.exclude);
+  const snapshotId = parseStatsSnapshot(options.snapshot);
+  const since = parseStatsSince(options.since);
+  const until = parseStatsUntil(options.until);
+  validateStatsDateRange(since, until);
+  const tag = parseStatsTag(options.tag);
+  const label = parseStatsLabel(options.label);
+
+  return snapshots.filter((snapshot) => {
+    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
+    if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) return false;
+    if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) return false;
+    if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
+    if (label !== undefined && snapshot.label !== label) return false;
+    return true;
+  });
 }
 
 interface ComputedStats {
