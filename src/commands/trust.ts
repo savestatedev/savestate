@@ -381,6 +381,14 @@ export interface TrustDenyListEntryJson {
 
 export interface TrustDenyListJson {
   entries: TrustDenyListEntryJson[];
+  pagination: {
+    offset: number;
+    limit: number | null;
+    total: number;
+    shown: number;
+    hasMore: boolean;
+    nextOffset: number | null;
+  };
 }
 
 export function formatTrustDenyListJson(
@@ -392,10 +400,16 @@ export function formatTrustDenyListJson(
     addedBy: string;
     epoch: number;
   }>,
+  options: Pick<DenyListOptions, 'limit' | 'offset'> = {},
 ): string {
+  const offset = parseTrustDenyListOffset(options.offset) ?? 0;
+  const limit = parseTrustDenyListLimit(options.limit);
+  const page = applyTrustDenyListFilters(entries, options);
+  const hasMore = offset + page.length < entries.length;
+
   return JSON.stringify(
     {
-      entries: entries.map((entry) => ({
+      entries: page.map((entry) => ({
         id: entry.id,
         pattern: entry.pattern,
         reason: entry.reason,
@@ -403,6 +417,14 @@ export function formatTrustDenyListJson(
         addedBy: entry.addedBy,
         epoch: entry.epoch,
       })),
+      pagination: {
+        offset,
+        limit: limit ?? null,
+        total: entries.length,
+        shown: page.length,
+        hasMore,
+        nextOffset: hasMore ? offset + (limit ?? page.length) : null,
+      },
     },
     null,
     2,
@@ -651,11 +673,12 @@ export async function trustDenyRemoveCommand(
 
 export async function trustDenyListCommand(options: DenyListOptions): Promise<void> {
   const store = new TrustStore();
-  const entries = applyTrustDenyListFilters(store.listDenylist(), options);
+  const allEntries = store.listDenylist();
+  const entries = applyTrustDenyListFilters(allEntries, options);
   store.close();
 
   if (options.json) {
-    console.log(formatTrustDenyListJson(entries));
+    console.log(formatTrustDenyListJson(allEntries, options));
     return;
   }
 
