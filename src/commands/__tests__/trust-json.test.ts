@@ -66,4 +66,17 @@ describe('savestate trust --json', () => {
     });
     expect(parsed.denylistSize).toBe(0);
   });
+
+  it('applies status pagination to JSON and reports continuation metadata', () => {
+    const parsed = JSON.parse(formatTrustJson(populated, { offset: '1', limit: '2' })) as TrustJson;
+
+    expect(parsed.entriesByState).toEqual({ stable: 5, rejected: 1 });
+    expect(parsed.entriesByScope).toEqual({ procedural: 3, episodic: 1 });
+    expect(parsed.pagination).toEqual({
+      offset: 1,
+      limit: 2,
+      state: { total: 5, shown: 2, hasMore: true, nextOffset: 3 },
+      scope: { total: 3, shown: 2, hasMore: false, nextOffset: null },
+    });
+  });
 });

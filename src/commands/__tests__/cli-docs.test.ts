@@ -1231,6 +1231,13 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustAuditOffset');
   });
 
+  it('documents trust JSON pagination metadata', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    expect(trustSection).toContain('pagination');
+    expect(trustSection).toContain('nextOffset');
+    expect(trustSection).toContain('Pass <code>nextOffset</code> back with <code>--offset</code>');
+  });
+
   it('documents trust --reason as a non-empty reason', () => {
     const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
     expect(trustSection).toContain('--reason');
