@@ -68,7 +68,20 @@ export function parseStatsSince(value: string | undefined): number | undefined {
 export function parseStatsUntil(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  const normalized = value.trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  let ms: number;
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    const endOfDay = new Date(`${normalized}T23:59:59.999Z`);
+    const isValidCalendarDate =
+      endOfDay.getUTCFullYear() === Number(year) &&
+      endOfDay.getUTCMonth() + 1 === Number(month) &&
+      endOfDay.getUTCDate() === Number(day);
+    ms = isValidCalendarDate ? endOfDay.getTime() : Number.NaN;
+  } else {
+    ms = new Date(value).getTime();
+  }
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO 8601 date.`,
