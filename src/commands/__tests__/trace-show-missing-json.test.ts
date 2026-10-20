@@ -27,7 +27,7 @@ describe('savestate trace show --json when missing', () => {
   });
 
   it('keeps pagination metadata for --json-summary when missing', () => {
-    const parsed = JSON.parse(formatTraceShowMissingJson('run-123', true)) as {
+    const parsed = JSON.parse(formatTraceShowMissingJson('run-123', true, 5, 2)) as {
       found: boolean;
       runId: string;
       events: unknown[];
@@ -38,15 +38,15 @@ describe('savestate trace show --json when missing', () => {
       runId: 'run-123',
       events: [],
       pagination: {
-        offset: 0,
-        limit: null,
+        offset: 5,
+        limit: 2,
         total: 0,
         shown: 0,
         emptyReason: 'collection',
         hasMore: false,
         nextOffset: null,
-        hasPrevious: false,
-        previousOffset: null,
+        hasPrevious: true,
+        previousOffset: 3,
         suggestedOffset: null,
       },
     });
