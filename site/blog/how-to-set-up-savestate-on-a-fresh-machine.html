@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Set Up SaveState on a Fresh Machine | SaveState</title>
+<meta name="description" content="Set up SaveState on a fresh machine with Node 22 and @savestate/cli 0.9.0. Real npm install, init, snapshot, list, and restore output, then the MCP stdio server for Claude Code and Cursor.">
+<meta name="keywords" content="SaveState install, Node 22, @savestate/cli 0.9.0, MCP stdio, Claude Code, Cursor">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine">
+<meta property="og:title" content="How to Set Up SaveState on a Fresh Machine">
+<meta property="og:description" content="Set up SaveState on a fresh machine with Node 22 and @savestate/cli 0.9.0. Real npm install, init, snapshot, list, and restore output, then the MCP stdio server for Claude Code and Cursor.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta property="og:site_name" content="SaveState">
+<meta property="article:published_time" content="2026-10-20">
+<meta property="article:author" content="SaveState">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine">
+<meta name="twitter:title" content="How to Set Up SaveState on a Fresh Machine">
+<meta name="twitter:description" content="Set up SaveState on a fresh machine with Node 22 and @savestate/cli 0.9.0. Real npm install, init, snapshot, list, and restore output, then the MCP stdio server for Claude Code and Cursor.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Set Up SaveState on a Fresh Machine",
+  "description": "Set up SaveState on a fresh machine with Node 22 and @savestate/cli 0.9.0. Real npm install, init, snapshot, list, and restore output, then the MCP stdio server for Claude Code and Cursor.",
+  "image": "https://savestate.dev/og-image.png",
+  "datePublished": "2026-10-20",
+  "dateModified": "2026-10-20",
+  "author": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://savestate.dev/logo.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine"
+  }
+}
+</script>
+
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links { display: none; }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a { padding: 12px 0; font-size: 16px; }
+  .nav-links.show .btn-nav { margin-top: 8px; text-align: center; }
+}
+
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header { margin-bottom: 48px; }
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li { margin-bottom: 8px; }
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a { color: var(--blue); text-decoration: none; }
+.article-content a:hover { text-decoration: underline; }
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover { transform: translateY(-2px); text-decoration: none; }
+
+.cta-secondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cta-fulfillment {
+  margin-top: 16px;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.cta-fulfillment code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">October 20, 2026</div>
+      <h1>How to Set Up SaveState on a Fresh Machine</h1>
+      <p class="subtitle">Node v22.23.3, npm 10.9.9, and @savestate/cli 0.9.0. Install, init, save, list, restore, then the MCP server.</p>
+    </header>
+
+    <div class="article-content">
+      <p>This is a new-user pass on a clean Node 22 install of the published package <code>@savestate/cli</code> at version 0.9.0. The commands below are the ones that ran, and the transcripts are the text those commands printed.</p>
+      <p>The sources followed were the README quick start (<code>npm install -g @savestate/cli</code>, then init, snapshot, list, restore), the docs pages, and <a href="/llms.txt">llms.txt</a> (<code>npm install -g @savestate/cli</code>, then <code>npx -y @savestate/cli mcp</code>). For the adapter, see <a href="/claude-code">Claude Code</a>. For the client config, see <a href="/docs/mcp.html">MCP</a> and <a href="/cursor">Cursor</a>.</p>
+
+      <h2>The machine</h2>
+      <p>Node came from the official tarball <code>node-v22.23.3-linux-x64</code>, unpacked under <code>/tmp/ss-clean</code>. <code>node -v</code> printed <code>v22.23.3</code>. <code>npm -v</code> printed <code>10.9.9</code>. <code>PATH</code> put that Node first, then <code>/usr/bin</code> and <code>/bin</code>.</p>
+      <p>Before the install there was no <code>~/.npmrc</code>, no <code>~/.savestate</code>, and no global <code>@savestate/cli</code>. Project commands used <code>HOME=/tmp/ss-clean/home2</code>. The global install itself used <code>HOME=/tmp/ss-clean/home</code>, which also had no SaveState config. The terminal was 120 columns by 40 rows, so the spinners could finish. The passphrase was the documented example <code>your-passphrase</code>.</p>
+      <p>The worked example is a Claude Code project that already contains <code>CLAUDE.md</code>. Before init, this file was created at <code>~/my-ai-workspace/CLAUDE.md</code>:</p>
+      <pre><code># Workspace
+
+This project is a Claude Code workspace used to try SaveState.
+
+Preference: cocktail recommendations should mention the glass.</code></pre>
+
+      <h2>Install</h2>
+      <pre><code>$ npm install -g @savestate/cli</code></pre>
+      <p>Exit code 0. Output:</p>
+      <pre><code>added 229 packages in 6s
+
+64 packages are looking for funding
+  run `npm fund` for details
+npm notice
+npm notice New major version of npm available! 10.9.9 -&gt; 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice</code></pre>
+      <p>The binary landed at <code>/tmp/ss-clean/node-v22.23.3-linux-x64/bin/savestate</code>, the prefix for this clean Node. <code>savestate --version</code> exited 0 and printed <code>0.9.0</code>.</p>
+      <pre><code>$ npx @savestate/cli --version</code></pre>
+      <p>Exit code 0. The output included spinner frames, then <code>0.9.0</code>, then the same npm upgrade notice as the install. The installed <code>package.json</code> description was <code>Time Machine for AI. Backup, restore, and migrate your AI identity.</code></p>
+
+      <h2>Init</h2>
+      <p>Run in <code>~/my-ai-workspace</code>, with the passphrase already exported. Elapsed 0.646 seconds. Exit code 0. Spinner frames were on the same lines as the status text.</p>
+      <pre><code>$ export SAVESTATE_PASSPHRASE="your-passphrase"
+$ npx @savestate/cli init
+
+⚡ SaveState [U+2014] Time Machine for AI
+
+⠋ Initializing SaveState...✔ Created .savestate/ directory
+⠋ Detecting platform...✔ Detected platform: Claude Code
+
+  Your snapshots will be encrypted with a passphrase.
+  You can also set SAVESTATE_PASSPHRASE env var.
+
+
+✓ SaveState initialized!
+
+  Next steps:
+  savestate snapshot      Capture your first snapshot
+  savestate config        Configure storage &amp; adapters
+  savestate adapters      See available platform adapters
+</code></pre>
+      <p>The banner still says Time Machine for AI. The character between SaveState and Time Machine for AI is U+2014. The transcript writes it as <code>[U+2014]</code>.</p>
+      <p><code>~/my-ai-workspace/.savestate/config.json</code> was written. <code>storage.options.path</code> is the absolute home directory <code>~/.savestate</code> (<code>/tmp/ss-clean/home2/.savestate</code>). <code>passphraseConfigured</code> is true. The passphrase itself is not in the file. <code>defaultAdapter</code> is <code>claude-code</code>.</p>
+
+      <h2>Save a snapshot</h2>
+      <p>Elapsed 1.006 seconds. Exit code 0.</p>
+      <pre><code>$ npx @savestate/cli snapshot --label first
+
+⠋ Extracting state via Claude Code adapter...✔ Full snapshot created!
+
+  ID:         ss-2026-10-20T13-43-36-6w3qby
+  Adapter:    Claude Code
+  Type:       full
+  Label:      first
+  Files:      9 files in archive
+  Archive:    1.1 KB
+  Encrypted:  1.2 KB
+  Storage:    local
+  Status:     ✓ Encrypted &amp; stored
+
+  Restore with: savestate restore ss-2026-10-20T13-43-36-6w3qby
+</code></pre>
+      <p>The archive file is 1206 bytes:</p>
+      <pre><code>~/.savestate/ss-2026-10-20T13-43-36-6w3qby.saf.enc</code></pre>
+      <p>On this machine that path is <code>/tmp/ss-clean/home2/.savestate/ss-2026-10-20T13-43-36-6w3qby.saf.enc</code>. The project index is <code>~/my-ai-workspace/.savestate/index.json</code>, and it points at that filename. The archive is not inside the project <code>.savestate/</code> directory. Project <code>.savestate/</code> holds <code>config.json</code> and <code>index.json</code>.</p>
+
+      <h2>List</h2>
+      <p>Elapsed 0.695 seconds. Exit code 0. The columns are <code>ID</code>, <code>Date</code>, <code>Adapter</code>, <code>Label</code>, and <code>Size</code>. The date is local time.</p>
+      <pre><code>$ npx @savestate/cli list
+
+📋 Snapshots
+   Storage: local
+
+  ID                             Date                  Adapter      Label        Size
+  ───────────────────────────────────────────────────────────────────────────────────
+  ss-2026-10-20T13-43-36-6w3qby  Oct 20, 13:43         claude-code  first      1.2 KB
+
+  1 snapshot
+</code></pre>
+
+      <h2>Restore</h2>
+      <p><code>CLAUDE.md</code> was edited so the preference line said the recommendations should be deleted from the file. Then <code>restore latest</code>. Elapsed 1.03 seconds. Exit code 0.</p>
+      <pre><code>$ npx @savestate/cli restore latest
+
+🔄 Restoring from snapshot: latest
+
+⠋ Retrieving and decrypting snapshot...✔ Restore complete!
+
+  Snapshot:      ss-2026-10-20T13-43-36-6w3qby
+  Timestamp:     2026-10-20T13:43:36.789Z
+  Platform:      claude-code
+  Adapter:       claude-code
+  Label:         first
+  Identity:      ✓ restored
+  Memory:        0 entries restored
+  Conversations: 0 indexed
+
+  ✓ Your AI state has been restored.
+  Existing files were backed up with .bak extension.
+</code></pre>
+      <p>After restore, <code>CLAUDE.md</code> matched the file that was snapshotted. <code>CLAUDE.md.bak</code> held the edited text.</p>
+
+      <h2>Connect the MCP stdio server</h2>
+      <p>The Claude Code block from the MCP docs went into <code>~/.claude/settings.json</code>. The Cursor block went into <code>~/.cursor/mcp.json</code>. Both files were written exactly as those samples. The Claude Code file sets <code>SAVESTATE_MCP_PASSPHRASE</code> to <code>your-passphrase-here</code>. That string is the sample value. The CLI passphrase in the earlier commands was <code>your-passphrase</code>.</p>
+      <pre><code>{
+  "mcpServers": {
+    "savestate": {
+      "command": "npx",
+      "args": ["-y", "@savestate/cli", "mcp"],
+      "env": {
+        "SAVESTATE_MCP_PASSPHRASE": "your-passphrase-here"
+      }
+    }
+  }
+}</code></pre>
+      <p>Cursor, in <code>~/.cursor/mcp.json</code>:</p>
+      <pre><code>{
+  "mcpServers": {
+    "savestate": {
+      "command": "npx",
+      "args": ["-y", "@savestate/cli", "mcp"]
+    }
+  }
+}</code></pre>
+      <p>Claude Code and Cursor were not installed on this machine, so they were not restarted. The process those configs start was started directly, in <code>~/my-ai-workspace</code>, with <code>SAVESTATE_MCP_PASSPHRASE=your-passphrase-here</code>.</p>
+      <pre><code>$ npx -y @savestate/cli mcp</code></pre>
+      <p>For the first two seconds, stdout was empty. stderr was:</p>
+      <pre><code>SaveState MCP server running on stdio</code></pre>
+      <p>A stdio client from <code>@modelcontextprotocol/sdk</code> 1.32.1, the copy installed with <code>@savestate/cli@0.9.0</code>, then called <code>connect</code> and <code>listTools</code>. That succeeded. <code>serverInfo</code> from the handshake:</p>
+      <pre><code>{"name":"savestate","version":"0.5.0"}</code></pre>
+      <p>Tools returned, four names:</p>
+      <ul>
+        <li><code>savestate_snapshot</code></li>
+        <li><code>savestate_restore</code></li>
+        <li><code>savestate_list</code></li>
+        <li><code>savestate_status</code></li>
+      </ul>
+      <p>The MCP docs page also lists <code>savestate_search_snapshots</code>, <code>savestate_stats</code>, the <code>savestate_memory_*</code> tools, and the OpenMemory-compatible names. Those names were not in this server's <code>tools/list</code> result. npm <code>0.9.0</code> does not expose them.</p>
+
+      <div class="cta-box">
+        <h3>Pro is $9/mo.</h3>
+        <p>This pass stored one encrypted snapshot on local disk, at <code>~/.savestate/&lt;id&gt;.saf.enc</code>. Pro is $9/mo. Card today. No waitlist.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="setup-pro-checkout">Subscribe to Pro, $9/mo</a>
+        <p class="cta-fulfillment">After you pay, claim the API key yourself. Then <code>savestate login</code>.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="setup-npm-secondary">Prefer the CLI first? Install from npm</a>
+      </div>
+
+      <hr>
+
+      <p><em>Questions? See the <a href="/faq.html">FAQ</a> or open an issue on <a href="https://github.com/savestatedev/savestate">GitHub</a>.</em></p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>

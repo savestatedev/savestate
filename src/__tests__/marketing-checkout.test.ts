@@ -735,6 +735,46 @@ describe('public marketing checkout CTAs', () => {
     expect(developers).toContain('href="/blog/how-to-move-savestate-memory-between-two-machines"');
   });
 
+  it('lists the fresh-machine setup how-to with real CLI output and one Pro CTA', () => {
+    const html = loadHtml('site/blog/how-to-set-up-savestate-on-a-fresh-machine.html');
+    const vercel = loadHtml('vercel.json');
+    expect(html).toContain('<title>How to Set Up SaveState on a Fresh Machine | SaveState</title>');
+    expect(html).toContain('Set up SaveState on a fresh machine with Node 22 and @savestate/cli 0.9.0. Real npm install, init, snapshot, list, and restore output, then the MCP stdio server for Claude Code and Cursor.');
+    expect(html).toContain('<link rel="canonical" href="https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine">');
+    expect(html).toContain('<script defer src="/_vercel/insights/script.js"></script>');
+    expect(html).toContain('v22.23.3');
+    expect(html).toContain('10.9.9');
+    expect(html).toContain('ss-2026-10-20T13-43-36-6w3qby');
+    expect(html).toContain('2026-10-20T13:43:36.789Z');
+    expect(html).toContain('~/.savestate/ss-2026-10-20T13-43-36-6w3qby.saf.enc');
+    expect(html).toContain('ID');
+    expect(html).toContain('Date');
+    expect(html).toContain('Adapter');
+    expect(html).toContain('Label');
+    expect(html).toContain('Size');
+    expect(html).toContain('Oct 20, 13:43');
+    expect(html).toContain('SaveState MCP server running on stdio');
+    expect(html).toContain('{"name":"savestate","version":"0.5.0"}');
+    expect(html).toContain('savestate_snapshot');
+    expect(html).toContain('savestate_restore');
+    expect(html).toContain('savestate_list');
+    expect(html).toContain('savestate_status');
+    expect(html).toContain('cocktail recommendations should mention the glass');
+    expect(html).not.toMatch(/quiet|spine|honest fixes/i);
+    const proLinks = html.match(/https:\/\/buy\.stripe\.com\/aFa00j5E4ees8hf3kp2ZO00/g) ?? [];
+    expect(proLinks).toHaveLength(1);
+    expect(html).not.toContain(stripe.products.team.payment_link);
+    expect(hrefForCta(html, 'setup-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(html, 'setup-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(html).not.toMatch(/class="btn"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn"/);
+    expect(html).not.toMatch(/—/);
+    expect(sitemap).toContain('https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine');
+    expect(blogIndex).toContain('/blog/how-to-set-up-savestate-on-a-fresh-machine');
+    expect(blogIndex).toContain('How to Set Up SaveState on a Fresh Machine');
+    expect(vercel).toContain('"/blog/how-to-set-up-savestate-on-a-fresh-machine"');
+    expect(vercel).toContain('"/blog/how-to-set-up-savestate-on-a-fresh-machine.html"');
+  });
+
   it('lists the three buyer pages on live URL paths', () => {
     expect(sitemap).toContain('https://savestate.dev/cursor');
     expect(sitemap).toContain('https://savestate.dev/claude-code');
