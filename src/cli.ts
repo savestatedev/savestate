@@ -213,6 +213,7 @@ denyCmd
   .option('-r, --reason <reason>', 'Why this pattern is denylisted (non-empty)')
   .option('-b, --by <actor>', 'Who is adding this entry (defaults to "cli", single non-empty actor id)')
   .option('--limit <n>', 'Maximum number of status field rows to show')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustDenyAddCommand);
 
@@ -221,6 +222,7 @@ denyCmd
   .alias('rm')
   .description('Remove a pattern from the denylist (exact match; single non-empty pattern)')
   .option('--limit <n>', 'Maximum number of status field rows to show')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustDenyRemoveCommand);
 

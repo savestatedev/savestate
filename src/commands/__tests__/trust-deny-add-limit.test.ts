@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseTrustDenyAddLimit, selectTrustDenyAddEntries } from '../trust.js';
+import {
+  parseTrustDenyAddLimit,
+  parseTrustDenyAddOffset,
+  selectTrustDenyAddEntries,
+} from '../trust.js';
 
 describe('savestate trust deny add --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,24 @@ describe('savestate trust deny add --limit', () => {
   it('returns all rows when --limit is omitted', () => {
     const entries = [{ id: 'added' }, { id: 'reason' }];
     expect(selectTrustDenyAddEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('parses bounded offsets and applies offset before limit', () => {
+    expect(parseTrustDenyAddOffset(undefined)).toBeUndefined();
+    expect(parseTrustDenyAddOffset('0')).toBe(0);
+    expect(parseTrustDenyAddOffset('1000')).toBe(1000);
+    expect(() => parseTrustDenyAddOffset('-1')).toThrow(
+      'Invalid --offset value "-1". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseTrustDenyAddOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+    expect(
+      selectTrustDenyAddEntries(
+        [{ id: 'added' }, { id: 'reason' }, { id: 'by' }],
+        1,
+        1,
+      ).map((entry) => entry.id),
+    ).toEqual(['reason']);
   });
 });

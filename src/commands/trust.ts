@@ -124,9 +124,11 @@ interface DenyAddOptions {
   by?: string;
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_TRUST_DENY_ADD_LIMIT = 1000;
+const MAX_TRUST_DENY_ADD_OFFSET = 1000;
 
 /** Parse trust deny add --limit without turning user input errors into an empty add. */
 export function parseTrustDenyAddLimit(value: string | undefined): number | undefined {
@@ -141,10 +143,26 @@ export function parseTrustDenyAddLimit(value: string | undefined): number | unde
   return limit;
 }
 
-/** Keep the first N deny-add status field rows when --limit is set. */
-export function selectTrustDenyAddEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+/** Parse trust deny add --offset without turning user input errors into an unbounded skip. */
+export function parseTrustDenyAddOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_DENY_ADD_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_DENY_ADD_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Apply deny-add --offset before --limit to status field rows. */
+export function selectTrustDenyAddEntries<T>(
+  entries: T[],
+  limit?: number,
+  offset?: number,
+): T[] {
+  return entries.slice(offset ?? 0, (offset ?? 0) + (limit ?? entries.length));
 }
 
 interface DenyListOptions {
@@ -154,6 +172,7 @@ interface DenyListOptions {
 }
 
 const MAX_TRUST_DENY_REMOVE_LIMIT = 1000;
+const MAX_TRUST_DENY_REMOVE_OFFSET = 1000;
 
 /** Parse trust deny remove --limit without turning user input errors into an empty remove. */
 export function parseTrustDenyRemoveLimit(value: string | undefined): number | undefined {
@@ -168,10 +187,26 @@ export function parseTrustDenyRemoveLimit(value: string | undefined): number | u
   return limit;
 }
 
-/** Keep the first N deny-remove status field rows when --limit is set. */
-export function selectTrustDenyRemoveEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+/** Parse trust deny remove --offset without turning user input errors into an unbounded skip. */
+export function parseTrustDenyRemoveOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_DENY_REMOVE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_DENY_REMOVE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Apply deny-remove --offset before --limit to status field rows. */
+export function selectTrustDenyRemoveEntries<T>(
+  entries: T[],
+  limit?: number,
+  offset?: number,
+): T[] {
+  return entries.slice(offset ?? 0, (offset ?? 0) + (limit ?? entries.length));
 }
 
 const MAX_TRUST_DENY_LIST_LIMIT = 1000;
@@ -637,6 +672,7 @@ export async function trustDenyAddCommand(
 ): Promise<void> {
   const pattern = parseTrustPattern(rawPattern);
   const limit = parseTrustDenyAddLimit(options.limit);
+  const offset = parseTrustDenyAddOffset(options.offset);
   const store = new TrustStore();
   const reason = parseTrustReason(options.reason) ?? 'no reason given';
   const addedBy = parseTrustBy(options.by) ?? 'cli';
@@ -653,7 +689,7 @@ export async function trustDenyAddCommand(
     chalk.dim(`  reason: ${reason}`),
     chalk.dim(`  by:     ${addedBy}`),
   ];
-  for (const row of selectTrustDenyAddEntries(rows, limit)) {
+  for (const row of selectTrustDenyAddEntries(rows, limit, offset)) {
     console.log(row);
   }
   console.log();
@@ -665,6 +701,7 @@ export async function trustDenyRemoveCommand(
 ): Promise<void> {
   const pattern = parseTrustPattern(rawPattern);
   const limit = parseTrustDenyRemoveLimit(options.limit);
+  const offset = parseTrustDenyRemoveOffset(options.offset);
   const store = new TrustStore();
   const removed = store.removeFromDenylist(pattern);
   store.close();
@@ -689,7 +726,7 @@ export async function trustDenyRemoveCommand(
         chalk.dim(`  pattern: ${pattern}`),
         chalk.dim(`  removed: ${removed}`),
       ];
-  for (const row of selectTrustDenyRemoveEntries(rows, limit)) {
+  for (const row of selectTrustDenyRemoveEntries(rows, limit, offset)) {
     console.log(row);
   }
   console.log();

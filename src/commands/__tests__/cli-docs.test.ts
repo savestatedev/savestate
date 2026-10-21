@@ -1128,6 +1128,18 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustDenyRemoveLimit');
   });
 
+  it('documents trust deny remove --offset as a bounded non-negative integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const removeBlock = trustBlock.slice(
+      trustBlock.indexOf("command('remove <pattern>')"),
+      trustBlock.lastIndexOf("command('list')"),
+    );
+    expect(trustSection).toContain('savestate trust deny remove secret.env --offset 1 --limit 2');
+    expect(removeBlock).toContain(".option('--offset <n>'");
+    expect(trust).toContain('export function parseTrustDenyRemoveOffset');
+  });
+
   it('registers --json on savestate trust deny list', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const listBlock = trustBlock.slice(trustBlock.lastIndexOf("command('list')"));
@@ -1288,6 +1300,18 @@ describe('CLI docs', () => {
     expect(trustSection).toContain('savestate trust deny add secret.env --reason "contains credentials" --limit 5');
     expect(addBlock).toContain(".option('--limit <n>'");
     expect(trust).toContain('export function parseTrustDenyAddLimit');
+  });
+
+  it('documents trust deny add --offset as a bounded non-negative integer', () => {
+    const trustSection = docs.slice(docs.indexOf('id="trust"'), docs.indexOf('id="team"'));
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    const addBlock = trustBlock.slice(
+      trustBlock.indexOf("command('add <pattern>')"),
+      trustBlock.indexOf("command('remove <pattern>')"),
+    );
+    expect(trustSection).toContain('savestate trust deny add secret.env --offset 1 --limit 2');
+    expect(addBlock).toContain(".option('--offset <n>'");
+    expect(trust).toContain('export function parseTrustDenyAddOffset');
   });
 
   it('lists savestate team in the command overview', () => {
