@@ -2113,6 +2113,8 @@ export interface MemoryExplainPaginationJson {
   limit: number | null;
   total: number;
   pageSize: number;
+  hasPrevious: boolean;
+  previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
 }
@@ -2129,16 +2131,18 @@ export function formatMemoryExplainPrettySummary(
   if (total === 0) return 'No memories matched the query.';
   if (shown === 0) {
     const suggestedOffset = Math.floor((total - 1) / pageSize) * pageSize;
+    const previous = offset > 0 ? ` Previous page: use --offset ${Math.max(0, offset - pageSize)} --limit ${pageSize}.` : '';
     return `No memories on this page (offset ${offset}; ${total} relevant memories matched). ` +
-      `Try --offset ${suggestedOffset} to open the nearest available page.`;
+      `Try --offset ${suggestedOffset} to open the nearest available page.${previous}`;
   }
 
   const first = offset + 1;
   const last = offset + shown;
-  const continuation = last < total
-    ? ` Next page: use --offset ${last} --limit ${pageSize}.`
-    : '';
-  return `Showing ${first}-${last} of ${total} relevant memories.${continuation}`;
+  const navigation = [
+    ...(offset > 0 ? [`Previous page: use --offset ${Math.max(0, offset - pageSize)} --limit ${pageSize}.`] : []),
+    ...(last < total ? [`Next page: use --offset ${last} --limit ${pageSize}.`] : []),
+  ];
+  return `Showing ${first}-${last} of ${total} relevant memories.${navigation.length > 0 ? ` ${navigation.join(' ')}` : ''}`;
 }
 
 /** Keep the empty-state message aligned with whether the collection or page is empty. */
@@ -2165,6 +2169,7 @@ export function formatMemoryExplainJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
   const pageSize = pagination.pageSize ?? pagination.limit ?? Math.max(1, results.length);
+  const hasPrevious = offset > 0;
   const hasMore = pagination.hasMore ?? offset + results.length < total;
   const suggestedOffset = results.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
@@ -2179,6 +2184,8 @@ export function formatMemoryExplainJson(
       limit: pagination.limit ?? null,
       total,
       pageSize,
+      hasPrevious,
+      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
@@ -2217,6 +2224,7 @@ export function formatMemoryExplainMissingJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
   const pageSize = pagination.pageSize ?? pagination.limit ?? 1;
+  const hasPrevious = offset > 0;
   const hasMore = pagination.hasMore ?? offset < total;
   const record: MemoryExplainMissingJson = {
     found: false,
@@ -2229,6 +2237,8 @@ export function formatMemoryExplainMissingJson(
       limit: pagination.limit ?? null,
       total,
       pageSize,
+      hasPrevious,
+      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
