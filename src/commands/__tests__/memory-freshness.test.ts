@@ -65,6 +65,19 @@ describe('memory freshness profiles', () => {
     });
   });
 
+  it('falls back for malformed TTL overrides from imported archive metadata', () => {
+    expect(getMemoryFreshness(entry({
+      freshnessClass: 'medium',
+      softTtlSeconds: -1,
+      hardTtlSeconds: Number.POSITIVE_INFINITY,
+      lastVerifiedAt: '2026-10-15T11:00:00.000Z',
+    }), now)).toMatchObject({
+      softTtlSeconds: 7 * 24 * 60 * 60,
+      hardTtlSeconds: 30 * 24 * 60 * 60,
+      state: 'active',
+    });
+  });
+
   it('filters list results by resolved freshness state', () => {
     const entries = [
       entry({ id: 'active', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' }),

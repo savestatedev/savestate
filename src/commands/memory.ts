@@ -113,6 +113,17 @@ export interface MemoryFreshness {
   verificationSource?: string;
 }
 
+/** Ignore malformed archive TTL overrides instead of letting them disable freshness checks. */
+function resolveFreshnessTtl(
+  override: number | null | undefined,
+  fallback: number | null,
+): number | null {
+  if (override === null) return null;
+  return override !== undefined && Number.isFinite(override) && override >= 0
+    ? override
+    : fallback;
+}
+
 /** Resolve freshness from explicit entry metadata while keeping old snapshots usable. */
 export function getMemoryFreshness(
   entry: MemoryEntry,
@@ -125,12 +136,8 @@ export function getMemoryFreshness(
     ? requestedClass
     : 'slow';
   const defaults = DEFAULT_MEMORY_FRESHNESS_PROFILES[freshnessClass];
-  const softTtlSeconds = entry.softTtlSeconds !== undefined
-    ? entry.softTtlSeconds
-    : defaults.softTtlSeconds;
-  const hardTtlSeconds = entry.hardTtlSeconds !== undefined
-    ? entry.hardTtlSeconds
-    : defaults.hardTtlSeconds;
+  const softTtlSeconds = resolveFreshnessTtl(entry.softTtlSeconds, defaults.softTtlSeconds);
+  const hardTtlSeconds = resolveFreshnessTtl(entry.hardTtlSeconds, defaults.hardTtlSeconds);
   const lastVerifiedAt = entry.lastVerifiedAt ?? entry.updatedAt ?? entry.createdAt;
   const verifiedAt = new Date(lastVerifiedAt).getTime();
   const ageSeconds = Number.isFinite(verifiedAt)
