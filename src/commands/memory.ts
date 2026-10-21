@@ -1013,8 +1013,15 @@ export function formatMemoryListPageSummary(
   const pageDescription = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const hasNextPage = pageEnd < total;
   const nextOffset = limit === undefined ? pageEnd : offset + limit;
-  const continuation = hasNextPage ? `; next offset ${nextOffset}` : '';
-  return `(showing ${shown} of ${total} matching memories; ${pageDescription}${continuation})`;
+  const hints = [pageDescription];
+  if (hasNextPage) {
+    hints.push(`next offset ${nextOffset}`);
+  }
+  if (offset > 0) {
+    const previousStep = limit === undefined ? shown : limit;
+    hints.push(`previous offset ${Math.max(0, offset - previousStep)}`);
+  }
+  return `(showing ${shown} of ${total} matching memories; ${hints.join('; ')})`;
 }
 
 /**
