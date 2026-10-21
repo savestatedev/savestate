@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyStatsFilters,
   formatStatsEmptyState,
+  formatStatsPaginationHint,
   getStatsNextOffset,
   parseStatsLimit,
   parseStatsOffset,
@@ -80,6 +81,16 @@ describe('savestate stats --limit', () => {
       'Try --offset 10 to open the nearest available page.',
     );
     expect(formatStatsEmptyState(0, 0, 5)).toBe('No snapshots match those filters.');
+  });
+
+  it('guides interactive users through a bounded page', () => {
+    expect(formatStatsPaginationHint(5, 2, 0, 2)).toBe(
+      'Showing 2 of 5 snapshots (offset 0, limit 2); next offset 2.',
+    );
+    expect(formatStatsPaginationHint(5, 1, 4, 2)).toBe(
+      'Showing 1 of 5 snapshots (offset 4, limit 2); previous offset 2.',
+    );
+    expect(formatStatsPaginationHint(5, 5)).toBe('');
   });
 
   it('orders equal-timestamp snapshots by id for stable pagination', () => {

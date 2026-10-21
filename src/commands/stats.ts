@@ -253,6 +253,31 @@ export function formatStatsEmptyState(
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
+/** Describe a bounded stats page so interactive users can continue pagination. */
+export function formatStatsPaginationHint(
+  matchingCount: number,
+  shown: number,
+  offset = 0,
+  limit?: number,
+): string {
+  if (offset === 0 && limit === undefined && shown === matchingCount) return '';
+
+  const page = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const hints = [`Showing ${shown} of ${matchingCount} snapshots (${page})`];
+
+  if (limit !== undefined && offset + shown < matchingCount) {
+    hints.push(`next offset ${offset + shown}`);
+  }
+  if (limit !== undefined && offset > 0) {
+    hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+  }
+  if (limit !== undefined && shown === 0 && matchingCount > 0) {
+    hints.push(`try offset ${Math.floor((matchingCount - 1) / limit) * limit}`);
+  }
+
+  return `${hints.join('; ')}.`;
+}
+
 /** Keep stats pagination stable when snapshots share a timestamp. */
 export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
@@ -426,6 +451,8 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   }
 
   const stats = computeStats(filtered);
+  const offset = parseStatsOffset(options.offset) ?? 0;
+  const limit = parseStatsLimit(options.limit);
 
   console.log(chalk.bold('📊 SaveState Stats'));
   console.log(chalk.dim(`   Storage: ${config.storage.type}`));
@@ -451,6 +478,17 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
     );
     console.log();
     return;
+  }
+
+  const paginationHint = formatStatsPaginationHint(
+    matching.length,
+    filtered.length,
+    offset,
+    limit,
+  );
+  if (paginationHint) {
+    console.log(chalk.dim(`  ${paginationHint}`));
+    console.log();
   }
 
   printRow('Total snapshots', String(stats.total));
