@@ -262,6 +262,12 @@ export function applyTrustDenyListFilters<T>(
   );
 }
 
+/** Explain whether an empty page means an empty denylist or an exhausted offset. */
+export function formatTrustDenyListEmptyMessage(total: number, offset = 0): string {
+  if (total === 0) return 'No patterns on the denylist.';
+  return `No denylist entries on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
+}
+
 const MAX_TRUST_STATUS_LIMIT = 1000;
 
 /** Parse trust status --limit without turning user input errors into an empty metrics view. */
@@ -747,7 +753,7 @@ export async function trustDenyListCommand(options: DenyListOptions): Promise<vo
   console.log(chalk.bold(`🚫 Denylist  ${chalk.dim(`(${entries.length} entries)`)}`));
   console.log();
   if (entries.length === 0) {
-    console.log(chalk.dim('  No patterns on the denylist.'));
+    console.log(chalk.dim(`  ${formatTrustDenyListEmptyMessage(allEntries.length, parseTrustDenyListOffset(options.offset) ?? 0)}`));
     console.log();
     return;
   }
