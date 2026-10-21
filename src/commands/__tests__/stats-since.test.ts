@@ -36,6 +36,12 @@ describe('savestate stats --since', () => {
     },
   );
 
+  it('rejects impossible date-only calendar values', () => {
+    expect(() => parseStatsSince('2026-02-30')).toThrow(
+      'Invalid --since value "2026-02-30". Expected an ISO 8601 date.',
+    );
+  });
+
   it('skips snapshots older than the cutoff', () => {
     expect(
       applyStatsFilters(

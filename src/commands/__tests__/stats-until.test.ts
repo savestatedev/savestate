@@ -35,7 +35,7 @@ describe('savestate stats --until', () => {
   });
 
   it('accepts ISO 8601 dates', () => {
-    expect(parseStatsUntil('2026-04-01')).toBe(new Date('2026-04-01').getTime());
+    expect(parseStatsUntil('2026-04-01')).toBe(new Date('2026-04-01T23:59:59.999Z').getTime());
     expect(parseStatsUntil('2026-04-01T00:00:00Z')).toBe(
       new Date('2026-04-01T00:00:00Z').getTime(),
     );
@@ -55,11 +55,18 @@ describe('savestate stats --until', () => {
       applyStatsFilters(
         [
           entry({ id: 'old', timestamp: '2026-01-01T00:00:00Z' }),
+          entry({ id: 'end-of-day', timestamp: '2026-04-01T23:59:59.999Z' }),
           entry({ id: 'new', timestamp: '2026-05-01T00:00:00Z' }),
         ],
         { until: '2026-04-01' },
       ).map((snapshot) => snapshot.id),
-    ).toEqual(['old']);
+    ).toEqual(['old', 'end-of-day']);
+  });
+
+  it('rejects impossible date-only calendar values', () => {
+    expect(() => parseStatsUntil('2026-02-30')).toThrow(
+      'Invalid --until value "2026-02-30". Expected an ISO 8601 date.',
+    );
   });
 
   it('ANDs --adapter with --until', () => {

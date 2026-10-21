@@ -55,7 +55,20 @@ export function parseStatsAdapter(value: string | undefined): string | undefined
 export function parseStatsSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  const normalized = value.trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  let ms: number;
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    const startOfDay = new Date(`${normalized}T00:00:00.000Z`);
+    const isValidCalendarDate =
+      startOfDay.getUTCFullYear() === Number(year) &&
+      startOfDay.getUTCMonth() + 1 === Number(month) &&
+      startOfDay.getUTCDate() === Number(day);
+    ms = isValidCalendarDate ? startOfDay.getTime() : Number.NaN;
+  } else {
+    ms = new Date(value).getTime();
+  }
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --since value "${value}". Expected an ISO 8601 date.`,
@@ -68,7 +81,20 @@ export function parseStatsSince(value: string | undefined): number | undefined {
 export function parseStatsUntil(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  const normalized = value.trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  let ms: number;
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    const endOfDay = new Date(`${normalized}T23:59:59.999Z`);
+    const isValidCalendarDate =
+      endOfDay.getUTCFullYear() === Number(year) &&
+      endOfDay.getUTCMonth() + 1 === Number(month) &&
+      endOfDay.getUTCDate() === Number(day);
+    ms = isValidCalendarDate ? endOfDay.getTime() : Number.NaN;
+  } else {
+    ms = new Date(value).getTime();
+  }
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO 8601 date.`,
@@ -196,6 +222,12 @@ export function selectStatsOffsetEntries<T>(entries: T[], offset?: number): T[] 
   return entries.slice(offset);
 }
 
+/** Suggest the nearest valid page when a bounded stats page is exhausted. */
+export function suggestStatsOffset(total: number, shown: number, limit?: number): number | null {
+  if (shown > 0 || total === 0 || limit === undefined) return null;
+  return Math.floor((total - 1) / limit) * limit;
+}
+
 /** Keep stats pagination stable when snapshots share a timestamp. */
 export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
@@ -210,28 +242,7 @@ export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
   options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
 ): SnapshotIndexEntry[] {
-  const adapter = parseStatsAdapter(options.adapter);
-  const exclude = parseStatsExclude(options.exclude);
-  const snapshotId = parseStatsSnapshot(options.snapshot);
-  const since = parseStatsSince(options.since);
-  const until = parseStatsUntil(options.until);
-  validateStatsDateRange(since, until);
-  const tag = parseStatsTag(options.tag);
-  const label = parseStatsLabel(options.label);
-  let filtered = snapshots.filter((snapshot) => {
-    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
-    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
-    if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
-    if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) {
-      return false;
-    }
-    if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) {
-      return false;
-    }
-    if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
-    if (label !== undefined && snapshot.label !== label) return false;
-    return true;
-  });
+  let filtered = filterStatsEntries(snapshots, options);
   const limit = parseStatsLimit(options.limit);
   const offset = parseStatsOffset(options.offset);
   if (limit !== undefined || offset !== undefined) {
@@ -260,9 +271,38 @@ export interface StatsJson {
   tagCount: number;
   topTags: Array<{ tag: string; count: number }>;
   storage: { type: string };
+  pagination: StatsPagination;
 }
 
-export function formatStatsJson(snapshots: SnapshotIndexEntry[], storageType: string): string {
+export interface StatsPagination {
+  total: number;
+  shown: number;
+  offset: number;
+  limit: number | null;
+  emptyReason: 'collection' | 'page' | null;
+  suggestedOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+}
+
+export function formatStatsJson(
+  snapshots: SnapshotIndexEntry[],
+  storageType: string,
+  pagination: StatsPagination = {
+    total: snapshots.length,
+    shown: snapshots.length,
+    offset: 0,
+    limit: null,
+    emptyReason: snapshots.length === 0 ? 'collection' : null,
+    suggestedOffset: null,
+    hasPrevious: false,
+    previousOffset: null,
+    hasMore: false,
+    nextOffset: null,
+  },
+): string {
   const stats = computeStats(snapshots);
   const record: StatsJson = {
     total: stats.total,
@@ -278,6 +318,7 @@ export function formatStatsJson(snapshots: SnapshotIndexEntry[], storageType: st
     tagCount: stats.tagCount,
     topTags: stats.topTags.map(([tag, count]) => ({ tag, count })),
     storage: { type: storageType },
+    pagination,
   };
   return JSON.stringify(record, null, 2);
 }
@@ -333,10 +374,29 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
 
   const config = await loadConfig();
   const index = await loadIndex();
+  const matching = filterStatsEntries(index.snapshots, options);
   const filtered = applyStatsFilters(index.snapshots, options);
 
   if (options.json) {
-    console.log(formatStatsJson(filtered, config.storage.type));
+    const offset = parseStatsOffset(options.offset) ?? 0;
+    const limit = parseStatsLimit(options.limit) ?? null;
+    const hasPrevious = offset > 0;
+    const hasMore = limit !== null && offset + filtered.length < matching.length;
+    const suggestedOffset = suggestStatsOffset(matching.length, filtered.length, limit ?? undefined);
+    console.log(formatStatsJson(filtered, config.storage.type, {
+      total: matching.length,
+      shown: filtered.length,
+      offset,
+      limit,
+      emptyReason: filtered.length > 0 ? null : matching.length === 0 ? 'collection' : 'page',
+      suggestedOffset,
+      hasPrevious,
+      previousOffset: hasPrevious
+        ? Math.max(0, offset - (limit ?? Math.max(filtered.length, 1)))
+        : null,
+      hasMore,
+      nextOffset: hasMore ? offset + filtered.length : null,
+    }));
     return;
   }
 
@@ -396,6 +456,32 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   }
 
   console.log();
+}
+
+/** Apply non-paginating stats filters so JSON can report the page's total. */
+function filterStatsEntries(
+  snapshots: SnapshotIndexEntry[],
+  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label'>,
+): SnapshotIndexEntry[] {
+  const adapter = parseStatsAdapter(options.adapter);
+  const exclude = parseStatsExclude(options.exclude);
+  const snapshotId = parseStatsSnapshot(options.snapshot);
+  const since = parseStatsSince(options.since);
+  const until = parseStatsUntil(options.until);
+  validateStatsDateRange(since, until);
+  const tag = parseStatsTag(options.tag);
+  const label = parseStatsLabel(options.label);
+
+  return snapshots.filter((snapshot) => {
+    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
+    if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) return false;
+    if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) return false;
+    if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
+    if (label !== undefined && snapshot.label !== label) return false;
+    return true;
+  });
 }
 
 interface ComputedStats {

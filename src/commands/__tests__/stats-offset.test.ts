@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { applyStatsFilters, parseStatsOffset, selectStatsOffsetEntries } from '../stats.js';
+import {
+  applyStatsFilters,
+  parseStatsOffset,
+  selectStatsOffsetEntries,
+  suggestStatsOffset,
+} from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
@@ -50,6 +55,13 @@ describe('savestate stats --offset', () => {
   it('returns all snapshots when offset is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectStatsOffsetEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('suggests the final bounded page for an exhausted offset', () => {
+    expect(suggestStatsOffset(3, 0, 2)).toBe(2);
+    expect(suggestStatsOffset(0, 0, 2)).toBeNull();
+    expect(suggestStatsOffset(3, 1, 2)).toBeNull();
+    expect(suggestStatsOffset(3, 0)).toBeNull();
   });
 
   it('skips the newest snapshots before --limit', () => {
