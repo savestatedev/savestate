@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseTrustDenyRemoveLimit, selectTrustDenyRemoveEntries } from '../trust.js';
+import {
+  parseTrustDenyRemoveLimit,
+  parseTrustDenyRemoveOffset,
+  selectTrustDenyRemoveEntries,
+} from '../trust.js';
 
 describe('savestate trust deny remove --limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,24 @@ describe('savestate trust deny remove --limit', () => {
   it('returns all rows when --limit is omitted', () => {
     const entries = [{ id: 'status' }, { id: 'pattern' }];
     expect(selectTrustDenyRemoveEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('parses bounded offsets and applies offset before limit', () => {
+    expect(parseTrustDenyRemoveOffset(undefined)).toBeUndefined();
+    expect(parseTrustDenyRemoveOffset('0')).toBe(0);
+    expect(parseTrustDenyRemoveOffset('1000')).toBe(1000);
+    expect(() => parseTrustDenyRemoveOffset('-1')).toThrow(
+      'Invalid --offset value "-1". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseTrustDenyRemoveOffset('1001')).toThrow(
+      'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+    expect(
+      selectTrustDenyRemoveEntries(
+        [{ id: 'status' }, { id: 'pattern' }, { id: 'removed' }],
+        1,
+        1,
+      ).map((entry) => entry.id),
+    ).toEqual(['pattern']);
   });
 });

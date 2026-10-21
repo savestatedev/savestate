@@ -124,9 +124,11 @@ interface DenyAddOptions {
   by?: string;
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 const MAX_TRUST_DENY_ADD_LIMIT = 1000;
+const MAX_TRUST_DENY_ADD_OFFSET = 1000;
 
 /** Parse trust deny add --limit without turning user input errors into an empty add. */
 export function parseTrustDenyAddLimit(value: string | undefined): number | undefined {
@@ -141,10 +143,31 @@ export function parseTrustDenyAddLimit(value: string | undefined): number | unde
   return limit;
 }
 
-/** Keep the first N deny-add status field rows when --limit is set. */
-export function selectTrustDenyAddEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+/** Parse trust deny add --offset without turning user input errors into an unbounded skip. */
+export function parseTrustDenyAddOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_DENY_ADD_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_DENY_ADD_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Apply deny-add --offset before --limit to status field rows. */
+export function selectTrustDenyAddEntries<T>(
+  entries: T[],
+  limit?: number,
+  offset?: number,
+): T[] {
+  return entries.slice(offset ?? 0, (offset ?? 0) + (limit ?? entries.length));
+}
+
+/** Explain when deny-add status pagination skips past every status field. */
+export function formatTrustDenyStatusEmptyMessage(total: number, offset = 0): string {
+  return `No status fields on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
 }
 
 interface DenyListOptions {
@@ -154,6 +177,7 @@ interface DenyListOptions {
 }
 
 const MAX_TRUST_DENY_REMOVE_LIMIT = 1000;
+const MAX_TRUST_DENY_REMOVE_OFFSET = 1000;
 
 /** Parse trust deny remove --limit without turning user input errors into an empty remove. */
 export function parseTrustDenyRemoveLimit(value: string | undefined): number | undefined {
@@ -168,10 +192,26 @@ export function parseTrustDenyRemoveLimit(value: string | undefined): number | u
   return limit;
 }
 
-/** Keep the first N deny-remove status field rows when --limit is set. */
-export function selectTrustDenyRemoveEntries<T>(entries: T[], limit?: number): T[] {
-  if (limit === undefined) return entries;
-  return entries.slice(0, limit);
+/** Parse trust deny remove --offset without turning user input errors into an unbounded skip. */
+export function parseTrustDenyRemoveOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_DENY_REMOVE_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_DENY_REMOVE_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Apply deny-remove --offset before --limit to status field rows. */
+export function selectTrustDenyRemoveEntries<T>(
+  entries: T[],
+  limit?: number,
+  offset?: number,
+): T[] {
+  return entries.slice(offset ?? 0, (offset ?? 0) + (limit ?? entries.length));
 }
 
 const MAX_TRUST_DENY_LIST_LIMIT = 1000;
@@ -225,6 +265,18 @@ export function applyTrustDenyListFilters<T>(
     selectTrustDenyListOffsetEntries(entries, parseTrustDenyListOffset(options.offset)),
     parseTrustDenyListLimit(options.limit),
   );
+}
+
+/** Explain whether an empty page means an empty denylist or an exhausted offset. */
+export function formatTrustDenyListEmptyMessage(total: number, offset = 0): string {
+  if (total === 0) return 'No patterns on the denylist.';
+  return `No denylist entries on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
+}
+
+/** Explain whether an empty audit page means no history or an exhausted offset. */
+export function formatTrustAuditEmptyMessage(total: number, offset = 0): string {
+  if (total === 0) return 'No transitions recorded yet.';
+  return `No audit events on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
 }
 
 const MAX_TRUST_STATUS_LIMIT = 1000;
@@ -594,7 +646,7 @@ export async function trustAuditCommand(options: TrustOptions): Promise<void> {
   console.log();
 
   if (events.length === 0) {
-    console.log(chalk.dim('  No transitions recorded yet.'));
+    console.log(chalk.dim(`  ${formatTrustAuditEmptyMessage(allEvents.length, offset ?? 0)}`));
     console.log();
     store.close();
     return;
@@ -637,6 +689,7 @@ export async function trustDenyAddCommand(
 ): Promise<void> {
   const pattern = parseTrustPattern(rawPattern);
   const limit = parseTrustDenyAddLimit(options.limit);
+  const offset = parseTrustDenyAddOffset(options.offset);
   const store = new TrustStore();
   const reason = parseTrustReason(options.reason) ?? 'no reason given';
   const addedBy = parseTrustBy(options.by) ?? 'cli';
@@ -653,8 +706,12 @@ export async function trustDenyAddCommand(
     chalk.dim(`  reason: ${reason}`),
     chalk.dim(`  by:     ${addedBy}`),
   ];
-  for (const row of selectTrustDenyAddEntries(rows, limit)) {
+  const page = selectTrustDenyAddEntries(rows, limit, offset);
+  for (const row of page) {
     console.log(row);
+  }
+  if (page.length === 0) {
+    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0)}`));
   }
   console.log();
 }
@@ -665,6 +722,7 @@ export async function trustDenyRemoveCommand(
 ): Promise<void> {
   const pattern = parseTrustPattern(rawPattern);
   const limit = parseTrustDenyRemoveLimit(options.limit);
+  const offset = parseTrustDenyRemoveOffset(options.offset);
   const store = new TrustStore();
   const removed = store.removeFromDenylist(pattern);
   store.close();
@@ -689,8 +747,12 @@ export async function trustDenyRemoveCommand(
         chalk.dim(`  pattern: ${pattern}`),
         chalk.dim(`  removed: ${removed}`),
       ];
-  for (const row of selectTrustDenyRemoveEntries(rows, limit)) {
+  const page = selectTrustDenyRemoveEntries(rows, limit, offset);
+  for (const row of page) {
     console.log(row);
+  }
+  if (page.length === 0) {
+    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0)}`));
   }
   console.log();
 }
@@ -710,7 +772,7 @@ export async function trustDenyListCommand(options: DenyListOptions): Promise<vo
   console.log(chalk.bold(`🚫 Denylist  ${chalk.dim(`(${entries.length} entries)`)}`));
   console.log();
   if (entries.length === 0) {
-    console.log(chalk.dim('  No patterns on the denylist.'));
+    console.log(chalk.dim(`  ${formatTrustDenyListEmptyMessage(allEntries.length, parseTrustDenyListOffset(options.offset) ?? 0)}`));
     console.log();
     return;
   }
