@@ -26,4 +26,10 @@ describe('savestate memory list human empty state', () => {
       'No memories shown: offset 100 skips past 45 matching memories. Try --offset 40 to open the nearest available page.',
     );
   });
+
+  it('returns to the start for an empty unbounded page', () => {
+    expect(formatMemoryListEmptyState(45, 100)).toBe(
+      'No memories shown: offset 100 skips past 45 matching memories. Try --offset 0 to open the nearest available page.',
+    );
+  });
 });

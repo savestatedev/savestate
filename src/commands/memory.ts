@@ -982,7 +982,7 @@ export function applyMemoryListFilters<T>(
 export function formatMemoryListEmptyState(
   matchingCount: number,
   offset: number,
-  limit = 20,
+  limit?: number,
   collectionEmpty = false,
   snapshotId?: string,
 ): string {
@@ -994,7 +994,9 @@ export function formatMemoryListEmptyState(
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }
 
-  const suggestedOffset = Math.floor((matchingCount - 1) / limit) * limit;
+  const suggestedOffset = limit === undefined
+    ? 0
+    : Math.floor((matchingCount - 1) / limit) * limit;
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
@@ -1013,8 +1015,19 @@ export function formatMemoryListPageSummary(
   const pageDescription = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const hasNextPage = pageEnd < total;
   const nextOffset = limit === undefined ? pageEnd : offset + limit;
-  const continuation = hasNextPage ? `; next offset ${nextOffset}` : '';
-  return `(showing ${shown} of ${total} matching memories; ${pageDescription}${continuation})`;
+  const hints = [pageDescription];
+  if (hasNextPage) {
+    hints.push(`next offset ${nextOffset}`);
+  }
+  if (offset > 0) {
+    const previousOffset = shown === 0
+      ? limit === undefined || total === 0
+        ? 0
+        : Math.floor((total - 1) / limit) * limit
+      : offset - (limit === undefined ? shown : limit);
+    hints.push(`previous offset ${Math.max(0, previousOffset)}`);
+  }
+  return `(showing ${shown} of ${total} matching memories; ${hints.join('; ')})`;
 }
 
 /**
