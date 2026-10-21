@@ -165,6 +165,11 @@ export function selectTrustDenyAddEntries<T>(
   return entries.slice(offset ?? 0, (offset ?? 0) + (limit ?? entries.length));
 }
 
+/** Explain when deny-add status pagination skips past every status field. */
+export function formatTrustDenyStatusEmptyMessage(total: number, offset = 0): string {
+  return `No status fields on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
+}
+
 interface DenyListOptions {
   json?: boolean;
   limit?: string;
@@ -701,8 +706,12 @@ export async function trustDenyAddCommand(
     chalk.dim(`  reason: ${reason}`),
     chalk.dim(`  by:     ${addedBy}`),
   ];
-  for (const row of selectTrustDenyAddEntries(rows, limit, offset)) {
+  const page = selectTrustDenyAddEntries(rows, limit, offset);
+  for (const row of page) {
     console.log(row);
+  }
+  if (page.length === 0) {
+    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0)}`));
   }
   console.log();
 }
@@ -738,8 +747,12 @@ export async function trustDenyRemoveCommand(
         chalk.dim(`  pattern: ${pattern}`),
         chalk.dim(`  removed: ${removed}`),
       ];
-  for (const row of selectTrustDenyRemoveEntries(rows, limit, offset)) {
+  const page = selectTrustDenyRemoveEntries(rows, limit, offset);
+  for (const row of page) {
     console.log(row);
+  }
+  if (page.length === 0) {
+    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0)}`));
   }
   console.log();
 }
