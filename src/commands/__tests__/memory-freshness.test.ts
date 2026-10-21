@@ -55,6 +55,36 @@ describe('memory freshness profiles', () => {
       .toBe('needs_confirmation');
   });
 
+  it('falls back for freshness classes inherited from the profile prototype', () => {
+    expect(getMemoryFreshness(entry({
+      freshnessClass: 'toString' as MemoryEntry['freshnessClass'],
+    }), now)).toMatchObject({
+      class: 'slow',
+      softTtlSeconds: 30 * 24 * 60 * 60,
+      hardTtlSeconds: 180 * 24 * 60 * 60,
+    });
+  });
+
+  it('falls back for malformed TTL overrides from imported archive metadata', () => {
+    expect(getMemoryFreshness(entry({
+      freshnessClass: 'medium',
+      softTtlSeconds: -1,
+      hardTtlSeconds: Number.POSITIVE_INFINITY,
+      lastVerifiedAt: '2026-10-15T11:00:00.000Z',
+    }), now)).toMatchObject({
+      softTtlSeconds: 7 * 24 * 60 * 60,
+      hardTtlSeconds: 30 * 24 * 60 * 60,
+      state: 'active',
+    });
+  });
+
+  it('falls back for unknown stale behaviors from imported archive metadata', () => {
+    expect(getMemoryFreshness(entry({
+      freshnessClass: 'fast',
+      staleBehavior: 'allow' as MemoryEntry['staleBehavior'],
+    }), now).staleBehavior).toBe('hide');
+  });
+
   it('filters list results by resolved freshness state', () => {
     const entries = [
       entry({ id: 'active', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' }),

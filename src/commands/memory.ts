@@ -113,22 +113,41 @@ export interface MemoryFreshness {
   verificationSource?: string;
 }
 
+/** Ignore malformed archive TTL overrides instead of letting them disable freshness checks. */
+function resolveFreshnessTtl(
+  override: number | null | undefined,
+  fallback: number | null,
+): number | null {
+  if (override === null) return null;
+  return override !== undefined && Number.isFinite(override) && override >= 0
+    ? override
+    : fallback;
+}
+
+/** Ignore unknown archive stale behaviors instead of returning invalid policy data. */
+function resolveStaleBehavior(
+  override: MemoryStaleBehavior | undefined,
+  fallback: MemoryStaleBehavior,
+): MemoryStaleBehavior {
+  return override === 'warn' || override === 'hide' || override === 'block'
+    ? override
+    : fallback;
+}
+
 /** Resolve freshness from explicit entry metadata while keeping old snapshots usable. */
 export function getMemoryFreshness(
   entry: MemoryEntry,
   now = new Date(),
 ): MemoryFreshness {
   const requestedClass = entry.freshnessClass;
-  const freshnessClass = requestedClass && requestedClass in DEFAULT_MEMORY_FRESHNESS_PROFILES
+  // Archive metadata is untrusted input; only accept own profile names so
+  // prototype properties such as "toString" cannot produce undefined TTLs.
+  const freshnessClass = requestedClass && Object.hasOwn(DEFAULT_MEMORY_FRESHNESS_PROFILES, requestedClass)
     ? requestedClass
     : 'slow';
   const defaults = DEFAULT_MEMORY_FRESHNESS_PROFILES[freshnessClass];
-  const softTtlSeconds = entry.softTtlSeconds !== undefined
-    ? entry.softTtlSeconds
-    : defaults.softTtlSeconds;
-  const hardTtlSeconds = entry.hardTtlSeconds !== undefined
-    ? entry.hardTtlSeconds
-    : defaults.hardTtlSeconds;
+  const softTtlSeconds = resolveFreshnessTtl(entry.softTtlSeconds, defaults.softTtlSeconds);
+  const hardTtlSeconds = resolveFreshnessTtl(entry.hardTtlSeconds, defaults.hardTtlSeconds);
   const lastVerifiedAt = entry.lastVerifiedAt ?? entry.updatedAt ?? entry.createdAt;
   const verifiedAt = new Date(lastVerifiedAt).getTime();
   const ageSeconds = Number.isFinite(verifiedAt)
@@ -148,7 +167,7 @@ export function getMemoryFreshness(
     state,
     softTtlSeconds,
     hardTtlSeconds,
-    staleBehavior: entry.staleBehavior ?? defaults.staleBehavior,
+    staleBehavior: resolveStaleBehavior(entry.staleBehavior, defaults.staleBehavior),
     lastVerifiedAt,
     ...(entry.verificationSource ? { verificationSource: entry.verificationSource } : {}),
   };
