@@ -228,6 +228,16 @@ export function suggestStatsOffset(total: number, shown: number, limit?: number)
   return Math.floor((total - 1) / limit) * limit;
 }
 
+/** Advance bounded stats pages even when an out-of-range page is empty. */
+export function getStatsNextOffset(
+  offset: number,
+  limit: number | null,
+  hasMore: boolean,
+): number | null {
+  if (!hasMore || limit === null) return null;
+  return offset + limit;
+}
+
 /** Keep stats pagination stable when snapshots share a timestamp. */
 export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
@@ -395,7 +405,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
         ? Math.max(0, offset - (limit ?? Math.max(filtered.length, 1)))
         : null,
       hasMore,
-      nextOffset: hasMore ? offset + filtered.length : null,
+      nextOffset: getStatsNextOffset(offset, limit, hasMore),
     }));
     return;
   }

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { applyStatsFilters, parseStatsLimit, parseStatsOffset, sortStatsEntries } from '../stats.js';
+import {
+  applyStatsFilters,
+  getStatsNextOffset,
+  parseStatsLimit,
+  parseStatsOffset,
+  sortStatsEntries,
+} from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
@@ -60,6 +66,12 @@ describe('savestate stats --limit', () => {
         { limit: '2' },
       ).map((snapshot) => snapshot.id),
     ).toEqual(['new', 'mid']);
+  });
+
+  it('advances an empty bounded page by the requested page size', () => {
+    expect(getStatsNextOffset(10, 5, true)).toBe(15);
+    expect(getStatsNextOffset(10, 5, false)).toBeNull();
+    expect(getStatsNextOffset(10, null, true)).toBeNull();
   });
 
   it('orders equal-timestamp snapshots by id for stable pagination', () => {
