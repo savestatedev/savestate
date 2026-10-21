@@ -268,6 +268,12 @@ export function formatTrustDenyListEmptyMessage(total: number, offset = 0): stri
   return `No denylist entries on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
 }
 
+/** Explain whether an empty audit page means no history or an exhausted offset. */
+export function formatTrustAuditEmptyMessage(total: number, offset = 0): string {
+  if (total === 0) return 'No transitions recorded yet.';
+  return `No audit events on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
+}
+
 const MAX_TRUST_STATUS_LIMIT = 1000;
 
 /** Parse trust status --limit without turning user input errors into an empty metrics view. */
@@ -635,7 +641,7 @@ export async function trustAuditCommand(options: TrustOptions): Promise<void> {
   console.log();
 
   if (events.length === 0) {
-    console.log(chalk.dim('  No transitions recorded yet.'));
+    console.log(chalk.dim(`  ${formatTrustAuditEmptyMessage(allEvents.length, offset ?? 0)}`));
     console.log();
     store.close();
     return;
