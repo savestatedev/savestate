@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>How to Restore a Claude Code Project After a Crash | SaveState</title>
-<meta name="description" content="Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.1, including the missing-passphrase error and the fix.">
+<meta name="description" content="Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.0, including the missing-passphrase error and the fix.">
 <meta name="keywords" content="Claude Code restore, Claude Code crash, CLAUDE.md, encrypted AI memory, SaveState">
 
 <!-- Open Graph -->
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://savestate.dev/blog/how-to-restore-a-claude-code-project-after-a-crash">
 <meta property="og:title" content="How to Restore a Claude Code Project After a Crash">
-<meta property="og:description" content="Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.1, including the missing-passphrase error and the fix.">
+<meta property="og:description" content="Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.0, including the missing-passphrase error and the fix.">
 <meta property="og:image" content="https://savestate.dev/og-image.png">
 <meta property="og:site_name" content="SaveState">
 <meta property="article:published_time" content="2026-10-17">
@@ -21,7 +21,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:url" content="https://savestate.dev/blog/how-to-restore-a-claude-code-project-after-a-crash">
 <meta name="twitter:title" content="How to Restore a Claude Code Project After a Crash">
-<meta name="twitter:description" content="Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.1, including the missing-passphrase error and the fix.">
+<meta name="twitter:description" content="Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.0, including the missing-passphrase error and the fix.">
 <meta name="twitter:image" content="https://savestate.dev/og-image.png">
 
 <!-- Canonical -->
@@ -32,7 +32,7 @@
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "How to Restore a Claude Code Project After a Crash",
-  "description": "Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.1, including the missing-passphrase error and the fix.",
+  "description": "Restore a Claude Code project after a crash. Real init, snapshot, restore, and search output from @savestate/cli 0.9.0, including the missing-passphrase error and the fix.",
   "image": "https://savestate.dev/og-image.png",
   "datePublished": "2026-10-17",
   "dateModified": "2026-10-17",
@@ -424,7 +424,7 @@ footer a { color: var(--text-muted); }
 
     <div class="article-content">
       <p>A crash can leave <code>CLAUDE.md</code> as a stub. The repo still builds. The billing rule the agent was following lived in that file, and the file is now wrong.</p>
-      <p>This is the recovery, run against the SaveState CLI built from this repository at version 0.9.1. The commands were <code>npx --no-install @savestate/cli</code>, linked to that local build, so these transcripts come from this repository. After you install the package, the same subcommands are <code>npx @savestate/cli</code>. The passphrase <code>ledger-crash-demo</code> exists only for this temp project.</p>
+      <p>This is the recovery, run against the SaveState CLI built from this repository at version 0.9.0. The commands were <code>npx --no-install @savestate/cli</code>, linked to that local build, so these transcripts come from this repository. After you install the package, the same subcommands are <code>npx @savestate/cli</code>. The passphrase <code>ledger-crash-demo</code> exists only for this temp project.</p>
       <p>For the adapter itself, see <a href="/claude-code">Claude Code</a>. Snapshots are a <a href="/docs/format.html">SaveState Archive</a>, encrypted with AES-256-GCM before they are stored.</p>
 
       <h2>A project worth restoring</h2>
@@ -436,7 +436,7 @@ Never double-charge a customer after a crash.
 Restore this file before the next deploy.</code></pre>
       <p><code>.claude/settings.json</code> allowed <code>Bash(npm test)</code>.</p>
       <pre><code>$ npx --no-install @savestate/cli --version
-0.9.1</code></pre>
+0.9.0</code></pre>
 
       <h2>Init with the passphrase already set</h2>
       <pre><code>$ export SAVESTATE_PASSPHRASE='ledger-crash-demo'

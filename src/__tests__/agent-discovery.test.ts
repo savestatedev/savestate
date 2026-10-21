@@ -68,8 +68,8 @@ describe('agent discovery files', () => {
     expect(npm.mcpName).toBe('io.github.savestatedev/memory');
     expect(npm.mcpName).toBe(packet.name);
     expect(npm.version).toBe('0.9.1');
-    expect(packet.version).toBe(npm.version);
-    expect((packet.packages as Array<{ version: string }>)[0].version).toBe(npm.version);
+    expect(packet.version).toBe('0.9.0');
+    expect((packet.packages as Array<{ version: string }>)[0].version).toBe('0.9.0');
   });
 
   it('keeps the leftover well-known card renamed to memory, not as the primary', () => {

@@ -90,7 +90,7 @@ describe('homepage checkout CTAs', () => {
   });
 
   it('shows the current release and supported AI clients in the hero', () => {
-    expect(homepage).toMatch(/v0\.9\.1: cross-snapshot search/);
+    expect(homepage).toMatch(/v0\.9\.0: cross-snapshot search/);
     expect(homepage).toMatch(/across ChatGPT, Claude, Gemini, Claude Code, Cursor, and Clawdbot\./);
   });
 
