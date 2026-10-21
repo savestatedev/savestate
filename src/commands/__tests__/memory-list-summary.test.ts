@@ -62,4 +62,10 @@ describe('savestate memory list table pagination summary', () => {
       '(showing 2 of 7 matching memories; offset 3; next offset 5; previous offset 1)',
     );
   });
+
+  it('points exhausted unbounded pages back to the start', () => {
+    expect(formatMemoryListPageSummary(7, 0, 100)).toBe(
+      '(showing 0 of 7 matching memories; offset 100; previous offset 0)',
+    );
+  });
 });
