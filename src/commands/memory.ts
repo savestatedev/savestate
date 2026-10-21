@@ -982,7 +982,7 @@ export function applyMemoryListFilters<T>(
 export function formatMemoryListEmptyState(
   matchingCount: number,
   offset: number,
-  limit = 20,
+  limit?: number,
   collectionEmpty = false,
   snapshotId?: string,
 ): string {
@@ -994,7 +994,9 @@ export function formatMemoryListEmptyState(
     return 'No memories found matching the criteria. Try adjusting the filters.';
   }
 
-  const suggestedOffset = Math.floor((matchingCount - 1) / limit) * limit;
+  const suggestedOffset = limit === undefined
+    ? 0
+    : Math.floor((matchingCount - 1) / limit) * limit;
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
