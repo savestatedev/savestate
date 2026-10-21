@@ -228,6 +228,68 @@ export function suggestStatsOffset(total: number, shown: number, limit?: number)
   return Math.floor((total - 1) / limit) * limit;
 }
 
+/** Advance bounded stats pages even when an out-of-range page is empty. */
+export function getStatsNextOffset(
+  offset: number,
+  limit: number | null,
+  hasMore: boolean,
+): number | null {
+  if (!hasMore || limit === null) return null;
+  return offset + limit;
+}
+
+/** Point back to the nearest available bounded stats page when offset is stale. */
+export function getStatsPreviousOffset(
+  total: number,
+  offset: number,
+  limit: number | null,
+): number | null {
+  if (offset <= 0 || limit === null) return null;
+  const previousOffset = Math.max(0, offset - limit);
+  if (total === 0) return previousOffset;
+  return Math.min(previousOffset, Math.floor((total - 1) / limit) * limit);
+}
+
+/** Explain how to recover when a stale stats offset skips past every match. */
+export function formatStatsEmptyState(
+  matchingCount: number,
+  offset: number,
+  limit?: number,
+): string {
+  if (matchingCount === 0) return 'No snapshots match those filters.';
+
+  const pageSize = limit ?? matchingCount;
+  const suggestedOffset = Math.floor((matchingCount - 1) / pageSize) * pageSize;
+  return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
+    matchingCount === 1 ? 'snapshot' : 'snapshots'
+  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+}
+
+/** Describe a bounded stats page so interactive users can continue pagination. */
+export function formatStatsPaginationHint(
+  matchingCount: number,
+  shown: number,
+  offset = 0,
+  limit?: number,
+): string {
+  if (offset === 0 && limit === undefined && shown === matchingCount) return '';
+
+  const page = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const hints = [`Showing ${shown} of ${matchingCount} snapshots (${page})`];
+
+  if (limit !== undefined && offset + shown < matchingCount) {
+    hints.push(`next offset ${offset + shown}`);
+  }
+  if (limit !== undefined && offset > 0) {
+    hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+  }
+  if (limit !== undefined && shown === 0 && matchingCount > 0) {
+    hints.push(`try offset ${Math.floor((matchingCount - 1) / limit) * limit}`);
+  }
+
+  return `${hints.join('; ')}.`;
+}
+
 /** Keep stats pagination stable when snapshots share a timestamp. */
 export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
@@ -391,16 +453,16 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
       emptyReason: filtered.length > 0 ? null : matching.length === 0 ? 'collection' : 'page',
       suggestedOffset,
       hasPrevious,
-      previousOffset: hasPrevious
-        ? Math.max(0, offset - (limit ?? Math.max(filtered.length, 1)))
-        : null,
+      previousOffset: getStatsPreviousOffset(matching.length, offset, limit),
       hasMore,
-      nextOffset: hasMore ? offset + filtered.length : null,
+      nextOffset: getStatsNextOffset(offset, limit, hasMore),
     }));
     return;
   }
 
   const stats = computeStats(filtered);
+  const offset = parseStatsOffset(options.offset) ?? 0;
+  const limit = parseStatsLimit(options.limit);
 
   console.log(chalk.bold('📊 SaveState Stats'));
   console.log(chalk.dim(`   Storage: ${config.storage.type}`));
@@ -415,9 +477,28 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   }
 
   if (stats.total === 0) {
-    console.log(chalk.dim('  No snapshots match those filters.'));
+    console.log(
+      chalk.dim(
+        `  ${formatStatsEmptyState(
+          matching.length,
+          parseStatsOffset(options.offset) ?? 0,
+          parseStatsLimit(options.limit),
+        )}`,
+      ),
+    );
     console.log();
     return;
+  }
+
+  const paginationHint = formatStatsPaginationHint(
+    matching.length,
+    filtered.length,
+    offset,
+    limit,
+  );
+  if (paginationHint) {
+    console.log(chalk.dim(`  ${paginationHint}`));
+    console.log();
   }
 
   printRow('Total snapshots', String(stats.total));

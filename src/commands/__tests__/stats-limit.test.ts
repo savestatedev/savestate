@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { applyStatsFilters, parseStatsLimit, parseStatsOffset, sortStatsEntries } from '../stats.js';
+import {
+  applyStatsFilters,
+  formatStatsEmptyState,
+  formatStatsPaginationHint,
+  getStatsNextOffset,
+  parseStatsLimit,
+  parseStatsOffset,
+  sortStatsEntries,
+} from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
 function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
@@ -60,6 +68,29 @@ describe('savestate stats --limit', () => {
         { limit: '2' },
       ).map((snapshot) => snapshot.id),
     ).toEqual(['new', 'mid']);
+  });
+
+  it('advances an empty bounded page by the requested page size', () => {
+    expect(getStatsNextOffset(10, 5, true)).toBe(15);
+    expect(getStatsNextOffset(10, 5, false)).toBeNull();
+    expect(getStatsNextOffset(10, null, true)).toBeNull();
+  });
+
+  it('explains how to recover from a stale empty page', () => {
+    expect(formatStatsEmptyState(12, 15, 5)).toContain(
+      'Try --offset 10 to open the nearest available page.',
+    );
+    expect(formatStatsEmptyState(0, 0, 5)).toBe('No snapshots match those filters.');
+  });
+
+  it('guides interactive users through a bounded page', () => {
+    expect(formatStatsPaginationHint(5, 2, 0, 2)).toBe(
+      'Showing 2 of 5 snapshots (offset 0, limit 2); next offset 2.',
+    );
+    expect(formatStatsPaginationHint(5, 1, 4, 2)).toBe(
+      'Showing 1 of 5 snapshots (offset 4, limit 2); previous offset 2.',
+    );
+    expect(formatStatsPaginationHint(5, 5)).toBe('');
   });
 
   it('orders equal-timestamp snapshots by id for stable pagination', () => {
