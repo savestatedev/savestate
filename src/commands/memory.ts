@@ -119,7 +119,9 @@ export function getMemoryFreshness(
   now = new Date(),
 ): MemoryFreshness {
   const requestedClass = entry.freshnessClass;
-  const freshnessClass = requestedClass && requestedClass in DEFAULT_MEMORY_FRESHNESS_PROFILES
+  // Archive metadata is untrusted input; only accept own profile names so
+  // prototype properties such as "toString" cannot produce undefined TTLs.
+  const freshnessClass = requestedClass && Object.hasOwn(DEFAULT_MEMORY_FRESHNESS_PROFILES, requestedClass)
     ? requestedClass
     : 'slow';
   const defaults = DEFAULT_MEMORY_FRESHNESS_PROFILES[freshnessClass];
