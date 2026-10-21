@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyStatsFilters,
+  formatStatsEmptyState,
   getStatsNextOffset,
   parseStatsLimit,
   parseStatsOffset,
@@ -72,6 +73,13 @@ describe('savestate stats --limit', () => {
     expect(getStatsNextOffset(10, 5, true)).toBe(15);
     expect(getStatsNextOffset(10, 5, false)).toBeNull();
     expect(getStatsNextOffset(10, null, true)).toBeNull();
+  });
+
+  it('explains how to recover from a stale empty page', () => {
+    expect(formatStatsEmptyState(12, 15, 5)).toContain(
+      'Try --offset 10 to open the nearest available page.',
+    );
+    expect(formatStatsEmptyState(0, 0, 5)).toBe('No snapshots match those filters.');
   });
 
   it('orders equal-timestamp snapshots by id for stable pagination', () => {

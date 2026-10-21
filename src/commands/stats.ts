@@ -238,6 +238,21 @@ export function getStatsNextOffset(
   return offset + limit;
 }
 
+/** Explain how to recover when a stale stats offset skips past every match. */
+export function formatStatsEmptyState(
+  matchingCount: number,
+  offset: number,
+  limit?: number,
+): string {
+  if (matchingCount === 0) return 'No snapshots match those filters.';
+
+  const pageSize = limit ?? matchingCount;
+  const suggestedOffset = Math.floor((matchingCount - 1) / pageSize) * pageSize;
+  return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
+    matchingCount === 1 ? 'snapshot' : 'snapshots'
+  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+}
+
 /** Keep stats pagination stable when snapshots share a timestamp. */
 export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
@@ -425,7 +440,15 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   }
 
   if (stats.total === 0) {
-    console.log(chalk.dim('  No snapshots match those filters.'));
+    console.log(
+      chalk.dim(
+        `  ${formatStatsEmptyState(
+          matching.length,
+          parseStatsOffset(options.offset) ?? 0,
+          parseStatsLimit(options.limit),
+        )}`,
+      ),
+    );
     console.log();
     return;
   }
