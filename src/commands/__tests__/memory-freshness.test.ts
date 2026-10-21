@@ -78,6 +78,13 @@ describe('memory freshness profiles', () => {
     });
   });
 
+  it('falls back for unknown stale behaviors from imported archive metadata', () => {
+    expect(getMemoryFreshness(entry({
+      freshnessClass: 'fast',
+      staleBehavior: 'allow' as MemoryEntry['staleBehavior'],
+    }), now).staleBehavior).toBe('hide');
+  });
+
   it('filters list results by resolved freshness state', () => {
     const entries = [
       entry({ id: 'active', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' }),

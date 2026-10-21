@@ -124,6 +124,16 @@ function resolveFreshnessTtl(
     : fallback;
 }
 
+/** Ignore unknown archive stale behaviors instead of returning invalid policy data. */
+function resolveStaleBehavior(
+  override: MemoryStaleBehavior | undefined,
+  fallback: MemoryStaleBehavior,
+): MemoryStaleBehavior {
+  return override === 'warn' || override === 'hide' || override === 'block'
+    ? override
+    : fallback;
+}
+
 /** Resolve freshness from explicit entry metadata while keeping old snapshots usable. */
 export function getMemoryFreshness(
   entry: MemoryEntry,
@@ -157,7 +167,7 @@ export function getMemoryFreshness(
     state,
     softTtlSeconds,
     hardTtlSeconds,
-    staleBehavior: entry.staleBehavior ?? defaults.staleBehavior,
+    staleBehavior: resolveStaleBehavior(entry.staleBehavior, defaults.staleBehavior),
     lastVerifiedAt,
     ...(entry.verificationSource ? { verificationSource: entry.verificationSource } : {}),
   };
