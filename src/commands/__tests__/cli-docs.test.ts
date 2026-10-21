@@ -5362,6 +5362,14 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchOffset');
   });
 
+  it('documents search --json-summary recovery metadata', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('--json-summary');
+    expect(searchSection).toContain('<code>suggestedOffset</code>');
+    expect(searchSection).toContain('nearest earlier page to retry');
+    expect(search).toContain('formatSearchResultsSummaryJson');
+  });
+
   it('documents search --adapter as a known adapter', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));

@@ -2096,8 +2096,9 @@ export function formatMemoryExplainPrettySummary(
 
   if (total === 0) return 'No memories matched the query.';
   if (shown === 0) {
+    const suggestedOffset = Math.floor((total - 1) / pageSize) * pageSize;
     return `No memories on this page (offset ${offset}; ${total} relevant memories matched). ` +
-      'Try a smaller --offset value.';
+      `Try --offset ${suggestedOffset} to open the nearest available page.`;
   }
 
   const first = offset + 1;
