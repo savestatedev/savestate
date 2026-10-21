@@ -45,6 +45,7 @@ describe('savestate stats --json', () => {
       offset: 0,
       limit: null,
       emptyReason: null,
+      suggestedOffset: null,
       hasPrevious: false,
       previousOffset: null,
       hasMore: false,
@@ -63,6 +64,7 @@ describe('savestate stats --json', () => {
     expect(parsed.topTags).toEqual([]);
     expect(parsed.storage).toEqual({ type: 'local' });
     expect(parsed.pagination.emptyReason).toBe('collection');
+    expect(parsed.pagination.suggestedOffset).toBeNull();
   });
 
   it('preserves page navigation metadata for aggregate JSON', () => {
@@ -72,6 +74,7 @@ describe('savestate stats --json', () => {
       offset: 1,
       limit: 1,
       emptyReason: null,
+      suggestedOffset: null,
       hasPrevious: true,
       previousOffset: 0,
       hasMore: true,
@@ -85,10 +88,31 @@ describe('savestate stats --json', () => {
       offset: 1,
       limit: 1,
       emptyReason: null,
+      suggestedOffset: null,
       hasPrevious: true,
       previousOffset: 0,
       hasMore: true,
       nextOffset: 2,
+    });
+  });
+
+  it('suggests the nearest valid page when the offset is exhausted', () => {
+    const parsed = JSON.parse(formatStatsJson([], 'local', {
+      total: 3,
+      shown: 0,
+      offset: 8,
+      limit: 2,
+      emptyReason: 'page',
+      suggestedOffset: 2,
+      hasPrevious: true,
+      previousOffset: 6,
+      hasMore: false,
+      nextOffset: null,
+    })) as StatsJson;
+
+    expect(parsed.pagination).toMatchObject({
+      emptyReason: 'page',
+      suggestedOffset: 2,
     });
   });
 

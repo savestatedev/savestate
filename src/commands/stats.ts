@@ -222,6 +222,12 @@ export function selectStatsOffsetEntries<T>(entries: T[], offset?: number): T[] 
   return entries.slice(offset);
 }
 
+/** Suggest the nearest valid page when a bounded stats page is exhausted. */
+export function suggestStatsOffset(total: number, shown: number, limit?: number): number | null {
+  if (shown > 0 || total === 0 || limit === undefined) return null;
+  return Math.floor((total - 1) / limit) * limit;
+}
+
 /** Keep stats pagination stable when snapshots share a timestamp. */
 export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
@@ -274,6 +280,7 @@ export interface StatsPagination {
   offset: number;
   limit: number | null;
   emptyReason: 'collection' | 'page' | null;
+  suggestedOffset: number | null;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
@@ -289,6 +296,7 @@ export function formatStatsJson(
     offset: 0,
     limit: null,
     emptyReason: snapshots.length === 0 ? 'collection' : null,
+    suggestedOffset: null,
     hasPrevious: false,
     previousOffset: null,
     hasMore: false,
@@ -374,12 +382,14 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
     const limit = parseStatsLimit(options.limit) ?? null;
     const hasPrevious = offset > 0;
     const hasMore = limit !== null && offset + filtered.length < matching.length;
+    const suggestedOffset = suggestStatsOffset(matching.length, filtered.length, limit ?? undefined);
     console.log(formatStatsJson(filtered, config.storage.type, {
       total: matching.length,
       shown: filtered.length,
       offset,
       limit,
       emptyReason: filtered.length > 0 ? null : matching.length === 0 ? 'collection' : 'page',
+      suggestedOffset,
       hasPrevious,
       previousOffset: hasPrevious
         ? Math.max(0, offset - (limit ?? Math.max(filtered.length, 1)))
