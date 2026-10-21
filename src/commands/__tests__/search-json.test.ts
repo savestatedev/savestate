@@ -53,6 +53,7 @@ describe('savestate search --json', () => {
       limit: 5,
       shown: 1,
       emptyReason: null,
+      suggestedOffset: null,
       hasMore: false,
       nextOffset: null,
       hasPrevious: true,
@@ -93,6 +94,7 @@ describe('savestate search --json', () => {
 
     expect(firstPage.pagination.emptyReason).toBe('collection');
     expect(laterPage.pagination.emptyReason).toBe('page');
+    expect(laterPage.pagination.suggestedOffset).toBe(5);
   });
 
   it('keeps the summary envelope complete for missing snapshots', () => {
@@ -109,6 +111,7 @@ describe('savestate search --json', () => {
       limit: 2,
       shown: 0,
       emptyReason: 'collection',
+      suggestedOffset: null,
       hasMore: false,
       nextOffset: null,
       hasPrevious: true,
