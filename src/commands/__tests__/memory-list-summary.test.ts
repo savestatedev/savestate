@@ -68,4 +68,10 @@ describe('savestate memory list table pagination summary', () => {
       '(showing 0 of 7 matching memories; offset 100; previous offset 0)',
     );
   });
+
+  it('points exhausted bounded pages to the nearest available page', () => {
+    expect(formatMemoryListPageSummary(45, 0, 100, 20)).toBe(
+      '(showing 0 of 45 matching memories; offset 100, limit 20; previous offset 40)',
+    );
+  });
 });

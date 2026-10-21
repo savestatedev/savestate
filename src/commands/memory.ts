@@ -1020,8 +1020,10 @@ export function formatMemoryListPageSummary(
     hints.push(`next offset ${nextOffset}`);
   }
   if (offset > 0) {
-    const previousOffset = limit === undefined && shown === 0
-      ? 0
+    const previousOffset = shown === 0
+      ? limit === undefined || total === 0
+        ? 0
+        : Math.floor((total - 1) / limit) * limit
       : offset - (limit === undefined ? shown : limit);
     hints.push(`previous offset ${Math.max(0, previousOffset)}`);
   }
