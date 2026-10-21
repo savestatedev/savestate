@@ -8,7 +8,8 @@ describe('savestate trust deny list empty pages', () => {
 
   it('distinguishes an exhausted offset from an empty denylist', () => {
     expect(formatTrustDenyListEmptyMessage(3, 3)).toBe(
-      'No denylist entries on this page (total: 3; offset: 3). Try a smaller --offset.',
+      'No denylist entries on this page (total: 3; offset: 3). ' +
+      'Try --offset 0 to open the nearest available page.',
     );
   });
 });

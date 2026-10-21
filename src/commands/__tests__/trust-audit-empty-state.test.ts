@@ -8,7 +8,9 @@ describe('savestate trust audit empty pages', () => {
 
   it('distinguishes an exhausted offset from empty history', () => {
     expect(formatTrustAuditEmptyMessage(4, 4)).toBe(
-      'No audit events on this page (total: 4; offset: 4). Try a smaller --offset.',
+      'No audit events on this page (total: 4; offset: 4). ' +
+      'Try --offset 0 to open the nearest available page.',
     );
+    expect(formatTrustAuditEmptyMessage(5, 8, 2)).toContain('Try --offset 4');
   });
 });

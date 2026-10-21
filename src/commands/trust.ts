@@ -166,8 +166,14 @@ export function selectTrustDenyAddEntries<T>(
 }
 
 /** Explain when deny-add status pagination skips past every status field. */
-export function formatTrustDenyStatusEmptyMessage(total: number, offset = 0): string {
-  return `No status fields on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
+export function formatTrustDenyStatusEmptyMessage(
+  total: number,
+  offset = 0,
+  pageSize = total,
+): string {
+  const suggestedOffset = pageSize > 0 ? Math.floor((total - 1) / pageSize) * pageSize : 0;
+  return `No status fields on this page (total: ${total}; offset: ${offset}). ` +
+    `Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 interface DenyListOptions {
@@ -268,15 +274,19 @@ export function applyTrustDenyListFilters<T>(
 }
 
 /** Explain whether an empty page means an empty denylist or an exhausted offset. */
-export function formatTrustDenyListEmptyMessage(total: number, offset = 0): string {
+export function formatTrustDenyListEmptyMessage(total: number, offset = 0, pageSize = total): string {
   if (total === 0) return 'No patterns on the denylist.';
-  return `No denylist entries on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
+  const suggestedOffset = pageSize > 0 ? Math.floor((total - 1) / pageSize) * pageSize : 0;
+  return `No denylist entries on this page (total: ${total}; offset: ${offset}). ` +
+    `Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 /** Explain whether an empty audit page means no history or an exhausted offset. */
-export function formatTrustAuditEmptyMessage(total: number, offset = 0): string {
+export function formatTrustAuditEmptyMessage(total: number, offset = 0, pageSize = total): string {
   if (total === 0) return 'No transitions recorded yet.';
-  return `No audit events on this page (total: ${total}; offset: ${offset}). Try a smaller --offset.`;
+  const suggestedOffset = pageSize > 0 ? Math.floor((total - 1) / pageSize) * pageSize : 0;
+  return `No audit events on this page (total: ${total}; offset: ${offset}). ` +
+    `Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 const MAX_TRUST_STATUS_LIMIT = 1000;
@@ -646,7 +656,7 @@ export async function trustAuditCommand(options: TrustOptions): Promise<void> {
   console.log();
 
   if (events.length === 0) {
-    console.log(chalk.dim(`  ${formatTrustAuditEmptyMessage(allEvents.length, offset ?? 0)}`));
+    console.log(chalk.dim(`  ${formatTrustAuditEmptyMessage(allEvents.length, offset ?? 0, limit)}`));
     console.log();
     store.close();
     return;
@@ -711,7 +721,7 @@ export async function trustDenyAddCommand(
     console.log(row);
   }
   if (page.length === 0) {
-    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0)}`));
+    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0, limit ?? rows.length)}`));
   }
   console.log();
 }
@@ -752,7 +762,7 @@ export async function trustDenyRemoveCommand(
     console.log(row);
   }
   if (page.length === 0) {
-    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0)}`));
+    console.log(chalk.dim(`  ${formatTrustDenyStatusEmptyMessage(rows.length, offset ?? 0, limit ?? rows.length)}`));
   }
   console.log();
 }
@@ -760,6 +770,8 @@ export async function trustDenyRemoveCommand(
 export async function trustDenyListCommand(options: DenyListOptions): Promise<void> {
   const store = new TrustStore();
   const allEntries = store.listDenylist();
+  const limit = parseTrustDenyListLimit(options.limit);
+  const offset = parseTrustDenyListOffset(options.offset) ?? 0;
   const entries = applyTrustDenyListFilters(allEntries, options);
   store.close();
 
@@ -772,7 +784,8 @@ export async function trustDenyListCommand(options: DenyListOptions): Promise<vo
   console.log(chalk.bold(`🚫 Denylist  ${chalk.dim(`(${entries.length} entries)`)}`));
   console.log();
   if (entries.length === 0) {
-    console.log(chalk.dim(`  ${formatTrustDenyListEmptyMessage(allEntries.length, parseTrustDenyListOffset(options.offset) ?? 0)}`));
+    const pageSize = limit ?? allEntries.length;
+    console.log(chalk.dim(`  ${formatTrustDenyListEmptyMessage(allEntries.length, offset, pageSize)}`));
     console.log();
     return;
   }
