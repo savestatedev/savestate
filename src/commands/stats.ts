@@ -238,6 +238,18 @@ export function getStatsNextOffset(
   return offset + limit;
 }
 
+/** Point back to the nearest available bounded stats page when offset is stale. */
+export function getStatsPreviousOffset(
+  total: number,
+  offset: number,
+  limit: number | null,
+): number | null {
+  if (offset <= 0 || limit === null) return null;
+  const previousOffset = Math.max(0, offset - limit);
+  if (total === 0) return previousOffset;
+  return Math.min(previousOffset, Math.floor((total - 1) / limit) * limit);
+}
+
 /** Explain how to recover when a stale stats offset skips past every match. */
 export function formatStatsEmptyState(
   matchingCount: number,
@@ -441,9 +453,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
       emptyReason: filtered.length > 0 ? null : matching.length === 0 ? 'collection' : 'page',
       suggestedOffset,
       hasPrevious,
-      previousOffset: hasPrevious
-        ? Math.max(0, offset - (limit ?? Math.max(filtered.length, 1)))
-        : null,
+      previousOffset: getStatsPreviousOffset(matching.length, offset, limit),
       hasMore,
       nextOffset: getStatsNextOffset(offset, limit, hasMore),
     }));

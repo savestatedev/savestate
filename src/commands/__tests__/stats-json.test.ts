@@ -105,7 +105,7 @@ describe('savestate stats --json', () => {
       emptyReason: 'page',
       suggestedOffset: 2,
       hasPrevious: true,
-      previousOffset: 6,
+      previousOffset: 2,
       hasMore: false,
       nextOffset: null,
     })) as StatsJson;

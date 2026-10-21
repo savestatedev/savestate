@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyStatsFilters,
+  getStatsPreviousOffset,
   parseStatsOffset,
   selectStatsOffsetEntries,
   suggestStatsOffset,
@@ -62,6 +63,13 @@ describe('savestate stats --offset', () => {
     expect(suggestStatsOffset(0, 0, 2)).toBeNull();
     expect(suggestStatsOffset(3, 1, 2)).toBeNull();
     expect(suggestStatsOffset(3, 0)).toBeNull();
+  });
+
+  it('backs up to the nearest available page from an exhausted offset', () => {
+    expect(getStatsPreviousOffset(3, 8, 2)).toBe(2);
+    expect(getStatsPreviousOffset(5, 4, 2)).toBe(2);
+    expect(getStatsPreviousOffset(0, 8, 2)).toBe(6);
+    expect(getStatsPreviousOffset(3, 8, null)).toBeNull();
   });
 
   it('skips the newest snapshots before --limit', () => {
