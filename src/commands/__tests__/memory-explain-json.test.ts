@@ -191,6 +191,7 @@ describe('savestate memory explain --json', () => {
         {
           namespace: 'org:app:agent',
           source: 'chatgpt',
+          content: 'editor',
           tags: ['work', 'urgent'],
           freshness: 'active',
           pinned: true,
@@ -201,6 +202,7 @@ describe('savestate memory explain --json', () => {
     expect(parsed.filters).toEqual({
       namespace: 'org:app:agent',
       source: 'chatgpt',
+      content: 'editor',
       tags: ['work', 'urgent'],
       freshness: 'active',
       pinned: true,

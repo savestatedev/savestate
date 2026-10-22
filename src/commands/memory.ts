@@ -494,6 +494,7 @@ export function filterMemoryExplainEntries(
   options: {
     namespace?: string;
     source?: string;
+    content?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
@@ -507,7 +508,10 @@ export function filterMemoryExplainEntries(
       filterMemoryListByCreatedUntil(
         filterMemoryListByTags(
           filterMemoryListBySource(
-            filterMemoryListByNamespace(entries, options.namespace),
+            filterMemoryListByContent(
+              filterMemoryListByNamespace(entries, options.namespace),
+              options.content,
+            ),
             options.source,
           ),
           options.tags,
@@ -591,6 +595,7 @@ export function formatMemoryExplainFilterMatches(
   options: {
     namespace?: string;
     source?: string;
+    content?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
@@ -601,6 +606,7 @@ export function formatMemoryExplainFilterMatches(
   const filters: string[] = [];
   if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
   if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.content !== undefined) filters.push(`content=${options.content}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
   if (options.pinned !== undefined) filters.push(`pinned=${options.pinned}`);
@@ -2101,6 +2107,7 @@ export interface MemoryExplainJson {
 export interface MemoryExplainFiltersJson {
   namespace?: string;
   source?: string;
+  content?: string;
   tags?: string[];
   freshness?: MemoryFreshnessState;
   pinned?: boolean;
@@ -2258,6 +2265,7 @@ export function formatMemoryExplainMissingJson(
 export function getMemoryExplainFilters(options?: {
   namespace?: string;
   source?: string;
+  content?: string;
   tags?: string[];
   freshness?: MemoryFreshnessState;
   pinned?: boolean;
@@ -2269,6 +2277,7 @@ export function getMemoryExplainFilters(options?: {
   const filters: MemoryExplainFiltersJson = {};
   if (options.namespace !== undefined) filters.namespace = options.namespace;
   if (options.source !== undefined) filters.source = options.source;
+  if (options.content !== undefined) filters.content = options.content;
   if (options.tags !== undefined) filters.tags = options.tags;
   if (options.freshness !== undefined) filters.freshness = options.freshness;
   if (options.pinned !== undefined) filters.pinned = options.pinned;
@@ -2377,6 +2386,7 @@ export async function explainMemoryCommand(
   options?: {
     namespace?: string;
     source?: string;
+    content?: string;
     limit?: string;
     offset?: string;
     tags?: string[];
