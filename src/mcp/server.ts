@@ -106,6 +106,10 @@ import { parseSavestateStatusLimit, selectSavestateStatusEntries } from './saves
 import { parseSavestateStatusOffset, selectSavestateStatusOffsetEntries } from './savestate-status-offset.js';
 import { parseSearchMemoryLimit, selectSearchMemoryEntries } from './search-memory-limit.js';
 import { parseSearchMemoryOffset, selectSearchMemoryOffsetEntries } from './search-memory-offset.js';
+import {
+  formatMemorySearchEmptyPage,
+  formatMemorySearchPageSummary,
+} from './memory-search-summary.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
@@ -304,7 +308,7 @@ const tools: Tool[] = [
     name: 'savestate_memory_search',
     description:
       'Search memories using text query and filters. ' +
-      'Returns matching memories with their metadata.',
+      'Returns matching memories with their metadata, plus previous and next offsets for pagination.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -449,7 +453,7 @@ const tools: Tool[] = [
     name: 'search_memory',
     description:
       'Search stored memories. Compatible with OpenMemory MCP API. ' +
-      'Returns relevant memories based on query and filters.',
+      'Returns relevant memories based on query and filters, plus previous and next offsets for pagination.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1118,20 +1122,24 @@ async function handleMemorySearch(
       type: input.type,
       tags: input.tags,
       search: input.query,
-      limit: (offset ?? 0) + (limit ?? 10),
+      limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
     };
 
+    const pageLimit = limit ?? 10;
+    const start = offset ?? 0;
+    const queried = await store.query(query);
+    const hasMore = queried.length > start + pageLimit;
     const results = selectSavestateMemorySearchEntries(
-      selectSavestateMemorySearchOffsetEntries(await store.query(query), offset),
-      limit ?? 10,
+      selectSavestateMemorySearchOffsetEntries(queried, offset),
+      pageLimit,
     );
 
     if (results.length === 0) {
-      return 'No memories found matching your query.';
+      return formatMemorySearchEmptyPage(offset, pageLimit);
     }
 
-    const lines = [`Found ${results.length} memory(ies):`, ''];
+    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
 
     for (const memory of results) {
       lines.push(`- ${memory.id}`);
@@ -1257,20 +1265,24 @@ async function handleSearchMemory(
       type: input.type,
       tags: input.tags,
       search: input.query,
-      limit: (offset ?? 0) + (limit ?? 10),
+      limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
     };
 
+    const pageLimit = limit ?? 10;
+    const start = offset ?? 0;
+    const queried = await store.query(query);
+    const hasMore = queried.length > start + pageLimit;
     const results = selectSearchMemoryEntries(
-      selectSearchMemoryOffsetEntries(await store.query(query), offset),
-      limit ?? 10,
+      selectSearchMemoryOffsetEntries(queried, offset),
+      pageLimit,
     );
 
     if (results.length === 0) {
-      return 'No memories found matching your query.';
+      return formatMemorySearchEmptyPage(offset, pageLimit);
     }
 
-    const lines = [`Found ${results.length} memory(ies):`, ''];
+    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
 
     for (const memory of results) {
       lines.push(`- ${memory.id}`);
