@@ -55,6 +55,8 @@ describe('MCP savestate://memories limit', () => {
       offset: 1,
       nextOffset: 3,
       nextUri: 'savestate://memories?offset=3&limit=2',
+      previousOffset: 0,
+      suggestedOffset: null,
       entries: [{ id: 'm2' }, { id: 'm3' }],
     });
   });
@@ -64,6 +66,24 @@ describe('MCP savestate://memories limit', () => {
       count: 1,
       total: 2,
       offset: 1,
+      nextOffset: null,
+      nextUri: null,
+      previousOffset: 0,
+      suggestedOffset: null,
+    });
+  });
+
+  it('suggests the last available page when an offset is stale', () => {
+    expect(buildMemoriesResourcePage(
+      [{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }],
+      3,
+      9,
+      2,
+    )).toMatchObject({
+      count: 0,
+      offset: 9,
+      previousOffset: 7,
+      suggestedOffset: 2,
       nextOffset: null,
       nextUri: null,
     });
