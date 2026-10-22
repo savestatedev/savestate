@@ -2602,6 +2602,12 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('source: parseMemorySource(options.source)');
   });
 
+  it('documents memory explain --content as a content filter', () => {
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(explainBlock).toContain(".option('--content <text>'");
+    expect(memoryCli).toContain('content: parseMemoryContentFilter(options.content)');
+  });
+
   it('documents memory list --tags as an all-tags filter', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));

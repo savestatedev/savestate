@@ -664,6 +664,7 @@ export function registerMemoryCommands(program: Command): void {
     .description('Explain why memories were retrieved for a query (non-empty query)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
     .option('--source <id>', 'Source id to search (matching is case-insensitive)')
+    .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('-p, --pinned', 'Filter to pinned memories')
     .option('--unpinned', 'Filter to unpinned memories')
     .option('--until <date>', 'Search memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
@@ -686,6 +687,7 @@ export function registerMemoryCommands(program: Command): void {
         await explainMemoryCommand(storage, passphrase, parsedQuery, {
           namespace: parseMemoryNamespace(options.namespace),
           source: parseMemorySource(options.source),
+          content: parseMemoryContentFilter(options.content),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           until,
           since,

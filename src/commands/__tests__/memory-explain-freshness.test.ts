@@ -31,6 +31,15 @@ describe('savestate memory explain freshness filter', () => {
     expect(filterMemoryExplainEntries(entries, { freshness: 'stale', now })).toEqual([entries[1]]);
   });
 
+  it('keeps only memories containing the requested content', () => {
+    const entries = [
+      { id: 'match', content: 'Preferred editor: Vim', source: 'user', createdAt: '2026-10-17T23:00:00.000Z' },
+      { id: 'other', content: 'Preferred terminal: zsh', source: 'user', createdAt: '2026-10-17T23:00:00.000Z' },
+    ];
+
+    expect(filterMemoryExplainEntries(entries, { content: 'EDITOR: VIM' })).toEqual([entries[0]]);
+  });
+
   it('summarizes the active freshness scope for pretty output', () => {
     expect(formatMemoryExplainFilterSummary({ freshness: 'needs_confirmation' })).toBe(
       'freshness=needs_confirmation',
@@ -42,10 +51,11 @@ describe('savestate memory explain freshness filter', () => {
     expect(formatMemoryExplainFilterSummary({
       namespace: 'org:app:agent',
       source: 'chatgpt',
+      content: 'editor',
       tags: ['work', 'urgent'],
       freshness: 'active',
     })).toBe(
-      'namespace=org:app:agent, source=chatgpt, tags=[work, urgent], freshness=active',
+      'namespace=org:app:agent, source=chatgpt, content=editor, tags=[work, urgent], freshness=active',
     );
   });
 
@@ -53,12 +63,14 @@ describe('savestate memory explain freshness filter', () => {
     expect(formatMemoryExplainFilterMatches({
       namespace: 'org:app:agent',
       source: 'chatgpt',
+      content: 'editor',
       tags: ['work', 'urgent'],
       freshness: 'active',
       pinned: true,
     })).toEqual([
       'namespace=org:app:agent',
       'source=chatgpt',
+      'content=editor',
       'tags=[work, urgent]',
       'freshness=active',
       'pinned=true',

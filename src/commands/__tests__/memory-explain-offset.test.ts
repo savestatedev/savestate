@@ -56,7 +56,13 @@ describe('savestate memory explain --offset', () => {
 
   it('summarizes a visible page and its continuation', () => {
     expect(formatMemoryExplainPrettySummary(2, 5, { offset: 2, pageSize: 2 })).toBe(
-      'Showing 3-4 of 5 relevant memories. Next page: use --offset 4 --limit 2.',
+      'Showing 3-4 of 5 relevant memories. Previous page: use --offset 0 --limit 2. Next page: use --offset 4 --limit 2.',
+    );
+  });
+
+  it('summarizes the previous page when a result page is not the first page', () => {
+    expect(formatMemoryExplainPrettySummary(1, 3, { offset: 2, pageSize: 2 })).toBe(
+      'Showing 3-3 of 3 relevant memories. Previous page: use --offset 0 --limit 2.',
     );
   });
 
@@ -66,7 +72,7 @@ describe('savestate memory explain --offset', () => {
     );
     expect(formatMemoryExplainPrettySummary(0, 5, { offset: 10, pageSize: 2 })).toBe(
       'No memories on this page (offset 10; 5 relevant memories matched). ' +
-      'Try --offset 4 to open the nearest available page.',
+      'Try --offset 4 to open the nearest available page. Previous page: use --offset 8 --limit 2.',
     );
     expect(formatMemoryExplainPrettySummary(0, 0)).toBe('No memories matched the query.');
     expect(formatMemoryExplainEmptyMessage(5)).toBe('No memories are visible on this page.');

@@ -494,6 +494,7 @@ export function filterMemoryExplainEntries(
   options: {
     namespace?: string;
     source?: string;
+    content?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
@@ -507,7 +508,10 @@ export function filterMemoryExplainEntries(
       filterMemoryListByCreatedUntil(
         filterMemoryListByTags(
           filterMemoryListBySource(
-            filterMemoryListByNamespace(entries, options.namespace),
+            filterMemoryListByContent(
+              filterMemoryListByNamespace(entries, options.namespace),
+              options.content,
+            ),
             options.source,
           ),
           options.tags,
@@ -591,6 +595,7 @@ export function formatMemoryExplainFilterMatches(
   options: {
     namespace?: string;
     source?: string;
+    content?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
@@ -601,6 +606,7 @@ export function formatMemoryExplainFilterMatches(
   const filters: string[] = [];
   if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
   if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.content !== undefined) filters.push(`content=${options.content}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
   if (options.pinned !== undefined) filters.push(`pinned=${options.pinned}`);
@@ -2101,6 +2107,7 @@ export interface MemoryExplainJson {
 export interface MemoryExplainFiltersJson {
   namespace?: string;
   source?: string;
+  content?: string;
   tags?: string[];
   freshness?: MemoryFreshnessState;
   pinned?: boolean;
@@ -2112,7 +2119,11 @@ export interface MemoryExplainPaginationJson {
   offset: number;
   limit: number | null;
   total: number;
+  /** Number of matching results after the visible page. */
+  remaining: number;
   pageSize: number;
+  hasPrevious: boolean;
+  previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
 }
@@ -2129,16 +2140,18 @@ export function formatMemoryExplainPrettySummary(
   if (total === 0) return 'No memories matched the query.';
   if (shown === 0) {
     const suggestedOffset = Math.floor((total - 1) / pageSize) * pageSize;
+    const previous = offset > 0 ? ` Previous page: use --offset ${Math.max(0, offset - pageSize)} --limit ${pageSize}.` : '';
     return `No memories on this page (offset ${offset}; ${total} relevant memories matched). ` +
-      `Try --offset ${suggestedOffset} to open the nearest available page.`;
+      `Try --offset ${suggestedOffset} to open the nearest available page.${previous}`;
   }
 
   const first = offset + 1;
   const last = offset + shown;
-  const continuation = last < total
-    ? ` Next page: use --offset ${last} --limit ${pageSize}.`
-    : '';
-  return `Showing ${first}-${last} of ${total} relevant memories.${continuation}`;
+  const navigation = [
+    ...(offset > 0 ? [`Previous page: use --offset ${Math.max(0, offset - pageSize)} --limit ${pageSize}.`] : []),
+    ...(last < total ? [`Next page: use --offset ${last} --limit ${pageSize}.`] : []),
+  ];
+  return `Showing ${first}-${last} of ${total} relevant memories.${navigation.length > 0 ? ` ${navigation.join(' ')}` : ''}`;
 }
 
 /** Keep the empty-state message aligned with whether the collection or page is empty. */
@@ -2165,7 +2178,9 @@ export function formatMemoryExplainJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
   const pageSize = pagination.pageSize ?? pagination.limit ?? Math.max(1, results.length);
+  const hasPrevious = offset > 0;
   const hasMore = pagination.hasMore ?? offset + results.length < total;
+  const remaining = Math.max(0, total - offset - results.length);
   const suggestedOffset = results.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
     : null;
@@ -2178,7 +2193,10 @@ export function formatMemoryExplainJson(
       offset,
       limit: pagination.limit ?? null,
       total,
+      remaining,
       pageSize,
+      hasPrevious,
+      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
@@ -2217,7 +2235,9 @@ export function formatMemoryExplainMissingJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
   const pageSize = pagination.pageSize ?? pagination.limit ?? 1;
+  const hasPrevious = offset > 0;
   const hasMore = pagination.hasMore ?? offset < total;
+  const remaining = Math.max(0, total - offset);
   const record: MemoryExplainMissingJson = {
     found: false,
     query,
@@ -2228,7 +2248,10 @@ export function formatMemoryExplainMissingJson(
       offset,
       limit: pagination.limit ?? null,
       total,
+      remaining,
       pageSize,
+      hasPrevious,
+      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
@@ -2242,6 +2265,7 @@ export function formatMemoryExplainMissingJson(
 export function getMemoryExplainFilters(options?: {
   namespace?: string;
   source?: string;
+  content?: string;
   tags?: string[];
   freshness?: MemoryFreshnessState;
   pinned?: boolean;
@@ -2253,6 +2277,7 @@ export function getMemoryExplainFilters(options?: {
   const filters: MemoryExplainFiltersJson = {};
   if (options.namespace !== undefined) filters.namespace = options.namespace;
   if (options.source !== undefined) filters.source = options.source;
+  if (options.content !== undefined) filters.content = options.content;
   if (options.tags !== undefined) filters.tags = options.tags;
   if (options.freshness !== undefined) filters.freshness = options.freshness;
   if (options.pinned !== undefined) filters.pinned = options.pinned;
@@ -2361,6 +2386,7 @@ export async function explainMemoryCommand(
   options?: {
     namespace?: string;
     source?: string;
+    content?: string;
     limit?: string;
     offset?: string;
     tags?: string[];
