@@ -148,6 +148,19 @@ describe('savestate memory explain --json', () => {
     expect(parsed.found).toBeUndefined();
   });
 
+  it('points exhausted bounded pages to the nearest populated page', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { offset: 100, limit: 20, total: 45 },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.suggestedOffset).toBe(40);
+    expect(parsed.pagination.previousOffset).toBe(40);
+  });
+
   it('includes an active freshness filter for JSON consumers', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(

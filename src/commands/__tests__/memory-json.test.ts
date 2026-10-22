@@ -357,6 +357,20 @@ describe('savestate memory --json', () => {
     expect(parsed.suggestedOffset).toBe(0);
   });
 
+  it('points exhausted bounded pages to the nearest populated page', () => {
+    const all = Array.from({ length: 45 }, (_, index) =>
+      entry({ id: `mem-${index + 1}`, content: `memory ${index + 1}` }),
+    );
+    const parsed = JSON.parse(
+      formatMemoryListJson(all, [], { offset: 100, limit: 20 }),
+    ) as MemoryListJson;
+
+    expect(parsed.emptyReason).toBe('page');
+    expect(parsed.hasPrevious).toBe(true);
+    expect(parsed.previousOffset).toBe(40);
+    expect(parsed.suggestedOffset).toBe(40);
+  });
+
   it('advances sparse bounded pages by their requested page size', () => {
     const entries = [
       { id: 'mem-1', content: 'first' },

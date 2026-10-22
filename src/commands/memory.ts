@@ -363,6 +363,11 @@ export function formatMemoryListJson(
       ? 0
       : Math.floor((all.length - 1) / pageSize) * pageSize
     : null;
+  const previousOffset = hasPrevious
+    ? emptyPage && pagination.limit !== undefined
+      ? suggestedOffset
+      : Math.max(0, offset - pageSize)
+    : null;
   const record: MemoryListJson = {
     found: true,
     snapshot: pagination.snapshot ?? 'latest',
@@ -375,7 +380,7 @@ export function formatMemoryListJson(
     limit: pagination.limit ?? null,
     pageSize,
     hasPrevious,
-    previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
+    previousOffset,
     hasMore,
     nextOffset: hasMore ? offset + continuationStep : null,
     suggestedOffset,
@@ -2184,6 +2189,11 @@ export function formatMemoryExplainJson(
   const suggestedOffset = results.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
     : null;
+  const previousOffset = offset > 0
+    ? results.length === 0 && total > 0
+      ? suggestedOffset
+      : Math.max(0, offset - pageSize)
+    : null;
   const record: MemoryExplainJson = {
     query,
     shown: results.length,
@@ -2196,7 +2206,7 @@ export function formatMemoryExplainJson(
       remaining,
       pageSize,
       hasPrevious,
-      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
+      previousOffset,
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
