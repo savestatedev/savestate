@@ -117,6 +117,7 @@ describe('savestate list --json', () => {
       hasMore: false,
       nextOffset: null,
       suggestedOffset: 1,
+      previousOffset: 1,
     });
   });
 

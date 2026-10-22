@@ -160,7 +160,11 @@ export function formatListJson(
     page: Math.floor(offsetValue / limit) + 1,
     totalPages,
     hasPrevious,
-    previousOffset: hasPrevious ? Math.max(0, offsetValue - limit) : null,
+    previousOffset: hasPrevious
+      ? records.length === 0 && suggestedOffset !== null
+        ? suggestedOffset
+        : Math.max(0, offsetValue - limit)
+      : null,
     hasMore,
     nextOffset: hasMore ? offsetValue + records.length : null,
     suggestedOffset,
