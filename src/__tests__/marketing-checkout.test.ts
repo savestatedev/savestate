@@ -763,6 +763,7 @@ describe('public marketing checkout CTAs', () => {
     expect(html).toContain('savestate_list');
     expect(html).toContain('savestate_status');
     expect(html).toContain('cocktail recommendations should mention the glass');
+    expect(html).toContain('Next step: <a href="/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor">How to connect SaveState\'s MCP server to Claude Code and Cursor</a>.');
     expect(html).not.toMatch(/quiet|spine|honest fixes/i);
     const proLinks = html.match(/https:\/\/buy\.stripe\.com\/aFa00j5E4ees8hf3kp2ZO00/g) ?? [];
     expect(proLinks).toHaveLength(1);
