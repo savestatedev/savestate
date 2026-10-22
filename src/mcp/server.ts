@@ -487,7 +487,8 @@ const tools: Tool[] = [
     description:
       'List all stored memories. Compatible with OpenMemory MCP API. ' +
       'Returns memories with optional filtering. The summary includes the starting offset; ' +
-      'when more results are available it includes the next offset to request.',
+      'when more results are available it includes the next offset to request, and later pages ' +
+      'include the previous offset for page recovery.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1334,7 +1335,7 @@ async function handleListMemories(
     }
 
     const lines = [
-      formatListMemoriesPageSummary(results.length, total, offset, hasMore),
+      formatListMemoriesPageSummary(results.length, total, offset, hasMore, pageLimit),
       '',
     ];
 

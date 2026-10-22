@@ -44,10 +44,16 @@ describe('MCP list_memories limit', () => {
 
   it('summarizes page position and continuation state', () => {
     expect(formatListMemoriesPageSummary(2, 5, 2, true)).toBe(
-      'Memories (2 shown of 5 total, starting at 2; next offset 4; more available):',
+      'Memories (2 shown of 5 total, starting at 2; previous offset 0; next offset 4; more available):',
     );
     expect(formatListMemoriesPageSummary(1, 1, undefined, false)).toBe(
       'Memories (1 shown of 1 total, starting at 0):',
+    );
+  });
+
+  it('includes a previous offset for later pages using the requested page size', () => {
+    expect(formatListMemoriesPageSummary(2, 8, 4, false, 2)).toBe(
+      'Memories (2 shown of 8 total, starting at 4; previous offset 2):',
     );
   });
 

@@ -24,10 +24,14 @@ export function formatListMemoriesPageSummary(
   total: number,
   offset: number | undefined,
   hasMore: boolean,
+  pageSize = Math.max(1, shown),
 ): string {
   const start = offset ?? 0;
+  const previous = start > 0
+    ? `; previous offset ${Math.max(0, start - pageSize)}`
+    : '';
   const more = hasMore ? `; next offset ${start + shown}; more available` : '';
-  return `Memories (${shown} shown of ${total} total, starting at ${start}${more}):`;
+  return `Memories (${shown} shown of ${total} total, starting at ${start}${previous}${more}):`;
 }
 
 /** Explain an empty page and point callers at the nearest populated page. */
