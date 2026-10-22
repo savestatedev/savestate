@@ -72,7 +72,7 @@ describe('savestate memory explain --offset', () => {
     );
     expect(formatMemoryExplainPrettySummary(0, 5, { offset: 10, pageSize: 2 })).toBe(
       'No memories on this page (offset 10; 5 relevant memories matched). ' +
-      'Try --offset 4 to open the nearest available page. Previous page: use --offset 8 --limit 2.',
+      'Try --offset 4 to open the nearest available page. Previous page: use --offset 4 --limit 2.',
     );
     expect(formatMemoryExplainPrettySummary(0, 0)).toBe('No memories matched the query.');
     expect(formatMemoryExplainEmptyMessage(5)).toBe('No memories are visible on this page.');
