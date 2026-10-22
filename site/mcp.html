@@ -460,7 +460,7 @@ footer a { color: var(--text-muted); }
       <li><strong>savestate_snapshot / restore / list / status</strong> Capture, restore, list, and check adapters from the chat.</li>
       <li><strong>savestate_stats</strong> Snapshot count, cadence, adapter mix, tags.</li>
       <li><strong>savestate_memory_store / _search / _delete</strong> Live memory CRUD against the local store.</li>
-      <li><strong>add_memories / search_memory / list_memories / delete_memory</strong> OpenMemory-compatible surface for clients that expect that protocol.</li>
+      <li><strong>add_memories / search_memory / list_memories / delete_memory</strong> OpenMemory-compatible surface for clients that expect that protocol. Paginated <code>list_memories</code> responses include previous/next offsets, and stale pages point to the nearest page to retry.</li>
     </ul>
     <p class="note">Resources: <code>savestate://snapshots</code> and <code>savestate://memories</code>. Passphrases stay in the local process. Setup detail lives in the <a href="/docs/mcp.html">MCP guide</a>.</p>
 
