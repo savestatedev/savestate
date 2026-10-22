@@ -177,6 +177,7 @@ describe('CLI docs', () => {
   it('documents memory list JSON pagination metadata', () => {
     expect(docs).toContain('hasPrevious</code>/<code>previousOffset');
     expect(docs).toContain('hasMore</code>/<code>nextOffset');
+    expect(docs).toContain('<code>remaining</code> matching entries after the current page');
     expect(docs).toContain('pass the returned offset back with <code>--offset</code>');
     expect(docs).toContain('namespace (a string or <code>null</code>)');
     expect(docs).toContain('byFreshness</code> and <code>shownByFreshness');
