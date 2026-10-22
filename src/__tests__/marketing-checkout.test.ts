@@ -821,6 +821,45 @@ describe('public marketing checkout CTAs', () => {
     expect(blogIndex).toContain("How to connect SaveState's MCP server to Claude Code and Cursor");
     expect(vercel).toContain('"/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor"');
     expect(vercel).toContain('"/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor.html"');
+    expect(docsIndex).toContain('href="/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor"');
+  });
+
+  it('lists the restore-after-crash how-to with real 0.9.0 CLI output and one Pro CTA', () => {
+    const html = loadHtml('site/blog/how-to-restore-savestate-after-a-crash.html');
+    const vercel = loadHtml('vercel.json');
+    const llms = loadHtml('site/llms.txt');
+    expect(html).toContain('<title>How to Restore SaveState After a Crash | SaveState</title>');
+    expect(html).toContain('Restore SaveState after a crash with published @savestate/cli 0.9.0. Real npx init, snapshot, list, and restore output: CLAUDE.md and .claude/settings.json came back.');
+    expect(html).toContain('<link rel="canonical" href="https://savestate.dev/blog/how-to-restore-savestate-after-a-crash">');
+    expect(html).toContain('<script defer src="/_vercel/insights/script.js"></script>');
+    expect(html).toContain('v22.23.4');
+    expect(html).toContain('10.9.9');
+    expect(html).toContain('0.9.0');
+    expect(html).not.toContain('0.9.1');
+    expect(html).not.toMatch(/MCP Registry/i);
+    expect(html).toContain('crash-slip-19');
+    expect(html).toContain('crash-slip-demo');
+    expect(html).toContain('ss-2026-10-22T21-24-43-e7kolm');
+    expect(html).toContain('2026-10-22T21:24:43.644Z');
+    expect(html).toContain('CORRUPTED AFTER CRASH');
+    expect(html).toContain('before-crash');
+    expect(html).toContain('1290');
+    expect(html).toContain('npx -y @savestate/cli restore latest');
+    expect(html).toContain('npx -y @savestate/cli list');
+    expect(html).not.toMatch(/quiet|spine|honest fixes/i);
+    expect(html).not.toMatch(/—/);
+    const proLinks = html.match(/https:\/\/buy\.stripe\.com\/aFa00j5E4ees8hf3kp2ZO00/g) ?? [];
+    expect(proLinks).toHaveLength(1);
+    expect(html).not.toContain(stripe.products.team.payment_link);
+    expect(hrefForCta(html, 'crash-restore-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(html, 'crash-restore-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(html).not.toMatch(/class="btn"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn"/);
+    expect(llms).toContain('https://savestate.dev/blog/how-to-restore-savestate-after-a-crash');
+    expect(sitemap).toContain('https://savestate.dev/blog/how-to-restore-savestate-after-a-crash');
+    expect(blogIndex).toContain('/blog/how-to-restore-savestate-after-a-crash');
+    expect(blogIndex).toContain('How to Restore SaveState After a Crash');
+    expect(vercel).toContain('"/blog/how-to-restore-savestate-after-a-crash"');
+    expect(vercel).toContain('"/blog/how-to-restore-savestate-after-a-crash.html"');
   });
 
   it('lists the three buyer pages on live URL paths', () => {

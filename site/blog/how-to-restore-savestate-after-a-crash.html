@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Restore SaveState After a Crash | SaveState</title>
+<meta name="description" content="Restore SaveState after a crash with published @savestate/cli 0.9.0. Real npx init, snapshot, list, and restore output: CLAUDE.md and .claude/settings.json came back.">
+<meta name="keywords" content="SaveState restore, crash, @savestate/cli 0.9.0, CLAUDE.md, npx">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://savestate.dev/blog/how-to-restore-savestate-after-a-crash">
+<meta property="og:title" content="How to Restore SaveState After a Crash">
+<meta property="og:description" content="Restore SaveState after a crash with published @savestate/cli 0.9.0. Real npx init, snapshot, list, and restore output: CLAUDE.md and .claude/settings.json came back.">
+<meta property="og:image" content="https://savestate.dev/og-image.png">
+<meta property="og:site_name" content="SaveState">
+<meta property="article:published_time" content="2026-10-22">
+<meta property="article:author" content="SaveState">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://savestate.dev/blog/how-to-restore-savestate-after-a-crash">
+<meta name="twitter:title" content="How to Restore SaveState After a Crash">
+<meta name="twitter:description" content="Restore SaveState after a crash with published @savestate/cli 0.9.0. Real npx init, snapshot, list, and restore output: CLAUDE.md and .claude/settings.json came back.">
+<meta name="twitter:image" content="https://savestate.dev/og-image.png">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://savestate.dev/blog/how-to-restore-savestate-after-a-crash">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Restore SaveState After a Crash",
+  "description": "Restore SaveState after a crash with published @savestate/cli 0.9.0. Real npx init, snapshot, list, and restore output: CLAUDE.md and .claude/settings.json came back.",
+  "image": "https://savestate.dev/og-image.png",
+  "datePublished": "2026-10-22",
+  "dateModified": "2026-10-22",
+  "author": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SaveState",
+    "url": "https://savestate.dev",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://savestate.dev/logo.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://savestate.dev/blog/how-to-restore-savestate-after-a-crash"
+  }
+}
+</script>
+
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a1a2e;
+  --blue: #03C1DF;
+  --blue-light: #9BCDE4;
+  --blue-dim: #025A6A;
+  --bg: #06060c;
+  --bg-card: #0d0d18;
+  --bg-code: #0a0a14;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --glow: rgba(3, 193, 223, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(3, 193, 223, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(6, 6, 12, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+nav .container {
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text) 0%, var(--blue-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-links .btn-nav {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links { display: none; }
+
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(6, 6, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .nav-links.show a { padding: 12px 0; font-size: 16px; }
+  .nav-links.show .btn-nav { margin-top: 8px; text-align: center; }
+}
+
+article {
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
+
+.article-header { margin-bottom: 48px; }
+
+.article-header .date {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.article-header .subtitle {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.article-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.article-content p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.article-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 20px;
+  padding-left: 24px;
+  color: var(--text-muted);
+}
+
+.article-content li { margin-bottom: 8px; }
+
+.article-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--blue);
+}
+
+.article-content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-content a { color: var(--blue); text-decoration: none; }
+.article-content a:hover { text-decoration: underline; }
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.cta-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+  text-align: center;
+}
+
+.cta-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.cta-box p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cta-box .btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta-box .btn:hover { transform: translateY(-2px); text-decoration: none; }
+
+.cta-secondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cta-fulfillment {
+  margin-top: 16px;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.cta-fulfillment code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+footer a { color: var(--text-muted); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover { color: var(--blue); }
+
+@media (max-width: 600px) {
+  .article-header h1 { font-size: 28px; }
+  .article-content h2 { font-size: 22px; }
+}
+</style>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
+      <span class="nav-wordmark">SaveState</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it Works</a></li>
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/#cli">CLI</a></li>
+      <li><a href="https://github.com/savestatedev/savestate" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/faq.html">FAQ</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+    </ul>
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<article>
+  <div class="container">
+    <a href="/blog" class="back-link">← Back to Blog</a>
+
+    <header class="article-header">
+      <div class="date">October 22, 2026</div>
+      <h1>How to Restore SaveState After a Crash</h1>
+      <p class="subtitle">Node v22.23.4, npm 10.9.9, and @savestate/cli 0.9.0. Snapshot, corrupt the project, list, restore.</p>
+    </header>
+
+    <div class="article-content">
+      <p>This is a restore after a crash, using the published npm package <code>@savestate/cli</code>. The shell started with <code>HOME=/tmp/ss-crash-restore/home</code> and <code>SAVESTATE_PASSPHRASE=crash-slip-demo</code>. The working directory was <code>$HOME/night-desk</code>. <code>node -v</code> printed <code>v22.23.4</code> and exited 0. <code>npm -v</code> printed <code>10.9.9</code> and exited 0. The commands below are the ones that ran, and the transcripts are the text those commands printed.</p>
+
+      <h2>The project before the crash</h2>
+      <pre><code>$ cat &gt; CLAUDE.md &lt;&lt; 'EOF'
+# Night desk
+
+After a crash, keep the note crash-slip-19 in CLAUDE.md.
+Do not start a second deploy until this file is restored.
+EOF
+$ mkdir -p .claude
+$ printf '%s\n' '{"permissions":{"allow":["Bash(npm test)"]}}' &gt; .claude/settings.json</code></pre>
+      <p><code>cat CLAUDE.md</code> exited 0 and printed:</p>
+      <pre><code># Night desk
+
+After a crash, keep the note crash-slip-19 in CLAUDE.md.
+Do not start a second deploy until this file is restored.</code></pre>
+      <p><code>cat .claude/settings.json</code> exited 0 and printed:</p>
+      <pre><code>{"permissions":{"allow":["Bash(npm test)"]}}</code></pre>
+
+      <h2>Published package</h2>
+      <pre><code>$ npx -y @savestate/cli --version</code></pre>
+      <p>Exit code 0.</p>
+      <pre><code>0.9.0
+npm notice
+npm notice New major version of npm available! 10.9.9 -&gt; 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice</code></pre>
+
+      <h2>Init</h2>
+      <pre><code>$ npx -y @savestate/cli init</code></pre>
+      <p>Exit code 0. The banner line contains U+2014. The transcript writes that character as <code>[U+2014]</code>.</p>
+      <pre><code>
+⚡ SaveState [U+2014] Time Machine for AI
+
+✔ Created .savestate/ directory
+✔ Detected platform: Claude Code
+
+  Your snapshots will be encrypted with a passphrase.
+  You can also set SAVESTATE_PASSPHRASE env var.
+
+
+✓ SaveState initialized!
+
+  Next steps:
+  savestate snapshot      Capture your first snapshot
+  savestate config        Configure storage &amp; adapters
+  savestate adapters      See available platform adapters</code></pre>
+      <p>The Claude Code adapter detected <code>CLAUDE.md</code>. The passphrase came from <code>SAVESTATE_PASSPHRASE</code>. Init did not prompt.</p>
+
+      <h2>Snapshot</h2>
+      <pre><code>$ npx -y @savestate/cli snapshot --label before-crash</code></pre>
+      <p>Exit code 0.</p>
+      <pre><code>
+✔ Full snapshot created!
+
+  ID:         ss-2026-10-22T21-24-43-e7kolm
+  Adapter:    Claude Code
+  Type:       full
+  Label:      before-crash
+  Files:      10 files in archive
+  Archive:    1.2 KB
+  Encrypted:  1.3 KB
+  Storage:    local
+  Status:     ✓ Encrypted &amp; stored
+
+  Restore with: savestate restore ss-2026-10-22T21-24-43-e7kolm</code></pre>
+      <pre><code>$ ls -l "$HOME/.savestate"</code></pre>
+      <p>Exit code 0.</p>
+      <pre><code>total 4
+-rw-r--r-- 1 ubuntu ubuntu 1290 Oct 22 21:24 ss-2026-10-22T21-24-43-e7kolm.saf.enc</code></pre>
+      <p>The archive file is 1290 bytes. The snapshot lines above call the encrypted size 1.3 KB. On this machine the path is <code>/tmp/ss-crash-restore/home/.savestate/ss-2026-10-22T21-24-43-e7kolm.saf.enc</code>.</p>
+
+      <h2>Crash the project</h2>
+      <p><code>CLAUDE.md</code> was overwritten. <code>.claude/settings.json</code> was removed.</p>
+      <pre><code>$ printf 'CORRUPTED AFTER CRASH\n' &gt; CLAUDE.md
+$ rm .claude/settings.json</code></pre>
+      <p><code>cat CLAUDE.md</code> exited 0 and printed:</p>
+      <pre><code>CORRUPTED AFTER CRASH</code></pre>
+      <p><code>ls -la .claude</code> exited 0. The directory had no <code>settings.json</code>:</p>
+      <pre><code>total 8
+drwxr-xr-x 2 ubuntu ubuntu 4096 Oct 22 21:24 .
+drwxr-xr-x 4 ubuntu ubuntu 4096 Oct 22 21:24 ..</code></pre>
+
+      <h2>List</h2>
+      <pre><code>$ npx -y @savestate/cli list</code></pre>
+      <p>Exit code 0. The date is local time.</p>
+      <pre><code>
+📋 Snapshots
+   Storage: local
+
+  ID                             Date                  Adapter      Label               Size
+  ──────────────────────────────────────────────────────────────────────────────────────────
+  ss-2026-10-22T21-24-43-e7kolm  Oct 22, 21:24         claude-code  before-crash      1.3 KB
+
+  1 snapshot</code></pre>
+
+      <h2>Restore</h2>
+      <pre><code>$ npx -y @savestate/cli restore latest</code></pre>
+      <p>Exit code 0.</p>
+      <pre><code>
+🔄 Restoring from snapshot: latest
+
+✔ Restore complete!
+
+  Snapshot:      ss-2026-10-22T21-24-43-e7kolm
+  Timestamp:     2026-10-22T21:24:43.644Z
+  Platform:      claude-code
+  Adapter:       claude-code
+  Label:         before-crash
+  Identity:      ✓ restored
+  Memory:        0 entries restored
+  Conversations: 0 indexed
+
+  ✓ Your AI state has been restored.
+  Existing files were backed up with .bak extension.</code></pre>
+
+      <h2>The files came back</h2>
+      <p><code>cat CLAUDE.md</code> exited 0 and printed the snapshotted text:</p>
+      <pre><code># Night desk
+
+After a crash, keep the note crash-slip-19 in CLAUDE.md.
+Do not start a second deploy until this file is restored.</code></pre>
+      <p><code>cat CLAUDE.md.bak</code> exited 0 and printed the crashed bytes:</p>
+      <pre><code>CORRUPTED AFTER CRASH</code></pre>
+      <p><code>cat .claude/settings.json</code> exited 0 and printed the snapshotted file:</p>
+      <pre><code>{"permissions":{"allow":["Bash(npm test)"]}}</code></pre>
+      <p><code>ls -la .claude</code> exited 0:</p>
+      <pre><code>total 12
+drwxr-xr-x 2 ubuntu ubuntu 4096 Oct 22 21:24 .
+drwxr-xr-x 4 ubuntu ubuntu 4096 Oct 22 21:24 ..
+-rw-r--r-- 1 ubuntu ubuntu   45 Oct 22 21:24 settings.json</code></pre>
+      <p>The overwritten <code>CLAUDE.md</code> was saved as <code>CLAUDE.md.bak</code>. The deleted <code>.claude/settings.json</code> was written back, and there was no <code>settings.json.bak</code>.</p>
+
+      <div class="cta-box">
+        <h3>Pro is $9/mo.</h3>
+        <p>This restore used one local encrypted snapshot. Pro is $9/mo. Card today. No waitlist.</p>
+        <a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn" data-cta="crash-restore-pro-checkout">Subscribe to Pro, $9/mo</a>
+        <p class="cta-fulfillment">After you pay, claim the API key yourself. Then <code>savestate login</code>.</p>
+        <a href="https://www.npmjs.com/package/@savestate/cli" class="cta-secondary" target="_blank" rel="noopener" data-cta="crash-restore-npm-secondary">Prefer the CLI first? Install from npm</a>
+      </div>
+
+      <hr>
+
+      <p><em>Questions? See the <a href="/faq.html">FAQ</a> or open an issue on <a href="https://github.com/savestatedev/savestate">GitHub</a>.</em></p>
+    </div>
+
+
+  </div>
+</article>
+
+<footer>
+  <div class="container">
+    <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
+  </div>
+</footer>
+
+</body>
+</html>
