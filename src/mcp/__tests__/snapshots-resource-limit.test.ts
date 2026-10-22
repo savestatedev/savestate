@@ -54,6 +54,9 @@ describe('MCP savestate://snapshots limit', () => {
       offset: 1,
       nextOffset: 3,
       nextUri: 'savestate://snapshots?offset=3&limit=2',
+      previousOffset: 0,
+      previousUri: 'savestate://snapshots?offset=0&limit=2',
+      suggestedOffset: null,
       entries: [{ id: 's2' }, { id: 's3' }],
     });
   });
@@ -65,6 +68,19 @@ describe('MCP savestate://snapshots limit', () => {
       offset: 1,
       nextOffset: null,
       nextUri: null,
+      previousOffset: 0,
+      previousUri: 'savestate://snapshots?offset=0&limit=2',
+      suggestedOffset: null,
+    });
+  });
+
+  it('suggests the nearest available page when the offset is stale', () => {
+    expect(buildSnapshotsResourcePage([{ id: 's1' }, { id: 's2' }, { id: 's3' }], 9, 2)).toMatchObject({
+      count: 0,
+      offset: 9,
+      previousOffset: 7,
+      previousUri: 'savestate://snapshots?offset=7&limit=2',
+      suggestedOffset: 2,
     });
   });
 });
