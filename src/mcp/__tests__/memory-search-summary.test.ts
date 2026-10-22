@@ -6,8 +6,14 @@ import {
 
 describe('memory search pagination summaries', () => {
   it('reports the next offset when another page exists', () => {
-    expect(formatMemorySearchPageSummary(2, 4, true)).toBe(
-      'Found 2 memory(ies) starting at offset 4; next offset 6; more available:',
+    expect(formatMemorySearchPageSummary(2, 4, true, 4)).toBe(
+      'Found 2 memory(ies) starting at offset 4; previous offset 0; next offset 6; more available:',
+    );
+  });
+
+  it('uses the requested page size for previous-page recovery', () => {
+    expect(formatMemorySearchPageSummary(3, 12, false, 5)).toBe(
+      'Found 3 memory(ies) starting at offset 12; previous offset 7:',
     );
   });
 

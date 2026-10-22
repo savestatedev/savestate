@@ -308,7 +308,7 @@ const tools: Tool[] = [
     name: 'savestate_memory_search',
     description:
       'Search memories using text query and filters. ' +
-      'Returns matching memories with their metadata and the next offset when more results exist.',
+      'Returns matching memories with their metadata, plus previous and next offsets for pagination.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -453,7 +453,7 @@ const tools: Tool[] = [
     name: 'search_memory',
     description:
       'Search stored memories. Compatible with OpenMemory MCP API. ' +
-      'Returns relevant memories based on query and filters, plus the next offset when more results exist.',
+      'Returns relevant memories based on query and filters, plus previous and next offsets for pagination.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1139,7 +1139,7 @@ async function handleMemorySearch(
       return formatMemorySearchEmptyPage(offset, pageLimit);
     }
 
-    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore), ''];
+    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
 
     for (const memory of results) {
       lines.push(`- ${memory.id}`);
@@ -1282,7 +1282,7 @@ async function handleSearchMemory(
       return formatMemorySearchEmptyPage(offset, pageLimit);
     }
 
-    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore), ''];
+    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
 
     for (const memory of results) {
       lines.push(`- ${memory.id}`);
