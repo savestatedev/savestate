@@ -2189,6 +2189,11 @@ export function formatMemoryExplainJson(
   const suggestedOffset = results.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
     : null;
+  const previousOffset = offset > 0
+    ? results.length === 0 && total > 0
+      ? suggestedOffset
+      : Math.max(0, offset - pageSize)
+    : null;
   const record: MemoryExplainJson = {
     query,
     shown: results.length,
@@ -2201,7 +2206,7 @@ export function formatMemoryExplainJson(
       remaining,
       pageSize,
       hasPrevious,
-      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
+      previousOffset,
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
