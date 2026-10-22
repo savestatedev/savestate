@@ -82,6 +82,7 @@ https://savestate.dev/pricing
 
 ## Guides
 
+https://savestate.dev/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor
 https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine
 
 ## Specs

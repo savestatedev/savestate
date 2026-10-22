@@ -780,6 +780,48 @@ describe('public marketing checkout CTAs', () => {
     expect(vercel).toContain('"/blog/how-to-set-up-savestate-on-a-fresh-machine.html"');
   });
 
+  it('lists the Claude Code and Cursor MCP how-to with the verified 0.9.0 tool list', () => {
+    const html = loadHtml('site/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor.html');
+    const vercel = loadHtml('vercel.json');
+    const llms = loadHtml('site/llms.txt');
+    expect(html).toContain("<title>How to connect SaveState's MCP server to Claude Code and Cursor | SaveState</title>");
+    expect(html).toContain("Connect SaveState's MCP server to Claude Code and Cursor with published @savestate/cli 0.9.0. Real npx --version and mcp help, then stdio initialize and tools/list: savestate_snapshot, savestate_restore, savestate_list, savestate_status.");
+    expect(html).toContain('<link rel="canonical" href="https://savestate.dev/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor">');
+    expect(html).toContain('<script defer src="/_vercel/insights/script.js"></script>');
+    expect(html).toContain('v22.23.4');
+    expect(html).toContain('10.9.9');
+    expect(html).toContain('0.9.0');
+    expect(html).not.toContain('0.9.1');
+    expect(html).toContain('SaveState MCP server running on stdio');
+    expect(html).toContain('{"name":"savestate","version":"0.5.0"}');
+    expect(html).toContain('savestate_snapshot');
+    expect(html).toContain('savestate_restore');
+    expect(html).toContain('savestate_list');
+    expect(html).toContain('savestate_status');
+    expect(html).toContain('.mcp.json');
+    expect(html).toContain('.cursor/mcp.json');
+    expect(html).toContain('SAVESTATE_PASSPHRASE');
+    expect(html).toContain('your-passphrase');
+    expect(html).toContain('npx -y @savestate/cli mcp');
+    expect(html).not.toMatch(/memory_/);
+    expect(html).not.toMatch(/savestate_search/);
+    expect(html).not.toMatch(/MCP Registry/i);
+    expect(html).not.toMatch(/quiet|spine|honest fixes/i);
+    expect(html).not.toMatch(/—/);
+    const proLinks = html.match(/https:\/\/buy\.stripe\.com\/aFa00j5E4ees8hf3kp2ZO00/g) ?? [];
+    expect(proLinks).toHaveLength(1);
+    expect(html).not.toContain(stripe.products.team.payment_link);
+    expect(hrefForCta(html, 'connect-mcp-pro-checkout')).toBe(stripe.products.pro.payment_link);
+    expect(hrefForCta(html, 'connect-mcp-npm-secondary')).toBe('https://www.npmjs.com/package/@savestate/cli');
+    expect(html).not.toMatch(/class="btn"[^>]*npmjs\.com|npmjs\.com[^>]*class="btn"/);
+    expect(llms).toContain('https://savestate.dev/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor');
+    expect(sitemap).toContain('https://savestate.dev/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor');
+    expect(blogIndex).toContain('/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor');
+    expect(blogIndex).toContain("How to connect SaveState's MCP server to Claude Code and Cursor");
+    expect(vercel).toContain('"/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor"');
+    expect(vercel).toContain('"/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor.html"');
+  });
+
   it('lists the three buyer pages on live URL paths', () => {
     expect(sitemap).toContain('https://savestate.dev/cursor');
     expect(sitemap).toContain('https://savestate.dev/claude-code');
