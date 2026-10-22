@@ -1330,7 +1330,7 @@ async function handleListMemories(
     });
 
     if (results.length === 0) {
-      return formatListMemoriesEmptyPage(total, offset);
+      return formatListMemoriesEmptyPage(total, offset, pageLimit);
     }
 
     const lines = [
