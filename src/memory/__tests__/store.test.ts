@@ -157,6 +157,13 @@ describe('MemoryStore', () => {
       const results = await store.query({ search: 'Fact' });
       expect(results).toHaveLength(2);
     });
+
+    it('should count entries using the same filters as query', () => {
+      expect(store.count()).toBe(4);
+      expect(store.count({ type: 'fact' })).toBe(2);
+      expect(store.count({ tags: ['ui'] })).toBe(1);
+      expect(store.count({ minImportance: 0.6 })).toBe(2);
+    });
   });
 
   describe('getStats', () => {
