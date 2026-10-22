@@ -496,6 +496,10 @@ const tools: Tool[] = [
           items: { type: 'string' },
           description: 'Filter by tags',
         },
+        minImportance: {
+          type: 'number',
+          description: 'Minimum importance score filter (0-1)',
+        },
         limit: {
           type: 'number',
           description: 'Maximum results (default: 50; positive integer up to 1000)',
@@ -652,6 +656,7 @@ const AddMemoriesInputSchema = z.object({
 const ListMemoriesInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
   tags: z.array(z.string()).optional(),
+  minImportance: z.number().min(0).max(1).optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
 });
@@ -1305,6 +1310,7 @@ async function handleListMemories(
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
+      minImportance: input.minImportance,
       // Fetch one sentinel row so the response can tell callers whether to continue.
       limit: pageLimit + 1,
       offset,
@@ -1313,7 +1319,11 @@ async function handleListMemories(
     const queried = await store.query(query);
     const hasMore = queried.length > pageLimit;
     const results = selectListMemoriesEntries(queried, pageLimit);
-    const total = store.count({ type: input.type, tags: input.tags });
+    const total = store.count({
+      type: input.type,
+      tags: input.tags,
+      minImportance: input.minImportance,
+    });
 
     if (results.length === 0) {
       return formatListMemoriesEmptyPage(total, offset);

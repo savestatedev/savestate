@@ -162,6 +162,7 @@ describe('MemoryStore', () => {
       expect(store.count()).toBe(4);
       expect(store.count({ type: 'fact' })).toBe(2);
       expect(store.count({ tags: ['ui'] })).toBe(1);
+      expect(store.count({ minImportance: 0.6 })).toBe(2);
     });
   });
 
