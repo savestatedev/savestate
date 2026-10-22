@@ -44,13 +44,17 @@ export function buildMemoriesResourcePage<T>(
   const nextOffset = start + selected.length < total
     ? start + selected.length
     : null;
-  const previousOffset = start > 0 ? Math.max(0, start - pageSize) : null;
-  const previousUri = previousOffset === null
-    ? null
-    : `${resourceUri}?offset=${previousOffset}&limit=${pageSize}`;
   const suggestedOffset = selected.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
     : null;
+  const previousOffset = start > 0
+    ? selected.length === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, start - pageSize)
+    : null;
+  const previousUri = previousOffset === null
+    ? null
+    : `${resourceUri}?offset=${previousOffset}&limit=${pageSize}`;
 
   return {
     count: selected.length,
