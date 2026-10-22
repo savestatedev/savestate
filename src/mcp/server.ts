@@ -1313,14 +1313,14 @@ async function handleListMemories(
     const queried = await store.query(query);
     const hasMore = queried.length > pageLimit;
     const results = selectListMemoriesEntries(queried, pageLimit);
-    const stats = store.getStats();
+    const total = store.count({ type: input.type, tags: input.tags });
 
     if (results.length === 0) {
-      return formatListMemoriesEmptyPage(stats.totalEntries, offset);
+      return formatListMemoriesEmptyPage(total, offset);
     }
 
     const lines = [
-      formatListMemoriesPageSummary(results.length, stats.totalEntries, offset, hasMore),
+      formatListMemoriesPageSummary(results.length, total, offset, hasMore),
       '',
     ];
 

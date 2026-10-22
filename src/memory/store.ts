@@ -272,6 +272,46 @@ export class MemoryStore {
     return entries;
   }
 
+  /** Count memory entries matching the same filters as query(), without pagination. */
+  count(query: MemoryQuery = {}): number {
+    let sql = 'SELECT COUNT(*) as count FROM memories WHERE 1=1';
+    const params: any[] = [];
+
+    if (query.type) {
+      sql += ' AND type = ?';
+      params.push(query.type);
+    }
+
+    if (query.minImportance !== undefined) {
+      sql += ' AND importance >= ?';
+      params.push(query.minImportance);
+    }
+
+    if (query.since) {
+      sql += ' AND created_at >= ?';
+      params.push(query.since);
+    }
+
+    if (query.until) {
+      sql += ' AND created_at <= ?';
+      params.push(query.until);
+    }
+
+    if (query.tags && query.tags.length > 0) {
+      const tagConditions = query.tags.map(() => "tags LIKE ?");
+      sql += ` AND (${tagConditions.join(' OR ')})`;
+      params.push(...query.tags.map(tag => `%"${tag}"%`));
+    }
+
+    if (query.search) {
+      sql += ' AND content LIKE ?';
+      params.push(`%${query.search}%`);
+    }
+
+    const stmt = this.db.prepare(sql);
+    return (stmt.get(...params) as { count: number }).count;
+  }
+
   /**
    * Get memory statistics
    */
