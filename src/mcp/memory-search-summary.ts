@@ -9,7 +9,15 @@ export function formatMemorySearchPageSummary(
   return `Found ${shown} memory(ies) starting at offset ${start}${more}:`;
 }
 
-/** Explain an empty search page without losing the caller's pagination position. */
-export function formatMemorySearchEmptyPage(offset: number | undefined): string {
-  return `No memories found matching your query at offset ${offset ?? 0}.`;
+/** Explain an empty search page and give callers an actionable recovery offset. */
+export function formatMemorySearchEmptyPage(
+  offset: number | undefined,
+  limit = 10,
+): string {
+  const start = offset ?? 0;
+  if (start === 0) {
+    return 'No memories found matching your query at offset 0.';
+  }
+
+  return `No memories found matching your query at offset ${start}. Try offset ${Math.max(0, start - limit)}.`;
 }
