@@ -65,6 +65,7 @@ import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './d
 import { parseDeleteAllMemoriesOffset, selectDeleteAllMemoriesOffsetEntries } from './delete-all-memories-offset.js';
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseDeleteMemoryOffset, selectDeleteMemoryOffsetEntries } from './delete-memory-offset.js';
+import { MemorySearchInputSchema } from './memory-search-schema.js';
 import {
   formatListMemoriesEmptyPage,
   formatListMemoriesPageSummary,
@@ -616,15 +617,6 @@ const MemoryStoreInputSchema = z.object({
   metadata: z.record(z.string(), z.any()).optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
-});
-
-const MemorySearchInputSchema = z.object({
-  query: z.string().optional(),
-  type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
-  tags: z.array(z.string()).optional(),
-  limit: z.number().optional(),
-  offset: z.number().optional(),
-  minImportance: z.number().optional(),
 });
 
 const MemoryDeleteInputSchema = z.object({

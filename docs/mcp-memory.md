@@ -83,7 +83,7 @@ Or for a single memory:
 
 ### search_memory
 
-Search memories by query text and filters. `limit` is a positive integer up to 1000 (default 10). `offset` is a non-negative integer up to 1000.
+Search memories by query text and filters. `minImportance` accepts a minimum importance score from 0 to 1. `limit` is a positive integer up to 1000 (default 10). `offset` is a non-negative integer up to 1000.
 
 **Input:**
 ```json
@@ -91,6 +91,7 @@ Search memories by query text and filters. `limit` is a positive integer up to 1
   "query": "database preferences",
   "type": "preference",
   "tags": ["coding"],
+  "minImportance": 0.7,
   "limit": 10,
   "offset": 0
 }
@@ -98,12 +99,13 @@ Search memories by query text and filters. `limit` is a positive integer up to 1
 
 ### list_memories
 
-List all stored memories with optional filtering. `limit` is a positive integer up to 1000 (default 50). `offset` is a non-negative integer up to 1000.
+List all stored memories with optional filtering. `minImportance` accepts a minimum importance score from 0 to 1. `limit` is a positive integer up to 1000 (default 50). `offset` is a non-negative integer up to 1000.
 
 **Input:**
 ```json
 {
   "type": "fact",
+  "minImportance": 0.7,
   "limit": 50,
   "offset": 0
 }
