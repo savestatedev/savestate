@@ -326,6 +326,7 @@ export interface MemoryListJson {
     since: string | null;
     oldestFirst: boolean;
     minImportance?: number;
+    maxImportance?: number;
   };
   byTier: Record<MemoryTier, number>;
   shownByTier: Record<MemoryTier, number>;
@@ -398,6 +399,9 @@ export function formatMemoryListJson(
       oldestFirst: pagination.filters?.oldestFirst ?? false,
       ...(pagination.filters?.minImportance !== undefined
         ? { minImportance: pagination.filters.minImportance }
+        : {}),
+      ...(pagination.filters?.maxImportance !== undefined
+        ? { maxImportance: pagination.filters.maxImportance }
         : {}),
     },
     byTier: countByTier(all),
@@ -603,14 +607,16 @@ export function filterMemoryListByFreshness(
 export function filterMemoryListByImportance(
   entries: MemoryEntry[],
   minImportance?: number,
+  maxImportance?: number,
 ): MemoryEntry[] {
-  if (minImportance === undefined) return entries;
+  if (minImportance === undefined && maxImportance === undefined) return entries;
   return entries.filter((entry) => {
     const value = entry.metadata?.importance;
     const importance = typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
       ? value
       : 0.5;
-    return importance >= minImportance;
+    return (minImportance === undefined || importance >= minImportance) &&
+      (maxImportance === undefined || importance <= maxImportance);
   });
 }
 
@@ -1097,6 +1103,7 @@ export async function listMemories(
     since?: string;
     freshness?: MemoryFreshnessState;
     minImportance?: number;
+    maxImportance?: number;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -1144,7 +1151,7 @@ export async function listMemories(
   entries = filterMemoryListByCreatedSince(entries, options?.since);
   const freshnessNow = new Date();
   entries = filterMemoryListByFreshness(entries, options?.freshness, freshnessNow);
-  entries = filterMemoryListByImportance(entries, options?.minImportance);
+  entries = filterMemoryListByImportance(entries, options?.minImportance, options?.maxImportance);
 
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
@@ -1171,6 +1178,7 @@ export async function listMemories(
         until: options?.until,
         oldestFirst: options?.oldestFirst,
         minImportance: options?.minImportance,
+        maxImportance: options?.maxImportance,
       },
     }));
     return;

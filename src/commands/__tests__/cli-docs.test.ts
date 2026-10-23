@@ -2516,6 +2516,15 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryMinImportance');
   });
 
+  it('documents memory list --max-importance', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('--max-importance');
+    expect(memorySection).toContain('savestate memory list --max-importance 0.5 --json');
+    expect(listBlock).toContain(".option('--max-importance <n>'");
+    expect(memoryCli).toContain('export function parseMemoryMaxImportance');
+  });
+
   it('documents memory list --oldest-first ordering', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--oldest-first');

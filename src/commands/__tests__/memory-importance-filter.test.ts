@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryMinImportance } from '../memory-cli.js';
+import { parseMemoryMaxImportance, parseMemoryMinImportance } from '../memory-cli.js';
 import { filterMemoryListByImportance, formatMemoryListJson } from '../memory.js';
 
 describe('savestate memory list --min-importance', () => {
@@ -9,6 +9,10 @@ describe('savestate memory list --min-importance', () => {
     expect(parseMemoryMinImportance(undefined)).toBeUndefined();
     expect(() => parseMemoryMinImportance('1.1')).toThrow(
       'Invalid --min-importance value "1.1". Expected a number between 0 and 1.',
+    );
+    expect(parseMemoryMaxImportance(' 0.8 ')).toBe(0.8);
+    expect(() => parseMemoryMaxImportance('-0.1')).toThrow(
+      'Invalid --max-importance value "-0.1". Expected a number between 0 and 1.',
     );
   });
 
@@ -21,6 +25,7 @@ describe('savestate memory list --min-importance', () => {
 
     expect(filterMemoryListByImportance(entries, 0.8).map(({ id }) => id)).toEqual(['high']);
     expect(filterMemoryListByImportance(entries, 0.5).map(({ id }) => id)).toEqual(['high', 'default', 'invalid']);
+    expect(filterMemoryListByImportance(entries, undefined, 0.5).map(({ id }) => id)).toEqual(['default', 'invalid']);
     expect(filterMemoryListByImportance(entries)).toBe(entries);
   });
 
@@ -31,5 +36,14 @@ describe('savestate memory list --min-importance', () => {
     })) as { filters: { minImportance?: number } };
 
     expect(parsed.filters.minImportance).toBe(0.8);
+  });
+
+  it('preserves the upper threshold for JSON consumers', () => {
+    const entries = [{ id: 'default', content: 'default', source: 'test', createdAt: '2026-10-01T00:00:00.000Z' }];
+    const parsed = JSON.parse(formatMemoryListJson(entries, entries, {
+      filters: { maxImportance: 0.5 },
+    })) as { filters: { maxImportance?: number } };
+
+    expect(parsed.filters.maxImportance).toBe(0.5);
   });
 });
