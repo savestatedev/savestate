@@ -2506,6 +2506,25 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('Target tier');
   });
 
+  it('documents memory list --min-importance', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('--min-importance');
+    expect(memorySection).toContain('default score of 0.5');
+    expect(memorySection).toContain('savestate memory list --min-importance 0.8 --json');
+    expect(listBlock).toContain(".option('--min-importance <n>'");
+    expect(memoryCli).toContain('export function parseMemoryMinImportance');
+  });
+
+  it('documents memory list --max-importance', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('--max-importance');
+    expect(memorySection).toContain('savestate memory list --max-importance 0.5 --json');
+    expect(listBlock).toContain(".option('--max-importance <n>'");
+    expect(memoryCli).toContain('export function parseMemoryMaxImportance');
+  });
+
   it('documents memory list --oldest-first ordering', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--oldest-first');

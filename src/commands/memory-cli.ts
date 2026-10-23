@@ -163,6 +163,46 @@ export function parseMemoryImportance(value: string | undefined): number | undef
   return importance;
 }
 
+/** Parse memory list --min-importance without silently accepting malformed scores. */
+export function parseMemoryMinImportance(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(normalized)) {
+    throw new Error(
+      `Invalid --min-importance value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+
+  const importance = Number(normalized);
+  if (!Number.isFinite(importance) || importance < 0 || importance > 1) {
+    throw new Error(
+      `Invalid --min-importance value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+  return importance;
+}
+
+/** Parse memory list --max-importance without silently accepting malformed scores. */
+export function parseMemoryMaxImportance(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(normalized)) {
+    throw new Error(
+      `Invalid --max-importance value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+
+  const importance = Number(normalized);
+  if (!Number.isFinite(importance) || importance < 0 || importance > 1) {
+    throw new Error(
+      `Invalid --max-importance value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+  return importance;
+}
+
 /** Parse memory --snapshot without treating blank ids as the latest snapshot. */
 export function parseMemorySnapshot(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -455,6 +495,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
     .option('--since <date>', 'Show memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
+    .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
+    .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
@@ -480,6 +522,8 @@ export function registerMemoryCommands(program: Command): void {
           tags: parseMemoryTags(options.tags),
           since,
           freshness: parseMemoryFreshness(options.freshness),
+          minImportance: parseMemoryMinImportance(options.minImportance),
+          maxImportance: parseMemoryMaxImportance(options.maxImportance),
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),
