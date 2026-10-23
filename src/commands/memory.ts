@@ -2492,7 +2492,8 @@ export async function explainMemoryCommand(
       const age = Date.now() - new Date(entry.createdAt).getTime();
       const recencyScore = Math.exp(-age / (7 * 24 * 60 * 60 * 1000)); // 7-day half-life
 
-      const importance = (entry.metadata?.importance as number | undefined) ?? 0.5;
+      // Keep explain ranking aligned with list filters when older archives contain bad metadata.
+      const importance = getMemoryListImportance(entry);
       const criticality = (entry.metadata?.criticality as number | undefined) ?? 0.5;
 
       // Weighted score (matches checkpoint ranking formula)

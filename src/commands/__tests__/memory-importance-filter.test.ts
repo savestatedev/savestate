@@ -42,6 +42,10 @@ describe('savestate memory list --min-importance', () => {
 
     expect(getMemoryListImportance(entries[0])).toBe(0.9);
     expect(getMemoryListImportance(entries[1])).toBe(0.5);
+    expect(getMemoryListImportance({
+      ...entries[1],
+      metadata: { importance: 2 },
+    })).toBe(0.5);
     expect(formatMemoryListImportance(entries[0])).toBe('0.90');
     expect(formatMemoryListImportance(entries[1])).toBe('0.50');
 
