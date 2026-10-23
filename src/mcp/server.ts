@@ -111,6 +111,7 @@ import {
   formatMemorySearchPageSummary,
 } from './memory-search-summary.js';
 import { formatMemorySearchEntry } from './memory-search-entry.js';
+import { formatMemoryListEntry } from './memory-list-entry.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
@@ -472,6 +473,10 @@ const tools: Tool[] = [
           type: 'array',
           items: { type: 'string' },
           description: 'Filter by tags',
+        },
+        minImportance: {
+          type: 'number',
+          description: 'Minimum importance score filter (0-1)',
         },
         limit: {
           type: 'number',
@@ -1280,15 +1285,7 @@ async function handleSearchMemory(
     const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
 
     for (const memory of results) {
-      lines.push(`- ${memory.id}`);
-      lines.push(`  Type: ${memory.type}`);
-      lines.push(`  Tags: ${memory.tags?.join(', ') ?? 'none'}`);
-      lines.push(`  Importance: ${memory.importance}`);
-      const preview = memory.content.length > 100
-        ? memory.content.slice(0, 100) + '...'
-        : memory.content;
-      lines.push(`  Content: ${preview}`);
-      lines.push('');
+      lines.push(...formatMemorySearchEntry(memory));
     }
 
     return lines.join('\n');
@@ -1334,15 +1331,7 @@ async function handleListMemories(
     ];
 
     for (const memory of results) {
-      const preview = memory.content.length > 80
-        ? memory.content.slice(0, 80) + '...'
-        : memory.content;
-      lines.push(`- [${memory.type}] ${memory.id}`);
-      lines.push(`  ${preview}`);
-      if (memory.tags && memory.tags.length > 0) {
-        lines.push(`  Tags: ${memory.tags.join(', ')}`);
-      }
-      lines.push('');
+      lines.push(...formatMemoryListEntry(memory));
     }
 
     return lines.join('\n');
