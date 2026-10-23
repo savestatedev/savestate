@@ -860,6 +860,8 @@ describe('public marketing checkout CTAs', () => {
     expect(blogIndex).toContain('How to Restore SaveState After a Crash');
     expect(vercel).toContain('"/blog/how-to-restore-savestate-after-a-crash"');
     expect(vercel).toContain('"/blog/how-to-restore-savestate-after-a-crash.html"');
+    expect(docsIndex).toContain('href="/blog/how-to-restore-savestate-after-a-crash"');
+    expect(docsIndex).toContain('How to Restore SaveState After a Crash');
   });
 
   it('lists the three buyer pages on live URL paths', () => {
