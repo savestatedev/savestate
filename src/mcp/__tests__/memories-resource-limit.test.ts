@@ -52,6 +52,7 @@ describe('MCP savestate://memories limit', () => {
     expect(page).toEqual({
       count: 2,
       total: 4,
+      remaining: 1,
       offset: 1,
       nextOffset: 3,
       nextUri: 'savestate://memories?offset=3&limit=2',
@@ -66,6 +67,7 @@ describe('MCP savestate://memories limit', () => {
     expect(buildMemoriesResourcePage([{ id: 'm1' }, { id: 'm2' }], 2, 1, 2)).toMatchObject({
       count: 1,
       total: 2,
+      remaining: 0,
       offset: 1,
       nextOffset: null,
       nextUri: null,
@@ -83,6 +85,7 @@ describe('MCP savestate://memories limit', () => {
       2,
     )).toMatchObject({
       count: 0,
+      remaining: 0,
       offset: 9,
       previousOffset: 2,
       previousUri: 'savestate://memories?offset=2&limit=2',

@@ -3,6 +3,8 @@ const MAX_MEMORIES_RESOURCE_LIMIT = 1000;
 export interface MemoriesResourcePage<T> {
   count: number;
   total: number;
+  /** Number of memories after the visible page. */
+  remaining: number;
   offset: number;
   nextOffset: number | null;
   nextUri: string | null;
@@ -59,6 +61,7 @@ export function buildMemoriesResourcePage<T>(
   return {
     count: selected.length,
     total,
+    remaining: Math.max(0, total - start - selected.length),
     offset: start,
     nextOffset,
     nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,

@@ -577,7 +577,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, offset, nextOffset, nextUri, previousOffset, previousUri, and suggestedOffset for pagination and stale-page recovery.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, offset, nextOffset, nextUri, previousOffset, previousUri, and suggestedOffset for pagination and stale-page recovery.',
     mimeType: 'application/json',
   },
 ];
@@ -1539,6 +1539,7 @@ async function handleReadResource(uri: string): Promise<string> {
       return JSON.stringify({
         count: page.count,
         total: page.total,
+        remaining: page.remaining,
         offset: page.offset,
         nextOffset: page.nextOffset,
         nextUri: page.nextUri,
