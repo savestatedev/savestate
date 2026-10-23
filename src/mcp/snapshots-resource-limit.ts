@@ -12,6 +12,7 @@ export interface SnapshotsResourcePage<T> {
   previousOffset: number | null;
   previousUri: string | null;
   suggestedOffset: number | null;
+  suggestedUri: string | null;
   entries: T[];
 }
 
@@ -57,6 +58,9 @@ export function buildSnapshotsResourcePage<T>(
   const previousUri = previousOffset === null
     ? null
     : `${resourceUri}?offset=${previousOffset}&limit=${pageSize}`;
+  const suggestedUri = suggestedOffset === null
+    ? null
+    : `${resourceUri}?offset=${suggestedOffset}&limit=${pageSize}`;
 
   return {
     count: selected.length,
@@ -69,6 +73,7 @@ export function buildSnapshotsResourcePage<T>(
     previousOffset,
     previousUri,
     suggestedOffset,
+    suggestedUri,
     entries: selected,
   };
 }
