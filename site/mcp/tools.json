@@ -19,7 +19,15 @@
     { "name": "delete_all_memories", "description": "OpenMemory-compatible clear all memories" }
   ],
   "resources": [
-    { "uri": "savestate://snapshots", "name": "Snapshots" },
-    { "uri": "savestate://memories", "name": "Memories" }
+    {
+      "uri": "savestate://snapshots",
+      "name": "Snapshots",
+      "description": "List snapshots with bounded ?limit= and ?offset= pagination. Responses include nextUri, previousUri, and suggestedUri for stale-page recovery."
+    },
+    {
+      "uri": "savestate://memories",
+      "name": "Memories",
+      "description": "List live memories with bounded ?limit= and ?offset= pagination. Responses include nextUri, previousUri, and suggestedUri for stale-page recovery."
+    }
   ]
 }
