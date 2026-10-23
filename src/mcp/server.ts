@@ -578,7 +578,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes createdAt, updatedAt, and expiresAt when set.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
     mimeType: 'application/json',
   },
 ];
