@@ -114,6 +114,7 @@ import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './searc
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
+import { toMemoryResourceEntry } from './memory-resource-entry.js';
 import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
 
@@ -577,7 +578,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes createdAt, updatedAt, and expiresAt when set.',
     mimeType: 'application/json',
   },
 ];
@@ -1589,14 +1590,7 @@ async function handleReadResource(uri: string): Promise<string> {
         suggestedOffset: page.suggestedOffset,
         suggestedUri: page.suggestedUri,
         byType: stats.byType,
-        memories: page.entries.map(m => ({
-          id: m.id,
-          type: m.type,
-          content: m.content,
-          tags: m.tags,
-          importance: m.importance,
-          createdAt: m.createdAt,
-        })),
+        memories: page.entries.map(toMemoryResourceEntry),
       }, null, 2);
     }
 
