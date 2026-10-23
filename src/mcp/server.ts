@@ -110,10 +110,12 @@ import {
   formatMemorySearchEmptyPage,
   formatMemorySearchPageSummary,
 } from './memory-search-summary.js';
+import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
+import { toMemoryResourceEntry } from './memory-resource-entry.js';
 import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
 
@@ -308,7 +310,7 @@ const tools: Tool[] = [
     name: 'savestate_memory_search',
     description:
       'Search memories using text query and filters. ' +
-      'Returns matching memories with their metadata, plus previous and next offsets for pagination.',
+      'Returns matching memories with metadata and lifecycle timestamps, plus previous and next offsets for pagination.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -453,7 +455,7 @@ const tools: Tool[] = [
     name: 'search_memory',
     description:
       'Search stored memories. Compatible with OpenMemory MCP API. ' +
-      'Returns relevant memories based on query and filters, plus previous and next offsets for pagination.',
+      'Returns relevant memories with metadata and lifecycle timestamps, plus previous and next offsets for pagination.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -577,7 +579,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
     mimeType: 'application/json',
   },
 ];
@@ -1143,15 +1145,7 @@ async function handleMemorySearch(
     const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
 
     for (const memory of results) {
-      lines.push(`- ${memory.id}`);
-      lines.push(`  Type: ${memory.type}`);
-      lines.push(`  Tags: ${memory.tags?.join(', ') ?? 'none'}`);
-      lines.push(`  Importance: ${memory.importance}`);
-      const preview = memory.content.length > 100
-        ? memory.content.slice(0, 100) + '...'
-        : memory.content;
-      lines.push(`  Content: ${preview}`);
-      lines.push('');
+      lines.push(...formatMemorySearchEntry(memory));
     }
 
     return lines.join('\n');
@@ -1589,14 +1583,7 @@ async function handleReadResource(uri: string): Promise<string> {
         suggestedOffset: page.suggestedOffset,
         suggestedUri: page.suggestedUri,
         byType: stats.byType,
-        memories: page.entries.map(m => ({
-          id: m.id,
-          type: m.type,
-          content: m.content,
-          tags: m.tags,
-          importance: m.importance,
-          createdAt: m.createdAt,
-        })),
+        memories: page.entries.map(toMemoryResourceEntry),
       }, null, 2);
     }
 
