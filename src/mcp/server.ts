@@ -1573,6 +1573,7 @@ async function handleReadResource(uri: string): Promise<string> {
       return JSON.stringify({
         count: page.count,
         total: page.total,
+        remaining: page.remaining,
         offset: page.offset,
         nextOffset: page.nextOffset,
         nextUri: page.nextUri,
