@@ -9,6 +9,7 @@ export function formatMemoryListEntry(memory: MemoryEntry): string[] {
   const lines = [
     `- [${memory.type}] ${memory.id}`,
     `  ${preview}`,
+    `  Importance: ${memory.importance}`,
     `  Metadata: ${JSON.stringify(memory.metadata ?? {})}`,
     `  Created: ${memory.createdAt}`,
     `  Updated: ${memory.updatedAt}`,

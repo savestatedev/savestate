@@ -20,6 +20,7 @@ describe('MCP list_memories entries', () => {
       '- [preference] memory-1',
       '  Use concise answers.',
       '  Tags: style',
+      '  Importance: 0.7',
       '  Metadata: {"source":"settings","confidence":0.9}',
       '  Created: 2026-10-01T00:00:00.000Z',
       '  Updated: 2026-10-02T00:00:00.000Z',
