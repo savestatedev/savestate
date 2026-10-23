@@ -111,6 +111,7 @@ import {
   formatMemorySearchPageSummary,
 } from './memory-search-summary.js';
 import { formatMemorySearchEntry } from './memory-search-entry.js';
+import { formatMemoryListEntry } from './memory-list-entry.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
@@ -1326,15 +1327,7 @@ async function handleListMemories(
     ];
 
     for (const memory of results) {
-      const preview = memory.content.length > 80
-        ? memory.content.slice(0, 80) + '...'
-        : memory.content;
-      lines.push(`- [${memory.type}] ${memory.id}`);
-      lines.push(`  ${preview}`);
-      if (memory.tags && memory.tags.length > 0) {
-        lines.push(`  Tags: ${memory.tags.join(', ')}`);
-      }
-      lines.push('');
+      lines.push(...formatMemoryListEntry(memory));
     }
 
     return lines.join('\n');
