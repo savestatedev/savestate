@@ -286,6 +286,7 @@ export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
   pinned: boolean;
+  importance: number;
   source: string;
   namespace: string | null;
   createdAt: string;
@@ -414,6 +415,7 @@ export function formatMemoryListJson(
       id: entry.id,
       tier: getEffectiveTier(entry),
       pinned: !!entry.pinned,
+      importance: getMemoryListImportance(entry),
       source: entry.source,
       namespace: (() => {
         const namespace = typeof entry.metadata?.namespace === 'string'
@@ -611,13 +613,18 @@ export function filterMemoryListByImportance(
 ): MemoryEntry[] {
   if (minImportance === undefined && maxImportance === undefined) return entries;
   return entries.filter((entry) => {
-    const value = entry.metadata?.importance;
-    const importance = typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
-      ? value
-      : 0.5;
+    const importance = getMemoryListImportance(entry);
     return (minImportance === undefined || importance >= minImportance) &&
       (maxImportance === undefined || importance <= maxImportance);
   });
+}
+
+/** Return the effective importance score used by filters and list output. */
+export function getMemoryListImportance(entry: MemoryEntry): number {
+  const value = entry.metadata?.importance;
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
+    ? value
+    : 0.5;
 }
 
 /** Describe active scope filters for the human-facing explain output. */
@@ -956,6 +963,11 @@ export function formatMemoryListSource(source: string): string {
   return normalized.length > 18 ? `${normalized.slice(0, 15)}...` : normalized;
 }
 
+/** Keep importance visible without making the human-facing table noisy. */
+export function formatMemoryListImportance(entry: MemoryEntry): string {
+  return getMemoryListImportance(entry).toFixed(2);
+}
+
 /** Keep namespace labels readable in the human-facing memory table. */
 export function formatMemoryListNamespace(namespace: string | undefined): string {
   const normalized = namespace?.trim();
@@ -1218,6 +1230,7 @@ export async function listMemories(
     'ID                                    ',
     'Tier',
     'Pinned',
+    'Importance',
     'Source              ',
     ...(showNamespace ? ['Namespace                    '] : []),
     ...(showTags ? ['Tags                    '] : []),
@@ -1245,6 +1258,7 @@ export async function listMemories(
       entry.id.padEnd(36),
       tier,
       pinned,
+      formatMemoryListImportance(entry),
       source,
       ...(showNamespace ? [namespace] : []),
       ...(showTags ? [tags] : []),
