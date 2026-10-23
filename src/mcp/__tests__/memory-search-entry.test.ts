@@ -18,5 +18,17 @@ describe('MCP memory search entries', () => {
     expect(formatMemorySearchEntry(memory)).toContain(
       '  Metadata: {"source":"security-review","confidence":0.98}',
     );
+    expect(formatMemorySearchEntry(memory)).toEqual([
+      '- memory-1',
+      '  Type: fact',
+      '  Tags: security',
+      '  Importance: 0.9',
+      '  Metadata: {"source":"security-review","confidence":0.98}',
+      '  Created: 2026-10-01T00:00:00.000Z',
+      '  Updated: 2026-10-02T00:00:00.000Z',
+      '  Expires: none',
+      '  Content: The archive is encrypted.',
+      '',
+    ]);
   });
 });

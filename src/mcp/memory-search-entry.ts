@@ -12,6 +12,9 @@ export function formatMemorySearchEntry(memory: MemoryEntry): string[] {
     `  Tags: ${memory.tags?.join(', ') ?? 'none'}`,
     `  Importance: ${memory.importance}`,
     `  Metadata: ${JSON.stringify(memory.metadata ?? {})}`,
+    `  Created: ${memory.createdAt}`,
+    `  Updated: ${memory.updatedAt}`,
+    `  Expires: ${memory.expiresAt ?? 'none'}`,
     `  Content: ${preview}`,
     '',
   ];
