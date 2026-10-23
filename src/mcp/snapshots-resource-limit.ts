@@ -3,7 +3,10 @@ const MAX_SNAPSHOTS_RESOURCE_LIMIT = 1000;
 export interface SnapshotsResourcePage<T> {
   count: number;
   total: number;
+  /** Number of snapshots after the visible page. */
+  remaining: number;
   offset: number;
+  pageSize: number;
   nextOffset: number | null;
   nextUri: string | null;
   previousOffset: number | null;
@@ -58,7 +61,9 @@ export function buildSnapshotsResourcePage<T>(
   return {
     count: selected.length,
     total: entries.length,
+    remaining: Math.max(0, entries.length - start - selected.length),
     offset: start,
+    pageSize,
     nextOffset,
     nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,
     previousOffset,

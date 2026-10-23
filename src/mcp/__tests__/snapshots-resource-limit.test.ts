@@ -51,7 +51,9 @@ describe('MCP savestate://snapshots limit', () => {
     expect(page).toEqual({
       count: 2,
       total: 4,
+      remaining: 1,
       offset: 1,
+      pageSize: 2,
       nextOffset: 3,
       nextUri: 'savestate://snapshots?offset=3&limit=2',
       previousOffset: 0,
@@ -65,7 +67,9 @@ describe('MCP savestate://snapshots limit', () => {
     expect(buildSnapshotsResourcePage([{ id: 's1' }, { id: 's2' }], 1, 2)).toMatchObject({
       count: 1,
       total: 2,
+      remaining: 0,
       offset: 1,
+      pageSize: 2,
       nextOffset: null,
       nextUri: null,
       previousOffset: 0,
@@ -77,7 +81,9 @@ describe('MCP savestate://snapshots limit', () => {
   it('suggests the nearest available page when the offset is stale', () => {
     expect(buildSnapshotsResourcePage([{ id: 's1' }, { id: 's2' }, { id: 's3' }], 9, 2)).toMatchObject({
       count: 0,
+      remaining: 0,
       offset: 9,
+      pageSize: 2,
       previousOffset: 2,
       previousUri: 'savestate://snapshots?offset=2&limit=2',
       suggestedOffset: 2,
