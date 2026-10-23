@@ -474,6 +474,10 @@ const tools: Tool[] = [
           items: { type: 'string' },
           description: 'Filter by tags',
         },
+        minImportance: {
+          type: 'number',
+          description: 'Minimum importance score filter (0-1)',
+        },
         limit: {
           type: 'number',
           description: 'Maximum results (default: 10; positive integer up to 1000)',
