@@ -61,6 +61,8 @@ export interface ListJsonFilters {
 export interface ListJson {
   total: number;
   shown: number;
+  /** Number of matching snapshots after the visible page. */
+  remaining: number;
   emptyReason: 'collection' | 'page' | null;
   offset: number;
   limit: number;
@@ -141,6 +143,7 @@ export function formatListJson(
     }));
   const hasPrevious = offsetValue > 0;
   const hasMore = offsetValue + records.length < snapshots.length;
+  const remaining = Math.max(0, snapshots.length - offsetValue - records.length);
   const emptyReason = records.length > 0
     ? null
     : snapshots.length === 0
@@ -153,6 +156,7 @@ export function formatListJson(
   const result: ListJson = {
     total: snapshots.length,
     shown: records.length,
+    remaining,
     emptyReason,
     offset: offsetValue,
     limit,
