@@ -7,6 +7,8 @@ export interface MemoriesResourcePage<T> {
   remaining: number;
   offset: number;
   pageSize: number;
+  page: number;
+  totalPages: number;
   nextOffset: number | null;
   nextUri: string | null;
   previousOffset: number | null;
@@ -69,6 +71,8 @@ export function buildMemoriesResourcePage<T>(
     remaining: Math.max(0, total - start - selected.length),
     offset: start,
     pageSize,
+    page: Math.floor(start / pageSize) + 1,
+    totalPages: Math.ceil(total / pageSize),
     nextOffset,
     nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,
     previousOffset,

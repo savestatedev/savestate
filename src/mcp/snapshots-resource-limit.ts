@@ -7,6 +7,8 @@ export interface SnapshotsResourcePage<T> {
   remaining: number;
   offset: number;
   pageSize: number;
+  page: number;
+  totalPages: number;
   nextOffset: number | null;
   nextUri: string | null;
   previousOffset: number | null;
@@ -68,6 +70,8 @@ export function buildSnapshotsResourcePage<T>(
     remaining: Math.max(0, entries.length - start - selected.length),
     offset: start,
     pageSize,
+    page: Math.floor(start / pageSize) + 1,
+    totalPages: Math.ceil(entries.length / pageSize),
     nextOffset,
     nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,
     previousOffset,
