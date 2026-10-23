@@ -60,6 +60,7 @@ describe('MCP savestate://memories limit', () => {
       previousOffset: 0,
       previousUri: 'savestate://memories?offset=0&limit=2',
       suggestedOffset: null,
+      suggestedUri: null,
       entries: [{ id: 'm2' }, { id: 'm3' }],
     });
   });
@@ -93,6 +94,7 @@ describe('MCP savestate://memories limit', () => {
       previousOffset: 2,
       previousUri: 'savestate://memories?offset=2&limit=2',
       suggestedOffset: 2,
+      suggestedUri: 'savestate://memories?offset=2&limit=2',
       nextOffset: null,
       nextUri: null,
     });

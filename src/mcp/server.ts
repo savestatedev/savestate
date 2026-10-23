@@ -571,13 +571,13 @@ const resources: Resource[] = [
   {
     uri: 'savestate://snapshots',
     name: 'Snapshots',
-    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, and suggestedOffset for pagination and stale-page recovery.',
+    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery.',
     mimeType: 'application/json',
   },
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, and suggestedOffset for pagination and stale-page recovery.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery.',
     mimeType: 'application/json',
   },
 ];
@@ -1547,6 +1547,7 @@ async function handleReadResource(uri: string): Promise<string> {
         previousOffset: page.previousOffset,
         previousUri: page.previousUri,
         suggestedOffset: page.suggestedOffset,
+        suggestedUri: page.suggestedUri,
         snapshots: page.entries.map((e: SnapshotIndexEntry) => ({
           id: e.id,
           timestamp: e.timestamp,
@@ -1582,6 +1583,7 @@ async function handleReadResource(uri: string): Promise<string> {
         previousOffset: page.previousOffset,
         previousUri: page.previousUri,
         suggestedOffset: page.suggestedOffset,
+        suggestedUri: page.suggestedUri,
         byType: stats.byType,
         memories: page.entries.map(m => ({
           id: m.id,
