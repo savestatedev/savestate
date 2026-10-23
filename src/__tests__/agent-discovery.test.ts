@@ -113,6 +113,15 @@ describe('agent discovery files', () => {
     for (const name of names) {
       expect(server).toContain(`name: '${name}'`);
     }
+
+    const resources = tools.resources as Array<{ uri: string; description: string }>;
+    for (const uri of ['savestate://snapshots', 'savestate://memories']) {
+      const resource = resources.find((entry) => entry.uri === uri);
+      expect(resource?.description).toContain('total, count, remaining, offset, pageSize');
+      expect(resource?.description).toContain('nextUri');
+      expect(resource?.description).toContain('previousUri');
+      expect(resource?.description).toContain('suggestedUri');
+    }
   });
 
   it('keeps llms.txt as the required floor: capability, install, MCP, auth, pay, 402+claim', () => {
