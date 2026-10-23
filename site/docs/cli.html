@@ -1535,6 +1535,7 @@
         <tr><td><code>--until &lt;date&gt;</code></td><td>Show only memories created on or before this ISO-8601 date or timestamp on <code>list</code> or <code>explain</code>; date-only values include the full UTC day</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Show only memories created on or after this ISO-8601 date or timestamp on <code>list</code> or <code>explain</code>. Date-only values start at <code>00:00 UTC</code>.</td></tr>
         <tr><td><code>--freshness &lt;state&gt;</code></td><td>Show only memories in the requested freshness state: <code>active</code>, <code>stale</code>, or <code>needs_confirmation</code>.</td></tr>
+        <tr><td><code>--min-importance &lt;n&gt;</code></td><td>Show only <code>list</code> memories with an importance score at least <code>n</code> (0-1, inclusive). Missing importance metadata uses the default score of 0.5.</td></tr>
         <tr><td><code>-n, --namespace &lt;ns&gt;</code></td><td>Show only memories whose metadata namespace matches <code>org:app:agent[:user]</code> on <code>list</code>, <code>explain</code>, and <code>expire</code>. Must be a single non-empty namespace.</td></tr>
         <tr><td><code>--content &lt;text&gt;</code></td><td>Show only memories whose content includes this text, case-insensitively. Must be non-empty.</td></tr>
         <tr><td><code>--tags &lt;tags&gt;</code></td><td>Show only memories containing every requested metadata tag. Matching is case-insensitive. Provide one or more non-empty tags separated by commas; surrounding whitespace and duplicate tags are normalized.</td></tr>
@@ -1566,6 +1567,7 @@
 <span class="code-prompt">$</span> savestate memory list --tags work,urgent
 <span class="code-prompt">$</span> savestate memory list --until 2026-10-01
 <span class="code-prompt">$</span> savestate memory list --since 2026-10-01
+<span class="code-prompt">$</span> savestate memory list --min-importance 0.8 --json
 <span class="code-prompt">$</span> savestate memory list --offset 10 --limit 5
 <span class="code-prompt">$</span> savestate memory list --oldest-first --limit 5
 <span class="code-prompt">$</span> savestate memory list --reverse --limit 5

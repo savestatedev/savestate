@@ -325,6 +325,7 @@ export interface MemoryListJson {
     until: string | null;
     since: string | null;
     oldestFirst: boolean;
+    minImportance?: number;
   };
   byTier: Record<MemoryTier, number>;
   shownByTier: Record<MemoryTier, number>;
@@ -395,6 +396,9 @@ export function formatMemoryListJson(
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
+      ...(pagination.filters?.minImportance !== undefined
+        ? { minImportance: pagination.filters.minImportance }
+        : {}),
     },
     byTier: countByTier(all),
     shownByTier: countByTier(shown),
@@ -593,6 +597,21 @@ export function filterMemoryListByFreshness(
 ): MemoryEntry[] {
   if (freshness === undefined) return entries;
   return entries.filter((entry) => getMemoryFreshness(entry, now).state === freshness);
+}
+
+/** Keep memories at or above the requested effective importance score. */
+export function filterMemoryListByImportance(
+  entries: MemoryEntry[],
+  minImportance?: number,
+): MemoryEntry[] {
+  if (minImportance === undefined) return entries;
+  return entries.filter((entry) => {
+    const value = entry.metadata?.importance;
+    const importance = typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
+      ? value
+      : 0.5;
+    return importance >= minImportance;
+  });
 }
 
 /** Describe active scope filters for the human-facing explain output. */
@@ -1077,6 +1096,7 @@ export async function listMemories(
     until?: string;
     since?: string;
     freshness?: MemoryFreshnessState;
+    minImportance?: number;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -1124,6 +1144,7 @@ export async function listMemories(
   entries = filterMemoryListByCreatedSince(entries, options?.since);
   const freshnessNow = new Date();
   entries = filterMemoryListByFreshness(entries, options?.freshness, freshnessNow);
+  entries = filterMemoryListByImportance(entries, options?.minImportance);
 
   const filteredEntries = entries;
   const offset = options?.offset ?? 0;
@@ -1149,6 +1170,7 @@ export async function listMemories(
         since: options?.since,
         until: options?.until,
         oldestFirst: options?.oldestFirst,
+        minImportance: options?.minImportance,
       },
     }));
     return;
