@@ -1280,15 +1280,7 @@ async function handleSearchMemory(
     const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
 
     for (const memory of results) {
-      lines.push(`- ${memory.id}`);
-      lines.push(`  Type: ${memory.type}`);
-      lines.push(`  Tags: ${memory.tags?.join(', ') ?? 'none'}`);
-      lines.push(`  Importance: ${memory.importance}`);
-      const preview = memory.content.length > 100
-        ? memory.content.slice(0, 100) + '...'
-        : memory.content;
-      lines.push(`  Content: ${preview}`);
-      lines.push('');
+      lines.push(...formatMemorySearchEntry(memory));
     }
 
     return lines.join('\n');
