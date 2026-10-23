@@ -43,13 +43,17 @@ export function buildSnapshotsResourcePage<T>(
   const nextOffset = start + selected.length < entries.length
     ? start + selected.length
     : null;
-  const previousOffset = start > 0 ? Math.max(0, start - pageSize) : null;
-  const previousUri = previousOffset === null
-    ? null
-    : `${resourceUri}?offset=${previousOffset}&limit=${pageSize}`;
   const suggestedOffset = selected.length === 0 && entries.length > 0
     ? Math.floor((entries.length - 1) / pageSize) * pageSize
     : null;
+  const previousOffset = start > 0
+    ? selected.length === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, start - pageSize)
+    : null;
+  const previousUri = previousOffset === null
+    ? null
+    : `${resourceUri}?offset=${previousOffset}&limit=${pageSize}`;
 
   return {
     count: selected.length,

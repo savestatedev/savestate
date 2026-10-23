@@ -33,6 +33,7 @@ describe('savestate list --json', () => {
     const parsed = JSON.parse(formatListJson([older, newer])) as ListJson;
     expect(parsed.total).toBe(2);
     expect(parsed.shown).toBe(2);
+    expect(parsed.remaining).toBe(0);
     expect(parsed.emptyReason).toBeNull();
     expect(parsed.entries[0]?.id).toBe('ss-newer');
     expect(parsed.entries[0]?.label).toBe('pre-update');
@@ -92,6 +93,7 @@ describe('savestate list --json', () => {
     expect(parsed).toMatchObject({
       total: 2,
       shown: 1,
+      remaining: 0,
       emptyReason: null,
       offset: 1,
       limit: 1,
@@ -106,17 +108,32 @@ describe('savestate list --json', () => {
     expect(parsed.entries[0]?.id).toBe('ss-older');
   });
 
+  it('reports matching snapshots remaining after the visible page', () => {
+    const parsed = JSON.parse(formatListJson([older, newer], 1)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      total: 2,
+      shown: 1,
+      remaining: 1,
+      offset: 0,
+      hasMore: true,
+      nextOffset: 1,
+    });
+  });
+
   it('suggests the nearest page when an offset is past the filtered list', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 1, 5)) as ListJson;
 
     expect(parsed).toMatchObject({
       total: 2,
       shown: 0,
+      remaining: 0,
       emptyReason: 'page',
       offset: 5,
       hasMore: false,
       nextOffset: null,
       suggestedOffset: 1,
+      previousOffset: 1,
     });
   });
 

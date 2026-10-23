@@ -78,8 +78,8 @@ describe('MCP savestate://snapshots limit', () => {
     expect(buildSnapshotsResourcePage([{ id: 's1' }, { id: 's2' }, { id: 's3' }], 9, 2)).toMatchObject({
       count: 0,
       offset: 9,
-      previousOffset: 7,
-      previousUri: 'savestate://snapshots?offset=7&limit=2',
+      previousOffset: 2,
+      previousUri: 'savestate://snapshots?offset=2&limit=2',
       suggestedOffset: 2,
     });
   });

@@ -84,8 +84,8 @@ describe('MCP savestate://memories limit', () => {
     )).toMatchObject({
       count: 0,
       offset: 9,
-      previousOffset: 7,
-      previousUri: 'savestate://memories?offset=7&limit=2',
+      previousOffset: 2,
+      previousUri: 'savestate://memories?offset=2&limit=2',
       suggestedOffset: 2,
       nextOffset: null,
       nextUri: null,
