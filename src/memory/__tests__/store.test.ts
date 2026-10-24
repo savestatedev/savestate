@@ -153,6 +153,12 @@ describe('MemoryStore', () => {
       expect(limited).toHaveLength(2);
     });
 
+    it('should support an offset without an explicit limit', async () => {
+      const page = await store.query({ offset: 2 });
+
+      expect(page.map((entry) => entry.content)).toEqual(['Fact 2', 'Pref 1']);
+    });
+
     it('should filter by tags', async () => {
       const tagged = await store.query({ tags: ['ui'] });
       expect(tagged).toHaveLength(1);
