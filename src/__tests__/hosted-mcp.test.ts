@@ -76,6 +76,7 @@ describe('hosted MCP /api/mcp', () => {
       stdio: string;
       docs: string;
       transport: string;
+      tools: Array<{ name: string; inputSchema: { properties: Record<string, unknown> } }>;
     };
     expect(body.name).toBe('io.github.savestatedev/memory');
     expect(body.keys).toBe('https://savestate.dev/v1/keys');
@@ -84,6 +85,17 @@ describe('hosted MCP /api/mcp', () => {
     expect(body.stdio).toBe('npx -y @savestate/cli mcp');
     expect(body.docs).toBe('https://savestate.dev/mcp');
     expect(body.transport).toBe('streamable-http');
+    expect(body.tools).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'savestate_status' }),
+        expect.objectContaining({
+          name: 'savestate_search_snapshots',
+          inputSchema: expect.objectContaining({
+            properties: expect.objectContaining({ query: expect.anything() }),
+          }),
+        }),
+      ]),
+    );
   });
 
   it('GET with SSE-only Accept is 405 (no long-lived stream on Vercel)', async () => {
