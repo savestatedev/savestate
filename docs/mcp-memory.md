@@ -168,7 +168,7 @@ These work identically to the OpenMemory tools but follow SaveState's naming con
 
 The MCP server also exposes resources for programmatic access:
 
-- `savestate://memories` - JSON list of memories (default 50; `?limit=` is a positive integer up to 1000; `?offset=` is a non-negative integer up to 1000). The response includes `total`, `offset`, `nextOffset`, and `nextUri` for forward pagination, plus `previousOffset` and `previousUri` for returning to the prior page and `suggestedOffset` when an offset is past the available entries.
+- `savestate://memories` - JSON list of memories (default 50; `?limit=` is a positive integer up to 1000; `?offset=` is a non-negative integer up to 1000; `?type=` accepts `fact`, `event`, `preference`, or `conversation`; `?tag=` accepts a non-empty tag). Type and tag filters are preserved in continuation URIs. The response includes `total`, `offset`, `nextOffset`, and `nextUri` for forward pagination, plus `previousOffset` and `previousUri` for returning to the prior page and `suggestedOffset` when an offset is past the available entries.
 - `savestate://snapshots` - JSON list of snapshots (default 50; `?limit=` is a positive integer up to 1000; `?offset=` is a non-negative integer up to 1000)
 
 ## Cross-Platform Memory
