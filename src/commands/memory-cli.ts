@@ -18,6 +18,8 @@ import {
   parseMemoryConfigLimit,
   parseMemoryConfigOffset,
   parseMemoryListOffset,
+  parseMemoryMinImportance,
+  parseMemoryMaxImportance,
   type MemoryFreshnessState,
 } from './memory.js';
 import {
@@ -201,6 +203,19 @@ export function parseMemoryMaxImportance(value: string | undefined): number | un
     );
   }
   return importance;
+}
+
+/** Reject an inverted importance range before loading encrypted storage. */
+export function validateMemoryImportanceRange(
+  minImportance: number | undefined,
+  maxImportance: number | undefined,
+): void {
+  if (minImportance === undefined || maxImportance === undefined) return;
+  if (minImportance > maxImportance) {
+    throw new Error(
+      `Invalid memory importance range: --min-importance (${minImportance}) must be at or below --max-importance (${maxImportance}).`,
+    );
+  }
 }
 
 /** Parse memory --snapshot without treating blank ids as the latest snapshot. */
@@ -508,6 +523,9 @@ export function registerMemoryCommands(program: Command): void {
         const until = parseMemoryListUntil(options.until);
         const since = parseMemoryListSince(options.since);
         validateMemoryListDateRange(since, until);
+        const minImportance = parseMemoryMinImportance(options.minImportance);
+        const maxImportance = parseMemoryMaxImportance(options.maxImportance);
+        validateMemoryImportanceRange(minImportance, maxImportance);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -522,8 +540,8 @@ export function registerMemoryCommands(program: Command): void {
           tags: parseMemoryTags(options.tags),
           since,
           freshness: parseMemoryFreshness(options.freshness),
-          minImportance: parseMemoryMinImportance(options.minImportance),
-          maxImportance: parseMemoryMaxImportance(options.maxImportance),
+          minImportance,
+          maxImportance,
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),
@@ -717,6 +735,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
+    .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
+    .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--json', 'Output as JSON')
     .action(async (query, options) => {
       try {
@@ -724,6 +744,9 @@ export function registerMemoryCommands(program: Command): void {
         const until = parseMemoryListUntil(options.until);
         const since = parseMemoryListSince(options.since);
         validateMemoryListDateRange(since, until);
+        const minImportance = parseMemoryMinImportance(options.minImportance);
+        const maxImportance = parseMemoryMaxImportance(options.maxImportance);
+        validateMemoryImportanceRange(minImportance, maxImportance);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -739,6 +762,8 @@ export function registerMemoryCommands(program: Command): void {
           offset: options.offset,
           tags: parseMemoryTags(options.tags),
           freshness: parseMemoryFreshness(options.freshness),
+          minImportance,
+          maxImportance,
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {

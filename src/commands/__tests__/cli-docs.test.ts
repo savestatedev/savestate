@@ -3223,6 +3223,27 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryExplainLimit');
   });
 
+  it('documents memory explain importance filters', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(memorySection).toContain('--min-importance');
+    expect(memorySection).toContain('--max-importance');
+    expect(memorySection).toContain('importance');
+    expect(memorySection).toContain('list</code> or <code>explain</code> memories');
+    expect(memorySection).toContain('savestate memory explain "inbox preference" --min-importance 0.8');
+    expect(explainBlock).toContain(".option('--min-importance <n>'");
+    expect(explainBlock).toContain(".option('--max-importance <n>'");
+    expect(memoryCli).toContain('const minImportance = parseMemoryMinImportance(options.minImportance)');
+    expect(memoryCli).toContain('const maxImportance = parseMemoryMaxImportance(options.maxImportance)');
+    expect(memoryCli).toContain('validateMemoryImportanceRange(minImportance, maxImportance)');
+  });
+
+  it('documents the effective importance in memory explain JSON results', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('effective <code>importance</code>');
+    expect(memory).toContain('importance: getMemoryListImportance(entry)');
+  });
+
   it('documents memory explain --offset as a bounded non-negative integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
