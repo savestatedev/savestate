@@ -116,6 +116,10 @@ import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './searc
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
+import {
+  hasValidMemoryImportanceRange,
+  INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
+} from './memory-importance-range.js';
 import { toMemoryResourceEntry } from './memory-resource-entry.js';
 import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
@@ -139,7 +143,21 @@ function getMemoryStore(): MemoryStore {
 
 // ─── Tool Definitions ────────────────────────────────────────
 
-const tools: Tool[] = [
+const importanceInputSchema = {
+  type: 'number' as const,
+  minimum: 0,
+  maximum: 1,
+  description: 'Importance score (0-1)',
+};
+
+const importanceFilterSchema = {
+  type: 'number' as const,
+  minimum: 0,
+  maximum: 1,
+  description: 'Importance score filter (0-1)',
+};
+
+export const tools: Tool[] = [
   // ─── SaveState Core Tools ──────────────────────────────────
   {
     name: 'savestate_snapshot',
@@ -288,7 +306,7 @@ const tools: Tool[] = [
           description: 'Tags for filtering and organization',
         },
         importance: {
-          type: 'number',
+          ...importanceInputSchema,
           description: 'Importance score (0-1). Defaults to 0.5',
         },
         metadata: {
@@ -337,10 +355,8 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Pagination offset (non-negative integer up to 1000)',
         },
-        minImportance: {
-          type: 'number',
-          description: 'Minimum importance score filter (0-1)',
-        },
+        minImportance: importanceFilterSchema,
+        maxImportance: importanceFilterSchema,
       },
     },
   },
@@ -430,7 +446,7 @@ const tools: Tool[] = [
                 description: 'Memory type',
               },
               tags: { type: 'array', items: { type: 'string' } },
-              importance: { type: 'number' },
+              importance: importanceInputSchema,
               metadata: { type: 'object' },
             },
             required: ['content'],
@@ -474,10 +490,8 @@ const tools: Tool[] = [
           items: { type: 'string' },
           description: 'Filter by tags',
         },
-        minImportance: {
-          type: 'number',
-          description: 'Minimum importance score filter (0-1)',
-        },
+        minImportance: importanceFilterSchema,
+        maxImportance: importanceFilterSchema,
         limit: {
           type: 'number',
           description: 'Maximum results (default: 10; positive integer up to 1000)',
@@ -509,10 +523,8 @@ const tools: Tool[] = [
           items: { type: 'string' },
           description: 'Filter by tags',
         },
-        minImportance: {
-          type: 'number',
-          description: 'Minimum importance score filter (0-1)',
-        },
+        minImportance: importanceFilterSchema,
+        maxImportance: importanceFilterSchema,
         limit: {
           type: 'number',
           description: 'Maximum results (default: 50; positive integer up to 1000)',
@@ -661,8 +673,12 @@ const ListMemoriesInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
+  maxImportance: z.number().min(0).max(1).optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
+}).refine(hasValidMemoryImportanceRange, {
+  message: INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
+  path: ['maxImportance'],
 });
 
 const DeleteAllMemoriesInputSchema = z.object({
@@ -1132,6 +1148,7 @@ async function handleMemorySearch(
       search: input.query,
       limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
     };
 
     const pageLimit = limit ?? 10;
@@ -1267,6 +1284,7 @@ async function handleSearchMemory(
       search: input.query,
       limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
     };
 
     const pageLimit = limit ?? 10;
@@ -1307,6 +1325,7 @@ async function handleListMemories(
       type: input.type,
       tags: input.tags,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
       // Fetch one sentinel row so the response can tell callers whether to continue.
       limit: pageLimit + 1,
       offset,
@@ -1319,6 +1338,7 @@ async function handleListMemories(
       type: input.type,
       tags: input.tags,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
     });
 
     if (results.length === 0) {

@@ -45,6 +45,7 @@ export interface MemoryQuery {
   type?: MemoryType;
   tags?: string[];
   minImportance?: number;
+  maxImportance?: number;
   limit?: number;
   offset?: number;
   search?: string;
