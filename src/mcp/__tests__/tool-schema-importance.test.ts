@@ -1,0 +1,26 @@
+import { describe, expect, it } from 'vitest';
+import { tools } from '../server.js';
+
+function getTool(name: string) {
+  const tool = tools.find((candidate) => candidate.name === name);
+  expect(tool).toBeDefined();
+  return tool!;
+}
+
+describe('MCP importance tool schemas', () => {
+  it('advertises bounded importance values for storage', () => {
+    const schema = getTool('savestate_memory_store').inputSchema as any;
+    expect(schema.properties.importance).toMatchObject({
+      type: 'number',
+      minimum: 0,
+      maximum: 1,
+    });
+  });
+
+  it.each(['savestate_memory_search', 'search_memory', 'list_memories'])
+    ('advertises bounded importance filters for %s', (name) => {
+      const schema = getTool(name).inputSchema as any;
+      expect(schema.properties.minImportance).toMatchObject({ minimum: 0, maximum: 1 });
+      expect(schema.properties.maxImportance).toMatchObject({ minimum: 0, maximum: 1 });
+    });
+});
