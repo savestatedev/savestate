@@ -18,6 +18,18 @@ export function parseMemoriesResourceTag(value: string | null): string | undefin
   return normalized;
 }
 
+/** Parse an optional memory resource search without turning a blank query into an unfiltered request. */
+export function parseMemoriesResourceSearch(value: string | null): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error('Invalid search value. Expected a non-empty search query.');
+  }
+
+  return normalized;
+}
+
 /** Parse an optional memory resource type without silently widening the query. */
 export function parseMemoriesResourceType(value: string | null): MemoryType | undefined {
   if (value === null) return undefined;
@@ -74,10 +86,12 @@ export function buildMemoriesResourceUri(
   maxImportance: number | undefined,
   type?: MemoryType,
   tag?: string,
+  search?: string,
 ): string {
   const params = new URLSearchParams();
   if (type !== undefined) params.set('type', type);
   if (tag !== undefined) params.set('tag', tag);
+  if (search !== undefined) params.set('search', search);
   if (minImportance !== undefined) params.set('minImportance', String(minImportance));
   if (maxImportance !== undefined) params.set('maxImportance', String(maxImportance));
   const query = params.toString();

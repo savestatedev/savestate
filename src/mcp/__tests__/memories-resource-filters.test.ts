@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourceUri,
   parseMemoriesResourceImportance,
+  parseMemoriesResourceSearch,
   parseMemoriesResourceTag,
   parseMemoriesResourceType,
   validateMemoriesResourceImportanceRange,
@@ -42,9 +43,17 @@ describe('MCP savestate://memories importance filters', () => {
     );
   });
 
+  it('parses non-empty search queries', () => {
+    expect(parseMemoriesResourceSearch('  encrypted archive ')).toBe('encrypted archive');
+    expect(parseMemoriesResourceSearch(null)).toBeUndefined();
+    expect(() => parseMemoriesResourceSearch('   ')).toThrow(
+      'Invalid search value. Expected a non-empty search query.',
+    );
+  });
+
   it('keeps filters in pagination resource links', () => {
-    expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'project')).toBe(
-      'savestate://memories?type=event&tag=project&minImportance=0.4&maxImportance=0.9',
+    expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'project', 'encrypted archive')).toBe(
+      'savestate://memories?type=event&tag=project&search=encrypted+archive&minImportance=0.4&maxImportance=0.9',
     );
   });
 });
