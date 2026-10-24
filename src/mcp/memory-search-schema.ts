@@ -7,4 +7,5 @@ export const MemorySearchInputSchema = z.object({
   limit: z.number().optional(),
   offset: z.number().optional(),
   minImportance: z.number().min(0).max(1).optional(),
+  maxImportance: z.number().min(0).max(1).optional(),
 });

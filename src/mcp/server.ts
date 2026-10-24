@@ -341,6 +341,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Minimum importance score filter (0-1)',
         },
+        maxImportance: {
+          type: 'number',
+          description: 'Maximum importance score filter (0-1)',
+        },
       },
     },
   },
@@ -478,6 +482,10 @@ const tools: Tool[] = [
           type: 'number',
           description: 'Minimum importance score filter (0-1)',
         },
+        maxImportance: {
+          type: 'number',
+          description: 'Maximum importance score filter (0-1)',
+        },
         limit: {
           type: 'number',
           description: 'Maximum results (default: 10; positive integer up to 1000)',
@@ -512,6 +520,10 @@ const tools: Tool[] = [
         minImportance: {
           type: 'number',
           description: 'Minimum importance score filter (0-1)',
+        },
+        maxImportance: {
+          type: 'number',
+          description: 'Maximum importance score filter (0-1)',
         },
         limit: {
           type: 'number',
@@ -661,6 +673,7 @@ const ListMemoriesInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
+  maxImportance: z.number().min(0).max(1).optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
 });
@@ -1132,6 +1145,7 @@ async function handleMemorySearch(
       search: input.query,
       limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
     };
 
     const pageLimit = limit ?? 10;
@@ -1267,6 +1281,7 @@ async function handleSearchMemory(
       search: input.query,
       limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
     };
 
     const pageLimit = limit ?? 10;
@@ -1307,6 +1322,7 @@ async function handleListMemories(
       type: input.type,
       tags: input.tags,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
       // Fetch one sentinel row so the response can tell callers whether to continue.
       limit: pageLimit + 1,
       offset,
@@ -1319,6 +1335,7 @@ async function handleListMemories(
       type: input.type,
       tags: input.tags,
       minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
     });
 
     if (results.length === 0) {

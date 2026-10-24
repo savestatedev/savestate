@@ -142,6 +142,12 @@ describe('MemoryStore', () => {
       expect(important.every(e => (e.importance ?? 0) >= 0.6)).toBe(true);
     });
 
+    it('should filter by maximum importance', async () => {
+      const lowerPriority = await store.query({ maxImportance: 0.5 });
+      expect(lowerPriority).toHaveLength(2);
+      expect(lowerPriority.every(e => (e.importance ?? 1) <= 0.5)).toBe(true);
+    });
+
     it('should limit results', async () => {
       const limited = await store.query({ limit: 2 });
       expect(limited).toHaveLength(2);
@@ -163,6 +169,7 @@ describe('MemoryStore', () => {
       expect(store.count({ type: 'fact' })).toBe(2);
       expect(store.count({ tags: ['ui'] })).toBe(1);
       expect(store.count({ minImportance: 0.6 })).toBe(2);
+      expect(store.count({ maxImportance: 0.5 })).toBe(2);
     });
   });
 

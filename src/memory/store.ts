@@ -228,6 +228,11 @@ export class MemoryStore {
       params.push(query.minImportance);
     }
 
+    if (query.maxImportance !== undefined) {
+      sql += ' AND importance <= ?';
+      params.push(query.maxImportance);
+    }
+
     if (query.since) {
       sql += ' AND created_at >= ?';
       params.push(query.since);
@@ -285,6 +290,11 @@ export class MemoryStore {
     if (query.minImportance !== undefined) {
       sql += ' AND importance >= ?';
       params.push(query.minImportance);
+    }
+
+    if (query.maxImportance !== undefined) {
+      sql += ' AND importance <= ?';
+      params.push(query.maxImportance);
     }
 
     if (query.since) {
