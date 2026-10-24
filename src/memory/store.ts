@@ -19,6 +19,16 @@ import type { WriteGate } from '../trust-kernel/gates.js';
 
 const DEFAULT_DB_PATH = join(homedir(), '.savestate', 'memory.db');
 
+function appendTagFilters(sql: string, params: unknown[], tags: string[]): string {
+  if (tags.length === 0) return sql;
+
+  const tagConditions = tags.map(
+    () => 'EXISTS (SELECT 1 FROM json_each(memories.tags) WHERE json_each.value = ?)',
+  );
+  params.push(...tags);
+  return `${sql} AND (${tagConditions.join(' OR ')})`;
+}
+
 export interface MemoryStoreOptions {
   dbPath?: string;
   keySource?: KeySource;
@@ -244,10 +254,7 @@ export class MemoryStore {
     }
 
     if (query.tags && query.tags.length > 0) {
-      // Simple tag matching - check if any tag exists in the tags JSON
-      const tagConditions = query.tags.map(() => "tags LIKE ?");
-      sql += ` AND (${tagConditions.join(' OR ')})`;
-      params.push(...query.tags.map(tag => `%"${tag}"%`));
+      sql = appendTagFilters(sql, params, query.tags);
     }
 
     if (query.search) {
@@ -308,9 +315,7 @@ export class MemoryStore {
     }
 
     if (query.tags && query.tags.length > 0) {
-      const tagConditions = query.tags.map(() => "tags LIKE ?");
-      sql += ` AND (${tagConditions.join(' OR ')})`;
-      params.push(...query.tags.map(tag => `%"${tag}"%`));
+      sql = appendTagFilters(sql, params, query.tags);
     }
 
     if (query.search) {

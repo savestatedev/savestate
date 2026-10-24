@@ -159,6 +159,17 @@ describe('MemoryStore', () => {
       expect(tagged[0].content).toBe('Pref 1');
     });
 
+    it('should match literal tag values instead of LIKE patterns', async () => {
+      await store.create({ type: 'fact', content: 'Literal percent', tags: ['50%'] });
+      await store.create({ type: 'fact', content: 'Different percent', tags: ['50x'] });
+
+      const tagged = await store.query({ tags: ['50%'] });
+
+      expect(tagged).toHaveLength(1);
+      expect(tagged[0].content).toBe('Literal percent');
+      expect(store.count({ tags: ['50%'] })).toBe(1);
+    });
+
     it('should search content', async () => {
       const results = await store.query({ search: 'Fact' });
       expect(results).toHaveLength(2);
