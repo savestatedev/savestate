@@ -3229,6 +3229,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--min-importance');
     expect(memorySection).toContain('--max-importance');
     expect(memorySection).toContain('importance');
+    expect(memorySection).toContain('list</code> or <code>explain</code> memories');
     expect(memorySection).toContain('savestate memory explain "inbox preference" --min-importance 0.8');
     expect(explainBlock).toContain(".option('--min-importance <n>'");
     expect(explainBlock).toContain(".option('--max-importance <n>'");

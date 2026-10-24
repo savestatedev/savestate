@@ -667,6 +667,7 @@ export function formatMemoryExplainFilterSummary(
   options: {
     namespace?: string;
     source?: string;
+    content?: string;
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;
