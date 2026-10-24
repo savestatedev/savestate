@@ -117,7 +117,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         payment_required: 402,
         issuance: 'POST /v1/keys then GET claim_url',
       },
-      tools: TOOLS.map((t) => t.name),
+      // Keep discovery self-describing so clients can learn hosted tool inputs
+      // before making an authenticated JSON-RPC request.
+      tools: TOOLS,
     });
   }
 
