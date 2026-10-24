@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { parseMemoryMaxImportance, parseMemoryMinImportance } from '../memory-cli.js';
-import { filterMemoryListByImportance, formatMemoryListJson } from '../memory.js';
+import {
+  filterMemoryListByImportance,
+  formatMemoryListImportance,
+  formatMemoryListJson,
+  getMemoryListImportance,
+} from '../memory.js';
 
 describe('savestate memory list --min-importance', () => {
   it('accepts bounded scores and rejects malformed values', () => {
@@ -27,6 +32,30 @@ describe('savestate memory list --min-importance', () => {
     expect(filterMemoryListByImportance(entries, 0.5).map(({ id }) => id)).toEqual(['high', 'default', 'invalid']);
     expect(filterMemoryListByImportance(entries, undefined, 0.5).map(({ id }) => id)).toEqual(['default', 'invalid']);
     expect(filterMemoryListByImportance(entries)).toBe(entries);
+  });
+
+  it('exposes the effective score in JSON and table-friendly output', () => {
+    const entries = [
+      { id: 'high', content: 'high', source: 'test', createdAt: '2026-10-01T00:00:00.000Z', metadata: { importance: 0.9 } },
+      { id: 'default', content: 'default', source: 'test', createdAt: '2026-10-01T00:00:00.000Z' },
+    ];
+
+    expect(getMemoryListImportance(entries[0])).toBe(0.9);
+    expect(getMemoryListImportance(entries[1])).toBe(0.5);
+    expect(getMemoryListImportance({
+      ...entries[1],
+      metadata: { importance: 2 },
+    })).toBe(0.5);
+    expect(formatMemoryListImportance(entries[0])).toBe('0.90');
+    expect(formatMemoryListImportance(entries[1])).toBe('0.50');
+
+    const parsed = JSON.parse(formatMemoryListJson(entries, entries)) as {
+      entries: Array<{ id: string; importance: number }>;
+    };
+    expect(parsed.entries.map(({ id, importance }) => ({ id, importance }))).toEqual([
+      { id: 'high', importance: 0.9 },
+      { id: 'default', importance: 0.5 },
+    ]);
   });
 
   it('preserves the active threshold for JSON consumers', () => {
