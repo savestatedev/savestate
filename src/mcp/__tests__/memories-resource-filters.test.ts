@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourceUri,
   parseMemoriesResourceImportance,
+  parseMemoriesResourceTag,
   parseMemoriesResourceType,
   validateMemoriesResourceImportanceRange,
 } from '../memories-resource-filters.js';
@@ -33,9 +34,17 @@ describe('MCP savestate://memories importance filters', () => {
     );
   });
 
+  it('parses non-empty tags', () => {
+    expect(parseMemoriesResourceTag(' project ')).toBe('project');
+    expect(parseMemoriesResourceTag(null)).toBeUndefined();
+    expect(() => parseMemoriesResourceTag('   ')).toThrow(
+      'Invalid tag value. Expected a non-empty tag.',
+    );
+  });
+
   it('keeps filters in pagination resource links', () => {
-    expect(buildMemoriesResourceUri(0.4, 0.9, 'event')).toBe(
-      'savestate://memories?type=event&minImportance=0.4&maxImportance=0.9',
+    expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'project')).toBe(
+      'savestate://memories?type=event&tag=project&minImportance=0.4&maxImportance=0.9',
     );
   });
 });

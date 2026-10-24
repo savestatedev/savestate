@@ -6,6 +6,18 @@ import type { MemoryType } from '../memory/types.js';
 
 const MEMORY_TYPES: readonly MemoryType[] = ['fact', 'event', 'preference', 'conversation'];
 
+/** Parse an optional memory resource tag without turning a blank filter into an unfiltered query. */
+export function parseMemoriesResourceTag(value: string | null): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error('Invalid tag value. Expected a non-empty tag.');
+  }
+
+  return normalized;
+}
+
 /** Parse an optional memory resource type without silently widening the query. */
 export function parseMemoriesResourceType(value: string | null): MemoryType | undefined {
   if (value === null) return undefined;
@@ -61,9 +73,11 @@ export function buildMemoriesResourceUri(
   minImportance: number | undefined,
   maxImportance: number | undefined,
   type?: MemoryType,
+  tag?: string,
 ): string {
   const params = new URLSearchParams();
   if (type !== undefined) params.set('type', type);
+  if (tag !== undefined) params.set('tag', tag);
   if (minImportance !== undefined) params.set('minImportance', String(minImportance));
   if (maxImportance !== undefined) params.set('maxImportance', String(maxImportance));
   const query = params.toString();
