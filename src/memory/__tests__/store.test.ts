@@ -268,4 +268,20 @@ describe('MemoryStore with encryption', () => {
     expect(all.map(e => e.content)).toContain('Secret 2');
     expect(all.map(e => e.content)).toContain('Secret preference');
   });
+
+  it('should preserve encryption when updating metadata without content', async () => {
+    const entry = await store.create({
+      type: 'fact',
+      content: 'Secret metadata fact',
+      metadata: { source: 'initial' },
+    });
+
+    const updated = await store.update(entry.id, {
+      metadata: { source: 'updated' },
+    });
+
+    expect(updated).not.toBeNull();
+    expect(updated!.content).toBe('Secret metadata fact');
+    expect(updated!.metadata).toEqual({ source: 'updated' });
+  });
 });

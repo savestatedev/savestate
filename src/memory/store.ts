@@ -193,8 +193,9 @@ export class MemoryStore {
     let content = updates.content ?? existing.content;
     let encrypted = 0;
 
-    // Re-encrypt if content changed and encryption is enabled
-    if (updates.content && this.encryptionEnabled && this.keySource) {
+    // Re-encrypt the full record whenever encryption is enabled. Updates to
+    // metadata must not downgrade an existing encrypted memory to plaintext.
+    if (this.encryptionEnabled && this.keySource) {
       const encryptedBuffer = await encrypt(Buffer.from(content), this.keySource);
       content = encryptedBuffer.toString('base64');
       encrypted = 1;
