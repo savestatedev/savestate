@@ -554,9 +554,17 @@ export function filterMemoryExplainEntries(
 export function getMemoryListTags(entry: MemoryEntry): string[] {
   const tags = entry.metadata?.tags;
   if (!Array.isArray(tags)) return [];
-  return [...new Set(tags.filter((tag): tag is string => typeof tag === 'string')
+  const seen = new Set<string>();
+  return tags
+    .filter((tag): tag is string => typeof tag === 'string')
     .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0))];
+    .filter((tag) => {
+      if (tag.length === 0) return false;
+      const normalized = tag.toLocaleLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
 }
 
 /** Keep memories created on or before the requested timestamp. */

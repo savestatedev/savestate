@@ -56,6 +56,17 @@ describe('savestate memory --json', () => {
     expect(parsed.entries[0].tags).toEqual(['work', 'urgent']);
   });
 
+  it('deduplicates legacy tags case-insensitively while preserving the first label', () => {
+    const tagged = entry({
+      id: 'mem-case-tags',
+      content: 'case tags',
+      metadata: { tags: [' Work ', 'work', 'URGENT', 'urgent'] },
+    });
+
+    const parsed = JSON.parse(formatMemoryListJson([tagged], [tagged])) as MemoryListJson;
+    expect(parsed.entries[0].tags).toEqual(['Work', 'URGENT']);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
