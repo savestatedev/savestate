@@ -1616,6 +1616,10 @@ async function handleReadResource(uri: string): Promise<string> {
         previousUri: page.previousUri,
         suggestedOffset: page.suggestedOffset,
         suggestedUri: page.suggestedUri,
+        filters: {
+          minImportance: minImportance ?? null,
+          maxImportance: maxImportance ?? null,
+        },
         byType,
         memories: page.entries.map(toMemoryResourceEntry),
       }, null, 2);
