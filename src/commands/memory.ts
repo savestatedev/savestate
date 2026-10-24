@@ -515,6 +515,8 @@ export function filterMemoryExplainEntries(
     pinned?: boolean;
     since?: string;
     until?: string;
+    minImportance?: number;
+    maxImportance?: number;
     now?: Date;
   } = {},
 ): MemoryEntry[] {
@@ -538,9 +540,14 @@ export function filterMemoryExplainEntries(
     options.freshness,
     options.now,
   );
+  const importanceScoped = filterMemoryListByImportance(
+    scoped,
+    options.minImportance,
+    options.maxImportance,
+  );
   return options.pinned === undefined
-    ? scoped
-    : scoped.filter((entry) => !!entry.pinned === options.pinned);
+    ? importanceScoped
+    : importanceScoped.filter((entry) => !!entry.pinned === options.pinned);
 }
 
 /** Normalize legacy tag metadata before filtering or serializing it. */
@@ -638,6 +645,8 @@ export function formatMemoryExplainFilterMatches(
     pinned?: boolean;
     since?: string;
     until?: string;
+    minImportance?: number;
+    maxImportance?: number;
   } = {},
 ): string[] {
   const filters: string[] = [];
@@ -649,6 +658,8 @@ export function formatMemoryExplainFilterMatches(
   if (options.pinned !== undefined) filters.push(`pinned=${options.pinned}`);
   if (options.since !== undefined) filters.push(`since=${options.since}`);
   if (options.until !== undefined) filters.push(`until=${options.until}`);
+  if (options.minImportance !== undefined) filters.push(`minImportance=${options.minImportance}`);
+  if (options.maxImportance !== undefined) filters.push(`maxImportance=${options.maxImportance}`);
   return filters;
 }
 
@@ -661,6 +672,8 @@ export function formatMemoryExplainFilterSummary(
     pinned?: boolean;
     since?: string;
     until?: string;
+    minImportance?: number;
+    maxImportance?: number;
   } = {},
 ): string | undefined {
   const filters = formatMemoryExplainFilterMatches(options);
@@ -2164,6 +2177,8 @@ export interface MemoryExplainFiltersJson {
   pinned?: boolean;
   since?: string;
   until?: string;
+  minImportance?: number;
+  maxImportance?: number;
 }
 
 export interface MemoryExplainPaginationJson {
@@ -2329,6 +2344,8 @@ export function getMemoryExplainFilters(options?: {
   pinned?: boolean;
   since?: string;
   until?: string;
+  minImportance?: number;
+  maxImportance?: number;
 }): MemoryExplainFiltersJson | undefined {
   if (!options) return undefined;
 
@@ -2341,6 +2358,8 @@ export function getMemoryExplainFilters(options?: {
   if (options.pinned !== undefined) filters.pinned = options.pinned;
   if (options.since !== undefined) filters.since = options.since;
   if (options.until !== undefined) filters.until = options.until;
+  if (options.minImportance !== undefined) filters.minImportance = options.minImportance;
+  if (options.maxImportance !== undefined) filters.maxImportance = options.maxImportance;
   return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
@@ -2452,6 +2471,8 @@ export async function explainMemoryCommand(
     pinned?: boolean;
     since?: string;
     until?: string;
+    minImportance?: number;
+    maxImportance?: number;
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {

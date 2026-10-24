@@ -94,4 +94,24 @@ describe('savestate memory explain freshness filter', () => {
 
     expect(filterMemoryExplainEntries(entries, { pinned: false })).toEqual([entries[1]]);
   });
+
+  it('keeps only memories in the requested importance range', () => {
+    const entries = [
+      { id: 'high', content: 'editor preference', source: 'user', createdAt: '2026-10-17T23:00:00.000Z', metadata: { importance: 0.9 } },
+      { id: 'default', content: 'editor preference', source: 'user', createdAt: '2026-10-17T23:00:00.000Z' },
+      { id: 'low', content: 'editor preference', source: 'user', createdAt: '2026-10-17T23:00:00.000Z', metadata: { importance: 0.2 } },
+    ];
+
+    expect(filterMemoryExplainEntries(entries, { minImportance: 0.5, maxImportance: 0.9 })).toEqual([
+      entries[0],
+      entries[1],
+    ]);
+  });
+
+  it('reports importance filters in human-readable matches', () => {
+    expect(formatMemoryExplainFilterMatches({ minImportance: 0.8, maxImportance: 1 })).toEqual([
+      'minImportance=0.8',
+      'maxImportance=1',
+    ]);
+  });
 });

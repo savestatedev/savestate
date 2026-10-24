@@ -76,3 +76,10 @@ describe('savestate memory list --min-importance', () => {
     expect(parsed.filters.maxImportance).toBe(0.5);
   });
 });
+
+describe('savestate memory explain importance filters', () => {
+  it('accepts the same bounded score syntax as memory list', () => {
+    expect(parseMemoryMinImportance('0.8')).toBe(0.8);
+    expect(parseMemoryMaxImportance('1.0')).toBe(1);
+  });
+});

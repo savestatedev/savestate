@@ -18,6 +18,8 @@ import {
   parseMemoryConfigLimit,
   parseMemoryConfigOffset,
   parseMemoryListOffset,
+  parseMemoryMinImportance,
+  parseMemoryMaxImportance,
   type MemoryFreshnessState,
 } from './memory.js';
 import {
@@ -717,6 +719,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
+    .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
+    .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--json', 'Output as JSON')
     .action(async (query, options) => {
       try {
@@ -739,6 +743,8 @@ export function registerMemoryCommands(program: Command): void {
           offset: options.offset,
           tags: parseMemoryTags(options.tags),
           freshness: parseMemoryFreshness(options.freshness),
+          minImportance: parseMemoryMinImportance(options.minImportance),
+          maxImportance: parseMemoryMaxImportance(options.maxImportance),
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
