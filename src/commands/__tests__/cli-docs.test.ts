@@ -3238,6 +3238,12 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('validateMemoryImportanceRange(minImportance, maxImportance)');
   });
 
+  it('documents the effective importance in memory explain JSON results', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('effective <code>importance</code>');
+    expect(memory).toContain('importance: getMemoryListImportance(entry)');
+  });
+
   it('documents memory explain --offset as a bounded non-negative integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
