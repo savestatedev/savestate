@@ -1154,6 +1154,13 @@ async function handleMemorySearch(
     const pageLimit = limit ?? 10;
     const start = offset ?? 0;
     const queried = await store.query(query);
+    const total = store.count({
+      type: input.type,
+      tags: input.tags,
+      search: input.query,
+      minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
+    });
     const hasMore = queried.length > start + pageLimit;
     const results = selectSavestateMemorySearchEntries(
       selectSavestateMemorySearchOffsetEntries(queried, offset),
@@ -1164,7 +1171,7 @@ async function handleMemorySearch(
       return formatMemorySearchEmptyPage(offset, pageLimit);
     }
 
-    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
+    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit, total), ''];
 
     for (const memory of results) {
       lines.push(...formatMemorySearchEntry(memory));
@@ -1290,6 +1297,13 @@ async function handleSearchMemory(
     const pageLimit = limit ?? 10;
     const start = offset ?? 0;
     const queried = await store.query(query);
+    const total = store.count({
+      type: input.type,
+      tags: input.tags,
+      search: input.query,
+      minImportance: input.minImportance,
+      maxImportance: input.maxImportance,
+    });
     const hasMore = queried.length > start + pageLimit;
     const results = selectSearchMemoryEntries(
       selectSearchMemoryOffsetEntries(queried, offset),
@@ -1300,7 +1314,7 @@ async function handleSearchMemory(
       return formatMemorySearchEmptyPage(offset, pageLimit);
     }
 
-    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit), ''];
+    const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit, total), ''];
 
     for (const memory of results) {
       lines.push(...formatMemorySearchEntry(memory));
