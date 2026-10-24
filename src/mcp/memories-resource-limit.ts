@@ -60,10 +60,10 @@ export function buildMemoriesResourcePage<T>(
     : null;
   const previousUri = previousOffset === null
     ? null
-    : `${resourceUri}?offset=${previousOffset}&limit=${pageSize}`;
+    : `${resourceUri}${resourceUri.includes('?') ? '&' : '?'}offset=${previousOffset}&limit=${pageSize}`;
   const suggestedUri = suggestedOffset === null
     ? null
-    : `${resourceUri}?offset=${suggestedOffset}&limit=${pageSize}`;
+    : `${resourceUri}${resourceUri.includes('?') ? '&' : '?'}offset=${suggestedOffset}&limit=${pageSize}`;
 
   return {
     count: selected.length,
@@ -74,7 +74,9 @@ export function buildMemoriesResourcePage<T>(
     page: Math.floor(start / pageSize) + 1,
     totalPages: Math.ceil(total / pageSize),
     nextOffset,
-    nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,
+    nextUri: nextOffset === null
+      ? null
+      : `${resourceUri}${resourceUri.includes('?') ? '&' : '?'}offset=${nextOffset}&limit=${pageSize}`,
     previousOffset,
     previousUri,
     suggestedOffset,

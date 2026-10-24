@@ -117,6 +117,11 @@ import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from '
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
 import {
+  buildMemoriesResourceUri,
+  parseMemoriesResourceImportance,
+  validateMemoriesResourceImportanceRange,
+} from './memories-resource-filters.js';
+import {
   hasValidMemoryImportanceRange,
   INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
 } from './memory-importance-range.js';
@@ -596,7 +601,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000). The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000; ?minImportance= and ?maxImportance= are inclusive scores from 0 through 1). Importance filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
     mimeType: 'application/json',
   },
 ];
@@ -1573,9 +1578,29 @@ async function handleReadResource(uri: string): Promise<string> {
       const limit = rawLimit === null
         ? undefined
         : parseMemoriesResourceLimit(Number(rawLimit));
-      const entries = await store.query({ limit: (offset ?? 0) + (limit ?? 50) });
-      const stats = store.getStats();
-      const page = buildMemoriesResourcePage(entries, stats.totalEntries, offset, limit);
+      const minImportance = parseMemoriesResourceImportance(
+        url.searchParams.get('minImportance'),
+        'minImportance',
+      );
+      const maxImportance = parseMemoriesResourceImportance(
+        url.searchParams.get('maxImportance'),
+        'maxImportance',
+      );
+      validateMemoriesResourceImportanceRange(minImportance, maxImportance);
+      const filters = { minImportance, maxImportance };
+      const entries = await store.query({
+        ...filters,
+        limit: (offset ?? 0) + (limit ?? 50),
+      });
+      const total = store.count(filters);
+      const byType = Object.fromEntries(
+        (['fact', 'event', 'preference', 'conversation'] as const).map((type) => [
+          type,
+          store.count({ ...filters, type }),
+        ]),
+      );
+      const resourceUri = buildMemoriesResourceUri(minImportance, maxImportance);
+      const page = buildMemoriesResourcePage(entries, total, offset, limit, resourceUri);
 
       return JSON.stringify({
         count: page.count,
@@ -1591,7 +1616,7 @@ async function handleReadResource(uri: string): Promise<string> {
         previousUri: page.previousUri,
         suggestedOffset: page.suggestedOffset,
         suggestedUri: page.suggestedUri,
-        byType: stats.byType,
+        byType,
         memories: page.entries.map(toMemoryResourceEntry),
       }, null, 2);
     }

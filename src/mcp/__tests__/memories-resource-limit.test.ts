@@ -84,6 +84,19 @@ describe('MCP savestate://memories limit', () => {
     });
   });
 
+  it('preserves resource filters in continuation links', () => {
+    expect(buildMemoriesResourcePage(
+      [{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }],
+      3,
+      0,
+      2,
+      'savestate://memories?minImportance=0.8',
+    )).toMatchObject({
+      nextOffset: 2,
+      nextUri: 'savestate://memories?minImportance=0.8&offset=2&limit=2',
+    });
+  });
+
   it('suggests the last available page when an offset is stale', () => {
     expect(buildMemoriesResourcePage(
       [{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }],
