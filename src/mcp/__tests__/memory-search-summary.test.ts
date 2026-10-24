@@ -41,6 +41,12 @@ describe('memory search pagination summaries', () => {
     );
   });
 
+  it('reports filtered totals on an empty page', () => {
+    expect(formatMemorySearchEmptyPage(12, 4, 6)).toBe(
+      'No memories found matching your query at offset 12. Total matching: 6. Try offset 8.',
+    );
+  });
+
   it('keeps the first page message focused on the missing query', () => {
     expect(formatMemorySearchEmptyPage(undefined)).toBe(
       'No memories found matching your query at offset 0.',

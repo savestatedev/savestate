@@ -21,11 +21,13 @@ export function formatMemorySearchPageSummary(
 export function formatMemorySearchEmptyPage(
   offset: number | undefined,
   limit = 10,
+  total?: number,
 ): string {
   const start = offset ?? 0;
+  const totalSummary = total === undefined ? '' : ` Total matching: ${total}.`;
   if (start === 0) {
-    return 'No memories found matching your query at offset 0.';
+    return `No memories found matching your query at offset 0.${totalSummary}`;
   }
 
-  return `No memories found matching your query at offset ${start}. Try offset ${Math.max(0, start - limit)}.`;
+  return `No memories found matching your query at offset ${start}.${totalSummary} Try offset ${Math.max(0, start - limit)}.`;
 }

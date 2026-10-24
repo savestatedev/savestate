@@ -1168,7 +1168,7 @@ async function handleMemorySearch(
     );
 
     if (results.length === 0) {
-      return formatMemorySearchEmptyPage(offset, pageLimit);
+      return formatMemorySearchEmptyPage(offset, pageLimit, total);
     }
 
     const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit, total), ''];
@@ -1311,7 +1311,7 @@ async function handleSearchMemory(
     );
 
     if (results.length === 0) {
-      return formatMemorySearchEmptyPage(offset, pageLimit);
+      return formatMemorySearchEmptyPage(offset, pageLimit, total);
     }
 
     const lines = [formatMemorySearchPageSummary(results.length, offset, hasMore, pageLimit, total), ''];
