@@ -4,24 +4,30 @@ export function formatMemorySearchPageSummary(
   offset: number | undefined,
   hasMore: boolean,
   pageSize = Math.max(1, shown),
+  total?: number,
 ): string {
   const start = offset ?? 0;
+  const totalSummary = total === undefined
+    ? ''
+    : ` of ${total} total; ${Math.max(0, total - start - shown)} remaining`;
   const previous = start > 0
     ? `; previous offset ${Math.max(0, start - pageSize)}`
     : '';
   const more = hasMore ? `; next offset ${start + shown}; more available` : '';
-  return `Found ${shown} memory(ies) starting at offset ${start}${previous}${more}:`;
+  return `Found ${shown} memory(ies) starting at offset ${start}${totalSummary}${previous}${more}:`;
 }
 
 /** Explain an empty search page and give callers an actionable recovery offset. */
 export function formatMemorySearchEmptyPage(
   offset: number | undefined,
   limit = 10,
+  total?: number,
 ): string {
   const start = offset ?? 0;
+  const totalSummary = total === undefined ? '' : ` Total matching: ${total}.`;
   if (start === 0) {
-    return 'No memories found matching your query at offset 0.';
+    return `No memories found matching your query at offset 0.${totalSummary}`;
   }
 
-  return `No memories found matching your query at offset ${start}. Try offset ${Math.max(0, start - limit)}.`;
+  return `No memories found matching your query at offset ${start}.${totalSummary} Try offset ${Math.max(0, start - limit)}.`;
 }

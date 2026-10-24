@@ -11,6 +11,12 @@ describe('memory search pagination summaries', () => {
     );
   });
 
+  it('reports filtered totals and remaining rows when available', () => {
+    expect(formatMemorySearchPageSummary(2, 4, true, 4, 8)).toBe(
+      'Found 2 memory(ies) starting at offset 4 of 8 total; 2 remaining; previous offset 0; next offset 6; more available:',
+    );
+  });
+
   it('uses the requested page size for previous-page recovery', () => {
     expect(formatMemorySearchPageSummary(3, 12, false, 5)).toBe(
       'Found 3 memory(ies) starting at offset 12; previous offset 7:',
@@ -32,6 +38,12 @@ describe('memory search pagination summaries', () => {
   it('uses the requested page size for empty-page recovery', () => {
     expect(formatMemorySearchEmptyPage(12, 4)).toBe(
       'No memories found matching your query at offset 12. Try offset 8.',
+    );
+  });
+
+  it('reports filtered totals on an empty page', () => {
+    expect(formatMemorySearchEmptyPage(12, 4, 6)).toBe(
+      'No memories found matching your query at offset 12. Total matching: 6. Try offset 8.',
     );
   });
 
