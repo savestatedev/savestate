@@ -175,6 +175,14 @@ describe('MemoryStore', () => {
       expect(results).toHaveLength(2);
     });
 
+    it('should search tag values as well as content', async () => {
+      const results = await store.query({ search: 'ui' });
+
+      expect(results).toHaveLength(1);
+      expect(results[0].content).toBe('Pref 1');
+      expect(store.count({ search: 'ui' })).toBe(1);
+    });
+
     it('should count entries using the same filters as query', () => {
       expect(store.count()).toBe(4);
       expect(store.count({ type: 'fact' })).toBe(2);

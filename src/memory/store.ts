@@ -29,6 +29,14 @@ function appendTagFilters(sql: string, params: unknown[], tags: string[]): strin
   return `${sql} AND (${tagConditions.join(' OR ')})`;
 }
 
+function appendSearchFilter(sql: string, params: unknown[], search: string): string {
+  const pattern = `%${search}%`;
+  params.push(pattern, pattern);
+  return `${sql} AND (content LIKE ? OR EXISTS (
+    SELECT 1 FROM json_each(memories.tags) WHERE json_each.value LIKE ?
+  ))`;
+}
+
 export interface MemoryStoreOptions {
   dbPath?: string;
   keySource?: KeySource;
@@ -258,8 +266,7 @@ export class MemoryStore {
     }
 
     if (query.search) {
-      sql += ' AND content LIKE ?';
-      params.push(`%${query.search}%`);
+      sql = appendSearchFilter(sql, params, query.search);
     }
 
     sql += ' ORDER BY importance DESC, created_at DESC';
@@ -319,8 +326,7 @@ export class MemoryStore {
     }
 
     if (query.search) {
-      sql += ' AND content LIKE ?';
-      params.push(`%${query.search}%`);
+      sql = appendSearchFilter(sql, params, query.search);
     }
 
     const stmt = this.db.prepare(sql);
