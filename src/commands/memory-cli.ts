@@ -205,6 +205,19 @@ export function parseMemoryMaxImportance(value: string | undefined): number | un
   return importance;
 }
 
+/** Reject an inverted importance range before loading encrypted storage. */
+export function validateMemoryImportanceRange(
+  minImportance: number | undefined,
+  maxImportance: number | undefined,
+): void {
+  if (minImportance === undefined || maxImportance === undefined) return;
+  if (minImportance > maxImportance) {
+    throw new Error(
+      `Invalid memory importance range: --min-importance (${minImportance}) must be at or below --max-importance (${maxImportance}).`,
+    );
+  }
+}
+
 /** Parse memory --snapshot without treating blank ids as the latest snapshot. */
 export function parseMemorySnapshot(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -510,6 +523,9 @@ export function registerMemoryCommands(program: Command): void {
         const until = parseMemoryListUntil(options.until);
         const since = parseMemoryListSince(options.since);
         validateMemoryListDateRange(since, until);
+        const minImportance = parseMemoryMinImportance(options.minImportance);
+        const maxImportance = parseMemoryMaxImportance(options.maxImportance);
+        validateMemoryImportanceRange(minImportance, maxImportance);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -524,8 +540,8 @@ export function registerMemoryCommands(program: Command): void {
           tags: parseMemoryTags(options.tags),
           since,
           freshness: parseMemoryFreshness(options.freshness),
-          minImportance: parseMemoryMinImportance(options.minImportance),
-          maxImportance: parseMemoryMaxImportance(options.maxImportance),
+          minImportance,
+          maxImportance,
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),
@@ -728,6 +744,9 @@ export function registerMemoryCommands(program: Command): void {
         const until = parseMemoryListUntil(options.until);
         const since = parseMemoryListSince(options.since);
         validateMemoryListDateRange(since, until);
+        const minImportance = parseMemoryMinImportance(options.minImportance);
+        const maxImportance = parseMemoryMaxImportance(options.maxImportance);
+        validateMemoryImportanceRange(minImportance, maxImportance);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -743,8 +762,8 @@ export function registerMemoryCommands(program: Command): void {
           offset: options.offset,
           tags: parseMemoryTags(options.tags),
           freshness: parseMemoryFreshness(options.freshness),
-          minImportance: parseMemoryMinImportance(options.minImportance),
-          maxImportance: parseMemoryMaxImportance(options.maxImportance),
+          minImportance,
+          maxImportance,
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {

@@ -3232,8 +3232,9 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory explain "inbox preference" --min-importance 0.8');
     expect(explainBlock).toContain(".option('--min-importance <n>'");
     expect(explainBlock).toContain(".option('--max-importance <n>'");
-    expect(memoryCli).toContain('minImportance: parseMemoryMinImportance(options.minImportance)');
-    expect(memoryCli).toContain('maxImportance: parseMemoryMaxImportance(options.maxImportance)');
+    expect(memoryCli).toContain('const minImportance = parseMemoryMinImportance(options.minImportance)');
+    expect(memoryCli).toContain('const maxImportance = parseMemoryMaxImportance(options.maxImportance)');
+    expect(memoryCli).toContain('validateMemoryImportanceRange(minImportance, maxImportance)');
   });
 
   it('documents memory explain --offset as a bounded non-negative integer', () => {

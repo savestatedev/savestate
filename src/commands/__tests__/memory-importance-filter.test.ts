@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryMaxImportance, parseMemoryMinImportance } from '../memory-cli.js';
+import {
+  parseMemoryMaxImportance,
+  parseMemoryMinImportance,
+  validateMemoryImportanceRange,
+} from '../memory-cli.js';
 import {
   filterMemoryListByImportance,
   formatMemoryListImportance,
@@ -81,5 +85,13 @@ describe('savestate memory explain importance filters', () => {
   it('accepts the same bounded score syntax as memory list', () => {
     expect(parseMemoryMinImportance('0.8')).toBe(0.8);
     expect(parseMemoryMaxImportance('1.0')).toBe(1);
+  });
+
+  it('rejects an inverted importance range before storage access', () => {
+    expect(() => validateMemoryImportanceRange(0.9, 0.2)).toThrow(
+      'Invalid memory importance range: --min-importance (0.9) must be at or below --max-importance (0.2).',
+    );
+    expect(() => validateMemoryImportanceRange(0.2, 0.9)).not.toThrow();
+    expect(() => validateMemoryImportanceRange(undefined, 0.9)).not.toThrow();
   });
 });
