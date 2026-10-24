@@ -195,6 +195,22 @@ describe('savestate memory explain --json', () => {
     });
   });
 
+  it('includes the effective importance used by ranking when provided', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        importance: 0.9,
+        summary: 'High-importance match.',
+        pinned: false,
+        tier: 'L2',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.importance).toBe(0.9);
+  });
+
   it('includes every active scope filter for JSON consumers', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(

@@ -2134,6 +2134,8 @@ export interface MemoryExplainResultJson {
   id: string;
   createdAt?: string;
   score: number;
+  /** Effective importance score used by the retrieval ranking. */
+  importance?: number;
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
@@ -2216,6 +2218,7 @@ export function formatMemoryExplainJson(
     id: string;
     createdAt?: string;
     score: number;
+    importance?: number;
     summary: string;
     pinned: boolean;
     tier: MemoryTier;
@@ -2258,6 +2261,7 @@ export function formatMemoryExplainJson(
       id: result.id,
       createdAt: result.createdAt,
       score: result.score,
+      importance: result.importance,
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
@@ -2584,6 +2588,7 @@ export async function explainMemoryCommand(
           id: r.entry.id,
           createdAt: r.entry.createdAt,
           score: r.finalScore,
+          importance: getMemoryListImportance(r.entry),
           summary: r.explanation.summary,
           pinned: !!r.entry.pinned,
           tier: getEffectiveTier(r.entry),
