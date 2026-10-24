@@ -116,6 +116,10 @@ import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './searc
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
+import {
+  hasValidMemoryImportanceRange,
+  INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
+} from './memory-importance-range.js';
 import { toMemoryResourceEntry } from './memory-resource-entry.js';
 import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
@@ -676,6 +680,9 @@ const ListMemoriesInputSchema = z.object({
   maxImportance: z.number().min(0).max(1).optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
+}).refine(hasValidMemoryImportanceRange, {
+  message: INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
+  path: ['maxImportance'],
 });
 
 const DeleteAllMemoriesInputSchema = z.object({

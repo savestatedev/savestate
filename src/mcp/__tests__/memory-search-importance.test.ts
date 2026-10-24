@@ -17,4 +17,14 @@ describe('MCP memory search importance filter', () => {
   ])('rejects out-of-range threshold %s=%s', (field, value) => {
     expect(() => MemorySearchInputSchema.parse({ [field]: value })).toThrow();
   });
+
+  it('rejects an inverted importance range', () => {
+    expect(() => MemorySearchInputSchema.parse({ minImportance: 0.9, maxImportance: 0.2 }))
+      .toThrow('minImportance must be at or below maxImportance');
+  });
+
+  it('accepts an inclusive importance range', () => {
+    expect(MemorySearchInputSchema.parse({ minImportance: 0.2, maxImportance: 0.9 }))
+      .toMatchObject({ minImportance: 0.2, maxImportance: 0.9 });
+  });
 });
