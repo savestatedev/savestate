@@ -97,6 +97,19 @@ describe('MCP savestate://memories limit', () => {
     });
   });
 
+  it('preserves text search in continuation links', () => {
+    expect(buildMemoriesResourcePage(
+      [{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }],
+      3,
+      0,
+      2,
+      'savestate://memories?search=encrypted+archive',
+    )).toMatchObject({
+      nextOffset: 2,
+      nextUri: 'savestate://memories?search=encrypted+archive&offset=2&limit=2',
+    });
+  });
+
   it('suggests the last available page when an offset is stale', () => {
     expect(buildMemoriesResourcePage(
       [{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }],
