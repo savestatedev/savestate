@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourceUri,
   parseMemoriesResourceImportance,
+  parseMemoriesResourceType,
   validateMemoriesResourceImportanceRange,
 } from '../memories-resource-filters.js';
 
@@ -24,9 +25,17 @@ describe('MCP savestate://memories importance filters', () => {
     );
   });
 
+  it('parses and validates memory types', () => {
+    expect(parseMemoriesResourceType(' preference ')).toBe('preference');
+    expect(parseMemoriesResourceType(null)).toBeUndefined();
+    expect(() => parseMemoriesResourceType('unknown')).toThrow(
+      'Invalid type value "unknown". Expected one of: fact, event, preference, conversation.',
+    );
+  });
+
   it('keeps filters in pagination resource links', () => {
-    expect(buildMemoriesResourceUri(0.4, 0.9)).toBe(
-      'savestate://memories?minImportance=0.4&maxImportance=0.9',
+    expect(buildMemoriesResourceUri(0.4, 0.9, 'event')).toBe(
+      'savestate://memories?type=event&minImportance=0.4&maxImportance=0.9',
     );
   });
 });

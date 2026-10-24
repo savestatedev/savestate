@@ -2,6 +2,23 @@ import {
   hasValidMemoryImportanceRange,
   INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
 } from './memory-importance-range.js';
+import type { MemoryType } from '../memory/types.js';
+
+const MEMORY_TYPES: readonly MemoryType[] = ['fact', 'event', 'preference', 'conversation'];
+
+/** Parse an optional memory resource type without silently widening the query. */
+export function parseMemoriesResourceType(value: string | null): MemoryType | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  if (!MEMORY_TYPES.includes(normalized as MemoryType)) {
+    throw new Error(
+      `Invalid type value "${value}". Expected one of: ${MEMORY_TYPES.join(', ')}.`,
+    );
+  }
+
+  return normalized as MemoryType;
+}
 
 const MAX_MEMORY_IMPORTANCE = 1;
 const MIN_MEMORY_IMPORTANCE = 0;
@@ -43,8 +60,10 @@ export function validateMemoriesResourceImportanceRange(
 export function buildMemoriesResourceUri(
   minImportance: number | undefined,
   maxImportance: number | undefined,
+  type?: MemoryType,
 ): string {
   const params = new URLSearchParams();
+  if (type !== undefined) params.set('type', type);
   if (minImportance !== undefined) params.set('minImportance', String(minImportance));
   if (maxImportance !== undefined) params.set('maxImportance', String(maxImportance));
   const query = params.toString();
