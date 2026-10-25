@@ -44,6 +44,14 @@ describe('savestate stats --tag', () => {
     ).toEqual(['work']);
   });
 
+  it('matches legacy tags case-insensitively after trimming', () => {
+    expect(
+      applyStatsFilters([entry({ id: 'legacy', tags: [' Work '] })], { tag: 'work' }).map(
+        (snapshot) => snapshot.id,
+      ),
+    ).toEqual(['legacy']);
+  });
+
   it('ANDs --adapter with --tag', () => {
     expect(
       applyStatsFilters(

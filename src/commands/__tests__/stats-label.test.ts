@@ -44,6 +44,14 @@ describe('savestate stats --label', () => {
     ).toEqual(['backup']);
   });
 
+  it('matches legacy labels case-insensitively after trimming', () => {
+    expect(
+      applyStatsFilters([entry({ id: 'legacy', label: ' Project Alpha ' })], {
+        label: 'project alpha',
+      }).map((snapshot) => snapshot.id),
+    ).toEqual(['legacy']);
+  });
+
   it('ANDs --adapter with --label', () => {
     expect(
       applyStatsFilters(
