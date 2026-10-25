@@ -39,6 +39,20 @@ function appendSearchFilter(sql: string, params: unknown[], search: string): str
   ))`;
 }
 
+function normalizeDateFilter(value: string, boundary: 'start' | 'end'): string {
+  const normalized = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return normalized;
+
+  const candidate = `${normalized}T${boundary === 'start' ? '00:00:00.000' : '23:59:59.999'}Z`;
+  const parsed = Date.parse(candidate);
+  if (Number.isNaN(parsed) || new Date(parsed).toISOString().slice(0, 10) !== normalized) {
+    const filterName = boundary === 'start' ? 'since' : 'until';
+    throw new RangeError(`Invalid memory ${filterName} date: ${value}`);
+  }
+
+  return candidate;
+}
+
 function validatePagination(query: MemoryQuery): void {
   if (query.limit !== undefined && (!Number.isInteger(query.limit) || query.limit < 0)) {
     throw new RangeError('Memory query limit must be a non-negative integer');
@@ -268,12 +282,12 @@ export class MemoryStore {
 
     if (query.since) {
       sql += ' AND created_at >= ?';
-      params.push(query.since);
+      params.push(normalizeDateFilter(query.since, 'start'));
     }
 
     if (query.until) {
       sql += ' AND created_at <= ?';
-      params.push(query.until);
+      params.push(normalizeDateFilter(query.until, 'end'));
     }
 
     if (query.tags && query.tags.length > 0) {
@@ -333,12 +347,12 @@ export class MemoryStore {
 
     if (query.since) {
       sql += ' AND created_at >= ?';
-      params.push(query.since);
+      params.push(normalizeDateFilter(query.since, 'start'));
     }
 
     if (query.until) {
       sql += ' AND created_at <= ?';
-      params.push(query.until);
+      params.push(normalizeDateFilter(query.until, 'end'));
     }
 
     if (query.tags && query.tags.length > 0) {
