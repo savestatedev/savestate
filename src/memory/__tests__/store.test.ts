@@ -159,6 +159,15 @@ describe('MemoryStore', () => {
       expect(limited).toEqual([]);
     });
 
+    it('should reject invalid pagination values instead of treating them as unbounded', async () => {
+      await expect(store.query({ limit: -1 })).rejects.toThrow(
+        'Memory query limit must be a non-negative integer',
+      );
+      await expect(store.query({ offset: 1.5 })).rejects.toThrow(
+        'Memory query offset must be a non-negative integer',
+      );
+    });
+
     it('should support an offset without an explicit limit', async () => {
       const page = await store.query({ offset: 2 });
 

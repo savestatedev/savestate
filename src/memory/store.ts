@@ -37,6 +37,16 @@ function appendSearchFilter(sql: string, params: unknown[], search: string): str
   ))`;
 }
 
+function validatePagination(query: MemoryQuery): void {
+  if (query.limit !== undefined && (!Number.isInteger(query.limit) || query.limit < 0)) {
+    throw new RangeError('Memory query limit must be a non-negative integer');
+  }
+
+  if (query.offset !== undefined && (!Number.isInteger(query.offset) || query.offset < 0)) {
+    throw new RangeError('Memory query offset must be a non-negative integer');
+  }
+}
+
 export interface MemoryStoreOptions {
   dbPath?: string;
   keySource?: KeySource;
@@ -234,6 +244,8 @@ export class MemoryStore {
    * Query memory entries
    */
   async query(query: MemoryQuery = {}): Promise<MemoryEntry[]> {
+    validatePagination(query);
+
     let sql = 'SELECT * FROM memories WHERE 1=1';
     const params: any[] = [];
 
