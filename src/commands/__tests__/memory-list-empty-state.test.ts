@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { formatMemoryListEmptyState } from '../memory.js';
+import { formatMemoryListEmptyState, formatMemoryListFilterSummary } from '../memory.js';
 
 describe('savestate memory list human empty state', () => {
   it('explains when no memories match the filters', () => {
     expect(formatMemoryListEmptyState(0, 0)).toBe(
       'No memories found matching the criteria. Try adjusting the filters.',
+    );
+  });
+
+  it('includes active filters in an empty filtered collection', () => {
+    const filters = formatMemoryListFilterSummary({
+      tier: 'L1',
+      pinned: true,
+      source: 'agent',
+      content: 'preferred editor',
+      tags: ['work', 'urgent'],
+    });
+
+    expect(filters).toBe('tier=L1, pinned, source=agent, content="preferred editor", tags=[work, urgent]');
+    expect(formatMemoryListEmptyState(0, 0, undefined, false, undefined, filters)).toBe(
+      'No memories found matching these filters: tier=L1, pinned, source=agent, content="preferred editor", tags=[work, urgent]. Try adjusting the filters.',
     );
   });
 

@@ -1074,13 +1074,15 @@ export function formatMemoryListEmptyState(
   limit?: number,
   collectionEmpty = false,
   snapshotId?: string,
+  filterSummary?: string,
 ): string {
   if (matchingCount === 0) {
     if (collectionEmpty) {
       const snapshotLabel = snapshotId ? ` in snapshot ${snapshotId}` : ' in this snapshot';
       return `No memories found${snapshotLabel}. Capture or import memories to populate this list.`;
     }
-    return 'No memories found matching the criteria. Try adjusting the filters.';
+    const criteria = filterSummary ? ` these filters: ${filterSummary}` : ' the criteria';
+    return `No memories found matching${criteria}. Try adjusting the filters.`;
   }
 
   const suggestedOffset = limit === undefined
@@ -1089,6 +1091,37 @@ export function formatMemoryListEmptyState(
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+}
+
+/** Summarize active list filters so an empty human-facing result is actionable. */
+export function formatMemoryListFilterSummary(
+  options: {
+    tier?: MemoryTier;
+    pinned?: boolean;
+    source?: string;
+    namespace?: string;
+    content?: string;
+    tags?: string[];
+    until?: string;
+    since?: string;
+    freshness?: MemoryFreshnessState;
+    minImportance?: number;
+    maxImportance?: number;
+  } = {},
+): string | undefined {
+  const filters: string[] = [];
+  if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
+  if (options.pinned !== undefined) filters.push(options.pinned ? 'pinned' : 'unpinned');
+  if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
+  if (options.content !== undefined) filters.push(`content=${JSON.stringify(options.content)}`);
+  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
+  if (options.since !== undefined) filters.push(`since=${options.since}`);
+  if (options.until !== undefined) filters.push(`until=${options.until}`);
+  if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
+  if (options.minImportance !== undefined) filters.push(`min-importance=${options.minImportance}`);
+  if (options.maxImportance !== undefined) filters.push(`max-importance=${options.maxImportance}`);
+  return filters.length > 0 ? filters.join(', ') : undefined;
 }
 
 /** Describe the visible memory page when filters or pagination hide entries. */
@@ -1242,6 +1275,19 @@ export async function listMemories(
       options?.limit,
       normalized.core.length === 0,
       snapshot.manifest.id,
+      formatMemoryListFilterSummary({
+        tier: options?.tier,
+        pinned: options?.pinned,
+        source: options?.source,
+        namespace: options?.namespace,
+        content: options?.content,
+        tags: options?.tags,
+        since: options?.since,
+        until: options?.until,
+        freshness: options?.freshness,
+        minImportance: options?.minImportance,
+        maxImportance: options?.maxImportance,
+      }),
     ));
     return;
   }
