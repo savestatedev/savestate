@@ -1,8 +1,8 @@
 /**
  * Tests for the Trust Kernel ↔ MemoryStore integration (Phase 2).
  *
- * MemoryStore.create() now optionally routes through a WriteGate. Denylisted
- * content is rejected with a typed exception and never reaches SQLite.
+ * MemoryStore writes optionally route through a WriteGate. Denylisted content
+ * is rejected with a typed exception and never reaches SQLite.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -85,6 +85,18 @@ describe('MemoryStore + Trust Kernel WriteGate', () => {
       expect(rejection.blockers.length).toBeGreaterThan(0);
       expect(rejection.blockers[0]).toMatch(/Denylisted/i);
     }
+  });
+
+  it('rejects denylisted updates without changing the stored memory', async () => {
+    const gate = new WriteGate({ store: trustStore });
+    const memory = new MemoryStore({ dbPath: memDb, writeGate: gate });
+    const entry = await memory.create({ type: 'fact', content: 'safe original' });
+    trustStore.addToDenylist('forbidden', 'test denylist', 'test');
+
+    await expect(memory.update(entry.id, { content: 'now forbidden' })).rejects.toBeInstanceOf(
+      TrustGateRejection,
+    );
+    await expect(memory.get(entry.id)).resolves.toMatchObject({ content: 'safe original' });
   });
 });
 

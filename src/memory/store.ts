@@ -68,7 +68,7 @@ export interface MemoryStoreOptions {
   keySource?: KeySource;
   encryptionEnabled?: boolean;
   /**
-   * Optional Trust Kernel gate. When set, every `create()` call routes
+   * Optional Trust Kernel gate. When set, every create/update call routes
    * through `writeGate.evaluate()` first. Rejected writes raise
    * `TrustGateRejection` and never hit the DB.
    */
@@ -137,20 +137,7 @@ export class MemoryStore {
    * Create a new memory entry
    */
   async create(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<MemoryEntry> {
-    if (this.writeGate) {
-      const gateResult = this.writeGate.evaluate({
-        content: entry.content,
-        source: 'memory-store',
-        tags: entry.tags,
-        metadata: entry.metadata,
-      });
-      if (!gateResult.allowed) {
-        throw new TrustGateRejection(
-          `Memory write rejected by Trust Kernel: ${gateResult.blockers.join('; ')}`,
-          gateResult.blockers,
-        );
-      }
-    }
+    this.assertWriteAllowed(entry);
 
     const id = randomUUID();
     const now = new Date().toISOString();
@@ -214,6 +201,12 @@ export class MemoryStore {
   async update(id: string, updates: Partial<MemoryEntry>): Promise<MemoryEntry | null> {
     const existing = await this.get(id);
     if (!existing) return null;
+
+    this.assertWriteAllowed({
+      content: updates.content ?? existing.content,
+      tags: updates.tags ?? existing.tags,
+      metadata: updates.metadata ?? existing.metadata,
+    });
 
     const now = new Date().toISOString();
     let content = updates.content ?? existing.content;
@@ -409,6 +402,24 @@ export class MemoryStore {
    */
   close(): void {
     this.db.close();
+  }
+
+  /** Apply the same Trust Kernel policy to creates and updates. */
+  private assertWriteAllowed(entry: Pick<MemoryEntry, 'content' | 'tags' | 'metadata'>): void {
+    if (!this.writeGate) return;
+
+    const gateResult = this.writeGate.evaluate({
+      content: entry.content,
+      source: 'memory-store',
+      tags: entry.tags,
+      metadata: entry.metadata,
+    });
+    if (!gateResult.allowed) {
+      throw new TrustGateRejection(
+        `Memory write rejected by Trust Kernel: ${gateResult.blockers.join('; ')}`,
+        gateResult.blockers,
+      );
+    }
   }
 
   /**
