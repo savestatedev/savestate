@@ -153,10 +153,43 @@ describe('MemoryStore', () => {
       expect(limited).toHaveLength(2);
     });
 
+    it('should return no results for an explicit zero limit', async () => {
+      const limited = await store.query({ limit: 0 });
+
+      expect(limited).toEqual([]);
+    });
+
+    it('should reject invalid pagination values instead of treating them as unbounded', async () => {
+      await expect(store.query({ limit: -1 })).rejects.toThrow(
+        'Memory query limit must be a non-negative integer',
+      );
+      await expect(store.query({ offset: 1.5 })).rejects.toThrow(
+        'Memory query offset must be a non-negative integer',
+      );
+    });
+
     it('should support an offset without an explicit limit', async () => {
       const page = await store.query({ offset: 2 });
 
       expect(page.map((entry) => entry.content)).toEqual(['Fact 2', 'Pref 1']);
+    });
+
+    it('should use a stable ID tie-breaker for paginated ties', async () => {
+      const first = await store.create({ type: 'fact', content: 'Tie 1', importance: 0.4 });
+      const second = await store.create({ type: 'fact', content: 'Tie 2', importance: 0.4 });
+      const db = (store as unknown as { db: { prepare: (sql: string) => { run: (...params: string[]) => void } } }).db;
+      db.prepare('UPDATE memories SET created_at = ? WHERE id IN (?, ?)').run(
+        '2026-10-25T12:00:00.000Z',
+        first.id,
+        second.id,
+      );
+
+      const all = await store.query({ minImportance: 0.4, maxImportance: 0.4 });
+      const firstPage = await store.query({ minImportance: 0.4, maxImportance: 0.4, limit: 1 });
+      const secondPage = await store.query({ minImportance: 0.4, maxImportance: 0.4, limit: 1, offset: 1 });
+
+      expect([firstPage[0].id, secondPage[0].id]).toEqual(all.map((entry) => entry.id));
+      expect([first.id, second.id].sort()).toEqual([firstPage[0].id, secondPage[0].id]);
     });
 
     it('should filter by tags', async () => {
@@ -187,6 +220,20 @@ describe('MemoryStore', () => {
       expect(results).toHaveLength(1);
       expect(results[0].content).toBe('Pref 1');
       expect(store.count({ search: 'ui' })).toBe(1);
+    });
+
+    it('should treat LIKE metacharacters in searches literally', async () => {
+      await store.create({ type: 'fact', content: 'Budget is 100% approved' });
+      await store.create({ type: 'fact', content: 'Budget is 100x approved' });
+      await store.create({ type: 'fact', content: 'user_name is set' });
+      await store.create({ type: 'fact', content: 'username is set' });
+
+      const percentResults = await store.query({ search: '100%' });
+      const underscoreResults = await store.query({ search: 'user_name' });
+
+      expect(percentResults.map((entry) => entry.content)).toEqual(['Budget is 100% approved']);
+      expect(underscoreResults.map((entry) => entry.content)).toEqual(['user_name is set']);
+      expect(store.count({ search: '100%' })).toBe(1);
     });
 
     it('should count entries using the same filters as query', () => {

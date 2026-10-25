@@ -30,11 +30,23 @@ function appendTagFilters(sql: string, params: unknown[], tags: string[]): strin
 }
 
 function appendSearchFilter(sql: string, params: unknown[], search: string): string {
-  const pattern = `%${search}%`;
+  // Search is a substring match, so user-supplied LIKE metacharacters must
+  // remain literal instead of changing the query's meaning.
+  const pattern = `%${search.replace(/[\\%_]/g, '\\$&')}%`;
   params.push(pattern, pattern);
-  return `${sql} AND (content LIKE ? OR EXISTS (
-    SELECT 1 FROM json_each(memories.tags) WHERE json_each.value LIKE ?
+  return `${sql} AND (content LIKE ? ESCAPE '\\' OR EXISTS (
+    SELECT 1 FROM json_each(memories.tags) WHERE json_each.value LIKE ? ESCAPE '\\'
   ))`;
+}
+
+function validatePagination(query: MemoryQuery): void {
+  if (query.limit !== undefined && (!Number.isInteger(query.limit) || query.limit < 0)) {
+    throw new RangeError('Memory query limit must be a non-negative integer');
+  }
+
+  if (query.offset !== undefined && (!Number.isInteger(query.offset) || query.offset < 0)) {
+    throw new RangeError('Memory query offset must be a non-negative integer');
+  }
 }
 
 export interface MemoryStoreOptions {
@@ -234,6 +246,8 @@ export class MemoryStore {
    * Query memory entries
    */
   async query(query: MemoryQuery = {}): Promise<MemoryEntry[]> {
+    validatePagination(query);
+
     let sql = 'SELECT * FROM memories WHERE 1=1';
     const params: any[] = [];
 
@@ -270,9 +284,11 @@ export class MemoryStore {
       sql = appendSearchFilter(sql, params, query.search);
     }
 
-    sql += ' ORDER BY importance DESC, created_at DESC';
+    // Keep pagination stable when memories share the same importance and
+    // creation timestamp (which is possible for writes in one millisecond).
+    sql += ' ORDER BY importance DESC, created_at DESC, id ASC';
 
-    if (query.limit) {
+    if (query.limit !== undefined) {
       sql += ' LIMIT ?';
       params.push(query.limit);
     } else if (query.offset) {
