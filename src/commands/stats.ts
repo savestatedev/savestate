@@ -559,8 +559,14 @@ function filterStatsEntries(
     if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) return false;
     if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) return false;
-    if (tag !== undefined && !(snapshot.tags ?? []).includes(tag)) return false;
-    if (label !== undefined && snapshot.label !== label) return false;
+    if (
+      tag !== undefined &&
+      !(snapshot.tags ?? []).some((value) => value.trim().toLowerCase() === tag.toLowerCase())
+    ) return false;
+    if (
+      label !== undefined &&
+      snapshot.label?.trim().toLowerCase() !== label.toLowerCase()
+    ) return false;
     return true;
   });
 }

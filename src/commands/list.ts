@@ -571,8 +571,11 @@ export function applyListFilters(
     if (platform && s.platform.trim().toLowerCase() !== platform) return false;
     if (exclude !== undefined && exclude.includes(s.adapter.trim().toLowerCase())) return false;
     if (snapshotId !== undefined && s.id !== snapshotId) return false;
-    if (tag && !(s.tags ?? []).some((value) => value.trim() === tag)) return false;
-    if (label !== undefined && s.label?.trim() !== label) return false;
+    if (
+      tag &&
+      !(s.tags ?? []).some((value) => value.trim().toLowerCase() === tag.toLowerCase())
+    ) return false;
+    if (label !== undefined && s.label?.trim().toLowerCase() !== label.toLowerCase()) return false;
     return true;
   });
 }
