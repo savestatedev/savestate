@@ -65,7 +65,10 @@ import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './d
 import { parseDeleteAllMemoriesOffset, selectDeleteAllMemoriesOffsetEntries } from './delete-all-memories-offset.js';
 import { parseDeleteMemoryLimit, selectDeleteMemoryEntries } from './delete-memory-limit.js';
 import { parseDeleteMemoryOffset, selectDeleteMemoryOffsetEntries } from './delete-memory-offset.js';
-import { MemorySearchInputSchema } from './memory-search-schema.js';
+import {
+  MemorySearchInputSchema,
+  parseMemorySearchDateFilters,
+} from './memory-search-schema.js';
 import {
   formatListMemoriesEmptyPage,
   formatListMemoriesPageSummary,
@@ -368,6 +371,14 @@ export const tools: Tool[] = [
         },
         minImportance: importanceFilterSchema,
         maxImportance: importanceFilterSchema,
+        since: {
+          type: 'string',
+          description: 'Filter by creation time on or after an ISO-8601 date or timestamp (date-only starts at 00:00 UTC)',
+        },
+        until: {
+          type: 'string',
+          description: 'Filter by creation time on or before an ISO-8601 date or timestamp (date-only includes the full UTC day)',
+        },
       },
     },
   },
@@ -503,6 +514,14 @@ export const tools: Tool[] = [
         },
         minImportance: importanceFilterSchema,
         maxImportance: importanceFilterSchema,
+        since: {
+          type: 'string',
+          description: 'Filter by creation time on or after an ISO-8601 date or timestamp (date-only starts at 00:00 UTC)',
+        },
+        until: {
+          type: 'string',
+          description: 'Filter by creation time on or before an ISO-8601 date or timestamp (date-only includes the full UTC day)',
+        },
         limit: {
           type: 'number',
           description: 'Maximum results (default: 10; positive integer up to 1000)',
@@ -1168,6 +1187,7 @@ async function handleMemorySearch(
 
     const limit = parseSavestateMemorySearchLimit(input.limit);
     const offset = parseSavestateMemorySearchOffset(input.offset);
+    const dateFilters = parseMemorySearchDateFilters(input);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
@@ -1175,6 +1195,7 @@ async function handleMemorySearch(
       limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
+      ...dateFilters,
     };
 
     const pageLimit = limit ?? 10;
@@ -1186,6 +1207,7 @@ async function handleMemorySearch(
       search: input.query,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
+      ...dateFilters,
     });
     const hasMore = queried.length > start + pageLimit;
     const results = selectSavestateMemorySearchEntries(
@@ -1311,6 +1333,7 @@ async function handleSearchMemory(
 
     const limit = parseSearchMemoryLimit(input.limit);
     const offset = parseSearchMemoryOffset(input.offset);
+    const dateFilters = parseMemorySearchDateFilters(input);
     const query: MemoryQuery = {
       type: input.type,
       tags: input.tags,
@@ -1318,6 +1341,7 @@ async function handleSearchMemory(
       limit: (offset ?? 0) + (limit ?? 10) + 1,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
+      ...dateFilters,
     };
 
     const pageLimit = limit ?? 10;
@@ -1329,6 +1353,7 @@ async function handleSearchMemory(
       search: input.query,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
+      ...dateFilters,
     });
     const hasMore = queried.length > start + pageLimit;
     const results = selectSearchMemoryEntries(
