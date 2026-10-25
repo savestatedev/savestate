@@ -174,6 +174,20 @@ describe('MemoryStore', () => {
       expect(page.map((entry) => entry.content)).toEqual(['Fact 2', 'Pref 1']);
     });
 
+    it('should include the full UTC day for date-only filters', async () => {
+      const entry = await store.create({ type: 'fact', content: 'Date-filtered fact' });
+      const db = (store as unknown as { db: { prepare: (sql: string) => { run: (...params: string[]) => void } } }).db;
+      db.prepare('UPDATE memories SET created_at = ? WHERE id = ?').run(
+        '2026-10-01T18:00:00.000Z',
+        entry.id,
+      );
+
+      const results = await store.query({ since: '2026-10-01', until: '2026-10-01' });
+
+      expect(results.map((memory) => memory.content)).toContain('Date-filtered fact');
+      expect(store.count({ since: '2026-10-01', until: '2026-10-01' })).toBe(1);
+    });
+
     it('should use a stable ID tie-breaker for paginated ties', async () => {
       const first = await store.create({ type: 'fact', content: 'Tie 1', importance: 0.4 });
       const second = await store.create({ type: 'fact', content: 'Tie 2', importance: 0.4 });
