@@ -1112,8 +1112,8 @@ export function formatMemoryListFilterSummary(
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.pinned !== undefined) filters.push(options.pinned ? 'pinned' : 'unpinned');
-  if (options.source !== undefined) filters.push(`source=${options.source}`);
-  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
+  if (options.source !== undefined) filters.push(`source=${options.source.trim()}`);
+  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace.trim()}`);
   if (options.content !== undefined) filters.push(`content=${JSON.stringify(options.content)}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
   if (options.since !== undefined) filters.push(`since=${options.since}`);

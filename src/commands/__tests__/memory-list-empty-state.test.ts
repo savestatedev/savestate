@@ -23,6 +23,13 @@ describe('savestate memory list human empty state', () => {
     );
   });
 
+  it('normalizes source and namespace values in the filter summary', () => {
+    expect(formatMemoryListFilterSummary({
+      source: '  agent  ',
+      namespace: '  work  ',
+    })).toBe('source=agent, namespace=work');
+  });
+
   it('explains how to populate an empty snapshot', () => {
     expect(formatMemoryListEmptyState(0, 0, 20, true)).toBe(
       'No memories found in this snapshot. Capture or import memories to populate this list.',
