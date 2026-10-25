@@ -274,7 +274,7 @@ export class MemoryStore {
     // creation timestamp (which is possible for writes in one millisecond).
     sql += ' ORDER BY importance DESC, created_at DESC, id ASC';
 
-    if (query.limit) {
+    if (query.limit !== undefined) {
       sql += ' LIMIT ?';
       params.push(query.limit);
     } else if (query.offset) {

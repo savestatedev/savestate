@@ -153,6 +153,12 @@ describe('MemoryStore', () => {
       expect(limited).toHaveLength(2);
     });
 
+    it('should return no results for an explicit zero limit', async () => {
+      const limited = await store.query({ limit: 0 });
+
+      expect(limited).toEqual([]);
+    });
+
     it('should support an offset without an explicit limit', async () => {
       const page = await store.query({ offset: 2 });
 
