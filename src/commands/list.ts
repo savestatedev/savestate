@@ -575,7 +575,7 @@ export function applyListFilters(
       tag &&
       !(s.tags ?? []).some((value) => value.trim().toLowerCase() === tag.toLowerCase())
     ) return false;
-    if (label !== undefined && s.label?.trim() !== label) return false;
+    if (label !== undefined && s.label?.trim().toLowerCase() !== label.toLowerCase()) return false;
     return true;
   });
 }

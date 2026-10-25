@@ -75,6 +75,14 @@ describe('applyListFilters', () => {
     expect(out.map((s) => s.id)).toEqual(['legacy']);
   });
 
+  it('matches snapshot labels case-insensitively', () => {
+    const out = applyListFilters(
+      [entry({ id: 'legacy', label: ' Project Alpha ' })],
+      { label: 'project alpha' },
+    );
+    expect(out.map((s) => s.id)).toEqual(['legacy']);
+  });
+
   it('throws on blank --tag', () => {
     expect(() => applyListFilters(all, { tag: ' ' })).toThrow(
       'Invalid --tag value " ". Expected a single non-empty snapshot tag (no commas).',
