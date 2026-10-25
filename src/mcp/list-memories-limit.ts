@@ -41,10 +41,10 @@ export function formatListMemoriesEmptyPage(
   limit?: number,
 ): string {
   const start = offset ?? 0;
-  if (total === 0) return `No memories found at offset ${start}. Total stored: 0`;
+  if (total === 0) return `No memories found at offset ${start}. Total matching: 0`;
 
   const pageSize = limit ?? 50;
   const suggestedOffset = Math.floor((total - 1) / pageSize) * pageSize;
-  return `No memories found at offset ${start}. Total stored: ${total}. ` +
+  return `No memories found at offset ${start}. Total matching: ${total}. ` +
     `Suggested offset ${suggestedOffset} with limit ${pageSize} opens the nearest available page.`;
 }
