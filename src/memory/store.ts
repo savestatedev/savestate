@@ -275,6 +275,9 @@ export class MemoryStore {
     if (query.limit) {
       sql += ' LIMIT ?';
       params.push(query.limit);
+    } else if (query.offset) {
+      // SQLite requires LIMIT before OFFSET. -1 keeps all remaining rows.
+      sql += ' LIMIT -1';
     }
 
     if (query.offset) {
