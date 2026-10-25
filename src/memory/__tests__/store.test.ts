@@ -222,6 +222,20 @@ describe('MemoryStore', () => {
       expect(store.count({ search: 'ui' })).toBe(1);
     });
 
+    it('should treat LIKE metacharacters in searches literally', async () => {
+      await store.create({ type: 'fact', content: 'Budget is 100% approved' });
+      await store.create({ type: 'fact', content: 'Budget is 100x approved' });
+      await store.create({ type: 'fact', content: 'user_name is set' });
+      await store.create({ type: 'fact', content: 'username is set' });
+
+      const percentResults = await store.query({ search: '100%' });
+      const underscoreResults = await store.query({ search: 'user_name' });
+
+      expect(percentResults.map((entry) => entry.content)).toEqual(['Budget is 100% approved']);
+      expect(underscoreResults.map((entry) => entry.content)).toEqual(['user_name is set']);
+      expect(store.count({ search: '100%' })).toBe(1);
+    });
+
     it('should count entries using the same filters as query', () => {
       expect(store.count()).toBe(4);
       expect(store.count({ type: 'fact' })).toBe(2);

@@ -30,10 +30,12 @@ function appendTagFilters(sql: string, params: unknown[], tags: string[]): strin
 }
 
 function appendSearchFilter(sql: string, params: unknown[], search: string): string {
-  const pattern = `%${search}%`;
+  // Search is a substring match, so user-supplied LIKE metacharacters must
+  // remain literal instead of changing the query's meaning.
+  const pattern = `%${search.replace(/[\\%_]/g, '\\$&')}%`;
   params.push(pattern, pattern);
-  return `${sql} AND (content LIKE ? OR EXISTS (
-    SELECT 1 FROM json_each(memories.tags) WHERE json_each.value LIKE ?
+  return `${sql} AND (content LIKE ? ESCAPE '\\' OR EXISTS (
+    SELECT 1 FROM json_each(memories.tags) WHERE json_each.value LIKE ? ESCAPE '\\'
   ))`;
 }
 
