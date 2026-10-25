@@ -261,6 +261,16 @@ describe('MemoryStore', () => {
       expect(store.count({ search: 'Ui' })).toBe(1);
     });
 
+    it('should filter metadata sources case-insensitively', async () => {
+      await store.create({ type: 'fact', content: 'Claude memory', metadata: { source: 'Claude-Code' } });
+      await store.create({ type: 'fact', content: 'ChatGPT memory', metadata: { source: 'chatgpt' } });
+
+      const results = await store.query({ source: ' claude-code ' });
+
+      expect(results.map((entry) => entry.content)).toEqual(['Claude memory']);
+      expect(store.count({ source: 'CLAUDE-CODE' })).toBe(1);
+    });
+
     it('should treat LIKE metacharacters in searches literally', async () => {
       await store.create({ type: 'fact', content: 'Budget is 100% approved' });
       await store.create({ type: 'fact', content: 'Budget is 100x approved' });

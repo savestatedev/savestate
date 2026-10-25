@@ -39,6 +39,11 @@ function appendSearchFilter(sql: string, params: unknown[], search: string): str
   ))`;
 }
 
+function appendSourceFilter(sql: string, params: unknown[], source: string): string {
+  params.push(source.trim());
+  return `${sql} AND lower(COALESCE(json_extract(metadata, '$.source'), '')) = lower(?)`;
+}
+
 function normalizeDateFilter(value: string, boundary: 'start' | 'end'): string {
   const normalized = value.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return normalized;
@@ -263,6 +268,10 @@ export class MemoryStore {
       params.push(query.type);
     }
 
+    if (query.source) {
+      sql = appendSourceFilter(sql, params, query.source);
+    }
+
     if (query.minImportance !== undefined) {
       sql += ' AND importance >= ?';
       params.push(query.minImportance);
@@ -326,6 +335,10 @@ export class MemoryStore {
     if (query.type) {
       sql += ' AND type = ?';
       params.push(query.type);
+    }
+
+    if (query.source) {
+      sql = appendSourceFilter(sql, params, query.source);
     }
 
     if (query.minImportance !== undefined) {

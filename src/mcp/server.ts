@@ -356,6 +356,10 @@ export const tools: Tool[] = [
           enum: ['fact', 'event', 'preference', 'conversation'],
           description: 'Filter by memory type',
         },
+        source: {
+          type: 'string',
+          description: 'Filter by metadata source (case-insensitive)',
+        },
         tags: {
           type: 'array',
           items: { type: 'string' },
@@ -506,6 +510,10 @@ export const tools: Tool[] = [
           type: 'string',
           enum: ['fact', 'event', 'preference', 'conversation'],
           description: 'Filter by memory type',
+        },
+        source: {
+          type: 'string',
+          description: 'Filter by metadata source (case-insensitive)',
         },
         tags: {
           type: 'array',
@@ -1190,6 +1198,7 @@ async function handleMemorySearch(
     const dateFilters = parseMemorySearchDateFilters(input);
     const query: MemoryQuery = {
       type: input.type,
+      source: input.source,
       tags: input.tags,
       search: input.query,
       limit: (offset ?? 0) + (limit ?? 10) + 1,
@@ -1203,6 +1212,7 @@ async function handleMemorySearch(
     const queried = await store.query(query);
     const total = store.count({
       type: input.type,
+      source: input.source,
       tags: input.tags,
       search: input.query,
       minImportance: input.minImportance,
@@ -1336,6 +1346,7 @@ async function handleSearchMemory(
     const dateFilters = parseMemorySearchDateFilters(input);
     const query: MemoryQuery = {
       type: input.type,
+      source: input.source,
       tags: input.tags,
       search: input.query,
       limit: (offset ?? 0) + (limit ?? 10) + 1,
@@ -1349,6 +1360,7 @@ async function handleSearchMemory(
     const queried = await store.query(query);
     const total = store.count({
       type: input.type,
+      source: input.source,
       tags: input.tags,
       search: input.query,
       minImportance: input.minImportance,

@@ -5,6 +5,14 @@ import {
 } from '../memory-search-schema.js';
 
 describe('MCP memory search date filters', () => {
+  it('accepts a trimmed source metadata filter', () => {
+    expect(MemorySearchInputSchema.parse({ source: '  Claude-Code ' }).source).toBe('Claude-Code');
+  });
+
+  it('rejects a blank source metadata filter', () => {
+    expect(() => MemorySearchInputSchema.parse({ source: '   ' })).toThrow();
+  });
+
   it('accepts inclusive ISO creation bounds on the shared search schema', () => {
     const parsed = MemorySearchInputSchema.parse({
       query: 'archive',
