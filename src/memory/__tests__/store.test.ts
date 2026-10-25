@@ -221,6 +221,14 @@ describe('MemoryStore', () => {
       expect(tagged[0].content).toBe('Pref 1');
     });
 
+    it('should match tags case-insensitively', async () => {
+      const tagged = await store.query({ tags: ['UI'] });
+
+      expect(tagged).toHaveLength(1);
+      expect(tagged[0].content).toBe('Pref 1');
+      expect(store.count({ tags: ['Ui'] })).toBe(1);
+    });
+
     it('should match literal tag values instead of LIKE patterns', async () => {
       await store.create({ type: 'fact', content: 'Literal percent', tags: ['50%'] });
       await store.create({ type: 'fact', content: 'Different percent', tags: ['50x'] });

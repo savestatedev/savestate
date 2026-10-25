@@ -23,7 +23,7 @@ function appendTagFilters(sql: string, params: unknown[], tags: string[]): strin
   if (tags.length === 0) return sql;
 
   const tagConditions = tags.map(
-    () => 'EXISTS (SELECT 1 FROM json_each(memories.tags) WHERE json_each.value = ?)',
+    () => 'EXISTS (SELECT 1 FROM json_each(memories.tags) WHERE lower(json_each.value) = lower(?))',
   );
   params.push(...tags);
   return `${sql} AND (${tagConditions.join(' OR ')})`;
