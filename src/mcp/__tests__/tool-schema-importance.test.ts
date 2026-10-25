@@ -24,3 +24,10 @@ describe('MCP importance tool schemas', () => {
       expect(schema.properties.maxImportance).toMatchObject({ minimum: 0, maximum: 1 });
     });
 });
+
+describe('MCP list_memories search schema', () => {
+  it('advertises a text filter', () => {
+    const schema = getTool('list_memories').inputSchema as any;
+    expect(schema.properties.search).toMatchObject({ type: 'string' });
+  });
+});

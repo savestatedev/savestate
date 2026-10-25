@@ -588,11 +588,13 @@ describe('OpenMemory API Compatibility', () => {
   });
 
   describe('list_memories Input Schema', () => {
-    it('supports pagination', () => {
+    it('supports search filters and pagination', () => {
       const input = {
+        search: ' encrypted archive ',
         limit: 50,
         offset: 100,
       };
+      expect(input.search).toContain('encrypted archive');
       expect(input.limit).toBe(50);
       expect(input.offset).toBe(100);
     });

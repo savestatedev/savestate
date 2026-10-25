@@ -536,6 +536,10 @@ export const tools: Tool[] = [
         },
         minImportance: importanceFilterSchema,
         maxImportance: importanceFilterSchema,
+        search: {
+          type: 'string',
+          description: 'Filter by a non-empty substring in memory content or tags',
+        },
         since: {
           type: 'string',
           description: 'Filter by creation time on or after an ISO-8601 date or timestamp (date-only starts at 00:00 UTC)',
@@ -693,6 +697,7 @@ const ListMemoriesInputSchema = z.object({
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
   maxImportance: z.number().min(0).max(1).optional(),
+  search: z.string().optional(),
   since: z.string().optional(),
   until: z.string().optional(),
   limit: z.number().optional(),
@@ -1355,6 +1360,7 @@ async function handleListMemories(
 
     const limit = parseListMemoriesLimit(input.limit);
     const offset = parseListMemoriesOffset(input.offset);
+    const search = parseMemoriesResourceSearch(input.search ?? null);
     const { since, until } = parseListMemoriesDateFilters(input);
     const pageLimit = limit ?? 50;
     const query: MemoryQuery = {
@@ -1362,6 +1368,7 @@ async function handleListMemories(
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
+      search,
       since,
       until,
       // Fetch one sentinel row so the response can tell callers whether to continue.
@@ -1377,6 +1384,7 @@ async function handleListMemories(
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
+      search,
       since,
       until,
     });
