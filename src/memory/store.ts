@@ -34,8 +34,8 @@ function appendSearchFilter(sql: string, params: unknown[], search: string): str
   // remain literal instead of changing the query's meaning.
   const pattern = `%${search.replace(/[\\%_]/g, '\\$&')}%`;
   params.push(pattern, pattern);
-  return `${sql} AND (content LIKE ? ESCAPE '\\' OR EXISTS (
-    SELECT 1 FROM json_each(memories.tags) WHERE json_each.value LIKE ? ESCAPE '\\'
+  return `${sql} AND (lower(content) LIKE lower(?) ESCAPE '\\' OR EXISTS (
+    SELECT 1 FROM json_each(memories.tags) WHERE lower(json_each.value) LIKE lower(?) ESCAPE '\\'
   ))`;
 }
 

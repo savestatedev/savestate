@@ -253,6 +253,14 @@ describe('MemoryStore', () => {
       expect(store.count({ search: 'ui' })).toBe(1);
     });
 
+    it('should search tags case-insensitively', async () => {
+      const results = await store.query({ search: 'UI' });
+
+      expect(results).toHaveLength(1);
+      expect(results[0].content).toBe('Pref 1');
+      expect(store.count({ search: 'Ui' })).toBe(1);
+    });
+
     it('should treat LIKE metacharacters in searches literally', async () => {
       await store.create({ type: 'fact', content: 'Budget is 100% approved' });
       await store.create({ type: 'fact', content: 'Budget is 100x approved' });
