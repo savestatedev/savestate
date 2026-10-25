@@ -270,7 +270,9 @@ export class MemoryStore {
       sql = appendSearchFilter(sql, params, query.search);
     }
 
-    sql += ' ORDER BY importance DESC, created_at DESC';
+    // Keep pagination stable when memories share the same importance and
+    // creation timestamp (which is possible for writes in one millisecond).
+    sql += ' ORDER BY importance DESC, created_at DESC, id ASC';
 
     if (query.limit) {
       sql += ' LIMIT ?';

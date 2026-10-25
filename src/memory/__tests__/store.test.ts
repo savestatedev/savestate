@@ -159,6 +159,24 @@ describe('MemoryStore', () => {
       expect(page.map((entry) => entry.content)).toEqual(['Fact 2', 'Pref 1']);
     });
 
+    it('should use a stable ID tie-breaker for paginated ties', async () => {
+      const first = await store.create({ type: 'fact', content: 'Tie 1', importance: 0.4 });
+      const second = await store.create({ type: 'fact', content: 'Tie 2', importance: 0.4 });
+      const db = (store as unknown as { db: { prepare: (sql: string) => { run: (...params: string[]) => void } } }).db;
+      db.prepare('UPDATE memories SET created_at = ? WHERE id IN (?, ?)').run(
+        '2026-10-25T12:00:00.000Z',
+        first.id,
+        second.id,
+      );
+
+      const all = await store.query({ minImportance: 0.4, maxImportance: 0.4 });
+      const firstPage = await store.query({ minImportance: 0.4, maxImportance: 0.4, limit: 1 });
+      const secondPage = await store.query({ minImportance: 0.4, maxImportance: 0.4, limit: 1, offset: 1 });
+
+      expect([firstPage[0].id, secondPage[0].id]).toEqual(all.map((entry) => entry.id));
+      expect([first.id, second.id].sort()).toEqual([firstPage[0].id, secondPage[0].id]);
+    });
+
     it('should filter by tags', async () => {
       const tagged = await store.query({ tags: ['ui'] });
       expect(tagged).toHaveLength(1);
