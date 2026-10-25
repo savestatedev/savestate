@@ -221,6 +221,14 @@ describe('MemoryStore', () => {
       expect(tagged[0].content).toBe('Pref 1');
     });
 
+    it('should match tags case-insensitively', async () => {
+      const tagged = await store.query({ tags: ['UI'] });
+
+      expect(tagged).toHaveLength(1);
+      expect(tagged[0].content).toBe('Pref 1');
+      expect(store.count({ tags: ['Ui'] })).toBe(1);
+    });
+
     it('should match literal tag values instead of LIKE patterns', async () => {
       await store.create({ type: 'fact', content: 'Literal percent', tags: ['50%'] });
       await store.create({ type: 'fact', content: 'Different percent', tags: ['50x'] });
@@ -243,6 +251,24 @@ describe('MemoryStore', () => {
       expect(results).toHaveLength(1);
       expect(results[0].content).toBe('Pref 1');
       expect(store.count({ search: 'ui' })).toBe(1);
+    });
+
+    it('should search tags case-insensitively', async () => {
+      const results = await store.query({ search: 'UI' });
+
+      expect(results).toHaveLength(1);
+      expect(results[0].content).toBe('Pref 1');
+      expect(store.count({ search: 'Ui' })).toBe(1);
+    });
+
+    it('should filter metadata sources case-insensitively', async () => {
+      await store.create({ type: 'fact', content: 'Claude memory', metadata: { source: 'Claude-Code' } });
+      await store.create({ type: 'fact', content: 'ChatGPT memory', metadata: { source: 'chatgpt' } });
+
+      const results = await store.query({ source: ' claude-code ' });
+
+      expect(results.map((entry) => entry.content)).toEqual(['Claude memory']);
+      expect(store.count({ source: 'CLAUDE-CODE' })).toBe(1);
     });
 
     it('should treat LIKE metacharacters in searches literally', async () => {

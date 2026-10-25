@@ -43,6 +43,8 @@ export interface ConversationMemory extends MemoryEntry {
 
 export interface MemoryQuery {
   type?: MemoryType;
+  /** Match the string-valued metadata.source field, ignoring letter case. */
+  source?: string;
   tags?: string[];
   minImportance?: number;
   maxImportance?: number;
