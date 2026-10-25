@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourceUri,
+  parseMemoriesResourceDate,
   parseMemoriesResourceImportance,
   parseMemoriesResourceSearch,
   parseMemoriesResourceTag,
   parseMemoriesResourceType,
   validateMemoriesResourceImportanceRange,
+  validateMemoriesResourceDateRange,
 } from '../memories-resource-filters.js';
 
 describe('MCP savestate://memories importance filters', () => {
@@ -51,9 +53,24 @@ describe('MCP savestate://memories importance filters', () => {
     );
   });
 
+  it('normalizes inclusive ISO creation bounds', () => {
+    expect(parseMemoriesResourceDate('2026-10-01', 'since')).toBe('2026-10-01T00:00:00.000Z');
+    expect(parseMemoriesResourceDate('2026-10-01', 'until')).toBe('2026-10-01T23:59:59.999Z');
+    expect(parseMemoriesResourceDate('2026-10-01T12:30:00-04:00', 'since')).toBe('2026-10-01T16:30:00.000Z');
+    expect(() => parseMemoriesResourceDate('2026-02-30', 'since')).toThrow('Invalid since value');
+    expect(() => parseMemoriesResourceDate('10/01/2026', 'since')).toThrow('Invalid since value');
+  });
+
+  it('rejects an inverted creation-date range', () => {
+    expect(() => validateMemoriesResourceDateRange(
+      parseMemoriesResourceDate('2026-10-02', 'since'),
+      parseMemoriesResourceDate('2026-10-01', 'until'),
+    )).toThrow('since must be at or before until');
+  });
+
   it('keeps filters in pagination resource links', () => {
-    expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'project', 'encrypted archive')).toBe(
-      'savestate://memories?type=event&tag=project&search=encrypted+archive&minImportance=0.4&maxImportance=0.9',
+    expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'project', 'encrypted archive', '2026-10-01T00:00:00.000Z', '2026-10-31T23:59:59.999Z')).toBe(
+      'savestate://memories?type=event&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
     );
   });
 });
