@@ -30,6 +30,52 @@ export function parseMemoriesResourceSearch(value: string | null): string | unde
   return normalized;
 }
 
+/** Parse an optional memory resource creation bound and normalize it for SQLite. */
+export function parseMemoriesResourceDate(
+  value: string | null,
+  name: 'since' | 'until',
+): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(normalized);
+  const timestamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized);
+  if (normalized.length === 0 || (!dateOnly && !timestamp)) {
+    throw new Error(
+      `Invalid ${name} value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+  const candidate = dateOnly
+    ? `${normalized}T${name === 'until' ? '23:59:59.999' : '00:00:00.000'}Z`
+    : normalized;
+  const parsed = Date.parse(candidate);
+  if (Number.isNaN(parsed)) {
+    throw new Error(
+      `Invalid ${name} value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+
+  // Date.parse accepts rollover dates such as 2026-02-30; reject those for
+  // date-only filters so a typo never broadens the requested time range.
+  if (dateOnly && new Date(parsed).toISOString().slice(0, 10) !== normalized) {
+    throw new Error(
+      `Invalid ${name} value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+
+  return new Date(parsed).toISOString();
+}
+
+/** Reject an impossible creation-date range before querying the memory store. */
+export function validateMemoriesResourceDateRange(
+  since: string | undefined,
+  until: string | undefined,
+): void {
+  if (since !== undefined && until !== undefined && since > until) {
+    throw new Error('since must be at or before until');
+  }
+}
+
 /** Parse an optional memory resource type without silently widening the query. */
 export function parseMemoriesResourceType(value: string | null): MemoryType | undefined {
   if (value === null) return undefined;
@@ -87,11 +133,15 @@ export function buildMemoriesResourceUri(
   type?: MemoryType,
   tag?: string,
   search?: string,
+  since?: string,
+  until?: string,
 ): string {
   const params = new URLSearchParams();
   if (type !== undefined) params.set('type', type);
   if (tag !== undefined) params.set('tag', tag);
   if (search !== undefined) params.set('search', search);
+  if (since !== undefined) params.set('since', since);
+  if (until !== undefined) params.set('until', until);
   if (minImportance !== undefined) params.set('minImportance', String(minImportance));
   if (maxImportance !== undefined) params.set('maxImportance', String(maxImportance));
   const query = params.toString();
