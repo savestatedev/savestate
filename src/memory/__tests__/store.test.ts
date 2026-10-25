@@ -182,10 +182,10 @@ describe('MemoryStore', () => {
         entry.id,
       );
 
-      const results = await store.query({ since: '2026-10-01', until: '2026-10-01' });
+      const results = await store.query({ since: ' 2026-10-01 ', until: ' 2026-10-01 ' });
 
       expect(results.map((memory) => memory.content)).toContain('Date-filtered fact');
-      expect(store.count({ since: '2026-10-01', until: '2026-10-01' })).toBe(1);
+      expect(store.count({ since: ' 2026-10-01 ', until: ' 2026-10-01 ' })).toBe(1);
     });
 
     it('should use a stable ID tie-breaker for paginated ties', async () => {

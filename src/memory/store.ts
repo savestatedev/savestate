@@ -40,9 +40,10 @@ function appendSearchFilter(sql: string, params: unknown[], search: string): str
 }
 
 function normalizeDateFilter(value: string, boundary: 'start' | 'end'): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const normalized = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return normalized;
 
-  return `${value}T${boundary === 'start' ? '00:00:00.000' : '23:59:59.999'}Z`;
+  return `${normalized}T${boundary === 'start' ? '00:00:00.000' : '23:59:59.999'}Z`;
 }
 
 function validatePagination(query: MemoryQuery): void {
