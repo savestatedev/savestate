@@ -1079,6 +1079,9 @@ export function formatMemoryListEmptyState(
   if (matchingCount === 0) {
     if (collectionEmpty) {
       const snapshotLabel = snapshotId ? ` in snapshot ${snapshotId}` : ' in this snapshot';
+      if (filterSummary) {
+        return `No memories found${snapshotLabel} matching these filters: ${filterSummary}. Capture or import memories to populate this list.`;
+      }
       return `No memories found${snapshotLabel}. Capture or import memories to populate this list.`;
     }
     const criteria = filterSummary ? ` these filters: ${filterSummary}` : ' the criteria';

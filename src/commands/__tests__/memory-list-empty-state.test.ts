@@ -40,6 +40,19 @@ describe('savestate memory list human empty state', () => {
     );
   });
 
+  it('keeps active filters visible when the snapshot itself is empty', () => {
+    expect(formatMemoryListEmptyState(
+      0,
+      0,
+      20,
+      true,
+      'ss-empty-2026-10-17',
+      'tier=L1, pinned',
+    )).toBe(
+      'No memories found in snapshot ss-empty-2026-10-17 matching these filters: tier=L1, pinned. Capture or import memories to populate this list.',
+    );
+  });
+
   it('explains when an offset skips past matching memories', () => {
     expect(formatMemoryListEmptyState(1, 1)).toBe(
       'No memories shown: offset 1 skips past 1 matching memory. Try --offset 0 to open the nearest available page.',
