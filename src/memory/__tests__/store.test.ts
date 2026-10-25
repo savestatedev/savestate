@@ -188,6 +188,15 @@ describe('MemoryStore', () => {
       expect(store.count({ since: ' 2026-10-01 ', until: ' 2026-10-01 ' })).toBe(1);
     });
 
+    it('should reject impossible date-only filters', async () => {
+      await expect(store.query({ since: '2026-02-30' })).rejects.toThrow(
+        'Invalid memory since date: 2026-02-30',
+      );
+      expect(() => store.count({ until: '2026-02-30' })).toThrow(
+        'Invalid memory until date: 2026-02-30',
+      );
+    });
+
     it('should use a stable ID tie-breaker for paginated ties', async () => {
       const first = await store.create({ type: 'fact', content: 'Tie 1', importance: 0.4 });
       const second = await store.create({ type: 'fact', content: 'Tie 2', importance: 0.4 });
