@@ -549,6 +549,7 @@ export const tools: Tool[] = [
     description:
       'List all stored memories. Compatible with OpenMemory MCP API. ' +
       'Returns memories with optional filtering, including a case-insensitive metadata source filter. ' +
+      'The default result limit is 50. ' +
       'The summary includes the starting offset; ' +
       'when more results are available it includes the next offset to request, and later pages ' +
       'include the previous offset for page recovery. An exhausted page reports a suggested offset.',
