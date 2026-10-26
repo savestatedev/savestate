@@ -1125,8 +1125,10 @@ export function formatMemoryListFilterSummary(
   if (content) filters.push(`content=${JSON.stringify(content)}`);
   const tags = options.tags?.map(normalizeFilterText).filter(Boolean);
   if (tags && tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
-  if (options.since !== undefined) filters.push(`since=${options.since}`);
-  if (options.until !== undefined) filters.push(`until=${options.until}`);
+  const since = options.since === undefined ? undefined : normalizeFilterText(options.since);
+  if (since) filters.push(`since=${since}`);
+  const until = options.until === undefined ? undefined : normalizeFilterText(options.until);
+  if (until) filters.push(`until=${until}`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
   if (options.minImportance !== undefined) filters.push(`min-importance=${options.minImportance}`);
   if (options.maxImportance !== undefined) filters.push(`max-importance=${options.maxImportance}`);

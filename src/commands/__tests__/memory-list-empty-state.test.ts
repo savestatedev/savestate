@@ -36,7 +36,9 @@ describe('savestate memory list human empty state', () => {
       namespace: 'org:\tapp',
       content: 'preferred\neditor',
       tags: ['work\nurgent', '  personal  '],
-    })).toBe('source=agent team, namespace=org: app, content="preferred editor", tags=[work urgent, personal]');
+      since: '2026-10-01\n00:00Z',
+      until: '2026-10-31\t23:59Z',
+    })).toBe('source=agent team, namespace=org: app, content="preferred editor", tags=[work urgent, personal], since=2026-10-01 00:00Z, until=2026-10-31 23:59Z');
   });
 
   it('omits blank filter values from the empty-state summary', () => {
@@ -45,6 +47,8 @@ describe('savestate memory list human empty state', () => {
       namespace: '',
       content: '  ',
       tags: [' ', '\t'],
+      since: '  ',
+      until: '\n',
     })).toBeUndefined();
   });
 
