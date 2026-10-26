@@ -27,11 +27,13 @@ export function formatListMemoriesPageSummary(
   pageSize = Math.max(1, shown),
 ): string {
   const start = offset ?? 0;
+  const page = Math.floor(start / pageSize) + 1;
+  const totalPages = Math.ceil(total / pageSize);
   const previous = start > 0
     ? `; previous offset ${Math.max(0, start - pageSize)}`
     : '';
   const more = hasMore ? `; next offset ${start + shown}; more available` : '';
-  return `Memories (${shown} shown of ${total} total, starting at ${start}${previous}${more}):`;
+  return `Memories (${shown} shown of ${total} total, page ${page} of ${totalPages}, starting at ${start}${previous}${more}):`;
 }
 
 /** Explain an empty page and point callers at the nearest populated page. */
