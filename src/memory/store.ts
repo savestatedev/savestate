@@ -41,7 +41,7 @@ function appendSearchFilter(sql: string, params: unknown[], search: string): str
 
 function appendSourceFilter(sql: string, params: unknown[], source: string): string {
   params.push(source.trim());
-  return `${sql} AND lower(COALESCE(json_extract(metadata, '$.source'), '')) = lower(?)`;
+  return `${sql} AND lower(trim(COALESCE(json_extract(metadata, '$.source'), ''))) = lower(?)`;
 }
 
 function normalizeDateFilter(value: string, boundary: 'start' | 'end'): string {

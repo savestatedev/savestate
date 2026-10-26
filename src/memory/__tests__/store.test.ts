@@ -262,7 +262,7 @@ describe('MemoryStore', () => {
     });
 
     it('should filter metadata sources case-insensitively', async () => {
-      await store.create({ type: 'fact', content: 'Claude memory', metadata: { source: 'Claude-Code' } });
+      await store.create({ type: 'fact', content: 'Claude memory', metadata: { source: ' Claude-Code ' } });
       await store.create({ type: 'fact', content: 'ChatGPT memory', metadata: { source: 'chatgpt' } });
 
       const results = await store.query({ source: ' claude-code ' });
