@@ -1,4 +1,5 @@
 import type { MemoryEntry } from '../memory/types.js';
+import { normalizeMemoryMetadata } from '../memory/source.js';
 
 /** Render the searchable memory fields promised by the MCP tool description. */
 export function formatMemorySearchEntry(memory: MemoryEntry): string[] {
@@ -11,7 +12,7 @@ export function formatMemorySearchEntry(memory: MemoryEntry): string[] {
     `  Type: ${memory.type}`,
     `  Tags: ${memory.tags?.join(', ') ?? 'none'}`,
     `  Importance: ${memory.importance}`,
-    `  Metadata: ${JSON.stringify(memory.metadata ?? {})}`,
+    `  Metadata: ${JSON.stringify(normalizeMemoryMetadata(memory.metadata) ?? {})}`,
     `  Created: ${memory.createdAt}`,
     `  Updated: ${memory.updatedAt}`,
     `  Expires: ${memory.expiresAt ?? 'none'}`,
