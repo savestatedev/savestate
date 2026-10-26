@@ -2359,7 +2359,11 @@ export function formatMemoryExplainJson(
       lastVerifiedAt: result.lastVerifiedAt,
     })),
   };
-  if (filters && Object.keys(filters).length > 0) record.filters = filters;
+  if (filters && Object.keys(filters).length > 0) {
+    record.filters = filters.source === undefined
+      ? filters
+      : { ...filters, source: normalizeMemoryListSource(filters.source) };
+  }
   return JSON.stringify(record, null, 2);
 }
 
@@ -2404,7 +2408,11 @@ export function formatMemoryExplainMissingJson(
     },
     results: null,
   };
-  if (filters && Object.keys(filters).length > 0) record.filters = filters;
+  if (filters && Object.keys(filters).length > 0) {
+    record.filters = filters.source === undefined
+      ? filters
+      : { ...filters, source: normalizeMemoryListSource(filters.source) };
+  }
   return JSON.stringify(record, null, 2);
 }
 
@@ -2425,7 +2433,7 @@ export function getMemoryExplainFilters(options?: {
 
   const filters: MemoryExplainFiltersJson = {};
   if (options.namespace !== undefined) filters.namespace = options.namespace;
-  if (options.source !== undefined) filters.source = options.source;
+  if (options.source !== undefined) filters.source = normalizeMemoryListSource(options.source);
   if (options.content !== undefined) filters.content = options.content;
   if (options.tags !== undefined) filters.tags = options.tags;
   if (options.freshness !== undefined) filters.freshness = options.freshness;
@@ -2624,7 +2632,7 @@ export async function explainMemoryCommand(
           source_trace: {
             ingestion_timestamp: entry.createdAt,
             source_type: 'user_input' as const,
-            source_id: entry.source ?? 'unknown',
+            source_id: normalizeMemoryListSource(entry.source),
           },
           timestamp_weight: recencyScore,
           policy_path: {
