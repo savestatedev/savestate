@@ -725,9 +725,9 @@ const AddMemoriesInputSchema = z.object({
   offset: z.number().optional(),
 });
 
-const ListMemoriesInputSchema = z.object({
+export const ListMemoriesInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
-  source: z.string().optional(),
+  source: z.string().trim().min(1).optional(),
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
   maxImportance: z.number().min(0).max(1).optional(),
@@ -1404,12 +1404,13 @@ async function handleListMemories(
 
     const limit = parseListMemoriesLimit(input.limit);
     const offset = parseListMemoriesOffset(input.offset);
+    const source = input.source;
     const search = parseMemoriesResourceSearch(input.search ?? null);
     const { since, until } = parseListMemoriesDateFilters(input);
     const pageLimit = limit ?? 50;
     const query: MemoryQuery = {
       type: input.type,
-      source: input.source,
+      source,
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
@@ -1426,7 +1427,7 @@ async function handleListMemories(
     const results = selectListMemoriesEntries(queried, pageLimit);
     const total = store.count({
       type: input.type,
-      source: input.source,
+      source,
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,

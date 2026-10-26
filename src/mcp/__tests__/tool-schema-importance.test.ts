@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tools } from '../server.js';
+import { ListMemoriesInputSchema, tools } from '../server.js';
 
 function getTool(name: string) {
   const tool = tools.find((candidate) => candidate.name === name);
@@ -35,5 +35,10 @@ describe('MCP list_memories search schema', () => {
     const schema = getTool('list_memories').inputSchema as any;
     expect(schema.properties.source).toMatchObject({ type: 'string' });
     expect(schema.properties.source.description).toContain('case-insensitive');
+  });
+
+  it('normalizes and rejects blank metadata source filters', () => {
+    expect(ListMemoriesInputSchema.parse({ source: '  Claude-Code ' }).source).toBe('Claude-Code');
+    expect(() => ListMemoriesInputSchema.parse({ source: '   ' })).toThrow();
   });
 });
