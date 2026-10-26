@@ -1113,16 +1113,17 @@ export function formatMemoryListFilterSummary(
     maxImportance?: number;
   } = {},
 ): string | undefined {
+  const normalizeFilterText = (value: string): string => value.replace(/\s+/g, ' ').trim();
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.pinned !== undefined) filters.push(options.pinned ? 'pinned' : 'unpinned');
-  const source = options.source?.trim();
+  const source = options.source === undefined ? undefined : normalizeFilterText(options.source);
   if (source) filters.push(`source=${source}`);
-  const namespace = options.namespace?.trim();
+  const namespace = options.namespace === undefined ? undefined : normalizeFilterText(options.namespace);
   if (namespace) filters.push(`namespace=${namespace}`);
   const content = options.content?.trim();
   if (content) filters.push(`content=${JSON.stringify(content)}`);
-  const tags = options.tags?.map((tag) => tag.trim()).filter(Boolean);
+  const tags = options.tags?.map(normalizeFilterText).filter(Boolean);
   if (tags && tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
   if (options.since !== undefined) filters.push(`since=${options.since}`);
   if (options.until !== undefined) filters.push(`until=${options.until}`);

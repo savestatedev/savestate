@@ -30,6 +30,14 @@ describe('savestate memory list human empty state', () => {
     })).toBe('source=agent, namespace=work');
   });
 
+  it('keeps multiline filter values on one CLI output line', () => {
+    expect(formatMemoryListFilterSummary({
+      source: 'agent\nteam',
+      namespace: 'org:\tapp',
+      tags: ['work\nurgent', '  personal  '],
+    })).toBe('source=agent team, namespace=org: app, tags=[work urgent, personal]');
+  });
+
   it('omits blank filter values from the empty-state summary', () => {
     expect(formatMemoryListFilterSummary({
       source: '  ',
