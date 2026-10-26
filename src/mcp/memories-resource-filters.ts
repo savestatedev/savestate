@@ -161,3 +161,35 @@ export function buildMemoriesResourceUri(
   const query = params.toString();
   return query.length > 0 ? `savestate://memories?${query}` : 'savestate://memories';
 }
+
+/** Echo every active resource filter so clients can verify the applied scope. */
+export function formatMemoriesResourceFilters(
+  type: MemoryType | undefined,
+  source: string | undefined,
+  tag: string | undefined,
+  search: string | undefined,
+  since: string | undefined,
+  until: string | undefined,
+  minImportance: number | undefined,
+  maxImportance: number | undefined,
+): {
+  type: MemoryType | null;
+  source: string | null;
+  tag: string | null;
+  search: string | null;
+  since: string | null;
+  until: string | null;
+  minImportance: number | null;
+  maxImportance: number | null;
+} {
+  return {
+    type: type ?? null,
+    source: source ?? null,
+    tag: tag ?? null,
+    search: search ?? null,
+    since: since ?? null,
+    until: until ?? null,
+    minImportance: minImportance ?? null,
+    maxImportance: maxImportance ?? null,
+  };
+}

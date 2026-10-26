@@ -193,6 +193,24 @@ describe('savestate memory --json', () => {
     ]);
   });
 
+  it('normalizes the source filter alongside serialized source entries', () => {
+    const legacy = entry({ id: 'mem-source', content: 'source', source: '  Claude-Code  ' });
+
+    const parsed = JSON.parse(formatMemoryListJson([legacy], [legacy], {
+      filters: { source: '  Claude-Code  ' },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.source).toBe('Claude-Code');
+    expect(parsed.entries[0].source).toBe('Claude-Code');
+  });
+
+  it('trims legacy source padding in JSON entries', () => {
+    const legacy = entry({ id: 'legacy', content: 'legacy source', source: '  Claude-Code  ' });
+    const parsed = JSON.parse(formatMemoryListJson([legacy], [legacy])) as MemoryListJson;
+
+    expect(parsed.entries[0].source).toBe('Claude-Code');
+  });
+
   it('records empty lists with zero counts', () => {
     const parsed = JSON.parse(formatMemoryListJson([], [])) as MemoryListJson;
     expect(parsed.found).toBe(true);

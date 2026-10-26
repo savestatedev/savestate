@@ -8,6 +8,7 @@ import {
   formatMemoryListFreshnessSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
+  normalizeMemoryListSource,
   formatMemoryListTags,
   filterMemoryListBySource,
   shouldShowMemoryListTags,
@@ -33,6 +34,10 @@ describe('savestate memory list --source', () => {
 
     expect(filterMemoryListBySource(entries, ' claude-code ').map(({ id }) => id)).toEqual(['claude']);
     expect(filterMemoryListBySource(entries)).toBe(entries);
+  });
+
+  it('normalizes legacy source padding for JSON consumers', () => {
+    expect(normalizeMemoryListSource('  claude-code  ')).toBe('claude-code');
   });
 });
 

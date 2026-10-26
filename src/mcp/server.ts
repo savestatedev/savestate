@@ -122,6 +122,7 @@ import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memorie
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
 import {
   buildMemoriesResourceUri,
+  formatMemoriesResourceFilters,
   parseMemoriesResourceImportance,
   parseMemoriesResourceDate,
   parseMemoriesResourceSearch,
@@ -1722,15 +1723,16 @@ async function handleReadResource(uri: string): Promise<string> {
         previousUri: page.previousUri,
         suggestedOffset: page.suggestedOffset,
         suggestedUri: page.suggestedUri,
-        filters: {
-          type: type ?? null,
-          tag: tag ?? null,
-          search: search ?? null,
-          since: since ?? null,
-          until: until ?? null,
-          minImportance: minImportance ?? null,
-          maxImportance: maxImportance ?? null,
-        },
+        filters: formatMemoriesResourceFilters(
+          type,
+          source,
+          tag,
+          search,
+          since,
+          until,
+          minImportance,
+          maxImportance,
+        ),
         byType,
         memories: page.entries.map(toMemoryResourceEntry),
       }, null, 2);

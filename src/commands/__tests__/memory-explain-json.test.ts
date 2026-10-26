@@ -237,4 +237,17 @@ describe('savestate memory explain --json', () => {
       pinned: true,
     });
   });
+
+  it('normalizes padded source ids in explain filters', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        {},
+        { source: '  Claude-Code  ' },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.filters?.source).toBe('Claude-Code');
+  });
 });
