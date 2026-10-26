@@ -53,7 +53,10 @@ describe('MCP savestate_list limit', () => {
 
   it('keeps the requested offset visible for an empty page', () => {
     expect(formatSavestateListEmptyPage(5, 8)).toBe(
-      'No snapshots found at offset 8. Total stored: 5',
+      'No snapshots found at offset 8. Total stored: 5. Suggested offset 0 with limit 10 opens the nearest available page.',
+    );
+    expect(formatSavestateListEmptyPage(25, 30, 10)).toBe(
+      'No snapshots found at offset 30. Total stored: 25. Suggested offset 20 with limit 10 opens the nearest available page.',
     );
     expect(formatSavestateListEmptyPage(0, undefined)).toBe(
       'No snapshots found at offset 0. Total stored: 0',

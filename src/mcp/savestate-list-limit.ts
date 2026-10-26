@@ -30,7 +30,18 @@ export function formatSavestateListPageSummary(
   return `Snapshots (${shown} shown of ${total} total, starting at ${start}${more}):`;
 }
 
-/** Explain an empty page without losing the caller's pagination position. */
-export function formatSavestateListEmptyPage(total: number, offset: number | undefined): string {
-  return `No snapshots found at offset ${offset ?? 0}. Total stored: ${total}`;
+/** Explain an empty page and point callers at the nearest populated page. */
+export function formatSavestateListEmptyPage(
+  total: number,
+  offset: number | undefined,
+  limit = 10,
+): string {
+  const start = offset ?? 0;
+  if (total === 0) {
+    return `No snapshots found at offset ${start}. Total stored: 0`;
+  }
+
+  const suggestedOffset = Math.floor((total - 1) / limit) * limit;
+  return `No snapshots found at offset ${start}. Total stored: ${total}. ` +
+    `Suggested offset ${suggestedOffset} with limit ${limit} opens the nearest available page.`;
 }

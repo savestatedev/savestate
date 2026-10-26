@@ -1001,7 +1001,7 @@ async function handleList(
     entries = selectSavestateListEntries(entries, limit ?? 10);
 
     if (entries.length === 0) {
-      return formatSavestateListEmptyPage(totalEntries, offset);
+      return formatSavestateListEmptyPage(totalEntries, offset, limit ?? 10);
     }
 
     const start = offset ?? 0;
