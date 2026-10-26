@@ -63,7 +63,8 @@ describe('MCP list_memories limit', () => {
 
   it('suggests the nearest populated page for an empty page', () => {
     expect(formatListMemoriesEmptyPage(5, 8, 2)).toBe(
-      'No memories found at offset 8. Total matching: 5. ' +
+      'No memories found at offset 8 (requested page 5; 3 pages available). ' +
+      'Total matching: 5. ' +
       'Suggested offset 4 with limit 2 opens the nearest available page.',
     );
     expect(formatListMemoriesEmptyPage(0, undefined)).toBe(
