@@ -1,11 +1,42 @@
 import { describe, expect, it } from 'vitest';
-import { formatMemoryListEmptyState } from '../memory.js';
+import { formatMemoryListEmptyState, formatMemoryListFilterSummary } from '../memory.js';
 
 describe('savestate memory list human empty state', () => {
   it('explains when no memories match the filters', () => {
     expect(formatMemoryListEmptyState(0, 0)).toBe(
       'No memories found matching the criteria. Try adjusting the filters.',
     );
+  });
+
+  it('includes active filters in an empty filtered collection', () => {
+    const filters = formatMemoryListFilterSummary({
+      tier: 'L1',
+      pinned: true,
+      source: 'agent',
+      content: 'preferred editor',
+      tags: ['work', 'urgent'],
+    });
+
+    expect(filters).toBe('tier=L1, pinned, source=agent, content="preferred editor", tags=[work, urgent]');
+    expect(formatMemoryListEmptyState(0, 0, undefined, false, undefined, filters)).toBe(
+      'No memories found matching these filters: tier=L1, pinned, source=agent, content="preferred editor", tags=[work, urgent]. Try adjusting the filters.',
+    );
+  });
+
+  it('normalizes source and namespace values in the filter summary', () => {
+    expect(formatMemoryListFilterSummary({
+      source: '  agent  ',
+      namespace: '  work  ',
+    })).toBe('source=agent, namespace=work');
+  });
+
+  it('omits blank filter values from the empty-state summary', () => {
+    expect(formatMemoryListFilterSummary({
+      source: '  ',
+      namespace: '',
+      content: '  ',
+      tags: [' ', '\t'],
+    })).toBeUndefined();
   });
 
   it('explains how to populate an empty snapshot', () => {
@@ -15,6 +46,19 @@ describe('savestate memory list human empty state', () => {
 
     expect(formatMemoryListEmptyState(0, 0, 20, true, 'ss-empty-2026-10-17')).toBe(
       'No memories found in snapshot ss-empty-2026-10-17. Capture or import memories to populate this list.',
+    );
+  });
+
+  it('keeps active filters visible when the snapshot itself is empty', () => {
+    expect(formatMemoryListEmptyState(
+      0,
+      0,
+      20,
+      true,
+      'ss-empty-2026-10-17',
+      'tier=L1, pinned',
+    )).toBe(
+      'No memories found in snapshot ss-empty-2026-10-17 matching these filters: tier=L1, pinned. Capture or import memories to populate this list.',
     );
   });
 
