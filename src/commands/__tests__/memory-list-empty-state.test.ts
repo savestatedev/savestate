@@ -34,8 +34,9 @@ describe('savestate memory list human empty state', () => {
     expect(formatMemoryListFilterSummary({
       source: 'agent\nteam',
       namespace: 'org:\tapp',
+      content: 'preferred\neditor',
       tags: ['work\nurgent', '  personal  '],
-    })).toBe('source=agent team, namespace=org: app, tags=[work urgent, personal]');
+    })).toBe('source=agent team, namespace=org: app, content="preferred editor", tags=[work urgent, personal]');
   });
 
   it('omits blank filter values from the empty-state summary', () => {

@@ -1121,7 +1121,7 @@ export function formatMemoryListFilterSummary(
   if (source) filters.push(`source=${source}`);
   const namespace = options.namespace === undefined ? undefined : normalizeFilterText(options.namespace);
   if (namespace) filters.push(`namespace=${namespace}`);
-  const content = options.content?.trim();
+  const content = options.content === undefined ? undefined : normalizeFilterText(options.content);
   if (content) filters.push(`content=${JSON.stringify(content)}`);
   const tags = options.tags?.map(normalizeFilterText).filter(Boolean);
   if (tags && tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
