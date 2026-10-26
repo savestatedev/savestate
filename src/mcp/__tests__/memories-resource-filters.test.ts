@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourceUri,
+  formatMemoriesResourceFilters,
   parseMemoriesResourceDate,
   parseMemoriesResourceImportance,
   parseMemoriesResourceSearch,
@@ -81,5 +82,27 @@ describe('MCP savestate://memories importance filters', () => {
     expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'Claude-Code', 'project', 'encrypted archive', '2026-10-01T00:00:00.000Z', '2026-10-31T23:59:59.999Z')).toBe(
       'savestate://memories?type=event&source=Claude-Code&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
     );
+  });
+
+  it('echoes the source filter in resource response metadata', () => {
+    expect(formatMemoriesResourceFilters(
+      'event',
+      'Claude-Code',
+      'project',
+      'encrypted archive',
+      '2026-10-01T00:00:00.000Z',
+      '2026-10-31T23:59:59.999Z',
+      0.4,
+      0.9,
+    )).toEqual({
+      type: 'event',
+      source: 'Claude-Code',
+      tag: 'project',
+      search: 'encrypted archive',
+      since: '2026-10-01T00:00:00.000Z',
+      until: '2026-10-31T23:59:59.999Z',
+      minImportance: 0.4,
+      maxImportance: 0.9,
+    });
   });
 });
