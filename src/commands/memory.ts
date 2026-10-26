@@ -1115,10 +1115,14 @@ export function formatMemoryListFilterSummary(
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.pinned !== undefined) filters.push(options.pinned ? 'pinned' : 'unpinned');
-  if (options.source !== undefined) filters.push(`source=${options.source.trim()}`);
-  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace.trim()}`);
-  if (options.content !== undefined) filters.push(`content=${JSON.stringify(options.content)}`);
-  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
+  const source = options.source?.trim();
+  if (source) filters.push(`source=${source}`);
+  const namespace = options.namespace?.trim();
+  if (namespace) filters.push(`namespace=${namespace}`);
+  const content = options.content?.trim();
+  if (content) filters.push(`content=${JSON.stringify(content)}`);
+  const tags = options.tags?.map((tag) => tag.trim()).filter(Boolean);
+  if (tags && tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
   if (options.since !== undefined) filters.push(`since=${options.since}`);
   if (options.until !== undefined) filters.push(`until=${options.until}`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);

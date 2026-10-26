@@ -30,6 +30,15 @@ describe('savestate memory list human empty state', () => {
     })).toBe('source=agent, namespace=work');
   });
 
+  it('omits blank filter values from the empty-state summary', () => {
+    expect(formatMemoryListFilterSummary({
+      source: '  ',
+      namespace: '',
+      content: '  ',
+      tags: [' ', '\t'],
+    })).toBeUndefined();
+  });
+
   it('explains how to populate an empty snapshot', () => {
     expect(formatMemoryListEmptyState(0, 0, 20, true)).toBe(
       'No memories found in this snapshot. Capture or import memories to populate this list.',
