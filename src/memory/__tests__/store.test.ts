@@ -49,6 +49,19 @@ describe('MemoryStore', () => {
 
       expect(entry.importance).toBe(0.5);
     });
+
+    it('should normalize source metadata before persisting and returning it', async () => {
+      const entry = await store.create({
+        type: 'fact',
+        content: 'The source is legacy padded.',
+        metadata: { source: '  Claude-Code  ', confidence: 0.7 },
+      });
+
+      expect(entry.metadata).toEqual({ source: 'Claude-Code', confidence: 0.7 });
+      await expect(store.get(entry.id)).resolves.toMatchObject({
+        metadata: { source: 'Claude-Code', confidence: 0.7 },
+      });
+    });
   });
 
   describe('get', () => {

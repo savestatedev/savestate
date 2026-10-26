@@ -15,6 +15,7 @@ import type {
   MemoryQuery,
   MemoryStats
 } from './types.js';
+import { normalizeMemoryMetadata } from './source.js';
 import type { WriteGate } from '../trust-kernel/gates.js';
 
 const DEFAULT_DB_PATH = join(homedir(), '.savestate', 'memory.db');
@@ -142,7 +143,8 @@ export class MemoryStore {
    * Create a new memory entry
    */
   async create(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<MemoryEntry> {
-    this.assertWriteAllowed(entry);
+    const metadata = normalizeMemoryMetadata(entry.metadata);
+    this.assertWriteAllowed({ ...entry, metadata });
 
     const id = randomUUID();
     const now = new Date().toISOString();
@@ -166,7 +168,7 @@ export class MemoryStore {
       id,
       entry.type,
       content,
-      entry.metadata ? JSON.stringify(entry.metadata) : null,
+      metadata ? JSON.stringify(metadata) : null,
       entry.importance ?? 0.5,
       now,
       now,
@@ -179,7 +181,7 @@ export class MemoryStore {
       id,
       type: entry.type,
       content: entry.content, // Return original content
-      metadata: entry.metadata,
+      metadata,
       importance: entry.importance ?? 0.5,
       createdAt: now,
       updatedAt: now,
@@ -207,10 +209,14 @@ export class MemoryStore {
     const existing = await this.get(id);
     if (!existing) return null;
 
+    const metadata = normalizeMemoryMetadata(
+      updates.metadata === undefined ? existing.metadata : updates.metadata,
+    );
+
     this.assertWriteAllowed({
       content: updates.content ?? existing.content,
       tags: updates.tags ?? existing.tags,
-      metadata: updates.metadata ?? existing.metadata,
+      metadata,
     });
 
     const now = new Date().toISOString();
@@ -233,7 +239,7 @@ export class MemoryStore {
 
     stmt.run(
       content,
-      updates.metadata ? JSON.stringify(updates.metadata) : (existing.metadata ? JSON.stringify(existing.metadata) : null),
+      metadata ? JSON.stringify(metadata) : null,
       updates.importance ?? existing.importance,
       now,
       updates.expiresAt ?? existing.expiresAt ?? null,
