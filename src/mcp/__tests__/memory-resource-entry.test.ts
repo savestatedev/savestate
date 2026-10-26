@@ -28,4 +28,20 @@ describe('MCP memory resource entries', () => {
       expiresAt: '2026-11-01T00:00:00.000Z',
     });
   });
+
+  it('normalizes padded source identifiers without dropping other metadata', () => {
+    const memory: MemoryEntry = {
+      id: 'memory-2',
+      type: 'fact',
+      content: 'The source is legacy padded.',
+      metadata: { source: '  Claude-Code  ', confidence: 0.7 },
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-01T00:00:00.000Z',
+    };
+
+    expect(toMemoryResourceEntry(memory).metadata).toEqual({
+      source: 'Claude-Code',
+      confidence: 0.7,
+    });
+  });
 });

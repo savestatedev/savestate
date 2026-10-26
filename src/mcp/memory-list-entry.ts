@@ -1,4 +1,5 @@
 import type { MemoryEntry } from '../memory/types.js';
+import { normalizeMemoryMetadata } from '../memory/source.js';
 
 /** Render the metadata and lifecycle fields promised by list_memories. */
 export function formatMemoryListEntry(memory: MemoryEntry): string[] {
@@ -10,7 +11,7 @@ export function formatMemoryListEntry(memory: MemoryEntry): string[] {
     `- [${memory.type}] ${memory.id}`,
     `  ${preview}`,
     `  Importance: ${memory.importance}`,
-    `  Metadata: ${JSON.stringify(memory.metadata ?? {})}`,
+    `  Metadata: ${JSON.stringify(normalizeMemoryMetadata(memory.metadata) ?? {})}`,
     `  Created: ${memory.createdAt}`,
     `  Updated: ${memory.updatedAt}`,
     `  Expires: ${memory.expiresAt ?? 'none'}`,

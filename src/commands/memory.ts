@@ -24,6 +24,7 @@ import { findEntry, getLatestEntry, updateEntry } from '../index-file.js';
 import { decrypt, encrypt } from '../encryption.js';
 import { unpackFromArchive, unpackSnapshot, packSnapshot, packToArchive, snapshotFilename } from '../format.js';
 import { isIncremental, reconstructFromChain } from '../incremental.js';
+import { normalizeMemorySource } from '../memory/source.js';
 
 /** Default tier configuration for new setups */
 export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
@@ -484,8 +485,7 @@ export function filterMemoryListBySource(
 
 /** Keep legacy padding out of machine-readable and terminal memory output. */
 export function normalizeMemoryListSource(source: string | undefined): string {
-  const normalized = source?.trim() ?? '';
-  return normalized || 'unknown';
+  return normalizeMemorySource(source);
 }
 
 /** Keep memories whose content includes the requested case-insensitive text. */

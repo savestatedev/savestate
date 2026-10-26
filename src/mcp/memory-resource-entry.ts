@@ -1,4 +1,5 @@
 import type { MemoryEntry } from '../memory/types.js';
+import { normalizeMemoryMetadata } from '../memory/source.js';
 
 /** Keep memory lifecycle timestamps available to MCP clients consuming the resource. */
 export function toMemoryResourceEntry(memory: MemoryEntry): Pick<
@@ -9,7 +10,7 @@ export function toMemoryResourceEntry(memory: MemoryEntry): Pick<
     id: memory.id,
     type: memory.type,
     content: memory.content,
-    metadata: memory.metadata,
+    metadata: normalizeMemoryMetadata(memory.metadata),
     tags: memory.tags,
     importance: memory.importance,
     createdAt: memory.createdAt,
