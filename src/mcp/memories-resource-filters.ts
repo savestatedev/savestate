@@ -30,6 +30,18 @@ export function parseMemoriesResourceSearch(value: string | null): string | unde
   return normalized;
 }
 
+/** Parse an optional memory resource source without turning a blank filter into an unfiltered query. */
+export function parseMemoriesResourceSource(value: string | null): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error('Invalid source value. Expected a non-empty source.');
+  }
+
+  return normalized;
+}
+
 /** Parse an optional memory resource creation bound and normalize it for SQLite. */
 export function parseMemoriesResourceDate(
   value: string | null,
@@ -131,6 +143,7 @@ export function buildMemoriesResourceUri(
   minImportance: number | undefined,
   maxImportance: number | undefined,
   type?: MemoryType,
+  source?: string,
   tag?: string,
   search?: string,
   since?: string,
@@ -138,6 +151,7 @@ export function buildMemoriesResourceUri(
 ): string {
   const params = new URLSearchParams();
   if (type !== undefined) params.set('type', type);
+  if (source !== undefined) params.set('source', source);
   if (tag !== undefined) params.set('tag', tag);
   if (search !== undefined) params.set('search', search);
   if (since !== undefined) params.set('since', since);

@@ -591,10 +591,12 @@ describe('OpenMemory API Compatibility', () => {
     it('supports search filters and pagination', () => {
       const input = {
         search: ' encrypted archive ',
+        source: 'claude-code',
         limit: 50,
         offset: 100,
       };
       expect(input.search).toContain('encrypted archive');
+      expect(input.source).toBe('claude-code');
       expect(input.limit).toBe(50);
       expect(input.offset).toBe(100);
     });

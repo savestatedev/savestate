@@ -125,6 +125,7 @@ import {
   parseMemoriesResourceImportance,
   parseMemoriesResourceDate,
   parseMemoriesResourceSearch,
+  parseMemoriesResourceSource,
   parseMemoriesResourceTag,
   parseMemoriesResourceType,
   validateMemoriesResourceImportanceRange,
@@ -545,7 +546,8 @@ export const tools: Tool[] = [
     name: 'list_memories',
     description:
       'List all stored memories. Compatible with OpenMemory MCP API. ' +
-      'Returns memories with optional filtering. The summary includes the starting offset; ' +
+      'Returns memories with optional filtering, including a case-insensitive metadata source filter. ' +
+      'The summary includes the starting offset; ' +
       'when more results are available it includes the next offset to request, and later pages ' +
       'include the previous offset for page recovery. An exhausted page reports a suggested offset.',
     inputSchema: {
@@ -555,6 +557,10 @@ export const tools: Tool[] = [
           type: 'string',
           enum: ['fact', 'event', 'preference', 'conversation'],
           description: 'Filter by memory type',
+        },
+        source: {
+          type: 'string',
+          description: 'Filter by metadata source (case-insensitive exact match)',
         },
         tags: {
           type: 'array',
@@ -646,7 +652,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000; ?search= accepts a non-empty text query; ?type= accepts fact, event, preference, or conversation; ?tag= accepts a non-empty tag; ?since= and ?until= accept ISO-8601 creation bounds; ?minImportance= and ?maxImportance= are inclusive scores from 0 through 1). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000; ?search= accepts a non-empty text query; ?type= accepts fact, event, preference, or conversation; ?source= accepts a non-empty metadata source and matches case-insensitively; ?tag= accepts a non-empty tag; ?since= and ?until= accept ISO-8601 creation bounds; ?minImportance= and ?maxImportance= are inclusive scores from 0 through 1). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
     mimeType: 'application/json',
   },
 ];
@@ -719,8 +725,9 @@ const AddMemoriesInputSchema = z.object({
   offset: z.number().optional(),
 });
 
-const ListMemoriesInputSchema = z.object({
+export const ListMemoriesInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
+  source: z.string().trim().min(1).optional(),
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
   maxImportance: z.number().min(0).max(1).optional(),
@@ -1397,11 +1404,13 @@ async function handleListMemories(
 
     const limit = parseListMemoriesLimit(input.limit);
     const offset = parseListMemoriesOffset(input.offset);
+    const source = input.source;
     const search = parseMemoriesResourceSearch(input.search ?? null);
     const { since, until } = parseListMemoriesDateFilters(input);
     const pageLimit = limit ?? 50;
     const query: MemoryQuery = {
       type: input.type,
+      source,
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
@@ -1418,6 +1427,7 @@ async function handleListMemories(
     const results = selectListMemoriesEntries(queried, pageLimit);
     const total = store.count({
       type: input.type,
+      source,
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
@@ -1668,6 +1678,7 @@ async function handleReadResource(uri: string): Promise<string> {
       );
       const search = parseMemoriesResourceSearch(url.searchParams.get('search'));
       const type = parseMemoriesResourceType(url.searchParams.get('type'));
+      const source = parseMemoriesResourceSource(url.searchParams.get('source'));
       const tag = parseMemoriesResourceTag(url.searchParams.get('tag'));
       const since = parseMemoriesResourceDate(url.searchParams.get('since'), 'since');
       const until = parseMemoriesResourceDate(url.searchParams.get('until'), 'until');
@@ -1675,6 +1686,7 @@ async function handleReadResource(uri: string): Promise<string> {
       validateMemoriesResourceDateRange(since, until);
       const filters = {
         type,
+        source,
         tags: tag === undefined ? undefined : [tag],
         minImportance,
         maxImportance,
@@ -1693,7 +1705,7 @@ async function handleReadResource(uri: string): Promise<string> {
           store.count({ ...filters, type }),
         ]),
       );
-      const resourceUri = buildMemoriesResourceUri(minImportance, maxImportance, type, tag, search, since, until);
+      const resourceUri = buildMemoriesResourceUri(minImportance, maxImportance, type, source, tag, search, since, until);
       const page = buildMemoriesResourcePage(entries, total, offset, limit, resourceUri);
 
       return JSON.stringify({
