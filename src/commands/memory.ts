@@ -391,7 +391,9 @@ export function formatMemoryListJson(
       tier: pagination.filters?.tier ?? null,
       freshness: pagination.filters?.freshness ?? null,
       pinned: pagination.filters?.pinned ?? null,
-      source: pagination.filters?.source ?? null,
+      source: pagination.filters?.source === undefined
+        ? null
+        : normalizeMemoryListSource(pagination.filters.source),
       namespace: pagination.filters?.namespace ?? null,
       content: pagination.filters?.content ?? null,
       tags: pagination.filters?.tags ?? null,
