@@ -1091,9 +1091,10 @@ export function formatMemoryListEmptyState(
   const suggestedOffset = limit === undefined
     ? 0
     : Math.floor((matchingCount - 1) / limit) * limit;
+  const filterContext = filterSummary ? ` for these filters: ${filterSummary}` : '';
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
-  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+  }${filterContext}. Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 /** Summarize active list filters so an empty human-facing result is actionable. */

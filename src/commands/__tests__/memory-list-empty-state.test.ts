@@ -71,6 +71,20 @@ describe('savestate memory list human empty state', () => {
     );
   });
 
+  it('keeps active filters visible when an offset skips past matches', () => {
+    expect(formatMemoryListEmptyState(
+      3,
+      10,
+      2,
+      false,
+      undefined,
+      'tier=L1, pinned',
+    )).toBe(
+      'No memories shown: offset 10 skips past 3 matching memories for these filters: tier=L1, pinned. ' +
+      'Try --offset 2 to open the nearest available page.',
+    );
+  });
+
   it('returns to the start for an empty unbounded page', () => {
     expect(formatMemoryListEmptyState(45, 100)).toBe(
       'No memories shown: offset 100 skips past 45 matching memories. Try --offset 0 to open the nearest available page.',
