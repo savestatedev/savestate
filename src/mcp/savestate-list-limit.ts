@@ -35,13 +35,15 @@ export function formatSavestateListEmptyPage(
   total: number,
   offset: number | undefined,
   limit = 10,
+  platform?: string,
 ): string {
   const start = offset ?? 0;
+  const totalLabel = platform ? `Total matching platform "${platform}"` : 'Total stored';
   if (total === 0) {
-    return `No snapshots found at offset ${start}. Total stored: 0`;
+    return `No snapshots found at offset ${start}. ${totalLabel}: 0`;
   }
 
   const suggestedOffset = Math.floor((total - 1) / limit) * limit;
-  return `No snapshots found at offset ${start}. Total stored: ${total}. ` +
+  return `No snapshots found at offset ${start}. ${totalLabel}: ${total}. ` +
     `Suggested offset ${suggestedOffset} with limit ${limit} opens the nearest available page.`;
 }

@@ -61,5 +61,11 @@ describe('MCP savestate_list limit', () => {
     expect(formatSavestateListEmptyPage(0, undefined)).toBe(
       'No snapshots found at offset 0. Total stored: 0',
     );
+    expect(formatSavestateListEmptyPage(0, 10, 5, 'claude-code')).toBe(
+      'No snapshots found at offset 10. Total matching platform "claude-code": 0',
+    );
+    expect(formatSavestateListEmptyPage(12, 20, 5, 'chatgpt')).toContain(
+      'Total matching platform "chatgpt": 12.',
+    );
   });
 });
