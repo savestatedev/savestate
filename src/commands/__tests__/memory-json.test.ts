@@ -193,6 +193,13 @@ describe('savestate memory --json', () => {
     ]);
   });
 
+  it('trims legacy source padding in JSON entries', () => {
+    const legacy = entry({ id: 'legacy', content: 'legacy source', source: '  Claude-Code  ' });
+    const parsed = JSON.parse(formatMemoryListJson([legacy], [legacy])) as MemoryListJson;
+
+    expect(parsed.entries[0].source).toBe('Claude-Code');
+  });
+
   it('records empty lists with zero counts', () => {
     const parsed = JSON.parse(formatMemoryListJson([], [])) as MemoryListJson;
     expect(parsed.found).toBe(true);

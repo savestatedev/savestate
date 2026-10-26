@@ -416,7 +416,7 @@ export function formatMemoryListJson(
       tier: getEffectiveTier(entry),
       pinned: !!entry.pinned,
       importance: getMemoryListImportance(entry),
-      source: entry.source,
+      source: normalizeMemoryListSource(entry.source),
       namespace: (() => {
         const namespace = typeof entry.metadata?.namespace === 'string'
           ? entry.metadata.namespace.trim()
@@ -476,8 +476,14 @@ export function filterMemoryListBySource(
   source?: string,
 ): MemoryEntry[] {
   if (source === undefined) return entries;
-  const normalizedSource = source.trim().toLocaleLowerCase();
-  return entries.filter((entry) => entry.source.trim().toLocaleLowerCase() === normalizedSource);
+  const normalizedSource = normalizeMemoryListSource(source).toLocaleLowerCase();
+  return entries.filter((entry) => normalizeMemoryListSource(entry.source).toLocaleLowerCase() === normalizedSource);
+}
+
+/** Keep legacy padding out of machine-readable and terminal memory output. */
+export function normalizeMemoryListSource(source: string | undefined): string {
+  const normalized = source?.trim() ?? '';
+  return normalized || 'unknown';
 }
 
 /** Keep memories whose content includes the requested case-insensitive text. */
@@ -981,7 +987,7 @@ export function sortMemoryListEntries(
 
 /** Keep table output readable while still identifying the originating source. */
 export function formatMemoryListSource(source: string): string {
-  const normalized = source.replace(/\s+/g, ' ').trim();
+  const normalized = normalizeMemoryListSource(source).replace(/\s+/g, ' ');
   return normalized.length > 18 ? `${normalized.slice(0, 15)}...` : normalized;
 }
 
@@ -1324,7 +1330,7 @@ export async function listMemories(
   for (const entry of entries) {
     const tier = getEffectiveTier(entry);
     const pinned = entry.pinned ? '📌' : '  ';
-    const source = formatMemoryListSource(entry.source).padEnd(18);
+    const source = formatMemoryListSource(normalizeMemoryListSource(entry.source)).padEnd(18);
     const namespace = formatMemoryListNamespace(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     ).padEnd(24);
