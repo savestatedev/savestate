@@ -30,12 +30,25 @@ describe('savestate memory list human empty state', () => {
     })).toBe('source=agent, namespace=work');
   });
 
+  it('keeps multiline filter values on one CLI output line', () => {
+    expect(formatMemoryListFilterSummary({
+      source: 'agent\nteam',
+      namespace: 'org:\tapp',
+      content: 'preferred\neditor',
+      tags: ['work\nurgent', '  personal  '],
+      since: '2026-10-01\n00:00Z',
+      until: '2026-10-31\t23:59Z',
+    })).toBe('source=agent team, namespace=org: app, content="preferred editor", tags=[work urgent, personal], since=2026-10-01 00:00Z, until=2026-10-31 23:59Z');
+  });
+
   it('omits blank filter values from the empty-state summary', () => {
     expect(formatMemoryListFilterSummary({
       source: '  ',
       namespace: '',
       content: '  ',
       tags: [' ', '\t'],
+      since: '  ',
+      until: '\n',
     })).toBeUndefined();
   });
 
@@ -68,6 +81,20 @@ describe('savestate memory list human empty state', () => {
     );
     expect(formatMemoryListEmptyState(45, 100, 20)).toBe(
       'No memories shown: offset 100 skips past 45 matching memories. Try --offset 40 to open the nearest available page.',
+    );
+  });
+
+  it('keeps active filters visible when an offset skips past matches', () => {
+    expect(formatMemoryListEmptyState(
+      3,
+      10,
+      2,
+      false,
+      undefined,
+      'tier=L1, pinned',
+    )).toBe(
+      'No memories shown: offset 10 skips past 3 matching memories for these filters: tier=L1, pinned. ' +
+      'Try --offset 2 to open the nearest available page.',
     );
   });
 

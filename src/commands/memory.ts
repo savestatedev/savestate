@@ -1091,9 +1091,10 @@ export function formatMemoryListEmptyState(
   const suggestedOffset = limit === undefined
     ? 0
     : Math.floor((matchingCount - 1) / limit) * limit;
+  const filterContext = filterSummary ? ` for these filters: ${filterSummary}` : '';
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
-  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+  }${filterContext}. Try --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 /** Summarize active list filters so an empty human-facing result is actionable. */
@@ -1112,19 +1113,22 @@ export function formatMemoryListFilterSummary(
     maxImportance?: number;
   } = {},
 ): string | undefined {
+  const normalizeFilterText = (value: string): string => value.replace(/\s+/g, ' ').trim();
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.pinned !== undefined) filters.push(options.pinned ? 'pinned' : 'unpinned');
-  const source = options.source?.trim();
+  const source = options.source === undefined ? undefined : normalizeFilterText(options.source);
   if (source) filters.push(`source=${source}`);
-  const namespace = options.namespace?.trim();
+  const namespace = options.namespace === undefined ? undefined : normalizeFilterText(options.namespace);
   if (namespace) filters.push(`namespace=${namespace}`);
-  const content = options.content?.trim();
+  const content = options.content === undefined ? undefined : normalizeFilterText(options.content);
   if (content) filters.push(`content=${JSON.stringify(content)}`);
-  const tags = options.tags?.map((tag) => tag.trim()).filter(Boolean);
+  const tags = options.tags?.map(normalizeFilterText).filter(Boolean);
   if (tags && tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
-  if (options.since !== undefined) filters.push(`since=${options.since}`);
-  if (options.until !== undefined) filters.push(`until=${options.until}`);
+  const since = options.since === undefined ? undefined : normalizeFilterText(options.since);
+  if (since) filters.push(`since=${since}`);
+  const until = options.until === undefined ? undefined : normalizeFilterText(options.until);
+  if (until) filters.push(`until=${until}`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
   if (options.minImportance !== undefined) filters.push(`min-importance=${options.minImportance}`);
   if (options.maxImportance !== undefined) filters.push(`max-importance=${options.maxImportance}`);
