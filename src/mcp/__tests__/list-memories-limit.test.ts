@@ -66,4 +66,23 @@ describe('MCP list_memories limit', () => {
       'No memories found at offset 0. Total matching: 0',
     );
   });
+
+  it('explains active filters when an empty page is filtered', () => {
+    expect(formatListMemoriesEmptyPage(0, undefined, undefined, {
+      source: 'Claude-Code',
+      tags: ['project', 'work'],
+      minImportance: 0.8,
+      search: 'encrypted archive',
+    })).toBe(
+      'No memories found at offset 0. Total matching: 0. ' +
+      'Active filters: source=Claude-Code, tags=[project, work], search="encrypted archive", minImportance=0.8.',
+    );
+  });
+
+  it('keeps filter context on an out-of-range page', () => {
+    expect(formatListMemoriesEmptyPage(5, 8, 2, { type: 'event' })).toBe(
+      'No memories found at offset 8. Total matching: 5. Active filters: type=event. ' +
+      'Suggested offset 4 with limit 2 opens the nearest available page.',
+    );
+  });
 });

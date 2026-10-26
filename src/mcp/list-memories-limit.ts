@@ -1,5 +1,16 @@
 const MAX_LIST_MEMORIES_LIMIT = 1000;
 
+export interface ListMemoriesFilters {
+  type?: string;
+  source?: string;
+  tags?: string[];
+  minImportance?: number;
+  maxImportance?: number;
+  search?: string;
+  since?: string;
+  until?: string;
+}
+
 /** Parse list_memories limit without turning user input errors into an empty memory list. */
 export function parseListMemoriesLimit(value: number | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -39,12 +50,37 @@ export function formatListMemoriesEmptyPage(
   total: number,
   offset: number | undefined,
   limit?: number,
+  filters?: ListMemoriesFilters,
 ): string {
   const start = offset ?? 0;
-  if (total === 0) return `No memories found at offset ${start}. Total matching: 0`;
+  const activeFilters = formatListMemoriesFilters(filters);
+  const filterSummary = activeFilters.length > 0
+    ? ` Active filters: ${activeFilters}.`
+    : '';
+  if (total === 0) {
+    return filterSummary.length > 0
+      ? `No memories found at offset ${start}. Total matching: 0.${filterSummary}`
+      : `No memories found at offset ${start}. Total matching: 0`;
+  }
 
   const pageSize = limit ?? 50;
   const suggestedOffset = Math.floor((total - 1) / pageSize) * pageSize;
-  return `No memories found at offset ${start}. Total matching: ${total}. ` +
+  return `No memories found at offset ${start}. Total matching: ${total}.${filterSummary} ` +
     `Suggested offset ${suggestedOffset} with limit ${pageSize} opens the nearest available page.`;
+}
+
+/** Keep empty MCP responses self-describing when a filtered query has no page. */
+export function formatListMemoriesFilters(filters?: ListMemoriesFilters): string {
+  if (!filters) return '';
+
+  const parts: string[] = [];
+  if (filters.type) parts.push(`type=${filters.type}`);
+  if (filters.source) parts.push(`source=${filters.source}`);
+  if (filters.tags?.length) parts.push(`tags=[${filters.tags.join(', ')}]`);
+  if (filters.search) parts.push(`search="${filters.search}"`);
+  if (filters.minImportance !== undefined) parts.push(`minImportance=${filters.minImportance}`);
+  if (filters.maxImportance !== undefined) parts.push(`maxImportance=${filters.maxImportance}`);
+  if (filters.since) parts.push(`since=${filters.since}`);
+  if (filters.until) parts.push(`until=${filters.until}`);
+  return parts.join(', ');
 }
