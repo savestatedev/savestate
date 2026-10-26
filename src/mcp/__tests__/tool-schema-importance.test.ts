@@ -30,4 +30,10 @@ describe('MCP list_memories search schema', () => {
     const schema = getTool('list_memories').inputSchema as any;
     expect(schema.properties.search).toMatchObject({ type: 'string' });
   });
+
+  it('advertises a metadata source filter', () => {
+    const schema = getTool('list_memories').inputSchema as any;
+    expect(schema.properties.source).toMatchObject({ type: 'string' });
+    expect(schema.properties.source.description).toContain('case-insensitive');
+  });
 });

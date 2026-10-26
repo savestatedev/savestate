@@ -545,7 +545,8 @@ export const tools: Tool[] = [
     name: 'list_memories',
     description:
       'List all stored memories. Compatible with OpenMemory MCP API. ' +
-      'Returns memories with optional filtering. The summary includes the starting offset; ' +
+      'Returns memories with optional filtering, including a case-insensitive metadata source filter. ' +
+      'The summary includes the starting offset; ' +
       'when more results are available it includes the next offset to request, and later pages ' +
       'include the previous offset for page recovery. An exhausted page reports a suggested offset.',
     inputSchema: {
@@ -555,6 +556,10 @@ export const tools: Tool[] = [
           type: 'string',
           enum: ['fact', 'event', 'preference', 'conversation'],
           description: 'Filter by memory type',
+        },
+        source: {
+          type: 'string',
+          description: 'Filter by metadata source (case-insensitive exact match)',
         },
         tags: {
           type: 'array',
@@ -721,6 +726,7 @@ const AddMemoriesInputSchema = z.object({
 
 const ListMemoriesInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
+  source: z.string().optional(),
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
   maxImportance: z.number().min(0).max(1).optional(),
@@ -1402,6 +1408,7 @@ async function handleListMemories(
     const pageLimit = limit ?? 50;
     const query: MemoryQuery = {
       type: input.type,
+      source: input.source,
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
@@ -1418,6 +1425,7 @@ async function handleListMemories(
     const results = selectListMemoriesEntries(queried, pageLimit);
     const total = store.count({
       type: input.type,
+      source: input.source,
       tags: input.tags,
       minImportance: input.minImportance,
       maxImportance: input.maxImportance,
