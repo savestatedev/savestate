@@ -125,6 +125,7 @@ import {
   parseMemoriesResourceImportance,
   parseMemoriesResourceDate,
   parseMemoriesResourceSearch,
+  parseMemoriesResourceSource,
   parseMemoriesResourceTag,
   parseMemoriesResourceType,
   validateMemoriesResourceImportanceRange,
@@ -651,7 +652,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000; ?search= accepts a non-empty text query; ?type= accepts fact, event, preference, or conversation; ?tag= accepts a non-empty tag; ?since= and ?until= accept ISO-8601 creation bounds; ?minImportance= and ?maxImportance= are inclusive scores from 0 through 1). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
+    description: 'Memory entries (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000; ?search= accepts a non-empty text query; ?type= accepts fact, event, preference, or conversation; ?source= accepts a non-empty metadata source and matches case-insensitively; ?tag= accepts a non-empty tag; ?since= and ?until= accept ISO-8601 creation bounds; ?minImportance= and ?maxImportance= are inclusive scores from 0 through 1). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes metadata, createdAt, updatedAt, and expiresAt when set.',
     mimeType: 'application/json',
   },
 ];
@@ -1676,6 +1677,7 @@ async function handleReadResource(uri: string): Promise<string> {
       );
       const search = parseMemoriesResourceSearch(url.searchParams.get('search'));
       const type = parseMemoriesResourceType(url.searchParams.get('type'));
+      const source = parseMemoriesResourceSource(url.searchParams.get('source'));
       const tag = parseMemoriesResourceTag(url.searchParams.get('tag'));
       const since = parseMemoriesResourceDate(url.searchParams.get('since'), 'since');
       const until = parseMemoriesResourceDate(url.searchParams.get('until'), 'until');
@@ -1683,6 +1685,7 @@ async function handleReadResource(uri: string): Promise<string> {
       validateMemoriesResourceDateRange(since, until);
       const filters = {
         type,
+        source,
         tags: tag === undefined ? undefined : [tag],
         minImportance,
         maxImportance,
@@ -1701,7 +1704,7 @@ async function handleReadResource(uri: string): Promise<string> {
           store.count({ ...filters, type }),
         ]),
       );
-      const resourceUri = buildMemoriesResourceUri(minImportance, maxImportance, type, tag, search, since, until);
+      const resourceUri = buildMemoriesResourceUri(minImportance, maxImportance, type, source, tag, search, since, until);
       const page = buildMemoriesResourcePage(entries, total, offset, limit, resourceUri);
 
       return JSON.stringify({
