@@ -119,6 +119,7 @@ import { formatMemoryListEntry } from './memory-list-entry.js';
 import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
+import type { ListMemoriesFilters } from './list-memories-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
 import {
   buildMemoriesResourceUri,
@@ -548,6 +549,7 @@ export const tools: Tool[] = [
     description:
       'List all stored memories. Compatible with OpenMemory MCP API. ' +
       'Returns memories with optional filtering, including a case-insensitive metadata source filter. ' +
+      'The default result limit is 50. ' +
       'The summary includes the starting offset; ' +
       'when more results are available it includes the next offset to request, and later pages ' +
       'include the previous offset for page recovery. An exhausted page reports a suggested offset.',
@@ -1438,7 +1440,17 @@ async function handleListMemories(
     });
 
     if (results.length === 0) {
-      return formatListMemoriesEmptyPage(total, offset, pageLimit);
+      const filters: ListMemoriesFilters = {
+        type: input.type,
+        source,
+        tags: input.tags,
+        minImportance: input.minImportance,
+        maxImportance: input.maxImportance,
+        search,
+        since,
+        until,
+      };
+      return formatListMemoriesEmptyPage(total, offset, pageLimit, filters);
     }
 
     const lines = [

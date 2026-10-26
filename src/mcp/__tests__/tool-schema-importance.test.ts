@@ -26,6 +26,13 @@ describe('MCP importance tool schemas', () => {
 });
 
 describe('MCP list_memories search schema', () => {
+  it('advertises the implemented default result limit', () => {
+    expect(getTool('list_memories').description).toContain('default result limit is 50');
+    expect((getTool('list_memories').inputSchema as any).properties.limit.description).toContain(
+      'default: 50',
+    );
+  });
+
   it('advertises a text filter', () => {
     const schema = getTool('list_memories').inputSchema as any;
     expect(schema.properties.search).toMatchObject({ type: 'string' });
