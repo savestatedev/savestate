@@ -66,16 +66,57 @@ export function matchesSnapshotsResourceLabel(
     normalizedEntryLabel.toLowerCase() === requestedLabel.trim().toLowerCase();
 }
 
+/** Parse an optional snapshot resource tag filter without widening blank input. */
+export function parseSnapshotsResourceTag(value: string | null): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error('Invalid tag value. Expected a non-empty tag.');
+  }
+
+  return normalized;
+}
+
+/** Normalize legacy snapshot tags before matching or exposing them to clients. */
+export function normalizeSnapshotsResourceTags(tags: string[] | null | undefined): string[] {
+  if (!Array.isArray(tags)) return [];
+
+  const seen = new Set<string>();
+  return tags
+    .filter((tag): tag is string => typeof tag === 'string')
+    .map((tag) => tag.trim())
+    .filter((tag) => {
+      if (tag.length === 0) return false;
+      const normalized = tag.toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+}
+
+/** Match snapshot tags case-insensitively while treating missing tags as non-matches. */
+export function matchesSnapshotsResourceTag(
+  entryTags: string[] | null | undefined,
+  requestedTag: string,
+): boolean {
+  const normalizedRequestedTag = requestedTag.trim().toLowerCase();
+  return normalizeSnapshotsResourceTags(entryTags)
+    .some((tag) => tag.toLowerCase() === normalizedRequestedTag);
+}
+
 /** Preserve active snapshot filters in resource pagination links. */
 export function buildSnapshotsResourceUri(
   platform?: string,
   adapter?: string,
   label?: string,
+  tag?: string,
 ): string {
   const filters = [
     platform === undefined ? null : `platform=${encodeURIComponent(platform)}`,
     adapter === undefined ? null : `adapter=${encodeURIComponent(adapter)}`,
     label === undefined ? null : `label=${encodeURIComponent(label)}`,
+    tag === undefined ? null : `tag=${encodeURIComponent(tag)}`,
   ].filter((filter): filter is string => filter !== null);
   return filters.length > 0
     ? `savestate://snapshots?${filters.join('&')}`
@@ -83,14 +124,21 @@ export function buildSnapshotsResourceUri(
 }
 
 /** Echo the active snapshot resource filter so clients can verify the applied scope. */
-export function formatSnapshotsResourceFilters(platform?: string, adapter?: string, label?: string): {
+export function formatSnapshotsResourceFilters(
+  platform?: string,
+  adapter?: string,
+  label?: string,
+  tag?: string,
+): {
   platform: string | null;
   adapter: string | null;
   label: string | null;
+  tag: string | null;
 } {
   return {
     platform: platform ?? null,
     adapter: adapter ?? null,
     label: label ?? null,
+    tag: tag ?? null,
   };
 }

@@ -1,5 +1,8 @@
 import type { SnapshotIndexEntry } from '../index-file.js';
-import { normalizeSnapshotsResourceLabel } from './snapshots-resource-filters.js';
+import {
+  normalizeSnapshotsResourceLabel,
+  normalizeSnapshotsResourceTags,
+} from './snapshots-resource-filters.js';
 
 export interface SnapshotsResourceEntry {
   id: string;
@@ -7,6 +10,7 @@ export interface SnapshotsResourceEntry {
   platform: string;
   adapter: string;
   label: string | null;
+  tags: string[];
   size: number;
 }
 
@@ -18,6 +22,7 @@ export function formatSnapshotsResourceEntry(entry: SnapshotIndexEntry): Snapsho
     platform: entry.platform,
     adapter: entry.adapter,
     label: normalizeSnapshotsResourceLabel(entry.label),
+    tags: normalizeSnapshotsResourceTags(entry.tags),
     size: entry.size,
   };
 }
