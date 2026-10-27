@@ -195,6 +195,31 @@ export function selectIntegrityIncidentPage<T>(
   return selectIntegrityIncidents(page, limit);
 }
 
+/** Describe an integrity incident page so interactive users can continue or recover pagination. */
+export function formatIntegrityIncidentPaginationHint(
+  shown: number,
+  total: number,
+  offset = 0,
+  limit?: number,
+): string {
+  if (offset === 0 && limit === undefined && shown === total) return '';
+
+  const page = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const hints = [`Showing ${shown} of ${total} incidents (${page})`];
+
+  if (limit !== undefined && offset + shown < total) {
+    hints.push(`next offset ${offset + shown}`);
+  }
+  if (limit !== undefined && offset > 0) {
+    hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+  }
+  if (limit !== undefined && shown === 0 && total > 0) {
+    hints.push(`try offset ${Math.floor((total - 1) / limit) * limit}`);
+  }
+
+  return `${hints.join('; ')}.`;
+}
+
 const MAX_INTEGRITY_CONFIG_LIMIT = 1000;
 
 /** Parse integrity config --limit without turning user input errors into an empty config. */
@@ -1345,7 +1370,8 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const limit = parseIntegrityLimit(options.limit);
   const offset = parseIntegrityOffset(options.offset);
 
-  const incidents = selectIntegrityIncidentPage(await getIncidents(tenant_id, status), offset, limit);
+  const allIncidents = await getIncidents(tenant_id, status);
+  const incidents = selectIntegrityIncidentPage(allIncidents, offset, limit);
 
   if (options.json) {
     console.log(formatIntegrityIncidentsJson(incidents));
@@ -1355,13 +1381,24 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   console.log(chalk.bold('🚨 Integrity Incidents'));
   console.log();
 
+  const shown = incidents.slice(0, limit ?? 20);
+  const pageLimit = limit ?? (
+    offset !== undefined || shown.length < allIncidents.length ? 20 : undefined
+  );
+  const paginationHint = formatIntegrityIncidentPaginationHint(
+    shown.length,
+    allIncidents.length,
+    offset,
+    pageLimit,
+  );
+
   if (incidents.length === 0) {
     console.log(chalk.dim('  No incidents found.'));
+    if (paginationHint) console.log(chalk.dim(`  ${paginationHint}`));
     console.log();
     return;
   }
 
-  const shown = incidents.slice(0, limit ?? 20);
   for (const incident of shown) {
     const severityColor = {
       low: chalk.dim,
@@ -1389,6 +1426,7 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   if (incidents.length > shown.length) {
     console.log(chalk.dim(`  ... and ${incidents.length - shown.length} more`));
   }
+  if (paginationHint) console.log(chalk.dim(`  ${paginationHint}`));
   console.log();
 }
 

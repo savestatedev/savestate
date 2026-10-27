@@ -3990,6 +3990,11 @@ describe('CLI docs', () => {
     expect(integrity).toContain('export function parseIntegrityLimit');
   });
 
+  it('documents integrity incident pagination hints for human output', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('reports next/previous offsets in human-readable output');
+  });
+
   it('documents integrity config --limit as a bounded positive integer', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--limit');
