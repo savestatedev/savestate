@@ -50,13 +50,20 @@ export function parseSnapshotsResourceLabel(value: string | null): string | unde
   return normalized;
 }
 
+/** Normalize legacy snapshot labels before matching or exposing them to clients. */
+export function normalizeSnapshotsResourceLabel(label: string | null | undefined): string | null {
+  const normalized = label?.trim() ?? '';
+  return normalized.length > 0 ? normalized : null;
+}
+
 /** Match snapshot labels case-insensitively while treating missing labels as non-matches. */
 export function matchesSnapshotsResourceLabel(
-  entryLabel: string | undefined,
+  entryLabel: string | null | undefined,
   requestedLabel: string,
 ): boolean {
-  return entryLabel !== undefined &&
-    entryLabel.trim().toLowerCase() === requestedLabel.trim().toLowerCase();
+  const normalizedEntryLabel = normalizeSnapshotsResourceLabel(entryLabel);
+  return normalizedEntryLabel !== null &&
+    normalizedEntryLabel.toLowerCase() === requestedLabel.trim().toLowerCase();
 }
 
 /** Preserve active snapshot filters in resource pagination links. */

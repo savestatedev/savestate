@@ -5,6 +5,7 @@ import {
   matchesSnapshotsResourceAdapter,
   matchesSnapshotsResourceLabel,
   matchesSnapshotsResourcePlatform,
+  normalizeSnapshotsResourceLabel,
   parseSnapshotsResourceAdapter,
   parseSnapshotsResourceLabel,
   parseSnapshotsResourcePlatform,
@@ -38,7 +39,14 @@ describe('MCP savestate://snapshots platform filter', () => {
     expect(parseSnapshotsResourceLabel('  Daily Backup  ')).toBe('Daily Backup');
     expect(parseSnapshotsResourceLabel(null)).toBeUndefined();
     expect(matchesSnapshotsResourceLabel('daily backup', 'DAILY BACKUP')).toBe(true);
+    expect(matchesSnapshotsResourceLabel(null, 'daily backup')).toBe(false);
     expect(matchesSnapshotsResourceLabel(undefined, 'daily backup')).toBe(false);
+  });
+
+  it('normalizes missing and whitespace-only labels to null', () => {
+    expect(normalizeSnapshotsResourceLabel('  Daily backup  ')).toBe('Daily backup');
+    expect(normalizeSnapshotsResourceLabel('   ')).toBeNull();
+    expect(normalizeSnapshotsResourceLabel(null)).toBeNull();
   });
 
   it('rejects a blank label filter', () => {
