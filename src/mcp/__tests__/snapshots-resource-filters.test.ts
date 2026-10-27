@@ -77,4 +77,10 @@ describe('MCP savestate://snapshots platform filter', () => {
     });
     expect(formatSnapshotsResourceFilters()).toEqual({ platform: null, adapter: null, label: null });
   });
+
+  it('keeps the active label available as response metadata', () => {
+    const filters = formatSnapshotsResourceFilters(undefined, undefined, 'Daily backup');
+
+    expect(filters.label).toBe('Daily backup');
+  });
 });

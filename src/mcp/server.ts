@@ -1689,6 +1689,7 @@ async function handleReadResource(uri: string): Promise<string> {
         suggestedUri: page.suggestedUri,
         platform: platform ?? null,
         adapter: adapter ?? null,
+        label: label ?? null,
         filters: formatSnapshotsResourceFilters(platform, adapter, label),
         snapshots: page.entries.map(formatSnapshotsResourceEntry),
       }, null, 2);
