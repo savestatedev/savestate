@@ -23,6 +23,10 @@ describe('MCP savestate://snapshots platform filter', () => {
     expect(matchesSnapshotsResourcePlatform('gemini', 'claude-code')).toBe(false);
   });
 
+  it('ignores incidental whitespace in stored platform values', () => {
+    expect(matchesSnapshotsResourcePlatform('  claude-code  ', 'claude-code')).toBe(true);
+  });
+
   it('preserves the filter in pagination URIs', () => {
     expect(buildSnapshotsResourceUri()).toBe('savestate://snapshots');
     expect(buildSnapshotsResourceUri('Claude Code')).toBe(

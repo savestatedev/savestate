@@ -15,7 +15,7 @@ export function matchesSnapshotsResourcePlatform(
   entryPlatform: string,
   requestedPlatform: string,
 ): boolean {
-  return entryPlatform.toLowerCase() === requestedPlatform.toLowerCase();
+  return entryPlatform.trim().toLowerCase() === requestedPlatform.trim().toLowerCase();
 }
 
 /** Preserve the active platform filter in snapshot resource pagination links. */
