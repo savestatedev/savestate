@@ -75,7 +75,7 @@ export function parseSnapshotsResourceTag(value: string | null): string | undefi
     throw new Error('Invalid tag value. Expected a non-empty tag.');
   }
 
-  return normalized;
+  return normalized.toLowerCase();
 }
 
 /** Normalize legacy snapshot tags before matching or exposing them to clients. */
@@ -85,7 +85,7 @@ export function normalizeSnapshotsResourceTags(tags: string[] | null | undefined
   const seen = new Set<string>();
   return tags
     .filter((tag): tag is string => typeof tag === 'string')
-    .map((tag) => tag.trim())
+    .map((tag) => tag.trim().toLowerCase())
     .filter((tag) => {
       if (tag.length === 0) return false;
       const normalized = tag.toLowerCase();

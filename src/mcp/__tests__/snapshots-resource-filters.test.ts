@@ -59,7 +59,7 @@ describe('MCP savestate://snapshots platform filter', () => {
   });
 
   it('normalizes and matches a tag filter case-insensitively', () => {
-    expect(parseSnapshotsResourceTag('  release  ')).toBe('release');
+    expect(parseSnapshotsResourceTag('  RELEASE  ')).toBe('release');
     expect(parseSnapshotsResourceTag(null)).toBeUndefined();
     expect(matchesSnapshotsResourceTag(['release', 'backup'], 'RELEASE')).toBe(true);
     expect(matchesSnapshotsResourceTag(undefined, 'release')).toBe(false);
@@ -72,7 +72,7 @@ describe('MCP savestate://snapshots platform filter', () => {
   });
 
   it('normalizes missing, blank, and duplicate snapshot tags', () => {
-    expect(normalizeSnapshotsResourceTags([' release ', 'RELEASE', '', 'backup'])).toEqual([
+    expect(normalizeSnapshotsResourceTags([' RELEASE ', 'release', '', 'BACKUP'])).toEqual([
       'release',
       'backup',
     ]);
