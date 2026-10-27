@@ -734,7 +734,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--since <date>', 'Search memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
-    .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
+    .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
