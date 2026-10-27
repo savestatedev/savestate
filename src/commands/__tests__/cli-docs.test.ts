@@ -3185,6 +3185,7 @@ describe('CLI docs', () => {
   it('documents memory explain --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scope retrievals by tier with <code>--tier</code>');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
     expect(memorySection).toContain('<code>emptyReason</code>');
