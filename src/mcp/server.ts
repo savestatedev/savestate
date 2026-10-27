@@ -80,6 +80,7 @@ import { parseListMemoriesDateFilters } from './list-memories-date-filters.js';
 import {
   formatSavestateListEmptyPage,
   formatSavestateListPageSummary,
+  matchesSavestateListPlatform,
   parseSavestateListLimit,
   selectSavestateListEntries,
 } from './savestate-list-limit.js';
@@ -275,7 +276,7 @@ export const tools: Tool[] = [
         },
         platform: {
           type: 'string',
-          description: 'Filter by platform (claude-code, clawdbot, etc.)',
+          description: 'Filter by platform, case-insensitively (claude-code, clawdbot, etc.)',
         },
       },
     },
@@ -988,7 +989,9 @@ async function handleList(
 
     // Filter by platform if specified
     if (input.platform) {
-      entries = entries.filter((e: SnapshotIndexEntry) => e.platform === input.platform);
+      entries = entries.filter((e: SnapshotIndexEntry) =>
+        matchesSavestateListPlatform(e.platform, input.platform!),
+      );
     }
 
     // Sort by timestamp (newest first)
@@ -1001,7 +1004,7 @@ async function handleList(
     entries = selectSavestateListEntries(entries, limit ?? 10);
 
     if (entries.length === 0) {
-      return formatSavestateListEmptyPage(totalEntries, offset);
+      return formatSavestateListEmptyPage(totalEntries, offset, limit ?? 10, input.platform);
     }
 
     const start = offset ?? 0;

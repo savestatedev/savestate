@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatSavestateListEmptyPage,
   formatSavestateListPageSummary,
+  matchesSavestateListPlatform,
   parseSavestateListLimit,
   selectSavestateListEntries,
 } from '../savestate-list-limit.js';
@@ -42,6 +43,11 @@ describe('MCP savestate_list limit', () => {
     expect(selectSavestateListEntries(entries, undefined)).toEqual(entries);
   });
 
+  it('matches platform filters case-insensitively', () => {
+    expect(matchesSavestateListPlatform('claude-code', 'CLAUDE-CODE')).toBe(true);
+    expect(matchesSavestateListPlatform('claude-code', 'chatgpt')).toBe(false);
+  });
+
   it('summarizes page position and continuation state', () => {
     expect(formatSavestateListPageSummary(2, 5, 2, true)).toBe(
       'Snapshots (2 shown of 5 total, starting at 2; next offset 4; more available):',
@@ -53,10 +59,19 @@ describe('MCP savestate_list limit', () => {
 
   it('keeps the requested offset visible for an empty page', () => {
     expect(formatSavestateListEmptyPage(5, 8)).toBe(
-      'No snapshots found at offset 8. Total stored: 5',
+      'No snapshots found at offset 8. Total stored: 5. Suggested offset 0 with limit 10 opens the nearest available page.',
+    );
+    expect(formatSavestateListEmptyPage(25, 30, 10)).toBe(
+      'No snapshots found at offset 30. Total stored: 25. Suggested offset 20 with limit 10 opens the nearest available page.',
     );
     expect(formatSavestateListEmptyPage(0, undefined)).toBe(
       'No snapshots found at offset 0. Total stored: 0',
+    );
+    expect(formatSavestateListEmptyPage(0, 10, 5, 'claude-code')).toBe(
+      'No snapshots found at offset 10. Total matching platform "claude-code": 0',
+    );
+    expect(formatSavestateListEmptyPage(12, 20, 5, 'chatgpt')).toContain(
+      'Total matching platform "chatgpt": 12.',
     );
   });
 });
