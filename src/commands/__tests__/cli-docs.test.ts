@@ -3993,6 +3993,7 @@ describe('CLI docs', () => {
   it('documents integrity incident pagination hints for human output', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('reports next/previous offsets in human-readable output');
+    expect(integritySection).toContain('defaults offset-only pages to 20 incidents');
   });
 
   it('documents the paged integrity incident JSON envelope', () => {

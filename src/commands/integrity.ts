@@ -195,6 +195,14 @@ export function selectIntegrityIncidentPage<T>(
   return selectIntegrityIncidents(page, limit);
 }
 
+/** Keep offset-only incident pages consistent across human and JSON output. */
+export function resolveIntegrityIncidentPageLimit(
+  offset: number | undefined,
+  limit: number | undefined,
+): number | undefined {
+  return limit ?? (offset === undefined ? undefined : 20);
+}
+
 /** Describe an integrity incident page so interactive users can continue or recover pagination. */
 export function formatIntegrityIncidentPaginationHint(
   shown: number,
@@ -1421,14 +1429,15 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const status = parseIntegrityIncidentStatus(options.status);
   const limit = parseIntegrityLimit(options.limit);
   const offset = parseIntegrityOffset(options.offset);
+  const pageLimit = resolveIntegrityIncidentPageLimit(offset, limit);
 
   const allIncidents = await getIncidents(tenant_id, status);
-  const incidents = selectIntegrityIncidentPage(allIncidents, offset, limit);
+  const incidents = selectIntegrityIncidentPage(allIncidents, offset, pageLimit);
 
   if (options.json) {
     if (offset !== undefined || limit !== undefined) {
       console.log(
-        formatIntegrityIncidentsSummaryJson(incidents, allIncidents.length, offset, limit),
+        formatIntegrityIncidentsSummaryJson(incidents, allIncidents.length, offset, pageLimit),
       );
     } else {
       console.log(formatIntegrityIncidentsJson(incidents));
@@ -1440,14 +1449,14 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   console.log();
 
   const shown = incidents.slice(0, limit ?? 20);
-  const pageLimit = limit ?? (
+  const displayPageLimit = limit ?? (
     offset !== undefined || shown.length < allIncidents.length ? 20 : undefined
   );
   const paginationHint = formatIntegrityIncidentPaginationHint(
     shown.length,
     allIncidents.length,
     offset,
-    pageLimit,
+    displayPageLimit,
   );
 
   if (incidents.length === 0) {

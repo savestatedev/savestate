@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseIntegrityOffset, selectIntegrityIncidentPage } from '../integrity.js';
+import {
+  parseIntegrityOffset,
+  resolveIntegrityIncidentPageLimit,
+  selectIntegrityIncidentPage,
+} from '../integrity.js';
 
 describe('savestate integrity incidents --offset', () => {
   it('defaults to undefined', () => {
@@ -25,5 +29,11 @@ describe('savestate integrity incidents --offset', () => {
         1,
       ).map((incident) => incident.id),
     ).toEqual(['inc-2']);
+  });
+
+  it('uses the human-readable default page size when only offset is supplied', () => {
+    expect(resolveIntegrityIncidentPageLimit(20, undefined)).toBe(20);
+    expect(resolveIntegrityIncidentPageLimit(undefined, undefined)).toBeUndefined();
+    expect(resolveIntegrityIncidentPageLimit(20, 5)).toBe(5);
   });
 });
