@@ -664,6 +664,58 @@ export function formatIntegrityIncidentsJson(incidents: IntegrityIncident[]): st
   return JSON.stringify(incidents.map(toIncidentJson), null, 2);
 }
 
+export interface IntegrityIncidentsSummaryJson {
+  found: boolean;
+  incidents: IntegrityIncidentJson[];
+  pagination: {
+    offset: number;
+    limit: number | null;
+    total: number;
+    shown: number;
+    emptyReason: 'collection' | 'page' | null;
+    suggestedOffset: number | null;
+    hasMore: boolean;
+    nextOffset: number | null;
+    hasPrevious: boolean;
+    previousOffset: number | null;
+  };
+}
+
+/** Keep paged JSON self-describing without changing the legacy unpaged array shape. */
+export function formatIntegrityIncidentsSummaryJson(
+  incidents: IntegrityIncident[],
+  total: number,
+  offset = 0,
+  limit?: number,
+): string {
+  const shown = incidents.length;
+  const pageLimit = limit ?? null;
+  const hasMore = pageLimit !== null && offset + shown < total;
+  const hasPrevious = pageLimit !== null && offset > 0;
+  const suggestedOffset = pageLimit !== null && shown === 0 && total > 0
+    ? Math.floor((total - 1) / pageLimit) * pageLimit
+    : null;
+
+  const summary: IntegrityIncidentsSummaryJson = {
+    found: total > 0,
+    incidents: incidents.map(toIncidentJson),
+    pagination: {
+      offset,
+      limit: pageLimit,
+      total,
+      shown,
+      emptyReason: total === 0 ? 'collection' : shown === 0 ? 'page' : null,
+      suggestedOffset,
+      hasMore,
+      nextOffset: hasMore ? offset + shown : null,
+      hasPrevious,
+      previousOffset: hasPrevious ? Math.max(0, offset - pageLimit) : null,
+    },
+  };
+
+  return JSON.stringify(summary, null, 2);
+}
+
 export interface IntegrityIncidentsMissingJson {
   found: false;
   total: 0;
@@ -1374,7 +1426,13 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const incidents = selectIntegrityIncidentPage(allIncidents, offset, limit);
 
   if (options.json) {
-    console.log(formatIntegrityIncidentsJson(incidents));
+    if (offset !== undefined || limit !== undefined) {
+      console.log(
+        formatIntegrityIncidentsSummaryJson(incidents, allIncidents.length, offset, limit),
+      );
+    } else {
+      console.log(formatIntegrityIncidentsJson(incidents));
+    }
     return;
   }
 
