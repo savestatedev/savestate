@@ -23,3 +23,12 @@ export function buildSnapshotsResourceUri(platform?: string): string {
   if (platform === undefined) return 'savestate://snapshots';
   return `savestate://snapshots?platform=${encodeURIComponent(platform)}`;
 }
+
+/** Echo the active snapshot resource filter so clients can verify the applied scope. */
+export function formatSnapshotsResourceFilters(platform?: string): {
+  platform: string | null;
+} {
+  return {
+    platform: platform ?? null,
+  };
+}

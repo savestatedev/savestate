@@ -143,6 +143,7 @@ import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snaps
 import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
 import {
   buildSnapshotsResourceUri,
+  formatSnapshotsResourceFilters,
   matchesSnapshotsResourcePlatform,
   parseSnapshotsResourcePlatform,
 } from './snapshots-resource-filters.js';
@@ -1673,6 +1674,7 @@ async function handleReadResource(uri: string): Promise<string> {
         suggestedOffset: page.suggestedOffset,
         suggestedUri: page.suggestedUri,
         platform: platform ?? null,
+        filters: formatSnapshotsResourceFilters(platform),
         snapshots: page.entries.map((e: SnapshotIndexEntry) => ({
           id: e.id,
           timestamp: e.timestamp,
