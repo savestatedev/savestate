@@ -3995,6 +3995,13 @@ describe('CLI docs', () => {
     expect(integritySection).toContain('reports next/previous offsets in human-readable output');
   });
 
+  it('documents the paged integrity incident JSON envelope', () => {
+    const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
+    expect(integritySection).toContain('without pagination flags it remains the legacy incident array');
+    expect(integritySection).toContain('emptyReason');
+    expect(integritySection).toContain('previousOffset');
+  });
+
   it('documents integrity config --limit as a bounded positive integer', () => {
     const integritySection = docs.slice(docs.indexOf('id="integrity"'), docs.indexOf('id="trace"'));
     expect(integritySection).toContain('--limit');
