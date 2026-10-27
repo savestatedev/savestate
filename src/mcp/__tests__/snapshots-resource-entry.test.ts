@@ -20,4 +20,18 @@ describe('MCP savestate://snapshots entries', () => {
       size: 2048,
     });
   });
+
+  it('returns null for legacy snapshots without a label', () => {
+    const legacyEntry = {
+      id: 'snapshot-2',
+      timestamp: '2026-10-27T12:00:00.000Z',
+      platform: 'claude-code',
+      adapter: 'claude-code',
+      label: null,
+      size: 1024,
+      filename: 'snapshot-2.saf.enc',
+    } as unknown as Parameters<typeof formatSnapshotsResourceEntry>[0];
+
+    expect(formatSnapshotsResourceEntry(legacyEntry)).toMatchObject({ label: null });
+  });
 });

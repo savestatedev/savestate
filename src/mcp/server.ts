@@ -146,8 +146,10 @@ import {
   buildSnapshotsResourceUri,
   formatSnapshotsResourceFilters,
   matchesSnapshotsResourceAdapter,
+  matchesSnapshotsResourceLabel,
   matchesSnapshotsResourcePlatform,
   parseSnapshotsResourceAdapter,
+  parseSnapshotsResourceLabel,
   parseSnapshotsResourcePlatform,
 } from './snapshots-resource-filters.js';
 
@@ -659,7 +661,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://snapshots',
     name: 'Snapshots',
-    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000; ?platform= and ?adapter= accept non-empty values and match case-insensitively). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery.',
+    description: 'List of available snapshots (default 50; ?limit= is a positive integer up to 1000; ?offset= is a non-negative integer up to 1000; ?platform=, ?adapter=, and ?label= accept non-empty values and match case-insensitively). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery.',
     mimeType: 'application/json',
   },
   {
@@ -1655,18 +1657,20 @@ async function handleReadResource(uri: string): Promise<string> {
         : parseSnapshotsResourceLimit(Number(rawLimit));
       const platform = parseSnapshotsResourcePlatform(url.searchParams.get('platform'));
       const adapter = parseSnapshotsResourceAdapter(url.searchParams.get('adapter'));
+      const label = parseSnapshotsResourceLabel(url.searchParams.get('label'));
 
       const index = await loadIndex();
       const entries = sortSavestateListEntries(index.snapshots).filter((entry) =>
         (platform === undefined || matchesSnapshotsResourcePlatform(entry.platform, platform)) &&
-        (adapter === undefined || matchesSnapshotsResourceAdapter(entry.adapter, adapter)),
+        (adapter === undefined || matchesSnapshotsResourceAdapter(entry.adapter, adapter)) &&
+        (label === undefined || matchesSnapshotsResourceLabel(entry.label, label)),
       );
 
       const page = buildSnapshotsResourcePage(
         entries,
         offset,
         limit,
-        buildSnapshotsResourceUri(platform, adapter),
+        buildSnapshotsResourceUri(platform, adapter, label),
       );
 
       return JSON.stringify({
@@ -1685,7 +1689,8 @@ async function handleReadResource(uri: string): Promise<string> {
         suggestedUri: page.suggestedUri,
         platform: platform ?? null,
         adapter: adapter ?? null,
-        filters: formatSnapshotsResourceFilters(platform, adapter),
+        label: label ?? null,
+        filters: formatSnapshotsResourceFilters(platform, adapter, label),
         snapshots: page.entries.map(formatSnapshotsResourceEntry),
       }, null, 2);
     }
