@@ -6,6 +6,15 @@ import {
 } from '../memory.js';
 
 describe('savestate memory explain freshness filter', () => {
+  it('keeps only memories in the requested tier', () => {
+    const entries = [
+      { id: 'l1', content: 'editor preference', source: 'user', createdAt: '2026-10-17T23:00:00.000Z', tier: 'L1' as const },
+      { id: 'l2', content: 'editor preference', source: 'user', createdAt: '2026-10-17T23:00:00.000Z', tier: 'L2' as const },
+    ];
+
+    expect(filterMemoryExplainEntries(entries, { tier: 'L1' })).toEqual([entries[0]]);
+  });
+
   it('keeps only memories in the requested freshness state', () => {
     const now = new Date('2026-10-18T00:00:00.000Z');
     const entries = [
@@ -49,18 +58,20 @@ describe('savestate memory explain freshness filter', () => {
 
   it('summarizes every active scope filter for pretty output', () => {
     expect(formatMemoryExplainFilterSummary({
+      tier: 'L1',
       namespace: 'org:app:agent',
       source: 'chatgpt',
       content: 'editor',
       tags: ['work', 'urgent'],
       freshness: 'active',
     })).toBe(
-      'namespace=org:app:agent, source=chatgpt, content=editor, tags=[work, urgent], freshness=active',
+      'tier=L1, namespace=org:app:agent, source=chatgpt, content=editor, tags=[work, urgent], freshness=active',
     );
   });
 
   it('reports every active scope filter in the explanation trace', () => {
     expect(formatMemoryExplainFilterMatches({
+      tier: 'L1',
       namespace: 'org:app:agent',
       source: 'chatgpt',
       content: 'editor',
@@ -68,6 +79,7 @@ describe('savestate memory explain freshness filter', () => {
       freshness: 'active',
       pinned: true,
     })).toEqual([
+      'tier=L1',
       'namespace=org:app:agent',
       'source=chatgpt',
       'content=editor',

@@ -515,6 +515,7 @@ export function filterMemoryListByTags(
 export function filterMemoryExplainEntries(
   entries: MemoryEntry[],
   options: {
+    tier?: MemoryTier;
     namespace?: string;
     source?: string;
     content?: string;
@@ -548,8 +549,11 @@ export function filterMemoryExplainEntries(
     options.freshness,
     options.now,
   );
+  const tierScoped = options.tier === undefined
+    ? scoped
+    : filterByTier(scoped, options.tier);
   const importanceScoped = filterMemoryListByImportance(
-    scoped,
+    tierScoped,
     options.minImportance,
     options.maxImportance,
   );
@@ -653,6 +657,7 @@ export function getMemoryListImportance(entry: MemoryEntry): number {
 /** Describe active scope filters for the human-facing explain output. */
 export function formatMemoryExplainFilterMatches(
   options: {
+    tier?: MemoryTier;
     namespace?: string;
     source?: string;
     content?: string;
@@ -666,6 +671,7 @@ export function formatMemoryExplainFilterMatches(
   } = {},
 ): string[] {
   const filters: string[] = [];
+  if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
   if (options.source !== undefined) filters.push(`source=${options.source}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
@@ -681,6 +687,7 @@ export function formatMemoryExplainFilterMatches(
 
 export function formatMemoryExplainFilterSummary(
   options: {
+    tier?: MemoryTier;
     namespace?: string;
     source?: string;
     content?: string;
@@ -2243,6 +2250,7 @@ export interface MemoryExplainJson {
 }
 
 export interface MemoryExplainFiltersJson {
+  tier?: MemoryTier;
   namespace?: string;
   source?: string;
   content?: string;
@@ -2418,6 +2426,7 @@ export function formatMemoryExplainMissingJson(
 
 /** Preserve every active explain scope filter for JSON consumers. */
 export function getMemoryExplainFilters(options?: {
+  tier?: MemoryTier;
   namespace?: string;
   source?: string;
   content?: string;
@@ -2432,6 +2441,7 @@ export function getMemoryExplainFilters(options?: {
   if (!options) return undefined;
 
   const filters: MemoryExplainFiltersJson = {};
+  if (options.tier !== undefined) filters.tier = options.tier;
   if (options.namespace !== undefined) filters.namespace = options.namespace;
   if (options.source !== undefined) filters.source = normalizeMemoryListSource(options.source);
   if (options.content !== undefined) filters.content = options.content;
@@ -2543,6 +2553,7 @@ export async function explainMemoryCommand(
   passphrase: string,
   query: string,
   options?: {
+    tier?: MemoryTier;
     namespace?: string;
     source?: string;
     content?: string;

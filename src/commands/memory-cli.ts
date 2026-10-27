@@ -724,6 +724,7 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('explain <query>')
     .description('Explain why memories were retrieved for a query (non-empty query)')
+    .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
     .option('--source <id>', 'Source id to search (matching is case-insensitive)')
     .option('--content <text>', 'Filter by case-insensitive content substring')
@@ -752,6 +753,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await explainMemoryCommand(storage, passphrase, parsedQuery, {
+          tier: parseMemoryTier(options.tier),
           namespace: parseMemoryNamespace(options.namespace),
           source: parseMemorySource(options.source),
           content: parseMemoryContentFilter(options.content),
