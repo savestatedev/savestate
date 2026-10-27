@@ -3,6 +3,7 @@ import type { IntegrityIncident } from '../../integrity/index.js';
 import {
   formatIntegrityIncidentJson,
   formatIntegrityIncidentsJson,
+  formatIntegrityIncidentsSummaryJson,
   type IntegrityIncidentJson,
 } from '../integrity.js';
 
@@ -69,5 +70,49 @@ describe('savestate integrity --json', () => {
     expect(parsed.resolvedBy).toBe('reviewer-1');
     expect(parsed.eventCount).toBe(0);
     expect(formatIntegrityIncidentsJson([])).toBe('[]');
+  });
+
+  it('adds continuation metadata for paged incident JSON', () => {
+    const parsed = JSON.parse(
+      formatIntegrityIncidentsSummaryJson([incident], 5, 2, 2),
+    ) as {
+      incidents: IntegrityIncidentJson[];
+      pagination: Record<string, unknown>;
+    };
+
+    expect(parsed.incidents).toHaveLength(1);
+    expect(parsed.pagination).toEqual({
+      offset: 2,
+      limit: 2,
+      total: 5,
+      shown: 1,
+      emptyReason: null,
+      suggestedOffset: null,
+      hasMore: true,
+      nextOffset: 3,
+      hasPrevious: true,
+      previousOffset: 0,
+    });
+  });
+
+  it('distinguishes an exhausted page from an empty incident collection', () => {
+    const exhausted = JSON.parse(
+      formatIntegrityIncidentsSummaryJson([], 5, 8, 2),
+    ) as { found: boolean; pagination: Record<string, unknown> };
+    const empty = JSON.parse(
+      formatIntegrityIncidentsSummaryJson([], 0, 0, 2),
+    ) as { found: boolean; pagination: Record<string, unknown> };
+
+    expect(exhausted.found).toBe(true);
+    expect(exhausted.pagination).toMatchObject({
+      emptyReason: 'page',
+      suggestedOffset: 4,
+      previousOffset: 6,
+    });
+    expect(empty.found).toBe(false);
+    expect(empty.pagination).toMatchObject({
+      emptyReason: 'collection',
+      suggestedOffset: null,
+    });
   });
 });

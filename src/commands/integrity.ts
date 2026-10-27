@@ -195,6 +195,39 @@ export function selectIntegrityIncidentPage<T>(
   return selectIntegrityIncidents(page, limit);
 }
 
+/** Keep offset-only incident pages consistent across human and JSON output. */
+export function resolveIntegrityIncidentPageLimit(
+  offset: number | undefined,
+  limit: number | undefined,
+): number | undefined {
+  return limit ?? (offset === undefined ? undefined : 20);
+}
+
+/** Describe an integrity incident page so interactive users can continue or recover pagination. */
+export function formatIntegrityIncidentPaginationHint(
+  shown: number,
+  total: number,
+  offset = 0,
+  limit?: number,
+): string {
+  if (offset === 0 && limit === undefined && shown === total) return '';
+
+  const page = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const hints = [`Showing ${shown} of ${total} incidents (${page})`];
+
+  if (limit !== undefined && offset + shown < total) {
+    hints.push(`next offset ${offset + shown}`);
+  }
+  if (limit !== undefined && offset > 0) {
+    hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+  }
+  if (limit !== undefined && shown === 0 && total > 0) {
+    hints.push(`try offset ${Math.floor((total - 1) / limit) * limit}`);
+  }
+
+  return `${hints.join('; ')}.`;
+}
+
 const MAX_INTEGRITY_CONFIG_LIMIT = 1000;
 
 /** Parse integrity config --limit without turning user input errors into an empty config. */
@@ -637,6 +670,58 @@ export function formatIntegrityIncidentMissingJson(id: string): string {
 
 export function formatIntegrityIncidentsJson(incidents: IntegrityIncident[]): string {
   return JSON.stringify(incidents.map(toIncidentJson), null, 2);
+}
+
+export interface IntegrityIncidentsSummaryJson {
+  found: boolean;
+  incidents: IntegrityIncidentJson[];
+  pagination: {
+    offset: number;
+    limit: number | null;
+    total: number;
+    shown: number;
+    emptyReason: 'collection' | 'page' | null;
+    suggestedOffset: number | null;
+    hasMore: boolean;
+    nextOffset: number | null;
+    hasPrevious: boolean;
+    previousOffset: number | null;
+  };
+}
+
+/** Keep paged JSON self-describing without changing the legacy unpaged array shape. */
+export function formatIntegrityIncidentsSummaryJson(
+  incidents: IntegrityIncident[],
+  total: number,
+  offset = 0,
+  limit?: number,
+): string {
+  const shown = incidents.length;
+  const pageLimit = limit ?? null;
+  const hasMore = pageLimit !== null && offset + shown < total;
+  const hasPrevious = pageLimit !== null && offset > 0;
+  const suggestedOffset = pageLimit !== null && shown === 0 && total > 0
+    ? Math.floor((total - 1) / pageLimit) * pageLimit
+    : null;
+
+  const summary: IntegrityIncidentsSummaryJson = {
+    found: total > 0,
+    incidents: incidents.map(toIncidentJson),
+    pagination: {
+      offset,
+      limit: pageLimit,
+      total,
+      shown,
+      emptyReason: total === 0 ? 'collection' : shown === 0 ? 'page' : null,
+      suggestedOffset,
+      hasMore,
+      nextOffset: hasMore ? offset + shown : null,
+      hasPrevious,
+      previousOffset: hasPrevious ? Math.max(0, offset - pageLimit) : null,
+    },
+  };
+
+  return JSON.stringify(summary, null, 2);
 }
 
 export interface IntegrityIncidentsMissingJson {
@@ -1344,24 +1429,43 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   const status = parseIntegrityIncidentStatus(options.status);
   const limit = parseIntegrityLimit(options.limit);
   const offset = parseIntegrityOffset(options.offset);
+  const pageLimit = resolveIntegrityIncidentPageLimit(offset, limit);
 
-  const incidents = selectIntegrityIncidentPage(await getIncidents(tenant_id, status), offset, limit);
+  const allIncidents = await getIncidents(tenant_id, status);
+  const incidents = selectIntegrityIncidentPage(allIncidents, offset, pageLimit);
 
   if (options.json) {
-    console.log(formatIntegrityIncidentsJson(incidents));
+    if (offset !== undefined || limit !== undefined) {
+      console.log(
+        formatIntegrityIncidentsSummaryJson(incidents, allIncidents.length, offset, pageLimit),
+      );
+    } else {
+      console.log(formatIntegrityIncidentsJson(incidents));
+    }
     return;
   }
 
   console.log(chalk.bold('🚨 Integrity Incidents'));
   console.log();
 
+  const shown = incidents.slice(0, limit ?? 20);
+  const displayPageLimit = limit ?? (
+    offset !== undefined || shown.length < allIncidents.length ? 20 : undefined
+  );
+  const paginationHint = formatIntegrityIncidentPaginationHint(
+    shown.length,
+    allIncidents.length,
+    offset,
+    displayPageLimit,
+  );
+
   if (incidents.length === 0) {
     console.log(chalk.dim('  No incidents found.'));
+    if (paginationHint) console.log(chalk.dim(`  ${paginationHint}`));
     console.log();
     return;
   }
 
-  const shown = incidents.slice(0, limit ?? 20);
   for (const incident of shown) {
     const severityColor = {
       low: chalk.dim,
@@ -1389,6 +1493,7 @@ async function incidentsCommand(options: IntegrityOptions): Promise<void> {
   if (incidents.length > shown.length) {
     console.log(chalk.dim(`  ... and ${incidents.length - shown.length} more`));
   }
+  if (paginationHint) console.log(chalk.dim(`  ${paginationHint}`));
   console.log();
 }
 
