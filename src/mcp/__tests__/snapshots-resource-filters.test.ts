@@ -73,10 +73,18 @@ describe('MCP savestate://snapshots platform filter', () => {
 
   it('normalizes missing, blank, and duplicate snapshot tags', () => {
     expect(normalizeSnapshotsResourceTags([' RELEASE ', 'release', '', 'BACKUP'])).toEqual([
-      'release',
       'backup',
+      'release',
     ]);
     expect(normalizeSnapshotsResourceTags(undefined)).toEqual([]);
+  });
+
+  it('sorts normalized tags for stable resource output', () => {
+    expect(normalizeSnapshotsResourceTags(['zeta', 'Alpha', 'beta'])).toEqual([
+      'alpha',
+      'beta',
+      'zeta',
+    ]);
   });
 
   it('matches platforms without making casing significant', () => {

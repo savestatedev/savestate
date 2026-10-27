@@ -92,7 +92,8 @@ export function normalizeSnapshotsResourceTags(tags: string[] | null | undefined
       if (seen.has(normalized)) return false;
       seen.add(normalized);
       return true;
-    });
+    })
+    .sort();
 }
 
 /** Match snapshot tags case-insensitively while treating missing tags as non-matches. */
