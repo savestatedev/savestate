@@ -218,6 +218,7 @@ describe('savestate memory explain --json', () => {
         [],
         {},
         {
+          tier: 'L1',
           namespace: 'org:app:agent',
           source: 'chatgpt',
           content: 'editor',
@@ -229,6 +230,7 @@ describe('savestate memory explain --json', () => {
     ) as MemoryExplainJson;
 
     expect(parsed.filters).toEqual({
+      tier: 'L1',
       namespace: 'org:app:agent',
       source: 'chatgpt',
       content: 'editor',

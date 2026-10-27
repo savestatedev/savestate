@@ -3175,9 +3175,17 @@ describe('CLI docs', () => {
     expect(explainBlock).toContain(".option('--json'");
   });
 
+  it('keeps memory explain short flags unambiguous', () => {
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(explainBlock).toContain(".option('-t, --tier <tier>'");
+    expect(explainBlock).toContain(".option('--tags <tags>'");
+    expect(explainBlock).not.toContain(".option('-t, --tags <tags>'");
+  });
+
   it('documents memory explain --json', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
+    expect(memorySection).toContain('scope retrievals by tier with <code>--tier</code>');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
     expect(memorySection).toContain('<code>emptyReason</code>');
@@ -3186,7 +3194,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('<code>createdAt</code>');
     expect(memorySection).toContain("each result's <code>pinned</code> state");
     expect(memorySection).toContain("each result's current <code>freshness</code> state");
-    expect(memorySection).toContain("results also include <code>pinned</code> state and effective <code>tier</code>");
+    expect(memorySection).toContain("With <code>--json</code>, results also include effective <code>importance</code>, <code>pinned</code> state, and <code>tier</code>");
+    expect(memorySection).toContain("active filters (including tier, pinned/unpinned, importance, and creation-date scope)");
     expect(memorySection).toContain('<code>freshnessClass</code>');
     expect(memorySection).toContain('<code>lastVerifiedAt</code>');
     expect(memorySection).toContain('savestate memory explain "inbox preference" --json');

@@ -724,6 +724,7 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('explain <query>')
     .description('Explain why memories were retrieved for a query (non-empty query)')
+    .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
     .option('--source <id>', 'Source id to search (matching is case-insensitive)')
     .option('--content <text>', 'Filter by case-insensitive content substring')
@@ -733,7 +734,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--since <date>', 'Search memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
-    .option('-t, --tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
+    .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
@@ -752,6 +753,7 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await explainMemoryCommand(storage, passphrase, parsedQuery, {
+          tier: parseMemoryTier(options.tier),
           namespace: parseMemoryNamespace(options.namespace),
           source: parseMemorySource(options.source),
           content: parseMemoryContentFilter(options.content),
