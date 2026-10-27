@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatSavestateListEmptyPage,
   formatSavestateListPageSummary,
+  matchesSavestateListPlatform,
   parseSavestateListLimit,
   selectSavestateListEntries,
 } from '../savestate-list-limit.js';
@@ -40,6 +41,11 @@ describe('MCP savestate_list limit', () => {
   it('returns all snapshots when limit is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectSavestateListEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('matches platform filters case-insensitively', () => {
+    expect(matchesSavestateListPlatform('claude-code', 'CLAUDE-CODE')).toBe(true);
+    expect(matchesSavestateListPlatform('claude-code', 'chatgpt')).toBe(false);
   });
 
   it('summarizes page position and continuation state', () => {

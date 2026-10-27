@@ -18,6 +18,14 @@ export function selectSavestateListEntries<T>(entries: T[], limit?: number): T[]
   return entries.slice(0, limit);
 }
 
+/** Match platform identifiers without making callers reproduce their casing. */
+export function matchesSavestateListPlatform(
+  entryPlatform: string,
+  requestedPlatform: string,
+): boolean {
+  return entryPlatform.toLowerCase() === requestedPlatform.toLowerCase();
+}
+
 /** Format a compact page summary for MCP clients and humans reading the tool response. */
 export function formatSavestateListPageSummary(
   shown: number,
