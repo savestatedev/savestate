@@ -45,6 +45,7 @@ export function buildSnapshotsResourcePage<T>(
 ): SnapshotsResourcePage<T> {
   const start = offset ?? 0;
   const pageSize = limit ?? 50;
+  const querySeparator = resourceUri.includes('?') ? '&' : '?';
   const selected = selectSnapshotsResourceEntries(entries.slice(start), pageSize);
   const nextOffset = start + selected.length < entries.length
     ? start + selected.length
@@ -59,10 +60,10 @@ export function buildSnapshotsResourcePage<T>(
     : null;
   const previousUri = previousOffset === null
     ? null
-    : `${resourceUri}?offset=${previousOffset}&limit=${pageSize}`;
+    : `${resourceUri}${querySeparator}offset=${previousOffset}&limit=${pageSize}`;
   const suggestedUri = suggestedOffset === null
     ? null
-    : `${resourceUri}?offset=${suggestedOffset}&limit=${pageSize}`;
+    : `${resourceUri}${querySeparator}offset=${suggestedOffset}&limit=${pageSize}`;
 
   return {
     count: selected.length,
@@ -73,7 +74,9 @@ export function buildSnapshotsResourcePage<T>(
     page: Math.floor(start / pageSize) + 1,
     totalPages: Math.ceil(entries.length / pageSize),
     nextOffset,
-    nextUri: nextOffset === null ? null : `${resourceUri}?offset=${nextOffset}&limit=${pageSize}`,
+    nextUri: nextOffset === null
+      ? null
+      : `${resourceUri}${querySeparator}offset=${nextOffset}&limit=${pageSize}`,
     previousOffset,
     previousUri,
     suggestedOffset,

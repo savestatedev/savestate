@@ -97,4 +97,18 @@ describe('MCP savestate://snapshots limit', () => {
       suggestedUri: 'savestate://snapshots?offset=2&limit=2',
     });
   });
+
+  it('appends pagination parameters to filtered resource URIs', () => {
+    const page = buildSnapshotsResourcePage(
+      [{ id: 's1' }, { id: 's2' }, { id: 's3' }],
+      0,
+      2,
+      'savestate://snapshots?platform=Claude-Code',
+    );
+
+    expect(page.nextUri).toBe(
+      'savestate://snapshots?platform=Claude-Code&offset=2&limit=2',
+    );
+    expect(page.previousUri).toBeNull();
+  });
 });
