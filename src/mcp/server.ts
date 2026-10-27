@@ -141,6 +141,7 @@ import {
 import { toMemoryResourceEntry } from './memory-resource-entry.js';
 import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
+import { formatSnapshotsResourceEntry } from './snapshots-resource-entry.js';
 import {
   buildSnapshotsResourceUri,
   formatSnapshotsResourceFilters,
@@ -1685,13 +1686,7 @@ async function handleReadResource(uri: string): Promise<string> {
         platform: platform ?? null,
         adapter: adapter ?? null,
         filters: formatSnapshotsResourceFilters(platform, adapter),
-        snapshots: page.entries.map((e: SnapshotIndexEntry) => ({
-          id: e.id,
-          timestamp: e.timestamp,
-          platform: e.platform,
-          label: e.label,
-          size: e.size,
-        })),
+        snapshots: page.entries.map(formatSnapshotsResourceEntry),
       }, null, 2);
     }
 
