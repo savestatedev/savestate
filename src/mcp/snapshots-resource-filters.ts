@@ -38,11 +38,37 @@ export function matchesSnapshotsResourceAdapter(
   return entryAdapter.trim().toLowerCase() === requestedAdapter.trim().toLowerCase();
 }
 
+/** Parse an optional snapshot resource label filter without widening blank input. */
+export function parseSnapshotsResourceLabel(value: string | null): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error('Invalid label value. Expected a non-empty label.');
+  }
+
+  return normalized;
+}
+
+/** Match snapshot labels case-insensitively while treating missing labels as non-matches. */
+export function matchesSnapshotsResourceLabel(
+  entryLabel: string | undefined,
+  requestedLabel: string,
+): boolean {
+  return entryLabel !== undefined &&
+    entryLabel.trim().toLowerCase() === requestedLabel.trim().toLowerCase();
+}
+
 /** Preserve active snapshot filters in resource pagination links. */
-export function buildSnapshotsResourceUri(platform?: string, adapter?: string): string {
+export function buildSnapshotsResourceUri(
+  platform?: string,
+  adapter?: string,
+  label?: string,
+): string {
   const filters = [
     platform === undefined ? null : `platform=${encodeURIComponent(platform)}`,
     adapter === undefined ? null : `adapter=${encodeURIComponent(adapter)}`,
+    label === undefined ? null : `label=${encodeURIComponent(label)}`,
   ].filter((filter): filter is string => filter !== null);
   return filters.length > 0
     ? `savestate://snapshots?${filters.join('&')}`
@@ -50,12 +76,14 @@ export function buildSnapshotsResourceUri(platform?: string, adapter?: string): 
 }
 
 /** Echo the active snapshot resource filter so clients can verify the applied scope. */
-export function formatSnapshotsResourceFilters(platform?: string, adapter?: string): {
+export function formatSnapshotsResourceFilters(platform?: string, adapter?: string, label?: string): {
   platform: string | null;
   adapter: string | null;
+  label: string | null;
 } {
   return {
     platform: platform ?? null,
     adapter: adapter ?? null,
+    label: label ?? null,
   };
 }

@@ -3,8 +3,10 @@ import {
   buildSnapshotsResourceUri,
   formatSnapshotsResourceFilters,
   matchesSnapshotsResourceAdapter,
+  matchesSnapshotsResourceLabel,
   matchesSnapshotsResourcePlatform,
   parseSnapshotsResourceAdapter,
+  parseSnapshotsResourceLabel,
   parseSnapshotsResourcePlatform,
 } from '../snapshots-resource-filters.js';
 
@@ -32,6 +34,19 @@ describe('MCP savestate://snapshots platform filter', () => {
     );
   });
 
+  it('normalizes and matches a label filter case-insensitively', () => {
+    expect(parseSnapshotsResourceLabel('  Daily Backup  ')).toBe('Daily Backup');
+    expect(parseSnapshotsResourceLabel(null)).toBeUndefined();
+    expect(matchesSnapshotsResourceLabel('daily backup', 'DAILY BACKUP')).toBe(true);
+    expect(matchesSnapshotsResourceLabel(undefined, 'daily backup')).toBe(false);
+  });
+
+  it('rejects a blank label filter', () => {
+    expect(() => parseSnapshotsResourceLabel('   ')).toThrow(
+      'Invalid label value. Expected a non-empty label.',
+    );
+  });
+
   it('matches platforms without making casing significant', () => {
     expect(matchesSnapshotsResourcePlatform('claude-code', 'CLAUDE-CODE')).toBe(true);
     expect(matchesSnapshotsResourcePlatform('gemini', 'claude-code')).toBe(false);
@@ -49,13 +64,17 @@ describe('MCP savestate://snapshots platform filter', () => {
     expect(buildSnapshotsResourceUri('Claude Code', 'Claude-Code')).toBe(
       'savestate://snapshots?platform=Claude%20Code&adapter=Claude-Code',
     );
+    expect(buildSnapshotsResourceUri('Claude Code', 'Claude-Code', 'Daily backup')).toBe(
+      'savestate://snapshots?platform=Claude%20Code&adapter=Claude-Code&label=Daily%20backup',
+    );
   });
 
   it('echoes the active filter in response metadata', () => {
-    expect(formatSnapshotsResourceFilters('Claude-Code', 'claude-code')).toEqual({
+    expect(formatSnapshotsResourceFilters('Claude-Code', 'claude-code', 'Daily backup')).toEqual({
       platform: 'Claude-Code',
       adapter: 'claude-code',
+      label: 'Daily backup',
     });
-    expect(formatSnapshotsResourceFilters()).toEqual({ platform: null, adapter: null });
+    expect(formatSnapshotsResourceFilters()).toEqual({ platform: null, adapter: null, label: null });
   });
 });
