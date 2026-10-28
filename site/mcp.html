@@ -456,7 +456,7 @@ footer a { color: var(--text-muted); }
 
     <h2>Tools the server exposes</h2>
     <ul class="snap-list">
-      <li><strong>savestate_search_snapshots</strong> Full-text search across every snapshot — even from a different client.</li>
+      <li><strong>savestate_search_snapshots</strong> Full-text search across every snapshot — even from a different client. Paginated responses report previous/next offsets and explicitly identify the final page.</li>
       <li><strong>savestate_snapshot / restore / list / status</strong> Capture, restore, list, and check adapters from the chat.</li>
       <li><strong>savestate_stats</strong> Snapshot count, cadence, adapter mix, tags.</li>
       <li><strong>savestate_memory_store / _search / _delete</strong> Live memory CRUD against the local store.</li>

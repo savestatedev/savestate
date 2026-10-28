@@ -17,3 +17,53 @@ export function selectSearchSnapshotsEntries<T>(entries: T[], limit?: number): T
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
 }
+
+/** Return one bounded page and whether another page is available. */
+export function selectSearchSnapshotsPage<T>(
+  entries: T[],
+  limit: number,
+): { entries: T[]; hasNextPage: boolean } {
+  const page = entries.slice(0, limit);
+  return {
+    entries: page,
+    hasNextPage: entries.length > page.length,
+  };
+}
+
+/** Return the nearest earlier page offset, when the current page is not first. */
+export function getSearchSnapshotsPreviousOffset(
+  offset: number,
+  limit: number,
+): number | undefined {
+  if (offset <= 0) return undefined;
+  return Math.max(0, offset - limit);
+}
+
+/** Return the last populated page offset when a requested page is empty. */
+export function getSearchSnapshotsSuggestedOffset(
+  totalEntries: number,
+  limit: number,
+): number | undefined {
+  if (totalEntries <= 0) return undefined;
+  return Math.floor((totalEntries - 1) / limit) * limit;
+}
+
+/** Describe the available navigation from a populated search page. */
+export function formatSearchSnapshotsPageHints(
+  offset: number,
+  limit: number,
+  shown: number,
+  hasNextPage: boolean,
+): string[] {
+  const lines: string[] = [];
+  const previousOffset = getSearchSnapshotsPreviousOffset(offset, limit);
+  if (previousOffset !== undefined) {
+    lines.push(`Previous page: try offset ${previousOffset}.`);
+  }
+  if (hasNextPage) {
+    lines.push(`More matches available. Try offset ${offset + shown}.`);
+  } else {
+    lines.push('No more matches available.');
+  }
+  return lines;
+}

@@ -117,7 +117,12 @@ import {
 } from './memory-search-summary.js';
 import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
-import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
+import {
+  formatSearchSnapshotsPageHints,
+  getSearchSnapshotsSuggestedOffset,
+  parseSearchSnapshotsLimit,
+  selectSearchSnapshotsPage,
+} from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import type { ListMemoriesFilters } from './list-memories-limit.js';
@@ -434,7 +439,8 @@ export const tools: Tool[] = [
       'Search across ALL encrypted SaveState snapshots (not just live memory). ' +
       'Decrypts and scores matches across memory entries, identity/personality docs, ' +
       'conversation titles, and knowledge documents. Useful for recalling something ' +
-      'the user said weeks or months ago, even on a different platform.',
+      'the user said weeks or months ago, even on a different platform. Paginated ' +
+      'responses include next and previous offsets, or a recovery hint for an empty page.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1581,20 +1587,31 @@ async function handleSearchSnapshots(
     const config = await loadConfig();
     const limit = parseSearchSnapshotsLimit(input.limit);
     const offset = parseSearchSnapshotsOffset(input.offset);
-    const results = selectSearchSnapshotsEntries(
-      selectSearchSnapshotsOffsetEntries(
-        await searchSnapshots(input.query, config, {
-          types: input.type ? [input.type] : undefined,
-          limit: (offset ?? 0) + (limit ?? 20),
-          passphrase: input.passphrase,
-        }),
-        offset,
-      ),
-      limit ?? 20,
+    const pageSize = limit ?? 20;
+    const pageOffset = offset ?? 0;
+    const matches = await searchSnapshots(input.query, config, {
+      types: input.type ? [input.type] : undefined,
+      // Fetch one look-ahead result so MCP clients can discover the next page,
+      // while respecting searchSnapshots' 1,000-result ceiling.
+      limit: Math.min(pageOffset + pageSize + 1, 1000),
+      passphrase: input.passphrase,
+    });
+    const page = selectSearchSnapshotsPage(
+      selectSearchSnapshotsOffsetEntries(matches, offset),
+      pageSize,
     );
-    if (results.length === 0) return 'No matches found across snapshots.';
+    const results = page.entries;
+    if (results.length === 0) {
+      return pageOffset === 0
+        ? 'No matches found across snapshots.'
+        : `No matches found across snapshots at offset ${pageOffset}. Try offset ${getSearchSnapshotsSuggestedOffset(matches.length, pageSize) ?? 0}.`;
+    }
 
-    const lines: string[] = [`Found ${results.length} match(es):`, ''];
+    const lines: string[] = [
+      `Found ${results.length} match(es) at offset ${pageOffset}:`,
+      ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasNextPage),
+    ];
+    lines.push('');
     for (const r of results) {
       const date = r.snapshotTimestamp.slice(0, 10);
       const score = (r.score * 100).toFixed(0);

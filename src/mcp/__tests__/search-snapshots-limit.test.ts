@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from '../search-snapshots-limit.js';
+import {
+  formatSearchSnapshotsPageHints,
+  getSearchSnapshotsPreviousOffset,
+  getSearchSnapshotsSuggestedOffset,
+  parseSearchSnapshotsLimit,
+  selectSearchSnapshotsEntries,
+  selectSearchSnapshotsPage,
+} from '../search-snapshots-limit.js';
 
 describe('MCP savestate_search_snapshots limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +42,51 @@ describe('MCP savestate_search_snapshots limit', () => {
   it('returns all matches when limit is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectSearchSnapshotsEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('reports when a bounded page has more matches', () => {
+    expect(selectSearchSnapshotsPage(
+      [{ id: 's1' }, { id: 's2' }, { id: 's3' }],
+      2,
+    )).toEqual({
+      entries: [{ id: 's1' }, { id: 's2' }],
+      hasNextPage: true,
+    });
+  });
+
+  it('does not report a next page at the exact boundary', () => {
+    expect(selectSearchSnapshotsPage([{ id: 's1' }, { id: 's2' }], 2)).toEqual({
+      entries: [{ id: 's1' }, { id: 's2' }],
+      hasNextPage: false,
+    });
+  });
+
+  it('returns the previous page offset for later pages', () => {
+    expect(getSearchSnapshotsPreviousOffset(20, 20)).toBe(0);
+    expect(getSearchSnapshotsPreviousOffset(5, 20)).toBe(0);
+  });
+
+  it('omits a previous page offset on the first page', () => {
+    expect(getSearchSnapshotsPreviousOffset(0, 20)).toBeUndefined();
+  });
+
+  it('suggests the last populated page for an empty request', () => {
+    expect(getSearchSnapshotsSuggestedOffset(3, 20)).toBe(0);
+    expect(getSearchSnapshotsSuggestedOffset(41, 20)).toBe(40);
+    expect(getSearchSnapshotsSuggestedOffset(0, 20)).toBeUndefined();
+  });
+
+  it('labels a populated final page as terminal', () => {
+    expect(formatSearchSnapshotsPageHints(20, 20, 3, false)).toEqual([
+      'Previous page: try offset 0.',
+      'No more matches available.',
+    ]);
+  });
+
+  it('keeps the next-page hint for a populated non-final page', () => {
+    expect(formatSearchSnapshotsPageHints(20, 20, 20, true)).toEqual([
+      'Previous page: try offset 0.',
+      'More matches available. Try offset 40.',
+    ]);
   });
 });
