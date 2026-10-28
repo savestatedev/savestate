@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ProvenanceEntry } from '../../checkpoint/types.js';
 import {
+  formatMemoryLogEmptyPage,
   formatMemoryLogJson,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
@@ -108,5 +109,13 @@ describe('savestate memory log --json', () => {
       emptyReason: 'page',
       suggestedOffset: 0,
     });
+  });
+
+  it('explains an exhausted table page instead of calling the memory missing', () => {
+    expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3)).toBe(
+      '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
+      'The memory has 3 recorded entries.\n' +
+      'Try --offset 0 to view an available page.',
+    );
   });
 });

@@ -112,6 +112,25 @@ export function formatMemoryLogMissingJson(id: string): string {
   );
 }
 
+/** Explain an exhausted table page without implying that the memory is missing. */
+export function formatMemoryLogEmptyPage(
+  memoryId: string,
+  offset: number,
+  limit: number | null,
+  total: number,
+): string {
+  const page = limit === null ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const suggestedOffset = total > 0
+    ? (limit === null ? 0 : Math.floor((total - 1) / limit) * limit)
+    : null;
+
+  return [
+    `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
+    `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
+    suggestedOffset === null ? null : `Try --offset ${suggestedOffset} to view an available page.`,
+  ].filter((line): line is string => line !== null).join('\n');
+}
+
 const MAX_MEMORY_LOG_LIMIT = 1000;
 const MAX_MEMORY_LOG_OFFSET = 1000;
 
@@ -933,8 +952,12 @@ export async function memoryLogCommand(
     }
 
     if (log.length === 0) {
-      console.log(`\nNo audit log found for memory ${memoryId}`);
-      console.log(`(Memory may not exist or has no recorded history)`);
+      if (allLog.length === 0) {
+        console.log(`\nNo audit log found for memory ${memoryId}`);
+        console.log(`(Memory may not exist or has no recorded history)`);
+      } else {
+        console.log(formatMemoryLogEmptyPage(memoryId, offset, limit, allLog.length));
+      }
       return;
     }
 
