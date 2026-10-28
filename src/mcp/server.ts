@@ -451,7 +451,7 @@ export const tools: Tool[] = [
       properties: {
         query: {
           type: 'string',
-          description: 'Non-empty word or phrase to search; exact phrase matches rank highest',
+          description: 'Word or phrase to search (must be non-empty); exact phrase matches rank highest',
         },
         type: {
           type: 'string',
@@ -797,11 +797,13 @@ const DeleteAllMemoriesInputSchema = z.object({
   offset: z.number().optional(),
 });
 
-const SearchSnapshotsInputSchema = z.object({
+export const SearchSnapshotsInputSchema = z.object({
   query: z.string(),
   type: z.enum(['memory', 'conversation', 'identity', 'knowledge']).optional(),
   since: z.string().optional(),
   until: z.string().optional(),
+  label: z.string().optional(),
+  tag: z.string().optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
   passphrase: z.string(),
