@@ -81,15 +81,20 @@ export interface SearchSummaryJson {
 function normalizeSearchSummaryFilters(
   filters?: Partial<SearchSummaryFilters>,
 ): SearchSummaryFilters {
+  const normalizeText = (value: string | undefined): string | null => {
+    const normalized = value?.trim();
+    return normalized ? normalized : null;
+  };
+
   return {
     type: filters?.type ?? null,
     exclude: filters?.exclude ?? null,
-    since: filters?.since?.trim() ?? null,
-    until: filters?.until?.trim() ?? null,
-    snapshot: filters?.snapshot?.trim() ?? null,
-    adapter: filters?.adapter?.trim().toLowerCase() ?? null,
-    tag: filters?.tag?.trim() ?? null,
-    label: filters?.label?.trim() ?? null,
+    since: normalizeText(filters?.since),
+    until: normalizeText(filters?.until),
+    snapshot: normalizeText(filters?.snapshot),
+    adapter: normalizeText(filters?.adapter)?.toLowerCase() ?? null,
+    tag: normalizeText(filters?.tag),
+    label: normalizeText(filters?.label),
   };
 }
 
