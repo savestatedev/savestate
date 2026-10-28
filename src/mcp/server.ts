@@ -124,6 +124,7 @@ import {
   selectSearchSnapshotsPage,
 } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
+import { parseSearchSnapshotsQuery } from './search-snapshots-query.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import type { ListMemoriesFilters } from './list-memories-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
@@ -444,7 +445,7 @@ export const tools: Tool[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'Search query' },
+        query: { type: 'string', description: 'Non-empty search query' },
         type: {
           type: 'string',
           enum: ['memory', 'conversation', 'identity', 'knowledge'],
@@ -1584,12 +1585,13 @@ async function handleSearchSnapshots(
     if (!isInitialized()) {
       return 'Error: SaveState not initialized in this directory. Run `savestate init` first.';
     }
+    const query = parseSearchSnapshotsQuery(input.query);
     const config = await loadConfig();
     const limit = parseSearchSnapshotsLimit(input.limit);
     const offset = parseSearchSnapshotsOffset(input.offset);
     const pageSize = limit ?? 20;
     const pageOffset = offset ?? 0;
-    const matches = await searchSnapshots(input.query, config, {
+    const matches = await searchSnapshots(query, config, {
       types: input.type ? [input.type] : undefined,
       // Fetch one look-ahead result so MCP clients can discover the next page,
       // while respecting searchSnapshots' 1,000-result ceiling.
