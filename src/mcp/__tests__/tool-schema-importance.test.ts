@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ListMemoriesInputSchema, tools } from '../server.js';
+import { ListMemoriesInputSchema, SearchSnapshotsInputSchema, tools } from '../server.js';
 
 function getTool(name: string) {
   const tool = tools.find((candidate) => candidate.name === name);
@@ -62,5 +62,25 @@ describe('MCP snapshot search schema', () => {
     const schema = getTool('savestate_search_snapshots').inputSchema as any;
     expect(schema.properties.since).toMatchObject({ type: 'string' });
     expect(schema.properties.until).toMatchObject({ type: 'string' });
+  });
+
+  it('advertises snapshot label and tag filters', () => {
+    const schema = getTool('savestate_search_snapshots').inputSchema as any;
+    expect(schema.properties.label.description).toContain('case-insensitive');
+    expect(schema.properties.tag.description).toContain('case-insensitive');
+  });
+
+  it('keeps advertised metadata filters in the runtime input schema', () => {
+    expect(SearchSnapshotsInputSchema.parse({
+      query: 'migration notes',
+      label: 'weekly',
+      tag: 'work',
+      passphrase: 'test-passphrase',
+    })).toMatchObject({
+      query: 'migration notes',
+      label: 'weekly',
+      tag: 'work',
+      passphrase: 'test-passphrase',
+    });
   });
 });
