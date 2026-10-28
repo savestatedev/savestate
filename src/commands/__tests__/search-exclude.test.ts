@@ -43,4 +43,10 @@ describe('savestate search --exclude', () => {
       'Exclude: conversation, knowledge',
     ]);
   });
+
+  it('does not print an empty inclusion hint when every type is excluded', () => {
+    expect(formatSearchFilterHints([], ['memory', 'conversation', 'identity', 'knowledge'])).toEqual([
+      'Exclude: memory, conversation, identity, knowledge',
+    ]);
+  });
 });
