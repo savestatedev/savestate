@@ -67,3 +67,21 @@ export function formatSearchSnapshotsPageHints(
   }
   return lines;
 }
+
+/** Keep empty filtered searches explicit so callers do not mistake a scoped miss for a global one. */
+export function formatSearchSnapshotsEmptyPageMessage(
+  offset: number,
+  suggestedOffset: number | undefined,
+  filters?: { since?: string; until?: string },
+): string {
+  const activeFilters = [
+    filters?.since ? `since=${filters.since}` : undefined,
+    filters?.until ? `until=${filters.until}` : undefined,
+  ].filter((filter): filter is string => filter !== undefined);
+  const filterSummary = activeFilters.length > 0
+    ? ` Active filters: ${activeFilters.join(', ')}.`
+    : '';
+
+  if (offset === 0) return `No matches found across snapshots.${filterSummary}`;
+  return `No matches found across snapshots at offset ${offset}.${filterSummary} Try offset ${suggestedOffset ?? 0}.`;
+}

@@ -118,6 +118,7 @@ import {
 import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
 import {
+  formatSearchSnapshotsEmptyPageMessage,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
@@ -1626,9 +1627,11 @@ async function handleSearchSnapshots(
     );
     const results = page.entries;
     if (results.length === 0) {
-      return pageOffset === 0
-        ? 'No matches found across snapshots.'
-        : `No matches found across snapshots at offset ${pageOffset}. Try offset ${getSearchSnapshotsSuggestedOffset(matches.length, pageSize) ?? 0}.`;
+      return formatSearchSnapshotsEmptyPageMessage(
+        pageOffset,
+        getSearchSnapshotsSuggestedOffset(matches.length, pageSize),
+        { since, until },
+      );
     }
 
     const lines: string[] = [

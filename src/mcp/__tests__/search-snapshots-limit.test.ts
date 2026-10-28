@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatSearchSnapshotsEmptyPageMessage,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsPreviousOffset,
   getSearchSnapshotsSuggestedOffset,
@@ -103,5 +104,20 @@ describe('MCP savestate_search_snapshots limit', () => {
       'Previous page: try offset 0.',
       'More matches available. Try offset 40.',
     ]);
+  });
+
+  it('explains active date filters on an empty first page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, {
+      since: '2026-10-01T00:00:00.000Z',
+      until: '2026-10-31T23:59:59.999Z',
+    })).toBe(
+      'No matches found across snapshots. Active filters: since=2026-10-01T00:00:00.000Z, until=2026-10-31T23:59:59.999Z.',
+    );
+  });
+
+  it('keeps the recovery hint on an empty later page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(40, 20, { since: '2026-10-01T00:00:00.000Z' })).toBe(
+      'No matches found across snapshots at offset 40. Active filters: since=2026-10-01T00:00:00.000Z. Try offset 20.',
+    );
   });
 });
