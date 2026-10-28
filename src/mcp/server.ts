@@ -118,7 +118,7 @@ import {
 import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
 import {
-  getSearchSnapshotsPreviousOffset,
+  formatSearchSnapshotsPageHints,
   getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
   selectSearchSnapshotsPage,
@@ -1607,14 +1607,10 @@ async function handleSearchSnapshots(
         : `No matches found across snapshots at offset ${pageOffset}. Try offset ${getSearchSnapshotsSuggestedOffset(matches.length, pageSize) ?? 0}.`;
     }
 
-    const lines: string[] = [`Found ${results.length} match(es) at offset ${pageOffset}:`];
-    const previousOffset = getSearchSnapshotsPreviousOffset(pageOffset, pageSize);
-    if (previousOffset !== undefined) {
-      lines.push(`Previous page: try offset ${previousOffset}.`);
-    }
-    if (page.hasNextPage) {
-      lines.push(`More matches available. Try offset ${pageOffset + results.length}.`);
-    }
+    const lines: string[] = [
+      `Found ${results.length} match(es) at offset ${pageOffset}:`,
+      ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasNextPage),
+    ];
     lines.push('');
     for (const r of results) {
       const date = r.snapshotTimestamp.slice(0, 10);

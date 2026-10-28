@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatSearchSnapshotsPageHints,
   getSearchSnapshotsPreviousOffset,
   getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
@@ -73,5 +74,19 @@ describe('MCP savestate_search_snapshots limit', () => {
     expect(getSearchSnapshotsSuggestedOffset(3, 20)).toBe(0);
     expect(getSearchSnapshotsSuggestedOffset(41, 20)).toBe(40);
     expect(getSearchSnapshotsSuggestedOffset(0, 20)).toBeUndefined();
+  });
+
+  it('labels a populated final page as terminal', () => {
+    expect(formatSearchSnapshotsPageHints(20, 20, 3, false)).toEqual([
+      'Previous page: try offset 0.',
+      'No more matches available.',
+    ]);
+  });
+
+  it('keeps the next-page hint for a populated non-final page', () => {
+    expect(formatSearchSnapshotsPageHints(20, 20, 20, true)).toEqual([
+      'Previous page: try offset 0.',
+      'More matches available. Try offset 40.',
+    ]);
   });
 });

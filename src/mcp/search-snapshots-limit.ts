@@ -47,3 +47,23 @@ export function getSearchSnapshotsSuggestedOffset(
   if (totalEntries <= 0) return undefined;
   return Math.floor((totalEntries - 1) / limit) * limit;
 }
+
+/** Describe the available navigation from a populated search page. */
+export function formatSearchSnapshotsPageHints(
+  offset: number,
+  limit: number,
+  shown: number,
+  hasNextPage: boolean,
+): string[] {
+  const lines: string[] = [];
+  const previousOffset = getSearchSnapshotsPreviousOffset(offset, limit);
+  if (previousOffset !== undefined) {
+    lines.push(`Previous page: try offset ${previousOffset}.`);
+  }
+  if (hasNextPage) {
+    lines.push(`More matches available. Try offset ${offset + shown}.`);
+  } else {
+    lines.push('No more matches available.');
+  }
+  return lines;
+}
