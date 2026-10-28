@@ -146,13 +146,16 @@ import {
   buildSnapshotsResourceUri,
   formatSnapshotsResourceFilters,
   matchesSnapshotsResourceAdapter,
+  matchesSnapshotsResourceDateRange,
   matchesSnapshotsResourceLabel,
   matchesSnapshotsResourcePlatform,
   matchesSnapshotsResourceTag,
   parseSnapshotsResourceAdapter,
+  parseSnapshotsResourceDate,
   parseSnapshotsResourceLabel,
   parseSnapshotsResourcePlatform,
   parseSnapshotsResourceTag,
+  validateSnapshotsResourceDateRange,
 } from './snapshots-resource-filters.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -1661,20 +1664,24 @@ async function handleReadResource(uri: string): Promise<string> {
       const adapter = parseSnapshotsResourceAdapter(url.searchParams.get('adapter'));
       const label = parseSnapshotsResourceLabel(url.searchParams.get('label'));
       const tag = parseSnapshotsResourceTag(url.searchParams.get('tag'));
+      const since = parseSnapshotsResourceDate(url.searchParams.get('since'), 'since');
+      const until = parseSnapshotsResourceDate(url.searchParams.get('until'), 'until');
+      validateSnapshotsResourceDateRange(since, until);
 
       const index = await loadIndex();
       const entries = sortSavestateListEntries(index.snapshots).filter((entry) =>
         (platform === undefined || matchesSnapshotsResourcePlatform(entry.platform, platform)) &&
         (adapter === undefined || matchesSnapshotsResourceAdapter(entry.adapter, adapter)) &&
         (label === undefined || matchesSnapshotsResourceLabel(entry.label, label)) &&
-        (tag === undefined || matchesSnapshotsResourceTag(entry.tags, tag)),
+        (tag === undefined || matchesSnapshotsResourceTag(entry.tags, tag)) &&
+        matchesSnapshotsResourceDateRange(entry.timestamp, since, until),
       );
 
       const page = buildSnapshotsResourcePage(
         entries,
         offset,
         limit,
-        buildSnapshotsResourceUri(platform, adapter, label, tag),
+        buildSnapshotsResourceUri(platform, adapter, label, tag, since, until),
       );
 
       return JSON.stringify({
@@ -1695,7 +1702,9 @@ async function handleReadResource(uri: string): Promise<string> {
         adapter: adapter ?? null,
         label: label ?? null,
         tag: tag ?? null,
-        filters: formatSnapshotsResourceFilters(platform, adapter, label, tag),
+        since: since ?? null,
+        until: until ?? null,
+        filters: formatSnapshotsResourceFilters(platform, adapter, label, tag, since, until),
         snapshots: page.entries.map(formatSnapshotsResourceEntry),
       }, null, 2);
     }

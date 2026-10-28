@@ -3,15 +3,18 @@ import {
   buildSnapshotsResourceUri,
   formatSnapshotsResourceFilters,
   matchesSnapshotsResourceAdapter,
+  matchesSnapshotsResourceDateRange,
   matchesSnapshotsResourceLabel,
   matchesSnapshotsResourcePlatform,
   matchesSnapshotsResourceTag,
   normalizeSnapshotsResourceLabel,
   normalizeSnapshotsResourceTags,
   parseSnapshotsResourceAdapter,
+  parseSnapshotsResourceDate,
   parseSnapshotsResourceLabel,
   parseSnapshotsResourcePlatform,
   parseSnapshotsResourceTag,
+  validateSnapshotsResourceDateRange,
 } from '../snapshots-resource-filters.js';
 
 describe('MCP savestate://snapshots platform filter', () => {
@@ -87,6 +90,36 @@ describe('MCP savestate://snapshots platform filter', () => {
     ]);
   });
 
+  it('normalizes inclusive ISO date bounds', () => {
+    expect(parseSnapshotsResourceDate('2026-10-01', 'since')).toBe('2026-10-01T00:00:00.000Z');
+    expect(parseSnapshotsResourceDate('2026-10-01', 'until')).toBe('2026-10-01T23:59:59.999Z');
+    expect(parseSnapshotsResourceDate('2026-10-01T12:30:00-04:00', 'since')).toBe('2026-10-01T16:30:00.000Z');
+    expect(parseSnapshotsResourceDate(null, 'since')).toBeUndefined();
+  });
+
+  it('rejects invalid or reversed date bounds', () => {
+    expect(() => parseSnapshotsResourceDate('2026-02-30', 'since')).toThrow(
+      'Invalid since value "2026-02-30". Expected an ISO-8601 date or timestamp.',
+    );
+    expect(() => validateSnapshotsResourceDateRange(
+      '2026-10-02T00:00:00.000Z',
+      '2026-10-01T23:59:59.999Z',
+    )).toThrow('since must be at or before until');
+  });
+
+  it('matches snapshot timestamps inclusively', () => {
+    expect(matchesSnapshotsResourceDateRange(
+      '2026-10-01T00:00:00.000Z',
+      '2026-10-01T00:00:00.000Z',
+      '2026-10-01T23:59:59.999Z',
+    )).toBe(true);
+    expect(matchesSnapshotsResourceDateRange(
+      '2026-09-30T23:59:59.999Z',
+      '2026-10-01T00:00:00.000Z',
+    )).toBe(false);
+    expect(matchesSnapshotsResourceDateRange('not-a-date', '2026-10-01T00:00:00.000Z')).toBe(false);
+  });
+
   it('matches platforms without making casing significant', () => {
     expect(matchesSnapshotsResourcePlatform('claude-code', 'CLAUDE-CODE')).toBe(true);
     expect(matchesSnapshotsResourcePlatform('gemini', 'claude-code')).toBe(false);
@@ -110,6 +143,16 @@ describe('MCP savestate://snapshots platform filter', () => {
     expect(buildSnapshotsResourceUri('Claude Code', 'Claude-Code', 'Daily backup', 'release')).toBe(
       'savestate://snapshots?platform=Claude%20Code&adapter=Claude-Code&label=Daily%20backup&tag=release',
     );
+    expect(buildSnapshotsResourceUri(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      '2026-10-01T00:00:00.000Z',
+      '2026-10-01T23:59:59.999Z',
+    )).toBe(
+      'savestate://snapshots?since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-01T23%3A59%3A59.999Z',
+    );
   });
 
   it('echoes the active filter in response metadata', () => {
@@ -118,13 +161,31 @@ describe('MCP savestate://snapshots platform filter', () => {
       adapter: 'claude-code',
       label: 'Daily backup',
       tag: 'release',
+      since: null,
+      until: null,
     });
-    expect(formatSnapshotsResourceFilters()).toEqual({ platform: null, adapter: null, label: null, tag: null });
+    expect(formatSnapshotsResourceFilters()).toEqual({
+      platform: null,
+      adapter: null,
+      label: null,
+      tag: null,
+      since: null,
+      until: null,
+    });
   });
 
   it('keeps the active label available as response metadata', () => {
-    const filters = formatSnapshotsResourceFilters(undefined, undefined, 'Daily backup');
+    const filters = formatSnapshotsResourceFilters(
+      undefined,
+      undefined,
+      'Daily backup',
+      undefined,
+      '2026-10-01T00:00:00.000Z',
+      '2026-10-01T23:59:59.999Z',
+    );
 
     expect(filters.label).toBe('Daily backup');
+    expect(filters.since).toBe('2026-10-01T00:00:00.000Z');
+    expect(filters.until).toBe('2026-10-01T23:59:59.999Z');
   });
 });
