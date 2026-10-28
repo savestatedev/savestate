@@ -49,3 +49,11 @@ describe('MCP list_memories search schema', () => {
     expect(() => ListMemoriesInputSchema.parse({ source: '   ' })).toThrow();
   });
 });
+
+describe('MCP snapshot search schema', () => {
+  it('advertises inclusive snapshot date bounds', () => {
+    const schema = getTool('savestate_search_snapshots').inputSchema as any;
+    expect(schema.properties.since).toMatchObject({ type: 'string' });
+    expect(schema.properties.until).toMatchObject({ type: 'string' });
+  });
+});

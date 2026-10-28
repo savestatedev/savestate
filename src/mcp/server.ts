@@ -450,6 +450,14 @@ export const tools: Tool[] = [
           enum: ['memory', 'conversation', 'identity', 'knowledge'],
           description: 'Optional filter by content type',
         },
+        since: {
+          type: 'string',
+          description: 'Optional inclusive snapshot date or ISO-8601 timestamp lower bound',
+        },
+        until: {
+          type: 'string',
+          description: 'Optional inclusive snapshot date or ISO-8601 timestamp upper bound',
+        },
         limit: { type: 'number', description: 'Maximum results (default: 20; positive integer up to 1000)' },
         offset: { type: 'number', description: 'Pagination offset (non-negative integer up to 1000)' },
         passphrase: { type: 'string', description: 'Decryption passphrase' },
@@ -776,6 +784,8 @@ const DeleteAllMemoriesInputSchema = z.object({
 const SearchSnapshotsInputSchema = z.object({
   query: z.string(),
   type: z.enum(['memory', 'conversation', 'identity', 'knowledge']).optional(),
+  since: z.string().optional(),
+  until: z.string().optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
   passphrase: z.string(),
@@ -1587,9 +1597,18 @@ async function handleSearchSnapshots(
     const config = await loadConfig();
     const limit = parseSearchSnapshotsLimit(input.limit);
     const offset = parseSearchSnapshotsOffset(input.offset);
+    const since = parseSnapshotsResourceDate(input.since ?? null, 'since');
+    const until = parseSnapshotsResourceDate(input.until ?? null, 'until');
+    validateSnapshotsResourceDateRange(since, until);
     const pageSize = limit ?? 20;
     const pageOffset = offset ?? 0;
+    const snapshotIds = since === undefined && until === undefined
+      ? undefined
+      : (await loadIndex()).snapshots
+        .filter((entry) => matchesSnapshotsResourceDateRange(entry.timestamp, since, until))
+        .map((entry) => entry.id);
     const matches = await searchSnapshots(input.query, config, {
+      snapshots: snapshotIds,
       types: input.type ? [input.type] : undefined,
       // Fetch one look-ahead result so MCP clients can discover the next page,
       // while respecting searchSnapshots' 1,000-result ceiling.
