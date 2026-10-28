@@ -125,6 +125,7 @@ import {
   selectSearchSnapshotsPage,
 } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
+import { parseSearchSnapshotsQuery } from './search-snapshots-query.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import type { ListMemoriesFilters } from './list-memories-limit.js';
 import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
@@ -449,7 +450,7 @@ export const tools: Tool[] = [
       properties: {
         query: {
           type: 'string',
-          description: 'Word or phrase to search; exact phrase matches rank highest',
+          description: 'Non-empty word or phrase to search; exact phrase matches rank highest',
         },
         type: {
           type: 'string',
@@ -1600,6 +1601,7 @@ async function handleSearchSnapshots(
     if (!isInitialized()) {
       return 'Error: SaveState not initialized in this directory. Run `savestate init` first.';
     }
+    const query = parseSearchSnapshotsQuery(input.query);
     const config = await loadConfig();
     const limit = parseSearchSnapshotsLimit(input.limit);
     const offset = parseSearchSnapshotsOffset(input.offset);
@@ -1613,7 +1615,7 @@ async function handleSearchSnapshots(
       : (await loadIndex()).snapshots
         .filter((entry) => matchesSnapshotsResourceDateRange(entry.timestamp, since, until))
         .map((entry) => entry.id);
-    const matches = await searchSnapshots(input.query, config, {
+    const matches = await searchSnapshots(query, config, {
       snapshots: snapshotIds,
       types: input.type ? [input.type] : undefined,
       // Fetch one look-ahead result so MCP clients can discover the next page,
