@@ -1651,11 +1651,12 @@ async function handleSearchSnapshots(
         pageOffset,
         getSearchSnapshotsSuggestedOffset(matches.length, pageSize),
         { since, until, label, tag },
+        query,
       );
     }
 
     const lines: string[] = [
-      formatSearchSnapshotsPageSummary(pageOffset, results.length, { since, until, label, tag }),
+      formatSearchSnapshotsPageSummary(pageOffset, results.length, { since, until, label, tag }, query),
       ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasNextPage),
     ];
     lines.push('');

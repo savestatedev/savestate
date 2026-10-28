@@ -116,6 +116,12 @@ describe('MCP savestate_search_snapshots limit', () => {
     );
   });
 
+  it('identifies the query on an empty page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, undefined, 'memory: "backup"')).toBe(
+      'No matches found across snapshots. Query: "memory: \\\"backup\\\"".',
+    );
+  });
+
   it('keeps the recovery hint on an empty later page', () => {
     expect(formatSearchSnapshotsEmptyPageMessage(40, 20, { since: '2026-10-01T00:00:00.000Z' })).toBe(
       'No matches found across snapshots at offset 40. Active filters: since=2026-10-01T00:00:00.000Z. Try offset 20.',
@@ -137,7 +143,13 @@ describe('MCP savestate_search_snapshots limit', () => {
       label: 'weekly',
       tag: 'work',
     })).toBe(
-      'Found 3 match(es) at offset 20: Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work.',
+      'Found 3 match(es) at offset 20. Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work.',
+    );
+  });
+
+  it('identifies the query on a populated page', () => {
+    expect(formatSearchSnapshotsPageSummary(0, 2, undefined, 'encrypted archive')).toBe(
+      'Found 2 match(es) at offset 0. Query: "encrypted archive".',
     );
   });
 });

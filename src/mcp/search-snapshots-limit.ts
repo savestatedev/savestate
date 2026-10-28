@@ -20,6 +20,10 @@ function formatSearchSnapshotsActiveFilters(filters?: SearchSnapshotsFilters): s
     : '';
 }
 
+function formatSearchSnapshotsQuery(query?: string): string {
+  return query === undefined ? '' : ` Query: ${JSON.stringify(query)}.`;
+}
+
 /** Parse savestate_search_snapshots limit without turning user input errors into an unbounded snapshot search. */
 export function parseSearchSnapshotsLimit(value: number | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -93,11 +97,13 @@ export function formatSearchSnapshotsEmptyPageMessage(
   offset: number,
   suggestedOffset: number | undefined,
   filters?: SearchSnapshotsFilters,
+  query?: string,
 ): string {
+  const querySummary = formatSearchSnapshotsQuery(query);
   const filterSummary = formatSearchSnapshotsActiveFilters(filters);
 
-  if (offset === 0) return `No matches found across snapshots.${filterSummary}`;
-  return `No matches found across snapshots at offset ${offset}.${filterSummary} Try offset ${suggestedOffset ?? 0}.`;
+  if (offset === 0) return `No matches found across snapshots.${querySummary}${filterSummary}`;
+  return `No matches found across snapshots at offset ${offset}.${querySummary}${filterSummary} Try offset ${suggestedOffset ?? 0}.`;
 }
 
 /** Keep successful pages explicit about the scope that produced their matches. */
@@ -105,6 +111,7 @@ export function formatSearchSnapshotsPageSummary(
   offset: number,
   shown: number,
   filters?: SearchSnapshotsFilters,
+  query?: string,
 ): string {
-  return `Found ${shown} match(es) at offset ${offset}:${formatSearchSnapshotsActiveFilters(filters)}`;
+  return `Found ${shown} match(es) at offset ${offset}.${formatSearchSnapshotsQuery(query)}${formatSearchSnapshotsActiveFilters(filters)}`;
 }
