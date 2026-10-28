@@ -444,7 +444,8 @@ export const tools: Tool[] = [
       'the user said weeks or months ago, even on a different platform. Search with a ' +
       'word or phrase: exact phrase matches rank highest, while individual terms can ' +
       'still surface partial matches. Paginated ' +
-      'responses include next and previous offsets, or a recovery hint for an empty page.',
+      'responses include next and previous offsets, or a recovery hint for an empty page. ' +
+      'Optional label and tag filters narrow the snapshots searched before decryption.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -464,6 +465,14 @@ export const tools: Tool[] = [
         until: {
           type: 'string',
           description: 'Optional inclusive snapshot date or ISO-8601 timestamp upper bound',
+        },
+        label: {
+          type: 'string',
+          description: 'Optional case-insensitive snapshot label filter',
+        },
+        tag: {
+          type: 'string',
+          description: 'Optional case-insensitive snapshot tag filter',
         },
         limit: { type: 'number', description: 'Maximum results (default: 20; positive integer up to 1000)' },
         offset: { type: 'number', description: 'Pagination offset (non-negative integer up to 1000)' },
@@ -1607,13 +1616,19 @@ async function handleSearchSnapshots(
     const offset = parseSearchSnapshotsOffset(input.offset);
     const since = parseSnapshotsResourceDate(input.since ?? null, 'since');
     const until = parseSnapshotsResourceDate(input.until ?? null, 'until');
+    const label = parseSnapshotsResourceLabel(input.label ?? null);
+    const tag = parseSnapshotsResourceTag(input.tag ?? null);
     validateSnapshotsResourceDateRange(since, until);
     const pageSize = limit ?? 20;
     const pageOffset = offset ?? 0;
-    const snapshotIds = since === undefined && until === undefined
+    const snapshotIds = since === undefined && until === undefined && label === undefined && tag === undefined
       ? undefined
       : (await loadIndex()).snapshots
-        .filter((entry) => matchesSnapshotsResourceDateRange(entry.timestamp, since, until))
+        .filter((entry) =>
+          matchesSnapshotsResourceDateRange(entry.timestamp, since, until) &&
+          (label === undefined || matchesSnapshotsResourceLabel(entry.label, label)) &&
+          (tag === undefined || matchesSnapshotsResourceTag(entry.tags, tag)),
+        )
         .map((entry) => entry.id);
     const matches = await searchSnapshots(query, config, {
       snapshots: snapshotIds,
@@ -1632,7 +1647,7 @@ async function handleSearchSnapshots(
       return formatSearchSnapshotsEmptyPageMessage(
         pageOffset,
         getSearchSnapshotsSuggestedOffset(matches.length, pageSize),
-        { since, until },
+        { since, until, label, tag },
       );
     }
 

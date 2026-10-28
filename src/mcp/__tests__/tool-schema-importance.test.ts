@@ -63,4 +63,10 @@ describe('MCP snapshot search schema', () => {
     expect(schema.properties.since).toMatchObject({ type: 'string' });
     expect(schema.properties.until).toMatchObject({ type: 'string' });
   });
+
+  it('advertises snapshot label and tag filters', () => {
+    const schema = getTool('savestate_search_snapshots').inputSchema as any;
+    expect(schema.properties.label.description).toContain('case-insensitive');
+    expect(schema.properties.tag.description).toContain('case-insensitive');
+  });
 });

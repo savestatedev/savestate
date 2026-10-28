@@ -120,4 +120,13 @@ describe('MCP savestate_search_snapshots limit', () => {
       'No matches found across snapshots at offset 40. Active filters: since=2026-10-01T00:00:00.000Z. Try offset 20.',
     );
   });
+
+  it('explains metadata filters on an empty page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, {
+      label: 'weekly',
+      tag: 'work',
+    })).toBe(
+      'No matches found across snapshots. Active filters: label=weekly, tag=work.',
+    );
+  });
 });

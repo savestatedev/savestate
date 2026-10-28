@@ -72,11 +72,13 @@ export function formatSearchSnapshotsPageHints(
 export function formatSearchSnapshotsEmptyPageMessage(
   offset: number,
   suggestedOffset: number | undefined,
-  filters?: { since?: string; until?: string },
+  filters?: { since?: string; until?: string; label?: string; tag?: string },
 ): string {
   const activeFilters = [
     filters?.since ? `since=${filters.since}` : undefined,
     filters?.until ? `until=${filters.until}` : undefined,
+    filters?.label ? `label=${filters.label}` : undefined,
+    filters?.tag ? `tag=${filters.tag}` : undefined,
   ].filter((filter): filter is string => filter !== undefined);
   const filterSummary = activeFilters.length > 0
     ? ` Active filters: ${activeFilters.join(', ')}.`
