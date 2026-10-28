@@ -144,8 +144,12 @@ describe('MCP savestate_search_snapshots limit', () => {
       tag: 'work',
       type: 'memory',
     })).toBe(
-      'Found 3 match(es) at offset 20. Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work, type=memory.',
+      'Found 3 matches at offset 20. Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work, type=memory.',
     );
+  });
+
+  it('uses singular grammar for a one-result page', () => {
+    expect(formatSearchSnapshotsPageSummary(0, 1)).toBe('Found 1 match at offset 0.');
   });
 
   it('keeps the type filter visible on an empty page', () => {
@@ -156,7 +160,7 @@ describe('MCP savestate_search_snapshots limit', () => {
 
   it('identifies the query on a populated page', () => {
     expect(formatSearchSnapshotsPageSummary(0, 2, undefined, 'encrypted archive')).toBe(
-      'Found 2 match(es) at offset 0. Query: "encrypted archive".',
+      'Found 2 matches at offset 0. Query: "encrypted archive".',
     );
   });
 });

@@ -115,5 +115,6 @@ export function formatSearchSnapshotsPageSummary(
   filters?: SearchSnapshotsFilters,
   query?: string,
 ): string {
-  return `Found ${shown} match(es) at offset ${offset}.${formatSearchSnapshotsQuery(query)}${formatSearchSnapshotsActiveFilters(filters)}`;
+  const matchLabel = shown === 1 ? 'match' : 'matches';
+  return `Found ${shown} ${matchLabel} at offset ${offset}.${formatSearchSnapshotsQuery(query)}${formatSearchSnapshotsActiveFilters(filters)}`;
 }
