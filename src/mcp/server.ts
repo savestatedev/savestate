@@ -1650,13 +1650,18 @@ async function handleSearchSnapshots(
       return formatSearchSnapshotsEmptyPageMessage(
         pageOffset,
         getSearchSnapshotsSuggestedOffset(matches.length, pageSize),
-        { since, until, label, tag },
+        { since, until, label, tag, type: input.type },
         query,
       );
     }
 
     const lines: string[] = [
-      formatSearchSnapshotsPageSummary(pageOffset, results.length, { since, until, label, tag }, query),
+      formatSearchSnapshotsPageSummary(
+        pageOffset,
+        results.length,
+        { since, until, label, tag, type: input.type },
+        query,
+      ),
       ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasNextPage),
     ];
     lines.push('');

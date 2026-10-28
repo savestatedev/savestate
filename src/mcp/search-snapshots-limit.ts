@@ -5,6 +5,7 @@ export interface SearchSnapshotsFilters {
   until?: string;
   label?: string;
   tag?: string;
+  type?: string;
 }
 
 function formatSearchSnapshotsActiveFilters(filters?: SearchSnapshotsFilters): string {
@@ -13,6 +14,7 @@ function formatSearchSnapshotsActiveFilters(filters?: SearchSnapshotsFilters): s
     filters?.until ? `until=${filters.until}` : undefined,
     filters?.label ? `label=${filters.label}` : undefined,
     filters?.tag ? `tag=${filters.tag}` : undefined,
+    filters?.type ? `type=${filters.type}` : undefined,
   ].filter((filter): filter is string => filter !== undefined);
 
   return activeFilters.length > 0

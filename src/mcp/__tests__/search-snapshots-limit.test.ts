@@ -142,8 +142,15 @@ describe('MCP savestate_search_snapshots limit', () => {
       since: '2026-10-01T00:00:00.000Z',
       label: 'weekly',
       tag: 'work',
+      type: 'memory',
     })).toBe(
-      'Found 3 match(es) at offset 20. Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work.',
+      'Found 3 match(es) at offset 20. Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work, type=memory.',
+    );
+  });
+
+  it('keeps the type filter visible on an empty page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, { type: 'conversation' })).toBe(
+      'No matches found across snapshots. Active filters: type=conversation.',
     );
   });
 
