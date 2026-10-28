@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getSearchSnapshotsPreviousOffset,
+  getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
   selectSearchSnapshotsEntries,
   selectSearchSnapshotsPage,
@@ -66,5 +67,11 @@ describe('MCP savestate_search_snapshots limit', () => {
 
   it('omits a previous page offset on the first page', () => {
     expect(getSearchSnapshotsPreviousOffset(0, 20)).toBeUndefined();
+  });
+
+  it('suggests the last populated page for an empty request', () => {
+    expect(getSearchSnapshotsSuggestedOffset(3, 20)).toBe(0);
+    expect(getSearchSnapshotsSuggestedOffset(41, 20)).toBe(40);
+    expect(getSearchSnapshotsSuggestedOffset(0, 20)).toBeUndefined();
   });
 });

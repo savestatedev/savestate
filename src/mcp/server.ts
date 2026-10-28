@@ -119,6 +119,7 @@ import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
 import {
   getSearchSnapshotsPreviousOffset,
+  getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
   selectSearchSnapshotsPage,
 } from './search-snapshots-limit.js';
@@ -1588,24 +1589,22 @@ async function handleSearchSnapshots(
     const offset = parseSearchSnapshotsOffset(input.offset);
     const pageSize = limit ?? 20;
     const pageOffset = offset ?? 0;
+    const matches = await searchSnapshots(input.query, config, {
+      types: input.type ? [input.type] : undefined,
+      // Fetch one look-ahead result so MCP clients can discover the next page,
+      // while respecting searchSnapshots' 1,000-result ceiling.
+      limit: Math.min(pageOffset + pageSize + 1, 1000),
+      passphrase: input.passphrase,
+    });
     const page = selectSearchSnapshotsPage(
-      selectSearchSnapshotsOffsetEntries(
-        await searchSnapshots(input.query, config, {
-          types: input.type ? [input.type] : undefined,
-          // Fetch one look-ahead result so MCP clients can discover the next page,
-          // while respecting searchSnapshots' 1,000-result ceiling.
-          limit: Math.min(pageOffset + pageSize + 1, 1000),
-          passphrase: input.passphrase,
-        }),
-        offset,
-      ),
+      selectSearchSnapshotsOffsetEntries(matches, offset),
       pageSize,
     );
     const results = page.entries;
     if (results.length === 0) {
       return pageOffset === 0
         ? 'No matches found across snapshots.'
-        : `No matches found across snapshots at offset ${pageOffset}. Try offset ${Math.max(0, pageOffset - pageSize)}.`;
+        : `No matches found across snapshots at offset ${pageOffset}. Try offset ${getSearchSnapshotsSuggestedOffset(matches.length, pageSize) ?? 0}.`;
     }
 
     const lines: string[] = [`Found ${results.length} match(es) at offset ${pageOffset}:`];

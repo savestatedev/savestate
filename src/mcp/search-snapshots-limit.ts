@@ -38,3 +38,12 @@ export function getSearchSnapshotsPreviousOffset(
   if (offset <= 0) return undefined;
   return Math.max(0, offset - limit);
 }
+
+/** Return the last populated page offset when a requested page is empty. */
+export function getSearchSnapshotsSuggestedOffset(
+  totalEntries: number,
+  limit: number,
+): number | undefined {
+  if (totalEntries <= 0) return undefined;
+  return Math.floor((totalEntries - 1) / limit) * limit;
+}
