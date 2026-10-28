@@ -118,6 +118,7 @@ import {
 import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
 import {
+  getSearchSnapshotsPreviousOffset,
   parseSearchSnapshotsLimit,
   selectSearchSnapshotsPage,
 } from './search-snapshots-limit.js';
@@ -437,7 +438,8 @@ export const tools: Tool[] = [
       'Search across ALL encrypted SaveState snapshots (not just live memory). ' +
       'Decrypts and scores matches across memory entries, identity/personality docs, ' +
       'conversation titles, and knowledge documents. Useful for recalling something ' +
-      'the user said weeks or months ago, even on a different platform.',
+      'the user said weeks or months ago, even on a different platform. Paginated ' +
+      'responses include next and previous offsets, or a recovery hint for an empty page.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1607,6 +1609,10 @@ async function handleSearchSnapshots(
     }
 
     const lines: string[] = [`Found ${results.length} match(es) at offset ${pageOffset}:`];
+    const previousOffset = getSearchSnapshotsPreviousOffset(pageOffset, pageSize);
+    if (previousOffset !== undefined) {
+      lines.push(`Previous page: try offset ${previousOffset}.`);
+    }
     if (page.hasNextPage) {
       lines.push(`More matches available. Try offset ${pageOffset + results.length}.`);
     }

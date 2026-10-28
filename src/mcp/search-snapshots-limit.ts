@@ -29,3 +29,12 @@ export function selectSearchSnapshotsPage<T>(
     hasNextPage: entries.length > page.length,
   };
 }
+
+/** Return the nearest earlier page offset, when the current page is not first. */
+export function getSearchSnapshotsPreviousOffset(
+  offset: number,
+  limit: number,
+): number | undefined {
+  if (offset <= 0) return undefined;
+  return Math.max(0, offset - limit);
+}

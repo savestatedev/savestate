@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getSearchSnapshotsPreviousOffset,
   parseSearchSnapshotsLimit,
   selectSearchSnapshotsEntries,
   selectSearchSnapshotsPage,
@@ -56,5 +57,14 @@ describe('MCP savestate_search_snapshots limit', () => {
       entries: [{ id: 's1' }, { id: 's2' }],
       hasNextPage: false,
     });
+  });
+
+  it('returns the previous page offset for later pages', () => {
+    expect(getSearchSnapshotsPreviousOffset(20, 20)).toBe(0);
+    expect(getSearchSnapshotsPreviousOffset(5, 20)).toBe(0);
+  });
+
+  it('omits a previous page offset on the first page', () => {
+    expect(getSearchSnapshotsPreviousOffset(0, 20)).toBeUndefined();
   });
 });
