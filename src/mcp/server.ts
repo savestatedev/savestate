@@ -146,11 +146,14 @@ import {
   buildSnapshotsResourceUri,
   formatSnapshotsResourceFilters,
   matchesSnapshotsResourceAdapter,
+  matchesSnapshotsResourceDateRange,
   matchesSnapshotsResourceLabel,
   matchesSnapshotsResourcePlatform,
   parseSnapshotsResourceAdapter,
+  parseSnapshotsResourceDate,
   parseSnapshotsResourceLabel,
   parseSnapshotsResourcePlatform,
+  validateSnapshotsResourceDateRange,
 } from './snapshots-resource-filters.js';
 
 // ─── Shared Memory Store Instance ────────────────────────────
@@ -1658,19 +1661,23 @@ async function handleReadResource(uri: string): Promise<string> {
       const platform = parseSnapshotsResourcePlatform(url.searchParams.get('platform'));
       const adapter = parseSnapshotsResourceAdapter(url.searchParams.get('adapter'));
       const label = parseSnapshotsResourceLabel(url.searchParams.get('label'));
+      const since = parseSnapshotsResourceDate(url.searchParams.get('since'), 'since');
+      const until = parseSnapshotsResourceDate(url.searchParams.get('until'), 'until');
+      validateSnapshotsResourceDateRange(since, until);
 
       const index = await loadIndex();
       const entries = sortSavestateListEntries(index.snapshots).filter((entry) =>
         (platform === undefined || matchesSnapshotsResourcePlatform(entry.platform, platform)) &&
         (adapter === undefined || matchesSnapshotsResourceAdapter(entry.adapter, adapter)) &&
-        (label === undefined || matchesSnapshotsResourceLabel(entry.label, label)),
+        (label === undefined || matchesSnapshotsResourceLabel(entry.label, label)) &&
+        matchesSnapshotsResourceDateRange(entry.timestamp, since, until),
       );
 
       const page = buildSnapshotsResourcePage(
         entries,
         offset,
         limit,
-        buildSnapshotsResourceUri(platform, adapter, label),
+        buildSnapshotsResourceUri(platform, adapter, label, since, until),
       );
 
       return JSON.stringify({
@@ -1690,7 +1697,9 @@ async function handleReadResource(uri: string): Promise<string> {
         platform: platform ?? null,
         adapter: adapter ?? null,
         label: label ?? null,
-        filters: formatSnapshotsResourceFilters(platform, adapter, label),
+        since: since ?? null,
+        until: until ?? null,
+        filters: formatSnapshotsResourceFilters(platform, adapter, label, since, until),
         snapshots: page.entries.map(formatSnapshotsResourceEntry),
       }, null, 2);
     }

@@ -66,16 +66,80 @@ export function matchesSnapshotsResourceLabel(
     normalizedEntryLabel.toLowerCase() === requestedLabel.trim().toLowerCase();
 }
 
+/** Parse an optional snapshot timestamp bound and normalize it to UTC. */
+export function parseSnapshotsResourceDate(
+  value: string | null,
+  name: 'since' | 'until',
+): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(normalized);
+  const timestamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized);
+  if (normalized.length === 0 || (!dateOnly && !timestamp)) {
+    throw new Error(
+      `Invalid ${name} value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+
+  const candidate = dateOnly
+    ? `${normalized}T${name === 'until' ? '23:59:59.999' : '00:00:00.000'}Z`
+    : normalized;
+  const parsed = Date.parse(candidate);
+  if (Number.isNaN(parsed)) {
+    throw new Error(
+      `Invalid ${name} value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+
+  if (dateOnly && new Date(parsed).toISOString().slice(0, 10) !== normalized) {
+    throw new Error(
+      `Invalid ${name} value "${value}". Expected an ISO-8601 date or timestamp.`,
+    );
+  }
+
+  return new Date(parsed).toISOString();
+}
+
+/** Reject an impossible snapshot timestamp range before filtering. */
+export function validateSnapshotsResourceDateRange(
+  since: string | undefined,
+  until: string | undefined,
+): void {
+  if (since !== undefined && until !== undefined && since > until) {
+    throw new Error('since must be at or before until');
+  }
+}
+
+/** Match snapshot timestamps inclusively, ignoring legacy entries with invalid dates. */
+export function matchesSnapshotsResourceDateRange(
+  timestamp: string,
+  since?: string,
+  until?: string,
+): boolean {
+  if (since === undefined && until === undefined) return true;
+
+  const timestampValue = Date.parse(timestamp);
+  if (Number.isNaN(timestampValue)) return false;
+
+  return (since === undefined || timestampValue >= Date.parse(since)) &&
+    (until === undefined || timestampValue <= Date.parse(until));
+}
+
 /** Preserve active snapshot filters in resource pagination links. */
 export function buildSnapshotsResourceUri(
   platform?: string,
   adapter?: string,
   label?: string,
+  since?: string,
+  until?: string,
 ): string {
   const filters = [
     platform === undefined ? null : `platform=${encodeURIComponent(platform)}`,
     adapter === undefined ? null : `adapter=${encodeURIComponent(adapter)}`,
     label === undefined ? null : `label=${encodeURIComponent(label)}`,
+    since === undefined ? null : `since=${encodeURIComponent(since)}`,
+    until === undefined ? null : `until=${encodeURIComponent(until)}`,
   ].filter((filter): filter is string => filter !== null);
   return filters.length > 0
     ? `savestate://snapshots?${filters.join('&')}`
@@ -83,14 +147,24 @@ export function buildSnapshotsResourceUri(
 }
 
 /** Echo the active snapshot resource filter so clients can verify the applied scope. */
-export function formatSnapshotsResourceFilters(platform?: string, adapter?: string, label?: string): {
+export function formatSnapshotsResourceFilters(
+  platform?: string,
+  adapter?: string,
+  label?: string,
+  since?: string,
+  until?: string,
+): {
   platform: string | null;
   adapter: string | null;
   label: string | null;
+  since: string | null;
+  until: string | null;
 } {
   return {
     platform: platform ?? null,
     adapter: adapter ?? null,
     label: label ?? null,
+    since: since ?? null,
+    until: until ?? null,
   };
 }
