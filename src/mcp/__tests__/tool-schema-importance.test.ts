@@ -51,6 +51,13 @@ describe('MCP list_memories search schema', () => {
 });
 
 describe('MCP snapshot search schema', () => {
+  it('explains phrase matching for agent-generated queries', () => {
+    const tool = getTool('savestate_search_snapshots');
+    const schema = tool.inputSchema as any;
+    expect(tool.description).toContain('exact phrase matches rank highest');
+    expect(schema.properties.query.description).toContain('Word or phrase');
+  });
+
   it('advertises inclusive snapshot date bounds', () => {
     const schema = getTool('savestate_search_snapshots').inputSchema as any;
     expect(schema.properties.since).toMatchObject({ type: 'string' });

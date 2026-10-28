@@ -439,12 +439,17 @@ export const tools: Tool[] = [
       'Search across ALL encrypted SaveState snapshots (not just live memory). ' +
       'Decrypts and scores matches across memory entries, identity/personality docs, ' +
       'conversation titles, and knowledge documents. Useful for recalling something ' +
-      'the user said weeks or months ago, even on a different platform. Paginated ' +
+      'the user said weeks or months ago, even on a different platform. Search with a ' +
+      'word or phrase: exact phrase matches rank highest, while individual terms can ' +
+      'still surface partial matches. Paginated ' +
       'responses include next and previous offsets, or a recovery hint for an empty page.',
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'Search query' },
+        query: {
+          type: 'string',
+          description: 'Word or phrase to search; exact phrase matches rank highest',
+        },
         type: {
           type: 'string',
           enum: ['memory', 'conversation', 'identity', 'knowledge'],
