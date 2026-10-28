@@ -29,6 +29,19 @@ export interface MemoryLogEventJson {
 export interface MemoryLogJson {
   memoryId: string;
   events: MemoryLogEventJson[];
+  pagination: MemoryLogPaginationJson;
+}
+
+export interface MemoryLogPaginationJson {
+  offset: number;
+  limit: number | null;
+  total: number;
+  shown: number;
+  hasMore: boolean;
+  nextOffset: number | null;
+  previousOffset: number | null;
+  emptyReason: 'collection' | 'page' | null;
+  suggestedOffset: number | null;
 }
 
 function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
@@ -43,11 +56,38 @@ function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
   };
 }
 
-export function formatMemoryLogJson(memoryId: string, log: ProvenanceEntry[]): string {
+export function formatMemoryLogJson(
+  memoryId: string,
+  log: ProvenanceEntry[],
+  pagination: Partial<MemoryLogPaginationJson> = {},
+): string {
+  const offset = pagination.offset ?? 0;
+  const limit = pagination.limit ?? null;
+  const total = pagination.total ?? log.length;
+  const shown = pagination.shown ?? log.length;
+  const hasMore = pagination.hasMore ?? false;
+  const nextOffset = pagination.nextOffset ?? (hasMore && limit !== null ? offset + shown : null);
+  const previousOffset = pagination.previousOffset ?? (offset > 0 && limit !== null ? Math.max(0, offset - limit) : null);
+  const emptyReason = pagination.emptyReason ?? (shown === 0 ? (total === 0 ? 'collection' : 'page') : null);
+  const suggestedOffset = pagination.suggestedOffset ?? (
+    shown === 0 && total > 0 && limit !== null ? Math.floor((total - 1) / limit) * limit : null
+  );
+
   return JSON.stringify(
     {
       memoryId,
       events: log.map(toLogEventJson),
+      pagination: {
+        offset,
+        limit,
+        total,
+        shown,
+        hasMore,
+        nextOffset,
+        previousOffset,
+        emptyReason,
+        suggestedOffset,
+      },
     },
     null,
     2,
@@ -70,6 +110,25 @@ export function formatMemoryLogMissingJson(id: string): string {
     null,
     2,
   );
+}
+
+/** Explain an exhausted table page without implying that the memory is missing. */
+export function formatMemoryLogEmptyPage(
+  memoryId: string,
+  offset: number,
+  limit: number | null,
+  total: number,
+): string {
+  const page = limit === null ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const suggestedOffset = total > 0
+    ? (limit === null ? 0 : Math.floor((total - 1) / limit) * limit)
+    : null;
+
+  return [
+    `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
+    `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
+    suggestedOffset === null ? null : `Try --offset ${suggestedOffset} to view an available page.`,
+  ].filter((line): line is string => line !== null).join('\n');
 }
 
 const MAX_MEMORY_LOG_LIMIT = 1000;
@@ -863,23 +922,42 @@ export async function memoryLogCommand(
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
   try {
-    const log = applyMemoryLogFilters(await knowledgeLane.memoryAuditLog(memoryId), {
-      offset: options?.offset,
-      limit: options?.limit,
-    });
+    const allLog = await knowledgeLane.memoryAuditLog(memoryId);
+    const offset = parseMemoryLogOffset(options?.offset) ?? 0;
+    const limit = parseMemoryLogLimit(options?.limit) ?? null;
+    const log = limit === null
+      ? allLog.slice(offset)
+      : allLog.slice(offset, offset + limit);
+    const hasMore = offset + log.length < allLog.length;
 
     if (options?.format === 'json') {
-      if (log.length === 0) {
+      if (allLog.length === 0) {
         console.log(formatMemoryLogMissingJson(memoryId));
         return;
       }
-      console.log(formatMemoryLogJson(memoryId, log));
+      console.log(formatMemoryLogJson(memoryId, log, {
+        offset,
+        limit,
+        total: allLog.length,
+        shown: log.length,
+        hasMore,
+        nextOffset: hasMore && limit !== null ? offset + log.length : null,
+        previousOffset: offset > 0 && limit !== null ? Math.max(0, offset - limit) : null,
+        emptyReason: log.length === 0 ? 'page' : null,
+        suggestedOffset: log.length === 0 && limit !== null
+          ? Math.floor((allLog.length - 1) / limit) * limit
+          : null,
+      }));
       return;
     }
 
     if (log.length === 0) {
-      console.log(`\nNo audit log found for memory ${memoryId}`);
-      console.log(`(Memory may not exist or has no recorded history)`);
+      if (allLog.length === 0) {
+        console.log(`\nNo audit log found for memory ${memoryId}`);
+        console.log(`(Memory may not exist or has no recorded history)`);
+      } else {
+        console.log(formatMemoryLogEmptyPage(memoryId, offset, limit, allLog.length));
+      }
       return;
     }
 
@@ -907,7 +985,13 @@ export async function memoryLogCommand(
       }
     }
 
-    console.log(`\nTotal entries: ${log.length}`);
+    console.log(`\nShowing ${log.length} of ${allLog.length} entries (offset ${offset}${limit === null ? '' : `, limit ${limit}`})`);
+    if (hasMore && limit !== null) {
+      console.log(`Next page: use --offset ${offset + log.length}.`);
+    }
+    if (offset > 0 && limit !== null) {
+      console.log(`Previous page: use --offset ${Math.max(0, offset - limit)}.`);
+    }
   } catch (err) {
     throw new Error(`Failed to get audit log: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
