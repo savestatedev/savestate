@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatSearchSnapshotsEmptyPageMessage,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsPreviousOffset,
   getSearchSnapshotsSuggestedOffset,
@@ -7,8 +8,23 @@ import {
   selectSearchSnapshotsEntries,
   selectSearchSnapshotsPage,
 } from '../search-snapshots-limit.js';
+import {
+  matchesSnapshotsResourceDateRange,
+  parseSnapshotsResourceDate,
+  validateSnapshotsResourceDateRange,
+} from '../snapshots-resource-filters.js';
 
 describe('MCP savestate_search_snapshots limit', () => {
+  it('supports inclusive snapshot date bounds', () => {
+    const since = parseSnapshotsResourceDate('2026-10-01', 'since');
+    const until = parseSnapshotsResourceDate('2026-10-31', 'until');
+
+    validateSnapshotsResourceDateRange(since, until);
+    expect(matchesSnapshotsResourceDateRange('2026-10-01T00:00:00.000Z', since, until)).toBe(true);
+    expect(matchesSnapshotsResourceDateRange('2026-10-31T23:59:59.999Z', since, until)).toBe(true);
+    expect(matchesSnapshotsResourceDateRange('2026-11-01T00:00:00.000Z', since, until)).toBe(false);
+  });
+
   it('defaults to undefined', () => {
     expect(parseSearchSnapshotsLimit(undefined)).toBeUndefined();
   });
@@ -88,5 +104,20 @@ describe('MCP savestate_search_snapshots limit', () => {
       'Previous page: try offset 0.',
       'More matches available. Try offset 40.',
     ]);
+  });
+
+  it('explains active date filters on an empty first page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, {
+      since: '2026-10-01T00:00:00.000Z',
+      until: '2026-10-31T23:59:59.999Z',
+    })).toBe(
+      'No matches found across snapshots. Active filters: since=2026-10-01T00:00:00.000Z, until=2026-10-31T23:59:59.999Z.',
+    );
+  });
+
+  it('keeps the recovery hint on an empty later page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(40, 20, { since: '2026-10-01T00:00:00.000Z' })).toBe(
+      'No matches found across snapshots at offset 40. Active filters: since=2026-10-01T00:00:00.000Z. Try offset 20.',
+    );
   });
 });

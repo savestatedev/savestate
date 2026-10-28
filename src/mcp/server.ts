@@ -118,6 +118,7 @@ import {
 import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
 import {
+  formatSearchSnapshotsEmptyPageMessage,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
@@ -439,16 +440,29 @@ export const tools: Tool[] = [
       'Search across ALL encrypted SaveState snapshots (not just live memory). ' +
       'Decrypts and scores matches across memory entries, identity/personality docs, ' +
       'conversation titles, and knowledge documents. Useful for recalling something ' +
-      'the user said weeks or months ago, even on a different platform. Paginated ' +
+      'the user said weeks or months ago, even on a different platform. Search with a ' +
+      'word or phrase: exact phrase matches rank highest, while individual terms can ' +
+      'still surface partial matches. Paginated ' +
       'responses include next and previous offsets, or a recovery hint for an empty page.',
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'Search query' },
+        query: {
+          type: 'string',
+          description: 'Word or phrase to search; exact phrase matches rank highest',
+        },
         type: {
           type: 'string',
           enum: ['memory', 'conversation', 'identity', 'knowledge'],
           description: 'Optional filter by content type',
+        },
+        since: {
+          type: 'string',
+          description: 'Optional inclusive snapshot date or ISO-8601 timestamp lower bound',
+        },
+        until: {
+          type: 'string',
+          description: 'Optional inclusive snapshot date or ISO-8601 timestamp upper bound',
         },
         limit: { type: 'number', description: 'Maximum results (default: 20; positive integer up to 1000)' },
         offset: { type: 'number', description: 'Pagination offset (non-negative integer up to 1000)' },
@@ -776,6 +790,8 @@ const DeleteAllMemoriesInputSchema = z.object({
 const SearchSnapshotsInputSchema = z.object({
   query: z.string(),
   type: z.enum(['memory', 'conversation', 'identity', 'knowledge']).optional(),
+  since: z.string().optional(),
+  until: z.string().optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),
   passphrase: z.string(),
@@ -1587,9 +1603,18 @@ async function handleSearchSnapshots(
     const config = await loadConfig();
     const limit = parseSearchSnapshotsLimit(input.limit);
     const offset = parseSearchSnapshotsOffset(input.offset);
+    const since = parseSnapshotsResourceDate(input.since ?? null, 'since');
+    const until = parseSnapshotsResourceDate(input.until ?? null, 'until');
+    validateSnapshotsResourceDateRange(since, until);
     const pageSize = limit ?? 20;
     const pageOffset = offset ?? 0;
+    const snapshotIds = since === undefined && until === undefined
+      ? undefined
+      : (await loadIndex()).snapshots
+        .filter((entry) => matchesSnapshotsResourceDateRange(entry.timestamp, since, until))
+        .map((entry) => entry.id);
     const matches = await searchSnapshots(input.query, config, {
+      snapshots: snapshotIds,
       types: input.type ? [input.type] : undefined,
       // Fetch one look-ahead result so MCP clients can discover the next page,
       // while respecting searchSnapshots' 1,000-result ceiling.
@@ -1602,9 +1627,11 @@ async function handleSearchSnapshots(
     );
     const results = page.entries;
     if (results.length === 0) {
-      return pageOffset === 0
-        ? 'No matches found across snapshots.'
-        : `No matches found across snapshots at offset ${pageOffset}. Try offset ${getSearchSnapshotsSuggestedOffset(matches.length, pageSize) ?? 0}.`;
+      return formatSearchSnapshotsEmptyPageMessage(
+        pageOffset,
+        getSearchSnapshotsSuggestedOffset(matches.length, pageSize),
+        { since, until },
+      );
     }
 
     const lines: string[] = [
