@@ -2670,6 +2670,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('Omits previous content');
     expect(memorySection).toContain('savestate memory log mem-123 --json');
+    expect(memorySection).toContain('emptyReason');
+    expect(memorySection).toContain('suggestedOffset');
   });
 
   it('documents memory log --json when missing', () => {
