@@ -446,7 +446,7 @@ export const tools: Tool[] = [
       'word or phrase: exact phrase matches rank highest, while individual terms can ' +
       'still surface partial matches. Paginated ' +
       'responses include next and previous offsets, or a recovery hint for an empty page. ' +
-      'Optional label and tag filters narrow the snapshots searched before decryption.',
+      'Optional type, inclusive since/until date, label, and tag filters narrow the snapshots searched before decryption.',
     inputSchema: {
       type: 'object',
       properties: {

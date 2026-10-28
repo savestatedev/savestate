@@ -58,6 +58,12 @@ describe('MCP snapshot search schema', () => {
     expect(schema.properties.query.description).toContain('Word or phrase');
   });
 
+  it('advertises every snapshot scope filter', () => {
+    expect(getTool('savestate_search_snapshots').description).toContain(
+      'type, inclusive since/until date, label, and tag filters',
+    );
+  });
+
   it('advertises inclusive snapshot date bounds', () => {
     const schema = getTool('savestate_search_snapshots').inputSchema as any;
     expect(schema.properties.since).toMatchObject({ type: 'string' });
