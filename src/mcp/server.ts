@@ -119,6 +119,7 @@ import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
 import {
   formatSearchSnapshotsEmptyPageMessage,
+  formatSearchSnapshotsPageSummary,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
@@ -1654,7 +1655,7 @@ async function handleSearchSnapshots(
     }
 
     const lines: string[] = [
-      `Found ${results.length} match(es) at offset ${pageOffset}:`,
+      formatSearchSnapshotsPageSummary(pageOffset, results.length, { since, until, label, tag }),
       ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasNextPage),
     ];
     lines.push('');

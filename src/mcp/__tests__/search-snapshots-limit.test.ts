@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatSearchSnapshotsEmptyPageMessage,
+  formatSearchSnapshotsPageSummary,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsPreviousOffset,
   getSearchSnapshotsSuggestedOffset,
@@ -127,6 +128,16 @@ describe('MCP savestate_search_snapshots limit', () => {
       tag: 'work',
     })).toBe(
       'No matches found across snapshots. Active filters: label=weekly, tag=work.',
+    );
+  });
+
+  it('keeps active filters visible on populated pages', () => {
+    expect(formatSearchSnapshotsPageSummary(20, 3, {
+      since: '2026-10-01T00:00:00.000Z',
+      label: 'weekly',
+      tag: 'work',
+    })).toBe(
+      'Found 3 match(es) at offset 20: Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work.',
     );
   });
 });
