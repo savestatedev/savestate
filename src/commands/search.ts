@@ -78,6 +78,21 @@ export interface SearchSummaryJson {
   pagination: SearchSummaryPagination;
 }
 
+function normalizeSearchSummaryFilters(
+  filters?: Partial<SearchSummaryFilters>,
+): SearchSummaryFilters {
+  return {
+    type: filters?.type ?? null,
+    exclude: filters?.exclude ?? null,
+    since: filters?.since?.trim() ?? null,
+    until: filters?.until?.trim() ?? null,
+    snapshot: filters?.snapshot?.trim() ?? null,
+    adapter: filters?.adapter?.trim().toLowerCase() ?? null,
+    tag: filters?.tag?.trim() ?? null,
+    label: filters?.label?.trim() ?? null,
+  };
+}
+
 /** Keep paginated search navigation machine-readable without changing --json arrays. */
 export function formatSearchResultsSummaryJson(input: {
   query: string;
@@ -97,16 +112,7 @@ export function formatSearchResultsSummaryJson(input: {
     {
       found: true,
       query: input.query,
-      filters: {
-        type: input.filters?.type ?? null,
-        exclude: input.filters?.exclude ?? null,
-        since: input.filters?.since?.trim() ?? null,
-        until: input.filters?.until?.trim() ?? null,
-        snapshot: input.filters?.snapshot?.trim() ?? null,
-        adapter: input.filters?.adapter?.trim().toLowerCase() ?? null,
-        tag: input.filters?.tag?.trim() ?? null,
-        label: input.filters?.label?.trim() ?? null,
-      },
+      filters: normalizeSearchSummaryFilters(input.filters),
       results: input.results,
       pagination: {
         offset,
@@ -176,12 +182,17 @@ export function formatSearchMissingSummaryJson(
   snapshot: string,
   offset = 0,
   limit = 20,
+  filters?: Partial<SearchSummaryFilters>,
 ): string {
   return JSON.stringify(
     {
       found: false,
       query,
       snapshot,
+      filters: normalizeSearchSummaryFilters({
+        ...filters,
+        snapshot: filters?.snapshot ?? snapshot,
+      }),
       results: [],
       pagination: {
         offset,
@@ -488,8 +499,20 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (jsonOutput) {
       const limit = parseSearchLimit(options.limit);
       const offset = parseSearchOffset(options.offset) ?? 0;
+      const filters = options.jsonSummary
+        ? {
+          type: parseSearchType(options.type),
+          exclude: parseSearchExclude(options.exclude),
+          since: options.since,
+          until: options.until,
+          snapshot: snapshotId,
+          adapter: options.adapter,
+          tag: options.tag,
+          label: options.label,
+        }
+        : undefined;
       console.log(options.jsonSummary
-        ? formatSearchMissingSummaryJson(query, snapshotId ?? '', offset, limit)
+        ? formatSearchMissingSummaryJson(query, snapshotId ?? '', offset, limit, filters)
         : formatSearchMissingJson(query, snapshotId ?? ''));
       return;
     }
@@ -511,7 +534,16 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
         const limit = parseSearchLimit(options.limit);
         const offset = parseSearchOffset(options.offset) ?? 0;
         console.log(options.jsonSummary
-          ? formatSearchMissingSummaryJson(query, snapshotId, offset, limit)
+          ? formatSearchMissingSummaryJson(query, snapshotId, offset, limit, {
+            type: types,
+            exclude: excludedTypes,
+            since: options.since,
+            until: options.until,
+            snapshot: snapshotId,
+            adapter,
+            tag,
+            label,
+          })
           : formatSearchMissingJson(query, snapshotId));
         return;
       }

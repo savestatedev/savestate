@@ -136,13 +136,27 @@ describe('savestate search --json', () => {
 
   it('keeps the summary envelope complete for missing snapshots', () => {
     const parsed = JSON.parse(
-      formatSearchMissingSummaryJson('missing', 'ss-missing', 5, 2),
+      formatSearchMissingSummaryJson('missing', 'ss-missing', 5, 2, {
+        adapter: 'CHATGPT',
+        tag: ' work ',
+      }),
     ) as {
       found: boolean;
+      filters: Record<string, unknown>;
       pagination: Record<string, unknown>;
     };
 
     expect(parsed.found).toBe(false);
+    expect(parsed.filters).toEqual({
+      type: null,
+      exclude: null,
+      since: null,
+      until: null,
+      snapshot: 'ss-missing',
+      adapter: 'chatgpt',
+      tag: 'work',
+      label: null,
+    });
     expect(parsed.pagination).toMatchObject({
       offset: 5,
       limit: 2,
