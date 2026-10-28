@@ -1,5 +1,31 @@
 const MAX_SEARCH_SNAPSHOTS_LIMIT = 1000;
 
+export interface SearchSnapshotsFilters {
+  since?: string;
+  until?: string;
+  label?: string;
+  tag?: string;
+  type?: string;
+}
+
+function formatSearchSnapshotsActiveFilters(filters?: SearchSnapshotsFilters): string {
+  const activeFilters = [
+    filters?.since ? `since=${filters.since}` : undefined,
+    filters?.until ? `until=${filters.until}` : undefined,
+    filters?.label ? `label=${filters.label}` : undefined,
+    filters?.tag ? `tag=${filters.tag}` : undefined,
+    filters?.type ? `type=${filters.type}` : undefined,
+  ].filter((filter): filter is string => filter !== undefined);
+
+  return activeFilters.length > 0
+    ? ` Active filters: ${activeFilters.join(', ')}.`
+    : '';
+}
+
+function formatSearchSnapshotsQuery(query?: string): string {
+  return query === undefined ? '' : ` Query: ${JSON.stringify(query)}.`;
+}
+
 /** Parse savestate_search_snapshots limit without turning user input errors into an unbounded snapshot search. */
 export function parseSearchSnapshotsLimit(value: number | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -72,18 +98,23 @@ export function formatSearchSnapshotsPageHints(
 export function formatSearchSnapshotsEmptyPageMessage(
   offset: number,
   suggestedOffset: number | undefined,
-  filters?: { since?: string; until?: string; label?: string; tag?: string },
+  filters?: SearchSnapshotsFilters,
+  query?: string,
 ): string {
-  const activeFilters = [
-    filters?.since ? `since=${filters.since}` : undefined,
-    filters?.until ? `until=${filters.until}` : undefined,
-    filters?.label ? `label=${filters.label}` : undefined,
-    filters?.tag ? `tag=${filters.tag}` : undefined,
-  ].filter((filter): filter is string => filter !== undefined);
-  const filterSummary = activeFilters.length > 0
-    ? ` Active filters: ${activeFilters.join(', ')}.`
-    : '';
+  const querySummary = formatSearchSnapshotsQuery(query);
+  const filterSummary = formatSearchSnapshotsActiveFilters(filters);
 
-  if (offset === 0) return `No matches found across snapshots.${filterSummary}`;
-  return `No matches found across snapshots at offset ${offset}.${filterSummary} Try offset ${suggestedOffset ?? 0}.`;
+  if (offset === 0) return `No matches found across snapshots.${querySummary}${filterSummary}`;
+  return `No matches found across snapshots at offset ${offset}.${querySummary}${filterSummary} Try offset ${suggestedOffset ?? 0}.`;
+}
+
+/** Keep successful pages explicit about the scope that produced their matches. */
+export function formatSearchSnapshotsPageSummary(
+  offset: number,
+  shown: number,
+  filters?: SearchSnapshotsFilters,
+  query?: string,
+): string {
+  const matchLabel = shown === 1 ? 'match' : 'matches';
+  return `Found ${shown} ${matchLabel} at offset ${offset}.${formatSearchSnapshotsQuery(query)}${formatSearchSnapshotsActiveFilters(filters)}`;
 }

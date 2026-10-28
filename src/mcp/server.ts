@@ -119,6 +119,7 @@ import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
 import {
   formatSearchSnapshotsEmptyPageMessage,
+  formatSearchSnapshotsPageSummary,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
@@ -445,7 +446,7 @@ export const tools: Tool[] = [
       'word or phrase: exact phrase matches rank highest, while individual terms can ' +
       'still surface partial matches. Paginated ' +
       'responses include next and previous offsets, or a recovery hint for an empty page. ' +
-      'Optional label and tag filters narrow the snapshots searched before decryption.',
+      'Optional type, inclusive since/until date, label, and tag filters narrow the snapshots searched before decryption.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1649,12 +1650,18 @@ async function handleSearchSnapshots(
       return formatSearchSnapshotsEmptyPageMessage(
         pageOffset,
         getSearchSnapshotsSuggestedOffset(matches.length, pageSize),
-        { since, until, label, tag },
+        { since, until, label, tag, type: input.type },
+        query,
       );
     }
 
     const lines: string[] = [
-      `Found ${results.length} match(es) at offset ${pageOffset}:`,
+      formatSearchSnapshotsPageSummary(
+        pageOffset,
+        results.length,
+        { since, until, label, tag, type: input.type },
+        query,
+      ),
       ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasNextPage),
     ];
     lines.push('');

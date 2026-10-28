@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatSearchSnapshotsEmptyPageMessage,
+  formatSearchSnapshotsPageSummary,
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsPreviousOffset,
   getSearchSnapshotsSuggestedOffset,
@@ -115,6 +116,12 @@ describe('MCP savestate_search_snapshots limit', () => {
     );
   });
 
+  it('identifies the query on an empty page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, undefined, 'memory: "backup"')).toBe(
+      'No matches found across snapshots. Query: "memory: \\\"backup\\\"".',
+    );
+  });
+
   it('keeps the recovery hint on an empty later page', () => {
     expect(formatSearchSnapshotsEmptyPageMessage(40, 20, { since: '2026-10-01T00:00:00.000Z' })).toBe(
       'No matches found across snapshots at offset 40. Active filters: since=2026-10-01T00:00:00.000Z. Try offset 20.',
@@ -127,6 +134,33 @@ describe('MCP savestate_search_snapshots limit', () => {
       tag: 'work',
     })).toBe(
       'No matches found across snapshots. Active filters: label=weekly, tag=work.',
+    );
+  });
+
+  it('keeps active filters visible on populated pages', () => {
+    expect(formatSearchSnapshotsPageSummary(20, 3, {
+      since: '2026-10-01T00:00:00.000Z',
+      label: 'weekly',
+      tag: 'work',
+      type: 'memory',
+    })).toBe(
+      'Found 3 matches at offset 20. Active filters: since=2026-10-01T00:00:00.000Z, label=weekly, tag=work, type=memory.',
+    );
+  });
+
+  it('uses singular grammar for a one-result page', () => {
+    expect(formatSearchSnapshotsPageSummary(0, 1)).toBe('Found 1 match at offset 0.');
+  });
+
+  it('keeps the type filter visible on an empty page', () => {
+    expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, { type: 'conversation' })).toBe(
+      'No matches found across snapshots. Active filters: type=conversation.',
+    );
+  });
+
+  it('identifies the query on a populated page', () => {
+    expect(formatSearchSnapshotsPageSummary(0, 2, undefined, 'encrypted archive')).toBe(
+      'Found 2 matches at offset 0. Query: "encrypted archive".',
     );
   });
 });
