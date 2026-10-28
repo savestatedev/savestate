@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from '../search-snapshots-limit.js';
+import {
+  parseSearchSnapshotsLimit,
+  selectSearchSnapshotsEntries,
+  selectSearchSnapshotsPage,
+} from '../search-snapshots-limit.js';
 
 describe('MCP savestate_search_snapshots limit', () => {
   it('defaults to undefined', () => {
@@ -35,5 +39,22 @@ describe('MCP savestate_search_snapshots limit', () => {
   it('returns all matches when limit is omitted', () => {
     const entries = [{ id: 's1' }, { id: 's2' }];
     expect(selectSearchSnapshotsEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('reports when a bounded page has more matches', () => {
+    expect(selectSearchSnapshotsPage(
+      [{ id: 's1' }, { id: 's2' }, { id: 's3' }],
+      2,
+    )).toEqual({
+      entries: [{ id: 's1' }, { id: 's2' }],
+      hasNextPage: true,
+    });
+  });
+
+  it('does not report a next page at the exact boundary', () => {
+    expect(selectSearchSnapshotsPage([{ id: 's1' }, { id: 's2' }], 2)).toEqual({
+      entries: [{ id: 's1' }, { id: 's2' }],
+      hasNextPage: false,
+    });
   });
 });

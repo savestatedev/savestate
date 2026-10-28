@@ -17,3 +17,15 @@ export function selectSearchSnapshotsEntries<T>(entries: T[], limit?: number): T
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
 }
+
+/** Return one bounded page and whether another page is available. */
+export function selectSearchSnapshotsPage<T>(
+  entries: T[],
+  limit: number,
+): { entries: T[]; hasNextPage: boolean } {
+  const page = entries.slice(0, limit);
+  return {
+    entries: page,
+    hasNextPage: entries.length > page.length,
+  };
+}

@@ -117,7 +117,10 @@ import {
 } from './memory-search-summary.js';
 import { formatMemorySearchEntry } from './memory-search-entry.js';
 import { formatMemoryListEntry } from './memory-list-entry.js';
-import { parseSearchSnapshotsLimit, selectSearchSnapshotsEntries } from './search-snapshots-limit.js';
+import {
+  parseSearchSnapshotsLimit,
+  selectSearchSnapshotsPage,
+} from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import type { ListMemoriesFilters } from './list-memories-limit.js';
@@ -1581,20 +1584,33 @@ async function handleSearchSnapshots(
     const config = await loadConfig();
     const limit = parseSearchSnapshotsLimit(input.limit);
     const offset = parseSearchSnapshotsOffset(input.offset);
-    const results = selectSearchSnapshotsEntries(
+    const pageSize = limit ?? 20;
+    const pageOffset = offset ?? 0;
+    const page = selectSearchSnapshotsPage(
       selectSearchSnapshotsOffsetEntries(
         await searchSnapshots(input.query, config, {
           types: input.type ? [input.type] : undefined,
-          limit: (offset ?? 0) + (limit ?? 20),
+          // Fetch one look-ahead result so MCP clients can discover the next page,
+          // while respecting searchSnapshots' 1,000-result ceiling.
+          limit: Math.min(pageOffset + pageSize + 1, 1000),
           passphrase: input.passphrase,
         }),
         offset,
       ),
-      limit ?? 20,
+      pageSize,
     );
-    if (results.length === 0) return 'No matches found across snapshots.';
+    const results = page.entries;
+    if (results.length === 0) {
+      return pageOffset === 0
+        ? 'No matches found across snapshots.'
+        : `No matches found across snapshots at offset ${pageOffset}. Try offset ${Math.max(0, pageOffset - pageSize)}.`;
+    }
 
-    const lines: string[] = [`Found ${results.length} match(es):`, ''];
+    const lines: string[] = [`Found ${results.length} match(es) at offset ${pageOffset}:`];
+    if (page.hasNextPage) {
+      lines.push(`More matches available. Try offset ${pageOffset + results.length}.`);
+    }
+    lines.push('');
     for (const r of results) {
       const date = r.snapshotTimestamp.slice(0, 10);
       const score = (r.score * 100).toFixed(0);
