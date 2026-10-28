@@ -78,6 +78,17 @@ export interface SearchSummaryJson {
   pagination: SearchSummaryPagination;
 }
 
+/** Keep interactive search output explicit about both inclusion and exclusion filters. */
+export function formatSearchFilterHints(
+  types: SearchType[] | undefined,
+  excludedTypes: SearchType[] | undefined,
+): string[] {
+  const hints: string[] = [];
+  if (types) hints.push(`Filter: ${types.join(', ')}`);
+  if (excludedTypes) hints.push(`Exclude: ${excludedTypes.join(', ')}`);
+  return hints;
+}
+
 function normalizeSearchSummaryFilters(
   filters?: Partial<SearchSummaryFilters>,
 ): SearchSummaryFilters {
@@ -566,7 +577,9 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   if (!options.json) {
     console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
-    if (types) console.log(chalk.dim(`   Filter: ${types.join(', ')}`));
+    for (const hint of formatSearchFilterHints(types, excludedTypes)) {
+      console.log(chalk.dim(`   ${hint}`));
+    }
     if (since !== undefined) console.log(chalk.dim(`   Since: ${options.since}`));
     if (until !== undefined) console.log(chalk.dim(`   Until: ${options.until}`));
     if (snapshotId) console.log(chalk.dim(`   Snapshot: ${snapshotId}`));

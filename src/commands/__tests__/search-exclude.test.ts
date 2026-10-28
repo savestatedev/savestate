@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchExclude, resolveSearchType } from '../search.js';
+import { formatSearchFilterHints, parseSearchExclude, resolveSearchType } from '../search.js';
 
 describe('savestate search --exclude', () => {
   it('defaults to undefined', () => {
@@ -34,6 +34,13 @@ describe('savestate search --exclude', () => {
   it('drops excluded types from --type', () => {
     expect(resolveSearchType({ type: 'memory,conversation', exclude: 'conversation' })).toEqual([
       'memory',
+    ]);
+  });
+
+  it('formats inclusion and exclusion filters for interactive output', () => {
+    expect(formatSearchFilterHints(['memory'], ['conversation', 'knowledge'])).toEqual([
+      'Filter: memory',
+      'Exclude: conversation, knowledge',
     ]);
   });
 });
