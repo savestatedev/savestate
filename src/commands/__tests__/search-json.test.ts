@@ -47,6 +47,16 @@ describe('savestate search --json', () => {
 
     expect(parsed.found).toBe(true);
     expect(parsed.query).toBe('cocktail recommendations');
+    expect(parsed.filters).toEqual({
+      type: null,
+      exclude: null,
+      since: null,
+      until: null,
+      snapshot: null,
+      adapter: null,
+      tag: null,
+      label: null,
+    });
     expect(parsed.results).toEqual([match]);
     expect(parsed.pagination).toEqual({
       offset: 10,
@@ -58,6 +68,33 @@ describe('savestate search --json', () => {
       nextOffset: null,
       hasPrevious: true,
       previousOffset: 5,
+    });
+  });
+
+  it('records the filters used to produce a summary page', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail',
+        results: [match],
+        filters: {
+          type: ['memory'],
+          exclude: ['conversation'],
+          since: ' 2026-01-01 ',
+          adapter: 'CHATGPT',
+          tag: ' work ',
+        },
+      }),
+    ) as { filters: Record<string, unknown> };
+
+    expect(parsed.filters).toEqual({
+      type: ['memory'],
+      exclude: ['conversation'],
+      since: '2026-01-01',
+      until: null,
+      snapshot: null,
+      adapter: 'chatgpt',
+      tag: 'work',
+      label: null,
     });
   });
 

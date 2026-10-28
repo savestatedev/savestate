@@ -59,9 +59,21 @@ export interface SearchSummaryPagination {
   previousOffset: number | null;
 }
 
+export interface SearchSummaryFilters {
+  type: SearchType[] | null;
+  exclude: SearchType[] | null;
+  since: string | null;
+  until: string | null;
+  snapshot: string | null;
+  adapter: string | null;
+  tag: string | null;
+  label: string | null;
+}
+
 export interface SearchSummaryJson {
   found: boolean;
   query: string;
+  filters: SearchSummaryFilters;
   results: SearchResult[];
   pagination: SearchSummaryPagination;
 }
@@ -72,6 +84,7 @@ export function formatSearchResultsSummaryJson(input: {
   results: SearchResult[];
   offset?: number;
   limit?: number;
+  filters?: Partial<SearchSummaryFilters>;
 }): string {
   const offset = input.offset ?? 0;
   const limit = input.limit ?? 20;
@@ -84,6 +97,16 @@ export function formatSearchResultsSummaryJson(input: {
     {
       found: true,
       query: input.query,
+      filters: {
+        type: input.filters?.type ?? null,
+        exclude: input.filters?.exclude ?? null,
+        since: input.filters?.since?.trim() ?? null,
+        until: input.filters?.until?.trim() ?? null,
+        snapshot: input.filters?.snapshot?.trim() ?? null,
+        adapter: input.filters?.adapter?.trim().toLowerCase() ?? null,
+        tag: input.filters?.tag?.trim() ?? null,
+        label: input.filters?.label?.trim() ?? null,
+      },
       results: input.results,
       pagination: {
         offset,
@@ -478,6 +501,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const limit = parseSearchLimit(options.limit);
   const offset = parseSearchOffset(options.offset);
   const types = resolveSearchType(options);
+  const excludedTypes = parseSearchExclude(options.exclude);
 
   let catalog: Array<{ id: string; timestamp: string }> | undefined;
   if (snapshotId) {
@@ -533,7 +557,22 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
     if (jsonOutput) {
       console.log(options.jsonSummary
-        ? formatSearchResultsSummaryJson({ query, results, offset, limit })
+        ? formatSearchResultsSummaryJson({
+          query,
+          results,
+          offset,
+          limit,
+          filters: {
+            type: types ?? null,
+            exclude: excludedTypes ?? null,
+            since: options.since,
+            until: options.until,
+            snapshot: snapshotId,
+            adapter,
+            tag,
+            label,
+          },
+        })
         : formatSearchResultsJson(results));
       return;
     }
