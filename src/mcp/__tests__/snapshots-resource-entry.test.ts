@@ -9,6 +9,7 @@ describe('MCP savestate://snapshots entries', () => {
       platform: 'claude-code',
       adapter: 'claude-code',
       label: 'Daily backup',
+      tags: [' release ', 'RELEASE', 'team'],
       size: 2048,
       filename: 'snapshot-1.saf.enc',
     })).toEqual({
@@ -17,6 +18,7 @@ describe('MCP savestate://snapshots entries', () => {
       platform: 'claude-code',
       adapter: 'claude-code',
       label: 'Daily backup',
+      tags: ['release', 'team'],
       size: 2048,
     });
   });
@@ -28,10 +30,11 @@ describe('MCP savestate://snapshots entries', () => {
       platform: 'claude-code',
       adapter: 'claude-code',
       label: null,
+      tags: undefined,
       size: 1024,
       filename: 'snapshot-2.saf.enc',
     } as unknown as Parameters<typeof formatSnapshotsResourceEntry>[0];
 
-    expect(formatSnapshotsResourceEntry(legacyEntry)).toMatchObject({ label: null });
+    expect(formatSnapshotsResourceEntry(legacyEntry)).toMatchObject({ label: null, tags: [] });
   });
 });

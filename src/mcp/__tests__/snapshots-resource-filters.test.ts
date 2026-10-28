@@ -5,10 +5,13 @@ import {
   matchesSnapshotsResourceAdapter,
   matchesSnapshotsResourceLabel,
   matchesSnapshotsResourcePlatform,
+  matchesSnapshotsResourceTag,
   normalizeSnapshotsResourceLabel,
+  normalizeSnapshotsResourceTags,
   parseSnapshotsResourceAdapter,
   parseSnapshotsResourceLabel,
   parseSnapshotsResourcePlatform,
+  parseSnapshotsResourceTag,
 } from '../snapshots-resource-filters.js';
 
 describe('MCP savestate://snapshots platform filter', () => {
@@ -55,6 +58,35 @@ describe('MCP savestate://snapshots platform filter', () => {
     );
   });
 
+  it('normalizes and matches a tag filter case-insensitively', () => {
+    expect(parseSnapshotsResourceTag('  RELEASE  ')).toBe('release');
+    expect(parseSnapshotsResourceTag(null)).toBeUndefined();
+    expect(matchesSnapshotsResourceTag(['release', 'backup'], 'RELEASE')).toBe(true);
+    expect(matchesSnapshotsResourceTag(undefined, 'release')).toBe(false);
+  });
+
+  it('rejects a blank tag filter', () => {
+    expect(() => parseSnapshotsResourceTag('   ')).toThrow(
+      'Invalid tag value. Expected a non-empty tag.',
+    );
+  });
+
+  it('normalizes missing, blank, and duplicate snapshot tags', () => {
+    expect(normalizeSnapshotsResourceTags([' RELEASE ', 'release', '', 'BACKUP'])).toEqual([
+      'backup',
+      'release',
+    ]);
+    expect(normalizeSnapshotsResourceTags(undefined)).toEqual([]);
+  });
+
+  it('sorts normalized tags for stable resource output', () => {
+    expect(normalizeSnapshotsResourceTags(['zeta', 'Alpha', 'beta'])).toEqual([
+      'alpha',
+      'beta',
+      'zeta',
+    ]);
+  });
+
   it('matches platforms without making casing significant', () => {
     expect(matchesSnapshotsResourcePlatform('claude-code', 'CLAUDE-CODE')).toBe(true);
     expect(matchesSnapshotsResourcePlatform('gemini', 'claude-code')).toBe(false);
@@ -75,15 +107,19 @@ describe('MCP savestate://snapshots platform filter', () => {
     expect(buildSnapshotsResourceUri('Claude Code', 'Claude-Code', 'Daily backup')).toBe(
       'savestate://snapshots?platform=Claude%20Code&adapter=Claude-Code&label=Daily%20backup',
     );
+    expect(buildSnapshotsResourceUri('Claude Code', 'Claude-Code', 'Daily backup', 'release')).toBe(
+      'savestate://snapshots?platform=Claude%20Code&adapter=Claude-Code&label=Daily%20backup&tag=release',
+    );
   });
 
   it('echoes the active filter in response metadata', () => {
-    expect(formatSnapshotsResourceFilters('Claude-Code', 'claude-code', 'Daily backup')).toEqual({
+    expect(formatSnapshotsResourceFilters('Claude-Code', 'claude-code', 'Daily backup', 'release')).toEqual({
       platform: 'Claude-Code',
       adapter: 'claude-code',
       label: 'Daily backup',
+      tag: 'release',
     });
-    expect(formatSnapshotsResourceFilters()).toEqual({ platform: null, adapter: null, label: null });
+    expect(formatSnapshotsResourceFilters()).toEqual({ platform: null, adapter: null, label: null, tag: null });
   });
 
   it('keeps the active label available as response metadata', () => {

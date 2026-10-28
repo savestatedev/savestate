@@ -22,7 +22,7 @@
     {
       "uri": "savestate://snapshots",
       "name": "Snapshots",
-      "description": "List snapshots with bounded ?limit= and ?offset= pagination. Responses include total, count, remaining, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri so agents can continue or recover a stale page."
+      "description": "List snapshots with bounded ?limit= and ?offset= pagination plus case-insensitive ?platform=, ?adapter=, ?label=, and ?tag= filters. Filters carry into continuation links; responses include normalized tags, total, count, remaining, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri so agents can continue or recover a stale page."
     },
     {
       "uri": "savestate://memories",
