@@ -160,7 +160,9 @@ export function formatSearchResultsSummaryJson(input: {
   return JSON.stringify(
     {
       found: shown > 0,
-      query: input.query,
+      // Match the CLI parser so direct formatter callers get the same stable
+      // query metadata as `savestate search`.
+      query: input.query.trim(),
       filters: normalizeSearchSummaryFilters(input.filters),
       results: input.results,
       pagination: {

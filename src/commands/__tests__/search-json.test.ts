@@ -71,6 +71,17 @@ describe('savestate search --json', () => {
     });
   });
 
+  it('canonicalizes query whitespace for stable script metadata', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: '  cocktail recommendations  ',
+        results: [match],
+      }),
+    ) as { query: string };
+
+    expect(parsed.query).toBe('cocktail recommendations');
+  });
+
   it('records the filters used to produce a summary page', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({
