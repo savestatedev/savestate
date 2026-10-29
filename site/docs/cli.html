@@ -578,7 +578,7 @@
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of results (default 20). Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N ranked results after filters before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--snapshot &lt;id&gt;</code></td><td>Search within a specific snapshot instead of every archive</td></tr>
-        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only search snapshots from this adapter. Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
+        <tr><td><code>--adapter &lt;id&gt;</code></td><td>Only search snapshots from this adapter (matching is case-insensitive). Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.</td></tr>
         <tr><td><code>--tag &lt;tag&gt;</code></td><td>Only search snapshots with this tag. Must be a single non-empty snapshot tag (no commas).</td></tr>
         <tr><td><code>--label &lt;label&gt;</code></td><td>Only search snapshots with this human-readable label. Must be a single non-empty snapshot label (no commas).</td></tr>
         <tr><td><code>--json</code></td><td>Output ranked results as JSON. When SaveState is not initialized, emits a missing summary (found, query, snapshot, count; omits extra fields). When the snapshot is missing, emits a missing summary (found, query, snapshot, count; omits extra fields). Useful for scripting.</td></tr>

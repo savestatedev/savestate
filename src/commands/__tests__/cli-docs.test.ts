@@ -5445,6 +5445,7 @@ describe('CLI docs', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
     expect(searchSection).toContain('--adapter');
+    expect(searchSection).toContain('matching is case-insensitive');
     expect(searchSection).toContain(
       'Must be one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf',
     );
