@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchAdapter } from '../search.js';
+import { parseSearchAdapter, resolveSearchSnapshots } from '../search.js';
 
 describe('savestate search --adapter', () => {
   it('defaults to undefined', () => {
@@ -11,6 +11,15 @@ describe('savestate search --adapter', () => {
     expect(parseSearchAdapter('claude-code')).toBe('claude-code');
     expect(parseSearchAdapter('CLAUDE-WEB')).toBe('claude-web');
     expect(parseSearchAdapter(' Windsurf ')).toBe('windsurf');
+  });
+
+  it('matches legacy adapter metadata without regard to case or padding', () => {
+    expect(
+      resolveSearchSnapshots(
+        [{ id: 'legacy', timestamp: '2026-01-01T00:00:00Z', adapter: ' ChatGPT ' }],
+        { adapter: 'chatgpt' },
+      ),
+    ).toEqual(['legacy']);
   });
 
   it.each(['', ' ', 'nope', 'claude', '1', 'chat gpt'])('rejects invalid value %s', (value) => {

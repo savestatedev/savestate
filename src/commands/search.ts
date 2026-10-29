@@ -488,7 +488,12 @@ export function resolveSearchSnapshots(
       if (until !== undefined && new Date(entry.timestamp).getTime() > until) {
         return false;
       }
-      if (adapter !== undefined && entry.adapter !== adapter) return false;
+      if (
+        adapter !== undefined &&
+        entry.adapter?.trim().toLowerCase() !== adapter
+      ) {
+        return false;
+      }
       if (
         tag !== undefined &&
         !(entry.tags ?? []).some((entryTag) => entryTag.toLowerCase() === tag.toLowerCase())
