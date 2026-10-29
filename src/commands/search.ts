@@ -377,7 +377,7 @@ export function matchesSearchAdapter(
   entryAdapter: string | undefined,
   adapter: string,
 ): boolean {
-  return entryAdapter?.trim().toLowerCase() === adapter;
+  return entryAdapter?.trim().toLowerCase() === adapter.trim().toLowerCase();
 }
 
 /** Parse search --since without treating invalid dates as an empty result set. */

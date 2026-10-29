@@ -28,6 +28,7 @@ describe('savestate search --adapter', () => {
 
   it('matches explicit snapshot adapter checks like catalog filters', () => {
     expect(matchesSearchAdapter(' ChatGPT ', 'chatgpt')).toBe(true);
+    expect(matchesSearchAdapter(' ChatGPT ', ' CHATGPT ')).toBe(true);
     expect(matchesSearchAdapter('claude-code', 'chatgpt')).toBe(false);
   });
 
