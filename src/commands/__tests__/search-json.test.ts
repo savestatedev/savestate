@@ -143,7 +143,7 @@ describe('savestate search --json', () => {
   it('identifies an empty collection separately from an exhausted page', () => {
     const firstPage = JSON.parse(
       formatSearchResultsSummaryJson({ query: 'missing', results: [] }),
-    ) as { pagination: Record<string, unknown> };
+    ) as { found: boolean; pagination: Record<string, unknown> };
     const laterPage = JSON.parse(
       formatSearchResultsSummaryJson({
         query: 'missing',
@@ -151,8 +151,10 @@ describe('savestate search --json', () => {
         offset: 10,
         limit: 5,
       }),
-    ) as { pagination: Record<string, unknown> };
+    ) as { found: boolean; pagination: Record<string, unknown> };
 
+    expect(firstPage.found).toBe(false);
+    expect(laterPage.found).toBe(false);
     expect(firstPage.pagination.emptyReason).toBe('collection');
     expect(laterPage.pagination.emptyReason).toBe('page');
     expect(laterPage.pagination.suggestedOffset).toBe(5);
