@@ -491,7 +491,9 @@ export function resolveSearchSnapshots(
       if (adapter !== undefined && entry.adapter !== adapter) return false;
       if (
         tag !== undefined &&
-        !(entry.tags ?? []).some((entryTag) => entryTag.toLowerCase() === tag.toLowerCase())
+        !(entry.tags ?? []).some(
+          (entryTag) => entryTag.trim().toLowerCase() === tag.toLowerCase(),
+        )
       ) {
         return false;
       }

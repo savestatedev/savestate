@@ -39,6 +39,15 @@ describe('savestate search --tag', () => {
     ).toEqual(['work']);
   });
 
+  it('matches legacy tags after trimming surrounding whitespace', () => {
+    expect(
+      resolveSearchSnapshots(
+        [{ id: 'legacy', timestamp: '2026-01-01T00:00:00Z', tags: [' Work '] }],
+        { tag: 'work' },
+      ),
+    ).toEqual(['legacy']);
+  });
+
   it('ANDs --snapshot with --tag', () => {
     expect(
       resolveSearchSnapshots(
