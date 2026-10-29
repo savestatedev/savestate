@@ -78,14 +78,22 @@ export interface SearchSummaryJson {
   pagination: SearchSummaryPagination;
 }
 
+/** Keep both JSON modes free of interactive banners and progress output. */
+export function isSearchJsonOutput(
+  options: Pick<SearchOptions, 'json' | 'jsonSummary'>,
+): boolean {
+  return options.json === true || options.jsonSummary === true;
+}
+
 /** Keep interactive search output explicit about both inclusion and exclusion filters. */
 export function formatSearchFilterHints(
   types: SearchType[] | undefined,
   excludedTypes: SearchType[] | undefined,
 ): string[] {
   const hints: string[] = [];
-  if (types?.length) hints.push(`Filter: ${types.join(', ')}`);
-  if (excludedTypes) hints.push(`Exclude: ${excludedTypes.join(', ')}`);
+  const filter = formatSearchTypeFilter(types);
+  if (filter) hints.push(`Filter: ${filter}`);
+  if (excludedTypes?.length) hints.push(`Exclude: ${excludedTypes.join(', ')}`);
   return hints;
 }
 
@@ -515,7 +523,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const tag = parseSearchTag(options.tag);
   const label = parseSearchLabel(options.label);
 
-  const jsonOutput = options.json || options.jsonSummary;
+  const jsonOutput = isSearchJsonOutput(options);
 
   if (!jsonOutput) {
     console.log();
@@ -585,7 +593,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     ? resolveSearchSnapshots(catalog, options)
     : undefined;
 
-  if (!options.json) {
+  if (!jsonOutput) {
     console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
     for (const hint of formatSearchFilterHints(types, excludedTypes)) {
       console.log(chalk.dim(`   ${hint}`));
