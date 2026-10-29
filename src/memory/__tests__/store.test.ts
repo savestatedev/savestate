@@ -242,6 +242,15 @@ describe('MemoryStore', () => {
       expect(store.count({ tags: ['Ui'] })).toBe(1);
     });
 
+    it('should match legacy tags after trimming surrounding whitespace', async () => {
+      await store.create({ type: 'fact', content: 'Legacy tag', tags: [' Work '] });
+
+      const tagged = await store.query({ tags: ['work'] });
+
+      expect(tagged.map((entry) => entry.content)).toEqual(['Legacy tag']);
+      expect(store.count({ tags: [' Work '] })).toBe(1);
+    });
+
     it('should match literal tag values instead of LIKE patterns', async () => {
       await store.create({ type: 'fact', content: 'Literal percent', tags: ['50%'] });
       await store.create({ type: 'fact', content: 'Different percent', tags: ['50x'] });
