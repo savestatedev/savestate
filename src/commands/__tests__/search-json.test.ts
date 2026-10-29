@@ -99,6 +99,24 @@ describe('savestate search --json', () => {
     });
   });
 
+  it('canonicalizes type filters for stable script metadata', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail',
+        results: [match],
+        filters: {
+          type: ['MEMORY', 'memory'] as never,
+          exclude: [' CONVERSATION '] as never,
+        },
+      }),
+    ) as { filters: Record<string, unknown> };
+
+    expect(parsed.filters).toMatchObject({
+      type: ['memory'],
+      exclude: ['conversation'],
+    });
+  });
+
   it('normalizes blank filter values to null', () => {
     const parsed = JSON.parse(
       formatSearchMissingSummaryJson('missing', '', 0, 20, {

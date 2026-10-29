@@ -100,14 +100,18 @@ export function formatSearchFilterHints(
 function normalizeSearchSummaryFilters(
   filters?: Partial<SearchSummaryFilters>,
 ): SearchSummaryFilters {
+  const normalizeTypes = (values: SearchType[] | undefined): SearchType[] | null => {
+    if (values === undefined) return null;
+    return [...new Set(values.map((value) => value.trim().toLowerCase() as SearchType))];
+  };
   const normalizeText = (value: string | undefined): string | null => {
     const normalized = value?.trim();
     return normalized ? normalized : null;
   };
 
   return {
-    type: filters?.type ?? null,
-    exclude: filters?.exclude ?? null,
+    type: normalizeTypes(filters?.type),
+    exclude: normalizeTypes(filters?.exclude),
     since: normalizeText(filters?.since),
     until: normalizeText(filters?.until),
     snapshot: normalizeText(filters?.snapshot),
@@ -285,14 +289,13 @@ export function parseSearchType(
 
   const types = value
     .split(',')
-    .map((token) => token.trim().toLowerCase())
-    .filter(Boolean);
+    .map((token) => token.trim().toLowerCase());
 
   const uniqueTypes = [...new Set(types)];
 
   if (
     uniqueTypes.length === 0 ||
-    uniqueTypes.some((token) => !VALID_TYPES.has(token))
+    uniqueTypes.some((token) => token.length === 0 || !VALID_TYPES.has(token))
   ) {
     throw new Error(
       `Invalid --type value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,
@@ -310,14 +313,13 @@ export function parseSearchExclude(
 
   const types = value
     .split(',')
-    .map((token) => token.trim().toLowerCase())
-    .filter(Boolean);
+    .map((token) => token.trim().toLowerCase());
 
   const uniqueTypes = [...new Set(types)];
 
   if (
     uniqueTypes.length === 0 ||
-    uniqueTypes.some((token) => !VALID_TYPES.has(token))
+    uniqueTypes.some((token) => token.length === 0 || !VALID_TYPES.has(token))
   ) {
     throw new Error(
       `Invalid --exclude value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,
@@ -449,7 +451,9 @@ export function parseSearchTag(value: string | undefined): string | undefined {
     );
   }
 
-  return tag;
+  // Tags are matched case-insensitively; keep the parsed value canonical so
+  // interactive output and JSON summaries expose the same filter value.
+  return tag.toLowerCase();
 }
 
 /** Parse search --label without treating blank or comma-separated values as an empty result set. */
@@ -463,7 +467,9 @@ export function parseSearchLabel(value: string | undefined): string | undefined 
     );
   }
 
-  return label;
+  // Labels are matched case-insensitively; keep the parsed value canonical so
+  // interactive output and JSON summaries expose the same filter value.
+  return label.toLowerCase();
 }
 
 /** Resolve snapshot filters into ids before decrypting archives. */

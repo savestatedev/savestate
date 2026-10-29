@@ -12,6 +12,10 @@ describe('savestate search --tag', () => {
     expect(parseSearchTag(' v2 ')).toBe('v2');
   });
 
+  it('canonicalizes tag casing for downstream output', () => {
+    expect(parseSearchTag(' Work ')).toBe('work');
+  });
+
   it.each(['', ' ', ',', 'work,personal'])('rejects invalid value %s', (value) => {
     expect(() => parseSearchTag(value)).toThrow(
       `Invalid --tag value "${value}". Expected a single non-empty snapshot tag (no commas).`,
