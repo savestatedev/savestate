@@ -16,7 +16,7 @@ describe('savestate search --type', () => {
     expect(parseSearchType(' MEMORY,conversation,memory ')).toEqual(['memory', 'conversation']);
   });
 
-  it.each(['nope', '', 'memory,bogus', ',,'])('rejects invalid value %s', (value) => {
+  it.each(['nope', '', 'memory,bogus', ',,', 'memory,', 'memory,,conversation'])('rejects invalid value %s', (value) => {
     expect(() => parseSearchType(value)).toThrow(
       `Invalid --type value "${value}". Expected one or more of: memory, conversation, identity, knowledge.`,
     );

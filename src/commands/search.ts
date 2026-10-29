@@ -289,14 +289,13 @@ export function parseSearchType(
 
   const types = value
     .split(',')
-    .map((token) => token.trim().toLowerCase())
-    .filter(Boolean);
+    .map((token) => token.trim().toLowerCase());
 
   const uniqueTypes = [...new Set(types)];
 
   if (
     uniqueTypes.length === 0 ||
-    uniqueTypes.some((token) => !VALID_TYPES.has(token))
+    uniqueTypes.some((token) => token.length === 0 || !VALID_TYPES.has(token))
   ) {
     throw new Error(
       `Invalid --type value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,
@@ -314,14 +313,13 @@ export function parseSearchExclude(
 
   const types = value
     .split(',')
-    .map((token) => token.trim().toLowerCase())
-    .filter(Boolean);
+    .map((token) => token.trim().toLowerCase());
 
   const uniqueTypes = [...new Set(types)];
 
   if (
     uniqueTypes.length === 0 ||
-    uniqueTypes.some((token) => !VALID_TYPES.has(token))
+    uniqueTypes.some((token) => token.length === 0 || !VALID_TYPES.has(token))
   ) {
     throw new Error(
       `Invalid --exclude value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,

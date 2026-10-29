@@ -21,7 +21,7 @@ describe('savestate search --exclude', () => {
     expect(parseSearchExclude(' MEMORY,conversation,memory ')).toEqual(['memory', 'conversation']);
   });
 
-  it.each(['nope', '', 'memory,bogus', ',,'])('rejects invalid value %s', (value) => {
+  it.each(['nope', '', 'memory,bogus', ',,', 'memory,', 'memory,,conversation'])('rejects invalid value %s', (value) => {
     expect(() => parseSearchExclude(value)).toThrow(
       `Invalid --exclude value "${value}". Expected one or more of: memory, conversation, identity, knowledge.`,
     );
