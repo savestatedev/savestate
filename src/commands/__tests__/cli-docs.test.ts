@@ -5458,6 +5458,7 @@ describe('CLI docs', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
     expect(searchSection).toContain('--tag');
+    expect(searchSection).toContain('matching is case-insensitive and trims legacy surrounding whitespace');
     expect(searchSection).toContain('Must be a single non-empty snapshot tag (no commas)');
     expect(searchSection).toContain(
       'savestate search <span class="code-string">"cocktail recommendations"</span> --tag work',
@@ -5470,6 +5471,7 @@ describe('CLI docs', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
     expect(searchSection).toContain('--label');
+    expect(searchSection).toContain('matching is case-insensitive and trims legacy surrounding whitespace');
     expect(searchSection).toContain('Must be a single non-empty snapshot label (no commas)');
     expect(searchSection).toContain(
       'savestate search <span class="code-string">"cocktail recommendations"</span> --label backup',

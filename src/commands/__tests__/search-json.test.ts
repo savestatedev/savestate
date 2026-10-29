@@ -81,7 +81,8 @@ describe('savestate search --json', () => {
           exclude: ['conversation'],
           since: ' 2026-01-01 ',
           adapter: 'CHATGPT',
-          tag: ' work ',
+          tag: ' WORK ',
+          label: ' Nightly Backup ',
         },
       }),
     ) as { filters: Record<string, unknown> };
@@ -94,7 +95,7 @@ describe('savestate search --json', () => {
       snapshot: null,
       adapter: 'chatgpt',
       tag: 'work',
-      label: null,
+      label: 'nightly backup',
     });
   });
 
@@ -161,7 +162,8 @@ describe('savestate search --json', () => {
     const parsed = JSON.parse(
       formatSearchMissingSummaryJson('missing', 'ss-missing', 5, 2, {
         adapter: 'CHATGPT',
-        tag: ' work ',
+        tag: ' WORK ',
+        label: ' Nightly Backup ',
       }),
     ) as {
       found: boolean;
@@ -178,7 +180,7 @@ describe('savestate search --json', () => {
       snapshot: 'ss-missing',
       adapter: 'chatgpt',
       tag: 'work',
-      label: null,
+      label: 'nightly backup',
     });
     expect(parsed.pagination).toMatchObject({
       offset: 5,
