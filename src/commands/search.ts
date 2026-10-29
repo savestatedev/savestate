@@ -449,7 +449,9 @@ export function parseSearchTag(value: string | undefined): string | undefined {
     );
   }
 
-  return tag;
+  // Tags are matched case-insensitively; keep the parsed value canonical so
+  // interactive output and JSON summaries expose the same filter value.
+  return tag.toLowerCase();
 }
 
 /** Parse search --label without treating blank or comma-separated values as an empty result set. */
