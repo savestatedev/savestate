@@ -481,8 +481,13 @@ export function resolveSearchSnapshots(
         return false;
       }
       if (adapter !== undefined && entry.adapter !== adapter) return false;
-      if (tag !== undefined && !(entry.tags ?? []).includes(tag)) return false;
-      if (label !== undefined && entry.label !== label) return false;
+      if (
+        tag !== undefined &&
+        !(entry.tags ?? []).some((entryTag) => entryTag.toLowerCase() === tag.toLowerCase())
+      ) {
+        return false;
+      }
+      if (label !== undefined && entry.label?.toLowerCase() !== label.toLowerCase()) return false;
       return true;
     })
     .map((entry) => entry.id);
