@@ -30,6 +30,15 @@ describe('savestate search --tag', () => {
     ).toEqual(['work']);
   });
 
+  it('matches tags without regard to capitalization', () => {
+    expect(
+      resolveSearchSnapshots(
+        [{ id: 'work', timestamp: '2026-01-01T00:00:00Z', tags: ['Work'] }],
+        { tag: 'work' },
+      ),
+    ).toEqual(['work']);
+  });
+
   it('ANDs --snapshot with --tag', () => {
     expect(
       resolveSearchSnapshots(
