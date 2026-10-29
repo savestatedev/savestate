@@ -275,19 +275,21 @@ export function parseSearchType(
 
   const types = value
     .split(',')
-    .map((token) => token.trim())
+    .map((token) => token.trim().toLowerCase())
     .filter(Boolean);
 
+  const uniqueTypes = [...new Set(types)];
+
   if (
-    types.length === 0 ||
-    types.some((token) => !VALID_TYPES.has(token))
+    uniqueTypes.length === 0 ||
+    uniqueTypes.some((token) => !VALID_TYPES.has(token))
   ) {
     throw new Error(
       `Invalid --type value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,
     );
   }
 
-  return types as SearchType[];
+  return uniqueTypes as SearchType[];
 }
 
 /** Parse search --exclude without silently skipping unknown types. */
@@ -298,19 +300,21 @@ export function parseSearchExclude(
 
   const types = value
     .split(',')
-    .map((token) => token.trim())
+    .map((token) => token.trim().toLowerCase())
     .filter(Boolean);
 
+  const uniqueTypes = [...new Set(types)];
+
   if (
-    types.length === 0 ||
-    types.some((token) => !VALID_TYPES.has(token))
+    uniqueTypes.length === 0 ||
+    uniqueTypes.some((token) => !VALID_TYPES.has(token))
   ) {
     throw new Error(
       `Invalid --exclude value "${value}". Expected one or more of: ${SEARCH_TYPE_LIST}.`,
     );
   }
 
-  return types as SearchType[];
+  return uniqueTypes as SearchType[];
 }
 
 /** Resolve search --type/--exclude into the types that will be queried. */
@@ -322,6 +326,12 @@ export function resolveSearchType(
   return exclude
     ? (include ?? [...SEARCH_TYPES]).filter((type) => !exclude.includes(type))
     : include;
+}
+
+/** Keep interactive filter output explicit when exclusions remove every type. */
+export function formatSearchTypeFilter(types: SearchType[] | undefined): string | undefined {
+  if (types === undefined) return undefined;
+  return types.length > 0 ? types.join(', ') : 'none';
 }
 
 /** Parse search --snapshot without treating blank ids as a missing snapshot. */

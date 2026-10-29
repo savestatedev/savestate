@@ -17,6 +17,10 @@ describe('savestate search --exclude', () => {
     ]);
   });
 
+  it('normalizes casing and removes repeated exclusions', () => {
+    expect(parseSearchExclude(' MEMORY,conversation,memory ')).toEqual(['memory', 'conversation']);
+  });
+
   it.each(['nope', '', 'memory,bogus', ',,'])('rejects invalid value %s', (value) => {
     expect(() => parseSearchExclude(value)).toThrow(
       `Invalid --exclude value "${value}". Expected one or more of: memory, conversation, identity, knowledge.`,
