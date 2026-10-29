@@ -100,14 +100,18 @@ export function formatSearchFilterHints(
 function normalizeSearchSummaryFilters(
   filters?: Partial<SearchSummaryFilters>,
 ): SearchSummaryFilters {
+  const normalizeTypes = (values: SearchType[] | undefined): SearchType[] | null => {
+    if (values === undefined) return null;
+    return [...new Set(values.map((value) => value.trim().toLowerCase() as SearchType))];
+  };
   const normalizeText = (value: string | undefined): string | null => {
     const normalized = value?.trim();
     return normalized ? normalized : null;
   };
 
   return {
-    type: filters?.type ?? null,
-    exclude: filters?.exclude ?? null,
+    type: normalizeTypes(filters?.type),
+    exclude: normalizeTypes(filters?.exclude),
     since: normalizeText(filters?.since),
     until: normalizeText(filters?.until),
     snapshot: normalizeText(filters?.snapshot),
