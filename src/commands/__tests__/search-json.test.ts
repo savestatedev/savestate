@@ -80,6 +80,7 @@ describe('savestate search --json', () => {
           type: ['memory'],
           exclude: ['conversation'],
           since: ' 2026-01-01 ',
+          until: ' 2026-01-02 ',
           adapter: 'CHATGPT',
           tag: ' WORK ',
           label: ' Nightly Backup ',
@@ -90,13 +91,29 @@ describe('savestate search --json', () => {
     expect(parsed.filters).toEqual({
       type: ['memory'],
       exclude: ['conversation'],
-      since: '2026-01-01',
-      until: null,
+      since: '2026-01-01T00:00:00.000Z',
+      until: '2026-01-02T23:59:59.999Z',
       snapshot: null,
       adapter: 'chatgpt',
       tag: 'work',
       label: 'nightly backup',
     });
+  });
+
+  it('canonicalizes equivalent date filters for stable script metadata', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail',
+        results: [match],
+        filters: {
+          since: '2026-01-01T00:00:00.000Z',
+          until: '2026-01-02T23:59:59.999Z',
+        },
+      }),
+    ) as { filters: Record<string, unknown> };
+
+    expect(parsed.filters.since).toBe('2026-01-01T00:00:00.000Z');
+    expect(parsed.filters.until).toBe('2026-01-02T23:59:59.999Z');
   });
 
   it('canonicalizes type filters for stable script metadata', () => {

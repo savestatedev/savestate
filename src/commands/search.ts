@@ -110,12 +110,29 @@ function normalizeSearchSummaryFilters(
     const normalized = value?.trim();
     return normalized ? normalized : null;
   };
+  const normalizeDate = (
+    value: string | undefined,
+    parse: (value: string) => number | undefined,
+  ): string | null => {
+    const normalized = normalizeText(value);
+    if (!normalized) return null;
+
+    // Summary metadata should be stable across equivalent CLI spellings. Keep
+    // invalid direct formatter inputs readable; the command validates them
+    // before a summary is emitted.
+    try {
+      const timestamp = parse(normalized);
+      return timestamp === undefined ? normalized : new Date(timestamp).toISOString();
+    } catch {
+      return normalized;
+    }
+  };
 
   return {
     type: normalizeTypes(filters?.type),
     exclude: normalizeTypes(filters?.exclude),
-    since: normalizeText(filters?.since),
-    until: normalizeText(filters?.until),
+    since: normalizeDate(filters?.since, parseSearchSince),
+    until: normalizeDate(filters?.until, parseSearchUntil),
     snapshot: normalizeText(filters?.snapshot),
     adapter: normalizeText(filters?.adapter)?.toLowerCase() ?? null,
     // Snapshot tag and label matching is case-insensitive, so summaries should
