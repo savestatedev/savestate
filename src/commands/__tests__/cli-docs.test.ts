@@ -5473,6 +5473,7 @@ describe('CLI docs', () => {
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
     expect(searchSection).toContain('--label');
     expect(searchSection).toContain('matching is case-insensitive and trims legacy surrounding whitespace');
+    expect(searchSection).toContain('filter output is normalized to lowercase');
     expect(searchSection).toContain('Must be a single non-empty snapshot label (no commas)');
     expect(searchSection).toContain(
       'savestate search <span class="code-string">"cocktail recommendations"</span> --label backup',

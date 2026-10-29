@@ -465,7 +465,9 @@ export function parseSearchLabel(value: string | undefined): string | undefined 
     );
   }
 
-  return label;
+  // Labels are matched case-insensitively; keep the parsed value canonical so
+  // interactive output and JSON summaries expose the same filter value.
+  return label.toLowerCase();
 }
 
 /** Resolve snapshot filters into ids before decrypting archives. */

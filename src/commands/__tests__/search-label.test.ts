@@ -8,8 +8,12 @@ describe('savestate search --label', () => {
 
   it('accepts a single snapshot label', () => {
     expect(parseSearchLabel('backup')).toBe('backup');
-    expect(parseSearchLabel('Pre-update backup')).toBe('Pre-update backup');
+    expect(parseSearchLabel('Pre-update backup')).toBe('pre-update backup');
     expect(parseSearchLabel(' nightly ')).toBe('nightly');
+  });
+
+  it('canonicalizes label casing for downstream output', () => {
+    expect(parseSearchLabel(' Nightly Backup ')).toBe('nightly backup');
   });
 
   it.each(['', ' ', ',', 'backup,nightly'])('rejects invalid value %s', (value) => {
