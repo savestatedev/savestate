@@ -102,7 +102,9 @@ function normalizeSearchSummaryFilters(
 ): SearchSummaryFilters {
   const normalizeTypes = (values: SearchType[] | undefined): SearchType[] | null => {
     if (values === undefined) return null;
-    return [...new Set(values.map((value) => value.trim().toLowerCase() as SearchType))];
+    const normalized = [...new Set(values.map((value) => value.trim().toLowerCase() as SearchType))];
+    // Keep equivalent summaries stable when callers provide filters in a different order.
+    return normalized.sort((left, right) => SEARCH_TYPES.indexOf(left) - SEARCH_TYPES.indexOf(right));
   };
   const normalizeText = (value: string | undefined): string | null => {
     const normalized = value?.trim();
