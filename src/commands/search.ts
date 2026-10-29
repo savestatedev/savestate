@@ -112,8 +112,10 @@ function normalizeSearchSummaryFilters(
     until: normalizeText(filters?.until),
     snapshot: normalizeText(filters?.snapshot),
     adapter: normalizeText(filters?.adapter)?.toLowerCase() ?? null,
-    tag: normalizeText(filters?.tag),
-    label: normalizeText(filters?.label),
+    // Snapshot tag and label matching is case-insensitive, so summaries should
+    // expose the canonical form used by scripts rather than raw CLI casing.
+    tag: normalizeText(filters?.tag)?.toLowerCase() ?? null,
+    label: normalizeText(filters?.label)?.toLowerCase() ?? null,
   };
 }
 
