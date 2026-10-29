@@ -84,7 +84,8 @@ export function formatSearchFilterHints(
   excludedTypes: SearchType[] | undefined,
 ): string[] {
   const hints: string[] = [];
-  if (types?.length) hints.push(`Filter: ${types.join(', ')}`);
+  const filter = formatSearchTypeFilter(types);
+  if (filter) hints.push(`Filter: ${filter}`);
   if (excludedTypes) hints.push(`Exclude: ${excludedTypes.join(', ')}`);
   return hints;
 }

@@ -48,8 +48,9 @@ describe('savestate search --exclude', () => {
     ]);
   });
 
-  it('does not print an empty inclusion hint when every type is excluded', () => {
+  it('makes an empty effective filter explicit when every type is excluded', () => {
     expect(formatSearchFilterHints([], ['memory', 'conversation', 'identity', 'knowledge'])).toEqual([
+      'Filter: none',
       'Exclude: memory, conversation, identity, knowledge',
     ]);
   });
