@@ -54,4 +54,8 @@ describe('savestate search --exclude', () => {
       'Exclude: memory, conversation, identity, knowledge',
     ]);
   });
+
+  it('does not render an empty exclusion hint', () => {
+    expect(formatSearchFilterHints(undefined, [])).toEqual([]);
+  });
 });
