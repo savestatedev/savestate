@@ -388,7 +388,23 @@ export function matchesSearchAdapter(
 export function parseSearchSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  // Date parsing normalizes impossible calendar dates (for example,
+  // 2026-02-30) instead of rejecting them. Validate date-only input before
+  // converting it so --since agrees with --until.
+  const normalized = value.trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  let ms: number;
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    const startOfDay = new Date(`${normalized}T00:00:00.000Z`);
+    const isValidCalendarDate =
+      startOfDay.getUTCFullYear() === Number(year) &&
+      startOfDay.getUTCMonth() + 1 === Number(month) &&
+      startOfDay.getUTCDate() === Number(day);
+    ms = isValidCalendarDate ? startOfDay.getTime() : Number.NaN;
+  } else {
+    ms = new Date(value).getTime();
+  }
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --since value "${value}". Expected an ISO 8601 date.`,

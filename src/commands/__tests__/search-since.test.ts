@@ -13,7 +13,7 @@ describe('savestate search --since', () => {
     );
   });
 
-  it.each(['', ' ', 'nope', '2026-13-01', 'not-a-date'])(
+  it.each(['', ' ', 'nope', '2026-02-30', '2026-13-01', 'not-a-date'])(
     'rejects invalid value %s',
     (value) => {
       expect(() => parseSearchSince(value)).toThrow(
