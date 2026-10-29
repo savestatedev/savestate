@@ -372,6 +372,14 @@ export function parseSearchAdapter(value: string | undefined): string | undefine
   );
 }
 
+/** Match adapter metadata consistently for both catalog and explicit snapshot searches. */
+export function matchesSearchAdapter(
+  entryAdapter: string | undefined,
+  adapter: string,
+): boolean {
+  return entryAdapter?.trim().toLowerCase() === adapter;
+}
+
 /** Parse search --since without treating invalid dates as an empty result set. */
 export function parseSearchSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -492,7 +500,7 @@ export function resolveSearchSnapshots(
       }
       if (
         adapter !== undefined &&
-        entry.adapter?.trim().toLowerCase() !== adapter
+        !matchesSearchAdapter(entry.adapter, adapter)
       ) {
         return false;
       }
@@ -582,7 +590,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   let catalog: Array<{ id: string; timestamp: string }> | undefined;
   if (snapshotId) {
     const entry = await findEntry(snapshotId);
-    if (!entry || (adapter && entry.adapter !== adapter)) {
+    if (!entry || (adapter && !matchesSearchAdapter(entry.adapter, adapter))) {
       if (jsonOutput) {
         const limit = parseSearchLimit(options.limit);
         const offset = parseSearchOffset(options.offset) ?? 0;
