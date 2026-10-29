@@ -328,6 +328,12 @@ export function resolveSearchType(
     : include;
 }
 
+/** Keep interactive filter output explicit when exclusions remove every type. */
+export function formatSearchTypeFilter(types: SearchType[] | undefined): string | undefined {
+  if (types === undefined) return undefined;
+  return types.length > 0 ? types.join(', ') : 'none';
+}
+
 /** Parse search --snapshot without treating blank ids as a missing snapshot. */
 export function parseSearchSnapshot(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
