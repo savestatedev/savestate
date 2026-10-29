@@ -136,7 +136,7 @@ export function formatSearchResultsSummaryJson(input: {
     : null;
   return JSON.stringify(
     {
-      found: true,
+      found: shown > 0,
       query: input.query,
       filters: normalizeSearchSummaryFilters(input.filters),
       results: input.results,
