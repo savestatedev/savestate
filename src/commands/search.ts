@@ -495,7 +495,12 @@ export function resolveSearchSnapshots(
       ) {
         return false;
       }
-      if (label !== undefined && entry.label?.toLowerCase() !== label.toLowerCase()) return false;
+      // Snapshot labels may come from older indexes with surrounding padding.
+      // Normalize both sides so search agrees with the other label filters.
+      if (
+        label !== undefined &&
+        entry.label?.trim().toLowerCase() !== label.trim().toLowerCase()
+      ) return false;
       return true;
     })
     .map((entry) => entry.id);
