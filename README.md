@@ -217,7 +217,10 @@ Search results are ranked consistently across snapshots, so `--offset` can be
 combined with `--limit` to page through results. Both values are bounded to
 1000; the default page size is 20. `--json-summary` includes the normalized
 `filters` used for the page, which helps scripts distinguish similar queries
-run against different snapshot subsets.
+run against different snapshot subsets. Its pagination metadata also marks an
+empty first page as `collection` and an empty later page as `page`, with a
+`suggestedOffset` for retrying the nearest earlier page (including when a
+snapshot is missing or SaveState is not initialized).
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration
   --set <key=value>                  Set a config value

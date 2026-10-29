@@ -5438,6 +5438,8 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('--json-summary');
     expect(searchSection).toContain('<code>suggestedOffset</code>');
     expect(searchSection).toContain('nearest earlier page to retry');
+    expect(searchSection).toContain('any empty later page');
+    expect(searchSection).toContain('including a missing snapshot or uninitialized state');
     expect(search).toContain('formatSearchResultsSummaryJson');
   });
 
