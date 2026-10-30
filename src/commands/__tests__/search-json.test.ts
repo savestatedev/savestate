@@ -244,6 +244,7 @@ describe('savestate search --json', () => {
         adapter: 'CHATGPT',
         tag: ' WORK ',
         label: ' Nightly Backup ',
+        snapshot: ' stale-snapshot ',
       }),
     ) as {
       found: boolean;
@@ -282,5 +283,14 @@ describe('savestate search --json', () => {
     ) as { query: string };
 
     expect(parsed.query).toBe('missing');
+  });
+
+  it('uses null for an unscoped missing snapshot', () => {
+    const parsed = JSON.parse(
+      formatSearchMissingSummaryJson('missing', '   '),
+    ) as { snapshot: string | null; filters: Record<string, unknown> };
+
+    expect(parsed.snapshot).toBeNull();
+    expect(parsed.filters.snapshot).toBeNull();
   });
 });

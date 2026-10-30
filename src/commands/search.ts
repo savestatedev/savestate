@@ -215,6 +215,15 @@ export interface SearchMissingJson {
   count: 0;
 }
 
+export interface SearchMissingSummaryJson {
+  found: false;
+  query: string;
+  snapshot: string | null;
+  filters: SearchSummaryFilters;
+  results: SearchResult[];
+  pagination: SearchSummaryPagination;
+}
+
 export function formatSearchMissingJson(query: string, snapshot: string): string {
   return JSON.stringify(
     {
@@ -235,16 +244,20 @@ export function formatSearchMissingSummaryJson(
   limit = 20,
   filters?: Partial<SearchSummaryFilters>,
 ): string {
+  const normalizedSnapshot = snapshot.trim();
   return JSON.stringify(
     {
       found: false,
       // Keep missing summaries aligned with result summaries for direct
       // formatter callers, not only with the already-trimmed CLI query.
       query: query.trim(),
-      snapshot: snapshot.trim(),
+      // Match the normalized filter shape when no snapshot was requested.
+      snapshot: normalizedSnapshot || null,
       filters: normalizeSearchSummaryFilters({
         ...filters,
-        snapshot: filters?.snapshot ?? snapshot,
+        // The missing snapshot argument is the source of truth for both
+        // summary fields, even when direct callers pass stale filter data.
+        snapshot: normalizedSnapshot,
       }),
       results: [],
       pagination: {
@@ -258,7 +271,7 @@ export function formatSearchMissingSummaryJson(
         hasPrevious: offset > 0,
         previousOffset: offset > 0 ? Math.max(0, offset - limit) : null,
       },
-    },
+    } satisfies SearchMissingSummaryJson,
     null,
     2,
   );
