@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMemoryExplainFreshness } from '../memory.js';
+import { formatMemoryExplainFreshness, formatMemoryExplainSource } from '../memory.js';
 
 describe('savestate memory explain pretty freshness', () => {
   it('returns the current freshness state for human-facing output', () => {
@@ -30,5 +30,10 @@ describe('savestate memory explain pretty freshness', () => {
     expect(formatMemoryExplainFreshness(entry, new Date('2026-10-18T00:00:00.000Z'))).toBe(
       'active (slow; verified 2026-10-17; source profile-sync)',
     );
+  });
+
+  it('normalizes legacy padding in the source trace', () => {
+    expect(formatMemoryExplainSource('  ChatGPT  ')).toBe('ChatGPT');
+    expect(formatMemoryExplainSource('  ')).toBe('unknown');
   });
 });

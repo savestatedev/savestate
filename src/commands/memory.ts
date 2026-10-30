@@ -1043,6 +1043,11 @@ export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date(
   return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)}${verificationSource})`;
 }
 
+/** Keep source identifiers consistent across human and machine-readable explain output. */
+export function formatMemoryExplainSource(source: string | undefined): string {
+  return normalizeMemoryListSource(source);
+}
+
 /** Truncate table previews without adding an ellipsis to already-short content. */
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
@@ -2782,7 +2787,7 @@ export async function explainMemoryCommand(
 
     console.log('   📍 Source Trace:');
     console.log(`      • Created: ${entry.createdAt}`);
-    console.log(`      • Source: ${entry.source ?? 'unknown'}`);
+    console.log(`      • Source: ${formatMemoryExplainSource(entry.source)}`);
     if (displayTags.length) {
       console.log(`      • Tags: ${displayTags.join(', ')}`);
     }
