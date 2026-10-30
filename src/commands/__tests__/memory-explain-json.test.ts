@@ -213,6 +213,22 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results[0]?.importance).toBe(0.9);
   });
 
+  it('includes a normalized source id for retrieval tracing', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        source: '  ChatGPT  ',
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.source).toBe('ChatGPT');
+  });
+
   it('includes every active scope filter for JSON consumers', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
