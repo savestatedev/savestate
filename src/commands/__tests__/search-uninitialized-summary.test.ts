@@ -32,4 +32,14 @@ describe('savestate search --json-summary when uninitialized', () => {
       exclude: ['conversation'],
     });
   });
+
+  it('rejects an inverted date range before emitting an empty summary', async () => {
+    await expect(searchCommand('cocktail', {
+      jsonSummary: true,
+      since: '2026-10-10',
+      until: '2026-10-09',
+    })).rejects.toThrow(
+      'Invalid search date range: --since (2026-10-10) must be on or before --until (2026-10-09).',
+    );
+  });
 });

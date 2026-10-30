@@ -605,6 +605,9 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const adapter = parseSearchAdapter(options.adapter);
   const since = parseSearchSince(options.since);
   const until = parseSearchUntil(options.until);
+  // Validate the range before early JSON responses so an uninitialized or
+  // missing-snapshot search cannot turn invalid input into an empty result.
+  validateSearchDateRange(since, until, options.since, options.until);
   const tag = parseSearchTag(options.tag);
   const label = parseSearchLabel(options.label);
   // Validate type filters before the uninitialized JSON response so typos do
