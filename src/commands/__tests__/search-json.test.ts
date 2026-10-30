@@ -284,4 +284,13 @@ describe('savestate search --json', () => {
 
     expect(parsed.query).toBe('missing');
   });
+
+  it('uses null for an unscoped missing snapshot', () => {
+    const parsed = JSON.parse(
+      formatSearchMissingSummaryJson('missing', '   '),
+    ) as { snapshot: string | null; filters: Record<string, unknown> };
+
+    expect(parsed.snapshot).toBeNull();
+    expect(parsed.filters.snapshot).toBeNull();
+  });
 });
