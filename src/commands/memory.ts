@@ -2250,6 +2250,7 @@ export interface MemoryExplainResultJson {
   freshness: MemoryFreshnessState;
   freshnessClass?: MemoryFreshnessClass;
   lastVerifiedAt?: string;
+  verificationSource?: string;
 }
 
 export interface MemoryExplainJson {
@@ -2334,6 +2335,9 @@ export function formatMemoryExplainJson(
     pinned: boolean;
     tier: MemoryTier;
     freshness: MemoryFreshnessState;
+    freshnessClass?: MemoryFreshnessClass;
+    lastVerifiedAt?: string;
+    verificationSource?: string;
   }>,
   pagination: Partial<MemoryExplainPaginationJson> = {},
   filters?: MemoryExplainFiltersJson,
@@ -2379,6 +2383,7 @@ export function formatMemoryExplainJson(
       freshness: result.freshness,
       freshnessClass: result.freshnessClass,
       lastVerifiedAt: result.lastVerifiedAt,
+      verificationSource: result.verificationSource,
     })),
   };
   if (filters && Object.keys(filters).length > 0) {
@@ -2723,6 +2728,7 @@ export async function explainMemoryCommand(
           freshness: freshness.state,
           freshnessClass: freshness.class,
           lastVerifiedAt: freshness.lastVerifiedAt,
+          verificationSource: freshness.verificationSource,
         };
       }),
       pagination,
