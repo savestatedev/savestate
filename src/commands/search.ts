@@ -219,8 +219,8 @@ export function formatSearchMissingJson(query: string, snapshot: string): string
   return JSON.stringify(
     {
       found: false,
-      query,
-      snapshot,
+      query: query.trim(),
+      snapshot: snapshot.trim(),
       count: 0,
     },
     null,

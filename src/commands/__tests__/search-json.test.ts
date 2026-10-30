@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatSearchMissingJson,
   formatSearchResultsJson,
   formatSearchMissingSummaryJson,
   formatSearchResultsSummaryJson,
@@ -28,6 +29,19 @@ describe('savestate search --json', () => {
 
   it('prints an empty array when there are no matches', () => {
     expect(formatSearchResultsJson([])).toBe('[]');
+  });
+
+  it('canonicalizes missing metadata for compact JSON output', () => {
+    const parsed = JSON.parse(
+      formatSearchMissingJson('  missing  ', '  ss-missing  '),
+    ) as { query: string; snapshot: string };
+
+    expect(parsed).toEqual({
+      found: false,
+      query: 'missing',
+      snapshot: 'ss-missing',
+      count: 0,
+    });
   });
 
   it('prints pagination metadata without changing the result fields', () => {
