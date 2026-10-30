@@ -205,6 +205,9 @@ export function formatSearchPageHint(
 
     return `More matches may be available; try --offset ${nextOffset} --limit ${limit}.`;
   }
+  if (offset > 0 && shown > 0) {
+    return `Showing ${shown} matches at offset ${offset}. Try --offset ${Math.max(0, offset - limit)} --limit ${limit} for the previous page.`;
+  }
   return undefined;
 }
 

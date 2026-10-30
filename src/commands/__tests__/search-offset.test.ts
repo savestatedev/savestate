@@ -63,4 +63,10 @@ describe('savestate search --offset', () => {
     expect(formatSearchPageHint(3, 0, 5)).toBeUndefined();
   });
 
+  it('offers a previous page for a partial later page', () => {
+    expect(formatSearchPageHint(3, 10, 5)).toBe(
+      'Showing 3 matches at offset 10. Try --offset 5 --limit 5 for the previous page.',
+    );
+  });
+
 });
