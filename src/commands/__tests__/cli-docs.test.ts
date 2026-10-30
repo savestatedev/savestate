@@ -3265,6 +3265,13 @@ describe('CLI docs', () => {
     expect(memory).toContain('export function parseMemoryExplainOffset');
   });
 
+  it('documents strict decimal pagination for memory config', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('config --limit');
+    expect(memorySection).toContain('decimal integers only');
+    expect(memorySection).toContain('surrounding whitespace is allowed');
+  });
+
   it('documents memory explain creation-date filters', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));

@@ -185,6 +185,7 @@ describe('savestate memory explain --json', () => {
         freshness: 'stale',
         freshnessClass: 'fast',
         lastVerifiedAt: '2026-10-17T12:00:00.000Z',
+        verificationSource: 'operator-review',
       }]),
     ) as MemoryExplainJson;
 
@@ -192,6 +193,7 @@ describe('savestate memory explain --json', () => {
       freshness: 'stale',
       freshnessClass: 'fast',
       lastVerifiedAt: '2026-10-17T12:00:00.000Z',
+      verificationSource: 'operator-review',
     });
   });
 

@@ -1037,7 +1037,10 @@ export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date(
   const state = freshness.state === 'needs_confirmation'
     ? 'needs confirmation'
     : freshness.state;
-  return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)})`;
+  const verificationSource = freshness.verificationSource
+    ? `; source ${freshness.verificationSource}`
+    : '';
+  return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)}${verificationSource})`;
 }
 
 /** Truncate table previews without adding an ellipsis to already-short content. */
@@ -2122,7 +2125,14 @@ const MAX_MEMORY_CONFIG_OFFSET = 1000;
 export function parseMemoryConfigLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_CONFIG_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_CONFIG_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_CONFIG_LIMIT}.`,
@@ -2141,7 +2151,14 @@ export function selectMemoryConfigEntries<T>(entries: T[], limit?: number): T[] 
 export function parseMemoryConfigOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_CONFIG_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_CONFIG_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_CONFIG_OFFSET}.`,
@@ -2236,6 +2253,7 @@ export interface MemoryExplainResultJson {
   freshness: MemoryFreshnessState;
   freshnessClass?: MemoryFreshnessClass;
   lastVerifiedAt?: string;
+  verificationSource?: string;
 }
 
 export interface MemoryExplainJson {
@@ -2320,6 +2338,9 @@ export function formatMemoryExplainJson(
     pinned: boolean;
     tier: MemoryTier;
     freshness: MemoryFreshnessState;
+    freshnessClass?: MemoryFreshnessClass;
+    lastVerifiedAt?: string;
+    verificationSource?: string;
   }>,
   pagination: Partial<MemoryExplainPaginationJson> = {},
   filters?: MemoryExplainFiltersJson,
@@ -2365,6 +2386,7 @@ export function formatMemoryExplainJson(
       freshness: result.freshness,
       freshnessClass: result.freshnessClass,
       lastVerifiedAt: result.lastVerifiedAt,
+      verificationSource: result.verificationSource,
     })),
   };
   if (filters && Object.keys(filters).length > 0) {
@@ -2709,6 +2731,7 @@ export async function explainMemoryCommand(
           freshness: freshness.state,
           freshnessClass: freshness.class,
           lastVerifiedAt: freshness.lastVerifiedAt,
+          verificationSource: freshness.verificationSource,
         };
       }),
       pagination,
