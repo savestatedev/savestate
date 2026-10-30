@@ -169,6 +169,12 @@ describe('end-to-end: index parity with brute-force scan', () => {
     };
   });
 
+  it('returns immediately when every search type is excluded', async () => {
+    await expect(searchSnapshots('widget', {} as SaveStateConfig, {
+      types: [],
+    })).resolves.toEqual([]);
+  });
+
   afterEach(async () => {
     process.chdir(tmpdir());
     await rm(testDir, { recursive: true, force: true });

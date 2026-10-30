@@ -106,6 +106,10 @@ export async function searchSnapshots(
   const limit = resolveSearchLimit(options?.limit);
   const offset = resolveSearchOffset(options?.offset);
   const types = options?.types;
+  // An exclusion-only search can intentionally leave no searchable types.
+  // Return before requiring a passphrase or touching storage: the result is
+  // already known to be empty.
+  if (types?.length === 0) return [];
   const passphrase = options?.passphrase ?? process.env.SAVESTATE_PASSPHRASE;
   if (!passphrase) {
     throw new Error(
