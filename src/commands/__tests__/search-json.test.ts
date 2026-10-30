@@ -260,4 +260,12 @@ describe('savestate search --json', () => {
       previousOffset: 3,
     });
   });
+
+  it('canonicalizes query whitespace for missing summaries', () => {
+    const parsed = JSON.parse(
+      formatSearchMissingSummaryJson('  missing  ', 'ss-missing'),
+    ) as { query: string };
+
+    expect(parsed.query).toBe('missing');
+  });
 });

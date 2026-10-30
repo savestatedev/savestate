@@ -238,7 +238,9 @@ export function formatSearchMissingSummaryJson(
   return JSON.stringify(
     {
       found: false,
-      query,
+      // Keep missing summaries aligned with result summaries for direct
+      // formatter callers, not only with the already-trimmed CLI query.
+      query: query.trim(),
       snapshot,
       filters: normalizeSearchSummaryFilters({
         ...filters,
