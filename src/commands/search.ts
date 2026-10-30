@@ -100,18 +100,18 @@ export function formatSearchFilterHints(
 function normalizeSearchSummaryFilters(
   filters?: Partial<SearchSummaryFilters>,
 ): SearchSummaryFilters {
-  const normalizeTypes = (values: SearchType[] | undefined): SearchType[] | null => {
-    if (values === undefined) return null;
+  const normalizeTypes = (values: SearchType[] | null | undefined): SearchType[] | null => {
+    if (values == null) return null;
     const normalized = [...new Set(values.map((value) => value.trim().toLowerCase() as SearchType))];
     // Keep equivalent summaries stable when callers provide filters in a different order.
     return normalized.sort((left, right) => SEARCH_TYPES.indexOf(left) - SEARCH_TYPES.indexOf(right));
   };
-  const normalizeText = (value: string | undefined): string | null => {
+  const normalizeText = (value: string | null | undefined): string | null => {
     const normalized = value?.trim();
     return normalized ? normalized : null;
   };
   const normalizeDate = (
-    value: string | undefined,
+    value: string | null | undefined,
     parse: (value: string) => number | undefined,
   ): string | null => {
     const normalized = normalizeText(value);
@@ -605,8 +605,18 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const adapter = parseSearchAdapter(options.adapter);
   const since = parseSearchSince(options.since);
   const until = parseSearchUntil(options.until);
+  // Validate the range before early JSON responses so an uninitialized or
+  // missing-snapshot search cannot turn invalid input into an empty result.
+  validateSearchDateRange(since, until, options.since, options.until);
   const tag = parseSearchTag(options.tag);
   const label = parseSearchLabel(options.label);
+  // Validate type filters before the uninitialized JSON response so typos do
+  // not get reported as a valid empty search.
+  const requestedTypes = parseSearchType(options.type);
+  const excludedTypes = parseSearchExclude(options.exclude);
+  const types = excludedTypes
+    ? (requestedTypes ?? [...SEARCH_TYPES]).filter((type) => !excludedTypes.includes(type))
+    : requestedTypes;
 
   const jsonOutput = isSearchJsonOutput(options);
 
@@ -620,8 +630,10 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       const offset = parseSearchOffset(options.offset) ?? 0;
       const filters = options.jsonSummary
         ? {
-          type: parseSearchType(options.type),
-          exclude: parseSearchExclude(options.exclude),
+          // Keep uninitialized summaries aligned with initialized searches:
+          // report the effective type set after exclusions are applied.
+          type: types,
+          exclude: excludedTypes,
           since: options.since,
           until: options.until,
           snapshot: snapshotId,
@@ -642,8 +654,6 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const config = await loadConfig();
   const limit = parseSearchLimit(options.limit);
   const offset = parseSearchOffset(options.offset);
-  const types = resolveSearchType(options);
-  const excludedTypes = parseSearchExclude(options.exclude);
 
   let catalog: Array<{ id: string; timestamp: string }> | undefined;
   if (snapshotId) {
