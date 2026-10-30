@@ -1037,7 +1037,10 @@ export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date(
   const state = freshness.state === 'needs_confirmation'
     ? 'needs confirmation'
     : freshness.state;
-  return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)})`;
+  const verificationSource = freshness.verificationSource
+    ? `; source ${freshness.verificationSource}`
+    : '';
+  return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)}${verificationSource})`;
 }
 
 /** Truncate table previews without adding an ellipsis to already-short content. */

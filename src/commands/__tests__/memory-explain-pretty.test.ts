@@ -15,4 +15,20 @@ describe('savestate memory explain pretty freshness', () => {
       'needs confirmation (fast; verified 2026-10-01)',
     );
   });
+
+  it('includes the verification source when one is recorded', () => {
+    const entry = {
+      id: 'mem-456',
+      content: 'A preference verified by a profile sync.',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-01T00:00:00.000Z',
+      lastVerifiedAt: '2026-10-17T00:00:00.000Z',
+      verificationSource: 'profile-sync',
+      freshnessClass: 'slow' as const,
+    };
+
+    expect(formatMemoryExplainFreshness(entry, new Date('2026-10-18T00:00:00.000Z'))).toBe(
+      'active (slow; verified 2026-10-17; source profile-sync)',
+    );
+  });
 });
