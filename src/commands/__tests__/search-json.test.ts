@@ -200,6 +200,36 @@ describe('savestate search --json', () => {
     });
   });
 
+  it('accepts explicit null filter values from summary callers', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'missing',
+        results: [],
+        filters: {
+          type: null,
+          exclude: null,
+          since: null,
+          until: null,
+          snapshot: null,
+          adapter: null,
+          tag: null,
+          label: null,
+        },
+      }),
+    ) as { filters: Record<string, unknown> };
+
+    expect(parsed.filters).toEqual({
+      type: null,
+      exclude: null,
+      since: null,
+      until: null,
+      snapshot: null,
+      adapter: null,
+      tag: null,
+      label: null,
+    });
+  });
+
   it('points full pages at the next and previous offsets', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({

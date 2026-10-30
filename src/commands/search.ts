@@ -100,18 +100,18 @@ export function formatSearchFilterHints(
 function normalizeSearchSummaryFilters(
   filters?: Partial<SearchSummaryFilters>,
 ): SearchSummaryFilters {
-  const normalizeTypes = (values: SearchType[] | undefined): SearchType[] | null => {
-    if (values === undefined) return null;
+  const normalizeTypes = (values: SearchType[] | null | undefined): SearchType[] | null => {
+    if (values == null) return null;
     const normalized = [...new Set(values.map((value) => value.trim().toLowerCase() as SearchType))];
     // Keep equivalent summaries stable when callers provide filters in a different order.
     return normalized.sort((left, right) => SEARCH_TYPES.indexOf(left) - SEARCH_TYPES.indexOf(right));
   };
-  const normalizeText = (value: string | undefined): string | null => {
+  const normalizeText = (value: string | null | undefined): string | null => {
     const normalized = value?.trim();
     return normalized ? normalized : null;
   };
   const normalizeDate = (
-    value: string | undefined,
+    value: string | null | undefined,
     parse: (value: string) => number | undefined,
   ): string | null => {
     const normalized = normalizeText(value);
