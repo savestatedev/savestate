@@ -286,6 +286,10 @@ function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | n
   // Unknown index formats must not silently filter out valid memories. Older
   // or future archives can still be searched safely with the brute-force path.
   if (idx.version !== SEARCH_INDEX_VERSION) return null;
+  // Search indexes live inside user archives, so tolerate malformed current
+  // versions too. A bad pre-filter must never make otherwise searchable data
+  // unavailable.
+  if (!idx.tokens || typeof idx.tokens !== 'object' || Array.isArray(idx.tokens)) return null;
 
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return null;
@@ -301,8 +305,16 @@ function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | n
     }
     if (!hit) continue;
     const postings = idx.tokens[indexToken];
+    if (!Array.isArray(postings)) continue;
     for (const posting of postings) {
-      if (posting.type === 'memory') ids.add(posting.sourceId);
+      if (
+        posting &&
+        typeof posting === 'object' &&
+        posting.type === 'memory' &&
+        typeof posting.sourceId === 'string'
+      ) {
+        ids.add(posting.sourceId);
+      }
     }
   }
   return ids;
