@@ -241,7 +241,7 @@ export function formatSearchMissingSummaryJson(
       // Keep missing summaries aligned with result summaries for direct
       // formatter callers, not only with the already-trimmed CLI query.
       query: query.trim(),
-      snapshot,
+      snapshot: snapshot.trim(),
       filters: normalizeSearchSummaryFilters({
         ...filters,
         snapshot: filters?.snapshot ?? snapshot,
