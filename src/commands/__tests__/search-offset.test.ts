@@ -47,6 +47,12 @@ describe('savestate search --offset', () => {
     );
   });
 
+  it('marks an exact maximum next page as capped', () => {
+    expect(formatSearchPageHint(20, 980, 20)).toBe(
+      'More matches may be available; try --offset 1000 --limit 20 (maximum).',
+    );
+  });
+
   it('does not suggest an invalid page past the maximum offset', () => {
     expect(formatSearchPageHint(20, 1000, 20)).toBe(
       'Reached maximum searchable offset 1000; no later page is available.',

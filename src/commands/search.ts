@@ -199,7 +199,7 @@ export function formatSearchPageHint(
     }
 
     const nextOffset = offset + shown;
-    if (nextOffset > MAX_SEARCH_OFFSET) {
+    if (nextOffset >= MAX_SEARCH_OFFSET) {
       return `More matches may be available; try --offset ${MAX_SEARCH_OFFSET} --limit ${limit} (maximum).`;
     }
 
