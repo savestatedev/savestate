@@ -12,7 +12,7 @@ import { resolveStorage } from './storage/index.js';
 import { decrypt } from './encryption.js';
 import { unpackFromArchive, unpackSnapshot } from './format.js';
 import { isIncremental, reconstructFromChain } from './incremental.js';
-import { tokenize } from './search/index-builder.js';
+import { SEARCH_INDEX_VERSION, tokenize } from './search/index-builder.js';
 import { createHash } from 'node:crypto';
 
 type SearchType = 'memory' | 'conversation' | 'identity' | 'knowledge';
@@ -106,6 +106,10 @@ export async function searchSnapshots(
   const limit = resolveSearchLimit(options?.limit);
   const offset = resolveSearchOffset(options?.offset);
   const types = options?.types;
+  // An exclusion-only search can intentionally leave no searchable types.
+  // Return before requiring a passphrase or touching storage: the result is
+  // already known to be empty.
+  if (types?.length === 0) return [];
   const passphrase = options?.passphrase ?? process.env.SAVESTATE_PASSPHRASE;
   if (!passphrase) {
     throw new Error(
@@ -283,6 +287,13 @@ export function scoreMatch(query: string, content: string): number {
 function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | null {
   const idx = snapshot.searchIndex;
   if (!idx) return null;
+  // Unknown index formats must not silently filter out valid memories. Older
+  // or future archives can still be searched safely with the brute-force path.
+  if (idx.version !== SEARCH_INDEX_VERSION) return null;
+  // Search indexes live inside user archives, so tolerate malformed current
+  // versions too. A bad pre-filter must never make otherwise searchable data
+  // unavailable.
+  if (!idx.tokens || typeof idx.tokens !== 'object' || Array.isArray(idx.tokens)) return null;
 
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return null;
@@ -298,8 +309,16 @@ function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | n
     }
     if (!hit) continue;
     const postings = idx.tokens[indexToken];
+    if (!Array.isArray(postings)) continue;
     for (const posting of postings) {
-      if (posting.type === 'memory') ids.add(posting.sourceId);
+      if (
+        posting &&
+        typeof posting === 'object' &&
+        posting.type === 'memory' &&
+        typeof posting.sourceId === 'string'
+      ) {
+        ids.add(posting.sourceId);
+      }
     }
   }
   return ids;

@@ -169,6 +169,12 @@ describe('end-to-end: index parity with brute-force scan', () => {
     };
   });
 
+  it('returns immediately when every search type is excluded', async () => {
+    await expect(searchSnapshots('widget', {} as SaveStateConfig, {
+      types: [],
+    })).resolves.toEqual([]);
+  });
+
   afterEach(async () => {
     process.chdir(tmpdir());
     await rm(testDir, { recursive: true, force: true });
@@ -229,6 +235,32 @@ describe('end-to-end: index parity with brute-force scan', () => {
     clearSnapshotCache();
     const results = await searchSnapshots('widget', config, { passphrase: PASSPHRASE });
     expect(results.length).toBe(1);
+    expect(results[0].content).toContain('widget');
+  });
+
+  it('unknown search index versions fall back to the brute-force scan', async () => {
+    const snap = buildSnapshot([
+      { id: 'm1', content: 'future index widget content' },
+    ]);
+    snap.searchIndex = { version: '9.9.9', tokens: {} };
+    await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
+
+    const results = await searchSnapshots('widget', config, { passphrase: PASSPHRASE });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].content).toContain('widget');
+  });
+
+  it('malformed current search indexes fall back to the brute-force scan', async () => {
+    const snap = buildSnapshot([
+      { id: 'm1', content: 'malformed index widget content' },
+    ]);
+    snap.searchIndex = { version: SEARCH_INDEX_VERSION, tokens: null as any };
+    await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
+
+    const results = await searchSnapshots('widget', config, { passphrase: PASSPHRASE });
+
+    expect(results).toHaveLength(1);
     expect(results[0].content).toContain('widget');
   });
 

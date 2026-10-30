@@ -651,9 +651,43 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     process.exit(1);
   }
 
-  const config = await loadConfig();
   const limit = parseSearchLimit(options.limit);
   const offset = parseSearchOffset(options.offset);
+
+  if (types?.length === 0) {
+    if (jsonOutput) {
+      console.log(options.jsonSummary
+        ? formatSearchResultsSummaryJson({
+          query,
+          results: [],
+          offset: offset ?? 0,
+          limit,
+          filters: {
+            type: types,
+            exclude: excludedTypes ?? null,
+            since: options.since,
+            until: options.until,
+            snapshot: snapshotId,
+            adapter,
+            tag,
+            label,
+          },
+        })
+        : formatSearchResultsJson([]));
+      return;
+    }
+
+    console.log(chalk.bold(`🔍 Searching: "${chalk.cyan(query)}"`));
+    for (const hint of formatSearchFilterHints(types, excludedTypes)) {
+      console.log(chalk.dim(`   ${hint}`));
+    }
+    console.log();
+    console.log(chalk.dim('  No matches found: all search types were excluded.'));
+    console.log();
+    return;
+  }
+
+  const config = await loadConfig();
 
   let catalog: Array<{ id: string; timestamp: string }> | undefined;
   if (snapshotId) {
