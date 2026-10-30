@@ -65,7 +65,7 @@ describe('savestate search --offset', () => {
 
   it('offers a previous page for a partial later page', () => {
     expect(formatSearchPageHint(3, 10, 5)).toBe(
-      'Showing 3 matches at offset 10. Try --offset 5 --limit 5 for the previous page.',
+      'Showing 3 matches at offset 10; no later page is available. Try --offset 5 --limit 5 for the previous page.',
     );
   });
 
