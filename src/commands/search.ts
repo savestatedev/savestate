@@ -607,6 +607,13 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const until = parseSearchUntil(options.until);
   const tag = parseSearchTag(options.tag);
   const label = parseSearchLabel(options.label);
+  // Validate type filters before the uninitialized JSON response so typos do
+  // not get reported as a valid empty search.
+  const requestedTypes = parseSearchType(options.type);
+  const excludedTypes = parseSearchExclude(options.exclude);
+  const types = excludedTypes
+    ? (requestedTypes ?? [...SEARCH_TYPES]).filter((type) => !excludedTypes.includes(type))
+    : requestedTypes;
 
   const jsonOutput = isSearchJsonOutput(options);
 
@@ -620,8 +627,8 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       const offset = parseSearchOffset(options.offset) ?? 0;
       const filters = options.jsonSummary
         ? {
-          type: parseSearchType(options.type),
-          exclude: parseSearchExclude(options.exclude),
+          type: requestedTypes,
+          exclude: excludedTypes,
           since: options.since,
           until: options.until,
           snapshot: snapshotId,
@@ -642,8 +649,6 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const config = await loadConfig();
   const limit = parseSearchLimit(options.limit);
   const offset = parseSearchOffset(options.offset);
-  const types = resolveSearchType(options);
-  const excludedTypes = parseSearchExclude(options.exclude);
 
   let catalog: Array<{ id: string; timestamp: string }> | undefined;
   if (snapshotId) {
