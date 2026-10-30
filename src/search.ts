@@ -12,7 +12,7 @@ import { resolveStorage } from './storage/index.js';
 import { decrypt } from './encryption.js';
 import { unpackFromArchive, unpackSnapshot } from './format.js';
 import { isIncremental, reconstructFromChain } from './incremental.js';
-import { tokenize } from './search/index-builder.js';
+import { SEARCH_INDEX_VERSION, tokenize } from './search/index-builder.js';
 import { createHash } from 'node:crypto';
 
 type SearchType = 'memory' | 'conversation' | 'identity' | 'knowledge';
@@ -283,6 +283,9 @@ export function scoreMatch(query: string, content: string): number {
 function buildMemoryIdFilter(query: string, snapshot: Snapshot): Set<string> | null {
   const idx = snapshot.searchIndex;
   if (!idx) return null;
+  // Unknown index formats must not silently filter out valid memories. Older
+  // or future archives can still be searched safely with the brute-force path.
+  if (idx.version !== SEARCH_INDEX_VERSION) return null;
 
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return null;

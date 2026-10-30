@@ -232,6 +232,19 @@ describe('end-to-end: index parity with brute-force scan', () => {
     expect(results[0].content).toContain('widget');
   });
 
+  it('unknown search index versions fall back to the brute-force scan', async () => {
+    const snap = buildSnapshot([
+      { id: 'm1', content: 'future index widget content' },
+    ]);
+    snap.searchIndex = { version: '9.9.9', tokens: {} };
+    await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
+
+    const results = await searchSnapshots('widget', config, { passphrase: PASSPHRASE });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].content).toContain('widget');
+  });
+
   it('snapshot WITH search index returns the same results as the legacy fallback for identical content', async () => {
     // Build identical snapshots, force one to use a legacy archive layout
     // by stripping search/index.json. Compare results.
