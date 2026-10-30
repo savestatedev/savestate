@@ -627,7 +627,9 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       const offset = parseSearchOffset(options.offset) ?? 0;
       const filters = options.jsonSummary
         ? {
-          type: requestedTypes,
+          // Keep uninitialized summaries aligned with initialized searches:
+          // report the effective type set after exclusions are applied.
+          type: types,
           exclude: excludedTypes,
           since: options.since,
           until: options.until,
