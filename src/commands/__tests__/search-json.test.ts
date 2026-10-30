@@ -244,6 +244,7 @@ describe('savestate search --json', () => {
         adapter: 'CHATGPT',
         tag: ' WORK ',
         label: ' Nightly Backup ',
+        snapshot: ' stale-snapshot ',
       }),
     ) as {
       found: boolean;

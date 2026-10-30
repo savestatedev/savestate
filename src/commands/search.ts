@@ -235,16 +235,19 @@ export function formatSearchMissingSummaryJson(
   limit = 20,
   filters?: Partial<SearchSummaryFilters>,
 ): string {
+  const normalizedSnapshot = snapshot.trim();
   return JSON.stringify(
     {
       found: false,
       // Keep missing summaries aligned with result summaries for direct
       // formatter callers, not only with the already-trimmed CLI query.
       query: query.trim(),
-      snapshot: snapshot.trim(),
+      snapshot: normalizedSnapshot,
       filters: normalizeSearchSummaryFilters({
         ...filters,
-        snapshot: filters?.snapshot ?? snapshot,
+        // The missing snapshot argument is the source of truth for both
+        // summary fields, even when direct callers pass stale filter data.
+        snapshot: normalizedSnapshot,
       }),
       results: [],
       pagination: {
