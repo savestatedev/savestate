@@ -709,7 +709,7 @@ export function formatMemoryExplainFilterMatches(
 ): string[] {
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
-  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
+  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace.trim()}`);
   if (options.source !== undefined) filters.push(`source=${normalizeMemoryListSource(options.source)}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
@@ -1087,6 +1087,11 @@ export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date(
 /** Keep source identifiers consistent across human and machine-readable explain output. */
 export function formatMemoryExplainSource(source: string | undefined): string {
   return normalizeMemoryListSource(source);
+}
+
+/** Keep namespace labels consistent between memory list and explain output. */
+export function formatMemoryExplainNamespace(namespace: string | undefined): string {
+  return formatMemoryListNamespace(namespace);
 }
 
 /** Truncate table previews without adding an ellipsis to already-short content. */
@@ -2304,8 +2309,8 @@ export interface MemoryExplainResultJson {
   criticality?: number;
   /** Normalized source id for tracing the memory's origin. */
   source?: string;
-  /** Trimmed namespace for tracing the memory's scope. */
-  namespace?: string;
+  /** Trimmed namespace for tracing the memory's scope, or null when unassigned. */
+  namespace: string | null;
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
@@ -2418,6 +2423,8 @@ export function formatMemoryExplainJson(
     importance?: number;
     criticality?: number;
     source?: string;
+    /** Trimmed namespace for tracing the memory's scope. */
+    namespace?: string;
     summary: string;
     pinned: boolean;
     tier: MemoryTier;
@@ -2467,7 +2474,7 @@ export function formatMemoryExplainJson(
       importance: result.importance,
       criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
-      namespace: result.namespace?.trim() || undefined,
+      namespace: result.namespace?.trim() || null,
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
@@ -2480,9 +2487,15 @@ export function formatMemoryExplainJson(
     })),
   };
   if (filters && Object.keys(filters).length > 0) {
-    record.filters = filters.source === undefined
-      ? filters
-      : { ...filters, source: normalizeMemoryListSource(filters.source) };
+    record.filters = {
+      ...filters,
+      ...(filters.source === undefined
+        ? {}
+        : { source: normalizeMemoryListSource(filters.source) }),
+      ...(filters.namespace === undefined
+        ? {}
+        : { namespace: filters.namespace.trim() }),
+    };
   }
   return JSON.stringify(record, null, 2);
 }
@@ -2529,9 +2542,15 @@ export function formatMemoryExplainMissingJson(
     results: null,
   };
   if (filters && Object.keys(filters).length > 0) {
-    record.filters = filters.source === undefined
-      ? filters
-      : { ...filters, source: normalizeMemoryListSource(filters.source) };
+    record.filters = {
+      ...filters,
+      ...(filters.source === undefined
+        ? {}
+        : { source: normalizeMemoryListSource(filters.source) }),
+      ...(filters.namespace === undefined
+        ? {}
+        : { namespace: filters.namespace.trim() }),
+    };
   }
   return JSON.stringify(record, null, 2);
 }
@@ -2556,7 +2575,7 @@ export function getMemoryExplainFilters(options?: {
 
   const filters: MemoryExplainFiltersJson = {};
   if (options.tier !== undefined) filters.tier = options.tier;
-  if (options.namespace !== undefined) filters.namespace = options.namespace;
+  if (options.namespace !== undefined) filters.namespace = options.namespace.trim();
   if (options.source !== undefined) filters.source = normalizeMemoryListSource(options.source);
   if (options.content !== undefined) filters.content = options.content;
   if (options.tags !== undefined) filters.tags = options.tags;
@@ -2889,6 +2908,12 @@ export async function explainMemoryCommand(
     console.log('   📍 Source Trace:');
     console.log(`      • Created: ${entry.createdAt}`);
     console.log(`      • Source: ${formatMemoryExplainSource(entry.source)}`);
+    const namespace = typeof entry.metadata?.namespace === 'string'
+      ? entry.metadata.namespace.trim()
+      : '';
+    if (namespace) {
+      console.log(`      • Namespace: ${formatMemoryExplainNamespace(namespace)}`);
+    }
     if (displayTags.length) {
       console.log(`      • Tags: ${displayTags.join(', ')}`);
     }

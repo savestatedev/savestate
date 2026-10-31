@@ -3,6 +3,7 @@ import {
   filterMemoryExplainByCriticality,
   formatMemoryExplainFreshness,
   formatMemoryExplainFilterMatches,
+  formatMemoryExplainNamespace,
   formatMemoryExplainScoreBreakdown,
   formatMemoryExplainSource,
   getMemoryExplainCriticality,
@@ -80,6 +81,18 @@ describe('savestate memory explain pretty freshness', () => {
 
   it('normalizes source ids in the pretty filter summary', () => {
     expect(formatMemoryExplainFilterMatches({ source: ' Chat\t GPT ' })).toEqual(['source=Chat GPT']);
+  });
+
+  it('normalizes padded namespaces in the pretty filter summary', () => {
+    expect(formatMemoryExplainFilterMatches({ namespace: '  org:app:agent  ' }))
+      .toEqual(['namespace=org:app:agent']);
+  });
+
+  it('keeps namespace labels readable in pretty source traces', () => {
+    expect(formatMemoryExplainNamespace('  org:app:agent  ')).toBe('org:app:agent');
+    expect(formatMemoryExplainNamespace('org:very-long-application:agent:user'))
+      .toBe('org:very-long-applica...');
+    expect(formatMemoryExplainNamespace('   ')).toBe('—');
   });
 
   it('normalizes imported tags before pretty source-trace output', () => {
