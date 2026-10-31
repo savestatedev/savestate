@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filterMemoryExplainByCriticality,
   formatMemoryExplainFreshness,
+  formatMemoryExplainFilterMatches,
   formatMemoryExplainScoreBreakdown,
   formatMemoryExplainSource,
   getMemoryExplainCriticality,
@@ -75,6 +76,10 @@ describe('savestate memory explain pretty freshness', () => {
     expect(formatMemoryExplainSource('  ChatGPT  ')).toBe('ChatGPT');
     expect(formatMemoryExplainSource(' Chat\t GPT ')).toBe('Chat GPT');
     expect(formatMemoryExplainSource('  ')).toBe('unknown');
+  });
+
+  it('normalizes source ids in the pretty filter summary', () => {
+    expect(formatMemoryExplainFilterMatches({ source: ' Chat\t GPT ' })).toEqual(['source=Chat GPT']);
   });
 
   it('normalizes imported tags before pretty source-trace output', () => {

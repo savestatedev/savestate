@@ -710,7 +710,7 @@ export function formatMemoryExplainFilterMatches(
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
-  if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.source !== undefined) filters.push(`source=${normalizeMemoryListSource(options.source)}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
