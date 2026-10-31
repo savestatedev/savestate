@@ -81,6 +81,18 @@ describe('savestate memory explain pretty freshness', () => {
 
     expect(getMemoryExplainCriticality(entry)).toBe(0.5);
   });
+
+  it('accepts the checkpoint task_criticality metadata name', () => {
+    const entry = {
+      id: 'mem-checkpoint-criticality',
+      content: 'a checkpoint memory with canonical ranking metadata',
+      source: 'checkpoint',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      metadata: { task_criticality: 0.85 },
+    };
+
+    expect(getMemoryExplainCriticality(entry)).toBe(0.85);
+  });
 });
 
 describe('savestate memory explain criticality filter', () => {
