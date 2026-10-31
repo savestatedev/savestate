@@ -21,4 +21,10 @@ describe('savestate list --since', () => {
       );
     },
   );
+
+  it('rejects impossible date-only calendar values instead of normalizing them', () => {
+    expect(() => parseListSince('2026-02-30')).toThrow(
+      'Invalid --since value "2026-02-30". Expected an ISO 8601 date.',
+    );
+  });
 });
