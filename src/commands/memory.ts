@@ -2394,6 +2394,19 @@ export function formatMemoryExplainEmptyMessage(total: number): string {
     : 'No memories are visible on this page.';
 }
 
+/** Keep the human-readable score breakdown aligned with the JSON explanation. */
+export function formatMemoryExplainScoreBreakdown(
+  scores: MemoryExplainScoreBreakdownJson,
+): string {
+  return [
+    `      • Semantic Similarity: ${(scores.semanticSimilarity * 100).toFixed(1)}% (weight: 25%)`,
+    `      • Task Criticality:    ${(scores.taskCriticality * 100).toFixed(1)}% (weight: 45%)`,
+    `      • Importance:          ${(scores.importance * 100).toFixed(1)}% (weight: 20%)`,
+    `      • Recency:             ${(scores.recencyDecay * 100).toFixed(1)}% (weight: 10%)`,
+    `      • Confidence Boost:    ${(scores.confidenceBoost * 100).toFixed(1)}% (neutral)`,
+  ].join('\n');
+}
+
 export function formatMemoryExplainJson(
   query: string,
   results: Array<{
@@ -2855,10 +2868,13 @@ export async function explainMemoryCommand(
 
     // Score breakdown
     console.log('   📊 Score Breakdown:');
-    console.log(`      • Semantic Similarity: ${(scores.semantic * 100).toFixed(1)}% (weight: 25%)`);
-    console.log(`      • Task Criticality:    ${(scores.criticality * 100).toFixed(1)}% (weight: 45%)`);
-    console.log(`      • Importance:          ${(scores.importance * 100).toFixed(1)}% (weight: 20%)`);
-    console.log(`      • Recency:             ${(scores.recency * 100).toFixed(1)}% (weight: 10%)`);
+    console.log(formatMemoryExplainScoreBreakdown({
+      semanticSimilarity: scores.semantic,
+      recencyDecay: scores.recency,
+      importance: scores.importance,
+      taskCriticality: scores.criticality,
+      confidenceBoost: 1.0,
+    }));
     console.log();
 
     // Source trace
