@@ -1057,6 +1057,11 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
     : normalized;
 }
 
+/** Keep explain previews readable without adding an ellipsis to short content. */
+export function formatMemoryExplainContent(content: string, maxLength = 60): string {
+  return formatMemoryListContent(content, maxLength);
+}
+
 /** Keep tag labels readable in the human-facing memory table. */
 export function formatMemoryListTags(entry: MemoryEntry, maxLength = 24): string {
   const tags = getMemoryListTags(entry).join(', ');
@@ -2772,7 +2777,7 @@ export async function explainMemoryCommand(
     console.log(`\n#${(offset ?? 0) + index + 1} ${entry.id}${pinned}`);
     console.log(`   Tier: ${tier} | Final Score: ${(finalScore * 100).toFixed(1)}%`);
     console.log(`   Freshness: ${formatMemoryExplainFreshness(entry)}`);
-    console.log(`   Content: ${entry.content.slice(0, 60).replace(/\n/g, ' ')}...`);
+    console.log(`   Content: ${formatMemoryExplainContent(entry.content)}`);
     console.log();
 
     // Score breakdown
