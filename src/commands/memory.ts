@@ -2292,6 +2292,8 @@ export interface MemoryExplainResultJson {
   score: number;
   /** Effective importance score used by the retrieval ranking. */
   importance?: number;
+  /** Effective task-criticality score used by the retrieval ranking. */
+  criticality?: number;
   /** Normalized source id for tracing the memory's origin. */
   source?: string;
   summary: string;
@@ -2383,6 +2385,7 @@ export function formatMemoryExplainJson(
     createdAt?: string;
     score: number;
     importance?: number;
+    criticality?: number;
     source?: string;
     summary: string;
     pinned: boolean;
@@ -2430,6 +2433,7 @@ export function formatMemoryExplainJson(
       createdAt: result.createdAt,
       score: result.score,
       importance: result.importance,
+      criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
       summary: result.summary,
       pinned: result.pinned,
@@ -2784,6 +2788,7 @@ export async function explainMemoryCommand(
           createdAt: r.entry.createdAt,
           score: r.finalScore,
           importance: getMemoryListImportance(r.entry),
+          criticality: getMemoryExplainCriticality(r.entry),
           source: normalizeMemoryListSource(r.entry.source),
           summary: r.explanation.summary,
           pinned: !!r.entry.pinned,
