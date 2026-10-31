@@ -2789,8 +2789,8 @@ export async function explainMemoryCommand(
     console.log();
 
     // Source trace
-    // Access tags from metadata
-    const displayTags = (entry.metadata?.tags as string[] | undefined) ?? [];
+    // Reuse list normalization so imported padding, blanks, and duplicates do not leak into output.
+    const displayTags = getMemoryListTags(entry);
 
     console.log('   📍 Source Trace:');
     console.log(`      • Created: ${entry.createdAt}`);

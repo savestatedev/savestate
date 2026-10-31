@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMemoryExplainFreshness, formatMemoryExplainSource } from '../memory.js';
+import { formatMemoryExplainFreshness, formatMemoryExplainSource, getMemoryListTags } from '../memory.js';
 
 describe('savestate memory explain pretty freshness', () => {
   it('returns the current freshness state for human-facing output', () => {
@@ -52,5 +52,15 @@ describe('savestate memory explain pretty freshness', () => {
     expect(formatMemoryExplainSource('  ChatGPT  ')).toBe('ChatGPT');
     expect(formatMemoryExplainSource(' Chat\t GPT ')).toBe('Chat GPT');
     expect(formatMemoryExplainSource('  ')).toBe('unknown');
+  });
+
+  it('normalizes imported tags before pretty source-trace output', () => {
+    expect(getMemoryListTags({
+      id: 'mem-tags',
+      content: 'tagged preference',
+      source: 'import',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      metadata: { tags: [' Work ', 'urgent', 'work', '', 42] },
+    })).toEqual(['Work', 'urgent']);
   });
 });
