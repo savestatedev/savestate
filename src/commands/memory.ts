@@ -1059,7 +1059,7 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
 
 /** Keep explain previews readable without adding an ellipsis to short content. */
 export function formatMemoryExplainContent(content: string, maxLength = 60): string {
-  return formatMemoryListContent(content, maxLength);
+  return formatMemoryListContent(content, maxLength) || '—';
 }
 
 /** Keep tag labels readable in the human-facing memory table. */

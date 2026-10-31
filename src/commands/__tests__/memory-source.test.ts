@@ -142,6 +142,10 @@ describe('memory explain content display', () => {
     expect(formatMemoryExplainContent('A short preference')).toBe('A short preference');
     expect(formatMemoryExplainContent('line one\n\tline two')).toBe('line one line two');
   });
+
+  it('shows a placeholder for blank imported content', () => {
+    expect(formatMemoryExplainContent(' \n\t ')).toBe('—');
+  });
 });
 
 describe('memory list table tag display', () => {
