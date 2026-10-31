@@ -2688,6 +2688,7 @@ export async function explainMemoryCommand(
   passphrase: string,
   query: string,
   options?: {
+    snapshotId?: string;
     tier?: MemoryTier;
     namespace?: string;
     source?: string;
@@ -2708,7 +2709,7 @@ export async function explainMemoryCommand(
 ): Promise<void> {
   const limit = parseMemoryExplainLimit(options?.limit);
   const offset = parseMemoryExplainOffset(options?.offset);
-  const { snapshot } = await loadSnapshot(storage, passphrase);
+  const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
 
   // For this demo, we search the memory entries in the snapshot
   // In a full implementation, this would use the checkpoint storage searchMemories
