@@ -666,7 +666,7 @@ export function getMemoryExplainCriticality(entry: MemoryEntry): number {
   // Checkpoint memories use the canonical task_criticality name, while older
   // snapshot exports used criticality. Prefer the newer spelling but accept
   // both so explain ranking does not silently flatten imported scores.
-  const values = [entry.metadata?.criticality, entry.metadata?.task_criticality];
+  const values = [entry.metadata?.task_criticality, entry.metadata?.criticality];
   for (const value of values) {
     if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1) {
       return value;
