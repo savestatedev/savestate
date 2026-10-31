@@ -1089,6 +1089,11 @@ export function formatMemoryExplainSource(source: string | undefined): string {
   return normalizeMemoryListSource(source);
 }
 
+/** Keep namespace labels consistent between memory list and explain output. */
+export function formatMemoryExplainNamespace(namespace: string | undefined): string {
+  return formatMemoryListNamespace(namespace);
+}
+
 /** Truncate table previews without adding an ellipsis to already-short content. */
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
@@ -2889,6 +2894,12 @@ export async function explainMemoryCommand(
     console.log('   📍 Source Trace:');
     console.log(`      • Created: ${entry.createdAt}`);
     console.log(`      • Source: ${formatMemoryExplainSource(entry.source)}`);
+    const namespace = typeof entry.metadata?.namespace === 'string'
+      ? entry.metadata.namespace.trim()
+      : '';
+    if (namespace) {
+      console.log(`      • Namespace: ${formatMemoryExplainNamespace(namespace)}`);
+    }
     if (displayTags.length) {
       console.log(`      • Tags: ${displayTags.join(', ')}`);
     }
