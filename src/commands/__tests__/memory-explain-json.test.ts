@@ -218,7 +218,7 @@ describe('savestate memory explain --json', () => {
       formatMemoryExplainJson('inbox preference', [{
         id: 'mem-123',
         score: 0.82,
-        source: '  ChatGPT  ',
+        source: ' Chat\t GPT ',
         summary: 'Strong match for the query.',
         pinned: false,
         tier: 'L1',
@@ -226,7 +226,7 @@ describe('savestate memory explain --json', () => {
       }]),
     ) as MemoryExplainJson;
 
-    expect(parsed.results[0]?.source).toBe('ChatGPT');
+    expect(parsed.results[0]?.source).toBe('Chat GPT');
   });
 
   it('includes every active scope filter for JSON consumers', () => {

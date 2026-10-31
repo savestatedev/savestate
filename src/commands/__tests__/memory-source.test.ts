@@ -38,6 +38,7 @@ describe('savestate memory list --source', () => {
 
   it('normalizes legacy source padding for JSON consumers', () => {
     expect(normalizeMemoryListSource('  claude-code  ')).toBe('claude-code');
+    expect(normalizeMemoryListSource(' claude\t code ')).toBe('claude code');
   });
 });
 

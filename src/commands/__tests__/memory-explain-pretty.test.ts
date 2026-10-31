@@ -34,6 +34,7 @@ describe('savestate memory explain pretty freshness', () => {
 
   it('normalizes legacy padding in the source trace', () => {
     expect(formatMemoryExplainSource('  ChatGPT  ')).toBe('ChatGPT');
+    expect(formatMemoryExplainSource(' Chat\t GPT ')).toBe('Chat GPT');
     expect(formatMemoryExplainSource('  ')).toBe('unknown');
   });
 });

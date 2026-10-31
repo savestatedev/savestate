@@ -1,6 +1,6 @@
 /** Normalize source identifiers at output boundaries without changing other metadata. */
 export function normalizeMemorySource(source: string | undefined): string {
-  const normalized = source?.trim() ?? '';
+  const normalized = source?.trim().replace(/\s+/g, ' ') ?? '';
   return normalized || 'unknown';
 }
 
