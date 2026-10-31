@@ -2309,8 +2309,8 @@ export interface MemoryExplainResultJson {
   criticality?: number;
   /** Normalized source id for tracing the memory's origin. */
   source?: string;
-  /** Trimmed namespace for tracing the memory's scope. */
-  namespace?: string;
+  /** Trimmed namespace for tracing the memory's scope, or null when unassigned. */
+  namespace: string | null;
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
@@ -2474,7 +2474,7 @@ export function formatMemoryExplainJson(
       importance: result.importance,
       criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
-      namespace: result.namespace?.trim() || undefined,
+      namespace: result.namespace?.trim() || null,
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
