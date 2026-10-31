@@ -3200,6 +3200,8 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
     expect(memorySection).toContain('scope retrievals by tier with <code>--tier</code>');
+    expect(memorySection).toContain('source with <code>--source</code>, content with <code>--content</code>, tags with <code>--tags</code>');
+    expect(memorySection).toContain('pin state with <code>--pinned</code> or <code>--unpinned</code>, freshness with <code>--freshness</code>');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
     expect(memorySection).toContain('<code>emptyReason</code>');
