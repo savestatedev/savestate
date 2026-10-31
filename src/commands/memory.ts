@@ -2423,6 +2423,8 @@ export function formatMemoryExplainJson(
     importance?: number;
     criticality?: number;
     source?: string;
+    /** Trimmed namespace for tracing the memory's scope. */
+    namespace?: string;
     summary: string;
     pinned: boolean;
     tier: MemoryTier;
