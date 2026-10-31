@@ -654,6 +654,14 @@ export function getMemoryListImportance(entry: MemoryEntry): number {
     : 0.5;
 }
 
+/** Return a safe task-criticality score for explain ranking. */
+export function getMemoryExplainCriticality(entry: MemoryEntry): number {
+  const value = entry.metadata?.criticality;
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
+    ? value
+    : 0.5;
+}
+
 /** Describe active scope filters for the human-facing explain output. */
 export function formatMemoryExplainFilterMatches(
   options: {
@@ -1055,6 +1063,11 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
   return normalized.length > maxLength
     ? `${Array.from(normalized).slice(0, maxLength).join('')}...`
     : normalized;
+}
+
+/** Keep explain previews readable without adding an ellipsis to short content. */
+export function formatMemoryExplainContent(content: string, maxLength = 60): string {
+  return formatMemoryListContent(content, maxLength) || '—';
 }
 
 /** Keep tag labels readable in the human-facing memory table. */
@@ -2645,7 +2658,7 @@ export async function explainMemoryCommand(
 
       // Keep explain ranking aligned with list filters when older archives contain bad metadata.
       const importance = getMemoryListImportance(entry);
-      const criticality = (entry.metadata?.criticality as number | undefined) ?? 0.5;
+      const criticality = getMemoryExplainCriticality(entry);
 
       // Weighted score (matches checkpoint ranking formula)
       const finalScore =
@@ -2772,7 +2785,7 @@ export async function explainMemoryCommand(
     console.log(`\n#${(offset ?? 0) + index + 1} ${entry.id}${pinned}`);
     console.log(`   Tier: ${tier} | Final Score: ${(finalScore * 100).toFixed(1)}%`);
     console.log(`   Freshness: ${formatMemoryExplainFreshness(entry)}`);
-    console.log(`   Content: ${entry.content.slice(0, 60).replace(/\n/g, ' ')}...`);
+    console.log(`   Content: ${formatMemoryExplainContent(entry.content)}`);
     console.log();
 
     // Score breakdown
@@ -2784,8 +2797,8 @@ export async function explainMemoryCommand(
     console.log();
 
     // Source trace
-    // Access tags from metadata
-    const displayTags = (entry.metadata?.tags as string[] | undefined) ?? [];
+    // Reuse list normalization so imported padding, blanks, and duplicates do not leak into output.
+    const displayTags = getMemoryListTags(entry);
 
     console.log('   📍 Source Trace:');
     console.log(`      • Created: ${entry.createdAt}`);

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseMemoryFreshness, parseMemorySource, parseMemoryTags } from '../memory-cli.js';
 import {
   formatMemoryListContent,
+  formatMemoryExplainContent,
   formatMemoryListCreatedAt,
   formatMemoryListFreshness,
   formatMemoryListPageFreshnessSummary,
@@ -133,6 +134,17 @@ describe('memory list table content display', () => {
 
   it('does not split astral Unicode characters when truncating', () => {
     expect(formatMemoryListContent('😀😀😀', 2)).toBe('😀😀...');
+  });
+});
+
+describe('memory explain content display', () => {
+  it('shares the readable preview rules used by memory list', () => {
+    expect(formatMemoryExplainContent('A short preference')).toBe('A short preference');
+    expect(formatMemoryExplainContent('line one\n\tline two')).toBe('line one line two');
+  });
+
+  it('shows a placeholder for blank imported content', () => {
+    expect(formatMemoryExplainContent(' \n\t ')).toBe('—');
   });
 });
 
