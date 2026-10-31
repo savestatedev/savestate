@@ -81,4 +81,17 @@ describe('savestate memory explain --json when missing', () => {
       freshness: 'needs_confirmation',
     });
   });
+
+  it('includes the resolved snapshot when provided', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainMissingJson(
+        'inbox preference',
+        {},
+        undefined,
+        'ss-2026-10-18',
+      ),
+    ) as MemoryExplainMissingJson;
+
+    expect(parsed.snapshot).toBe('ss-2026-10-18');
+  });
 });

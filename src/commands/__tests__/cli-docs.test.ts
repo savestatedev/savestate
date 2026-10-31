@@ -2578,6 +2578,11 @@ describe('CLI docs', () => {
     expect(explainBlock).toContain('snapshotId: parseMemorySnapshot(options.snapshot)');
   });
 
+  it('documents the resolved snapshot in memory explain output', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('resolved archive <code>snapshot</code> ID');
+  });
+
   it('documents memory --reason as a non-empty reason', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--reason');

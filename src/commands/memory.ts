@@ -2330,6 +2330,8 @@ export interface MemoryExplainScoreBreakdownJson {
 
 export interface MemoryExplainJson {
   query: string;
+  /** Resolved archive snapshot used for retrieval, when available. */
+  snapshot?: string;
   shown: number;
   emptyReason: 'collection' | 'page' | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
@@ -2435,6 +2437,7 @@ export function formatMemoryExplainJson(
   }>,
   pagination: Partial<MemoryExplainPaginationJson> = {},
   filters?: MemoryExplainFiltersJson,
+  snapshotId?: string,
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
@@ -2452,6 +2455,7 @@ export function formatMemoryExplainJson(
     : null;
   const record: MemoryExplainJson = {
     query,
+    ...(snapshotId === undefined ? {} : { snapshot: snapshotId }),
     shown: results.length,
     emptyReason: results.length > 0 ? null : total === 0 ? 'collection' : 'page',
     suggestedOffset,
@@ -2503,6 +2507,8 @@ export function formatMemoryExplainJson(
 export interface MemoryExplainMissingJson {
   found: false;
   query: string;
+  /** Resolved archive snapshot used for retrieval, when available. */
+  snapshot?: string;
   shown: 0;
   emptyReason: 'collection';
   suggestedOffset: null;
@@ -2515,6 +2521,7 @@ export function formatMemoryExplainMissingJson(
   query: string,
   pagination: Partial<MemoryExplainPaginationJson> = {},
   filters?: MemoryExplainFiltersJson,
+  snapshotId?: string,
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
@@ -2525,6 +2532,7 @@ export function formatMemoryExplainMissingJson(
   const record: MemoryExplainMissingJson = {
     found: false,
     query,
+    ...(snapshotId === undefined ? {} : { snapshot: snapshotId }),
     shown: 0,
     emptyReason: 'collection',
     suggestedOffset: null,
@@ -2709,7 +2717,7 @@ export async function explainMemoryCommand(
 ): Promise<void> {
   const limit = parseMemoryExplainLimit(options?.limit);
   const offset = parseMemoryExplainOffset(options?.offset);
-  const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
+  const { snapshot, snapshotId } = await loadSnapshot(storage, passphrase, options?.snapshotId);
 
   // For this demo, we search the memory entries in the snapshot
   // In a full implementation, this would use the checkpoint storage searchMemories
@@ -2822,6 +2830,7 @@ export async function explainMemoryCommand(
           [],
           pagination,
           getMemoryExplainFilters(options),
+          snapshotId,
         ));
         return;
       }
@@ -2829,6 +2838,7 @@ export async function explainMemoryCommand(
         query,
         pagination,
         getMemoryExplainFilters(options),
+        snapshotId,
       ));
       return;
     }
@@ -2864,12 +2874,14 @@ export async function explainMemoryCommand(
       }),
       pagination,
       getMemoryExplainFilters(options),
+      snapshotId,
     ));
     return;
   }
 
   // Pretty print format
   console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
+  console.log(`   Snapshot: ${snapshotId}\n`);
   const filterSummary = formatMemoryExplainFilterSummary(options);
   if (filterSummary) {
     console.log(`   Filter: ${filterSummary}\n`);
@@ -2978,7 +2990,7 @@ async function loadSnapshot(
   storage: StorageBackend,
   passphrase: string,
   snapshotId?: string,
-): Promise<{ snapshot: Snapshot; filename: string }> {
+): Promise<{ snapshot: Snapshot; filename: string; snapshotId: string }> {
   let resolvedId: string;
   let filename: string;
 
@@ -3007,7 +3019,7 @@ async function loadSnapshot(
   }
 
   const snapshot = unpackSnapshot(fileMap);
-  return { snapshot, filename };
+  return { snapshot, filename, snapshotId: resolvedId };
 }
 
 async function saveSnapshot(

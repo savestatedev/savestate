@@ -336,6 +336,20 @@ describe('savestate memory explain --json', () => {
     });
   });
 
+  it('includes the resolved snapshot when provided', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { total: 0 },
+        undefined,
+        'ss-2026-10-18',
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.snapshot).toBe('ss-2026-10-18');
+  });
+
   it('normalizes padded source ids in explain filters', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
