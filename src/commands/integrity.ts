@@ -46,6 +46,7 @@ interface IntegrityOptions {
 const MAX_INTEGRITY_COUNT = 1000;
 const MAX_INTEGRITY_LIMIT = 1000;
 const MAX_INTEGRITY_OFFSET = 1000;
+const MAX_INTEGRITY_TEST_OFFSET = 1000;
 const MAX_INTEGRITY_TTL_DAYS = 365;
 
 /** Parse a honeyfact seed count without turning user input errors into an empty or NaN seed. */
@@ -352,6 +353,37 @@ export function parseIntegrityTestLimit(value: string | undefined): number | und
 export function selectIntegrityTestEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
   return entries.slice(0, limit);
+}
+
+/** Parse integrity test --offset without turning invalid skips into an unbounded result. */
+export function parseIntegrityTestOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_INTEGRITY_TEST_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_INTEGRITY_TEST_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_INTEGRITY_TEST_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip the first N tripwire event rows before applying --limit. */
+export function selectIntegrityTestOffsetEntries<T>(entries: T[], offset?: number): T[] {
+  if (offset === undefined) return entries;
+  return entries.slice(offset);
+}
+
+/** Apply integrity test --offset before --limit. */
+export function selectIntegrityTestPage<T>(entries: T[], offset?: number, limit?: number): T[] {
+  return selectIntegrityTestEntries(selectIntegrityTestOffsetEntries(entries, offset), limit);
 }
 
 const MAX_INTEGRITY_ROTATE_LIMIT = 1000;
@@ -1146,6 +1178,7 @@ export async function integrityCommand(
   const releaseLimit = subcommand === 'release' ? parseIntegrityReleaseLimit(options.limit) : undefined;
   const incidentLimit = subcommand === 'incident' ? parseIntegrityIncidentLimit(options.limit) : undefined;
   const testLimit = subcommand === 'test' ? parseIntegrityTestLimit(options.limit) : undefined;
+  const testOffset = subcommand === 'test' ? parseIntegrityTestOffset(options.offset) : undefined;
   const rotateLimit = subcommand === 'rotate' ? parseIntegrityRotateLimit(options.limit) : undefined;
   const seedLimit = subcommand === 'seed' ? parseIntegritySeedLimit(options.limit) : undefined;
   const clearLimit = subcommand === 'clear' ? parseIntegrityClearLimit(options.limit) : undefined;
@@ -1231,7 +1264,7 @@ export async function integrityCommand(
       await configCommand(args[0], options, configLimit);
       return;
     case 'test':
-      await testMonitorCommand(testInput!, options, testLimit);
+      await testMonitorCommand(testInput!, options, testLimit, testOffset);
       return;
     case 'clear':
       await clearCommand(options, clearLimit);
@@ -1815,7 +1848,12 @@ async function configCommand(
 /**
  * Test the tripwire monitor with sample input.
  */
-async function testMonitorCommand(input: string, options: IntegrityOptions, limit?: number): Promise<void> {
+async function testMonitorCommand(
+  input: string,
+  options: IntegrityOptions,
+  limit?: number,
+  offset?: number,
+): Promise<void> {
   const config = await loadConfig();
   const tenant_id = parseIntegrityTenant(options.tenant) ?? 'default';
 
@@ -1832,7 +1870,7 @@ async function testMonitorCommand(input: string, options: IntegrityOptions, limi
         triggered: result.triggered,
         durationMs: result.duration_ms,
         eventCount: result.events.length,
-        events: result.events.map((event) => ({
+        events: selectIntegrityTestPage(result.events, offset, limit).map((event) => ({
           id: event.id,
           honeyfactId: event.honeyfact_id,
           confidence: event.confidence,
@@ -1855,7 +1893,7 @@ async function testMonitorCommand(input: string, options: IntegrityOptions, limi
   } else {
     console.log(chalk.red(`✗ Detected ${result.events.length} honeyfact(s)!`));
     console.log();
-    for (const event of selectIntegrityTestEntries(result.events, limit)) {
+    for (const event of selectIntegrityTestPage(result.events, offset, limit)) {
       console.log(`  ${chalk.cyan(event.id)}`);
       console.log(`    Honeyfact: ${event.honeyfact_id}`);
       console.log(`    Confidence: ${(event.confidence * 100).toFixed(1)}%`);
@@ -1925,6 +1963,7 @@ function showUsage(): void {
   console.log('  --tenant <id>     Tenant ID (single non-empty id, default: "default")');
   console.log('  --json            Output as JSON');
   console.log('  --limit <n>       Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed, or rotate status field rows, or clear status field rows');
+  console.log('  --offset <n>      Skip the first N incidents, or test event rows, before applying --limit (non-negative integer up to 1000)');
   console.log('  --policy <policy> Containment policy (observe, approve, or auto)');
   console.log('  --force           Force action without confirmation');
   console.log('  --reason <text>   Reason for quarantine/release (non-empty)');
@@ -1944,7 +1983,7 @@ export function registerIntegrityCommands(program: Command): void {
     .option('--count <n>', 'Number of honeyfacts to seed')
     .option('--status <status>', 'Filter by incident status')
     .option('--limit <n>', 'Maximum number of incidents to show, configuration setting rows on config, or honeyfact, incident, and containment metric rows on status, or quarantine status field rows, or release status field rows, or event rows on incident, or event rows on test, or category rows on seed, or rotate status field rows, or clear status field rows')
-    .option('--offset <n>', 'Skip the first N incidents (non-negative integer up to 1000)')
+    .option('--offset <n>', 'Skip the first N incidents, or test event rows (non-negative integer up to 1000)')
     .option('--policy <policy>', 'Containment policy (observe, approve, or auto)')
     .option('-f, --force', 'Force action without confirmation')
     .option('--reason <text>', 'Reason for action (non-empty)')
