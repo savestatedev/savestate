@@ -526,6 +526,8 @@ export function filterMemoryExplainEntries(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
     now?: Date;
   } = {},
 ): MemoryEntry[] {
@@ -557,9 +559,14 @@ export function filterMemoryExplainEntries(
     options.minImportance,
     options.maxImportance,
   );
+  const criticalityScoped = filterMemoryExplainByCriticality(
+    importanceScoped,
+    options.minCriticality,
+    options.maxCriticality,
+  );
   return options.pinned === undefined
-    ? importanceScoped
-    : importanceScoped.filter((entry) => !!entry.pinned === options.pinned);
+    ? criticalityScoped
+    : criticalityScoped.filter((entry) => !!entry.pinned === options.pinned);
 }
 
 /** Normalize legacy tag metadata before filtering or serializing it. */
@@ -656,10 +663,30 @@ export function getMemoryListImportance(entry: MemoryEntry): number {
 
 /** Return a safe task-criticality score for explain ranking. */
 export function getMemoryExplainCriticality(entry: MemoryEntry): number {
-  const value = entry.metadata?.criticality;
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
-    ? value
-    : 0.5;
+  // Checkpoint memories use the canonical task_criticality name, while older
+  // snapshot exports used criticality. Prefer the newer spelling but accept
+  // both so explain ranking does not silently flatten imported scores.
+  const values = [entry.metadata?.task_criticality, entry.metadata?.criticality];
+  for (const value of values) {
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1) {
+      return value;
+    }
+  }
+  return 0.5;
+}
+
+/** Keep memories within the requested task-criticality range for explain. */
+export function filterMemoryExplainByCriticality(
+  entries: MemoryEntry[],
+  minCriticality?: number,
+  maxCriticality?: number,
+): MemoryEntry[] {
+  if (minCriticality === undefined && maxCriticality === undefined) return entries;
+  return entries.filter((entry) => {
+    const criticality = getMemoryExplainCriticality(entry);
+    return (minCriticality === undefined || criticality >= minCriticality) &&
+      (maxCriticality === undefined || criticality <= maxCriticality);
+  });
 }
 
 /** Describe active scope filters for the human-facing explain output. */
@@ -676,6 +703,8 @@ export function formatMemoryExplainFilterMatches(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
   } = {},
 ): string[] {
   const filters: string[] = [];
@@ -690,6 +719,8 @@ export function formatMemoryExplainFilterMatches(
   if (options.until !== undefined) filters.push(`until=${options.until}`);
   if (options.minImportance !== undefined) filters.push(`minImportance=${options.minImportance}`);
   if (options.maxImportance !== undefined) filters.push(`maxImportance=${options.maxImportance}`);
+  if (options.minCriticality !== undefined) filters.push(`minCriticality=${options.minCriticality}`);
+  if (options.maxCriticality !== undefined) filters.push(`maxCriticality=${options.maxCriticality}`);
   return filters;
 }
 
@@ -706,6 +737,8 @@ export function formatMemoryExplainFilterSummary(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
   } = {},
 ): string | undefined {
   const filters = formatMemoryExplainFilterMatches(options);
@@ -2265,6 +2298,8 @@ export interface MemoryExplainResultJson {
   score: number;
   /** Effective importance score used by the retrieval ranking. */
   importance?: number;
+  /** Effective task-criticality score used by the retrieval ranking. */
+  criticality?: number;
   /** Normalized source id for tracing the memory's origin. */
   source?: string;
   summary: string;
@@ -2299,6 +2334,8 @@ export interface MemoryExplainFiltersJson {
   until?: string;
   minImportance?: number;
   maxImportance?: number;
+  minCriticality?: number;
+  maxCriticality?: number;
 }
 
 export interface MemoryExplainPaginationJson {
@@ -2354,6 +2391,7 @@ export function formatMemoryExplainJson(
     createdAt?: string;
     score: number;
     importance?: number;
+    criticality?: number;
     source?: string;
     summary: string;
     pinned: boolean;
@@ -2401,6 +2439,7 @@ export function formatMemoryExplainJson(
       createdAt: result.createdAt,
       score: result.score,
       importance: result.importance,
+      criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
       summary: result.summary,
       pinned: result.pinned,
@@ -2483,6 +2522,8 @@ export function getMemoryExplainFilters(options?: {
   until?: string;
   minImportance?: number;
   maxImportance?: number;
+  minCriticality?: number;
+  maxCriticality?: number;
 }): MemoryExplainFiltersJson | undefined {
   if (!options) return undefined;
 
@@ -2498,6 +2539,8 @@ export function getMemoryExplainFilters(options?: {
   if (options.until !== undefined) filters.until = options.until;
   if (options.minImportance !== undefined) filters.minImportance = options.minImportance;
   if (options.maxImportance !== undefined) filters.maxImportance = options.maxImportance;
+  if (options.minCriticality !== undefined) filters.minCriticality = options.minCriticality;
+  if (options.maxCriticality !== undefined) filters.maxCriticality = options.maxCriticality;
   return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
@@ -2612,6 +2655,8 @@ export async function explainMemoryCommand(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {
@@ -2749,6 +2794,7 @@ export async function explainMemoryCommand(
           createdAt: r.entry.createdAt,
           score: r.finalScore,
           importance: getMemoryListImportance(r.entry),
+          criticality: getMemoryExplainCriticality(r.entry),
           source: normalizeMemoryListSource(r.entry.source),
           summary: r.explanation.summary,
           pinned: !!r.entry.pinned,

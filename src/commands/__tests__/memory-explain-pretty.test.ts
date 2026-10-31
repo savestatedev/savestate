@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  filterMemoryExplainByCriticality,
   formatMemoryExplainFreshness,
   formatMemoryExplainSource,
   getMemoryExplainCriticality,
@@ -79,5 +80,41 @@ describe('savestate memory explain pretty freshness', () => {
     };
 
     expect(getMemoryExplainCriticality(entry)).toBe(0.5);
+  });
+
+  it('accepts the checkpoint task_criticality metadata name', () => {
+    const entry = {
+      id: 'mem-checkpoint-criticality',
+      content: 'a checkpoint memory with canonical ranking metadata',
+      source: 'checkpoint',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      metadata: { task_criticality: 0.85 },
+    };
+
+    expect(getMemoryExplainCriticality(entry)).toBe(0.85);
+  });
+
+  it('prefers canonical task_criticality when legacy metadata is also present', () => {
+    const entry = {
+      id: 'mem-checkpoint-criticality-precedence',
+      content: 'a checkpoint memory with both ranking metadata names',
+      source: 'checkpoint',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      metadata: { criticality: 0.2, task_criticality: 0.85 },
+    };
+
+    expect(getMemoryExplainCriticality(entry)).toBe(0.85);
+  });
+});
+
+describe('savestate memory explain criticality filter', () => {
+  it('keeps the inclusive criticality range and defaults malformed metadata to 0.5', () => {
+    const entries = [
+      { id: 'low', content: 'query', source: 'test', createdAt: '2026-10-01T00:00:00.000Z', metadata: { criticality: 0.2 } },
+      { id: 'default', content: 'query', source: 'test', createdAt: '2026-10-01T00:00:00.000Z', metadata: { criticality: 'invalid' } },
+      { id: 'high', content: 'query', source: 'test', createdAt: '2026-10-01T00:00:00.000Z', metadata: { criticality: 0.9 } },
+    ];
+
+    expect(filterMemoryExplainByCriticality(entries, 0.5, 0.9).map(({ id }) => id)).toEqual(['default', 'high']);
   });
 });
