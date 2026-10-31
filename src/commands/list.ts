@@ -288,7 +288,24 @@ export function getListLabelWidth(snapshots: SnapshotIndexEntry[]): number {
 /** Parse list --since without treating invalid dates as an empty snapshot list. */
 export function parseListSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
-  const ms = new Date(value).getTime();
+
+  // Date-only input is a human-facing calendar boundary. Validate the
+  // calendar date before parsing so JavaScript cannot silently normalize an
+  // impossible date such as 2026-02-30 into a later day.
+  const normalized = value.trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  let ms: number;
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    const startOfDay = new Date(`${normalized}T00:00:00.000Z`);
+    const isValidCalendarDate =
+      startOfDay.getUTCFullYear() === Number(year) &&
+      startOfDay.getUTCMonth() + 1 === Number(month) &&
+      startOfDay.getUTCDate() === Number(day);
+    ms = isValidCalendarDate ? startOfDay.getTime() : Number.NaN;
+  } else {
+    ms = new Date(value).getTime();
+  }
   if (Number.isNaN(ms)) throw new Error(`Invalid --since value "${value}". Expected an ISO 8601 date.`);
   return ms;
 }
