@@ -654,6 +654,14 @@ export function getMemoryListImportance(entry: MemoryEntry): number {
     : 0.5;
 }
 
+/** Return a safe task-criticality score for explain ranking. */
+export function getMemoryExplainCriticality(entry: MemoryEntry): number {
+  const value = entry.metadata?.criticality;
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
+    ? value
+    : 0.5;
+}
+
 /** Describe active scope filters for the human-facing explain output. */
 export function formatMemoryExplainFilterMatches(
   options: {
@@ -2650,7 +2658,7 @@ export async function explainMemoryCommand(
 
       // Keep explain ranking aligned with list filters when older archives contain bad metadata.
       const importance = getMemoryListImportance(entry);
-      const criticality = (entry.metadata?.criticality as number | undefined) ?? 0.5;
+      const criticality = getMemoryExplainCriticality(entry);
 
       // Weighted score (matches checkpoint ranking formula)
       const finalScore =

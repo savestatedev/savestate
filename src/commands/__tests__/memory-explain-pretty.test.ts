@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatMemoryExplainFreshness, formatMemoryExplainSource, getMemoryListTags } from '../memory.js';
+import {
+  formatMemoryExplainFreshness,
+  formatMemoryExplainSource,
+  getMemoryExplainCriticality,
+  getMemoryListTags,
+} from '../memory.js';
 
 describe('savestate memory explain pretty freshness', () => {
   it('returns the current freshness state for human-facing output', () => {
@@ -62,5 +67,17 @@ describe('savestate memory explain pretty freshness', () => {
       createdAt: '2026-10-01T00:00:00.000Z',
       metadata: { tags: [' Work ', 'urgent', 'work', '', 42] },
     })).toEqual(['Work', 'urgent']);
+  });
+
+  it('falls back when imported criticality metadata is not a finite score', () => {
+    const entry = {
+      id: 'mem-criticality',
+      content: 'a preference with malformed ranking metadata',
+      source: 'import',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      metadata: { criticality: Number.NaN },
+    };
+
+    expect(getMemoryExplainCriticality(entry)).toBe(0.5);
   });
 });
