@@ -709,7 +709,7 @@ export function formatMemoryExplainFilterMatches(
 ): string[] {
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
-  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
+  if (options.namespace !== undefined) filters.push(`namespace=${options.namespace.trim()}`);
   if (options.source !== undefined) filters.push(`source=${normalizeMemoryListSource(options.source)}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
@@ -2487,9 +2487,15 @@ export function formatMemoryExplainJson(
     })),
   };
   if (filters && Object.keys(filters).length > 0) {
-    record.filters = filters.source === undefined
-      ? filters
-      : { ...filters, source: normalizeMemoryListSource(filters.source) };
+    record.filters = {
+      ...filters,
+      ...(filters.source === undefined
+        ? {}
+        : { source: normalizeMemoryListSource(filters.source) }),
+      ...(filters.namespace === undefined
+        ? {}
+        : { namespace: filters.namespace.trim() }),
+    };
   }
   return JSON.stringify(record, null, 2);
 }
@@ -2536,9 +2542,15 @@ export function formatMemoryExplainMissingJson(
     results: null,
   };
   if (filters && Object.keys(filters).length > 0) {
-    record.filters = filters.source === undefined
-      ? filters
-      : { ...filters, source: normalizeMemoryListSource(filters.source) };
+    record.filters = {
+      ...filters,
+      ...(filters.source === undefined
+        ? {}
+        : { source: normalizeMemoryListSource(filters.source) }),
+      ...(filters.namespace === undefined
+        ? {}
+        : { namespace: filters.namespace.trim() }),
+    };
   }
   return JSON.stringify(record, null, 2);
 }
@@ -2563,7 +2575,7 @@ export function getMemoryExplainFilters(options?: {
 
   const filters: MemoryExplainFiltersJson = {};
   if (options.tier !== undefined) filters.tier = options.tier;
-  if (options.namespace !== undefined) filters.namespace = options.namespace;
+  if (options.namespace !== undefined) filters.namespace = options.namespace.trim();
   if (options.source !== undefined) filters.source = normalizeMemoryListSource(options.source);
   if (options.content !== undefined) filters.content = options.content;
   if (options.tags !== undefined) filters.tags = options.tags;

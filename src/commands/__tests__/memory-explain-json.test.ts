@@ -346,4 +346,17 @@ describe('savestate memory explain --json', () => {
 
     expect(parsed.filters?.source).toBe('Claude-Code');
   });
+
+  it('normalizes padded namespaces in explain filters', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        {},
+        { namespace: '  work:mail:assistant  ' },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.filters?.namespace).toBe('work:mail:assistant');
+  });
 });
