@@ -2,12 +2,30 @@ import { describe, expect, it } from 'vitest';
 import {
   filterMemoryExplainByCriticality,
   formatMemoryExplainFreshness,
+  formatMemoryExplainFilterMatches,
+  formatMemoryExplainScoreBreakdown,
   formatMemoryExplainSource,
   getMemoryExplainCriticality,
   getMemoryListTags,
 } from '../memory.js';
 
 describe('savestate memory explain pretty freshness', () => {
+  it('shows every score component exposed by JSON explanations', () => {
+    expect(formatMemoryExplainScoreBreakdown({
+      semanticSimilarity: 0.8,
+      recencyDecay: 0.7,
+      importance: 0.9,
+      taskCriticality: 0.6,
+      confidenceBoost: 1,
+    })).toBe([
+      '      • Semantic Similarity: 80.0% (weight: 25%)',
+      '      • Task Criticality:    60.0% (weight: 45%)',
+      '      • Importance:          90.0% (weight: 20%)',
+      '      • Recency:             70.0% (weight: 10%)',
+      '      • Confidence Boost:    100.0% (neutral)',
+    ].join('\n'));
+  });
+
   it('returns the current freshness state for human-facing output', () => {
     const entry = {
       id: 'mem-123',
@@ -58,6 +76,10 @@ describe('savestate memory explain pretty freshness', () => {
     expect(formatMemoryExplainSource('  ChatGPT  ')).toBe('ChatGPT');
     expect(formatMemoryExplainSource(' Chat\t GPT ')).toBe('Chat GPT');
     expect(formatMemoryExplainSource('  ')).toBe('unknown');
+  });
+
+  it('normalizes source ids in the pretty filter summary', () => {
+    expect(formatMemoryExplainFilterMatches({ source: ' Chat\t GPT ' })).toEqual(['source=Chat GPT']);
   });
 
   it('normalizes imported tags before pretty source-trace output', () => {

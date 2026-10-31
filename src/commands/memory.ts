@@ -710,7 +710,7 @@ export function formatMemoryExplainFilterMatches(
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.namespace !== undefined) filters.push(`namespace=${options.namespace}`);
-  if (options.source !== undefined) filters.push(`source=${options.source}`);
+  if (options.source !== undefined) filters.push(`source=${normalizeMemoryListSource(options.source)}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
@@ -2304,6 +2304,8 @@ export interface MemoryExplainResultJson {
   criticality?: number;
   /** Normalized source id for tracing the memory's origin. */
   source?: string;
+  /** Trimmed namespace for tracing the memory's scope. */
+  namespace?: string;
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
@@ -2373,9 +2375,8 @@ export function formatMemoryExplainPrettySummary(
   if (total === 0) return 'No memories matched the query.';
   if (shown === 0) {
     const suggestedOffset = Math.floor((total - 1) / pageSize) * pageSize;
-    const previous = offset > 0 ? ` Previous page: use --offset ${suggestedOffset} --limit ${pageSize}.` : '';
     return `No memories on this page (offset ${offset}; ${total} relevant memories matched). ` +
-      `Try --offset ${suggestedOffset} to open the nearest available page.${previous}`;
+      `Try --offset ${suggestedOffset} to open the nearest available page.`;
   }
 
   const first = offset + 1;
@@ -2392,6 +2393,19 @@ export function formatMemoryExplainEmptyMessage(total: number): string {
   return total === 0
     ? 'No memories matched the query.'
     : 'No memories are visible on this page.';
+}
+
+/** Keep the human-readable score breakdown aligned with the JSON explanation. */
+export function formatMemoryExplainScoreBreakdown(
+  scores: MemoryExplainScoreBreakdownJson,
+): string {
+  return [
+    `      • Semantic Similarity: ${(scores.semanticSimilarity * 100).toFixed(1)}% (weight: 25%)`,
+    `      • Task Criticality:    ${(scores.taskCriticality * 100).toFixed(1)}% (weight: 45%)`,
+    `      • Importance:          ${(scores.importance * 100).toFixed(1)}% (weight: 20%)`,
+    `      • Recency:             ${(scores.recencyDecay * 100).toFixed(1)}% (weight: 10%)`,
+    `      • Confidence Boost:    ${(scores.confidenceBoost * 100).toFixed(1)}% (neutral)`,
+  ].join('\n');
 }
 
 export function formatMemoryExplainJson(
@@ -2453,6 +2467,7 @@ export function formatMemoryExplainJson(
       importance: result.importance,
       criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
+      namespace: result.namespace?.trim() || undefined,
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
@@ -2815,6 +2830,9 @@ export async function explainMemoryCommand(
           importance: getMemoryListImportance(r.entry),
           criticality: getMemoryExplainCriticality(r.entry),
           source: normalizeMemoryListSource(r.entry.source),
+          namespace: typeof r.entry.metadata?.namespace === 'string'
+            ? r.entry.metadata.namespace.trim() || undefined
+            : undefined,
           summary: r.explanation.summary,
           pinned: !!r.entry.pinned,
           tier: getEffectiveTier(r.entry),
@@ -2855,10 +2873,13 @@ export async function explainMemoryCommand(
 
     // Score breakdown
     console.log('   📊 Score Breakdown:');
-    console.log(`      • Semantic Similarity: ${(scores.semantic * 100).toFixed(1)}% (weight: 25%)`);
-    console.log(`      • Task Criticality:    ${(scores.criticality * 100).toFixed(1)}% (weight: 45%)`);
-    console.log(`      • Importance:          ${(scores.importance * 100).toFixed(1)}% (weight: 20%)`);
-    console.log(`      • Recency:             ${(scores.recency * 100).toFixed(1)}% (weight: 10%)`);
+    console.log(formatMemoryExplainScoreBreakdown({
+      semanticSimilarity: scores.semantic,
+      recencyDecay: scores.recency,
+      importance: scores.importance,
+      taskCriticality: scores.criticality,
+      confidenceBoost: 1.0,
+    }));
     console.log();
 
     // Source trace
