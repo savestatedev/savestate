@@ -2525,6 +2525,18 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryMaxImportance');
   });
 
+  it('documents memory explain criticality bounds', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(memorySection).toContain('--min-criticality');
+    expect(memorySection).toContain('--max-criticality');
+    expect(memorySection).toContain('task criticality');
+    expect(explainBlock).toContain(".option('--min-criticality <n>'");
+    expect(explainBlock).toContain(".option('--max-criticality <n>'");
+    expect(memoryCli).toContain('export function parseMemoryMinCriticality');
+    expect(memoryCli).toContain('export function parseMemoryMaxCriticality');
+  });
+
   it('documents memory list --oldest-first ordering', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--oldest-first');

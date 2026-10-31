@@ -526,6 +526,8 @@ export function filterMemoryExplainEntries(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
     now?: Date;
   } = {},
 ): MemoryEntry[] {
@@ -557,9 +559,14 @@ export function filterMemoryExplainEntries(
     options.minImportance,
     options.maxImportance,
   );
+  const criticalityScoped = filterMemoryExplainByCriticality(
+    importanceScoped,
+    options.minCriticality,
+    options.maxCriticality,
+  );
   return options.pinned === undefined
-    ? importanceScoped
-    : importanceScoped.filter((entry) => !!entry.pinned === options.pinned);
+    ? criticalityScoped
+    : criticalityScoped.filter((entry) => !!entry.pinned === options.pinned);
 }
 
 /** Normalize legacy tag metadata before filtering or serializing it. */
@@ -662,6 +669,20 @@ export function getMemoryExplainCriticality(entry: MemoryEntry): number {
     : 0.5;
 }
 
+/** Keep memories within the requested task-criticality range for explain. */
+export function filterMemoryExplainByCriticality(
+  entries: MemoryEntry[],
+  minCriticality?: number,
+  maxCriticality?: number,
+): MemoryEntry[] {
+  if (minCriticality === undefined && maxCriticality === undefined) return entries;
+  return entries.filter((entry) => {
+    const criticality = getMemoryExplainCriticality(entry);
+    return (minCriticality === undefined || criticality >= minCriticality) &&
+      (maxCriticality === undefined || criticality <= maxCriticality);
+  });
+}
+
 /** Describe active scope filters for the human-facing explain output. */
 export function formatMemoryExplainFilterMatches(
   options: {
@@ -676,6 +697,8 @@ export function formatMemoryExplainFilterMatches(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
   } = {},
 ): string[] {
   const filters: string[] = [];
@@ -690,6 +713,8 @@ export function formatMemoryExplainFilterMatches(
   if (options.until !== undefined) filters.push(`until=${options.until}`);
   if (options.minImportance !== undefined) filters.push(`minImportance=${options.minImportance}`);
   if (options.maxImportance !== undefined) filters.push(`maxImportance=${options.maxImportance}`);
+  if (options.minCriticality !== undefined) filters.push(`minCriticality=${options.minCriticality}`);
+  if (options.maxCriticality !== undefined) filters.push(`maxCriticality=${options.maxCriticality}`);
   return filters;
 }
 
@@ -706,6 +731,8 @@ export function formatMemoryExplainFilterSummary(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
   } = {},
 ): string | undefined {
   const filters = formatMemoryExplainFilterMatches(options);
@@ -2299,6 +2326,8 @@ export interface MemoryExplainFiltersJson {
   until?: string;
   minImportance?: number;
   maxImportance?: number;
+  minCriticality?: number;
+  maxCriticality?: number;
 }
 
 export interface MemoryExplainPaginationJson {
@@ -2483,6 +2512,8 @@ export function getMemoryExplainFilters(options?: {
   until?: string;
   minImportance?: number;
   maxImportance?: number;
+  minCriticality?: number;
+  maxCriticality?: number;
 }): MemoryExplainFiltersJson | undefined {
   if (!options) return undefined;
 
@@ -2498,6 +2529,8 @@ export function getMemoryExplainFilters(options?: {
   if (options.until !== undefined) filters.until = options.until;
   if (options.minImportance !== undefined) filters.minImportance = options.minImportance;
   if (options.maxImportance !== undefined) filters.maxImportance = options.maxImportance;
+  if (options.minCriticality !== undefined) filters.minCriticality = options.minCriticality;
+  if (options.maxCriticality !== undefined) filters.maxCriticality = options.maxCriticality;
   return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
@@ -2612,6 +2645,8 @@ export async function explainMemoryCommand(
     until?: string;
     minImportance?: number;
     maxImportance?: number;
+    minCriticality?: number;
+    maxCriticality?: number;
     format?: 'pretty' | 'json';
   },
 ): Promise<void> {

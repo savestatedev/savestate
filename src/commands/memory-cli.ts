@@ -18,8 +18,6 @@ import {
   parseMemoryConfigLimit,
   parseMemoryConfigOffset,
   parseMemoryListOffset,
-  parseMemoryMinImportance,
-  parseMemoryMaxImportance,
   type MemoryFreshnessState,
 } from './memory.js';
 import {
@@ -205,15 +203,55 @@ export function parseMemoryMaxImportance(value: string | undefined): number | un
   return importance;
 }
 
+/** Parse memory explain criticality bounds without silently accepting malformed scores. */
+function parseMemoryCriticalityBound(
+  value: string | undefined,
+  flag: '--min-criticality' | '--max-criticality',
+): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(normalized)) {
+    throw new Error(
+      `Invalid ${flag} value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+
+  const criticality = Number(normalized);
+  if (!Number.isFinite(criticality) || criticality < 0 || criticality > 1) {
+    throw new Error(
+      `Invalid ${flag} value "${value}". Expected a number between 0 and 1.`,
+    );
+  }
+  return criticality;
+}
+
+export function parseMemoryMinCriticality(value: string | undefined): number | undefined {
+  return parseMemoryCriticalityBound(value, '--min-criticality');
+}
+
+export function parseMemoryMaxCriticality(value: string | undefined): number | undefined {
+  return parseMemoryCriticalityBound(value, '--max-criticality');
+}
+
 /** Reject an inverted importance range before loading encrypted storage. */
 export function validateMemoryImportanceRange(
   minImportance: number | undefined,
   maxImportance: number | undefined,
 ): void {
-  if (minImportance === undefined || maxImportance === undefined) return;
-  if (minImportance > maxImportance) {
+  validateMemoryScoreRange(minImportance, maxImportance, 'importance');
+}
+
+/** Reject an inverted score range before loading encrypted storage. */
+export function validateMemoryScoreRange(
+  min: number | undefined,
+  max: number | undefined,
+  label: 'importance' | 'criticality',
+): void {
+  if (min === undefined || max === undefined) return;
+  if (min > max) {
     throw new Error(
-      `Invalid memory importance range: --min-importance (${minImportance}) must be at or below --max-importance (${maxImportance}).`,
+      `Invalid memory ${label} range: --min-${label} (${min}) must be at or below --max-${label} (${max}).`,
     );
   }
 }
@@ -738,6 +776,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
+    .option('--min-criticality <n>', 'Show explain matches with criticality at least this score (0-1)')
+    .option('--max-criticality <n>', 'Show explain matches with criticality at most this score (0-1)')
     .option('--json', 'Output as JSON')
     .action(async (query, options) => {
       try {
@@ -747,7 +787,10 @@ export function registerMemoryCommands(program: Command): void {
         validateMemoryListDateRange(since, until);
         const minImportance = parseMemoryMinImportance(options.minImportance);
         const maxImportance = parseMemoryMaxImportance(options.maxImportance);
+        const minCriticality = parseMemoryMinCriticality(options.minCriticality);
+        const maxCriticality = parseMemoryMaxCriticality(options.maxCriticality);
         validateMemoryImportanceRange(minImportance, maxImportance);
+        validateMemoryScoreRange(minCriticality, maxCriticality, 'criticality');
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -766,6 +809,8 @@ export function registerMemoryCommands(program: Command): void {
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
           maxImportance,
+          minCriticality,
+          maxCriticality,
           format: options.json ? 'json' : 'pretty',
         });
       } catch (err) {
