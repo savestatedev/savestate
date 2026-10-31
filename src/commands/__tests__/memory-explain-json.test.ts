@@ -197,6 +197,22 @@ describe('savestate memory explain --json', () => {
     });
   });
 
+  it('normalizes padding in verification sources', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+        verificationSource: ' profile\t sync ',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.verificationSource).toBe('profile sync');
+  });
+
   it('includes the effective importance used by ranking when provided', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson('inbox preference', [{

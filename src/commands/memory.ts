@@ -1038,7 +1038,7 @@ export function formatMemoryExplainFreshness(entry: MemoryEntry, now = new Date(
     ? 'needs confirmation'
     : freshness.state;
   const verificationSource = freshness.verificationSource
-    ? `; source ${freshness.verificationSource}`
+    ? `; source ${normalizeMemorySource(freshness.verificationSource)}`
     : '';
   return `${state} (${freshness.class}; verified ${formatMemoryListCreatedAt(freshness.lastVerifiedAt)}${verificationSource})`;
 }
@@ -2395,7 +2395,9 @@ export function formatMemoryExplainJson(
       freshness: result.freshness,
       freshnessClass: result.freshnessClass,
       lastVerifiedAt: result.lastVerifiedAt,
-      verificationSource: result.verificationSource,
+      verificationSource: result.verificationSource === undefined
+        ? undefined
+        : normalizeMemorySource(result.verificationSource),
     })),
   };
   if (filters && Object.keys(filters).length > 0) {

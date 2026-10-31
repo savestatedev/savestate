@@ -32,6 +32,22 @@ describe('savestate memory explain pretty freshness', () => {
     );
   });
 
+  it('normalizes padding in the verification source', () => {
+    const entry = {
+      id: 'mem-789',
+      content: 'A preference verified by an imported profile.',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-01T00:00:00.000Z',
+      lastVerifiedAt: '2026-10-17T00:00:00.000Z',
+      verificationSource: ' profile\t sync ',
+      freshnessClass: 'slow' as const,
+    };
+
+    expect(formatMemoryExplainFreshness(entry, new Date('2026-10-18T00:00:00.000Z'))).toBe(
+      'active (slow; verified 2026-10-17; source profile sync)',
+    );
+  });
+
   it('normalizes legacy padding in the source trace', () => {
     expect(formatMemoryExplainSource('  ChatGPT  ')).toBe('ChatGPT');
     expect(formatMemoryExplainSource(' Chat\t GPT ')).toBe('Chat GPT');
