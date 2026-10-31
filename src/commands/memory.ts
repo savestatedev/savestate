@@ -2304,6 +2304,8 @@ export interface MemoryExplainResultJson {
   criticality?: number;
   /** Normalized source id for tracing the memory's origin. */
   source?: string;
+  /** Trimmed namespace for tracing the memory's scope. */
+  namespace?: string;
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
@@ -2465,6 +2467,7 @@ export function formatMemoryExplainJson(
       importance: result.importance,
       criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
+      namespace: result.namespace?.trim() || undefined,
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
@@ -2827,6 +2830,9 @@ export async function explainMemoryCommand(
           importance: getMemoryListImportance(r.entry),
           criticality: getMemoryExplainCriticality(r.entry),
           source: normalizeMemoryListSource(r.entry.source),
+          namespace: typeof r.entry.metadata?.namespace === 'string'
+            ? r.entry.metadata.namespace.trim() || undefined
+            : undefined,
           summary: r.explanation.summary,
           pinned: !!r.entry.pinned,
           tier: getEffectiveTier(r.entry),

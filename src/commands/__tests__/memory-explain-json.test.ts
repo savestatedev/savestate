@@ -289,6 +289,22 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results[0]?.source).toBe('Chat GPT');
   });
 
+  it('includes a trimmed namespace for retrieval tracing', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        namespace: '  work:mail:assistant  ',
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.namespace).toBe('work:mail:assistant');
+  });
+
   it('includes every active scope filter for JSON consumers', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
