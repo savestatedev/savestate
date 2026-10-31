@@ -2296,6 +2296,8 @@ export interface MemoryExplainResultJson {
   id: string;
   createdAt?: string;
   score: number;
+  /** Score components used to produce the final retrieval score. */
+  scoreBreakdown?: MemoryExplainScoreBreakdownJson;
   /** Effective importance score used by the retrieval ranking. */
   importance?: number;
   /** Effective task-criticality score used by the retrieval ranking. */
@@ -2309,6 +2311,14 @@ export interface MemoryExplainResultJson {
   freshnessClass?: MemoryFreshnessClass;
   lastVerifiedAt?: string;
   verificationSource?: string;
+}
+
+export interface MemoryExplainScoreBreakdownJson {
+  semanticSimilarity: number;
+  recencyDecay: number;
+  importance: number;
+  taskCriticality: number;
+  confidenceBoost: number;
 }
 
 export interface MemoryExplainJson {
@@ -2390,6 +2400,7 @@ export function formatMemoryExplainJson(
     id: string;
     createdAt?: string;
     score: number;
+    scoreBreakdown?: MemoryExplainScoreBreakdownJson;
     importance?: number;
     criticality?: number;
     source?: string;
@@ -2438,6 +2449,7 @@ export function formatMemoryExplainJson(
       id: result.id,
       createdAt: result.createdAt,
       score: result.score,
+      scoreBreakdown: result.scoreBreakdown,
       importance: result.importance,
       criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
@@ -2793,6 +2805,13 @@ export async function explainMemoryCommand(
           id: r.entry.id,
           createdAt: r.entry.createdAt,
           score: r.finalScore,
+          scoreBreakdown: {
+            semanticSimilarity: r.scores.semantic,
+            recencyDecay: r.scores.recency,
+            importance: r.scores.importance,
+            taskCriticality: r.scores.criticality,
+            confidenceBoost: 1.0,
+          },
           importance: getMemoryListImportance(r.entry),
           criticality: getMemoryExplainCriticality(r.entry),
           source: normalizeMemoryListSource(r.entry.source),

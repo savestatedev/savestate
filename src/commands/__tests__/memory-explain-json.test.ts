@@ -245,6 +245,34 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results[0]?.criticality).toBe(0.9);
   });
 
+  it('includes score components for agent-readable retrieval explanations', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        scoreBreakdown: {
+          semanticSimilarity: 0.8,
+          recencyDecay: 0.7,
+          importance: 0.9,
+          taskCriticality: 0.6,
+          confidenceBoost: 1,
+        },
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.scoreBreakdown).toEqual({
+      semanticSimilarity: 0.8,
+      recencyDecay: 0.7,
+      importance: 0.9,
+      taskCriticality: 0.6,
+      confidenceBoost: 1,
+    });
+  });
+
   it('includes a normalized source id for retrieval tracing', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson('inbox preference', [{
