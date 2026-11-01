@@ -269,7 +269,14 @@ const MAX_MCP_STATUS_OFFSET = 1000;
 export function parseMcpStatusOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_STATUS_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MCP_STATUS_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_STATUS_OFFSET}.`,
