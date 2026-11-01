@@ -3301,6 +3301,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('stable 1-based <code>rank</code>');
     expect(memorySection).toContain('<code>pagination.remaining</code>');
     expect(memorySection).toContain('explain <code>pagination</code> object also includes <code>suggestedOffset</code>');
+    expect(memorySection).toContain('Filters are applied before pagination');
+    expect(memorySection).toContain('pass <code>--snapshot</code> to inspect a historical archive');
     expect(explainBlock).toContain(".option('--offset <n>'");
     expect(memory).toContain('export function parseMemoryExplainOffset');
   });

@@ -228,9 +228,12 @@ ranked memories matched a query:
 ```bash
 savestate memory explain "inbox preference" --json
 savestate memory explain "inbox preference" --offset 10 --limit 5 --json
+savestate memory explain "inbox preference" --snapshot ss-2026-10-18 --offset 10 --limit 5 --json
 ```
 
-The JSON response keeps each result's stable 1-based `rank` across pages.
+Pass `--snapshot` to explain retrievals from a historical archive. Filters are
+applied before pagination, so the JSON response keeps each result's stable
+1-based `rank` across pages.
 `pagination.remaining` reports matching results after the visible page; an
 empty later page is marked `emptyReason: "page"` and provides
 `suggestedOffset` so clients can recover from a stale offset.
