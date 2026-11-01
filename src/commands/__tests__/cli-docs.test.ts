@@ -2569,6 +2569,20 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryQuery');
   });
 
+  it('documents memory explain historical snapshot selection', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
+    expect(memorySection).toContain('archive used by <code>explain</code>');
+    expect(memorySection).toContain('memory explain "inbox preference" --snapshot ss-2026-10-18 --json');
+    expect(explainBlock).toContain(".option('-s, --snapshot <id>'");
+    expect(explainBlock).toContain('snapshotId: parseMemorySnapshot(options.snapshot)');
+  });
+
+  it('documents the resolved snapshot in memory explain output', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('resolved archive <code>snapshot</code> ID');
+  });
+
   it('documents memory --reason as a non-empty reason', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--reason');

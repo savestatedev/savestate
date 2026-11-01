@@ -98,6 +98,25 @@ describe('savestate memory explain --json', () => {
     });
   });
 
+  it('does not advertise a previous page for an empty collection with an offset', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'unknown query',
+        [],
+        { offset: 10, limit: 5, total: 0 },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 10,
+      total: 0,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('reports continuation metadata for a paged result', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
@@ -334,6 +353,20 @@ describe('savestate memory explain --json', () => {
       freshness: 'active',
       pinned: true,
     });
+  });
+
+  it('includes the resolved snapshot when provided', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { total: 0 },
+        undefined,
+        'ss-2026-10-18',
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.snapshot).toBe('ss-2026-10-18');
   });
 
   it('normalizes padded source ids in explain filters', () => {
