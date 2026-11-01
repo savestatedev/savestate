@@ -505,4 +505,19 @@ describe('savestate memory explain --json', () => {
     expect(normalizeMemoryExplainRank(3.5, 4)).toBe(4);
     expect(normalizeMemoryExplainRank(3, 4)).toBe(3);
   });
+
+  it('exposes rank as a required field on every serialized result', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]).toHaveProperty('rank', 1);
+  });
 });

@@ -2314,7 +2314,7 @@ export async function showTierConfig(
 export interface MemoryExplainResultJson {
   id: string;
   /** Stable 1-based retrieval rank across paginated explain results. */
-  rank?: number;
+  rank: number;
   createdAt?: string;
   score: number;
   /** Score components used to produce the final retrieval score. */
