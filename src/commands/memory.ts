@@ -2503,28 +2503,29 @@ export function formatMemoryExplainJson(
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
-    results: results.map((result) => ({
-      id: result.id,
-      createdAt: result.createdAt,
-      score: result.score,
-      scoreBreakdown: result.scoreBreakdown,
-      importance: result.importance,
-      criticality: result.criticality,
-      source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
-      namespace: result.namespace?.trim() || null,
-      ...(result.tags === undefined || result.tags.length === 0
-        ? {}
-        : { tags: normalizeMemoryTagFilters(result.tags) }),
-      summary: result.summary,
-      pinned: result.pinned,
-      tier: result.tier,
-      freshness: result.freshness,
-      freshnessClass: result.freshnessClass,
-      lastVerifiedAt: result.lastVerifiedAt,
-      verificationSource: result.verificationSource === undefined
-        ? undefined
-        : normalizeMemorySource(result.verificationSource),
-    })),
+    results: results.map((result) => {
+      const tags = result.tags === undefined ? [] : normalizeMemoryTagFilters(result.tags);
+      return {
+        id: result.id,
+        createdAt: result.createdAt,
+        score: result.score,
+        scoreBreakdown: result.scoreBreakdown,
+        importance: result.importance,
+        criticality: result.criticality,
+        source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
+        namespace: result.namespace?.trim() || null,
+        ...(tags.length === 0 ? {} : { tags }),
+        summary: result.summary,
+        pinned: result.pinned,
+        tier: result.tier,
+        freshness: result.freshness,
+        freshnessClass: result.freshnessClass,
+        lastVerifiedAt: result.lastVerifiedAt,
+        verificationSource: result.verificationSource === undefined
+          ? undefined
+          : normalizeMemorySource(result.verificationSource),
+      };
+    }),
   };
   if (filters && Object.keys(filters).length > 0) {
     record.filters = {

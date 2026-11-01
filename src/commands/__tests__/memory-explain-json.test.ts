@@ -250,6 +250,22 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results[0]?.tags).toEqual(['Work', 'urgent']);
   });
 
+  it('omits tags when metadata normalizes to an empty list', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-empty-tags',
+        score: 0.82,
+        summary: 'Match with blank tag metadata.',
+        pinned: false,
+        tier: 'L2',
+        freshness: 'active',
+        tags: [' ', ''],
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]).not.toHaveProperty('tags');
+  });
+
   it('includes the effective importance used by ranking when provided', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson('inbox preference', [{
