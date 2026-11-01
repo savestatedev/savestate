@@ -156,6 +156,33 @@ export function selectMcpExportItems<T>(items: T[], limit?: number): T[] {
   return items.slice(0, limit);
 }
 
+const MAX_MCP_EXPORT_OFFSET = 1000;
+
+/** Parse mcp export --offset without turning user input into an unbounded skip. */
+export function parseMcpExportOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value.trim())) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_EXPORT_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MCP_EXPORT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_EXPORT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip passport items before applying --limit during export. */
+export function selectMcpExportOffsetItems<T>(items: T[], offset?: number): T[] {
+  if (offset === undefined) return items;
+  return items.slice(offset);
+}
+
 const MAX_MCP_IMPORT_LIMIT = 1000;
 
 /** Parse mcp import --limit without turning user input errors into an empty import. */
@@ -175,6 +202,33 @@ export function parseMcpImportLimit(value: string | undefined): number | undefin
 export function selectMcpImportItems<T>(items: T[], limit?: number): T[] {
   if (limit === undefined) return items;
   return items.slice(0, limit);
+}
+
+const MAX_MCP_IMPORT_OFFSET = 1000;
+
+/** Parse mcp import --offset without turning user input into an unbounded skip. */
+export function parseMcpImportOffset(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  if (!/^\d+$/.test(value.trim())) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_IMPORT_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(value);
+  if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MCP_IMPORT_OFFSET) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_IMPORT_OFFSET}.`,
+    );
+  }
+  return offset;
+}
+
+/** Skip passport memories before applying --limit during import. */
+export function selectMcpImportOffsetItems<T>(items: T[], offset?: number): T[] {
+  if (offset === undefined) return items;
+  return items.slice(offset);
 }
 
 const MAX_MCP_STATUS_LIMIT = 1000;
@@ -575,6 +629,7 @@ interface MCPExportOptions {
   output?: string;
   includeSnapshots?: boolean;
   limit?: string;
+  offset?: string;
   json?: boolean;
 }
 
@@ -585,6 +640,7 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
     const agentId = parseMcpAgent(options.agent) ?? 'default';
     const output = parseMcpOutput(options.output);
     const limit = parseMcpExportLimit(options.limit);
+    const offset = parseMcpExportOffset(options.offset);
 
     if (!isInitialized()) {
       if (options.json) {
@@ -610,21 +666,27 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
 
     // Note: In a real implementation, we'd load from persistent storage
     // For now, we'll export from the index
-    const memories: PassportMemory[] = selectMcpExportItems([], limit);
+    const memories: PassportMemory[] = selectMcpExportItems(
+      selectMcpExportOffsetItems([], offset),
+      limit,
+    );
 
     // Get snapshots
     if (spinner) spinner.text = 'Loading snapshots...';
     const index = await loadIndex();
     const snapshots: PassportSnapshot[] = selectMcpExportItems(
-      index.snapshots
-        .filter((s) => !options.agent || s.platform.includes(agentId) || s.id.includes(agentId))
-        .map((s) => ({
-          id: s.id,
-          timestamp: s.timestamp,
-          platform: s.platform,
-          label: s.label,
-          size: s.size,
-        })),
+      selectMcpExportOffsetItems(
+        index.snapshots
+          .filter((s) => !options.agent || s.platform.includes(agentId) || s.id.includes(agentId))
+          .map((s) => ({
+            id: s.id,
+            timestamp: s.timestamp,
+            platform: s.platform,
+            label: s.label,
+            size: s.size,
+          })),
+        offset,
+      ),
       limit,
     );
 
@@ -690,6 +752,7 @@ interface MCPImportOptions {
   agent?: string;
   merge?: boolean;
   limit?: string;
+  offset?: string;
   json?: boolean;
 }
 
@@ -730,6 +793,7 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     const agentId = parseMcpAgent(options.agent);
     const input = parseMcpInput(options.input);
     const limit = parseMcpImportLimit(options.limit);
+    const offset = parseMcpImportOffset(options.offset);
 
     if (!isInitialized()) {
       if (options.json) {
@@ -780,7 +844,10 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     const lane = new KnowledgeLane(storage);
 
     let importedMemories = 0;
-    for (const memory of selectMcpImportItems(passport.memories, limit)) {
+    for (const memory of selectMcpImportItems(
+      selectMcpImportOffsetItems(passport.memories, offset),
+      limit,
+    )) {
       try {
         await lane.storeMemory({
           namespace,
@@ -842,7 +909,7 @@ export function registerMCPCommands(program: Command): void {
     .option('-o, --output <path>', 'Output file path (single non-empty path, default: passport-{agent}-{timestamp}.json)')
     .option('--include-snapshots', 'Include snapshot metadata in passport')
     .option('--limit <n>', 'Maximum number of MCP tools and resources to show on status, memories and snapshot metadata rows on export, memories to import, or serve status field rows')
-    .option('--offset <n>', 'Skip the first N MCP tools and resources on status (non-negative integer up to 1000)')
+    .option('--offset <n>', 'Skip the first N MCP tools and resources on status, snapshot metadata on export, or memories on import (non-negative integer up to 1000)')
     .option('-i, --input <path>', 'Passport file to import (single non-empty path)')
     .option('--merge', 'Merge with existing memories instead of replacing')
     .option('--json', 'Output as JSON')
