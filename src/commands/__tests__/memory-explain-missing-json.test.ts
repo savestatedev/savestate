@@ -60,6 +60,24 @@ describe('savestate memory explain --json when missing', () => {
     expect(parsed.filters).toEqual({ freshness: 'stale' });
   });
 
+  it('does not advertise a previous page for an empty collection with an offset', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainMissingJson(
+        'unknown query',
+        { offset: 10, limit: 5 },
+      ),
+    ) as MemoryExplainMissingJson;
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 10,
+      total: 0,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('preserves every active scope filter when no results match', () => {
     const parsed = JSON.parse(
       formatMemoryExplainMissingJson(

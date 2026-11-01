@@ -2456,7 +2456,8 @@ export function formatMemoryExplainJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
   const pageSize = pagination.pageSize ?? pagination.limit ?? Math.max(1, results.length);
-  const hasPrevious = offset > 0;
+  // Keep an empty collection from advertising pagination just because --offset was supplied.
+  const hasPrevious = offset > 0 && total > 0;
   const hasMore = pagination.hasMore ?? offset + results.length < total;
   const remaining = Math.max(0, total - offset - results.length);
   const suggestedOffset = results.length === 0 && total > 0
@@ -2480,7 +2481,7 @@ export function formatMemoryExplainJson(
       remaining,
       pageSize,
       hasPrevious,
-      previousOffset,
+      previousOffset: hasPrevious ? previousOffset : null,
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
@@ -2540,7 +2541,8 @@ export function formatMemoryExplainMissingJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
   const pageSize = pagination.pageSize ?? pagination.limit ?? 1;
-  const hasPrevious = offset > 0;
+  // Keep an empty collection from advertising pagination just because --offset was supplied.
+  const hasPrevious = offset > 0 && total > 0;
   const hasMore = pagination.hasMore ?? offset < total;
   const remaining = Math.max(0, total - offset);
   const record: MemoryExplainMissingJson = {
