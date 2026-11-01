@@ -2311,6 +2311,8 @@ export interface MemoryExplainResultJson {
   source?: string;
   /** Trimmed namespace for tracing the memory's scope, or null when unassigned. */
   namespace: string | null;
+  /** Normalized metadata tags, when the memory has any. */
+  tags?: string[];
   summary: string;
   pinned: boolean;
   tier: MemoryTier;
@@ -2494,6 +2496,7 @@ export function formatMemoryExplainJson(
       criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
       namespace: result.namespace?.trim() || null,
+      ...(result.tags === undefined || result.tags.length === 0 ? {} : { tags: result.tags }),
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
@@ -2879,6 +2882,7 @@ export async function explainMemoryCommand(
           namespace: typeof r.entry.metadata?.namespace === 'string'
             ? r.entry.metadata.namespace.trim() || undefined
             : undefined,
+          tags: getMemoryListTags(r.entry),
           summary: r.explanation.summary,
           pinned: !!r.entry.pinned,
           tier: getEffectiveTier(r.entry),

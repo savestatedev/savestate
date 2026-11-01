@@ -234,6 +234,22 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results[0]?.verificationSource).toBe('profile sync');
   });
 
+  it('includes normalized tags when a result carries tag metadata', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-tagged',
+        score: 0.82,
+        summary: 'Tagged match for the query.',
+        pinned: false,
+        tier: 'L2',
+        freshness: 'active',
+        tags: ['Work', 'urgent'],
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.tags).toEqual(['Work', 'urgent']);
+  });
+
   it('includes the effective importance used by ranking when provided', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson('inbox preference', [{
