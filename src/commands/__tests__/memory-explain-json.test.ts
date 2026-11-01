@@ -33,6 +33,7 @@ describe('savestate memory explain --json', () => {
       results: Array<MemoryExplainJson['results'][number] & { content?: unknown }>;
     };
     expect(parsed).toEqual({
+      found: true,
       query: 'inbox preference',
       shown: 2,
       emptyReason: null,
@@ -79,6 +80,7 @@ describe('savestate memory explain --json', () => {
   it('records no matches as an empty list', () => {
     const parsed = JSON.parse(formatMemoryExplainJson('unknown query', [])) as MemoryExplainJson;
     expect(parsed).toEqual({
+      found: true,
       query: 'unknown query',
       shown: 0,
       emptyReason: 'collection',
@@ -149,6 +151,7 @@ describe('savestate memory explain --json', () => {
     ) as MemoryExplainJson & { found?: unknown };
 
     expect(parsed).toEqual({
+      found: true,
       query: 'inbox preference',
       shown: 0,
       emptyReason: 'page',
@@ -166,7 +169,7 @@ describe('savestate memory explain --json', () => {
       },
       results: [],
     });
-    expect(parsed.found).toBeUndefined();
+    expect(parsed.found).toBe(true);
   });
 
   it('points exhausted bounded pages to the nearest populated page', () => {

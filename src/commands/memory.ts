@@ -2345,6 +2345,8 @@ export interface MemoryExplainScoreBreakdownJson {
 }
 
 export interface MemoryExplainJson {
+  /** Successful explain responses use the same explicit presence marker as missing summaries. */
+  found: true;
   query: string;
   /** Resolved archive snapshot used for retrieval, when available. */
   snapshot?: string;
@@ -2487,6 +2489,7 @@ export function formatMemoryExplainJson(
       : Math.max(0, offset - pageSize)
     : null;
   const record: MemoryExplainJson = {
+    found: true,
     query,
     ...(snapshotId === undefined ? {} : { snapshot: snapshotId }),
     shown: results.length,
