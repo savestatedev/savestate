@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyMemoryExplainFilters,
   formatMemoryExplainEmptyMessage,
+  formatMemoryExplainEmptyTips,
   formatMemoryExplainPrettySummary,
   parseMemoryExplainOffset,
   selectMemoryExplainOffsetEntries,
@@ -77,5 +78,14 @@ describe('savestate memory explain --offset', () => {
     expect(formatMemoryExplainPrettySummary(0, 0)).toBe('No memories matched the query.');
     expect(formatMemoryExplainEmptyMessage(5)).toBe('No memories are visible on this page.');
     expect(formatMemoryExplainEmptyMessage(0)).toBe('No memories matched the query.');
+    expect(formatMemoryExplainEmptyTips(5)).toEqual([
+      'Use the suggested offset above to open the nearest matching page',
+      'Adjust `--offset` or `--limit` to browse other pages',
+    ]);
+    expect(formatMemoryExplainEmptyTips(0)).toEqual([
+      'Try broader search terms',
+      'Check if memories exist with `savestate memory list`',
+      'Verify the namespace is correct',
+    ]);
   });
 });

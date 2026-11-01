@@ -2402,6 +2402,20 @@ export function formatMemoryExplainEmptyMessage(total: number): string {
     : 'No memories are visible on this page.';
 }
 
+/** Keep empty-page tips actionable without implying that matching memories are missing. */
+export function formatMemoryExplainEmptyTips(total: number): string[] {
+  return total === 0
+    ? [
+        'Try broader search terms',
+        'Check if memories exist with `savestate memory list`',
+        'Verify the namespace is correct',
+      ]
+    : [
+        'Use the suggested offset above to open the nearest matching page',
+        'Adjust `--offset` or `--limit` to browse other pages',
+      ];
+}
+
 /** Keep the human-readable score breakdown aligned with the JSON explanation. */
 export function formatMemoryExplainScoreBreakdown(
   scores: MemoryExplainScoreBreakdownJson,
@@ -2949,9 +2963,10 @@ export async function explainMemoryCommand(
   if (scoredLimited.length === 0) {
     console.log(`\n   ${formatMemoryExplainEmptyMessage(sorted.length)}\n`);
     console.log('   Tips:');
-    console.log('   • Try broader search terms');
-    console.log('   • Check if memories exist with `savestate memory list`');
-    console.log('   • Verify the namespace is correct\n');
+    for (const tip of formatMemoryExplainEmptyTips(sorted.length)) {
+      console.log(`   • ${tip}`);
+    }
+    console.log();
   }
 }
 
