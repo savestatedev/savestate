@@ -221,6 +221,23 @@ run against different snapshot subsets. Its pagination metadata also marks an
 empty first page as `collection` and an empty later page as `page`, with a
 `suggestedOffset` for retrying the nearest earlier page (including when a
 snapshot is missing or SaveState is not initialized).
+
+For memory-layer retrieval explanations, use `memory explain` to inspect why
+ranked memories matched a query:
+
+```bash
+savestate memory explain "inbox preference" --json
+savestate memory explain "inbox preference" --offset 10 --limit 5 --json
+savestate memory explain "inbox preference" --snapshot ss-2026-10-18 --offset 10 --limit 5 --json
+```
+
+Pass `--snapshot` to explain retrievals from a historical archive. Filters are
+applied before pagination, so the JSON response keeps each result's stable
+1-based `rank` across pages.
+`pagination.remaining` reports matching results after the visible page; an
+empty later page is marked `emptyReason: "page"` and provides
+`suggestedOffset` so clients can recover from a stale offset.
+
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration
   --set <key=value>                  Set a config value
