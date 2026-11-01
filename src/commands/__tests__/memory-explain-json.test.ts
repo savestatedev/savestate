@@ -234,6 +234,38 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results[0]?.verificationSource).toBe('profile sync');
   });
 
+  it('includes normalized tags when a result carries tag metadata', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-tagged',
+        score: 0.82,
+        summary: 'Tagged match for the query.',
+        pinned: false,
+        tier: 'L2',
+        freshness: 'active',
+        tags: ['Work', 'urgent'],
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.tags).toEqual(['Work', 'urgent']);
+  });
+
+  it('omits tags when metadata normalizes to an empty list', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-empty-tags',
+        score: 0.82,
+        summary: 'Match with blank tag metadata.',
+        pinned: false,
+        tier: 'L2',
+        freshness: 'active',
+        tags: [' ', ''],
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]).not.toHaveProperty('tags');
+  });
+
   it('includes the effective importance used by ranking when provided', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson('inbox preference', [{
@@ -393,5 +425,18 @@ describe('savestate memory explain --json', () => {
     ) as MemoryExplainJson;
 
     expect(parsed.filters?.namespace).toBe('work:mail:assistant');
+  });
+
+  it('canonicalizes explain tag filters for JSON consumers', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        {},
+        { tags: [' Work ', 'work', '', 'Urgent'] },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.filters?.tags).toEqual(['Work', 'Urgent']);
   });
 });

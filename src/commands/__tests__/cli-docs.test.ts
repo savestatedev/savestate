@@ -3224,7 +3224,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('<code>createdAt</code>');
     expect(memorySection).toContain("each result's <code>pinned</code> state");
     expect(memorySection).toContain("each result's current <code>freshness</code> state");
-    expect(memorySection).toContain("With <code>--json</code>, results also include effective <code>importance</code> and <code>criticality</code> scores, normalized <code>source</code>, <code>pinned</code> state, and <code>tier</code>");
+    expect(memorySection).toContain("With <code>--json</code>, results also include effective <code>importance</code> and <code>criticality</code> scores, normalized <code>source</code>, non-empty normalized <code>tags</code>, <code>pinned</code> state, and <code>tier</code>");
     expect(memorySection).toContain("active filters (including tier, pinned/unpinned, importance, criticality, and creation-date scope)");
     expect(memorySection).toContain('<code>freshnessClass</code>');
     expect(memorySection).toContain('<code>lastVerifiedAt</code>');
