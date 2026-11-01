@@ -2345,10 +2345,14 @@ export interface MemoryExplainScoreBreakdownJson {
 }
 
 export interface MemoryExplainJson {
+  /** Successful explain responses use the same explicit presence marker as missing summaries. */
+  found: true;
   query: string;
   /** Resolved archive snapshot used for retrieval, when available. */
   snapshot?: string;
   shown: number;
+  /** True when the current collection or page has no visible results. */
+  empty: boolean;
   emptyReason: 'collection' | 'page' | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
@@ -2473,7 +2477,13 @@ export function formatMemoryExplainJson(
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
-  const pageSize = pagination.pageSize ?? pagination.limit ?? Math.max(1, results.length);
+  // Keep direct formatter callers aligned with the CLI's default page size when
+  // an exhausted page is represented without an explicit --limit.
+  const pageSize = pagination.pageSize
+    ?? pagination.limit
+    ?? (results.length === 0
+      ? DEFAULT_MEMORY_EXPLAIN_LIMIT
+      : Math.max(1, results.length));
   // Keep an empty collection from advertising pagination just because --offset was supplied.
   const hasPrevious = offset > 0 && total > 0;
   const hasMore = pagination.hasMore ?? offset + results.length < total;
@@ -2487,9 +2497,11 @@ export function formatMemoryExplainJson(
       : Math.max(0, offset - pageSize)
     : null;
   const record: MemoryExplainJson = {
+    found: true,
     query,
     ...(snapshotId === undefined ? {} : { snapshot: snapshotId }),
     shown: results.length,
+    empty: results.length === 0,
     emptyReason: results.length > 0 ? null : total === 0 ? 'collection' : 'page',
     suggestedOffset,
     pagination: {
@@ -2565,7 +2577,7 @@ export function formatMemoryExplainMissingJson(
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
-  const pageSize = pagination.pageSize ?? pagination.limit ?? 1;
+  const pageSize = pagination.pageSize ?? pagination.limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT;
   // Keep an empty collection from advertising pagination just because --offset was supplied.
   const hasPrevious = offset > 0 && total > 0;
   const hasMore = pagination.hasMore ?? offset < total;

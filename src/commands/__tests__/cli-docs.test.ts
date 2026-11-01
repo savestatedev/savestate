@@ -3218,6 +3218,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('pin state with <code>--pinned</code> or <code>--unpinned</code>, freshness with <code>--freshness</code>');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('retrieval scores');
+    expect(memorySection).toContain('Explain success envelopes include <code>found: true</code>');
+    expect(memorySection).toContain('an <code>empty</code> boolean');
     expect(memorySection).toContain('<code>emptyReason</code>');
     expect(memorySection).toContain('<code>emptyReason: page</code>');
     expect(memorySection).toContain('<code>suggestedOffset</code>');

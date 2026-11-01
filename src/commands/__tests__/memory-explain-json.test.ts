@@ -33,8 +33,10 @@ describe('savestate memory explain --json', () => {
       results: Array<MemoryExplainJson['results'][number] & { content?: unknown }>;
     };
     expect(parsed).toEqual({
+      found: true,
       query: 'inbox preference',
       shown: 2,
+      empty: false,
       emptyReason: null,
       suggestedOffset: null,
       pagination: {
@@ -79,8 +81,10 @@ describe('savestate memory explain --json', () => {
   it('records no matches as an empty list', () => {
     const parsed = JSON.parse(formatMemoryExplainJson('unknown query', [])) as MemoryExplainJson;
     expect(parsed).toEqual({
+      found: true,
       query: 'unknown query',
       shown: 0,
+      empty: true,
       emptyReason: 'collection',
       suggestedOffset: null,
       pagination: {
@@ -88,7 +92,7 @@ describe('savestate memory explain --json', () => {
         limit: null,
         total: 0,
         remaining: 0,
-        pageSize: 1,
+        pageSize: 5,
         hasPrevious: false,
         previousOffset: null,
         hasMore: false,
@@ -149,8 +153,10 @@ describe('savestate memory explain --json', () => {
     ) as MemoryExplainJson & { found?: unknown };
 
     expect(parsed).toEqual({
+      found: true,
       query: 'inbox preference',
       shown: 0,
+      empty: true,
       emptyReason: 'page',
       suggestedOffset: 2,
       pagination: {
@@ -166,7 +172,7 @@ describe('savestate memory explain --json', () => {
       },
       results: [],
     });
-    expect(parsed.found).toBeUndefined();
+    expect(parsed.found).toBe(true);
   });
 
   it('points exhausted bounded pages to the nearest populated page', () => {
@@ -180,6 +186,20 @@ describe('savestate memory explain --json', () => {
 
     expect(parsed.suggestedOffset).toBe(40);
     expect(parsed.pagination.previousOffset).toBe(40);
+  });
+
+  it('uses the CLI default page size for exhausted pages without a limit', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { offset: 5, total: 6 },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.suggestedOffset).toBe(5);
+    expect(parsed.pagination.pageSize).toBe(5);
+    expect(parsed.pagination.previousOffset).toBe(5);
   });
 
   it('includes an active freshness filter for JSON consumers', () => {
