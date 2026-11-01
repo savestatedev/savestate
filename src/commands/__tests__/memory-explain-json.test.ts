@@ -53,6 +53,7 @@ describe('savestate memory explain --json', () => {
       results: [
         {
           id: 'mem-123',
+          rank: 1,
           createdAt: '2026-10-17T12:00:00.000Z',
           score: 0.82,
           summary: 'Strong match for "inbox preference" in active short-term memory.',
@@ -63,6 +64,7 @@ describe('savestate memory explain --json', () => {
         },
         {
           id: 'mem-456',
+          rank: 2,
           createdAt: '2026-10-16T08:30:00.000Z',
           score: 0.41,
           summary: 'Partial match for query in working memory.',
@@ -471,6 +473,25 @@ describe('savestate memory explain --json', () => {
         tier: 'L1',
         freshness: 'active',
       }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.rank).toBe(6);
+  });
+
+  it('derives a retrieval rank when the formatter receives a paged result without one', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [{
+          id: 'mem-123',
+          score: 0.82,
+          summary: 'Strong match for the query.',
+          pinned: false,
+          tier: 'L1',
+          freshness: 'active',
+        }],
+        { offset: 5, limit: 1, total: 6 },
+      ),
     ) as MemoryExplainJson;
 
     expect(parsed.results[0]?.rank).toBe(6);

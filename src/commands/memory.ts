@@ -2518,11 +2518,13 @@ export function formatMemoryExplainJson(
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
-    results: results.map((result) => {
+    results: results.map((result, index) => {
       const tags = result.tags === undefined ? [] : normalizeMemoryTagFilters(result.tags);
       return {
         id: result.id,
-        ...(result.rank === undefined ? {} : { rank: result.rank }),
+        // Keep the public formatter self-contained so every JSON result has a
+        // stable rank, even when callers do not precompute one.
+        rank: result.rank ?? offset + index + 1,
         createdAt: result.createdAt,
         score: result.score,
         scoreBreakdown: result.scoreBreakdown,
