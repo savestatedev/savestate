@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatMemoryExplainJson,
+  normalizeMemoryExplainRank,
   type MemoryExplainJson,
 } from '../memory.js';
 
@@ -53,6 +54,7 @@ describe('savestate memory explain --json', () => {
       results: [
         {
           id: 'mem-123',
+          rank: 1,
           createdAt: '2026-10-17T12:00:00.000Z',
           score: 0.82,
           summary: 'Strong match for "inbox preference" in active short-term memory.',
@@ -63,6 +65,7 @@ describe('savestate memory explain --json', () => {
         },
         {
           id: 'mem-456',
+          rank: 2,
           createdAt: '2026-10-16T08:30:00.000Z',
           score: 0.41,
           summary: 'Partial match for query in working memory.',
@@ -458,5 +461,63 @@ describe('savestate memory explain --json', () => {
     ) as MemoryExplainJson;
 
     expect(parsed.filters?.tags).toEqual(['Work', 'Urgent']);
+  });
+
+  it('preserves an explicit retrieval rank for paginated JSON consumers', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        rank: 6,
+        score: 0.82,
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.rank).toBe(6);
+  });
+
+  it('derives a retrieval rank when the formatter receives a paged result without one', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [{
+          id: 'mem-123',
+          score: 0.82,
+          summary: 'Strong match for the query.',
+          pinned: false,
+          tier: 'L1',
+          freshness: 'active',
+        }],
+        { offset: 5, limit: 1, total: 6 },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.rank).toBe(6);
+  });
+
+  it('falls back when a caller supplies an invalid retrieval rank', () => {
+    expect(normalizeMemoryExplainRank(0, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(-2, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(Number.NaN, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(3.5, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(3, 4)).toBe(3);
+  });
+
+  it('exposes rank as a required field on every serialized result', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        score: 0.82,
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]).toHaveProperty('rank', 1);
   });
 });
