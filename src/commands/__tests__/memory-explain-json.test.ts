@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatMemoryExplainJson,
+  normalizeMemoryExplainRank,
   type MemoryExplainJson,
 } from '../memory.js';
 
@@ -495,5 +496,13 @@ describe('savestate memory explain --json', () => {
     ) as MemoryExplainJson;
 
     expect(parsed.results[0]?.rank).toBe(6);
+  });
+
+  it('falls back when a caller supplies an invalid retrieval rank', () => {
+    expect(normalizeMemoryExplainRank(0, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(-2, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(Number.NaN, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(3.5, 4)).toBe(4);
+    expect(normalizeMemoryExplainRank(3, 4)).toBe(3);
   });
 });

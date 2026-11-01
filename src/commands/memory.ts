@@ -2451,6 +2451,11 @@ export function formatMemoryExplainScoreBreakdown(
   ].join('\n');
 }
 
+/** Keep caller-provided ranks valid without weakening the formatter's fallback. */
+export function normalizeMemoryExplainRank(rank: number | undefined, fallback: number): number {
+  return rank !== undefined && Number.isInteger(rank) && rank > 0 ? rank : fallback;
+}
+
 export function formatMemoryExplainJson(
   query: string,
   results: Array<{
@@ -2524,7 +2529,7 @@ export function formatMemoryExplainJson(
         id: result.id,
         // Keep the public formatter self-contained so every JSON result has a
         // stable rank, even when callers do not precompute one.
-        rank: result.rank ?? offset + index + 1,
+        rank: normalizeMemoryExplainRank(result.rank, offset + index + 1),
         createdAt: result.createdAt,
         score: result.score,
         scoreBreakdown: result.scoreBreakdown,
