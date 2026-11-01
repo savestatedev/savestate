@@ -459,4 +459,20 @@ describe('savestate memory explain --json', () => {
 
     expect(parsed.filters?.tags).toEqual(['Work', 'Urgent']);
   });
+
+  it('preserves an explicit retrieval rank for paginated JSON consumers', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson('inbox preference', [{
+        id: 'mem-123',
+        rank: 6,
+        score: 0.82,
+        summary: 'Strong match for the query.',
+        pinned: false,
+        tier: 'L1',
+        freshness: 'active',
+      }]),
+    ) as MemoryExplainJson;
+
+    expect(parsed.results[0]?.rank).toBe(6);
+  });
 });

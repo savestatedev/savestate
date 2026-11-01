@@ -2313,6 +2313,8 @@ export async function showTierConfig(
 
 export interface MemoryExplainResultJson {
   id: string;
+  /** Stable 1-based retrieval rank across paginated explain results. */
+  rank?: number;
   createdAt?: string;
   score: number;
   /** Score components used to produce the final retrieval score. */
@@ -2453,6 +2455,7 @@ export function formatMemoryExplainJson(
   query: string,
   results: Array<{
     id: string;
+    rank?: number;
     createdAt?: string;
     score: number;
     scoreBreakdown?: MemoryExplainScoreBreakdownJson;
@@ -2519,6 +2522,7 @@ export function formatMemoryExplainJson(
       const tags = result.tags === undefined ? [] : normalizeMemoryTagFilters(result.tags);
       return {
         id: result.id,
+        ...(result.rank === undefined ? {} : { rank: result.rank }),
         createdAt: result.createdAt,
         score: result.score,
         scoreBreakdown: result.scoreBreakdown,
@@ -2900,10 +2904,11 @@ export async function explainMemoryCommand(
     }
     console.log(formatMemoryExplainJson(
       query,
-      scoredLimited.map((r) => {
+      scoredLimited.map((r, index) => {
         const freshness = getMemoryFreshness(r.entry);
         return {
           id: r.entry.id,
+          rank: (offset ?? 0) + index + 1,
           createdAt: r.entry.createdAt,
           score: r.finalScore,
           scoreBreakdown: {
