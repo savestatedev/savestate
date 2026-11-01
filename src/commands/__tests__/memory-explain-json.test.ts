@@ -90,7 +90,7 @@ describe('savestate memory explain --json', () => {
         limit: null,
         total: 0,
         remaining: 0,
-        pageSize: 1,
+        pageSize: 5,
         hasPrevious: false,
         previousOffset: null,
         hasMore: false,

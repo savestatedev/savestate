@@ -2479,7 +2479,7 @@ export function formatMemoryExplainJson(
   // an exhausted page is represented without an explicit --limit.
   const pageSize = pagination.pageSize
     ?? pagination.limit
-    ?? (results.length === 0 && total > 0
+    ?? (results.length === 0
       ? DEFAULT_MEMORY_EXPLAIN_LIMIT
       : Math.max(1, results.length));
   // Keep an empty collection from advertising pagination just because --offset was supplied.
@@ -2574,7 +2574,7 @@ export function formatMemoryExplainMissingJson(
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
-  const pageSize = pagination.pageSize ?? pagination.limit ?? 1;
+  const pageSize = pagination.pageSize ?? pagination.limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT;
   // Keep an empty collection from advertising pagination just because --offset was supplied.
   const hasPrevious = offset > 0 && total > 0;
   const hasMore = pagination.hasMore ?? offset < total;
