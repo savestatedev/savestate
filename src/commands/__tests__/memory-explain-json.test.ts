@@ -185,6 +185,20 @@ describe('savestate memory explain --json', () => {
     expect(parsed.pagination.previousOffset).toBe(40);
   });
 
+  it('uses the CLI default page size for exhausted pages without a limit', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        { offset: 5, total: 6 },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.suggestedOffset).toBe(5);
+    expect(parsed.pagination.pageSize).toBe(5);
+    expect(parsed.pagination.previousOffset).toBe(5);
+  });
+
   it('includes an active freshness filter for JSON consumers', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(
