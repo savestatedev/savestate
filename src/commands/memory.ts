@@ -2443,6 +2443,8 @@ export function formatMemoryExplainJson(
     source?: string;
     /** Trimmed namespace for tracing the memory's scope. */
     namespace?: string;
+    /** Normalized metadata tags for tracing the memory's labels. */
+    tags?: string[];
     summary: string;
     pinned: boolean;
     tier: MemoryTier;
