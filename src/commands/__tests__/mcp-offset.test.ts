@@ -2,6 +2,7 @@ import {
   parseMcpExportOffset,
   parseMcpImportOffset,
   selectMcpExportOffsetItems,
+  selectMcpExportSnapshots,
   selectMcpImportOffsetItems,
 } from '../mcp.js';
 
@@ -19,5 +20,12 @@ describe('MCP passport --offset pagination', () => {
     expect(selectMcpImportOffsetItems(['a', 'b', 'c'], 2)).toEqual(['c']);
     expect(selectMcpImportOffsetItems(['a', 'b'], undefined)).toEqual(['a', 'b']);
     expect(() => parseMcpImportOffset('1001')).toThrow('non-negative integer up to 1000');
+  });
+
+  it('keeps snapshots opt-in while preserving export pagination', () => {
+    const snapshots = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+
+    expect(selectMcpExportSnapshots(snapshots, undefined, 1, 1)).toEqual([]);
+    expect(selectMcpExportSnapshots(snapshots, true, 1, 1)).toEqual([{ id: 'b' }]);
   });
 });

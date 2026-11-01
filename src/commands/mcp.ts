@@ -183,6 +183,17 @@ export function selectMcpExportOffsetItems<T>(items: T[], offset?: number): T[] 
   return items.slice(offset);
 }
 
+/** Export snapshot metadata only when the caller explicitly requests it. */
+export function selectMcpExportSnapshots<T>(
+  items: T[],
+  includeSnapshots: boolean | undefined,
+  offset?: number,
+  limit?: number,
+): T[] {
+  if (!includeSnapshots) return [];
+  return selectMcpExportItems(selectMcpExportOffsetItems(items, offset), limit);
+}
+
 const MAX_MCP_IMPORT_LIMIT = 1000;
 
 /** Parse mcp import --limit without turning user input errors into an empty import. */
@@ -674,19 +685,18 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
     // Get snapshots
     if (spinner) spinner.text = 'Loading snapshots...';
     const index = await loadIndex();
-    const snapshots: PassportSnapshot[] = selectMcpExportItems(
-      selectMcpExportOffsetItems(
-        index.snapshots
-          .filter((s) => !options.agent || s.platform.includes(agentId) || s.id.includes(agentId))
-          .map((s) => ({
-            id: s.id,
-            timestamp: s.timestamp,
-            platform: s.platform,
-            label: s.label,
-            size: s.size,
-          })),
-        offset,
-      ),
+    const snapshots: PassportSnapshot[] = selectMcpExportSnapshots(
+      index.snapshots
+        .filter((s) => !options.agent || s.platform.includes(agentId) || s.id.includes(agentId))
+        .map((s) => ({
+          id: s.id,
+          timestamp: s.timestamp,
+          platform: s.platform,
+          label: s.label,
+          size: s.size,
+        })),
+      options.includeSnapshots,
+      offset,
       limit,
     );
 
