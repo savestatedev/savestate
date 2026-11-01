@@ -1,4 +1,6 @@
 import {
+  formatMcpExportJson,
+  formatMcpImportJson,
   parseMcpExportOffset,
   parseMcpImportOffset,
   selectMcpExportOffsetItems,
@@ -7,6 +9,17 @@ import {
 } from '../mcp.js';
 
 describe('MCP passport --offset pagination', () => {
+  it('reports the requested page in JSON summaries', () => {
+    expect(JSON.parse(formatMcpExportJson({
+      agent: 'default', output: 'passport.json', memories: 0, snapshots: 2,
+      includeSnapshots: true, written: true, offset: 10, limit: 2,
+    }))).toMatchObject({ offset: 10, limit: 2 });
+    expect(JSON.parse(formatMcpImportJson({
+      input: 'passport.json', sourceAgent: 'source', targetAgent: 'target',
+      importedMemories: 2, totalMemories: 20, snapshots: 0, merge: false, offset: 10,
+    }))).toMatchObject({ offset: 10 });
+  });
+
   it('validates export offsets and skips before the limit is applied', () => {
     expect(parseMcpExportOffset('2')).toBe(2);
     expect(selectMcpExportOffsetItems(['a', 'b', 'c'], 1)).toEqual(['b', 'c']);

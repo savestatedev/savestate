@@ -456,6 +456,8 @@ export interface McpImportJson {
   totalMemories: number;
   snapshots: number;
   merge: boolean;
+  offset: number;
+  limit?: number;
 }
 
 export function formatMcpImportJson(result: McpImportJson): string {
@@ -468,6 +470,8 @@ export function formatMcpImportJson(result: McpImportJson): string {
       totalMemories: result.totalMemories,
       snapshots: result.snapshots,
       merge: result.merge,
+      offset: result.offset,
+      ...(result.limit === undefined ? {} : { limit: result.limit }),
     },
     null,
     2,
@@ -503,6 +507,8 @@ export interface McpExportJson {
   snapshots: number;
   includeSnapshots: boolean;
   written: boolean;
+  offset: number;
+  limit?: number;
 }
 
 export function formatMcpExportJson(result: McpExportJson): string {
@@ -514,6 +520,8 @@ export function formatMcpExportJson(result: McpExportJson): string {
       snapshots: result.snapshots,
       includeSnapshots: result.includeSnapshots,
       written: result.written,
+      offset: result.offset,
+      ...(result.limit === undefined ? {} : { limit: result.limit }),
     },
     null,
     2,
@@ -736,6 +744,8 @@ async function mcpExportCommand(options: MCPExportOptions): Promise<void> {
         snapshots: snapshots.length,
         includeSnapshots: options.includeSnapshots ?? false,
         written: true,
+        offset: offset ?? 0,
+        limit,
       }));
       return;
     }
@@ -886,6 +896,8 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
         totalMemories: passport.memories.length,
         snapshots: passport.snapshots.length,
         merge: options.merge ?? false,
+        offset: offset ?? 0,
+        limit,
       }));
       return;
     }
