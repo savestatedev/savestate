@@ -36,6 +36,7 @@ describe('savestate memory explain --json', () => {
       found: true,
       query: 'inbox preference',
       shown: 2,
+      empty: false,
       emptyReason: null,
       suggestedOffset: null,
       pagination: {
@@ -83,6 +84,7 @@ describe('savestate memory explain --json', () => {
       found: true,
       query: 'unknown query',
       shown: 0,
+      empty: true,
       emptyReason: 'collection',
       suggestedOffset: null,
       pagination: {
@@ -154,6 +156,7 @@ describe('savestate memory explain --json', () => {
       found: true,
       query: 'inbox preference',
       shown: 0,
+      empty: true,
       emptyReason: 'page',
       suggestedOffset: 2,
       pagination: {

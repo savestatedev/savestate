@@ -2351,6 +2351,8 @@ export interface MemoryExplainJson {
   /** Resolved archive snapshot used for retrieval, when available. */
   snapshot?: string;
   shown: number;
+  /** True when the current collection or page has no visible results. */
+  empty: boolean;
   emptyReason: 'collection' | 'page' | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
@@ -2499,6 +2501,7 @@ export function formatMemoryExplainJson(
     query,
     ...(snapshotId === undefined ? {} : { snapshot: snapshotId }),
     shown: results.length,
+    empty: results.length === 0,
     emptyReason: results.length > 0 ? null : total === 0 ? 'collection' : 'page',
     suggestedOffset,
     pagination: {
