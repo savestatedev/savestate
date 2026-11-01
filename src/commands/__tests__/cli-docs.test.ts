@@ -2222,6 +2222,16 @@ describe('CLI docs', () => {
     expect(mcp).toContain('export function parseMcpImportLimit');
   });
 
+  it('documents mcp export and import --offset as bounded pagination', () => {
+    const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
+    const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));
+    expect(mcpSection).toContain('savestate mcp export --offset 10 --limit 5');
+    expect(mcpSection).toContain('savestate mcp import --input passport.json --offset 10 --limit 5');
+    expect(mcpBlock).toContain('snapshot metadata on export');
+    expect(mcp).toContain('export function parseMcpExportOffset');
+    expect(mcp).toContain('export function parseMcpImportOffset');
+  });
+
   it('documents mcp status --limit as a bounded positive integer', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     const mcpBlock = mcp.slice(mcp.indexOf("command('mcp [subcommand]')"));

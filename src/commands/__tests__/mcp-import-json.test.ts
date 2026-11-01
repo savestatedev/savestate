@@ -14,6 +14,8 @@ const result: McpImportJson = {
   totalMemories: 4,
   snapshots: 2,
   merge: true,
+  offset: 1,
+  limit: 3,
 };
 
 describe('savestate mcp import --json', () => {
@@ -34,6 +36,8 @@ describe('savestate mcp import --json', () => {
       totalMemories: 4,
       snapshots: 2,
       merge: true,
+      offset: 1,
+      limit: 3,
     });
   });
 
@@ -45,12 +49,14 @@ describe('savestate mcp import --json', () => {
         totalMemories: 0,
         snapshots: 0,
         merge: false,
+        offset: 0,
       }),
     ) as McpImportJson;
     expect(parsed.importedMemories).toBe(0);
     expect(parsed.totalMemories).toBe(0);
     expect(parsed.snapshots).toBe(0);
     expect(parsed.merge).toBe(false);
+    expect(parsed.offset).toBe(0);
     expect(parsed.targetAgent).toBe('other-agent');
   });
 });
