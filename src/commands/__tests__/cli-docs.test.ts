@@ -3298,6 +3298,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--offset');
     expect(memorySection).toContain('Must be a non-negative integer up to 1000');
     expect(memorySection).toContain('savestate memory explain "inbox preference" --offset 10 --limit 5');
+    expect(memorySection).toContain('stable 1-based <code>rank</code>');
+    expect(memorySection).toContain('<code>pagination.remaining</code>');
     expect(explainBlock).toContain(".option('--offset <n>'");
     expect(memory).toContain('export function parseMemoryExplainOffset');
   });
