@@ -410,4 +410,17 @@ describe('savestate memory explain --json', () => {
 
     expect(parsed.filters?.namespace).toBe('work:mail:assistant');
   });
+
+  it('canonicalizes explain tag filters for JSON consumers', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [],
+        {},
+        { tags: [' Work ', 'work', '', 'Urgent'] },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.filters?.tags).toEqual(['Work', 'Urgent']);
+  });
 });

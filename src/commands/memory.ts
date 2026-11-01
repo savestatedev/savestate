@@ -586,6 +586,20 @@ export function getMemoryListTags(entry: MemoryEntry): string[] {
     });
 }
 
+/** Canonicalize tag filters before echoing them to machine-readable consumers. */
+function normalizeMemoryTagFilters(tags: string[]): string[] {
+  const seen = new Set<string>();
+  return tags
+    .map((tag) => tag.trim())
+    .filter((tag) => {
+      if (tag.length === 0) return false;
+      const normalized = tag.toLocaleLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+}
+
 /** Keep memories created on or before the requested timestamp. */
 export function filterMemoryListByCreatedUntil(
   entries: MemoryEntry[],
@@ -2498,7 +2512,9 @@ export function formatMemoryExplainJson(
       criticality: result.criticality,
       source: result.source === undefined ? undefined : normalizeMemoryListSource(result.source),
       namespace: result.namespace?.trim() || null,
-      ...(result.tags === undefined || result.tags.length === 0 ? {} : { tags: result.tags }),
+      ...(result.tags === undefined || result.tags.length === 0
+        ? {}
+        : { tags: normalizeMemoryTagFilters(result.tags) }),
       summary: result.summary,
       pinned: result.pinned,
       tier: result.tier,
@@ -2519,6 +2535,9 @@ export function formatMemoryExplainJson(
       ...(filters.namespace === undefined
         ? {}
         : { namespace: filters.namespace.trim() }),
+      ...(filters.tags === undefined
+        ? {}
+        : { tags: normalizeMemoryTagFilters(filters.tags) }),
     };
   }
   return JSON.stringify(record, null, 2);
@@ -2579,6 +2598,9 @@ export function formatMemoryExplainMissingJson(
       ...(filters.namespace === undefined
         ? {}
         : { namespace: filters.namespace.trim() }),
+      ...(filters.tags === undefined
+        ? {}
+        : { tags: normalizeMemoryTagFilters(filters.tags) }),
     };
   }
   return JSON.stringify(record, null, 2);
@@ -2607,7 +2629,7 @@ export function getMemoryExplainFilters(options?: {
   if (options.namespace !== undefined) filters.namespace = options.namespace.trim();
   if (options.source !== undefined) filters.source = normalizeMemoryListSource(options.source);
   if (options.content !== undefined) filters.content = options.content;
-  if (options.tags !== undefined) filters.tags = options.tags;
+  if (options.tags !== undefined) filters.tags = normalizeMemoryTagFilters(options.tags);
   if (options.freshness !== undefined) filters.freshness = options.freshness;
   if (options.pinned !== undefined) filters.pinned = options.pinned;
   if (options.since !== undefined) filters.since = options.since;
