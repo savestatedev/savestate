@@ -248,11 +248,11 @@ async function showReport(options: EvalOptions): Promise<void> {
   const benchmark = new QualityBenchmark();
   const allResults = await benchmark.loadResults(resultsPath);
   const results = applyEvalReportFilters(allResults, options);
+  const pagination = options.offset !== undefined || options.limit !== undefined
+    ? createEvalPagination(allResults.length, results.length, options)
+    : undefined;
 
   if (options.json) {
-    const pagination = options.offset !== undefined || options.limit !== undefined
-      ? createEvalPagination(allResults.length, results.length, options)
-      : undefined;
     console.log(formatEvalJson(results, pagination));
     return;
   }
@@ -274,6 +274,11 @@ async function showReport(options: EvalOptions): Promise<void> {
   console.log(`  Passed:       ${totalPassed}`);
   console.log(`  Pass rate:    ${formatPercent(overallPassRate)}`);
   console.log();
+
+  if (pagination) {
+    console.log(chalk.dim(`  ${formatEvalReportPageSummary(pagination)}`));
+    console.log();
+  }
 }
 
 export function createEvalPagination(
@@ -304,6 +309,26 @@ export function createEvalPagination(
     hasPrevious,
     previousOffset,
   };
+}
+
+export function formatEvalReportPageSummary(pagination: EvalPagination): string {
+  const pageArgs = pagination.limit === null
+    ? ''
+    : ` --limit ${pagination.limit}`;
+  if (pagination.emptyReason === 'page' && pagination.suggestedOffset !== null) {
+    return `No evaluation suites found at offset ${pagination.offset}; rerun with --offset ${pagination.suggestedOffset}${pageArgs}.`;
+  }
+
+  const navigation: string[] = [];
+  if (pagination.hasMore && pagination.nextOffset !== null) {
+    navigation.push(`next: --offset ${pagination.nextOffset}${pageArgs}`);
+  }
+  if (pagination.hasPrevious && pagination.previousOffset !== null) {
+    navigation.push(`previous: --offset ${pagination.previousOffset}${pageArgs}`);
+  }
+
+  const summary = `Showing ${pagination.shown} of ${pagination.total} evaluation suites (offset ${pagination.offset}${pagination.limit === null ? '' : `, limit ${pagination.limit}`})`;
+  return navigation.length > 0 ? `${summary}; ${navigation.join('; ')}.` : `${summary}.`;
 }
 
 function printSuiteResult(result: BenchmarkResult, verbose?: boolean): void {

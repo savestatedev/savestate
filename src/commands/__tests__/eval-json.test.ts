@@ -3,6 +3,7 @@ import type { BenchmarkResult } from '../../eval/index.js';
 import {
   createEvalPagination,
   formatEvalJson,
+  formatEvalReportPageSummary,
   type EvalJson,
   type EvalPagination,
 } from '../eval.js';
@@ -109,5 +110,35 @@ describe('savestate eval --json', () => {
       hasPrevious: true,
       previousOffset: 0,
     });
+  });
+
+  it('formats human-readable next and previous page hints', () => {
+    expect(formatEvalReportPageSummary({
+      offset: 1,
+      limit: 1,
+      total: 3,
+      shown: 1,
+      emptyReason: null,
+      suggestedOffset: null,
+      hasMore: true,
+      nextOffset: 2,
+      hasPrevious: true,
+      previousOffset: 0,
+    })).toBe('Showing 1 of 3 evaluation suites (offset 1, limit 1); next: --offset 2 --limit 1; previous: --offset 0 --limit 1.');
+  });
+
+  it('formats a recovery hint for an exhausted report page', () => {
+    expect(formatEvalReportPageSummary({
+      offset: 8,
+      limit: 2,
+      total: 3,
+      shown: 0,
+      emptyReason: 'page',
+      suggestedOffset: 2,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 6,
+    })).toBe('No evaluation suites found at offset 8; rerun with --offset 2 --limit 2.');
   });
 });
