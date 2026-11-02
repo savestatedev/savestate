@@ -64,6 +64,21 @@ describe('savestate mcp status --offset', () => {
       shown: 2,
       hasMore: true,
       nextOffset: 4,
+      hasPrevious: true,
+      previousOffset: 0,
+    });
+  });
+
+  it('reports the previous offset for later pages', () => {
+    expect(getMcpStatusPage(7, 2, 4, 2)).toEqual({
+      offset: 4,
+      limit: 2,
+      total: 7,
+      shown: 2,
+      hasMore: true,
+      nextOffset: 6,
+      hasPrevious: true,
+      previousOffset: 2,
     });
   });
 });

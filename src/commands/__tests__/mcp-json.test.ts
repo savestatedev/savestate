@@ -35,6 +35,8 @@ describe('savestate mcp status --json', () => {
         shown: 7,
         hasMore: false,
         nextOffset: null,
+        hasPrevious: false,
+        previousOffset: null,
       },
       resources: {
         offset: 0,
@@ -43,6 +45,8 @@ describe('savestate mcp status --json', () => {
         shown: 2,
         hasMore: false,
         nextOffset: null,
+        hasPrevious: false,
+        previousOffset: null,
       },
     });
   });

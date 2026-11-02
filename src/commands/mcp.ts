@@ -437,6 +437,8 @@ export interface McpStatusPage {
   shown: number;
   hasMore: boolean;
   nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
 }
 
 export interface McpStatusPagination {
@@ -451,6 +453,7 @@ export function getMcpStatusPage(
   limit?: number,
 ): McpStatusPage {
   const hasMore = limit !== undefined && offset + shown < total;
+  const hasPrevious = limit !== undefined && offset > 0;
   return {
     offset,
     limit: limit ?? null,
@@ -458,6 +461,8 @@ export function getMcpStatusPage(
     shown,
     hasMore,
     nextOffset: hasMore ? offset + shown : null,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offset - limit!) : null,
   };
 }
 
