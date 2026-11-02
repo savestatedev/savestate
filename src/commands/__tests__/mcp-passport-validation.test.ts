@@ -48,6 +48,26 @@ describe('MCP passport validation', () => {
       }],
       snapshots: [],
     },
+    {
+      version: '1.0.0',
+      source_agent: { id: 'chatgpt' },
+      memories: [{
+        id: 'memory-1',
+        content: '   ',
+        content_type: 'text',
+        tags: [],
+        importance: 0.5,
+        created_at: '2026-01-01T00:00:00.000Z',
+        source: { type: 'user_input', identifier: 'chatgpt' },
+      }],
+      snapshots: [],
+    },
+    {
+      version: '1.0.0',
+      source_agent: { id: 'chatgpt' },
+      memories: [],
+      snapshots: [{ id: 'snapshot-1', timestamp: '2026-01-01T00:00:00.000Z', platform: '   ' }],
+    },
   ])('rejects malformed passport data: %j', (value) => {
     expect(isValidMemoryPassport(value)).toBe(false);
   });

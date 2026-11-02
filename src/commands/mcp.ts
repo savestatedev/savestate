@@ -74,6 +74,10 @@ export interface PassportSnapshot {
   size?: number;
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 /** Guard the fields the importer needs before reading nested passport data. */
 export function isValidMemoryPassport(value: unknown): value is MemoryPassport {
   if (value === null || typeof value !== 'object') return false;
@@ -82,16 +86,14 @@ export function isValidMemoryPassport(value: unknown): value is MemoryPassport {
   const sourceAgent = passport.source_agent;
 
   return (
-    typeof passport.version === 'string' &&
-    passport.version.length > 0 &&
+    isNonEmptyString(passport.version) &&
     Array.isArray(passport.memories) &&
     passport.memories.every(isValidPassportMemory) &&
     Array.isArray(passport.snapshots) &&
     passport.snapshots.every(isValidPassportSnapshot) &&
     sourceAgent !== null &&
     typeof sourceAgent === 'object' &&
-    typeof sourceAgent.id === 'string' &&
-    sourceAgent.id.length > 0
+    isNonEmptyString(sourceAgent.id)
   );
 }
 
@@ -102,20 +104,20 @@ function isValidPassportMemory(value: unknown): value is PassportMemory {
   const source = memory.source;
 
   return (
-    typeof memory.id === 'string' &&
-    typeof memory.content === 'string' &&
-    typeof memory.content_type === 'string' &&
+    isNonEmptyString(memory.id) &&
+    isNonEmptyString(memory.content) &&
+    isNonEmptyString(memory.content_type) &&
     Array.isArray(memory.tags) &&
     memory.tags.every((tag) => typeof tag === 'string') &&
     typeof memory.importance === 'number' &&
     Number.isFinite(memory.importance) &&
     memory.importance >= 0 &&
     memory.importance <= 1 &&
-    typeof memory.created_at === 'string' &&
+    isNonEmptyString(memory.created_at) &&
     source !== null &&
     typeof source === 'object' &&
-    typeof source.type === 'string' &&
-    typeof source.identifier === 'string'
+    isNonEmptyString(source.type) &&
+    isNonEmptyString(source.identifier)
   );
 }
 
@@ -124,9 +126,9 @@ function isValidPassportSnapshot(value: unknown): value is PassportSnapshot {
 
   const snapshot = value as Partial<PassportSnapshot>;
   return (
-    typeof snapshot.id === 'string' &&
-    typeof snapshot.timestamp === 'string' &&
-    typeof snapshot.platform === 'string'
+    isNonEmptyString(snapshot.id) &&
+    isNonEmptyString(snapshot.timestamp) &&
+    isNonEmptyString(snapshot.platform)
   );
 }
 
