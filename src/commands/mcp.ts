@@ -470,6 +470,14 @@ export function formatMcpStatusPaginationHints(pagination: McpStatusPagination):
   return hints;
 }
 
+/** Explain how many entries are visible when status output is paged. */
+export function formatMcpStatusCollectionHeading(
+  label: string,
+  page: McpStatusPage,
+): string {
+  return `${label} (${page.shown}/${page.total} shown):`;
+}
+
 export function getMcpStatusPage(
   total: number,
   shown: number,
@@ -703,12 +711,24 @@ async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
     console.log(`  Auth: ${chalk.cyan('none')}`);
   }
 
-  console.log('\nAvailable MCP Tools:');
+  console.log(
+    '\n' +
+      formatMcpStatusCollectionHeading(
+        'Available MCP Tools',
+        status.pagination!.tools,
+      ),
+  );
   for (const tool of tools) {
     console.log(chalk.gray(`  - ${tool}`));
   }
 
-  console.log('\nAvailable MCP Resources:');
+  console.log(
+    '\n' +
+      formatMcpStatusCollectionHeading(
+        'Available MCP Resources',
+        status.pagination!.resources,
+      ),
+  );
   for (const resource of resources) {
     console.log(chalk.gray(`  - ${resource}`));
   }

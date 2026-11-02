@@ -3,6 +3,7 @@ import {
   MCP_TOOLS,
   applyMcpStatusFilters,
   formatMcpStatusPaginationHints,
+  formatMcpStatusCollectionHeading,
   getMcpStatusPage,
   parseMcpStatusOffset,
   selectMcpStatusOffsetEntries,
@@ -114,5 +115,11 @@ describe('savestate mcp status --offset', () => {
       'Tools next page: use --offset 4 --limit 2.',
       'Resources previous page: use --offset 0 --limit 2.',
     ]);
+  });
+
+  it('labels visible and total entries in human-readable status output', () => {
+    expect(
+      formatMcpStatusCollectionHeading('Available MCP Tools', getMcpStatusPage(14, 5, 5, 5)),
+    ).toBe('Available MCP Tools (5/14 shown):');
   });
 });
