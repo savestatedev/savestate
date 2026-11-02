@@ -691,6 +691,17 @@ export const tools: Tool[] = [
   },
 ];
 
+/** Return the protocol error payload for a tool name the server does not expose. */
+export function formatUnknownMcpToolResult(name: string): {
+  content: [{ type: 'text'; text: string }];
+  isError: true;
+} {
+  return {
+    content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+    isError: true,
+  };
+}
+
 // ─── Resource Definitions ────────────────────────────────────
 
 const resources: Resource[] = [
@@ -2009,7 +2020,7 @@ export async function startMCPServer(): Promise<void> {
           break;
         }
         default:
-          result = `Unknown tool: ${name}`;
+          return formatUnknownMcpToolResult(name);
       }
 
       return {
