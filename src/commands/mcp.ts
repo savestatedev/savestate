@@ -408,7 +408,8 @@ async function mcpServeCommand(options: MCPServeOptions): Promise<void> {
 
 // ─── MCP Status Command ──────────────────────────────────────
 
-const MCP_TOOLS = [
+/** Keep the CLI status inventory aligned with the tools registered by the MCP server. */
+export const MCP_TOOLS = [
   'savestate_snapshot',
   'savestate_restore',
   'savestate_list',
@@ -416,6 +417,13 @@ const MCP_TOOLS = [
   'savestate_memory_store',
   'savestate_memory_search',
   'savestate_memory_delete',
+  'savestate_search_snapshots',
+  'savestate_stats',
+  'add_memories',
+  'search_memory',
+  'list_memories',
+  'delete_memory',
+  'delete_all_memories',
 ];
 
 const MCP_RESOURCES = ['savestate://snapshots', 'savestate://memories'];
@@ -444,6 +452,38 @@ export interface McpStatusPage {
 export interface McpStatusPagination {
   tools: McpStatusPage;
   resources: McpStatusPage;
+}
+
+export function formatMcpStatusPaginationHints(pagination: McpStatusPagination): string[] {
+  const hints: string[] = [];
+  for (const [label, page] of [
+    ['Tools', pagination.tools],
+    ['Resources', pagination.resources],
+  ] as const) {
+    if (page.shown === 0 && page.total > 0) {
+      const suggestedOffset = page.limit === null
+        ? 0
+        : Math.floor((page.total - 1) / page.limit) * page.limit;
+      const limit = page.limit === null ? '' : ` --limit ${page.limit}`;
+      hints.push(`${label} page is empty: use --offset ${suggestedOffset}${limit}.`);
+      continue;
+    }
+    if (page.total > 0 && page.hasPrevious && page.previousOffset !== null && page.limit !== null) {
+      hints.push(`${label} previous page: use --offset ${page.previousOffset} --limit ${page.limit}.`);
+    }
+    if (page.hasMore && page.nextOffset !== null && page.limit !== null) {
+      hints.push(`${label} next page: use --offset ${page.nextOffset} --limit ${page.limit}.`);
+    }
+  }
+  return hints;
+}
+
+/** Explain how many entries are visible when status output is paged. */
+export function formatMcpStatusCollectionHeading(
+  label: string,
+  page: McpStatusPage,
+): string {
+  return `${label} (${page.shown}/${page.total} shown):`;
 }
 
 export function getMcpStatusPage(
@@ -679,14 +719,34 @@ async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
     console.log(`  Auth: ${chalk.cyan('none')}`);
   }
 
-  console.log('\nAvailable MCP Tools:');
+  console.log(
+    '\n' +
+      formatMcpStatusCollectionHeading(
+        'Available MCP Tools',
+        status.pagination!.tools,
+      ),
+  );
   for (const tool of tools) {
     console.log(chalk.gray(`  - ${tool}`));
   }
 
-  console.log('\nAvailable MCP Resources:');
+  console.log(
+    '\n' +
+      formatMcpStatusCollectionHeading(
+        'Available MCP Resources',
+        status.pagination!.resources,
+      ),
+  );
   for (const resource of resources) {
     console.log(chalk.gray(`  - ${resource}`));
+  }
+
+  const paginationHints = formatMcpStatusPaginationHints(status.pagination!);
+  if (paginationHints.length > 0) {
+    console.log('\n' + chalk.cyan('Pagination:'));
+    for (const hint of paginationHints) {
+      console.log(chalk.gray(`  ${hint}`));
+    }
   }
 
   console.log('\n' + chalk.cyan('Usage:'));
