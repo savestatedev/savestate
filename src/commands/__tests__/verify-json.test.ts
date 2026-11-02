@@ -37,6 +37,9 @@ describe('savestate verify --json', () => {
       shown: 1,
       hasMore: true,
       nextOffset: 2,
+      previousOffset: 0,
+      emptyReason: null,
+      suggestedOffset: null,
     };
     const parsed = JSON.parse(
       formatVerifyResult({ ...validResult, components: ['memory/core.json'] }, true, pagination),
@@ -44,6 +47,27 @@ describe('savestate verify --json', () => {
 
     expect(parsed.components).toEqual(['memory/core.json']);
     expect(parsed.pagination).toEqual(pagination);
+  });
+
+  it('describes an empty stale page and the nearest recoverable offset', () => {
+    const pagination: VerifyPagination = {
+      offset: 10,
+      limit: 2,
+      total: 5,
+      shown: 0,
+      hasMore: false,
+      nextOffset: null,
+      previousOffset: 8,
+      emptyReason: 'page',
+      suggestedOffset: 4,
+    };
+    const parsed = JSON.parse(
+      formatVerifyResult({ ...validResult, components: [] }, true, pagination),
+    ) as VerifyResult & { pagination: VerifyPagination };
+
+    expect(parsed.pagination.emptyReason).toBe('page');
+    expect(parsed.pagination.previousOffset).toBe(8);
+    expect(parsed.pagination.suggestedOffset).toBe(4);
   });
 
   it('keeps existing exit codes', () => {

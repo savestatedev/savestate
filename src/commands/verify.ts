@@ -38,6 +38,9 @@ export interface VerifyPagination {
   shown: number;
   hasMore: boolean;
   nextOffset: number | null;
+  previousOffset: number | null;
+  emptyReason: 'collection' | 'page' | null;
+  suggestedOffset: number | null;
 }
 
 export function formatVerifyChecksum(checksum: string): string {
@@ -1264,6 +1267,12 @@ export async function verifyCommand(
       shown: result.components.length,
       hasMore: offset + result.components.length < total,
       nextOffset: offset + result.components.length < total ? offset + result.components.length : null,
+      previousOffset: offset > 0 ? Math.max(0, offset - limit) : null,
+      emptyReason: result.components.length === 0 ? (total === 0 ? 'collection' : 'page') : null,
+      suggestedOffset:
+        result.components.length === 0 && total > 0 && limit > 0
+          ? Math.floor((total - 1) / limit) * limit
+          : null,
     };
   }
   const output = formatVerifyResult(result, !!options.json, pagination);
