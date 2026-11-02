@@ -691,6 +691,22 @@ export const tools: Tool[] = [
   },
 ];
 
+/** Return the protocol error payload for a tool name the server does not expose. */
+export function formatUnknownMcpToolResult(name: string): {
+  content: [{ type: 'text'; text: string }];
+  isError: true;
+} {
+  return {
+    content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+    isError: true,
+  };
+}
+
+/** Convert resource failures into protocol errors instead of successful error payloads. */
+export function formatMcpResourceReadError(err: unknown): Error {
+  return err instanceof Error ? err : new Error(String(err));
+}
+
 // ─── Resource Definitions ────────────────────────────────────
 
 const resources: Resource[] = [
@@ -1913,17 +1929,7 @@ export async function startMCPServer(): Promise<void> {
         ],
       };
     } catch (err) {
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: 'application/json',
-            text: JSON.stringify({
-              error: err instanceof Error ? err.message : String(err)
-            }),
-          },
-        ],
-      };
+      throw formatMcpResourceReadError(err);
     }
   });
 
@@ -2009,7 +2015,7 @@ export async function startMCPServer(): Promise<void> {
           break;
         }
         default:
-          result = `Unknown tool: ${name}`;
+          return formatUnknownMcpToolResult(name);
       }
 
       return {
