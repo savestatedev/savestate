@@ -561,9 +561,15 @@ export interface TraceExportMissingJson {
   run: string;
   runCount: 0;
   eventCount: 0;
+  pagination: TraceExportPaginationJson;
 }
 
-export function formatTraceExportMissingJson(run: string, format?: string): string {
+export function formatTraceExportMissingJson(
+  run: string,
+  format?: string,
+  offset = 0,
+  limit?: number,
+): string {
   return JSON.stringify(
     {
       found: false,
@@ -571,6 +577,7 @@ export function formatTraceExportMissingJson(run: string, format?: string): stri
       run,
       runCount: 0,
       eventCount: 0,
+      pagination: getTracePagination(0, 0, offset, limit),
     },
     null,
     2,
@@ -849,7 +856,12 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
 
   if (!isInitialized()) {
     if (options.json) {
-      console.log(formatTraceExportMissingJson(run, format));
+      console.log(formatTraceExportMissingJson(
+        run,
+        format,
+        offset ?? 0,
+        options.limit === undefined ? undefined : parseTraceExportLimit(options.limit),
+      ));
       return;
     }
     console.error(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -865,7 +877,12 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
       { offset: options.offset, limit: options.limit },
     );
     if (run !== 'all' && runs.length === 0) {
-      console.log(formatTraceExportMissingJson(run, format));
+      console.log(formatTraceExportMissingJson(
+        run,
+        format,
+        offset ?? 0,
+        options.limit === undefined ? undefined : parseTraceExportLimit(options.limit),
+      ));
       return;
     }
     console.log(formatTraceExportJson({

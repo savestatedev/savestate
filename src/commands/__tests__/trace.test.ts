@@ -262,4 +262,42 @@ describe.sequential('trace commands', () => {
       previousOffset: 0,
     });
   });
+
+  it('trace export --json reports pagination metadata for a missing run', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await traceExportCommand({
+      json: true,
+      run: 'run-missing',
+    });
+
+    const raw = logSpy.mock.calls
+      .map((call) => call[0])
+      .find((entry) => typeof entry === 'string' && entry.trim().startsWith('{'));
+    const parsed = JSON.parse(raw as string) as {
+      found: boolean;
+      pagination: {
+        offset: number;
+        limit: number | null;
+        total: number;
+        emptyReason: string | null;
+        hasPrevious: boolean;
+        previousOffset: number | null;
+      };
+    };
+
+    expect(parsed.found).toBe(false);
+    expect(parsed.pagination).toEqual({
+      offset: 0,
+      limit: null,
+      total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: false,
+      previousOffset: null,
+      suggestedOffset: null,
+    });
+  });
 });
