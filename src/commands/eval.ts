@@ -87,9 +87,10 @@ export interface EvalReportMissingJson {
   passed: 0;
   total: 0;
   passRate: 0;
+  pagination?: EvalPagination;
 }
 
-export function formatEvalReportMissingJson(): string {
+export function formatEvalReportMissingJson(pagination?: EvalPagination): string {
   return JSON.stringify(
     {
       found: false,
@@ -97,6 +98,7 @@ export function formatEvalReportMissingJson(): string {
       passed: 0,
       total: 0,
       passRate: 0,
+      ...(pagination ? { pagination } : {}),
     },
     null,
     2,
@@ -141,7 +143,7 @@ export async function evalCommand(rawSubcommand: string, options: EvalOptions): 
       return;
     }
     if (options.json && subcommand === 'report') {
-      console.log(formatEvalReportMissingJson());
+      console.log(formatEvalReportMissingJson(createOptionalEvalPagination(options, 0, 0)));
       return;
     }
     console.log(chalk.red('SaveState not initialized. Run `savestate init` first.'));
@@ -236,7 +238,7 @@ async function showReport(options: EvalOptions): Promise<void> {
 
   if (!existsSync(resultsPath)) {
     if (options.json) {
-      console.log(formatEvalReportMissingJson());
+      console.log(formatEvalReportMissingJson(createOptionalEvalPagination(options, 0, 0)));
       return;
     }
     console.log(chalk.yellow('  No evaluation results found.'));
@@ -248,9 +250,7 @@ async function showReport(options: EvalOptions): Promise<void> {
   const benchmark = new QualityBenchmark();
   const allResults = await benchmark.loadResults(resultsPath);
   const results = applyEvalReportFilters(allResults, options);
-  const pagination = options.offset !== undefined || options.limit !== undefined
-    ? createEvalPagination(allResults.length, results.length, options)
-    : undefined;
+  const pagination = createOptionalEvalPagination(options, allResults.length, results.length);
 
   if (options.json) {
     console.log(formatEvalJson(results, pagination));
@@ -309,6 +309,16 @@ export function createEvalPagination(
     hasPrevious,
     previousOffset,
   };
+}
+
+function createOptionalEvalPagination(
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+  total: number,
+  shown: number,
+): EvalPagination | undefined {
+  return options.offset !== undefined || options.limit !== undefined
+    ? createEvalPagination(total, shown, options)
+    : undefined;
 }
 
 export function formatEvalReportPageSummary(pagination: EvalPagination): string {

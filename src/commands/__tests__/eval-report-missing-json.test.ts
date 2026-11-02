@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  type EvalPagination,
   formatEvalReportMissingJson,
   type EvalReportMissingJson,
 } from '../eval.js';
@@ -29,5 +30,24 @@ describe('savestate eval report --json when missing', () => {
       'total',
     ]);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
+  });
+
+  it('preserves pagination metadata when a requested report page is missing', () => {
+    const pagination: EvalPagination = {
+      offset: 4,
+      limit: 2,
+      total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      suggestedOffset: null,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 2,
+    };
+    const parsed = JSON.parse(formatEvalReportMissingJson(pagination)) as EvalReportMissingJson;
+
+    expect(parsed.found).toBe(false);
+    expect(parsed.pagination).toEqual(pagination);
   });
 });
