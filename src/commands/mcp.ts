@@ -109,6 +109,8 @@ function isValidPassportMemory(value: unknown): value is PassportMemory {
     memory.tags.every((tag) => typeof tag === 'string') &&
     typeof memory.importance === 'number' &&
     Number.isFinite(memory.importance) &&
+    memory.importance >= 0 &&
+    memory.importance <= 1 &&
     typeof memory.created_at === 'string' &&
     source !== null &&
     typeof source === 'object' &&
