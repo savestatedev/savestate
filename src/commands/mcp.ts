@@ -74,6 +74,25 @@ export interface PassportSnapshot {
   size?: number;
 }
 
+/** Guard the fields the importer needs before reading nested passport data. */
+export function isValidMemoryPassport(value: unknown): value is MemoryPassport {
+  if (value === null || typeof value !== 'object') return false;
+
+  const passport = value as Partial<MemoryPassport>;
+  const sourceAgent = passport.source_agent;
+
+  return (
+    typeof passport.version === 'string' &&
+    passport.version.length > 0 &&
+    Array.isArray(passport.memories) &&
+    Array.isArray(passport.snapshots) &&
+    sourceAgent !== null &&
+    typeof sourceAgent === 'object' &&
+    typeof sourceAgent.id === 'string' &&
+    sourceAgent.id.length > 0
+  );
+}
+
 // ─── MCP Serve Command ───────────────────────────────────────
 
 const DEFAULT_MCP_PORT = 3333;
@@ -962,10 +981,10 @@ async function mcpImportCommand(options: MCPImportOptions): Promise<void> {
     // Read passport file
     if (spinner) spinner.text = 'Reading passport file...';
     const passportData = await readFile(inputPath, 'utf-8');
-    const passport: MemoryPassport = JSON.parse(passportData);
+    const passport: unknown = JSON.parse(passportData);
 
     // Validate passport format
-    if (!passport.version || !passport.memories || !passport.snapshots) {
+    if (!isValidMemoryPassport(passport)) {
       spinner?.fail('Invalid passport format');
       console.error(chalk.red('The file does not appear to be a valid memory passport.'));
       process.exit(1);
