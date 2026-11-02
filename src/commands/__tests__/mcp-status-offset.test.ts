@@ -128,6 +128,14 @@ describe('savestate mcp status --offset', () => {
     ).toEqual(['Tools page is empty: use --offset 10 --limit 5.']);
   });
 
+  it('suggests the first page when an unbounded offset is exhausted', () => {
+    expect(getMcpStatusPage(14, 0, 1000)).toMatchObject({
+      offset: 1000,
+      limit: null,
+      suggestedOffset: 0,
+    });
+  });
+
   it('labels visible and total entries in human-readable status output', () => {
     expect(
       formatMcpStatusCollectionHeading('Available MCP Tools', getMcpStatusPage(14, 5, 5, 5)),

@@ -553,8 +553,10 @@ export function getMcpStatusPage(
 ): McpStatusPage {
   const hasMore = limit !== undefined && offset + shown < total;
   const hasPrevious = limit !== undefined && offset > 0;
-  const suggestedOffset = limit !== undefined && shown === 0 && total > 0
-    ? Math.floor((total - 1) / limit) * limit
+  const suggestedOffset = shown === 0 && total > 0
+    ? limit === undefined
+      ? 0
+      : Math.floor((total - 1) / limit) * limit
     : null;
   return {
     offset,
