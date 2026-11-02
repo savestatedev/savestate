@@ -460,7 +460,15 @@ export function formatMcpStatusPaginationHints(pagination: McpStatusPagination):
     ['Tools', pagination.tools],
     ['Resources', pagination.resources],
   ] as const) {
-    if (page.hasPrevious && page.previousOffset !== null && page.limit !== null) {
+    if (page.shown === 0 && page.total > 0) {
+      const suggestedOffset = page.limit === null
+        ? 0
+        : Math.floor((page.total - 1) / page.limit) * page.limit;
+      const limit = page.limit === null ? '' : ` --limit ${page.limit}`;
+      hints.push(`${label} page is empty: use --offset ${suggestedOffset}${limit}.`);
+      continue;
+    }
+    if (page.total > 0 && page.hasPrevious && page.previousOffset !== null && page.limit !== null) {
       hints.push(`${label} previous page: use --offset ${page.previousOffset} --limit ${page.limit}.`);
     }
     if (page.hasMore && page.nextOffset !== null && page.limit !== null) {

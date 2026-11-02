@@ -113,8 +113,17 @@ describe('savestate mcp status --offset', () => {
     ).toEqual([
       'Tools previous page: use --offset 0 --limit 2.',
       'Tools next page: use --offset 4 --limit 2.',
-      'Resources previous page: use --offset 0 --limit 2.',
+      'Resources page is empty: use --offset 0 --limit 2.',
     ]);
+  });
+
+  it('points an exhausted page at the nearest populated page', () => {
+    expect(
+      formatMcpStatusPaginationHints({
+        tools: getMcpStatusPage(14, 0, 1000, 5),
+        resources: getMcpStatusPage(0, 0, 1000, 5),
+      }),
+    ).toEqual(['Tools page is empty: use --offset 10 --limit 5.']);
   });
 
   it('labels visible and total entries in human-readable status output', () => {
