@@ -392,6 +392,7 @@ describe('CLI docs', () => {
     expect(verifySection).toContain('--json');
     expect(verifySection).toContain('scripting');
     expect(verifySection).toContain('savestate verify agent.savestate --json');
+    expect(verifySection).toContain('pagination');
   });
 
   it('documents verify --json when missing', () => {
