@@ -19,6 +19,7 @@ describe('MCP passport validation', () => {
     { version: '1.0.0', memories: [], snapshots: [] },
     { version: '1.0.0', source_agent: {}, memories: [], snapshots: [] },
     { version: '1.0.0', source_agent: { id: 'chatgpt' }, memories: null, snapshots: [] },
+    { version: '1.0.0', source_agent: { id: 'chatgpt' }, memories: [{}], snapshots: [] },
   ])('rejects malformed passport data: %j', (value) => {
     expect(isValidMemoryPassport(value)).toBe(false);
   });

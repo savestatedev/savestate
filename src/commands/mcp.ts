@@ -85,11 +85,46 @@ export function isValidMemoryPassport(value: unknown): value is MemoryPassport {
     typeof passport.version === 'string' &&
     passport.version.length > 0 &&
     Array.isArray(passport.memories) &&
+    passport.memories.every(isValidPassportMemory) &&
     Array.isArray(passport.snapshots) &&
+    passport.snapshots.every(isValidPassportSnapshot) &&
     sourceAgent !== null &&
     typeof sourceAgent === 'object' &&
     typeof sourceAgent.id === 'string' &&
     sourceAgent.id.length > 0
+  );
+}
+
+function isValidPassportMemory(value: unknown): value is PassportMemory {
+  if (value === null || typeof value !== 'object') return false;
+
+  const memory = value as Partial<PassportMemory>;
+  const source = memory.source;
+
+  return (
+    typeof memory.id === 'string' &&
+    typeof memory.content === 'string' &&
+    typeof memory.content_type === 'string' &&
+    Array.isArray(memory.tags) &&
+    memory.tags.every((tag) => typeof tag === 'string') &&
+    typeof memory.importance === 'number' &&
+    Number.isFinite(memory.importance) &&
+    typeof memory.created_at === 'string' &&
+    source !== null &&
+    typeof source === 'object' &&
+    typeof source.type === 'string' &&
+    typeof source.identifier === 'string'
+  );
+}
+
+function isValidPassportSnapshot(value: unknown): value is PassportSnapshot {
+  if (value === null || typeof value !== 'object') return false;
+
+  const snapshot = value as Partial<PassportSnapshot>;
+  return (
+    typeof snapshot.id === 'string' &&
+    typeof snapshot.timestamp === 'string' &&
+    typeof snapshot.platform === 'string'
   );
 }
 
