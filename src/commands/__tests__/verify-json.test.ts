@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatVerifyResult, verifyExitCode, type VerifyResult } from '../verify.js';
+import { formatVerifyResult, verifyExitCode, type VerifyPagination, type VerifyResult } from '../verify.js';
 
 const validResult: VerifyResult = {
   status: 'valid',
@@ -27,6 +27,23 @@ describe('savestate verify --json', () => {
     expect(text).toContain('Agent: demo-agent');
     expect(text).toContain('Format: v1');
     expect(text.trimStart().startsWith('{')).toBe(false);
+  });
+
+  it('includes component pagination metadata when requested', () => {
+    const pagination: VerifyPagination = {
+      offset: 1,
+      limit: 1,
+      total: 3,
+      shown: 1,
+      hasMore: true,
+      nextOffset: 2,
+    };
+    const parsed = JSON.parse(
+      formatVerifyResult({ ...validResult, components: ['memory/core.json'] }, true, pagination),
+    ) as VerifyResult & { pagination: VerifyPagination };
+
+    expect(parsed.components).toEqual(['memory/core.json']);
+    expect(parsed.pagination).toEqual(pagination);
   });
 
   it('keeps existing exit codes', () => {

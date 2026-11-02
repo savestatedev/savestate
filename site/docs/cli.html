@@ -804,7 +804,7 @@
         <tr><td><code>-k, --keyfile &lt;path&gt;</code></td><td>Keyfile instead of a passphrase. Must be a single non-empty path. An empty path, missing file, directory, or file with no contents is rejected before decrypting.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of packed components to show. Must be a positive integer up to 1000. Combines with <code>--offset</code>.</td></tr>
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N packed components before applying <code>--limit</code>. Must be a non-negative integer up to 1000.</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the full verify result as JSON. Decrypts the archive when a key is provided. When the input file is missing, emits a missing summary (found, input, valid, agent; omits extra fields). Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the full verify result as JSON. Decrypts the archive when a key is provided. When packed components are present, includes <code>pagination</code> metadata (<code>offset</code>, <code>limit</code>, <code>total</code>, <code>shown</code>, <code>hasMore</code>, and <code>nextOffset</code>) so scripts can page through component lists. When the input file is missing, emits a missing summary (found, input, valid, agent; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 
