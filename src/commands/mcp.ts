@@ -199,7 +199,14 @@ const MAX_MCP_EXPORT_LIMIT = 1000;
 export function parseMcpExportLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_EXPORT_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_EXPORT_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_EXPORT_LIMIT}.`,
@@ -258,7 +265,14 @@ const MAX_MCP_IMPORT_LIMIT = 1000;
 export function parseMcpImportLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_IMPORT_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_IMPORT_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_IMPORT_LIMIT}.`,
@@ -373,7 +387,14 @@ const MAX_MCP_SERVE_LIMIT = 1000;
 export function parseMcpServeLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_SERVE_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_SERVE_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_SERVE_LIMIT}.`,
