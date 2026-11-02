@@ -38,9 +38,23 @@ export interface EvalJson {
   passed: number;
   total: number;
   passRate: number;
+  pagination?: EvalPagination;
 }
 
-export function formatEvalJson(results: BenchmarkResult[]): string {
+export interface EvalPagination {
+  offset: number;
+  limit: number | null;
+  total: number;
+  shown: number;
+  emptyReason: 'collection' | 'page' | null;
+  suggestedOffset: number | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+}
+
+export function formatEvalJson(results: BenchmarkResult[], pagination?: EvalPagination): string {
   const passed = results.reduce((sum, r) => sum + r.passed, 0);
   const total = results.reduce((sum, r) => sum + r.total, 0);
   const payload: EvalJson = {
@@ -62,6 +76,7 @@ export function formatEvalJson(results: BenchmarkResult[]): string {
     passed,
     total,
     passRate: total > 0 ? passed / total : 0,
+    ...(pagination ? { pagination } : {}),
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -72,9 +87,10 @@ export interface EvalReportMissingJson {
   passed: 0;
   total: 0;
   passRate: 0;
+  pagination?: EvalPagination;
 }
 
-export function formatEvalReportMissingJson(): string {
+export function formatEvalReportMissingJson(pagination?: EvalPagination): string {
   return JSON.stringify(
     {
       found: false,
@@ -82,6 +98,7 @@ export function formatEvalReportMissingJson(): string {
       passed: 0,
       total: 0,
       passRate: 0,
+      ...(pagination ? { pagination } : {}),
     },
     null,
     2,
@@ -126,7 +143,7 @@ export async function evalCommand(rawSubcommand: string, options: EvalOptions): 
       return;
     }
     if (options.json && subcommand === 'report') {
-      console.log(formatEvalReportMissingJson());
+      console.log(formatEvalReportMissingJson(createOptionalEvalPagination(options, 0, 0)));
       return;
     }
     console.log(chalk.red('SaveState not initialized. Run `savestate init` first.'));
@@ -221,7 +238,7 @@ async function showReport(options: EvalOptions): Promise<void> {
 
   if (!existsSync(resultsPath)) {
     if (options.json) {
-      console.log(formatEvalReportMissingJson());
+      console.log(formatEvalReportMissingJson(createOptionalEvalPagination(options, 0, 0)));
       return;
     }
     console.log(chalk.yellow('  No evaluation results found.'));
@@ -231,10 +248,12 @@ async function showReport(options: EvalOptions): Promise<void> {
   }
 
   const benchmark = new QualityBenchmark();
-  const results = applyEvalReportFilters(await benchmark.loadResults(resultsPath), options);
+  const allResults = await benchmark.loadResults(resultsPath);
+  const results = applyEvalReportFilters(allResults, options);
+  const pagination = createOptionalEvalPagination(options, allResults.length, results.length);
 
   if (options.json) {
-    console.log(formatEvalJson(results));
+    console.log(formatEvalJson(results, pagination));
     return;
   }
 
@@ -255,6 +274,71 @@ async function showReport(options: EvalOptions): Promise<void> {
   console.log(`  Passed:       ${totalPassed}`);
   console.log(`  Pass rate:    ${formatPercent(overallPassRate)}`);
   console.log();
+
+  if (pagination) {
+    console.log(chalk.dim(`  ${formatEvalReportPageSummary(pagination)}`));
+    console.log();
+  }
+}
+
+export function createEvalPagination(
+  total: number,
+  shown: number,
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+): EvalPagination {
+  const offset = parseEvalReportOffset(options.offset) ?? 0;
+  const limit = parseEvalReportLimit(options.limit) ?? null;
+  const emptyReason = total === 0 ? 'collection' : shown === 0 ? 'page' : null;
+  const hasMore = limit !== null && offset + shown < total;
+  const hasPrevious = limit !== null && offset > 0;
+  const previousOffset = hasPrevious ? Math.max(0, offset - limit) : null;
+  const nextOffset = hasMore ? offset + shown : null;
+  const suggestedOffset = emptyReason === 'page' && limit !== null
+    ? Math.floor((total - 1) / limit) * limit
+    : null;
+
+  return {
+    offset,
+    limit,
+    total,
+    shown,
+    emptyReason,
+    suggestedOffset,
+    hasMore,
+    nextOffset,
+    hasPrevious,
+    previousOffset,
+  };
+}
+
+function createOptionalEvalPagination(
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+  total: number,
+  shown: number,
+): EvalPagination | undefined {
+  return options.offset !== undefined || options.limit !== undefined
+    ? createEvalPagination(total, shown, options)
+    : undefined;
+}
+
+export function formatEvalReportPageSummary(pagination: EvalPagination): string {
+  const pageArgs = pagination.limit === null
+    ? ''
+    : ` --limit ${pagination.limit}`;
+  if (pagination.emptyReason === 'page' && pagination.suggestedOffset !== null) {
+    return `No evaluation suites found at offset ${pagination.offset}; rerun with --offset ${pagination.suggestedOffset}${pageArgs}.`;
+  }
+
+  const navigation: string[] = [];
+  if (pagination.hasMore && pagination.nextOffset !== null) {
+    navigation.push(`next: --offset ${pagination.nextOffset}${pageArgs}`);
+  }
+  if (pagination.hasPrevious && pagination.previousOffset !== null) {
+    navigation.push(`previous: --offset ${pagination.previousOffset}${pageArgs}`);
+  }
+
+  const summary = `Showing ${pagination.shown} of ${pagination.total} evaluation suites (offset ${pagination.offset}${pagination.limit === null ? '' : `, limit ${pagination.limit}`})`;
+  return navigation.length > 0 ? `${summary}; ${navigation.join('; ')}.` : `${summary}.`;
 }
 
 function printSuiteResult(result: BenchmarkResult, verbose?: boolean): void {

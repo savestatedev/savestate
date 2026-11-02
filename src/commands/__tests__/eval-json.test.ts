@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { BenchmarkResult } from '../../eval/index.js';
-import { formatEvalJson, type EvalJson } from '../eval.js';
+import {
+  createEvalPagination,
+  formatEvalJson,
+  formatEvalReportPageSummary,
+  type EvalJson,
+  type EvalPagination,
+} from '../eval.js';
 
 const recall: BenchmarkResult = {
   suiteName: 'recall',
@@ -52,5 +58,87 @@ describe('savestate eval --json', () => {
     expect(parsed.passed).toBe(0);
     expect(parsed.total).toBe(0);
     expect(parsed.passRate).toBe(0);
+  });
+
+  it('includes page navigation metadata for a requested report page', () => {
+    const pagination: EvalPagination = {
+      offset: 1,
+      limit: 1,
+      total: 3,
+      shown: 1,
+      emptyReason: null,
+      suggestedOffset: null,
+      hasMore: true,
+      nextOffset: 2,
+      hasPrevious: true,
+      previousOffset: 0,
+    };
+    const parsed = JSON.parse(formatEvalJson([recall], pagination)) as EvalJson;
+
+    expect(parsed.pagination).toEqual(pagination);
+  });
+
+  it('suggests the nearest page when a requested offset is exhausted', () => {
+    const pagination: EvalPagination = {
+      offset: 8,
+      limit: 2,
+      total: 3,
+      shown: 0,
+      emptyReason: 'page',
+      suggestedOffset: 2,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 6,
+    };
+    const parsed = JSON.parse(formatEvalJson([], pagination)) as EvalJson;
+
+    expect(parsed.pagination?.emptyReason).toBe('page');
+    expect(parsed.pagination?.suggestedOffset).toBe(2);
+  });
+
+  it('builds pagination metadata from report filters', () => {
+    expect(createEvalPagination(3, 1, { offset: '1', limit: '1' })).toEqual({
+      offset: 1,
+      limit: 1,
+      total: 3,
+      shown: 1,
+      emptyReason: null,
+      suggestedOffset: null,
+      hasMore: true,
+      nextOffset: 2,
+      hasPrevious: true,
+      previousOffset: 0,
+    });
+  });
+
+  it('formats human-readable next and previous page hints', () => {
+    expect(formatEvalReportPageSummary({
+      offset: 1,
+      limit: 1,
+      total: 3,
+      shown: 1,
+      emptyReason: null,
+      suggestedOffset: null,
+      hasMore: true,
+      nextOffset: 2,
+      hasPrevious: true,
+      previousOffset: 0,
+    })).toBe('Showing 1 of 3 evaluation suites (offset 1, limit 1); next: --offset 2 --limit 1; previous: --offset 0 --limit 1.');
+  });
+
+  it('formats a recovery hint for an exhausted report page', () => {
+    expect(formatEvalReportPageSummary({
+      offset: 8,
+      limit: 2,
+      total: 3,
+      shown: 0,
+      emptyReason: 'page',
+      suggestedOffset: 2,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 6,
+    })).toBe('No evaluation suites found at offset 8; rerun with --offset 2 --limit 2.');
   });
 });
