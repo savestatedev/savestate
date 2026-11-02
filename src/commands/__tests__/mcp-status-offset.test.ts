@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MCP_TOOLS,
   applyMcpStatusFilters,
   formatMcpStatusPaginationHints,
   getMcpStatusPage,
@@ -8,6 +9,25 @@ import {
 } from '../mcp.js';
 
 describe('savestate mcp status --offset', () => {
+  it('lists every tool exposed by the MCP server', () => {
+    expect(MCP_TOOLS).toEqual([
+      'savestate_snapshot',
+      'savestate_restore',
+      'savestate_list',
+      'savestate_status',
+      'savestate_memory_store',
+      'savestate_memory_search',
+      'savestate_memory_delete',
+      'savestate_search_snapshots',
+      'savestate_stats',
+      'add_memories',
+      'search_memory',
+      'list_memories',
+      'delete_memory',
+      'delete_all_memories',
+    ]);
+  });
+
   it('defaults to undefined', () => {
     expect(parseMcpStatusOffset(undefined)).toBeUndefined();
   });
