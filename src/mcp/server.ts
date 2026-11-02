@@ -702,6 +702,11 @@ export function formatUnknownMcpToolResult(name: string): {
   };
 }
 
+/** Convert resource failures into protocol errors instead of successful error payloads. */
+export function formatMcpResourceReadError(err: unknown): Error {
+  return err instanceof Error ? err : new Error(String(err));
+}
+
 // ─── Resource Definitions ────────────────────────────────────
 
 const resources: Resource[] = [
@@ -1924,17 +1929,7 @@ export async function startMCPServer(): Promise<void> {
         ],
       };
     } catch (err) {
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: 'application/json',
-            text: JSON.stringify({
-              error: err instanceof Error ? err.message : String(err)
-            }),
-          },
-        ],
-      };
+      throw formatMcpResourceReadError(err);
     }
   });
 
