@@ -1,12 +1,33 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MCP_TOOLS,
   applyMcpStatusFilters,
+  formatMcpStatusPaginationHints,
   getMcpStatusPage,
   parseMcpStatusOffset,
   selectMcpStatusOffsetEntries,
 } from '../mcp.js';
 
 describe('savestate mcp status --offset', () => {
+  it('lists every tool exposed by the MCP server', () => {
+    expect(MCP_TOOLS).toEqual([
+      'savestate_snapshot',
+      'savestate_restore',
+      'savestate_list',
+      'savestate_status',
+      'savestate_memory_store',
+      'savestate_memory_search',
+      'savestate_memory_delete',
+      'savestate_search_snapshots',
+      'savestate_stats',
+      'add_memories',
+      'search_memory',
+      'list_memories',
+      'delete_memory',
+      'delete_all_memories',
+    ]);
+  });
+
   it('defaults to undefined', () => {
     expect(parseMcpStatusOffset(undefined)).toBeUndefined();
   });
@@ -80,5 +101,18 @@ describe('savestate mcp status --offset', () => {
       hasPrevious: true,
       previousOffset: 2,
     });
+  });
+
+  it('formats terminal guidance for next and previous pages', () => {
+    expect(
+      formatMcpStatusPaginationHints({
+        tools: getMcpStatusPage(7, 2, 2, 2),
+        resources: getMcpStatusPage(2, 0, 2, 2),
+      }),
+    ).toEqual([
+      'Tools previous page: use --offset 0 --limit 2.',
+      'Tools next page: use --offset 4 --limit 2.',
+      'Resources previous page: use --offset 0 --limit 2.',
+    ]);
   });
 });
