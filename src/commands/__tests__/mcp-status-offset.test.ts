@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyMcpStatusFilters,
+  formatMcpStatusPaginationHints,
   getMcpStatusPage,
   parseMcpStatusOffset,
   selectMcpStatusOffsetEntries,
@@ -80,5 +81,18 @@ describe('savestate mcp status --offset', () => {
       hasPrevious: true,
       previousOffset: 2,
     });
+  });
+
+  it('formats terminal guidance for next and previous pages', () => {
+    expect(
+      formatMcpStatusPaginationHints({
+        tools: getMcpStatusPage(7, 2, 2, 2),
+        resources: getMcpStatusPage(2, 0, 2, 2),
+      }),
+    ).toEqual([
+      'Tools previous page: use --offset 0 --limit 2.',
+      'Tools next page: use --offset 4 --limit 2.',
+      'Resources previous page: use --offset 0 --limit 2.',
+    ]);
   });
 });

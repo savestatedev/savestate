@@ -446,6 +446,22 @@ export interface McpStatusPagination {
   resources: McpStatusPage;
 }
 
+export function formatMcpStatusPaginationHints(pagination: McpStatusPagination): string[] {
+  const hints: string[] = [];
+  for (const [label, page] of [
+    ['Tools', pagination.tools],
+    ['Resources', pagination.resources],
+  ] as const) {
+    if (page.hasPrevious && page.previousOffset !== null && page.limit !== null) {
+      hints.push(`${label} previous page: use --offset ${page.previousOffset} --limit ${page.limit}.`);
+    }
+    if (page.hasMore && page.nextOffset !== null && page.limit !== null) {
+      hints.push(`${label} next page: use --offset ${page.nextOffset} --limit ${page.limit}.`);
+    }
+  }
+  return hints;
+}
+
 export function getMcpStatusPage(
   total: number,
   shown: number,
@@ -687,6 +703,14 @@ async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
   console.log('\nAvailable MCP Resources:');
   for (const resource of resources) {
     console.log(chalk.gray(`  - ${resource}`));
+  }
+
+  const paginationHints = formatMcpStatusPaginationHints(status.pagination!);
+  if (paginationHints.length > 0) {
+    console.log('\n' + chalk.cyan('Pagination:'));
+    for (const hint of paginationHints) {
+      console.log(chalk.gray(`  ${hint}`));
+    }
   }
 
   console.log('\n' + chalk.cyan('Usage:'));
