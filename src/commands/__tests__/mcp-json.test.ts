@@ -37,6 +37,7 @@ describe('savestate mcp status --json', () => {
         nextOffset: null,
         hasPrevious: false,
         previousOffset: null,
+        suggestedOffset: null,
       },
       resources: {
         offset: 0,
@@ -47,8 +48,44 @@ describe('savestate mcp status --json', () => {
         nextOffset: null,
         hasPrevious: false,
         previousOffset: null,
+        suggestedOffset: null,
       },
     });
+  });
+
+  it('includes a recovery offset for an empty bounded page', () => {
+    const parsed = JSON.parse(formatMcpStatusJson({
+      ...status,
+      tools: [],
+      resources: [],
+      pagination: {
+        tools: {
+          offset: 1000,
+          limit: 5,
+          total: 14,
+          shown: 0,
+          hasMore: false,
+          nextOffset: null,
+          hasPrevious: true,
+          previousOffset: 995,
+          suggestedOffset: 10,
+        },
+        resources: {
+          offset: 1000,
+          limit: 5,
+          total: 2,
+          shown: 0,
+          hasMore: false,
+          nextOffset: null,
+          hasPrevious: true,
+          previousOffset: 995,
+          suggestedOffset: 0,
+        },
+      },
+    })) as McpStatus;
+
+    expect(parsed.pagination?.tools.suggestedOffset).toBe(10);
+    expect(parsed.pagination?.resources.suggestedOffset).toBe(0);
   });
 
   it('records an uninitialized MCP status', () => {

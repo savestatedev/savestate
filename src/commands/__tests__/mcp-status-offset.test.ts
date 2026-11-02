@@ -88,6 +88,7 @@ describe('savestate mcp status --offset', () => {
       nextOffset: 4,
       hasPrevious: true,
       previousOffset: 0,
+      suggestedOffset: null,
     });
   });
 
@@ -101,6 +102,7 @@ describe('savestate mcp status --offset', () => {
       nextOffset: 6,
       hasPrevious: true,
       previousOffset: 2,
+      suggestedOffset: null,
     });
   });
 
