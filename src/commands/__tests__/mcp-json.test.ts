@@ -27,6 +27,24 @@ describe('savestate mcp status --json', () => {
     expect(parsed.auth).toBe('none');
     expect(parsed.tools).toContain('savestate_memory_search');
     expect(parsed.resources).toEqual(['savestate://snapshots', 'savestate://memories']);
+    expect(parsed.pagination).toEqual({
+      tools: {
+        offset: 0,
+        limit: null,
+        total: 7,
+        shown: 7,
+        hasMore: false,
+        nextOffset: null,
+      },
+      resources: {
+        offset: 0,
+        limit: null,
+        total: 2,
+        shown: 2,
+        hasMore: false,
+        nextOffset: null,
+      },
+    });
   });
 
   it('records an uninitialized MCP status', () => {

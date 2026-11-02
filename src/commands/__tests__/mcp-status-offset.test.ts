@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyMcpStatusFilters,
+  getMcpStatusPage,
   parseMcpStatusOffset,
   selectMcpStatusOffsetEntries,
 } from '../mcp.js';
@@ -53,5 +54,16 @@ describe('savestate mcp status --offset', () => {
         { offset: '1', limit: '1' },
       ),
     ).toEqual(['savestate_restore']);
+  });
+
+  it('reports the next offset for a partial page', () => {
+    expect(getMcpStatusPage(7, 2, 2, 2)).toEqual({
+      offset: 2,
+      limit: 2,
+      total: 7,
+      shown: 2,
+      hasMore: true,
+      nextOffset: 4,
+    });
   });
 });
