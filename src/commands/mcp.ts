@@ -248,7 +248,14 @@ const MAX_MCP_STATUS_LIMIT = 1000;
 export function parseMcpStatusLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_STATUS_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MCP_STATUS_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MCP_STATUS_LIMIT}.`,
@@ -269,7 +276,14 @@ const MAX_MCP_STATUS_OFFSET = 1000;
 export function parseMcpStatusOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_STATUS_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MCP_STATUS_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MCP_STATUS_OFFSET}.`,
@@ -413,9 +427,50 @@ export interface McpStatus {
   auth: string;
   tools: string[];
   resources: string[];
+  pagination?: McpStatusPagination;
+}
+
+export interface McpStatusPage {
+  offset: number;
+  limit: number | null;
+  total: number;
+  shown: number;
+  hasMore: boolean;
+  nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+}
+
+export interface McpStatusPagination {
+  tools: McpStatusPage;
+  resources: McpStatusPage;
+}
+
+export function getMcpStatusPage(
+  total: number,
+  shown: number,
+  offset = 0,
+  limit?: number,
+): McpStatusPage {
+  const hasMore = limit !== undefined && offset + shown < total;
+  const hasPrevious = limit !== undefined && offset > 0;
+  return {
+    offset,
+    limit: limit ?? null,
+    total,
+    shown,
+    hasMore,
+    nextOffset: hasMore ? offset + shown : null,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offset - limit!) : null,
+  };
 }
 
 export function formatMcpStatusJson(status: McpStatus): string {
+  const pagination = status.pagination ?? {
+    tools: getMcpStatusPage(status.tools.length, status.tools.length),
+    resources: getMcpStatusPage(status.resources.length, status.resources.length),
+  };
   return JSON.stringify(
     {
       initialized: status.initialized,
@@ -424,6 +479,7 @@ export function formatMcpStatusJson(status: McpStatus): string {
       auth: status.auth,
       tools: status.tools,
       resources: status.resources,
+      pagination,
     },
     null,
     2,
@@ -559,8 +615,10 @@ interface MCPStatusOptions {
 }
 
 async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
-  const tools = applyMcpStatusFilters(MCP_TOOLS, options);
-  const resources = applyMcpStatusFilters(MCP_RESOURCES, options);
+  const offset = parseMcpStatusOffset(options.offset) ?? 0;
+  const limit = parseMcpStatusLimit(options.limit);
+  const tools = selectMcpStatusItems(selectMcpStatusOffsetEntries(MCP_TOOLS, offset), limit);
+  const resources = selectMcpStatusItems(selectMcpStatusOffsetEntries(MCP_RESOURCES, offset), limit);
   const initialized = isInitialized();
   let configured = false;
   let enabled = false;
@@ -584,6 +642,10 @@ async function mcpStatusCommand(options: MCPStatusOptions): Promise<void> {
     auth,
     tools,
     resources,
+    pagination: {
+      tools: getMcpStatusPage(MCP_TOOLS.length, tools.length, offset, limit),
+      resources: getMcpStatusPage(MCP_RESOURCES.length, resources.length, offset, limit),
+    },
   };
 
   if (options.json) {

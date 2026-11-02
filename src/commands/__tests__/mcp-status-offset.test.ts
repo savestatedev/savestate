@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyMcpStatusFilters,
+  getMcpStatusPage,
   parseMcpStatusOffset,
   selectMcpStatusOffsetEntries,
 } from '../mcp.js';
@@ -15,7 +16,11 @@ describe('savestate mcp status --offset', () => {
     expect(parseMcpStatusOffset('12')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it('accepts surrounding whitespace', () => {
+    expect(parseMcpStatusOffset(' 12 ')).toBe(12);
+  });
+
+  it.each(['-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMcpStatusOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
@@ -49,5 +54,31 @@ describe('savestate mcp status --offset', () => {
         { offset: '1', limit: '1' },
       ),
     ).toEqual(['savestate_restore']);
+  });
+
+  it('reports the next offset for a partial page', () => {
+    expect(getMcpStatusPage(7, 2, 2, 2)).toEqual({
+      offset: 2,
+      limit: 2,
+      total: 7,
+      shown: 2,
+      hasMore: true,
+      nextOffset: 4,
+      hasPrevious: true,
+      previousOffset: 0,
+    });
+  });
+
+  it('reports the previous offset for later pages', () => {
+    expect(getMcpStatusPage(7, 2, 4, 2)).toEqual({
+      offset: 4,
+      limit: 2,
+      total: 7,
+      shown: 2,
+      hasMore: true,
+      nextOffset: 6,
+      hasPrevious: true,
+      previousOffset: 2,
+    });
   });
 });

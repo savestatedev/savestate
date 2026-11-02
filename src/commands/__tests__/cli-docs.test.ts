@@ -2173,6 +2173,9 @@ describe('CLI docs', () => {
     const mcpSection = docs.slice(docs.indexOf('id="mcp"'), docs.indexOf('id="context"'));
     expect(mcpSection).toContain('--json');
     expect(mcpSection).toContain('scripting');
+    expect(mcpSection).toContain('pagination.tools');
+    expect(mcpSection).toContain('pagination.resources');
+    expect(mcpSection).toContain('nextOffset');
     expect(mcpSection).toContain('savestate mcp status --json');
   });
 
