@@ -300,4 +300,18 @@ describe.sequential('trace commands', () => {
       suggestedOffset: null,
     });
   });
+
+  it('trace export validates --limit before checking initialization', async () => {
+    const uninitializedCwd = await mkdtemp(join(tmpdir(), 'savestate-trace-uninitialized-'));
+    const previousCwd = process.cwd();
+    try {
+      process.chdir(uninitializedCwd);
+      await expect(traceExportCommand({ limit: 'not-a-number' })).rejects.toThrow(
+        'Invalid --limit value "not-a-number"',
+      );
+    } finally {
+      process.chdir(previousCwd);
+      await rm(uninitializedCwd, { recursive: true, force: true });
+    }
+  });
 });

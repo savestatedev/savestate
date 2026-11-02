@@ -852,6 +852,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   const format = parseTraceExportFormat(options.format);
   const run = parseTraceRun(options.run) ?? 'all';
   const offset = parseTraceExportOffset(options.offset);
+  const limit = parseTraceExportLimit(options.limit);
   validateTraceExportOptions(options.run, options.offset);
 
   if (!isInitialized()) {
@@ -860,7 +861,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
         run,
         format,
         offset ?? 0,
-        options.limit === undefined ? undefined : parseTraceExportLimit(options.limit),
+        limit,
       ));
       return;
     }
@@ -881,7 +882,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
         run,
         format,
         offset ?? 0,
-        options.limit === undefined ? undefined : parseTraceExportLimit(options.limit),
+        limit,
       ));
       return;
     }
@@ -890,7 +891,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
       run,
       runs,
       offset,
-      limit: options.limit === undefined ? undefined : parseTraceExportLimit(options.limit),
+      limit,
       total: run === 'all' ? allRuns.length : allRuns.filter((entry) => entry.run_id === run).length,
     }));
     return;
