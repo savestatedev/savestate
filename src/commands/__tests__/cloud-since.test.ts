@@ -7,10 +7,14 @@ describe('savestate cloud --since', () => {
   });
 
   it('accepts ISO 8601 dates', () => {
-    expect(parseCloudSince('2026-04-01')).toBe(new Date('2026-04-01').getTime());
+    expect(parseCloudSince('2026-04-01')).toBe(new Date('2026-04-01T00:00:00.000Z').getTime());
     expect(parseCloudSince('2026-04-01T00:00:00Z')).toBe(
       new Date('2026-04-01T00:00:00Z').getTime(),
     );
+  });
+
+  it('treats a date-only cutoff as the start of that UTC day', () => {
+    expect(parseCloudSince(' 2026-04-01 ')).toBe(new Date('2026-04-01T00:00:00.000Z').getTime());
   });
 
   it.each(['', ' ', 'nope', '2026-13-01', 'not-a-date'])(

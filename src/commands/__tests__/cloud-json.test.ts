@@ -26,6 +26,7 @@ const result: CloudListResult = {
 describe('savestate cloud --json', () => {
   it('prints cloud list metadata as JSON', () => {
     const parsed = JSON.parse(formatCloudListJson(result)) as CloudListResult & { apiKey?: string };
+    expect(parsed.found).toBe(true);
     expect(parsed.tier).toBe('pro');
     expect(parsed.cloudStorageUsed).toBe(1048576);
     expect(parsed.cloudStorageLimit).toBe(10737418240);
@@ -41,7 +42,8 @@ describe('savestate cloud --json', () => {
         cloudStorageLimit: 0,
         snapshots: [],
       }),
-    ) as CloudListResult;
+    ) as CloudListResult & { found: boolean };
+    expect(parsed.found).toBe(false);
     expect(parsed.tier).toBe('team');
     expect(parsed.cloudStorageUsed).toBe(0);
     expect(parsed.cloudStorageLimit).toBe(0);
@@ -62,6 +64,7 @@ const pushResult: CloudPushResult = {
 describe('savestate cloud push --json', () => {
   it('prints push summary as JSON', () => {
     const parsed = JSON.parse(formatCloudPushJson(pushResult)) as CloudPushResult & { apiKey?: string };
+    expect(parsed.found).toBe(true);
     expect(parsed.pushed).toBe(1);
     expect(parsed.failed).toBe(1);
     expect(parsed.all).toBe(false);
@@ -77,7 +80,8 @@ describe('savestate cloud push --json', () => {
         all: true,
         snapshots: [],
       }),
-    ) as CloudPushResult;
+    ) as CloudPushResult & { found: boolean };
+    expect(parsed.found).toBe(false);
     expect(parsed.pushed).toBe(0);
     expect(parsed.failed).toBe(0);
     expect(parsed.all).toBe(true);
@@ -100,6 +104,7 @@ const pullResult: CloudPullResult = {
 describe('savestate cloud pull --json', () => {
   it('prints pull summary as JSON', () => {
     const parsed = JSON.parse(formatCloudPullJson(pullResult)) as CloudPullResult & { apiKey?: string };
+    expect(parsed.found).toBe(true);
     expect(parsed.pulled).toBe(1);
     expect(parsed.failed).toBe(1);
     expect(parsed.skipped).toBe(1);
@@ -117,7 +122,8 @@ describe('savestate cloud pull --json', () => {
         all: true,
         snapshots: [],
       }),
-    ) as CloudPullResult;
+    ) as CloudPullResult & { found: boolean };
+    expect(parsed.found).toBe(false);
     expect(parsed.pulled).toBe(0);
     expect(parsed.failed).toBe(0);
     expect(parsed.skipped).toBe(0);
@@ -139,6 +145,7 @@ const deleteResult: CloudDeleteResult = {
 describe('savestate cloud delete --json', () => {
   it('prints delete summary as JSON', () => {
     const parsed = JSON.parse(formatCloudDeleteJson(deleteResult)) as CloudDeleteResult & { apiKey?: string };
+    expect(parsed.found).toBe(true);
     expect(parsed.deleted).toBe(1);
     expect(parsed.failed).toBe(1);
     expect(parsed.all).toBe(false);
@@ -154,7 +161,8 @@ describe('savestate cloud delete --json', () => {
         all: true,
         snapshots: [],
       }),
-    ) as CloudDeleteResult;
+    ) as CloudDeleteResult & { found: boolean };
+    expect(parsed.found).toBe(false);
     expect(parsed.deleted).toBe(0);
     expect(parsed.failed).toBe(0);
     expect(parsed.all).toBe(true);

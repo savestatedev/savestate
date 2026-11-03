@@ -335,6 +335,8 @@ export function applyStatsFilters(
 }
 
 export interface StatsJson {
+  /** Whether the filtered snapshot collection contains at least one entry. */
+  found: boolean;
   total: number;
   totalBytes: number;
   avgBytes: number;
@@ -382,6 +384,7 @@ export function formatStatsJson(
 ): string {
   const stats = computeStats(snapshots);
   const record: StatsJson = {
+    found: snapshots.length > 0,
     total: stats.total,
     totalBytes: stats.totalBytes,
     avgBytes: stats.avgBytes,

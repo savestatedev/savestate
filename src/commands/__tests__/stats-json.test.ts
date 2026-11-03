@@ -25,6 +25,7 @@ const newer: SnapshotIndexEntry = {
 describe('savestate stats --json', () => {
   it('prints usage statistics as JSON with storage type', () => {
     const parsed = JSON.parse(formatStatsJson([older, newer], 'local')) as StatsJson;
+    expect(parsed.found).toBe(true);
     expect(parsed.total).toBe(2);
     expect(parsed.totalBytes).toBe(6144);
     expect(parsed.avgBytes).toBe(3072);
@@ -55,6 +56,7 @@ describe('savestate stats --json', () => {
 
   it('records empty snapshot stats with null first and latest', () => {
     const parsed = JSON.parse(formatStatsJson([], 'local')) as StatsJson;
+    expect(parsed.found).toBe(false);
     expect(parsed.total).toBe(0);
     expect(parsed.totalBytes).toBe(0);
     expect(parsed.first).toBeNull();
