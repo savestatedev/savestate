@@ -199,6 +199,14 @@ savestate list                        List all snapshots
   --reverse                          Alias for --oldest-first
   --limit <n>                        Max snapshots to show
   --offset <n>                       Skip snapshots before applying --limit
+
+`savestate list --json` returns a summary object with `found` indicating whether
+the current page contains snapshots, alongside `total`, `shown`, `offset`,
+`limit`, and `entries`. When a page is empty, `emptyReason` distinguishes an
+empty collection from a stale offset, and `suggestedOffset` identifies the
+nearest page to retry. The response also includes `page`, `pageSize`, and
+`totalPages` for paginated scripting consumers.
+
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
   --exclude <types>                  Skip memory, conversation, identity, or knowledge
