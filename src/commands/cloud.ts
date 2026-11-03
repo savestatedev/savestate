@@ -496,6 +496,7 @@ export interface CloudPushResult {
 export function formatCloudPushJson(result: CloudPushResult): string {
   return JSON.stringify(
     {
+      found: result.snapshots.length > 0,
       pushed: result.pushed,
       failed: result.failed,
       all: result.all,
@@ -521,6 +522,7 @@ export interface CloudDeleteResult {
 export function formatCloudDeleteJson(result: CloudDeleteResult): string {
   return JSON.stringify(
     {
+      found: result.snapshots.length > 0,
       deleted: result.deleted,
       failed: result.failed,
       all: result.all,
@@ -588,6 +590,7 @@ export interface CloudPullResult {
 export function formatCloudPullJson(result: CloudPullResult): string {
   return JSON.stringify(
     {
+      found: result.snapshots.length > 0,
       pulled: result.pulled,
       failed: result.failed,
       skipped: result.skipped,
