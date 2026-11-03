@@ -536,7 +536,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
     console.log(`    ${chalk.cyan(adapter.padEnd(20))} ${count}`);
   }
 
-  if (Object.keys(stats.byPlatform).length > 1) {
+  if (shouldShowStatsPlatformSummary(options.platform, stats.byPlatform)) {
     console.log();
     console.log(chalk.dim('  By platform:'));
     for (const [platform, count] of Object.entries(stats.byPlatform)) {
@@ -683,6 +683,14 @@ export function computeStats(snapshots: SnapshotIndexEntry[]): ComputedStats {
     tagCount: tagCounts.size,
     topTags,
   };
+}
+
+/** Keep a platform filter visible in human-readable summaries, even for one bucket. */
+export function shouldShowStatsPlatformSummary(
+  platform: string | undefined,
+  byPlatform: Record<string, number>,
+): boolean {
+  return platform !== undefined || Object.keys(byPlatform).length > 1;
 }
 
 function printRow(label: string, value: string): void {

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
-import { applyStatsFilters, parseStatsPlatform } from '../stats.js';
+import {
+  applyStatsFilters,
+  parseStatsPlatform,
+  shouldShowStatsPlatformSummary,
+} from '../stats.js';
 
 function entry(partial: Partial<SnapshotIndexEntry>): SnapshotIndexEntry {
   return {
@@ -37,5 +41,13 @@ describe('savestate stats --platform', () => {
         { platform: 'claude' },
       ).map((snapshot) => snapshot.id),
     ).toEqual(['legacy']);
+  });
+
+  it('keeps the selected platform visible when it is the only bucket', () => {
+    expect(shouldShowStatsPlatformSummary('claude', { claude: 2 })).toBe(true);
+  });
+
+  it('hides the platform section for an unfiltered single-platform summary', () => {
+    expect(shouldShowStatsPlatformSummary(undefined, { claude: 2 })).toBe(false);
   });
 });
