@@ -30,6 +30,7 @@ interface TraceExportOptions {
   format?: string;
   run?: string;
   json?: boolean;
+  jsonSummary?: boolean;
   limit?: string;
   offset?: string;
 }
@@ -561,9 +562,15 @@ export interface TraceExportMissingJson {
   run: string;
   runCount: 0;
   eventCount: 0;
+  pagination: TraceExportPaginationJson;
 }
 
-export function formatTraceExportMissingJson(run: string, format?: string): string {
+export function formatTraceExportMissingJson(
+  run: string,
+  format?: string,
+  offset = 0,
+  limit?: number,
+): string {
   return JSON.stringify(
     {
       found: false,
@@ -571,6 +578,7 @@ export function formatTraceExportMissingJson(run: string, format?: string): stri
       run,
       runCount: 0,
       eventCount: 0,
+      pagination: getTracePagination(0, 0, offset, limit),
     },
     null,
     2,
@@ -845,11 +853,19 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   const format = parseTraceExportFormat(options.format);
   const run = parseTraceRun(options.run) ?? 'all';
   const offset = parseTraceExportOffset(options.offset);
+  const limit = parseTraceExportLimit(options.limit);
   validateTraceExportOptions(options.run, options.offset);
 
+  const wantsJsonSummary = options.json === true || options.jsonSummary === true;
+
   if (!isInitialized()) {
-    if (options.json) {
-      console.log(formatTraceExportMissingJson(run, format));
+    if (wantsJsonSummary) {
+      console.log(formatTraceExportMissingJson(
+        run,
+        format,
+        offset ?? 0,
+        limit,
+      ));
       return;
     }
     console.error(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -858,14 +874,19 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
 
   const store = new TraceStore();
 
-  if (options.json) {
+  if (wantsJsonSummary) {
     const allRuns = await store.listRuns();
     const runs = applyTraceExportFilters(
       run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
       { offset: options.offset, limit: options.limit },
     );
     if (run !== 'all' && runs.length === 0) {
-      console.log(formatTraceExportMissingJson(run, format));
+      console.log(formatTraceExportMissingJson(
+        run,
+        format,
+        offset ?? 0,
+        limit,
+      ));
       return;
     }
     console.log(formatTraceExportJson({
@@ -873,7 +894,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
       run,
       runs,
       offset,
-      limit: options.limit === undefined ? undefined : parseTraceExportLimit(options.limit),
+      limit,
       total: run === 'all' ? allRuns.length : allRuns.filter((entry) => entry.run_id === run).length,
     }));
     return;
@@ -886,15 +907,25 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   }
 
   const allRuns = await store.listRuns();
-  const runs = applyTraceExportFilters(
-    run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
-    { offset: options.offset, limit: options.limit },
-  );
+  const candidateRuns = run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run);
+  const runs = applyTraceExportFilters(candidateRuns, {
+    offset: options.offset,
+    limit: options.limit,
+  });
   const chunks: string[] = [];
   for (const entry of runs) {
     chunks.push(await store.export(entry.run_id, format));
   }
   process.stdout.write(chunks.join(''));
+
+  const hint = formatTracePaginationHint(
+    'trace runs',
+    runs.length,
+    candidateRuns.length,
+    offset ?? 0,
+    limit,
+  );
+  if (hint) console.error(chalk.dim(`  ${hint}`));
 }
 
 function formatDate(iso: string): string {
