@@ -35,8 +35,13 @@ describe('savestate cloud --json', () => {
     expect(parsed.cloudStorageLimit).toBe(10737418240);
     expect(parsed.total).toBe(2);
     expect(parsed.shown).toBe(1);
+    expect(parsed.remaining).toBe(1);
     expect(parsed.offset).toBe(0);
     expect(parsed.limit).toBe(1);
+    expect(parsed.page).toBe(1);
+    expect(parsed.pageSize).toBe(1);
+    expect(parsed.totalPages).toBe(2);
+    expect(parsed.hasPrevious).toBe(false);
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(1);
     expect(parsed.previousOffset).toBeNull();
@@ -63,6 +68,7 @@ describe('savestate cloud --json', () => {
     expect(parsed.cloudStorageLimit).toBe(0);
     expect(parsed.total).toBe(0);
     expect(parsed.shown).toBe(0);
+    expect(parsed.remaining).toBe(0);
     expect(parsed.emptyReason).toBe('collection');
     expect(parsed.snapshots).toEqual([]);
   });
