@@ -57,6 +57,7 @@ describe('computeStats', () => {
     const stats = computeStats([
       entry({ id: 'legacy', adapter: ' ChatGPT ' }),
       entry({ id: 'current', adapter: 'chatgpt' }),
+      entry({ id: 'blank', adapter: '   ' }),
     ]);
 
     expect(stats.byAdapter).toEqual({ chatgpt: 2 });

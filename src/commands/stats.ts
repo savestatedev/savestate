@@ -623,7 +623,9 @@ export function computeStats(snapshots: SnapshotIndexEntry[]): ComputedStats {
     // Keep legacy index entries from splitting one adapter across multiple
     // buckets in human-readable and JSON summaries.
     const adapter = s.adapter.trim().toLowerCase();
-    byAdapter[adapter] = (byAdapter[adapter] ?? 0) + 1;
+    if (adapter.length > 0) {
+      byAdapter[adapter] = (byAdapter[adapter] ?? 0) + 1;
+    }
     // Keep legacy platform values aligned with adapter and tag summaries.
     const platform = s.platform.trim().toLowerCase();
     if (platform.length > 0) {
