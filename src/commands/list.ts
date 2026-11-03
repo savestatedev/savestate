@@ -185,6 +185,9 @@ export function formatListJson(
 export interface ListMissingJson {
   found: false;
   total: 0;
+  shown: 0;
+  emptyReason: 'collection';
+  entries: [];
   storage: null;
 }
 
@@ -193,6 +196,9 @@ export function formatListMissingJson(): string {
     {
       found: false,
       total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      entries: [],
       storage: null,
     },
     null,

@@ -5153,7 +5153,9 @@ describe('CLI docs', () => {
     const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
     expect(listSection).toContain('--json');
     expect(listSection).toContain('scripting');
-    expect(listSection).toContain('found, total, storage');
+    expect(listSection).toContain('found, total, shown');
+    expect(listSection).toContain('emptyReason');
+    expect(listSection).toContain('entries');
     expect(listSection).toContain('savestate list --json');
     expect(listSource).toContain('export function formatListMissingJson');
   });

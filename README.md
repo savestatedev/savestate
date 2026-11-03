@@ -205,7 +205,9 @@ the current page contains snapshots, alongside `total`, `shown`, `offset`,
 `limit`, and `entries`. When a page is empty, `emptyReason` distinguishes an
 empty collection from a stale offset, and `suggestedOffset` identifies the
 nearest page to retry. The response also includes `page`, `pageSize`, and
-`totalPages` for paginated scripting consumers.
+`totalPages` for paginated scripting consumers. Before initialization, the
+response keeps a page-compatible shape with `shown: 0`,
+`emptyReason: "collection"`, and `entries: []`.
 
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
