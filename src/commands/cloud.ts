@@ -455,12 +455,36 @@ export interface CloudListResult {
   cloudStorageUsed: number;
   cloudStorageLimit: number;
   snapshots: CloudSnapshotJson[];
+  total?: number;
+  offset?: number;
+  limit?: number;
 }
 
 export function formatCloudListJson(result: CloudListResult): string {
+  const total = result.total ?? result.snapshots.length;
+  const offset = result.offset ?? 0;
+  const limit = result.limit ?? null;
+  const shown = result.snapshots.length;
+  const hasMore = limit !== null && offset + shown < total;
+  const emptyReason = shown > 0 ? null : total === 0 ? 'collection' : 'page';
+  const suggestedOffset = emptyReason === 'page' && limit !== null
+    ? Math.floor((total - 1) / limit) * limit
+    : null;
+
   return JSON.stringify(
     {
-      found: result.snapshots.length > 0,
+      found: shown > 0,
+      total,
+      shown,
+      offset,
+      limit,
+      hasMore,
+      nextOffset: hasMore ? offset + shown : null,
+      previousOffset: offset > 0 && limit !== null
+        ? suggestedOffset ?? Math.max(0, offset - limit)
+        : null,
+      suggestedOffset,
+      emptyReason,
       tier: result.tier,
       cloudStorageUsed: result.cloudStorageUsed,
       cloudStorageLimit: result.cloudStorageLimit,
@@ -1108,7 +1132,8 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   if (spinner) {
     spinner.text = 'Fetching cloud snapshots...';
   }
-  const snapshots = selectCloudListPage(await listCloudSnapshots(), limit, offset);
+  const allSnapshots = await listCloudSnapshots();
+  const snapshots = selectCloudListPage(allSnapshots, limit, offset);
   spinner?.stop();
 
   if (options.json) {
@@ -1118,6 +1143,9 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
         cloudStorageUsed: sub.cloudStorageUsed ?? 0,
         cloudStorageLimit: sub.cloudStorageLimit ?? 0,
         snapshots,
+        total: allSnapshots.length,
+        offset: offset ?? 0,
+        limit,
       }),
     );
     return;

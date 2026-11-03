@@ -21,6 +21,9 @@ const result: CloudListResult = {
       createdAt: '2026-01-26T00:00:00.000Z',
     },
   ],
+  total: 2,
+  offset: 0,
+  limit: 1,
 };
 
 describe('savestate cloud --json', () => {
@@ -30,6 +33,14 @@ describe('savestate cloud --json', () => {
     expect(parsed.tier).toBe('pro');
     expect(parsed.cloudStorageUsed).toBe(1048576);
     expect(parsed.cloudStorageLimit).toBe(10737418240);
+    expect(parsed.total).toBe(2);
+    expect(parsed.shown).toBe(1);
+    expect(parsed.offset).toBe(0);
+    expect(parsed.limit).toBe(1);
+    expect(parsed.hasMore).toBe(true);
+    expect(parsed.nextOffset).toBe(1);
+    expect(parsed.previousOffset).toBeNull();
+    expect(parsed.emptyReason).toBeNull();
     expect(parsed.snapshots).toEqual(result.snapshots);
     expect(parsed.apiKey).toBeUndefined();
   });
@@ -41,13 +52,33 @@ describe('savestate cloud --json', () => {
         cloudStorageUsed: 0,
         cloudStorageLimit: 0,
         snapshots: [],
+        total: 0,
+        offset: 0,
+        limit: 5,
       }),
     ) as CloudListResult & { found: boolean };
     expect(parsed.found).toBe(false);
     expect(parsed.tier).toBe('team');
     expect(parsed.cloudStorageUsed).toBe(0);
     expect(parsed.cloudStorageLimit).toBe(0);
+    expect(parsed.total).toBe(0);
+    expect(parsed.shown).toBe(0);
+    expect(parsed.emptyReason).toBe('collection');
     expect(parsed.snapshots).toEqual([]);
+  });
+
+  it('points scripts to the previous page when an offset is stale', () => {
+    const parsed = JSON.parse(formatCloudListJson({
+      ...result,
+      snapshots: [],
+      total: 3,
+      offset: 8,
+      limit: 2,
+    })) as CloudListResult & { found: boolean; emptyReason: string; previousOffset: number };
+
+    expect(parsed.found).toBe(false);
+    expect(parsed.emptyReason).toBe('page');
+    expect(parsed.previousOffset).toBe(2);
   });
 });
 
