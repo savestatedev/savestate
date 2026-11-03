@@ -62,6 +62,16 @@ describe('computeStats', () => {
     expect(stats.byAdapter).toEqual({ chatgpt: 2 });
   });
 
+  it('consolidates legacy platform casing and whitespace', () => {
+    const stats = computeStats([
+      entry({ id: 'legacy', platform: ' Claude ' }),
+      entry({ id: 'current', platform: 'claude' }),
+      entry({ id: 'blank', platform: '   ' }),
+    ]);
+
+    expect(stats.byPlatform).toEqual({ claude: 2 });
+  });
+
   it('counts top tags by frequency', () => {
     const stats = computeStats([
       entry({ id: 'a', tags: ['work', 'pinned'] }),
