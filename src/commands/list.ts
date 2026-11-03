@@ -59,6 +59,8 @@ export interface ListJsonFilters {
 }
 
 export interface ListJson {
+  /** Whether the current page contains at least one matching snapshot. */
+  found: boolean;
   total: number;
   shown: number;
   /** Number of matching snapshots after the visible page. */
@@ -154,6 +156,7 @@ export function formatListJson(
     : null;
   const totalPages = Math.ceil(snapshots.length / limit);
   const result: ListJson = {
+    found: records.length > 0,
     total: snapshots.length,
     shown: records.length,
     remaining,
@@ -182,6 +185,9 @@ export function formatListJson(
 export interface ListMissingJson {
   found: false;
   total: 0;
+  shown: 0;
+  emptyReason: 'collection';
+  entries: [];
   storage: null;
 }
 
@@ -190,6 +196,9 @@ export function formatListMissingJson(): string {
     {
       found: false,
       total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      entries: [],
       storage: null,
     },
     null,
