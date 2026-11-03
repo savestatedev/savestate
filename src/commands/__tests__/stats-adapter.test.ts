@@ -44,6 +44,18 @@ describe('savestate stats --adapter', () => {
     ).toEqual(['gpt']);
   });
 
+  it('matches legacy adapter casing and whitespace', () => {
+    expect(
+      applyStatsFilters(
+        [
+          entry({ id: 'legacy', adapter: ' ChatGPT ' }),
+          entry({ id: 'current', adapter: 'claude-code' }),
+        ],
+        { adapter: 'chatgpt' },
+      ).map((snapshot) => snapshot.id),
+    ).toEqual(['legacy']);
+  });
+
   it('ANDs --adapter with --since', () => {
     expect(
       applyStatsFilters(

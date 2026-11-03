@@ -554,8 +554,11 @@ function filterStatsEntries(
   const label = parseStatsLabel(options.label);
 
   return snapshots.filter((snapshot) => {
-    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
-    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    // Indexes created by older adapters may preserve casing or surrounding
+    // whitespace. Match normalized CLI input against those legacy values too.
+    const normalizedAdapter = snapshot.adapter.trim().toLowerCase();
+    if (adapter !== undefined && normalizedAdapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(normalizedAdapter)) return false;
     if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) return false;
     if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) return false;
