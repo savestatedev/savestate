@@ -100,7 +100,11 @@ export function parseCloudExclude(value: string | undefined): string[] | undefin
 export function parseCloudSince(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  const normalized = value.trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  const ms = dateOnly
+    ? new Date(`${normalized}T00:00:00.000Z`).getTime()
+    : new Date(value).getTime();
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --since value "${value}". Expected an ISO 8601 date.`,
@@ -113,7 +117,11 @@ export function parseCloudSince(value: string | undefined): number | undefined {
 export function parseCloudUntil(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const ms = new Date(value).getTime();
+  const normalized = value.trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  const ms = dateOnly
+    ? new Date(`${normalized}T23:59:59.999Z`).getTime()
+    : new Date(value).getTime();
   if (Number.isNaN(ms)) {
     throw new Error(
       `Invalid --until value "${value}". Expected an ISO 8601 date.`,

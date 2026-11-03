@@ -7,10 +7,14 @@ describe('savestate cloud --until', () => {
   });
 
   it('accepts ISO 8601 dates', () => {
-    expect(parseCloudUntil('2026-06-01')).toBe(new Date('2026-06-01').getTime());
+    expect(parseCloudUntil('2026-06-01')).toBe(new Date('2026-06-01T23:59:59.999Z').getTime());
     expect(parseCloudUntil('2026-06-01T00:00:00Z')).toBe(
       new Date('2026-06-01T00:00:00Z').getTime(),
     );
+  });
+
+  it('treats a date-only cutoff as the end of that UTC day', () => {
+    expect(parseCloudUntil(' 2026-06-01 ')).toBe(new Date('2026-06-01T23:59:59.999Z').getTime());
   });
 
   it.each(['', ' ', 'nope', '2026-13-01', 'not-a-date'])(
@@ -33,6 +37,15 @@ describe('savestate cloud --until', () => {
         { until: '2026-06-01' },
       ).map((entry) => entry.id),
     ).toEqual(['mid']);
+  });
+
+  it('includes snapshots later on the date-only cutoff day', () => {
+    expect(
+      resolveCloudPushSnapshots(
+        [{ id: 'same-day', timestamp: '2026-06-01T18:30:00Z' }],
+        { until: '2026-06-01' },
+      ).map((entry) => entry.id),
+    ).toEqual(['same-day']);
   });
 
   it('ANDs --id with --until', () => {
