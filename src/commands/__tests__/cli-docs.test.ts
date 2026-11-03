@@ -5144,6 +5144,7 @@ describe('CLI docs', () => {
     expect(listSection).toContain('scripting');
     expect(listSection).toContain('savestate list --json');
     expect(listSection).toContain('<code>found</code>');
+    expect(listSection).toContain('<code>page</code>/<code>pageSize</code>/<code>totalPages</code>');
     expect(listSection).toContain("savestate ls --tag weekly --json | jq '.entries[0]'");
     expect(listSection).not.toContain("savestate ls --tag weekly --json | jq '.[0]'");
   });
