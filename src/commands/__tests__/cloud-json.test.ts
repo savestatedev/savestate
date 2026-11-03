@@ -26,6 +26,7 @@ const result: CloudListResult = {
 describe('savestate cloud --json', () => {
   it('prints cloud list metadata as JSON', () => {
     const parsed = JSON.parse(formatCloudListJson(result)) as CloudListResult & { apiKey?: string };
+    expect(parsed.found).toBe(true);
     expect(parsed.tier).toBe('pro');
     expect(parsed.cloudStorageUsed).toBe(1048576);
     expect(parsed.cloudStorageLimit).toBe(10737418240);
@@ -41,7 +42,8 @@ describe('savestate cloud --json', () => {
         cloudStorageLimit: 0,
         snapshots: [],
       }),
-    ) as CloudListResult;
+    ) as CloudListResult & { found: boolean };
+    expect(parsed.found).toBe(false);
     expect(parsed.tier).toBe('team');
     expect(parsed.cloudStorageUsed).toBe(0);
     expect(parsed.cloudStorageLimit).toBe(0);

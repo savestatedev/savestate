@@ -452,6 +452,7 @@ export interface CloudListResult {
 export function formatCloudListJson(result: CloudListResult): string {
   return JSON.stringify(
     {
+      found: result.snapshots.length > 0,
       tier: result.tier,
       cloudStorageUsed: result.cloudStorageUsed,
       cloudStorageLimit: result.cloudStorageLimit,

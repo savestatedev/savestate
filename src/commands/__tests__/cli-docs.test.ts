@@ -2055,6 +2055,11 @@ describe('CLI docs', () => {
     expect(cloud).toContain('formatCloudListMissingJson()');
   });
 
+  it('documents found for initialized cloud list JSON', () => {
+    const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
+    expect(cloudSection).toContain('cloud list as JSON with <code>found</code>');
+  });
+
   it('documents cloud pull --json when missing', () => {
     const cloudSection = docs.slice(docs.indexOf('id="cloud"'), docs.indexOf('id="mcp"'));
     expect(cloudSection).toContain('--json');
