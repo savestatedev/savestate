@@ -125,6 +125,7 @@ program
   .command('stats')
   .description('Show usage statistics about your snapshots')
   .option('--json', 'Output as JSON')
+  .option('--platform <id>', 'Only snapshots recorded from this platform')
   .option('--adapter <id>', 'Only snapshots from this adapter')
   .option('--exclude <ids>', 'Skip snapshots from these adapters (one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf)')
   .option('--snapshot <id>', 'Only this snapshot (single non-empty snapshot id)')
