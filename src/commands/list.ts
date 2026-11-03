@@ -262,10 +262,12 @@ export function formatListEmptyState(
 /** Describe the visible list page without treating an offset as part of the limit. */
 export function formatListPageSummary(total: number, shown: number, offset = 0, limit = 50): string {
   const pageEnd = Math.min(offset + limit, total);
-  if (offset > 0 || pageEnd < total) {
-    return `(showing ${shown} of ${total} after filters; offset ${offset}, limit ${limit})`;
-  }
-  return `(showing ${shown} of ${total} after filters)`;
+  if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
+
+  const hints = [`offset ${offset}`, `limit ${limit}`];
+  if (pageEnd < total) hints.push(`next offset ${offset + shown}`);
+  if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+  return `(showing ${shown} of ${total} after filters; ${hints.join('; ')})`;
 }
 
 /** Pad the visible label text before applying terminal styling to placeholders. */
