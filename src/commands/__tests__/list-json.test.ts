@@ -31,6 +31,7 @@ const newer: SnapshotIndexEntry = {
 describe('savestate list --json', () => {
   it('prints snapshot records as JSON newest first', () => {
     const parsed = JSON.parse(formatListJson([older, newer])) as ListJson;
+    expect(parsed.found).toBe(true);
     expect(parsed.total).toBe(2);
     expect(parsed.shown).toBe(2);
     expect(parsed.remaining).toBe(0);
@@ -74,6 +75,7 @@ describe('savestate list --json', () => {
 
   it('prints an empty array when there are no snapshots', () => {
     expect(JSON.parse(formatListJson([]))).toMatchObject({
+      found: false,
       total: 0,
       shown: 0,
       emptyReason: 'collection',
@@ -125,6 +127,7 @@ describe('savestate list --json', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 1, 5)) as ListJson;
 
     expect(parsed).toMatchObject({
+      found: false,
       total: 2,
       shown: 0,
       remaining: 0,
