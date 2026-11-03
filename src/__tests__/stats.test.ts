@@ -53,6 +53,15 @@ describe('computeStats', () => {
     expect(stats.byPlatform['openai']).toBe(1);
   });
 
+  it('consolidates legacy adapter casing and whitespace', () => {
+    const stats = computeStats([
+      entry({ id: 'legacy', adapter: ' ChatGPT ' }),
+      entry({ id: 'current', adapter: 'chatgpt' }),
+    ]);
+
+    expect(stats.byAdapter).toEqual({ chatgpt: 2 });
+  });
+
   it('counts top tags by frequency', () => {
     const stats = computeStats([
       entry({ id: 'a', tags: ['work', 'pinned'] }),
@@ -61,6 +70,19 @@ describe('computeStats', () => {
     ]);
     expect(stats.tagCount).toBe(3);
     expect(stats.topTags[0]).toEqual(['work', 2]);
+  });
+
+  it('consolidates legacy tag casing and whitespace', () => {
+    const stats = computeStats([
+      entry({ id: 'legacy', tags: [' Work ', 'URGENT', ''] }),
+      entry({ id: 'current', tags: ['work'] }),
+    ]);
+
+    expect(stats.tagCount).toBe(2);
+    expect(stats.topTags).toEqual([
+      ['work', 2],
+      ['urgent', 1],
+    ]);
   });
 
   it('computes time span and cadence across snapshots', () => {

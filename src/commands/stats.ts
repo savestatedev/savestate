@@ -554,8 +554,11 @@ function filterStatsEntries(
   const label = parseStatsLabel(options.label);
 
   return snapshots.filter((snapshot) => {
-    if (adapter !== undefined && snapshot.adapter !== adapter) return false;
-    if (exclude !== undefined && exclude.includes(snapshot.adapter)) return false;
+    // Indexes created by older adapters may preserve casing or surrounding
+    // whitespace. Match normalized CLI input against those legacy values too.
+    const normalizedAdapter = snapshot.adapter.trim().toLowerCase();
+    if (adapter !== undefined && normalizedAdapter !== adapter) return false;
+    if (exclude !== undefined && exclude.includes(normalizedAdapter)) return false;
     if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
     if (since !== undefined && new Date(snapshot.timestamp).getTime() < since) return false;
     if (until !== undefined && new Date(snapshot.timestamp).getTime() > until) return false;
@@ -617,10 +620,16 @@ export function computeStats(snapshots: SnapshotIndexEntry[]): ComputedStats {
   const tagCounts = new Map<string, number>();
 
   for (const s of sorted) {
-    byAdapter[s.adapter] = (byAdapter[s.adapter] ?? 0) + 1;
+    // Keep legacy index entries from splitting one adapter across multiple
+    // buckets in human-readable and JSON summaries.
+    const adapter = s.adapter.trim().toLowerCase();
+    byAdapter[adapter] = (byAdapter[adapter] ?? 0) + 1;
     byPlatform[s.platform] = (byPlatform[s.platform] ?? 0) + 1;
     for (const tag of s.tags ?? []) {
-      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+      // Match the case-insensitive, trimmed semantics used by --tag filters.
+      const normalizedTag = tag.trim().toLowerCase();
+      if (normalizedTag.length === 0) continue;
+      tagCounts.set(normalizedTag, (tagCounts.get(normalizedTag) ?? 0) + 1);
     }
   }
 

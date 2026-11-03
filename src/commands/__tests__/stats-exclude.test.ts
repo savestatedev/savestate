@@ -47,6 +47,18 @@ describe('savestate stats --exclude', () => {
     ).toEqual(['claude']);
   });
 
+  it('excludes legacy adapter casing and whitespace', () => {
+    expect(
+      applyStatsFilters(
+        [
+          entry({ id: 'legacy', adapter: ' ChatGPT ' }),
+          entry({ id: 'current', adapter: 'claude-code' }),
+        ],
+        { exclude: 'chatgpt' },
+      ).map((snapshot) => snapshot.id),
+    ).toEqual(['current']);
+  });
+
   it('ANDs --adapter with --exclude', () => {
     expect(
       applyStatsFilters(
