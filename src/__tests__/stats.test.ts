@@ -72,6 +72,19 @@ describe('computeStats', () => {
     expect(stats.topTags[0]).toEqual(['work', 2]);
   });
 
+  it('consolidates legacy tag casing and whitespace', () => {
+    const stats = computeStats([
+      entry({ id: 'legacy', tags: [' Work ', 'URGENT', ''] }),
+      entry({ id: 'current', tags: ['work'] }),
+    ]);
+
+    expect(stats.tagCount).toBe(2);
+    expect(stats.topTags).toEqual([
+      ['work', 2],
+      ['urgent', 1],
+    ]);
+  });
+
   it('computes time span and cadence across snapshots', () => {
     const stats = computeStats([
       entry({ id: 'a', timestamp: '2026-01-01T00:00:00Z' }),

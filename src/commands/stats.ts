@@ -626,7 +626,10 @@ export function computeStats(snapshots: SnapshotIndexEntry[]): ComputedStats {
     byAdapter[adapter] = (byAdapter[adapter] ?? 0) + 1;
     byPlatform[s.platform] = (byPlatform[s.platform] ?? 0) + 1;
     for (const tag of s.tags ?? []) {
-      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+      // Match the case-insensitive, trimmed semantics used by --tag filters.
+      const normalizedTag = tag.trim().toLowerCase();
+      if (normalizedTag.length === 0) continue;
+      tagCounts.set(normalizedTag, (tagCounts.get(normalizedTag) ?? 0) + 1);
     }
   }
 
