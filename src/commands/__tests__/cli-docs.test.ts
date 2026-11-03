@@ -4465,6 +4465,13 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function formatTraceExportJson');
   });
 
+  it('documents trace export --json-summary as an alias', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    expect(traceSection).toContain('On <code>export</code>, it aliases the export summary');
+    expect(trace).toContain('jsonSummary?: boolean');
+    expect(trace).toContain('wantsJsonSummary');
+  });
+
   it('documents trace export --json when missing', () => {
     const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     expect(traceSection).toContain('--json');
@@ -4487,7 +4494,7 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('savestate trace export --json');
     expect(trace).toContain('export function formatTraceExportMissingJson');
     expect(exportBlock).toContain('if (!isInitialized())');
-    expect(exportBlock).toContain('if (options.json)');
+    expect(exportBlock).toContain('if (wantsJsonSummary)');
     expect(exportBlock).toContain('formatTraceExportMissingJson(');
   });
 

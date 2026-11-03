@@ -324,6 +324,31 @@ describe.sequential('trace commands', () => {
     });
   });
 
+  it('trace export --json-summary aliases the export JSON summary', async () => {
+    const store = new TraceStore({ cwd, redactSecrets: false });
+    await store.appendEvent('run-summary-alias', {
+      timestamp: '2026-02-21T10:00:00.000Z',
+      run_id: 'run-summary-alias',
+      adapter: 'clawdbot',
+      event_type: 'message',
+      payload: {},
+    });
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await traceExportCommand({ jsonSummary: true });
+
+    const raw = logSpy.mock.calls
+      .map((call) => call[0])
+      .find((entry) => typeof entry === 'string' && entry.trim().startsWith('{'));
+    const parsed = JSON.parse(raw as string) as {
+      found: boolean;
+      run: string;
+      runCount: number;
+    };
+
+    expect(parsed).toMatchObject({ found: true, run: 'all', runCount: 1 });
+  });
+
   it('trace export validates --limit before checking initialization', async () => {
     const uninitializedCwd = await mkdtemp(join(tmpdir(), 'savestate-trace-uninitialized-'));
     const previousCwd = process.cwd();

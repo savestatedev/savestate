@@ -30,6 +30,7 @@ interface TraceExportOptions {
   format?: string;
   run?: string;
   json?: boolean;
+  jsonSummary?: boolean;
   limit?: string;
   offset?: string;
 }
@@ -855,8 +856,10 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   const limit = parseTraceExportLimit(options.limit);
   validateTraceExportOptions(options.run, options.offset);
 
+  const wantsJsonSummary = options.json === true || options.jsonSummary === true;
+
   if (!isInitialized()) {
-    if (options.json) {
+    if (wantsJsonSummary) {
       console.log(formatTraceExportMissingJson(
         run,
         format,
@@ -871,7 +874,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
 
   const store = new TraceStore();
 
-  if (options.json) {
+  if (wantsJsonSummary) {
     const allRuns = await store.listRuns();
     const runs = applyTraceExportFilters(
       run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
