@@ -12,6 +12,7 @@ import type { SnapshotIndexEntry } from '../index-file.js';
 
 interface StatsOptions {
   json?: boolean;
+  platform?: string;
   adapter?: string;
   exclude?: string;
   snapshot?: string;
@@ -49,6 +50,20 @@ export function parseStatsAdapter(value: string | undefined): string | undefined
   throw new Error(
     `Invalid --adapter value "${value}". Expected one of: ${STATS_ADAPTER_LIST}.`,
   );
+}
+
+/** Parse stats --platform without treating blank or comma-separated values as empty usage stats. */
+export function parseStatsPlatform(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const platform = value.trim().toLowerCase();
+  if (platform.length === 0 || platform.includes(',') || /\s/.test(platform)) {
+    throw new Error(
+      `Invalid --platform value "${value}". Expected a single non-empty platform id (no spaces or commas).`,
+    );
+  }
+
+  return platform;
 }
 
 /** Parse stats --since without treating invalid dates as empty usage stats. */
@@ -302,7 +317,7 @@ export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndex
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
+  options: Pick<StatsOptions, 'platform' | 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
 ): SnapshotIndexEntry[] {
   let filtered = filterStatsEntries(snapshots, options);
   const limit = parseStatsLimit(options.limit);
@@ -410,6 +425,7 @@ export function formatStatsMissingJson(): string {
 }
 
 export async function statsCommand(options: StatsOptions): Promise<void> {
+  parseStatsPlatform(options.platform);
   parseStatsAdapter(options.adapter);
   parseStatsExclude(options.exclude);
   parseStatsSnapshot(options.snapshot);
@@ -542,8 +558,9 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
 /** Apply non-paginating stats filters so JSON can report the page's total. */
 function filterStatsEntries(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label'>,
+  options: Pick<StatsOptions, 'platform' | 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label'>,
 ): SnapshotIndexEntry[] {
+  const platform = parseStatsPlatform(options.platform);
   const adapter = parseStatsAdapter(options.adapter);
   const exclude = parseStatsExclude(options.exclude);
   const snapshotId = parseStatsSnapshot(options.snapshot);
@@ -557,6 +574,8 @@ function filterStatsEntries(
     // Indexes created by older adapters may preserve casing or surrounding
     // whitespace. Match normalized CLI input against those legacy values too.
     const normalizedAdapter = snapshot.adapter.trim().toLowerCase();
+    const normalizedPlatform = snapshot.platform.trim().toLowerCase();
+    if (platform !== undefined && normalizedPlatform !== platform) return false;
     if (adapter !== undefined && normalizedAdapter !== adapter) return false;
     if (exclude !== undefined && exclude.includes(normalizedAdapter)) return false;
     if (snapshotId !== undefined && snapshot.id !== snapshotId) return false;
