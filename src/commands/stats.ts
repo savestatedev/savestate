@@ -620,7 +620,10 @@ export function computeStats(snapshots: SnapshotIndexEntry[]): ComputedStats {
   const tagCounts = new Map<string, number>();
 
   for (const s of sorted) {
-    byAdapter[s.adapter] = (byAdapter[s.adapter] ?? 0) + 1;
+    // Keep legacy index entries from splitting one adapter across multiple
+    // buckets in human-readable and JSON summaries.
+    const adapter = s.adapter.trim().toLowerCase();
+    byAdapter[adapter] = (byAdapter[adapter] ?? 0) + 1;
     byPlatform[s.platform] = (byPlatform[s.platform] ?? 0) + 1;
     for (const tag of s.tags ?? []) {
       tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);

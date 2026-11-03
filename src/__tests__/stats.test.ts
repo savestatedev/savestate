@@ -53,6 +53,15 @@ describe('computeStats', () => {
     expect(stats.byPlatform['openai']).toBe(1);
   });
 
+  it('consolidates legacy adapter casing and whitespace', () => {
+    const stats = computeStats([
+      entry({ id: 'legacy', adapter: ' ChatGPT ' }),
+      entry({ id: 'current', adapter: 'chatgpt' }),
+    ]);
+
+    expect(stats.byAdapter).toEqual({ chatgpt: 2 });
+  });
+
   it('counts top tags by frequency', () => {
     const stats = computeStats([
       entry({ id: 'a', tags: ['work', 'pinned'] }),
