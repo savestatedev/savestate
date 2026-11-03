@@ -675,7 +675,7 @@ export function registerTraceCommands(program: Command): void {
     .command('trace <subcommand> [args...]')
     .description('Inspect Askable Echoes trace runs (list, show, export; single non-empty subcommand: list, show, or export; show requires a single non-empty run id)')
     .option('--json', 'Output as JSON')
-    .option('--json-summary', 'Output paginated trace list/show JSON with navigation metadata')
+    .option('--json-summary', 'Output paginated JSON summaries for list, show, or export')
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
     .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show, or runs to export')
