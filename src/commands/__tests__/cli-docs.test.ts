@@ -5143,6 +5143,8 @@ describe('CLI docs', () => {
     expect(listSection).toContain('--json');
     expect(listSection).toContain('scripting');
     expect(listSection).toContain('savestate list --json');
+    expect(listSection).toContain("savestate ls --tag weekly --json | jq '.entries[0]'");
+    expect(listSection).not.toContain("savestate ls --tag weekly --json | jq '.[0]'");
   });
 
   it('documents list --json when missing', () => {

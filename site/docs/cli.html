@@ -321,7 +321,7 @@
 <span class="code-prompt">$</span> savestate list --snapshot ss-2026-09-13T12-00-00-ab12cd
 
 <span class="code-comment"># Tagged backups as JSON</span>
-<span class="code-prompt">$</span> savestate ls --tag weekly --json | jq '.[0]'
+<span class="code-prompt">$</span> savestate ls --tag weekly --json | jq '.entries[0]'
 
 <span class="code-comment"># Labeled snapshots</span>
 <span class="code-prompt">$</span> savestate list --label "Pre-update backup"
