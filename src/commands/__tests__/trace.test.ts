@@ -218,6 +218,29 @@ describe.sequential('trace commands', () => {
     expect(JSON.parse(runLines[0]) as { run_id: string }).toMatchObject({ run_id: 'run-2' });
   });
 
+  it('trace export keeps pagination hints off stdout', async () => {
+    const store = new TraceStore({ cwd, redactSecrets: false });
+    for (const [runId, minute] of [['run-1', '00'], ['run-2', '01']] as const) {
+      await store.appendEvent(runId, {
+        timestamp: `2026-02-21T10:${minute}:00.000Z`,
+        run_id: runId,
+        adapter: 'clawdbot',
+        event_type: 'message',
+        payload: {},
+      });
+    }
+
+    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation((() => true) as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await traceExportCommand({ format: 'jsonl', limit: '1' });
+
+    expect(writeSpy.mock.calls.map((call) => String(call[0])).join('')).toMatch(/run-2/);
+    expect(errorSpy.mock.calls.map((call) => String(call[0])).join('')).toContain(
+      'next offset 1',
+    );
+  });
+
   it('trace export --json reports pagination recovery metadata', async () => {
     const store = new TraceStore({ cwd, redactSecrets: false });
     for (const [runId, minute] of [['run-1', '00'], ['run-2', '01'], ['run-3', '02']] as const) {

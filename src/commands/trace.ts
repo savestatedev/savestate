@@ -904,15 +904,25 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   }
 
   const allRuns = await store.listRuns();
-  const runs = applyTraceExportFilters(
-    run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
-    { offset: options.offset, limit: options.limit },
-  );
+  const candidateRuns = run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run);
+  const runs = applyTraceExportFilters(candidateRuns, {
+    offset: options.offset,
+    limit: options.limit,
+  });
   const chunks: string[] = [];
   for (const entry of runs) {
     chunks.push(await store.export(entry.run_id, format));
   }
   process.stdout.write(chunks.join(''));
+
+  const hint = formatTracePaginationHint(
+    'trace runs',
+    runs.length,
+    candidateRuns.length,
+    offset ?? 0,
+    limit,
+  );
+  if (hint) console.error(chalk.dim(`  ${hint}`));
 }
 
 function formatDate(iso: string): string {
