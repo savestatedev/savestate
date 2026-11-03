@@ -4651,6 +4651,7 @@ describe('CLI docs', () => {
     expect(statsSection).toContain('--json');
     expect(statsSection).toContain('scripting');
     expect(statsSection).toContain('savestate stats --json');
+    expect(statsSection).toContain('found');
   });
 
   it('documents stats --json when missing', () => {
