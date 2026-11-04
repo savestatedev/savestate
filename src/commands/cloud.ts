@@ -514,6 +514,33 @@ export function formatCloudListRange(total: number, offset: number, shown: numbe
   return `Showing snapshots ${first}-${last} of ${total}`;
 }
 
+/** Describe how an interactive user can move through cloud-list pages. */
+export function formatCloudListNavigation(
+  total: number,
+  offset: number,
+  shown: number,
+  limit?: number,
+): string[] {
+  if (limit === undefined) return [];
+
+  const hints: string[] = [];
+  if (shown === 0) {
+    if (total > 0) {
+      const suggestedOffset = Math.floor((total - 1) / limit) * limit;
+      hints.push(`Try --offset ${suggestedOffset} --limit ${limit} to view an available page.`);
+    }
+    return hints;
+  }
+
+  if (offset > 0) {
+    hints.push(`Previous page: use --offset ${Math.max(0, offset - limit)} --limit ${limit}.`);
+  }
+  if (offset + shown < total) {
+    hints.push(`Next page: use --offset ${offset + shown} --limit ${limit}.`);
+  }
+  return hints;
+}
+
 export interface CloudListMissingJson {
   found: false;
   total: 0;
@@ -1197,6 +1224,9 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   
   console.log();
   console.log(chalk.dim(`  ${formatCloudListRange(allSnapshots.length, offset ?? 0, snapshots.length, limit)}`));
+  for (const hint of formatCloudListNavigation(allSnapshots.length, offset ?? 0, snapshots.length, limit)) {
+    console.log(chalk.dim(`  ${hint}`));
+  }
 }
 
 /**
