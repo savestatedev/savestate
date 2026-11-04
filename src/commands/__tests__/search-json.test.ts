@@ -127,7 +127,6 @@ describe('savestate search --json', () => {
       nextOffset: null,
     });
   });
-
   it('canonicalizes query whitespace for stable script metadata', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({
