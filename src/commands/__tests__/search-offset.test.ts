@@ -35,6 +35,13 @@ describe('savestate search --offset', () => {
     );
   });
 
+  it('does not suggest a next page when a full page is terminal', () => {
+    expect(formatSearchPageHint(5, 10, 5, false)).toBe(
+      'Showing 5 matches at offset 10; no later page is available. Try --offset 5 --limit 5 for the previous page.',
+    );
+    expect(formatSearchPageHint(5, 0, 5, false)).toBeUndefined();
+  });
+
   it('suggests the previous page when an offset has no results', () => {
     expect(formatSearchPageHint(0, 10, 5)).toBe(
       'No matches found at offset 10. Try --offset 5 --limit 5.',

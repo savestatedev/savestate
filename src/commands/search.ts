@@ -165,11 +165,11 @@ export function formatSearchResultsSummaryJson(input: {
   const pageSize = limit;
   const page = Math.floor(offset / limit) + 1;
   const totalPages = total === null ? null : Math.ceil(total / limit);
-  const hasMore = input.hasMore ?? (
+  const hasMore = (input.hasMore ?? (
     total !== null
       ? offset < MAX_SEARCH_OFFSET && offset + shown < total
       : shown === limit && offset < MAX_SEARCH_OFFSET
-  );
+  )) && offset < MAX_SEARCH_OFFSET;
   const suggestedOffset = shown === 0 && offset > 0
     ? Math.max(0, offset - limit)
     : null;
@@ -210,11 +210,13 @@ export function formatSearchPageHint(
   shown: number,
   offset = 0,
   limit = 20,
+  hasMore?: boolean,
 ): string | undefined {
   if (shown === 0 && offset > 0) {
     return `No matches found at offset ${offset}. Try --offset ${Math.max(0, offset - limit)} --limit ${limit}.`;
   }
-  if (shown === limit) {
+  const more = hasMore ?? shown === limit;
+  if (shown === limit && more) {
     if (offset >= MAX_SEARCH_OFFSET) {
       return `Reached maximum searchable offset ${MAX_SEARCH_OFFSET}; no later page is available.`;
     }
@@ -807,7 +809,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     }
 
     if (results.length === 0) {
-      const hint = formatSearchPageHint(results.length, offset, limit);
+      const hint = formatSearchPageHint(results.length, offset, limit, page.hasMore);
       console.log(chalk.dim(`  ${hint ?? 'No matches found.'}`));
       console.log();
       return;
@@ -820,7 +822,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       printResult(r);
     }
 
-    const hint = formatSearchPageHint(results.length, offset, limit);
+    const hint = formatSearchPageHint(results.length, offset, limit, page.hasMore);
     if (hint) {
       console.log(chalk.dim(`  ${hint}`));
     }

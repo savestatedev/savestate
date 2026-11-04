@@ -153,6 +153,24 @@ describe('savestate search --json', () => {
       nextOffset: null,
     });
   });
+  it('caps an explicitly supplied hasMore flag at the bounded maximum offset', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match],
+        offset: 1000,
+        limit: 1,
+        total: 1002,
+        hasMore: true,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 1000,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
   it('canonicalizes query whitespace for stable script metadata', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({
