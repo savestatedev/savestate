@@ -108,6 +108,26 @@ describe('savestate search --json', () => {
     });
   });
 
+  it('does not advertise a page beyond the bounded maximum offset', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match],
+        offset: 1000,
+        limit: 1,
+        total: 1002,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      total: 1002,
+      offset: 1000,
+      shown: 1,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('canonicalizes query whitespace for stable script metadata', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({
