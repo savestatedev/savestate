@@ -52,6 +52,9 @@ export interface SearchSummaryPagination {
   remaining: number | null;
   offset: number;
   limit: number;
+  pageSize: number;
+  page: number;
+  totalPages: number | null;
   shown: number;
   emptyReason: 'collection' | 'page' | null;
   suggestedOffset: number | null;
@@ -159,6 +162,9 @@ export function formatSearchResultsSummaryJson(input: {
   const shown = input.results.length;
   const total = input.total ?? null;
   const remaining = total === null ? null : Math.max(0, total - offset - shown);
+  const pageSize = limit;
+  const page = Math.floor(offset / limit) + 1;
+  const totalPages = total === null ? null : Math.ceil(total / limit);
   const hasMore = input.hasMore ?? (
     total !== null
       ? offset < MAX_SEARCH_OFFSET && offset + shown < total
@@ -180,6 +186,9 @@ export function formatSearchResultsSummaryJson(input: {
         remaining,
         offset,
         limit,
+        pageSize,
+        page,
+        totalPages,
         shown,
         emptyReason: shown === 0 ? (offset > 0 ? 'page' : 'collection') : null,
         suggestedOffset,
@@ -280,6 +289,9 @@ export function formatSearchMissingSummaryJson(
         remaining: 0,
         offset,
         limit,
+        pageSize: limit,
+        page: Math.floor(offset / limit) + 1,
+        totalPages: 0,
         shown: 0,
         emptyReason: offset > 0 ? 'page' : 'collection',
         suggestedOffset: offset > 0 ? Math.max(0, offset - limit) : null,

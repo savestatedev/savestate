@@ -78,6 +78,9 @@ describe('savestate search --json', () => {
       remaining: 1,
       offset: 10,
       limit: 5,
+      pageSize: 5,
+      page: 3,
+      totalPages: 3,
       shown: 1,
       emptyReason: null,
       suggestedOffset: null,
@@ -101,10 +104,33 @@ describe('savestate search --json', () => {
 
     expect(parsed.pagination).toMatchObject({
       total: 4,
+      pageSize: 2,
+      page: 2,
+      totalPages: 2,
       remaining: 0,
       shown: 2,
       hasMore: false,
       nextOffset: null,
+    });
+  });
+
+  it('exposes page metadata when the total is not known', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail',
+        results: [match],
+        offset: 10,
+        limit: 5,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 10,
+      limit: 5,
+      pageSize: 5,
+      page: 3,
+      total: null,
+      totalPages: null,
     });
   });
 

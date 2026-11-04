@@ -228,7 +228,9 @@ combined with `--limit` to page through results. Both values are bounded to
 1000; the default page size is 20. `--json-summary` includes the normalized
 `filters` used for the page, which helps scripts distinguish similar queries
 run against different snapshot subsets. Initialized searches also report the
-exact matching `pagination.total` and `pagination.remaining` counts. Its pagination metadata also marks an
+exact matching `pagination.total` and `pagination.remaining` counts. The summary
+also includes `pagination.page`, `pagination.pageSize`, and `pagination.totalPages`
+(or `null` when the matching total is unavailable). Its pagination metadata also marks an
 empty first page as `collection` and an empty later page as `page`, with a
 `suggestedOffset` for retrying the nearest earlier page (including when a
 snapshot is missing or SaveState is not initialized).
@@ -244,9 +246,8 @@ savestate memory explain "inbox preference" --snapshot ss-2026-10-18 --offset 10
 
 Pass `--snapshot` to explain retrievals from a historical archive. Filters are
 applied before pagination, so the JSON response keeps each result's stable
-1-based `rank` across pages.
-`pagination.remaining` reports matching results after the visible page; an
-empty later page is marked `emptyReason: "page"` and provides
+1-based `rank` across pages. `pagination.remaining` reports matching results
+after the visible page; an empty later page is marked `emptyReason: "page"` and provides
 `suggestedOffset` so clients can recover from a stale offset.
 
 savestate diff <a> <b>                Compare two snapshots

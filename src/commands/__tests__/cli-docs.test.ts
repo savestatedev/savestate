@@ -5518,6 +5518,9 @@ describe('CLI docs', () => {
   it('documents search --json-summary recovery metadata', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('--json-summary');
+    expect(searchSection).toContain('<code>page</code>');
+    expect(searchSection).toContain('<code>pageSize</code>');
+    expect(searchSection).toContain('<code>totalPages</code>');
     expect(searchSection).toContain('<code>suggestedOffset</code>');
     expect(searchSection).toContain('nearest earlier page to retry');
     expect(searchSection).toContain('any empty later page');
