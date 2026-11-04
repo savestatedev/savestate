@@ -78,6 +78,10 @@ describe('savestate search --json', () => {
       remaining: 1,
       offset: 10,
       limit: 5,
+      maxOffset: 1000,
+      pageSize: 5,
+      page: 3,
+      totalPages: 3,
       shown: 1,
       emptyReason: null,
       suggestedOffset: null,
@@ -101,10 +105,35 @@ describe('savestate search --json', () => {
 
     expect(parsed.pagination).toMatchObject({
       total: 4,
+      maxOffset: 1000,
+      pageSize: 2,
+      page: 2,
+      totalPages: 2,
       remaining: 0,
       shown: 2,
       hasMore: false,
       nextOffset: null,
+    });
+  });
+
+  it('exposes page metadata when the total is not known', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail',
+        results: [match],
+        offset: 10,
+        limit: 5,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 10,
+      limit: 5,
+      maxOffset: 1000,
+      pageSize: 5,
+      page: 3,
+      total: null,
+      totalPages: null,
     });
   });
 
@@ -127,7 +156,43 @@ describe('savestate search --json', () => {
       nextOffset: null,
     });
   });
+  it('caps an explicitly supplied hasMore flag at the bounded maximum offset', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match],
+        offset: 1000,
+        limit: 1,
+        total: 1002,
+        hasMore: true,
+      }),
+    ) as { pagination: Record<string, unknown> };
 
+    expect(parsed.pagination).toMatchObject({
+      offset: 1000,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+  it('does not let an explicit hasMore flag exceed a known total', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match, { ...match, path: 'memory/core.json#second' }],
+        offset: 2,
+        limit: 2,
+        total: 4,
+        hasMore: true,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      total: 4,
+      shown: 2,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
   it('canonicalizes query whitespace for stable script metadata', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({
@@ -344,6 +409,7 @@ describe('savestate search --json', () => {
       remaining: 0,
       offset: 5,
       limit: 2,
+      maxOffset: 1000,
       shown: 0,
       emptyReason: 'page',
       suggestedOffset: 3,
