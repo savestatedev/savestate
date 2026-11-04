@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { isInitialized, loadConfig } from '../config.js';
 import { findEntry, loadIndex } from '../index-file.js';
-import { searchSnapshots } from '../search.js';
+import { searchSnapshotsPage } from '../search.js';
 import { getPassphrase } from '../passphrase.js';
 import type { SearchResult } from '../types.js';
 
@@ -48,6 +48,8 @@ export function formatSearchResultsJson(results: SearchResult[]): string {
 }
 
 export interface SearchSummaryPagination {
+  total: number | null;
+  remaining: number | null;
   offset: number;
   limit: number;
   shown: number;
@@ -148,12 +150,20 @@ export function formatSearchResultsSummaryJson(input: {
   results: SearchResult[];
   offset?: number;
   limit?: number;
+  total?: number;
+  hasMore?: boolean;
   filters?: Partial<SearchSummaryFilters>;
 }): string {
   const offset = input.offset ?? 0;
   const limit = input.limit ?? 20;
   const shown = input.results.length;
-  const hasMore = shown === limit && offset < MAX_SEARCH_OFFSET;
+  const total = input.total ?? null;
+  const remaining = total === null ? null : Math.max(0, total - offset - shown);
+  const hasMore = input.hasMore ?? (
+    total !== null
+      ? offset < MAX_SEARCH_OFFSET && offset + shown < total
+      : shown === limit && offset < MAX_SEARCH_OFFSET
+  );
   const suggestedOffset = shown === 0 && offset > 0
     ? Math.max(0, offset - limit)
     : null;
@@ -166,6 +176,8 @@ export function formatSearchResultsSummaryJson(input: {
       filters: normalizeSearchSummaryFilters(input.filters),
       results: input.results,
       pagination: {
+        total,
+        remaining,
         offset,
         limit,
         shown,
@@ -264,6 +276,8 @@ export function formatSearchMissingSummaryJson(
       }),
       results: [],
       pagination: {
+        total: 0,
+        remaining: 0,
         offset,
         limit,
         shown: 0,
@@ -745,13 +759,14 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   const spinner = jsonOutput ? null : ora('Searching across snapshots...').start();
 
   try {
-    const results = await searchSnapshots(query, config, {
+    const page = await searchSnapshotsPage(query, config, {
       types,
       limit,
       offset,
       snapshots,
       passphrase,
     });
+    const results = page.results;
 
     spinner?.stop();
 
@@ -762,6 +777,8 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
           results,
           offset,
           limit,
+          total: page.total,
+          hasMore: page.hasMore,
           filters: {
             type: types ?? null,
             exclude: excludedTypes ?? null,

@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto';
 
 import { LocalStorageBackend } from '../storage/local.js';
 import { createSnapshot } from '../snapshot.js';
-import { searchSnapshots, scoreMatch, clearSnapshotCache } from '../search.js';
+import { searchSnapshots, searchSnapshotsPage, scoreMatch, clearSnapshotCache } from '../search.js';
 import { saveIndex } from '../index-file.js';
 import type { Adapter, Snapshot, SaveStateConfig } from '../types.js';
 
@@ -134,6 +134,25 @@ describe('searchSnapshots', () => {
     expect(results).toEqual([]);
   });
 
+  it('preserves and validates pagination for an empty query page', async () => {
+    const page = await searchSnapshotsPage('  ', config, {
+      offset: 4,
+      limit: 3,
+      passphrase: PASSPHRASE,
+    });
+
+    expect(page).toEqual({
+      results: [],
+      total: 0,
+      offset: 4,
+      limit: 3,
+      hasMore: false,
+    });
+    await expect(searchSnapshotsPage('', config, { limit: 0 })).rejects.toThrow(
+      'Invalid search limit 0',
+    );
+  });
+
   it('normalizes surrounding query whitespace before scoring', async () => {
     const snap = buildSnapshot([{ id: 'm1', content: 'cache test phrase' }]);
     await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
@@ -176,6 +195,23 @@ describe('searchSnapshots', () => {
       limit: 3,
     });
     expect(results.length).toBe(3);
+  });
+
+  it('reports exact totals for paginated API callers', async () => {
+    const memories = Array.from({ length: 5 }, (_, i) => ({
+      id: `m${i}`,
+      content: `entry ${i} contains widget keyword`,
+    }));
+    await createSnapshot(new FakeAdapter(buildSnapshot(memories)), storage, PASSPHRASE);
+
+    const page = await searchSnapshotsPage('widget', config, {
+      passphrase: PASSPHRASE,
+      offset: 2,
+      limit: 2,
+    });
+
+    expect(page).toMatchObject({ total: 5, offset: 2, limit: 2, hasMore: true });
+    expect(page.results).toHaveLength(2);
   });
 
   it('skips ranked results before applying the limit', async () => {

@@ -51,6 +51,7 @@ describe('savestate search --json', () => {
         results: [match],
         offset: 10,
         limit: 5,
+        total: 12,
       }),
     ) as {
       found: boolean;
@@ -73,15 +74,57 @@ describe('savestate search --json', () => {
     });
     expect(parsed.results).toEqual([match]);
     expect(parsed.pagination).toEqual({
+      total: 12,
+      remaining: 1,
       offset: 10,
       limit: 5,
       shown: 1,
       emptyReason: null,
       suggestedOffset: null,
-      hasMore: false,
-      nextOffset: null,
+      hasMore: true,
+      nextOffset: 11,
       hasPrevious: true,
       previousOffset: 5,
+    });
+  });
+
+  it('does not advertise another page when a known total is exhausted', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match, { ...match, path: 'memory/core.json#second' }],
+        offset: 2,
+        limit: 2,
+        total: 4,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      total: 4,
+      remaining: 0,
+      shown: 2,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
+  it('does not advertise a page beyond the bounded maximum offset', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match],
+        offset: 1000,
+        limit: 1,
+        total: 1002,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      total: 1002,
+      offset: 1000,
+      shown: 1,
+      hasMore: false,
+      nextOffset: null,
     });
   });
 
@@ -241,6 +284,8 @@ describe('savestate search --json', () => {
     ) as { pagination: Record<string, unknown> };
 
     expect(parsed.pagination).toMatchObject({
+      total: null,
+      remaining: null,
       hasMore: true,
       nextOffset: 12,
       hasPrevious: true,
@@ -295,6 +340,8 @@ describe('savestate search --json', () => {
       label: 'nightly backup',
     });
     expect(parsed.pagination).toMatchObject({
+      total: 0,
+      remaining: 0,
       offset: 5,
       limit: 2,
       shown: 0,
