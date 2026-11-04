@@ -356,8 +356,12 @@ export interface StatsJson {
 export interface StatsPagination {
   total: number;
   shown: number;
+  remaining: number;
   offset: number;
   limit: number | null;
+  page: number;
+  pageSize: number | null;
+  totalPages: number;
   emptyReason: 'collection' | 'page' | null;
   suggestedOffset: number | null;
   hasPrevious: boolean;
@@ -372,8 +376,12 @@ export function formatStatsJson(
   pagination: StatsPagination = {
     total: snapshots.length,
     shown: snapshots.length,
+    remaining: 0,
     offset: 0,
     limit: null,
+    page: snapshots.length > 0 ? 1 : 0,
+    pageSize: null,
+    totalPages: snapshots.length > 0 ? 1 : 0,
     emptyReason: snapshots.length === 0 ? 'collection' : null,
     suggestedOffset: null,
     hasPrevious: false,
@@ -464,11 +472,20 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
     const hasPrevious = offset > 0;
     const hasMore = limit !== null && offset + filtered.length < matching.length;
     const suggestedOffset = suggestStatsOffset(matching.length, filtered.length, limit ?? undefined);
+    const totalPages = limit === null
+      ? matching.length > 0 ? 1 : 0
+      : Math.ceil(matching.length / limit);
     console.log(formatStatsJson(filtered, config.storage.type, {
       total: matching.length,
       shown: filtered.length,
+      remaining: Math.max(0, matching.length - offset - filtered.length),
       offset,
       limit,
+      page: limit === null
+        ? matching.length > 0 ? 1 : 0
+        : Math.floor(offset / limit) + 1,
+      pageSize: limit,
+      totalPages,
       emptyReason: filtered.length > 0 ? null : matching.length === 0 ? 'collection' : 'page',
       suggestedOffset,
       hasPrevious,
