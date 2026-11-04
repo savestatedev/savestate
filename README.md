@@ -230,7 +230,8 @@ combined with `--limit` to page through results. Both values are bounded to
 run against different snapshot subsets. Initialized searches also report the
 exact matching `pagination.total` and `pagination.remaining` counts. The summary
 also includes `pagination.page`, `pagination.pageSize`, and `pagination.totalPages`
-(or `null` when the matching total is unavailable). Its pagination metadata also marks an
+(or `null` when the matching total is unavailable), plus `pagination.maxOffset`
+(`1000`, the highest supported offset). Its pagination metadata also marks an
 empty first page as `collection` and an empty later page as `page`, with a
 `suggestedOffset` for retrying the nearest earlier page (including when a
 snapshot is missing or SaveState is not initialized).

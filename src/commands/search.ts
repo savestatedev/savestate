@@ -52,6 +52,7 @@ export interface SearchSummaryPagination {
   remaining: number | null;
   offset: number;
   limit: number;
+  maxOffset: number;
   pageSize: number;
   page: number;
   totalPages: number | null;
@@ -186,6 +187,7 @@ export function formatSearchResultsSummaryJson(input: {
         remaining,
         offset,
         limit,
+        maxOffset: MAX_SEARCH_OFFSET,
         pageSize,
         page,
         totalPages,
@@ -291,6 +293,7 @@ export function formatSearchMissingSummaryJson(
         remaining: 0,
         offset,
         limit,
+        maxOffset: MAX_SEARCH_OFFSET,
         pageSize: limit,
         page: Math.floor(offset / limit) + 1,
         totalPages: 0,

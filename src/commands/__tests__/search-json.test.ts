@@ -78,6 +78,7 @@ describe('savestate search --json', () => {
       remaining: 1,
       offset: 10,
       limit: 5,
+      maxOffset: 1000,
       pageSize: 5,
       page: 3,
       totalPages: 3,
@@ -104,6 +105,7 @@ describe('savestate search --json', () => {
 
     expect(parsed.pagination).toMatchObject({
       total: 4,
+      maxOffset: 1000,
       pageSize: 2,
       page: 2,
       totalPages: 2,
@@ -127,6 +129,7 @@ describe('savestate search --json', () => {
     expect(parsed.pagination).toMatchObject({
       offset: 10,
       limit: 5,
+      maxOffset: 1000,
       pageSize: 5,
       page: 3,
       total: null,
@@ -406,6 +409,7 @@ describe('savestate search --json', () => {
       remaining: 0,
       offset: 5,
       limit: 2,
+      maxOffset: 1000,
       shown: 0,
       emptyReason: 'page',
       suggestedOffset: 3,

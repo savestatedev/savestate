@@ -5453,6 +5453,11 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('savestate init');
   });
 
+  it('documents the search summary maximum offset', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('<code>maxOffset</code> (1000)');
+  });
+
   it('documents search --exclude as known search types', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
