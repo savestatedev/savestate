@@ -159,7 +159,11 @@ export function formatSearchResultsSummaryJson(input: {
   const shown = input.results.length;
   const total = input.total ?? null;
   const remaining = total === null ? null : Math.max(0, total - offset - shown);
-  const hasMore = input.hasMore ?? (shown === limit && offset < MAX_SEARCH_OFFSET);
+  const hasMore = input.hasMore ?? (
+    total !== null
+      ? offset + shown < total
+      : shown === limit && offset < MAX_SEARCH_OFFSET
+  );
   const suggestedOffset = shown === 0 && offset > 0
     ? Math.max(0, offset - limit)
     : null;

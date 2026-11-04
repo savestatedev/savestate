@@ -81,10 +81,30 @@ describe('savestate search --json', () => {
       shown: 1,
       emptyReason: null,
       suggestedOffset: null,
-      hasMore: false,
-      nextOffset: null,
+      hasMore: true,
+      nextOffset: 11,
       hasPrevious: true,
       previousOffset: 5,
+    });
+  });
+
+  it('does not advertise another page when a known total is exhausted', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match, { ...match, path: 'memory/core.json#second' }],
+        offset: 2,
+        limit: 2,
+        total: 4,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      total: 4,
+      remaining: 0,
+      shown: 2,
+      hasMore: false,
+      nextOffset: null,
     });
   });
 
