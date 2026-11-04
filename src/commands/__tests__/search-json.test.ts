@@ -174,6 +174,25 @@ describe('savestate search --json', () => {
       nextOffset: null,
     });
   });
+
+  it('does not emit a non-progressing next page for an empty unknown-total page', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [],
+        offset: 10,
+        limit: 5,
+        hasMore: true,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      shown: 0,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('does not let an explicit hasMore flag exceed a known total', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({
