@@ -109,12 +109,12 @@ export async function searchSnapshotsPage(
   config: SaveStateConfig,
   options?: SearchOptions,
 ): Promise<SearchPage> {
-  if (!query || query.trim().length === 0) {
-    return { results: [], total: 0, offset: 0, limit: DEFAULT_LIMIT, hasMore: false };
-  }
-
   const limit = resolveSearchLimit(options?.limit);
   const offset = resolveSearchOffset(options?.offset);
+  if (!query || query.trim().length === 0) {
+    return { results: [], total: 0, offset, limit, hasMore: false };
+  }
+
   const types = options?.types;
   // An exclusion-only search can intentionally leave no searchable types.
   // Return before requiring a passphrase or touching storage: the result is

@@ -134,6 +134,25 @@ describe('searchSnapshots', () => {
     expect(results).toEqual([]);
   });
 
+  it('preserves and validates pagination for an empty query page', async () => {
+    const page = await searchSnapshotsPage('  ', config, {
+      offset: 4,
+      limit: 3,
+      passphrase: PASSPHRASE,
+    });
+
+    expect(page).toEqual({
+      results: [],
+      total: 0,
+      offset: 4,
+      limit: 3,
+      hasMore: false,
+    });
+    await expect(searchSnapshotsPage('', config, { limit: 0 })).rejects.toThrow(
+      'Invalid search limit 0',
+    );
+  });
+
   it('normalizes surrounding query whitespace before scoring', async () => {
     const snap = buildSnapshot([{ id: 'm1', content: 'cache test phrase' }]);
     await createSnapshot(new FakeAdapter(snap), storage, PASSPHRASE);
