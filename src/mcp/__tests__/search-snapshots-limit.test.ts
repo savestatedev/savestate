@@ -93,6 +93,10 @@ describe('MCP savestate_search_snapshots limit', () => {
     expect(getSearchSnapshotsSuggestedOffset(0, 20)).toBeUndefined();
   });
 
+  it('caps stale-page recovery at the maximum accepted offset', () => {
+    expect(getSearchSnapshotsSuggestedOffset(2001, 20)).toBe(1000);
+  });
+
   it('labels a populated final page as terminal', () => {
     expect(formatSearchSnapshotsPageHints(20, 20, 3, false)).toEqual([
       'Previous page: try offset 0.',
@@ -104,6 +108,20 @@ describe('MCP savestate_search_snapshots limit', () => {
     expect(formatSearchSnapshotsPageHints(20, 20, 20, true)).toEqual([
       'Previous page: try offset 0.',
       'More matches available. Try offset 40.',
+    ]);
+  });
+
+  it('caps the next-page hint at the maximum supported offset', () => {
+    expect(formatSearchSnapshotsPageHints(999, 20, 20, true)).toEqual([
+      'Previous page: try offset 979.',
+      'More matches available. Try offset 1000.',
+    ]);
+  });
+
+  it('explains when the current page cannot advance further', () => {
+    expect(formatSearchSnapshotsPageHints(1000, 20, 20, true)).toEqual([
+      'Previous page: try offset 980.',
+      'More matches exist, but the maximum supported offset is 1000.',
     ]);
   });
 

@@ -1,4 +1,4 @@
-const MAX_SEARCH_SNAPSHOTS_OFFSET = 1000;
+export const MAX_SEARCH_SNAPSHOTS_OFFSET = 1000;
 
 /** Parse savestate_search_snapshots offset without turning user input errors into an unbounded skip. */
 export function parseSearchSnapshotsOffset(value: number | undefined): number | undefined {

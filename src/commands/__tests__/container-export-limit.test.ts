@@ -52,7 +52,7 @@ describe('savestate container export --offset', () => {
     expect(parseContainerExportOffset('12')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['', '-1', '1.5', '0x10', '1e2', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseContainerExportOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );
