@@ -232,6 +232,23 @@ describe('searchSnapshots', () => {
     expect(page.hasMore).toBe(false);
   });
 
+  it('keeps the bounded final page discoverable from the preceding page', async () => {
+    const memories = Array.from({ length: 1001 }, (_, i) => ({
+      id: `m${i}`,
+      content: `entry ${i} contains widget keyword`,
+    }));
+    await createSnapshot(new FakeAdapter(buildSnapshot(memories)), storage, PASSPHRASE);
+
+    const page = await searchSnapshotsPage('widget', config, {
+      passphrase: PASSPHRASE,
+      offset: 999,
+      limit: 1,
+    });
+
+    expect(page.results).toHaveLength(1);
+    expect(page.hasMore).toBe(true);
+  });
+
   it('skips ranked results before applying the limit', async () => {
     const memories = Array.from({ length: 5 }, (_, i) => ({
       id: `m${i}`,
