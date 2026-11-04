@@ -92,7 +92,14 @@ export function formatSearchSnapshotsPageHints(
     lines.push(`Previous page: try offset ${previousOffset}.`);
   }
   if (hasNextPage) {
-    lines.push(`More matches available. Try offset ${offset + shown}.`);
+    const nextOffset = Math.min(MAX_SEARCH_SNAPSHOTS_OFFSET, offset + shown);
+    if (nextOffset > offset) {
+      lines.push(`More matches available. Try offset ${nextOffset}.`);
+    } else {
+      lines.push(
+        `More matches exist, but the maximum supported offset is ${MAX_SEARCH_SNAPSHOTS_OFFSET}.`,
+      );
+    }
   } else {
     lines.push('No more matches available.');
   }

@@ -111,6 +111,20 @@ describe('MCP savestate_search_snapshots limit', () => {
     ]);
   });
 
+  it('caps the next-page hint at the maximum supported offset', () => {
+    expect(formatSearchSnapshotsPageHints(999, 20, 20, true)).toEqual([
+      'Previous page: try offset 979.',
+      'More matches available. Try offset 1000.',
+    ]);
+  });
+
+  it('explains when the current page cannot advance further', () => {
+    expect(formatSearchSnapshotsPageHints(1000, 20, 20, true)).toEqual([
+      'Previous page: try offset 980.',
+      'More matches exist, but the maximum supported offset is 1000.',
+    ]);
+  });
+
   it('explains active date filters on an empty first page', () => {
     expect(formatSearchSnapshotsEmptyPageMessage(0, undefined, {
       since: '2026-10-01T00:00:00.000Z',
