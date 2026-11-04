@@ -1208,8 +1208,17 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   console.log();
 
   if (snapshots.length === 0) {
-    console.log(chalk.yellow('  No snapshots in cloud.'));
-    console.log(chalk.dim('  Run `savestate cloud push` to upload.'));
+    if (allSnapshots.length === 0) {
+      console.log(chalk.yellow('  No snapshots in cloud.'));
+      console.log(chalk.dim('  Run `savestate cloud push` to upload.'));
+    } else {
+      console.log(chalk.yellow('  No snapshots on this page.'));
+    }
+    console.log();
+    console.log(chalk.dim(`  ${formatCloudListRange(allSnapshots.length, offset ?? 0, snapshots.length, limit)}`));
+    for (const hint of formatCloudListNavigation(allSnapshots.length, offset ?? 0, snapshots.length, limit)) {
+      console.log(chalk.dim(`  ${hint}`));
+    }
     return;
   }
 
