@@ -1,3 +1,5 @@
+import { MAX_SEARCH_SNAPSHOTS_OFFSET } from './search-snapshots-offset.js';
+
 const MAX_SEARCH_SNAPSHOTS_LIMIT = 1000;
 
 export interface SearchSnapshotsFilters {
@@ -71,7 +73,10 @@ export function getSearchSnapshotsSuggestedOffset(
   limit: number,
 ): number | undefined {
   if (totalEntries <= 0) return undefined;
-  return Math.floor((totalEntries - 1) / limit) * limit;
+  return Math.min(
+    MAX_SEARCH_SNAPSHOTS_OFFSET,
+    Math.floor((totalEntries - 1) / limit) * limit,
+  );
 }
 
 /** Describe the available navigation from a populated search page. */

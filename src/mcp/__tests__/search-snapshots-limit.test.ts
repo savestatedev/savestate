@@ -93,6 +93,10 @@ describe('MCP savestate_search_snapshots limit', () => {
     expect(getSearchSnapshotsSuggestedOffset(0, 20)).toBeUndefined();
   });
 
+  it('caps stale-page recovery at the maximum accepted offset', () => {
+    expect(getSearchSnapshotsSuggestedOffset(2001, 20)).toBe(1000);
+  });
+
   it('labels a populated final page as terminal', () => {
     expect(formatSearchSnapshotsPageHints(20, 20, 3, false)).toEqual([
       'Previous page: try offset 0.',
