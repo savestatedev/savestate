@@ -514,6 +514,16 @@ export function formatCloudListRange(total: number, offset: number, shown: numbe
   return `Showing snapshots ${first}-${last} of ${total}`;
 }
 
+/** Explain how to recover when a stale cloud-list offset skips past every snapshot. */
+export function formatCloudListEmptyState(total: number, offset: number, limit?: number): string {
+  const suggestedOffset = limit !== undefined && limit > 0
+    ? Math.floor((total - 1) / limit) * limit
+    : 0;
+  return `No snapshots shown: offset ${offset} skips past ${total} ${
+    total === 1 ? 'snapshot' : 'snapshots'
+  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+}
+
 /** Describe how an interactive user can move through cloud-list pages. */
 export function formatCloudListNavigation(
   total: number,
@@ -1212,7 +1222,7 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
       console.log(chalk.yellow('  No snapshots in cloud.'));
       console.log(chalk.dim('  Run `savestate cloud push` to upload.'));
     } else {
-      console.log(chalk.yellow('  No snapshots on this page.'));
+      console.log(chalk.yellow(`  ${formatCloudListEmptyState(allSnapshots.length, offset ?? 0, limit)}`));
     }
     console.log();
     console.log(chalk.dim(`  ${formatCloudListRange(allSnapshots.length, offset ?? 0, snapshots.length, limit)}`));
