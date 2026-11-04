@@ -470,6 +470,7 @@ export function formatCloudListJson(result: CloudListResult): string {
   const page = limit !== null ? Math.floor(offset / limit) + 1 : null;
   const totalPages = limit !== null ? Math.ceil(total / limit) : null;
   const emptyReason = shown > 0 ? null : total === 0 ? 'collection' : 'page';
+  const hasPrevious = offset > 0 && limit !== null;
   const suggestedOffset = emptyReason === 'page' && limit !== null
     ? Math.floor((total - 1) / limit) * limit
     : null;
@@ -485,10 +486,10 @@ export function formatCloudListJson(result: CloudListResult): string {
       page,
       pageSize: limit,
       totalPages,
-      hasPrevious: offset > 0,
+      hasPrevious,
       hasMore,
       nextOffset: hasMore ? offset + shown : null,
-      previousOffset: offset > 0 && limit !== null
+      previousOffset: hasPrevious
         ? suggestedOffset ?? Math.max(0, offset - limit)
         : null,
       suggestedOffset,

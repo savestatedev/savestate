@@ -86,6 +86,20 @@ describe('savestate cloud --json', () => {
     expect(parsed.emptyReason).toBe('page');
     expect(parsed.previousOffset).toBe(2);
   });
+
+  it('does not advertise page navigation when no page size was requested', () => {
+    const parsed = JSON.parse(formatCloudListJson({
+      ...result,
+      snapshots: result.snapshots,
+      total: 3,
+      offset: 1,
+      limit: undefined,
+    })) as CloudListResult & { hasPrevious: boolean; previousOffset: number | null };
+
+    expect(parsed.page).toBeNull();
+    expect(parsed.hasPrevious).toBe(false);
+    expect(parsed.previousOffset).toBeNull();
+  });
 });
 
 const pushResult: CloudPushResult = {
