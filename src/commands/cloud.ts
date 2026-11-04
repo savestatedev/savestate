@@ -467,7 +467,7 @@ export function formatCloudListJson(result: CloudListResult): string {
   const shown = result.snapshots.length;
   const hasMore = limit !== null && offset + shown < total;
   const remaining = Math.max(0, total - offset - shown);
-  const page = limit !== null ? Math.floor(offset / limit) + 1 : null;
+  const page = limit !== null && total > 0 ? Math.floor(offset / limit) + 1 : null;
   const totalPages = limit !== null ? Math.ceil(total / limit) : null;
   const emptyReason = shown > 0 ? null : total === 0 ? 'collection' : 'page';
   const hasPrevious = offset > 0 && limit !== null;
