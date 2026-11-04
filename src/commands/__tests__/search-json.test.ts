@@ -51,6 +51,7 @@ describe('savestate search --json', () => {
         results: [match],
         offset: 10,
         limit: 5,
+        total: 12,
       }),
     ) as {
       found: boolean;
@@ -73,6 +74,8 @@ describe('savestate search --json', () => {
     });
     expect(parsed.results).toEqual([match]);
     expect(parsed.pagination).toEqual({
+      total: 12,
+      remaining: 1,
       offset: 10,
       limit: 5,
       shown: 1,
@@ -241,6 +244,8 @@ describe('savestate search --json', () => {
     ) as { pagination: Record<string, unknown> };
 
     expect(parsed.pagination).toMatchObject({
+      total: null,
+      remaining: null,
       hasMore: true,
       nextOffset: 12,
       hasPrevious: true,
@@ -295,6 +300,8 @@ describe('savestate search --json', () => {
       label: 'nightly backup',
     });
     expect(parsed.pagination).toMatchObject({
+      total: 0,
+      remaining: 0,
       offset: 5,
       limit: 2,
       shown: 0,

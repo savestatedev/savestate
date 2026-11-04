@@ -71,6 +71,14 @@ export interface SearchOptions {
   passphrase?: string;
 }
 
+export interface SearchPage {
+  results: SearchResult[];
+  total: number;
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 function resolveSearchLimit(value: number | undefined): number {
   if (value === undefined) return DEFAULT_LIMIT;
   if (!Number.isInteger(value) || value < 1 || value > MAX_LIMIT) {
@@ -96,12 +104,14 @@ function resolveSearchOffset(value: number | undefined): number {
  * - Identity/personality documents
  * - Knowledge base documents (metadata only)
  */
-export async function searchSnapshots(
+export async function searchSnapshotsPage(
   query: string,
   config: SaveStateConfig,
   options?: SearchOptions,
-): Promise<SearchResult[]> {
-  if (!query || query.trim().length === 0) return [];
+): Promise<SearchPage> {
+  if (!query || query.trim().length === 0) {
+    return { results: [], total: 0, offset: 0, limit: DEFAULT_LIMIT, hasMore: false };
+  }
 
   const limit = resolveSearchLimit(options?.limit);
   const offset = resolveSearchOffset(options?.offset);
@@ -109,7 +119,9 @@ export async function searchSnapshots(
   // An exclusion-only search can intentionally leave no searchable types.
   // Return before requiring a passphrase or touching storage: the result is
   // already known to be empty.
-  if (types?.length === 0) return [];
+  if (types?.length === 0) {
+    return { results: [], total: 0, offset, limit, hasMore: false };
+  }
   const passphrase = options?.passphrase ?? process.env.SAVESTATE_PASSPHRASE;
   if (!passphrase) {
     throw new Error(
@@ -122,7 +134,9 @@ export async function searchSnapshots(
     ? index.snapshots.filter((s) => options.snapshots!.includes(s.id))
     : index.snapshots;
 
-  if (targets.length === 0) return [];
+  if (targets.length === 0) {
+    return { results: [], total: 0, offset, limit, hasMore: false };
+  }
 
   const storage = resolveStorage(config);
   const results: SearchResult[] = [];
@@ -235,7 +249,23 @@ export async function searchSnapshots(
     a.snapshotId.localeCompare(b.snapshotId) ||
     a.path.localeCompare(b.path),
   );
-  return results.slice(offset, offset + limit);
+  return {
+    results: results.slice(offset, offset + limit),
+    total: results.length,
+    offset,
+    limit,
+    hasMore: offset < MAX_OFFSET && offset + limit < results.length,
+  };
+}
+
+/** Preserve the original array-returning API for SDK callers. */
+export async function searchSnapshots(
+  query: string,
+  config: SaveStateConfig,
+  options?: SearchOptions,
+): Promise<SearchResult[]> {
+  const page = await searchSnapshotsPage(query, config, options);
+  return page.results;
 }
 
 /**
