@@ -171,6 +171,25 @@ describe('savestate search --json', () => {
       nextOffset: null,
     });
   });
+  it('does not let an explicit hasMore flag exceed a known total', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match, { ...match, path: 'memory/core.json#second' }],
+        offset: 2,
+        limit: 2,
+        total: 4,
+        hasMore: true,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      total: 4,
+      shown: 2,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
   it('canonicalizes query whitespace for stable script metadata', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({

@@ -169,7 +169,7 @@ export function formatSearchResultsSummaryJson(input: {
     total !== null
       ? offset < MAX_SEARCH_OFFSET && offset + shown < total
       : shown === limit && offset < MAX_SEARCH_OFFSET
-  )) && offset < MAX_SEARCH_OFFSET;
+  )) && offset < MAX_SEARCH_OFFSET && (total === null || offset + shown < total);
   const suggestedOffset = shown === 0 && offset > 0
     ? Math.max(0, offset - limit)
     : null;
