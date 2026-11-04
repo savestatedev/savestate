@@ -455,12 +455,45 @@ export interface CloudListResult {
   cloudStorageUsed: number;
   cloudStorageLimit: number;
   snapshots: CloudSnapshotJson[];
+  total?: number;
+  offset?: number;
+  limit?: number;
 }
 
 export function formatCloudListJson(result: CloudListResult): string {
+  const total = result.total ?? result.snapshots.length;
+  const offset = result.offset ?? 0;
+  const limit = result.limit ?? null;
+  const shown = result.snapshots.length;
+  const hasMore = limit !== null && offset + shown < total;
+  const remaining = Math.max(0, total - offset - shown);
+  const page = limit !== null ? Math.floor(offset / limit) + 1 : null;
+  const totalPages = limit !== null ? Math.ceil(total / limit) : null;
+  const emptyReason = shown > 0 ? null : total === 0 ? 'collection' : 'page';
+  const hasPrevious = offset > 0 && limit !== null;
+  const suggestedOffset = emptyReason === 'page' && limit !== null
+    ? Math.floor((total - 1) / limit) * limit
+    : null;
+
   return JSON.stringify(
     {
-      found: result.snapshots.length > 0,
+      found: shown > 0,
+      total,
+      shown,
+      remaining,
+      offset,
+      limit,
+      page,
+      pageSize: limit,
+      totalPages,
+      hasPrevious,
+      hasMore,
+      nextOffset: hasMore ? offset + shown : null,
+      previousOffset: hasPrevious
+        ? suggestedOffset ?? Math.max(0, offset - limit)
+        : null,
+      suggestedOffset,
+      emptyReason,
       tier: result.tier,
       cloudStorageUsed: result.cloudStorageUsed,
       cloudStorageLimit: result.cloudStorageLimit,
@@ -469,6 +502,16 @@ export function formatCloudListJson(result: CloudListResult): string {
     null,
     2,
   );
+}
+
+/** Describe the visible cloud-list range for human-readable pagination. */
+export function formatCloudListRange(total: number, offset: number, shown: number, limit?: number): string {
+  if (limit === undefined) return `${shown} snapshot(s) in cloud`;
+  if (shown === 0) return `No snapshots shown (offset ${offset} is past ${total} snapshot(s))`;
+
+  const first = offset + 1;
+  const last = offset + shown;
+  return `Showing snapshots ${first}-${last} of ${total}`;
 }
 
 export interface CloudListMissingJson {
@@ -1108,7 +1151,8 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   if (spinner) {
     spinner.text = 'Fetching cloud snapshots...';
   }
-  const snapshots = selectCloudListPage(await listCloudSnapshots(), limit, offset);
+  const allSnapshots = await listCloudSnapshots();
+  const snapshots = selectCloudListPage(allSnapshots, limit, offset);
   spinner?.stop();
 
   if (options.json) {
@@ -1118,6 +1162,9 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
         cloudStorageUsed: sub.cloudStorageUsed ?? 0,
         cloudStorageLimit: sub.cloudStorageLimit ?? 0,
         snapshots,
+        total: allSnapshots.length,
+        offset: offset ?? 0,
+        limit,
       }),
     );
     return;
@@ -1149,7 +1196,7 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   }
   
   console.log();
-  console.log(chalk.dim(`  ${snapshots.length} snapshot(s) in cloud`));
+  console.log(chalk.dim(`  ${formatCloudListRange(allSnapshots.length, offset ?? 0, snapshots.length, limit)}`));
 }
 
 /**
