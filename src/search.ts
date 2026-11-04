@@ -283,6 +283,10 @@ export function scoreMatch(query: string, content: string): number {
   const lowerQuery = query.trim().toLowerCase();
   const lowerContent = content.toLowerCase();
 
+  // An empty query is not a match, even when the content is empty. The CLI
+  // rejects blank queries, but this helper is public to SDK callers too.
+  if (lowerQuery.length === 0) return 0;
+
   if (!lowerContent.includes(lowerQuery)) {
     // Allow partial word-level matches when full phrase is absent.
     const words = lowerQuery.split(/\s+/).filter(Boolean);

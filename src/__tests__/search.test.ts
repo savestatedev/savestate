@@ -134,6 +134,11 @@ describe('searchSnapshots', () => {
     expect(results).toEqual([]);
   });
 
+  it('does not score blank queries as matches', () => {
+    expect(scoreMatch('', '')).toBe(0);
+    expect(scoreMatch('   ', 'saved memory')).toBe(0);
+  });
+
   it('preserves and validates pagination for an empty query page', async () => {
     const page = await searchSnapshotsPage('  ', config, {
       offset: 4,
