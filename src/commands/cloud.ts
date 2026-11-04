@@ -504,6 +504,16 @@ export function formatCloudListJson(result: CloudListResult): string {
   );
 }
 
+/** Describe the visible cloud-list range for human-readable pagination. */
+export function formatCloudListRange(total: number, offset: number, shown: number, limit?: number): string {
+  if (limit === undefined) return `${shown} snapshot(s) in cloud`;
+  if (shown === 0) return `No snapshots shown (offset ${offset} is past ${total} snapshot(s))`;
+
+  const first = offset + 1;
+  const last = offset + shown;
+  return `Showing snapshots ${first}-${last} of ${total}`;
+}
+
 export interface CloudListMissingJson {
   found: false;
   total: 0;
@@ -1186,7 +1196,7 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   }
   
   console.log();
-  console.log(chalk.dim(`  ${snapshots.length} snapshot(s) in cloud`));
+  console.log(chalk.dim(`  ${formatCloudListRange(allSnapshots.length, offset ?? 0, snapshots.length, limit)}`));
 }
 
 /**
