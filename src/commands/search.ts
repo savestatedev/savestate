@@ -218,7 +218,7 @@ export function formatSearchPageHint(
     return `No matches found at offset ${offset}. Try --offset ${Math.max(0, offset - limit)} --limit ${limit}.`;
   }
   const more = hasMore ?? shown === limit;
-  if (shown === limit && more) {
+  if (shown > 0 && more) {
     if (offset >= MAX_SEARCH_OFFSET) {
       return `Reached maximum searchable offset ${MAX_SEARCH_OFFSET}; no later page is available.`;
     }
