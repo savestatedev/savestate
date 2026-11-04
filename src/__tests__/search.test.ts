@@ -214,6 +214,24 @@ describe('searchSnapshots', () => {
     expect(page.results).toHaveLength(2);
   });
 
+  it('does not advertise a repeating continuation at the maximum offset', async () => {
+    const memories = Array.from({ length: 1002 }, (_, i) => ({
+      id: `m${i}`,
+      content: `entry ${i} contains widget keyword`,
+    }));
+    await createSnapshot(new FakeAdapter(buildSnapshot(memories)), storage, PASSPHRASE);
+
+    const page = await searchSnapshotsPage('widget', config, {
+      passphrase: PASSPHRASE,
+      offset: 999,
+      limit: 5,
+    });
+
+    expect(page.results).toHaveLength(3);
+    expect(page.results.at(-1)?.content).toContain('entry 1001');
+    expect(page.hasMore).toBe(false);
+  });
+
   it('skips ranked results before applying the limit', async () => {
     const memories = Array.from({ length: 5 }, (_, i) => ({
       id: `m${i}`,

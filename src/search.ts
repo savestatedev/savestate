@@ -249,12 +249,17 @@ export async function searchSnapshotsPage(
     a.snapshotId.localeCompare(b.snapshotId) ||
     a.path.localeCompare(b.path),
   );
+  const pageResults = results.slice(offset, offset + limit);
+  const nextOffset = offset + pageResults.length;
   return {
-    results: results.slice(offset, offset + limit),
+    results: pageResults,
     total: results.length,
     offset,
     limit,
-    hasMore: offset < MAX_OFFSET && offset + limit < results.length,
+    // Do not advertise a continuation that would repeat the result at the
+    // maximum reachable offset. Once a page includes that boundary, later
+    // matches are intentionally inaccessible because offsets are bounded.
+    hasMore: offset < MAX_OFFSET && nextOffset <= MAX_OFFSET && nextOffset < results.length,
   };
 }
 
