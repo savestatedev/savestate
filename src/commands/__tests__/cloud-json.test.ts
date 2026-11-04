@@ -69,6 +69,8 @@ describe('savestate cloud --json', () => {
     expect(parsed.total).toBe(0);
     expect(parsed.shown).toBe(0);
     expect(parsed.remaining).toBe(0);
+    expect(parsed.page).toBeNull();
+    expect(parsed.totalPages).toBe(0);
     expect(parsed.emptyReason).toBe('collection');
     expect(parsed.snapshots).toEqual([]);
   });
