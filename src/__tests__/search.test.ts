@@ -134,6 +134,11 @@ describe('searchSnapshots', () => {
     expect(results).toEqual([]);
   });
 
+  it('does not score blank queries as matches', () => {
+    expect(scoreMatch('', '')).toBe(0);
+    expect(scoreMatch('   ', 'saved memory')).toBe(0);
+  });
+
   it('preserves and validates pagination for an empty query page', async () => {
     const page = await searchSnapshotsPage('  ', config, {
       offset: 4,
@@ -212,6 +217,41 @@ describe('searchSnapshots', () => {
 
     expect(page).toMatchObject({ total: 5, offset: 2, limit: 2, hasMore: true });
     expect(page.results).toHaveLength(2);
+  });
+
+  it('does not advertise a repeating continuation at the maximum offset', async () => {
+    const memories = Array.from({ length: 1002 }, (_, i) => ({
+      id: `m${i}`,
+      content: `entry ${i} contains widget keyword`,
+    }));
+    await createSnapshot(new FakeAdapter(buildSnapshot(memories)), storage, PASSPHRASE);
+
+    const page = await searchSnapshotsPage('widget', config, {
+      passphrase: PASSPHRASE,
+      offset: 999,
+      limit: 5,
+    });
+
+    expect(page.results).toHaveLength(3);
+    expect(page.results.at(-1)?.content).toContain('entry 1001');
+    expect(page.hasMore).toBe(false);
+  });
+
+  it('keeps the bounded final page discoverable from the preceding page', async () => {
+    const memories = Array.from({ length: 1001 }, (_, i) => ({
+      id: `m${i}`,
+      content: `entry ${i} contains widget keyword`,
+    }));
+    await createSnapshot(new FakeAdapter(buildSnapshot(memories)), storage, PASSPHRASE);
+
+    const page = await searchSnapshotsPage('widget', config, {
+      passphrase: PASSPHRASE,
+      offset: 999,
+      limit: 1,
+    });
+
+    expect(page.results).toHaveLength(1);
+    expect(page.hasMore).toBe(true);
   });
 
   it('skips ranked results before applying the limit', async () => {

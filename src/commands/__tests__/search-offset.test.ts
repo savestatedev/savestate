@@ -42,6 +42,12 @@ describe('savestate search --offset', () => {
     expect(formatSearchPageHint(5, 0, 5, false)).toBeUndefined();
   });
 
+  it('follows an explicit hasMore flag for a partial page', () => {
+    expect(formatSearchPageHint(3, 10, 5, true)).toBe(
+      'More matches may be available; try --offset 13 --limit 5.',
+    );
+  });
+
   it('suggests the previous page when an offset has no results', () => {
     expect(formatSearchPageHint(0, 10, 5)).toBe(
       'No matches found at offset 10. Try --offset 5 --limit 5.',

@@ -156,6 +156,26 @@ describe('savestate search --json', () => {
       nextOffset: null,
     });
   });
+
+  it('does not advertise a repeating continuation when a page reaches the boundary', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [match, { ...match, path: 'memory/core.json#second' }],
+        offset: 999,
+        limit: 5,
+        total: 1002,
+        hasMore: true,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      offset: 999,
+      shown: 2,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
   it('caps an explicitly supplied hasMore flag at the bounded maximum offset', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({
@@ -174,6 +194,25 @@ describe('savestate search --json', () => {
       nextOffset: null,
     });
   });
+
+  it('does not emit a non-progressing next page for an empty unknown-total page', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [],
+        offset: 10,
+        limit: 5,
+        hasMore: true,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      shown: 0,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('does not let an explicit hasMore flag exceed a known total', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({

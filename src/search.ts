@@ -249,12 +249,17 @@ export async function searchSnapshotsPage(
     a.snapshotId.localeCompare(b.snapshotId) ||
     a.path.localeCompare(b.path),
   );
+  const pageResults = results.slice(offset, offset + limit);
+  const nextOffset = offset + pageResults.length;
   return {
-    results: results.slice(offset, offset + limit),
+    results: pageResults,
     total: results.length,
     offset,
     limit,
-    hasMore: offset < MAX_OFFSET && offset + limit < results.length,
+    // Do not advertise a continuation that would repeat the result at the
+    // maximum reachable offset. Once a page includes that boundary, later
+    // matches are intentionally inaccessible because offsets are bounded.
+    hasMore: offset < MAX_OFFSET && nextOffset <= MAX_OFFSET && nextOffset < results.length,
   };
 }
 
@@ -277,6 +282,10 @@ export function scoreMatch(query: string, content: string): number {
   // here so API and CLI searches rank the same way.
   const lowerQuery = query.trim().toLowerCase();
   const lowerContent = content.toLowerCase();
+
+  // An empty query is not a match, even when the content is empty. The CLI
+  // rejects blank queries, but this helper is public to SDK callers too.
+  if (lowerQuery.length === 0) return 0;
 
   if (!lowerContent.includes(lowerQuery)) {
     // Allow partial word-level matches when full phrase is absent.

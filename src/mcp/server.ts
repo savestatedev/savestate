@@ -123,9 +123,8 @@ import {
   formatSearchSnapshotsPageHints,
   getSearchSnapshotsSuggestedOffset,
   parseSearchSnapshotsLimit,
-  selectSearchSnapshotsPage,
 } from './search-snapshots-limit.js';
-import { parseSearchSnapshotsOffset, selectSearchSnapshotsOffsetEntries } from './search-snapshots-offset.js';
+import { parseSearchSnapshotsOffset } from './search-snapshots-offset.js';
 import { parseSearchSnapshotsQuery } from './search-snapshots-query.js';
 import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
 import type { ListMemoriesFilters } from './list-memories-limit.js';
@@ -1624,7 +1623,7 @@ async function handleDeleteAllMemories(
 async function handleSearchSnapshots(
   input: z.infer<typeof SearchSnapshotsInputSchema>,
 ): Promise<string> {
-  const { searchSnapshots } = await import('../search.js');
+  const { searchSnapshotsPage } = await import('../search.js');
   try {
     if (!isInitialized()) {
       return 'Error: SaveState not initialized in this directory. Run `savestate init` first.';
@@ -1649,23 +1648,21 @@ async function handleSearchSnapshots(
           (tag === undefined || matchesSnapshotsResourceTag(entry.tags, tag)),
         )
         .map((entry) => entry.id);
-    const matches = await searchSnapshots(query, config, {
+    // Search directly at the requested offset so the bounded offset 1,000
+    // page remains discoverable. Fetching from zero and slicing a capped
+    // result set can otherwise hide a final page after offset 999.
+    const page = await searchSnapshotsPage(query, config, {
       snapshots: snapshotIds,
       types: input.type ? [input.type] : undefined,
-      // Fetch one look-ahead result so MCP clients can discover the next page,
-      // while respecting searchSnapshots' 1,000-result ceiling.
-      limit: Math.min(pageOffset + pageSize + 1, 1000),
+      limit: pageSize,
+      offset: pageOffset,
       passphrase: input.passphrase,
     });
-    const page = selectSearchSnapshotsPage(
-      selectSearchSnapshotsOffsetEntries(matches, offset),
-      pageSize,
-    );
-    const results = page.entries;
+    const results = page.results;
     if (results.length === 0) {
       return formatSearchSnapshotsEmptyPageMessage(
         pageOffset,
-        getSearchSnapshotsSuggestedOffset(matches.length, pageSize),
+        getSearchSnapshotsSuggestedOffset(page.total, pageSize),
         { since, until, label, tag, type: input.type },
         query,
       );
@@ -1678,7 +1675,7 @@ async function handleSearchSnapshots(
         { since, until, label, tag, type: input.type },
         query,
       ),
-      ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasNextPage),
+      ...formatSearchSnapshotsPageHints(pageOffset, pageSize, results.length, page.hasMore),
     ];
     lines.push('');
     for (const r of results) {
