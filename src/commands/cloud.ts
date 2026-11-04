@@ -467,7 +467,7 @@ export function formatCloudListJson(result: CloudListResult): string {
   const shown = result.snapshots.length;
   const hasMore = limit !== null && offset + shown < total;
   const remaining = Math.max(0, total - offset - shown);
-  const page = limit !== null ? Math.floor(offset / limit) + 1 : null;
+  const page = limit !== null && total > 0 ? Math.floor(offset / limit) + 1 : null;
   const totalPages = limit !== null ? Math.ceil(total / limit) : null;
   const emptyReason = shown > 0 ? null : total === 0 ? 'collection' : 'page';
   const hasPrevious = offset > 0 && limit !== null;
@@ -512,6 +512,33 @@ export function formatCloudListRange(total: number, offset: number, shown: numbe
   const first = offset + 1;
   const last = offset + shown;
   return `Showing snapshots ${first}-${last} of ${total}`;
+}
+
+/** Describe how an interactive user can move through cloud-list pages. */
+export function formatCloudListNavigation(
+  total: number,
+  offset: number,
+  shown: number,
+  limit?: number,
+): string[] {
+  if (limit === undefined) return [];
+
+  const hints: string[] = [];
+  if (shown === 0) {
+    if (total > 0) {
+      const suggestedOffset = Math.floor((total - 1) / limit) * limit;
+      hints.push(`Try --offset ${suggestedOffset} --limit ${limit} to view an available page.`);
+    }
+    return hints;
+  }
+
+  if (offset > 0) {
+    hints.push(`Previous page: use --offset ${Math.max(0, offset - limit)} --limit ${limit}.`);
+  }
+  if (offset + shown < total) {
+    hints.push(`Next page: use --offset ${offset + shown} --limit ${limit}.`);
+  }
+  return hints;
 }
 
 export interface CloudListMissingJson {
@@ -1181,8 +1208,17 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   console.log();
 
   if (snapshots.length === 0) {
-    console.log(chalk.yellow('  No snapshots in cloud.'));
-    console.log(chalk.dim('  Run `savestate cloud push` to upload.'));
+    if (allSnapshots.length === 0) {
+      console.log(chalk.yellow('  No snapshots in cloud.'));
+      console.log(chalk.dim('  Run `savestate cloud push` to upload.'));
+    } else {
+      console.log(chalk.yellow('  No snapshots on this page.'));
+    }
+    console.log();
+    console.log(chalk.dim(`  ${formatCloudListRange(allSnapshots.length, offset ?? 0, snapshots.length, limit)}`));
+    for (const hint of formatCloudListNavigation(allSnapshots.length, offset ?? 0, snapshots.length, limit)) {
+      console.log(chalk.dim(`  ${hint}`));
+    }
     return;
   }
 
@@ -1197,6 +1233,9 @@ export async function cloudListCommand(options: CloudOptions = {}): Promise<void
   
   console.log();
   console.log(chalk.dim(`  ${formatCloudListRange(allSnapshots.length, offset ?? 0, snapshots.length, limit)}`));
+  for (const hint of formatCloudListNavigation(allSnapshots.length, offset ?? 0, snapshots.length, limit)) {
+    console.log(chalk.dim(`  ${hint}`));
+  }
 }
 
 /**
