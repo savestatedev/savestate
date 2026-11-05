@@ -208,6 +208,8 @@ nearest page to retry. The response also includes `page`, `pageSize`, and
 `totalPages` for paginated scripting consumers. Before initialization, the
 response keeps a page-compatible shape with `shown: 0`,
 `emptyReason: "collection"`, and `entries: []`.
+Legacy tag whitespace and duplicate tags are removed from JSON entries, while
+filter metadata is emitted in its normalized, de-duplicated form.
 
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge

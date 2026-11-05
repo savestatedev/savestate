@@ -55,7 +55,7 @@ describe('savestate list --json', () => {
   it('normalizes legacy tag whitespace for JSON consumers', () => {
     const parsed = JSON.parse(formatListJson([{
       ...newer,
-      tags: [' weekly ', '  ', 'project '],
+      tags: [' weekly ', '  ', 'project ', 'weekly'],
     }])) as ListJson;
 
     expect(parsed.entries[0]?.tags).toEqual(['weekly', 'project']);

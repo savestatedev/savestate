@@ -81,9 +81,13 @@ export interface ListJson {
   entries: ListSnapshotJson[];
 }
 
-/** Keep JSON tag values stable when older indexes contain surrounding whitespace. */
+/** Keep JSON tag values stable when older indexes contain whitespace or duplicates. */
 export function normalizeListJsonTags(tags?: string[]): string[] {
-  return (tags ?? []).map((tag) => tag.trim()).filter(Boolean);
+  return [...new Set(
+    (tags ?? [])
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+  )];
 }
 
 /** Keep JSON labels stable when older indexes contain surrounding whitespace. */
