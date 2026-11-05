@@ -83,11 +83,17 @@ export interface ListJson {
 
 /** Keep JSON tag values stable when older indexes contain whitespace or duplicates. */
 export function normalizeListJsonTags(tags?: string[]): string[] {
-  return [...new Set(
-    (tags ?? [])
-      .map((tag) => tag.trim())
-      .filter(Boolean),
-  )];
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const tag of tags ?? []) {
+    const trimmed = tag.trim();
+    const key = trimmed.toLowerCase();
+    if (trimmed && !seen.has(key)) {
+      seen.add(key);
+      normalized.push(trimmed);
+    }
+  }
+  return normalized;
 }
 
 /** Keep JSON labels stable when older indexes contain surrounding whitespace. */
