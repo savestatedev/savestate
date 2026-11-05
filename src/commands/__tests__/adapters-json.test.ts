@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatAdaptersJson,
   formatAdaptersSummaryJson,
+  parseAdaptersPlatform,
   selectAdaptersPlatform,
   type AdapterListEntry,
 } from '../adapters.js';
@@ -84,5 +85,14 @@ describe('savestate adapters --json', () => {
 
   it('matches platform filters without case or whitespace surprises', () => {
     expect(selectAdaptersPlatform([adapter], ' Claude-CODE ')).toEqual([adapter]);
+  });
+
+  it('rejects platform filters containing separators', () => {
+    expect(() => parseAdaptersPlatform('claude code')).toThrow(
+      'one non-empty platform ID with no spaces or commas',
+    );
+    expect(() => parseAdaptersPlatform('claude,code')).toThrow(
+      'one non-empty platform ID with no spaces or commas',
+    );
   });
 });
