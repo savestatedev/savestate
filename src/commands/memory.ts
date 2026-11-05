@@ -1771,7 +1771,14 @@ const MAX_MEMORY_PIN_OFFSET = 1000;
 export function parseMemoryPinLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_PIN_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_PIN_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_PIN_LIMIT}.`,
@@ -1790,7 +1797,14 @@ export function selectMemoryPinEntries<T>(entries: T[], limit?: number): T[] {
 export function parseMemoryPinOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_PIN_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_PIN_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_PIN_OFFSET}.`,
@@ -1906,7 +1920,14 @@ const MAX_MEMORY_UNPIN_OFFSET = 1000;
 export function parseMemoryUnpinLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_UNPIN_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_MEMORY_UNPIN_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_UNPIN_LIMIT}.`,
@@ -1925,7 +1946,14 @@ export function selectMemoryUnpinEntries<T>(entries: T[], limit?: number): T[] {
 export function parseMemoryUnpinOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_UNPIN_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_MEMORY_UNPIN_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_UNPIN_OFFSET}.`,

@@ -13,9 +13,10 @@ describe('savestate memory delete --offset', () => {
   it('accepts zero and positive integers', () => {
     expect(parseMemoryDeleteOffset('0')).toBe(0);
     expect(parseMemoryDeleteOffset('12')).toBe(12);
+    expect(parseMemoryDeleteOffset(' 12 ')).toBe(12);
   });
 
-  it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['-1', '1.5', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryDeleteOffset(value)).toThrow(
       `Invalid --offset value "${value}". Expected a non-negative integer up to 1000.`,
     );

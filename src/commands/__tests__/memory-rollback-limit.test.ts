@@ -6,11 +6,12 @@ describe('savestate memory rollback --limit', () => {
     expect(parseMemoryRollbackLimit(undefined)).toBeUndefined();
   });
 
-  it('accepts positive integers', () => {
+  it('accepts positive decimal integers', () => {
     expect(parseMemoryRollbackLimit('12')).toBe(12);
+    expect(parseMemoryRollbackLimit(' 12 ')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['', '   ', '0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryRollbackLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
