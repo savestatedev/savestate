@@ -55,12 +55,14 @@ describe('MCP list_memories search schema', () => {
       type: 'number',
       minimum: 1,
       maximum: 1000,
+      multipleOf: 1,
       default: 50,
     });
     expect(schema.properties.offset).toMatchObject({
       type: 'number',
       minimum: 0,
       maximum: 1000,
+      multipleOf: 1,
       default: 0,
     });
     expect(ListMemoriesInputSchema.parse({ limit: 50, offset: 0 })).toMatchObject({
