@@ -40,6 +40,7 @@ const INSPECT_ADAPTERS = [
 const INSPECT_ADAPTER_LIST = INSPECT_ADAPTERS.join(', ');
 
 export interface InspectJson {
+  found: true;
   id: string;
   timestamp: string;
   platform: string;
@@ -389,6 +390,7 @@ export async function inspectCommand(rawSnapshotId: string, options: InspectOpti
   const snapshot = unpackSnapshot(fileMap);
 
   const summary: InspectJson = {
+    found: true,
     id: snapshot.manifest.id,
     timestamp: snapshot.manifest.timestamp,
     platform: snapshot.manifest.platform,

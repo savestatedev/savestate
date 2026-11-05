@@ -4926,6 +4926,7 @@ describe('CLI docs', () => {
   it('documents inspect --json', () => {
     const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
     expect(inspectSection).toContain('--json');
+    expect(inspectSection).toContain('found: true');
     expect(inspectSection).toContain('scripting');
     expect(inspectSection).toContain('savestate inspect latest --json');
   });
