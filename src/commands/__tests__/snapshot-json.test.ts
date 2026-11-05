@@ -32,6 +32,7 @@ describe('savestate snapshot --json', () => {
     const parsed = JSON.parse(
       formatSnapshotResultJson(result, { adapter: 'Claude Code', storage: 'local', stateEventCount: 2 }),
     ) as {
+      found: boolean;
       snapshotId: string;
       adapter: string;
       label: string | null;
@@ -42,6 +43,7 @@ describe('savestate snapshot --json', () => {
       stateEventCount: number;
       delta: { added: number; bytesSaved: number; chainDepth: number } | null;
     };
+    expect(parsed.found).toBe(true);
     expect(parsed.snapshotId).toBe(result.snapshot.manifest.id);
     expect(parsed.adapter).toBe('Claude Code');
     expect(parsed.label).toBe('pre-update');

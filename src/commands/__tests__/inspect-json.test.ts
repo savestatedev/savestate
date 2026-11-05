@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { formatInspectJson, type InspectJson } from '../inspect.js';
 
 const labeled: InspectJson = {
+  found: true,
   id: 'ss-newer',
   timestamp: '2026-01-26T09:30:00.000Z',
   platform: 'claude',
@@ -23,6 +24,7 @@ const labeled: InspectJson = {
 };
 
 const unlabeled: InspectJson = {
+  found: true,
   id: 'ss-older',
   timestamp: '2026-01-25T09:30:00.000Z',
   platform: 'claude',
@@ -46,6 +48,7 @@ const unlabeled: InspectJson = {
 describe('savestate inspect --json', () => {
   it('prints snapshot summary as JSON with content counts', () => {
     const parsed = JSON.parse(formatInspectJson(labeled)) as InspectJson;
+    expect(parsed.found).toBe(true);
     expect(parsed.id).toBe('ss-newer');
     expect(parsed.label).toBe('pre-update');
     expect(parsed.tags).toEqual(['weekly']);

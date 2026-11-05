@@ -16,7 +16,12 @@ const result: RestoreResult = {
 
 describe('savestate restore --json', () => {
   it('prints restore metadata as JSON', () => {
-    const parsed = JSON.parse(formatRestoreResultJson(result)) as RestoreResult & { dryRun: boolean; label: string | null };
+    const parsed = JSON.parse(formatRestoreResultJson(result)) as RestoreResult & {
+      found: boolean;
+      dryRun: boolean;
+      label: string | null;
+    };
+    expect(parsed.found).toBe(true);
     expect(parsed.snapshotId).toBe(result.snapshotId);
     expect(parsed.platform).toBe('claude-code');
     expect(parsed.adapter).toBe('claude-code');

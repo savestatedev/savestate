@@ -4926,6 +4926,7 @@ describe('CLI docs', () => {
   it('documents inspect --json', () => {
     const inspectSection = docs.slice(docs.indexOf('id="inspect"'), docs.indexOf('id="diff"'));
     expect(inspectSection).toContain('--json');
+    expect(inspectSection).toContain('found: true');
     expect(inspectSection).toContain('scripting');
     expect(inspectSection).toContain('savestate inspect latest --json');
   });
@@ -5291,6 +5292,7 @@ describe('CLI docs', () => {
   it('documents restore --json', () => {
     const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
     expect(restoreSection).toContain('--json');
+    expect(restoreSection).toContain('found: true');
     expect(restoreSection).toContain('Decrypts the archive');
     expect(restoreSection).toContain('savestate restore latest --json --dry-run');
   });
@@ -5324,6 +5326,7 @@ describe('CLI docs', () => {
   it('documents snapshot --json', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--json');
+    expect(snapshotSection).toContain('found: true');
     expect(snapshotSection).toContain('Encrypts the archive');
     expect(snapshotSection).toContain('savestate snapshot --json --full');
   });
