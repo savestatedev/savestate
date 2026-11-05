@@ -397,7 +397,9 @@ export function formatMemoryListJson(
         : normalizeMemoryListSource(pagination.filters.source),
       namespace: pagination.filters?.namespace ?? null,
       content: pagination.filters?.content ?? null,
-      tags: pagination.filters?.tags ?? null,
+      tags: pagination.filters?.tags == null
+        ? null
+        : normalizeMemoryTagFilters(pagination.filters.tags),
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,

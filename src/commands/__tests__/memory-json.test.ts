@@ -67,6 +67,16 @@ describe('savestate memory --json', () => {
     expect(parsed.entries[0].tags).toEqual(['Work', 'URGENT']);
   });
 
+  it('normalizes active tag filters at the JSON output boundary', () => {
+    const tagged = entry({ id: 'mem-filter-tags', content: 'filter tags' });
+
+    const parsed = JSON.parse(formatMemoryListJson([tagged], [tagged], {
+      filters: { tags: [' Work ', 'work', 'URGENT', ' '] },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.tags).toEqual(['Work', 'URGENT']);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
