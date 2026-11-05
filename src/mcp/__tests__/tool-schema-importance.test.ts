@@ -38,6 +38,13 @@ describe('MCP list_memories search schema', () => {
     expect(schema.properties.search).toMatchObject({ type: 'string' });
   });
 
+  it('normalizes and rejects blank text filters', () => {
+    expect(ListMemoriesInputSchema.parse({ search: '  encrypted archive ' }).search).toBe(
+      'encrypted archive',
+    );
+    expect(() => ListMemoriesInputSchema.parse({ search: '   ' })).toThrow();
+  });
+
   it('advertises a metadata source filter', () => {
     const schema = getTool('list_memories').inputSchema as any;
     expect(schema.properties.source).toMatchObject({ type: 'string' });

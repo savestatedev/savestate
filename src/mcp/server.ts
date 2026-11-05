@@ -806,7 +806,7 @@ export const ListMemoriesInputSchema = z.object({
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
   maxImportance: z.number().min(0).max(1).optional(),
-  search: z.string().optional(),
+  search: z.string().trim().min(1).optional(),
   since: z.string().optional(),
   until: z.string().optional(),
   limit: z.number().int().min(1).max(MAX_LIST_MEMORIES_LIMIT).optional(),
