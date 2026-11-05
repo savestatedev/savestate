@@ -96,7 +96,10 @@ export function selectAdaptersPlatform(
   platform?: string,
 ): AdapterListEntry[] {
   if (platform === undefined) return adapters;
-  return adapters.filter((adapter) => adapter.platform === platform);
+  const normalizedPlatform = platform.trim().toLowerCase();
+  return adapters.filter(
+    (adapter) => adapter.platform.trim().toLowerCase() === normalizedPlatform,
+  );
 }
 
 /** Apply adapters --offset then --limit. */

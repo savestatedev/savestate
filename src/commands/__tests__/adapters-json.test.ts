@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatAdaptersJson,
   formatAdaptersSummaryJson,
+  selectAdaptersPlatform,
   type AdapterListEntry,
 } from '../adapters.js';
 
@@ -79,5 +80,9 @@ describe('savestate adapters --json', () => {
       emptyReason: 'page',
       suggestedOffset: 1,
     }));
+  });
+
+  it('matches platform filters without case or whitespace surprises', () => {
+    expect(selectAdaptersPlatform([adapter], ' Claude-CODE ')).toEqual([adapter]);
   });
 });
