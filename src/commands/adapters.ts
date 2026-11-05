@@ -31,8 +31,10 @@ export function parseAdaptersPlatform(value: string | undefined): string | undef
   if (value === undefined) return undefined;
 
   const platform = value.trim();
-  if (platform.length === 0) {
-    throw new Error('Invalid --platform value. Expected a non-empty platform ID.');
+  if (platform.length === 0 || /[\s,]/.test(platform)) {
+    throw new Error(
+      'Invalid --platform value. Expected one non-empty platform ID with no spaces or commas.',
+    );
   }
   return platform;
 }
@@ -96,7 +98,10 @@ export function selectAdaptersPlatform(
   platform?: string,
 ): AdapterListEntry[] {
   if (platform === undefined) return adapters;
-  return adapters.filter((adapter) => adapter.platform === platform);
+  const normalizedPlatform = platform.trim().toLowerCase();
+  return adapters.filter(
+    (adapter) => adapter.platform.trim().toLowerCase() === normalizedPlatform,
+  );
 }
 
 /** Apply adapters --offset then --limit. */

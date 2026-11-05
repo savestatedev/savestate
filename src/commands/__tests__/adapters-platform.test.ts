@@ -12,7 +12,7 @@ describe('savestate adapters --platform', () => {
 
   it('rejects an empty platform ID', () => {
     expect(() => parseAdaptersPlatform('   ')).toThrow(
-      'Invalid --platform value. Expected a non-empty platform ID.',
+      'Invalid --platform value. Expected one non-empty platform ID with no spaces or commas.',
     );
   });
 });

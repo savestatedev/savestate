@@ -5668,6 +5668,8 @@ describe('CLI docs', () => {
     const adaptersSection = docs.slice(docs.indexOf('id="adapters"'), docs.indexOf('id="export"'));
     const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
     expect(adaptersSection).toContain('--platform &lt;id&gt;');
+    expect(adaptersSection).toContain('Matching is case-insensitive and ignores surrounding whitespace');
+    expect(adaptersSection).toContain('one non-empty platform ID with no spaces or commas');
     expect(adaptersSection).toContain('savestate adapters --platform claude-code');
     expect(adaptersBlock).toContain(".option('--platform <id>'");
   });
