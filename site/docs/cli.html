@@ -167,7 +167,7 @@
         <tr><td><code>--full</code></td><td>Force a full snapshot, skipping incremental delta detection</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of status field rows to show. Must be a positive integer up to 1000. Combines with <code>--offset</code>.</td></tr>
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N status field rows. Must be a non-negative integer up to 1000. Applied before <code>--limit</code>.</td></tr>
-        <tr><td><code>--json</code></td><td>Emit the snapshot result as JSON. Encrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). When no adapter can be detected, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). Useful for scripting.</td></tr>
+        <tr><td><code>--json</code></td><td>Emit the snapshot result as JSON with <code>found: true</code> on success. Encrypts the archive. Skips the spinner. When SaveState is not initialized, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). When no adapter can be detected, emits a missing summary (found, adapter, snapshotId, timestamp, platform; omits extra fields). Useful for scripting.</td></tr>
       </tbody>
     </table>
 

@@ -112,6 +112,7 @@ export function formatSnapshotResultJson(
 ): string {
   return JSON.stringify(
     {
+      found: true,
       snapshotId: result.snapshot.manifest.id,
       timestamp: result.snapshot.manifest.timestamp,
       platform: result.snapshot.manifest.platform,

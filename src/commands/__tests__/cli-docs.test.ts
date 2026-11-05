@@ -5324,6 +5324,7 @@ describe('CLI docs', () => {
   it('documents snapshot --json', () => {
     const snapshotSection = docs.slice(docs.indexOf('id="snapshot"'), docs.indexOf('id="restore"'));
     expect(snapshotSection).toContain('--json');
+    expect(snapshotSection).toContain('found: true');
     expect(snapshotSection).toContain('Encrypts the archive');
     expect(snapshotSection).toContain('savestate snapshot --json --full');
   });
