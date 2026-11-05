@@ -271,6 +271,7 @@ export function resolveRestoreSnapshot(
 export function formatRestoreResultJson(result: RestoreResult, extra?: { dryRun?: boolean }): string {
   return JSON.stringify(
     {
+      found: true,
       snapshotId: result.snapshotId,
       timestamp: result.timestamp,
       platform: result.platform,

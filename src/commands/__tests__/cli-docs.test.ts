@@ -5291,6 +5291,7 @@ describe('CLI docs', () => {
   it('documents restore --json', () => {
     const restoreSection = docs.slice(docs.indexOf('id="restore"'), docs.indexOf('id="list"'));
     expect(restoreSection).toContain('--json');
+    expect(restoreSection).toContain('found: true');
     expect(restoreSection).toContain('Decrypts the archive');
     expect(restoreSection).toContain('savestate restore latest --json --dry-run');
   });
