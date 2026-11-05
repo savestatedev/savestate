@@ -38,6 +38,13 @@ describe('MCP list_memories search schema', () => {
     expect(schema.properties.search).toMatchObject({ type: 'string' });
   });
 
+  it('normalizes and rejects blank text filters', () => {
+    expect(ListMemoriesInputSchema.parse({ search: '  encrypted archive ' }).search).toBe(
+      'encrypted archive',
+    );
+    expect(() => ListMemoriesInputSchema.parse({ search: '   ' })).toThrow();
+  });
+
   it('advertises a metadata source filter', () => {
     const schema = getTool('list_memories').inputSchema as any;
     expect(schema.properties.source).toMatchObject({ type: 'string' });
@@ -47,6 +54,30 @@ describe('MCP list_memories search schema', () => {
   it('normalizes and rejects blank metadata source filters', () => {
     expect(ListMemoriesInputSchema.parse({ source: '  Claude-Code ' }).source).toBe('Claude-Code');
     expect(() => ListMemoriesInputSchema.parse({ source: '   ' })).toThrow();
+  });
+
+  it('advertises and enforces bounded integer pagination', () => {
+    const schema = getTool('list_memories').inputSchema as any;
+    expect(schema.properties.limit).toMatchObject({
+      type: 'number',
+      minimum: 1,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 50,
+    });
+    expect(schema.properties.offset).toMatchObject({
+      type: 'number',
+      minimum: 0,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 0,
+    });
+    expect(ListMemoriesInputSchema.parse({ limit: 50, offset: 0 })).toMatchObject({
+      limit: 50,
+      offset: 0,
+    });
+    expect(() => ListMemoriesInputSchema.parse({ limit: 1.5 })).toThrow();
+    expect(() => ListMemoriesInputSchema.parse({ offset: 1001 })).toThrow();
   });
 });
 

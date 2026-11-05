@@ -1,4 +1,4 @@
-const MAX_LIST_MEMORIES_OFFSET = 1000;
+export const MAX_LIST_MEMORIES_OFFSET = 1000;
 
 /** Parse list_memories offset without turning user input errors into an unbounded skip. */
 export function parseListMemoriesOffset(value: number | undefined): number | undefined {

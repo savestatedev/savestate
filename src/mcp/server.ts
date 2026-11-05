@@ -72,10 +72,11 @@ import {
 import {
   formatListMemoriesEmptyPage,
   formatListMemoriesPageSummary,
+  MAX_LIST_MEMORIES_LIMIT,
   parseListMemoriesLimit,
   selectListMemoriesEntries,
 } from './list-memories-limit.js';
-import { parseListMemoriesOffset } from './list-memories-offset.js';
+import { MAX_LIST_MEMORIES_OFFSET, parseListMemoriesOffset } from './list-memories-offset.js';
 import { parseListMemoriesDateFilters } from './list-memories-date-filters.js';
 import {
   formatSavestateListEmptyPage,
@@ -633,11 +634,19 @@ export const tools: Tool[] = [
         },
         limit: {
           type: 'number',
-          description: 'Maximum results (default: 50; positive integer up to 1000)',
+          minimum: 1,
+          maximum: MAX_LIST_MEMORIES_LIMIT,
+          multipleOf: 1,
+          default: 50,
+          description: `Maximum results (default: 50; positive integer up to ${MAX_LIST_MEMORIES_LIMIT})`,
         },
         offset: {
           type: 'number',
-          description: 'Pagination offset (non-negative integer up to 1000)',
+          minimum: 0,
+          maximum: MAX_LIST_MEMORIES_OFFSET,
+          multipleOf: 1,
+          default: 0,
+          description: `Pagination offset (non-negative integer up to ${MAX_LIST_MEMORIES_OFFSET})`,
         },
       },
     },
@@ -797,11 +806,11 @@ export const ListMemoriesInputSchema = z.object({
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
   maxImportance: z.number().min(0).max(1).optional(),
-  search: z.string().optional(),
+  search: z.string().trim().min(1).optional(),
   since: z.string().optional(),
   until: z.string().optional(),
-  limit: z.number().optional(),
-  offset: z.number().optional(),
+  limit: z.number().int().min(1).max(MAX_LIST_MEMORIES_LIMIT).optional(),
+  offset: z.number().int().min(0).max(MAX_LIST_MEMORIES_OFFSET).optional(),
 }).refine(hasValidMemoryImportanceRange, {
   message: INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
   path: ['maxImportance'],
