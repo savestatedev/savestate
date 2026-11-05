@@ -99,7 +99,11 @@ export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): Lis
     until: filters.until?.trim() ?? null,
     platform: filters.platform?.trim().toLowerCase() ?? null,
     adapter: filters.adapter?.trim().toLowerCase() ?? null,
-    exclude: filters.exclude?.map((adapter) => adapter.trim().toLowerCase()) ?? [],
+    exclude: [...new Set(
+      (filters.exclude ?? [])
+        .map((adapter) => adapter.trim().toLowerCase())
+        .filter(Boolean),
+    )],
     snapshot: filters.snapshot?.trim() ?? null,
     tag: filters.tag?.trim() ?? null,
     label: filters.label?.trim() ?? null,

@@ -167,7 +167,7 @@ describe('savestate list --json', () => {
       until: ' 2026-01-31T23:59:59Z ',
       platform: ' OpenAI ',
       adapter: ' ChatGPT ',
-      exclude: [' Claude-Code '],
+      exclude: [' Claude-Code ', ' ', 'claude-code'],
       snapshot: ' ss-1 ',
       tag: ' weekly ',
       label: ' pre-update ',
