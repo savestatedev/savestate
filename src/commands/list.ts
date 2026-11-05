@@ -81,9 +81,19 @@ export interface ListJson {
   entries: ListSnapshotJson[];
 }
 
-/** Keep JSON tag values stable when older indexes contain surrounding whitespace. */
+/** Keep JSON tag values stable when older indexes contain whitespace or duplicates. */
 export function normalizeListJsonTags(tags?: string[]): string[] {
-  return (tags ?? []).map((tag) => tag.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const tag of tags ?? []) {
+    const trimmed = tag.trim();
+    const key = trimmed.toLowerCase();
+    if (trimmed && !seen.has(key)) {
+      seen.add(key);
+      normalized.push(trimmed);
+    }
+  }
+  return normalized;
 }
 
 /** Keep JSON labels stable when older indexes contain surrounding whitespace. */
@@ -99,7 +109,11 @@ export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): Lis
     until: filters.until?.trim() ?? null,
     platform: filters.platform?.trim().toLowerCase() ?? null,
     adapter: filters.adapter?.trim().toLowerCase() ?? null,
-    exclude: filters.exclude?.map((adapter) => adapter.trim().toLowerCase()) ?? [],
+    exclude: [...new Set(
+      (filters.exclude ?? [])
+        .map((adapter) => adapter.trim().toLowerCase())
+        .filter(Boolean),
+    )],
     snapshot: filters.snapshot?.trim() ?? null,
     tag: filters.tag?.trim() ?? null,
     label: filters.label?.trim() ?? null,
