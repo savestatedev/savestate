@@ -676,7 +676,7 @@
       <tbody>
         <tr><td><code>--json</code></td><td>Output adapter records as a JSON array. When SaveState is not initialized, emits a missing summary (found, total; omits extra fields). Useful for scripting.</td></tr>
         <tr><td><code>--json-summary</code></td><td>Output an object with <code>found</code>, <code>entries</code>, and pagination metadata including <code>emptyReason</code>, <code>suggestedOffset</code>, and next/previous offsets. When SaveState is not initialized, emits the same empty summary shape. Useful for paginated scripts.</td></tr>
-        <tr><td><code>--platform &lt;id&gt;</code></td><td>Show only adapters reported by the specified platform. Combines with <code>--offset</code> and <code>--limit</code>.</td></tr>
+        <tr><td><code>--platform &lt;id&gt;</code></td><td>Show only adapters reported by the specified platform. Matching is case-insensitive and ignores surrounding whitespace. Must be one non-empty platform ID with no spaces or commas. Combines with <code>--offset</code> and <code>--limit</code>.</td></tr>
         <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of adapters to show. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N adapters. Must be a non-negative integer up to 1000. Applied before <code>--limit</code>.</td></tr>
       </tbody>
