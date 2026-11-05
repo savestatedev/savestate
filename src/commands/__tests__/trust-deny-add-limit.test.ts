@@ -10,11 +10,12 @@ describe('savestate trust deny add --limit', () => {
     expect(parseTrustDenyAddLimit(undefined)).toBeUndefined();
   });
 
-  it('accepts positive integers', () => {
+  it('accepts positive decimal integers with surrounding whitespace', () => {
     expect(parseTrustDenyAddLimit('12')).toBe(12);
+    expect(parseTrustDenyAddLimit(' 12 ')).toBe(12);
   });
 
-  it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
+  it.each(['0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseTrustDenyAddLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
     );
@@ -45,11 +46,18 @@ describe('savestate trust deny add --limit', () => {
     expect(parseTrustDenyAddOffset(undefined)).toBeUndefined();
     expect(parseTrustDenyAddOffset('0')).toBe(0);
     expect(parseTrustDenyAddOffset('1000')).toBe(1000);
+    expect(parseTrustDenyAddOffset(' 12 ')).toBe(12);
     expect(() => parseTrustDenyAddOffset('-1')).toThrow(
       'Invalid --offset value "-1". Expected a non-negative integer up to 1000.',
     );
     expect(() => parseTrustDenyAddOffset('1001')).toThrow(
       'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseTrustDenyAddOffset('1e2')).toThrow(
+      'Invalid --offset value "1e2". Expected a non-negative integer up to 1000.',
+    );
+    expect(() => parseTrustDenyAddOffset('0x10')).toThrow(
+      'Invalid --offset value "0x10". Expected a non-negative integer up to 1000.',
     );
     expect(
       selectTrustDenyAddEntries(

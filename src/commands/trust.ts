@@ -148,7 +148,14 @@ const MAX_TRUST_DENY_ADD_OFFSET = 1000;
 export function parseTrustDenyAddLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRUST_DENY_ADD_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TRUST_DENY_ADD_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_TRUST_DENY_ADD_LIMIT}.`,
@@ -161,7 +168,14 @@ export function parseTrustDenyAddLimit(value: string | undefined): number | unde
 export function parseTrustDenyAddOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_DENY_ADD_OFFSET}.`,
+    );
+  }
+
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_TRUST_DENY_ADD_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_TRUST_DENY_ADD_OFFSET}.`,
