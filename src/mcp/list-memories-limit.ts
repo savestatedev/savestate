@@ -1,4 +1,4 @@
-const MAX_LIST_MEMORIES_LIMIT = 1000;
+export const MAX_LIST_MEMORIES_LIMIT = 1000;
 
 export interface ListMemoriesFilters {
   type?: string;

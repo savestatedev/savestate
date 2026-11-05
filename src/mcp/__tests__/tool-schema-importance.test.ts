@@ -48,6 +48,18 @@ describe('MCP list_memories search schema', () => {
     expect(ListMemoriesInputSchema.parse({ source: '  Claude-Code ' }).source).toBe('Claude-Code');
     expect(() => ListMemoriesInputSchema.parse({ source: '   ' })).toThrow();
   });
+
+  it('advertises and enforces bounded integer pagination', () => {
+    const schema = getTool('list_memories').inputSchema as any;
+    expect(schema.properties.limit).toMatchObject({ type: 'number', minimum: 1, maximum: 1000 });
+    expect(schema.properties.offset).toMatchObject({ type: 'number', minimum: 0, maximum: 1000 });
+    expect(ListMemoriesInputSchema.parse({ limit: 50, offset: 0 })).toMatchObject({
+      limit: 50,
+      offset: 0,
+    });
+    expect(() => ListMemoriesInputSchema.parse({ limit: 1.5 })).toThrow();
+    expect(() => ListMemoriesInputSchema.parse({ offset: 1001 })).toThrow();
+  });
 });
 
 describe('MCP snapshot search schema', () => {
