@@ -191,16 +191,16 @@ const trustCmd = program
 trustCmd
   .command('status')
   .description('Show Trust Kernel metrics: entries by state/scope, denylist size, recent activity')
-  .option('--limit <n>', 'Maximum number of state or scope metric rows to show')
-  .option('--offset <n>', 'Skip the first N state or scope metric rows (non-negative integer up to 1000)')
+  .option('--limit <n>', 'Maximum number of state or scope metric rows to show (positive decimal integer up to 1000)')
+  .option('--offset <n>', 'Skip the first N state or scope metric rows (non-negative decimal integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustStatusCommand);
 
 trustCmd
   .command('audit')
   .description('Show recent state-transition events')
-  .option('--limit <n>', 'Number of recent events to show')
-  .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
+  .option('--limit <n>', 'Number of recent events to show (positive decimal integer up to 1000; default 50)')
+  .option('--offset <n>', 'Skip the first N audit events (non-negative decimal integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustAuditCommand);
 
@@ -213,8 +213,8 @@ denyCmd
   .description('Add a pattern to the denylist (single non-empty pattern)')
   .option('-r, --reason <reason>', 'Why this pattern is denylisted (non-empty)')
   .option('-b, --by <actor>', 'Who is adding this entry (defaults to "cli", single non-empty actor id)')
-  .option('--limit <n>', 'Maximum number of status field rows to show')
-  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
+  .option('--limit <n>', 'Maximum number of status field rows to show (positive decimal integer up to 1000)')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative decimal integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustDenyAddCommand);
 
@@ -222,8 +222,8 @@ denyCmd
   .command('remove <pattern>')
   .alias('rm')
   .description('Remove a pattern from the denylist (exact match; single non-empty pattern)')
-  .option('--limit <n>', 'Maximum number of status field rows to show')
-  .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
+  .option('--limit <n>', 'Maximum number of status field rows to show (positive decimal integer up to 1000)')
+  .option('--offset <n>', 'Skip the first N status field rows (non-negative decimal integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustDenyRemoveCommand);
 
@@ -231,8 +231,8 @@ denyCmd
   .command('list')
   .alias('ls')
   .description('Show all denylist entries')
-  .option('--limit <n>', 'Maximum number of denylist entries to show')
-  .option('--offset <n>', 'Skip the first N denylist entries (non-negative integer up to 1000)')
+  .option('--limit <n>', 'Maximum number of denylist entries to show (positive decimal integer up to 1000)')
+  .option('--offset <n>', 'Skip the first N denylist entries (non-negative decimal integer up to 1000)')
   .option('--json', 'Output as JSON')
   .action(trustDenyListCommand);
 

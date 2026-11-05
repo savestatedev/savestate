@@ -1207,6 +1207,13 @@ describe('CLI docs', () => {
     expect(trust).toContain('export function parseTrustStatusOffset');
   });
 
+  it('describes trust pagination inputs as decimal integers in CLI help', () => {
+    const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
+    expect(trustBlock).toContain('positive decimal integer up to 1000');
+    expect(trustBlock).toContain('non-negative decimal integer up to 1000');
+    expect(trustBlock).toContain('default 50');
+  });
+
   it('registers --json on savestate trust audit', () => {
     const trustBlock = cli.slice(cli.indexOf("command('trust')"), cli.indexOf("command('prune')"));
     const auditBlock = trustBlock.slice(
