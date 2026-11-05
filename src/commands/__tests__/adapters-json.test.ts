@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { formatAdaptersJson, type AdapterListEntry } from '../adapters.js';
+import {
+  formatAdaptersJson,
+  formatAdaptersSummaryJson,
+  type AdapterListEntry,
+} from '../adapters.js';
 
 const adapter: AdapterListEntry = {
   id: 'claude-code',
@@ -22,5 +26,58 @@ describe('savestate adapters --json', () => {
 
   it('prints an empty array when there are no adapters', () => {
     expect(formatAdaptersJson([])).toBe('[]');
+  });
+
+  it('prints recoverable pagination metadata in summary mode', () => {
+    const parsed = JSON.parse(formatAdaptersSummaryJson({
+      entries: [adapter],
+      total: 3,
+      offset: 1,
+      limit: 1,
+    })) as {
+      found: boolean;
+      entries: AdapterListEntry[];
+      pagination: {
+        total: number;
+        shown: number;
+        offset: number;
+        page: number;
+        totalPages: number;
+        hasPrevious: boolean;
+        previousOffset: number | null;
+        hasMore: boolean;
+        nextOffset: number | null;
+        emptyReason: string | null;
+      };
+    };
+
+    expect(parsed.found).toBe(true);
+    expect(parsed.entries).toHaveLength(1);
+    expect(parsed.pagination).toMatchObject({
+      total: 3,
+      shown: 1,
+      offset: 1,
+      page: 2,
+      totalPages: 3,
+      hasPrevious: true,
+      previousOffset: 0,
+      hasMore: true,
+      nextOffset: 2,
+      emptyReason: null,
+    });
+  });
+
+  it('suggests the previous page when a summary offset is exhausted', () => {
+    const parsed = JSON.parse(formatAdaptersSummaryJson({
+      entries: [],
+      total: 1,
+      offset: 2,
+      limit: 1,
+    })) as { pagination: { emptyReason: string; suggestedOffset: number } };
+
+    expect(parsed.pagination).toEqual(expect.objectContaining({
+      emptyReason: 'page',
+      suggestedOffset: 1,
+    }));
   });
 });

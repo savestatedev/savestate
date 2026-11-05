@@ -17,6 +17,7 @@ export interface AdapterListEntry {
 
 interface AdaptersOptions {
   json?: boolean;
+  jsonSummary?: boolean;
   limit?: string;
   offset?: string;
   platform?: string;
@@ -144,6 +145,69 @@ export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
   return JSON.stringify(adapters, null, 2);
 }
 
+export interface AdaptersSummaryJson {
+  found: boolean;
+  entries: AdapterListEntry[];
+  pagination: {
+    total: number;
+    shown: number;
+    offset: number;
+    limit: number | null;
+    page: number;
+    pageSize: number | null;
+    totalPages: number;
+    emptyReason: 'collection' | 'page' | null;
+    suggestedOffset: number | null;
+    hasPrevious: boolean;
+    previousOffset: number | null;
+    hasMore: boolean;
+    nextOffset: number | null;
+  };
+}
+
+/** Keep adapter pagination recoverable for scripts without changing --json arrays. */
+export function formatAdaptersSummaryJson(input: {
+  entries: AdapterListEntry[];
+  total: number;
+  offset?: number;
+  limit?: number;
+}): string {
+  const offset = input.offset ?? 0;
+  const limit = input.limit ?? null;
+  const shown = input.entries.length;
+  const pageSize = limit;
+  const page = limit === null ? (shown > 0 ? 1 : 0) : Math.floor(offset / limit) + 1;
+  const totalPages = limit === null ? (input.total > 0 ? 1 : 0) : Math.ceil(input.total / limit);
+  const hasMore = limit !== null && offset + shown < input.total;
+  const suggestedOffset = shown === 0 && offset > 0
+    ? Math.max(0, offset - (limit ?? 1))
+    : null;
+
+  return JSON.stringify(
+    {
+      found: shown > 0,
+      entries: input.entries,
+      pagination: {
+        total: input.total,
+        shown,
+        offset,
+        limit,
+        page,
+        pageSize,
+        totalPages,
+        emptyReason: shown === 0 ? (offset > 0 ? 'page' : 'collection') : null,
+        suggestedOffset,
+        hasPrevious: offset > 0,
+        previousOffset: offset > 0 ? Math.max(0, offset - (limit ?? 1)) : null,
+        hasMore,
+        nextOffset: hasMore ? offset + shown : null,
+      },
+    } satisfies AdaptersSummaryJson,
+    null,
+    2,
+  );
+}
+
 export interface AdaptersMissingJson {
   found: false;
   total: 0;
@@ -162,6 +226,10 @@ export function formatAdaptersMissingJson(): string {
 
 export async function adaptersCommand(options: AdaptersOptions = {}): Promise<void> {
   if (!isInitialized()) {
+    if (options.jsonSummary) {
+      console.log(formatAdaptersSummaryJson({ entries: [], total: 0 }));
+      return;
+    }
     if (options.json) {
       console.log(formatAdaptersMissingJson());
       return;
@@ -190,6 +258,16 @@ export async function adaptersCommand(options: AdaptersOptions = {}): Promise<vo
       limit,
     );
     spinner?.stop();
+
+    if (options.jsonSummary) {
+      console.log(formatAdaptersSummaryJson({
+        entries: adapterInfos,
+        total: filteredAdapterInfos.length,
+        offset: offset ?? 0,
+        limit,
+      }));
+      return;
+    }
 
     if (options.json) {
       console.log(formatAdaptersJson(adapterInfos));
