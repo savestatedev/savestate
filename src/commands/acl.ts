@@ -77,7 +77,11 @@ export function formatAclListJsonSummary(
     ? commitments.slice(offset)
     : commitments.slice(offset, offset + limit);
   const suggestedOffset = suggestAclListOffset(commitments.length, page.length, limit);
-  const hasMore = limit !== undefined && offset + page.length < commitments.length;
+  const pageEnd = offset + page.length;
+  // Never advertise a continuation that parseAclOffset will reject.
+  const hasMore = limit !== undefined
+    && pageEnd < commitments.length
+    && pageEnd <= MAX_ACL_OFFSET;
   const totalPages = limit === undefined
     ? commitments.length > 0 ? 1 : 0
     : Math.ceil(commitments.length / limit);
@@ -102,7 +106,7 @@ export function formatAclListJsonSummary(
         : Math.max(0, offset - (limit ?? offset))
       : null,
     hasMore,
-    nextOffset: hasMore ? offset + page.length : null,
+    nextOffset: hasMore ? pageEnd : null,
     suggestedOffset,
     entries: page.map(toCommitmentJson),
   };

@@ -68,4 +68,21 @@ describe('savestate acl list --json-summary', () => {
     });
     expect(summary.entries).toEqual([]);
   });
+
+  it('does not advertise a continuation beyond the bounded offset', () => {
+    const summary = JSON.parse(formatAclListJsonSummary(
+      Array.from({ length: 1002 }, (_, index) => commitment(`cmt-${index}`)),
+      1000,
+      1,
+    ));
+
+    expect(summary).toMatchObject({
+      offset: 1000,
+      maxOffset: 1000,
+      shown: 1,
+      remaining: 1,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
 });
