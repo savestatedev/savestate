@@ -3492,6 +3492,7 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('--offset');
     expect(aclSection).toContain('--state');
     expect(aclSection).toContain('type filter for <code>list</code>');
+    expect(aclSection).toContain('criticality filter for <code>list</code>');
     expect(aclSection).toContain('customer_promise');
     expect(aclSection).toContain('Active Commitment Layer');
   });

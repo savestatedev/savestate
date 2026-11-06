@@ -60,6 +60,7 @@ export interface AclListJsonSummary {
   pageSize: number | null;
   state: CommitmentState | null;
   type: CommitmentType | null;
+  criticality: Criticality | null;
   page: number;
   totalPages: number;
   hasPrevious: boolean;
@@ -77,6 +78,7 @@ export function formatAclListJsonSummary(
   limit?: number,
   state?: CommitmentState,
   type?: CommitmentType,
+  criticality?: Criticality,
 ): string {
   const page = limit === undefined
     ? commitments.slice(offset)
@@ -105,6 +107,7 @@ export function formatAclListJsonSummary(
     pageSize: limit ?? null,
     state: state ?? null,
     type: type ?? null,
+    criticality: criticality ?? null,
     page: limit === undefined
       ? commitments.length > 0 ? 1 : 0
       : Math.floor(offset / limit) + 1,
@@ -142,12 +145,14 @@ export function formatAclListHeading(
   limit: number | undefined,
   state?: CommitmentState,
   type?: CommitmentType,
+  criticality?: Criticality,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
     limit === undefined ? undefined : `limit ${limit}`,
     state === undefined ? undefined : `state ${state}`,
     type === undefined ? undefined : `type ${type}`,
+    criticality === undefined ? undefined : `criticality ${criticality}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   return `Found ${count} commitment(s)${suffix}:`;
@@ -159,12 +164,14 @@ export function formatAclListEmpty(
   suggestedOffset: number | null = null,
   state?: CommitmentState,
   type?: CommitmentType,
+  criticality?: Criticality,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
     limit === undefined ? undefined : `limit ${limit}`,
     state === undefined ? undefined : `state ${state}`,
     type === undefined ? undefined : `type ${type}`,
+    criticality === undefined ? undefined : `criticality ${criticality}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   const recovery = suggestedOffset === null
@@ -407,10 +414,12 @@ export function filterAclCommitments(
   commitments: Commitment[],
   state: CommitmentState | undefined,
   type?: CommitmentType,
+  criticality?: Criticality,
 ): Commitment[] {
   return commitments.filter((commitment) =>
     (state === undefined || commitment.state === state)
-    && (type === undefined || commitment.type === type),
+    && (type === undefined || commitment.type === type)
+    && (criticality === undefined || commitment.criticality === criticality),
   );
 }
 
@@ -637,10 +646,13 @@ async function aclList(options: AclCommandOptions = {}) {
     const limit = parseAclLimit(options.limit);
     const state = parseAclState(options.state);
     const type = options.type === undefined ? undefined : parseAclType(options.type);
-    const allCommitments = filterAclCommitments(listCommitments(), state, type);
+    const criticality = options.criticality === undefined
+      ? undefined
+      : parseAclCriticality(options.criticality);
+    const allCommitments = filterAclCommitments(listCommitments(), state, type, criticality);
     const commitments = applyAclLimit(applyAclOffset(allCommitments, offset), limit);
     if (options.jsonSummary) {
-      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit, state, type));
+      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit, state, type, criticality));
       return;
     }
     if (options.json) {
@@ -654,10 +666,11 @@ async function aclList(options: AclCommandOptions = {}) {
         suggestAclListOffset(allCommitments.length, commitments.length, limit),
         state,
         type,
+        criticality,
       ));
       return;
     }
-    console.log(`${formatAclListHeading(commitments.length, offset, limit, state, type)}\n`);
+    console.log(`${formatAclListHeading(commitments.length, offset, limit, state, type, criticality)}\n`);
     commitments.forEach((c) => {
       console.log(`ID: ${c.id}`);
       console.log(`  Type: ${c.type} (${c.criticality})`);
