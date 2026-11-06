@@ -86,6 +86,23 @@ describe('savestate acl list --json-summary', () => {
     });
   });
 
+  it('reports only pages reachable within the offset ceiling', () => {
+    const summary = JSON.parse(formatAclListJsonSummary(
+      Array.from({ length: 1200 }, (_, index) => commitment(`cmt-${index}`)),
+      1000,
+      100,
+    ));
+
+    expect(summary).toMatchObject({
+      offset: 1000,
+      maxOffset: 1000,
+      page: 11,
+      totalPages: 11,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('caps stale-page recovery at the supported offset ceiling', () => {
     const summary = JSON.parse(formatAclListJsonSummary(
       Array.from({ length: 1200 }, (_, index) => commitment(`cmt-${index}`)),

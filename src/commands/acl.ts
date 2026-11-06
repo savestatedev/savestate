@@ -84,7 +84,10 @@ export function formatAclListJsonSummary(
     && pageEnd <= MAX_ACL_OFFSET;
   const totalPages = limit === undefined
     ? commitments.length > 0 ? 1 : 0
-    : Math.ceil(commitments.length / limit);
+    : Math.min(
+      Math.ceil(commitments.length / limit),
+      Math.floor(MAX_ACL_OFFSET / limit) + 1,
+    );
   const result: AclListJsonSummary = {
     found: page.length > 0,
     total: commitments.length,
