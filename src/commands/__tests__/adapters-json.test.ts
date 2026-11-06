@@ -69,7 +69,7 @@ describe('savestate adapters --json', () => {
     });
   });
 
-  it('suggests the previous page when a summary offset is exhausted', () => {
+  it('suggests the nearest populated page when a summary offset is exhausted', () => {
     const parsed = JSON.parse(formatAdaptersSummaryJson({
       entries: [],
       total: 1,
@@ -79,8 +79,20 @@ describe('savestate adapters --json', () => {
 
     expect(parsed.pagination).toEqual(expect.objectContaining({
       emptyReason: 'page',
-      suggestedOffset: 1,
+      suggestedOffset: 0,
     }));
+  });
+
+  it('recovers from a distant exhausted offset on the final populated page', () => {
+    const parsed = JSON.parse(formatAdaptersSummaryJson({
+      entries: [],
+      total: 5,
+      offset: 1000,
+      limit: 2,
+    })) as { pagination: { suggestedOffset: number; previousOffset: number } };
+
+    expect(parsed.pagination.suggestedOffset).toBe(4);
+    expect(parsed.pagination.previousOffset).toBe(4);
   });
 
   it('matches platform filters without case or whitespace surprises', () => {

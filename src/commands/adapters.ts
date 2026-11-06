@@ -187,7 +187,9 @@ export function formatAdaptersSummaryJson(input: {
   const totalPages = limit === null ? (input.total > 0 ? 1 : 0) : Math.ceil(input.total / limit);
   const hasMore = limit !== null && offset + shown < input.total;
   const suggestedOffset = shown === 0 && offset > 0
-    ? Math.max(0, offset - (limit ?? 1))
+    ? limit === null
+      ? 0
+      : Math.floor((input.total - 1) / limit) * limit
     : null;
 
   return JSON.stringify(
@@ -205,7 +207,11 @@ export function formatAdaptersSummaryJson(input: {
         emptyReason: shown === 0 ? (offset > 0 ? 'page' : 'collection') : null,
         suggestedOffset,
         hasPrevious: offset > 0,
-        previousOffset: offset > 0 ? Math.max(0, offset - (limit ?? 1)) : null,
+        previousOffset: offset > 0
+          ? shown === 0 && suggestedOffset !== null
+            ? suggestedOffset
+            : Math.max(0, offset - (limit ?? 1))
+          : null,
         hasMore,
         nextOffset: hasMore ? offset + shown : null,
       },
