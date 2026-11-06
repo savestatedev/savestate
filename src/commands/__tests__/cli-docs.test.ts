@@ -3490,6 +3490,7 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('--approve');
     expect(aclSection).toContain('--action');
     expect(aclSection).toContain('--offset');
+    expect(aclSection).toContain('--state');
     expect(aclSection).toContain('customer_promise');
     expect(aclSection).toContain('Active Commitment Layer');
   });
@@ -3498,6 +3499,7 @@ describe('CLI docs', () => {
     const listBlock = acl.slice(acl.indexOf("command('acl <subcommand>')"));
     expect(listBlock).toContain(".option('--json'");
     expect(listBlock).toContain(".option('--offset <n>'");
+    expect(listBlock).toContain(".option('--state <state>'");
   });
 
   it('documents acl subcommand as a single acl action', () => {
