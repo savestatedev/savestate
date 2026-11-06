@@ -118,4 +118,19 @@ describe('savestate acl list --json-summary', () => {
       previousOffset: 1000,
     });
   });
+
+  it('suggests the collection start for an exhausted offset-only page', () => {
+    const summary = JSON.parse(formatAclListJsonSummary(
+      [commitment('cmt-a'), commitment('cmt-b')],
+      10,
+    ));
+
+    expect(summary).toMatchObject({
+      found: false,
+      emptyReason: 'page',
+      offset: 10,
+      suggestedOffset: 0,
+      previousOffset: 0,
+    });
+  });
 });
