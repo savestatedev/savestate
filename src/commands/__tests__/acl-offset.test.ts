@@ -54,12 +54,12 @@ describe('savestate acl list --offset', () => {
     expect(formatAclListEmpty(undefined, undefined)).toBe('No commitments found.');
   });
 
-  it('suggests the nearest populated page for an exhausted bounded page', () => {
+  it('suggests the nearest populated page for an exhausted page', () => {
     expect(suggestAclListOffset(11, 0, 5)).toBe(10);
+    expect(suggestAclListOffset(11, 0, undefined)).toBe(0);
     expect(formatAclListEmpty(15, 5, 10)).toBe(
       'No commitments found (skipped 15, limit 5). Try --offset 10 to open the nearest available page.',
     );
     expect(suggestAclListOffset(0, 0, 5)).toBeNull();
-    expect(suggestAclListOffset(11, 0, undefined)).toBeNull();
   });
 });

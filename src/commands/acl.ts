@@ -122,9 +122,11 @@ export function suggestAclListOffset(
   shown: number,
   limit: number | undefined,
 ): number | null {
-  return shown === 0 && total > 0 && limit !== undefined
-    ? Math.min(Math.floor((total - 1) / limit) * limit, MAX_ACL_OFFSET)
-    : null;
+  if (shown !== 0 || total === 0) return null;
+  // An offset-only request returns every remaining commitment, so the only
+  // populated recovery page is the collection start.
+  if (limit === undefined) return 0;
+  return Math.min(Math.floor((total - 1) / limit) * limit, MAX_ACL_OFFSET);
 }
 
 export function formatAclListHeading(
