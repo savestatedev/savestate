@@ -8,6 +8,7 @@ import {
   filterMemoryListByTags,
   getMemoryListSummary,
   countByFreshness,
+  normalizeMemoryListNamespace,
   type MemoryListJson,
 } from '../memory.js';
 
@@ -38,6 +39,15 @@ describe('savestate memory --json', () => {
     ];
 
     expect(filterMemoryListByNamespace(entries, ' org:app:agent ')).toEqual([entries[0]]);
+  });
+
+  it('normalizes padded namespaces in JSON filters', () => {
+    const parsed = JSON.parse(formatMemoryListJson([], [], {
+      filters: { namespace: '  org:app:agent  ' },
+    })) as MemoryListJson;
+
+    expect(normalizeMemoryListNamespace('  org:app:agent  ')).toBe('org:app:agent');
+    expect(parsed.filters.namespace).toBe('org:app:agent');
   });
 
   it('matches every requested tag after normalizing legacy metadata', () => {

@@ -395,7 +395,9 @@ export function formatMemoryListJson(
       source: pagination.filters?.source === undefined
         ? null
         : normalizeMemoryListSource(pagination.filters.source),
-      namespace: pagination.filters?.namespace ?? null,
+      namespace: pagination.filters?.namespace === undefined
+        ? null
+        : normalizeMemoryListNamespace(pagination.filters.namespace),
       content: pagination.filters?.content ?? null,
       tags: pagination.filters?.tags == null
         ? null
@@ -476,6 +478,11 @@ export function filterMemoryListByNamespace(
     typeof entry.metadata?.namespace === 'string' &&
     entry.metadata.namespace.trim() === normalizedNamespace,
   );
+}
+
+/** Keep padding out of machine-readable memory list filter metadata. */
+export function normalizeMemoryListNamespace(namespace: string | undefined): string {
+  return namespace?.trim() ?? '';
 }
 
 /** Keep memories captured by the requested source id, ignoring letter case. */
