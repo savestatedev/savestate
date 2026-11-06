@@ -47,6 +47,77 @@ export function formatAclListJson(commitments: Commitment[]): string {
   return JSON.stringify(commitments.map(toCommitmentJson), null, 2);
 }
 
+export interface AclListJsonSummary {
+  found: boolean;
+  total: number;
+  shown: number;
+  remaining: number;
+  emptyReason: 'collection' | 'page' | null;
+  offset: number;
+  limit: number | null;
+  pageSize: number | null;
+  page: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  hasMore: boolean;
+  nextOffset: number | null;
+  suggestedOffset: number | null;
+  entries: AclCommitmentJson[];
+}
+
+/** Include page state for scripts without changing the legacy --json array shape. */
+export function formatAclListJsonSummary(
+  commitments: Commitment[],
+  offset = 0,
+  limit?: number,
+): string {
+  const page = limit === undefined
+    ? commitments.slice(offset)
+    : commitments.slice(offset, offset + limit);
+  const suggestedOffset = suggestAclListOffset(commitments.length, page.length, limit);
+  const hasMore = limit !== undefined && offset + page.length < commitments.length;
+  const totalPages = limit === undefined
+    ? commitments.length > 0 ? 1 : 0
+    : Math.ceil(commitments.length / limit);
+  const result: AclListJsonSummary = {
+    found: page.length > 0,
+    total: commitments.length,
+    shown: page.length,
+    remaining: Math.max(0, commitments.length - offset - page.length),
+    emptyReason: page.length > 0 ? null : commitments.length === 0 ? 'collection' : 'page',
+    offset,
+    limit: limit ?? null,
+    pageSize: limit ?? null,
+    page: limit === undefined
+      ? commitments.length > 0 ? 1 : 0
+      : Math.floor(offset / limit) + 1,
+    totalPages,
+    hasPrevious: offset > 0,
+    previousOffset: offset > 0
+      ? suggestedOffset !== null
+        ? suggestedOffset
+        : Math.max(0, offset - (limit ?? offset))
+      : null,
+    hasMore,
+    nextOffset: hasMore ? offset + page.length : null,
+    suggestedOffset,
+    entries: page.map(toCommitmentJson),
+  };
+  return JSON.stringify(result, null, 2);
+}
+
+/** Find the nearest populated page when a bounded ACL page is past the collection. */
+export function suggestAclListOffset(
+  total: number,
+  shown: number,
+  limit: number | undefined,
+): number | null {
+  return shown === 0 && total > 0 && limit !== undefined
+    ? Math.floor((total - 1) / limit) * limit
+    : null;
+}
+
 export function formatAclListHeading(
   count: number,
   offset: number | undefined,
@@ -63,13 +134,17 @@ export function formatAclListHeading(
 export function formatAclListEmpty(
   offset: number | undefined,
   limit: number | undefined,
+  suggestedOffset: number | null = null,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
     limit === undefined ? undefined : `limit ${limit}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
-  return `No commitments found${suffix}.`;
+  const recovery = suggestedOffset === null
+    ? ''
+    : ` Try --offset ${suggestedOffset} to open the nearest available page.`;
+  return `No commitments found${suffix}.${recovery}`;
 }
 
 export function formatAclGateJson(result: AclGateResult): string {
@@ -297,6 +372,7 @@ interface AclCommandOptions {
   limit?: string;
   offset?: string;
   json?: boolean;
+  jsonSummary?: boolean;
 }
 
 const MAX_ACL_LIMIT = 1000;
@@ -503,16 +579,22 @@ async function aclList(options: AclCommandOptions = {}) {
   try {
     const offset = parseAclOffset(options.offset);
     const limit = parseAclLimit(options.limit);
-    const commitments = applyAclLimit(
-      applyAclOffset(listCommitments(), offset),
-      limit,
-    );
+    const allCommitments = listCommitments();
+    const commitments = applyAclLimit(applyAclOffset(allCommitments, offset), limit);
+    if (options.jsonSummary) {
+      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit));
+      return;
+    }
     if (options.json) {
       console.log(formatAclListJson(commitments));
       return;
     }
     if (commitments.length === 0) {
-      console.log(formatAclListEmpty(offset, limit));
+      console.log(formatAclListEmpty(
+        offset,
+        limit,
+        suggestAclListOffset(allCommitments.length, commitments.length, limit),
+      ));
       return;
     }
     console.log(`${formatAclListHeading(commitments.length, offset, limit)}\n`);
@@ -559,5 +641,6 @@ export function registerACLCommands(program: Command) {
     .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify, gate, or propose')
     .option('--offset <n>', 'Skip the first N commitments on list before applying --limit (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
+    .option('--json-summary', 'Output list pagination metadata and entries as JSON')
     .action(aclCommand);
 }
