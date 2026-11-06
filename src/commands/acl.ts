@@ -44,6 +44,18 @@ export function formatAclCommitmentJson(commitment: Commitment): string {
   return JSON.stringify(toCommitmentJson(commitment), null, 2);
 }
 
+/** Keep human-readable ACL rows aligned with the fields users filter on. */
+export function formatAclCommitmentText(commitment: Commitment): string {
+  return [
+    `ID: ${commitment.id}`,
+    `  Type: ${commitment.type} (${commitment.criticality})`,
+    `  State: ${commitment.state}`,
+    `  Proposer: ${commitment.proposer}`,
+    `  Description: ${commitment.description}`,
+    '',
+  ].join('\n');
+}
+
 export function formatAclListJson(commitments: Commitment[]): string {
   return JSON.stringify(commitments.map(toCommitmentJson), null, 2);
 }
@@ -684,13 +696,7 @@ async function aclList(options: AclCommandOptions = {}) {
       return;
     }
     console.log(`${formatAclListHeading(commitments.length, offset, limit, state, type, criticality, proposer)}\n`);
-    commitments.forEach((c) => {
-      console.log(`ID: ${c.id}`);
-      console.log(`  Type: ${c.type} (${c.criticality})`);
-      console.log(`  State: ${c.state}`);
-      console.log(`  Description: ${c.description}`);
-      console.log('');
-    });
+    commitments.forEach((commitment) => console.log(formatAclCommitmentText(commitment)));
   } catch (error: any) {
     console.error('Error listing commitments:', error.message);
     process.exit(1);
