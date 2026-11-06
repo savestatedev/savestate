@@ -59,6 +59,7 @@ export interface AclListJsonSummary {
   limit: number | null;
   pageSize: number | null;
   state: CommitmentState | null;
+  type: CommitmentType | null;
   page: number;
   totalPages: number;
   hasPrevious: boolean;
@@ -75,6 +76,7 @@ export function formatAclListJsonSummary(
   offset = 0,
   limit?: number,
   state?: CommitmentState,
+  type?: CommitmentType,
 ): string {
   const page = limit === undefined
     ? commitments.slice(offset)
@@ -102,6 +104,7 @@ export function formatAclListJsonSummary(
     limit: limit ?? null,
     pageSize: limit ?? null,
     state: state ?? null,
+    type: type ?? null,
     page: limit === undefined
       ? commitments.length > 0 ? 1 : 0
       : Math.floor(offset / limit) + 1,
@@ -138,11 +141,13 @@ export function formatAclListHeading(
   offset: number | undefined,
   limit: number | undefined,
   state?: CommitmentState,
+  type?: CommitmentType,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
     limit === undefined ? undefined : `limit ${limit}`,
     state === undefined ? undefined : `state ${state}`,
+    type === undefined ? undefined : `type ${type}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   return `Found ${count} commitment(s)${suffix}:`;
@@ -153,11 +158,13 @@ export function formatAclListEmpty(
   limit: number | undefined,
   suggestedOffset: number | null = null,
   state?: CommitmentState,
+  type?: CommitmentType,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
     limit === undefined ? undefined : `limit ${limit}`,
     state === undefined ? undefined : `state ${state}`,
+    type === undefined ? undefined : `type ${type}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   const recovery = suggestedOffset === null
@@ -399,10 +406,12 @@ export function parseAclState(value: string | undefined): CommitmentState | unde
 export function filterAclCommitments(
   commitments: Commitment[],
   state: CommitmentState | undefined,
+  type?: CommitmentType,
 ): Commitment[] {
-  return state === undefined
-    ? commitments
-    : commitments.filter((commitment) => commitment.state === state);
+  return commitments.filter((commitment) =>
+    (state === undefined || commitment.state === state)
+    && (type === undefined || commitment.type === type),
+  );
 }
 
 interface AclCommandOptions {
@@ -627,10 +636,11 @@ async function aclList(options: AclCommandOptions = {}) {
     const offset = parseAclOffset(options.offset);
     const limit = parseAclLimit(options.limit);
     const state = parseAclState(options.state);
-    const allCommitments = filterAclCommitments(listCommitments(), state);
+    const type = options.type === undefined ? undefined : parseAclType(options.type);
+    const allCommitments = filterAclCommitments(listCommitments(), state, type);
     const commitments = applyAclLimit(applyAclOffset(allCommitments, offset), limit);
     if (options.jsonSummary) {
-      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit, state));
+      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit, state, type));
       return;
     }
     if (options.json) {
@@ -643,10 +653,11 @@ async function aclList(options: AclCommandOptions = {}) {
         limit,
         suggestAclListOffset(allCommitments.length, commitments.length, limit),
         state,
+        type,
       ));
       return;
     }
-    console.log(`${formatAclListHeading(commitments.length, offset, limit, state)}\n`);
+    console.log(`${formatAclListHeading(commitments.length, offset, limit, state, type)}\n`);
     commitments.forEach((c) => {
       console.log(`ID: ${c.id}`);
       console.log(`  Type: ${c.type} (${c.criticality})`);

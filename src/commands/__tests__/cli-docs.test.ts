@@ -3491,6 +3491,7 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('--action');
     expect(aclSection).toContain('--offset');
     expect(aclSection).toContain('--state');
+    expect(aclSection).toContain('type filter for <code>list</code>');
     expect(aclSection).toContain('customer_promise');
     expect(aclSection).toContain('Active Commitment Layer');
   });
@@ -3500,6 +3501,7 @@ describe('CLI docs', () => {
     expect(listBlock).toContain(".option('--json'");
     expect(listBlock).toContain(".option('--offset <n>'");
     expect(listBlock).toContain(".option('--state <state>'");
+    expect(listBlock).toContain(".option('-t, --type <type>'");
   });
 
   it('documents acl subcommand as a single acl action', () => {

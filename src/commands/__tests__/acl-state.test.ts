@@ -39,14 +39,26 @@ describe('savestate acl list --state', () => {
     expect(filterAclCommitments(commitments, undefined)).toEqual(commitments);
   });
 
+  it('combines state and type filters before pagination', () => {
+    const commitments = [
+      commitment('cmt-active-promise', 'active'),
+      { ...commitment('cmt-active-write', 'active'), type: 'account_tool_write' as const },
+      commitment('cmt-proposed-promise', 'proposed'),
+    ];
+    expect(filterAclCommitments(commitments, 'active', 'customer_promise').map(({ id }) => id))
+      .toEqual(['cmt-active-promise']);
+  });
+
   it('reports the state filter in JSON pagination metadata', () => {
     const summary = JSON.parse(formatAclListJsonSummary(
       [commitment('cmt-active', 'active')],
       0,
       10,
       'active',
+      'customer_promise',
     ));
     expect(summary.state).toBe('active');
+    expect(summary.type).toBe('customer_promise');
     expect(summary.entries.map((entry: { id: string }) => entry.id)).toEqual(['cmt-active']);
   });
 
@@ -55,5 +67,6 @@ describe('savestate acl list --state', () => {
       'Found 1 commitment(s) (skipped 0, limit 5, state active):',
     );
     expect(formatAclListEmpty(10, 5, 5, 'active')).toContain('state active');
+    expect(formatAclListHeading(1, 0, 5, 'active', 'customer_promise')).toContain('type customer_promise');
   });
 });
