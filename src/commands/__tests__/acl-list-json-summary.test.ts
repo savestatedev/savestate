@@ -85,4 +85,20 @@ describe('savestate acl list --json-summary', () => {
       nextOffset: null,
     });
   });
+
+  it('caps stale-page recovery at the supported offset ceiling', () => {
+    const summary = JSON.parse(formatAclListJsonSummary(
+      Array.from({ length: 1200 }, (_, index) => commitment(`cmt-${index}`)),
+      1500,
+      100,
+    ));
+
+    expect(summary).toMatchObject({
+      offset: 1500,
+      maxOffset: 1000,
+      emptyReason: 'page',
+      suggestedOffset: 1000,
+      previousOffset: 1000,
+    });
+  });
 });

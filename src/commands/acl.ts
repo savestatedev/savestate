@@ -120,7 +120,7 @@ export function suggestAclListOffset(
   limit: number | undefined,
 ): number | null {
   return shown === 0 && total > 0 && limit !== undefined
-    ? Math.floor((total - 1) / limit) * limit
+    ? Math.min(Math.floor((total - 1) / limit) * limit, MAX_ACL_OFFSET)
     : null;
 }
 
