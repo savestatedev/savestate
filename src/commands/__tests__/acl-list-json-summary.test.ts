@@ -30,6 +30,7 @@ describe('savestate acl list --json-summary', () => {
       remaining: 1,
       emptyReason: null,
       offset: 1,
+      maxOffset: 1000,
       limit: 1,
       pageSize: 1,
       page: 2,
@@ -66,5 +67,55 @@ describe('savestate acl list --json-summary', () => {
       suggestedOffset: 2,
     });
     expect(summary.entries).toEqual([]);
+  });
+
+  it('does not advertise a continuation beyond the bounded offset', () => {
+    const summary = JSON.parse(formatAclListJsonSummary(
+      Array.from({ length: 1002 }, (_, index) => commitment(`cmt-${index}`)),
+      1000,
+      1,
+    ));
+
+    expect(summary).toMatchObject({
+      offset: 1000,
+      maxOffset: 1000,
+      shown: 1,
+      remaining: 1,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
+  it('reports only pages reachable within the offset ceiling', () => {
+    const summary = JSON.parse(formatAclListJsonSummary(
+      Array.from({ length: 1200 }, (_, index) => commitment(`cmt-${index}`)),
+      1000,
+      100,
+    ));
+
+    expect(summary).toMatchObject({
+      offset: 1000,
+      maxOffset: 1000,
+      page: 11,
+      totalPages: 11,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
+  it('caps stale-page recovery at the supported offset ceiling', () => {
+    const summary = JSON.parse(formatAclListJsonSummary(
+      Array.from({ length: 1200 }, (_, index) => commitment(`cmt-${index}`)),
+      1500,
+      100,
+    ));
+
+    expect(summary).toMatchObject({
+      offset: 1500,
+      maxOffset: 1000,
+      emptyReason: 'page',
+      suggestedOffset: 1000,
+      previousOffset: 1000,
+    });
   });
 });

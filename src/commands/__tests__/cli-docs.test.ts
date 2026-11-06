@@ -3520,6 +3520,7 @@ describe('CLI docs', () => {
     const aclBlock = acl.slice(acl.indexOf("command('acl <subcommand>')"));
     expect(aclSection).toContain('--json-summary');
     expect(aclSection).toContain('remaining');
+    expect(aclSection).toContain('maxOffset');
     expect(aclSection).toContain('suggestedOffset');
     expect(aclSection).toContain('nearest available offset');
     expect(aclSection).toContain('savestate acl list --offset 10 --limit 5 --json-summary');

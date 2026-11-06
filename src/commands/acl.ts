@@ -54,6 +54,7 @@ export interface AclListJsonSummary {
   remaining: number;
   emptyReason: 'collection' | 'page' | null;
   offset: number;
+  maxOffset: number;
   limit: number | null;
   pageSize: number | null;
   page: number;
@@ -76,10 +77,17 @@ export function formatAclListJsonSummary(
     ? commitments.slice(offset)
     : commitments.slice(offset, offset + limit);
   const suggestedOffset = suggestAclListOffset(commitments.length, page.length, limit);
-  const hasMore = limit !== undefined && offset + page.length < commitments.length;
+  const pageEnd = offset + page.length;
+  // Never advertise a continuation that parseAclOffset will reject.
+  const hasMore = limit !== undefined
+    && pageEnd < commitments.length
+    && pageEnd <= MAX_ACL_OFFSET;
   const totalPages = limit === undefined
     ? commitments.length > 0 ? 1 : 0
-    : Math.ceil(commitments.length / limit);
+    : Math.min(
+      Math.ceil(commitments.length / limit),
+      Math.floor(MAX_ACL_OFFSET / limit) + 1,
+    );
   const result: AclListJsonSummary = {
     found: page.length > 0,
     total: commitments.length,
@@ -87,6 +95,7 @@ export function formatAclListJsonSummary(
     remaining: Math.max(0, commitments.length - offset - page.length),
     emptyReason: page.length > 0 ? null : commitments.length === 0 ? 'collection' : 'page',
     offset,
+    maxOffset: MAX_ACL_OFFSET,
     limit: limit ?? null,
     pageSize: limit ?? null,
     page: limit === undefined
@@ -100,7 +109,7 @@ export function formatAclListJsonSummary(
         : Math.max(0, offset - (limit ?? offset))
       : null,
     hasMore,
-    nextOffset: hasMore ? offset + page.length : null,
+    nextOffset: hasMore ? pageEnd : null,
     suggestedOffset,
     entries: page.map(toCommitmentJson),
   };
@@ -114,7 +123,7 @@ export function suggestAclListOffset(
   limit: number | undefined,
 ): number | null {
   return shown === 0 && total > 0 && limit !== undefined
-    ? Math.floor((total - 1) / limit) * limit
+    ? Math.min(Math.floor((total - 1) / limit) * limit, MAX_ACL_OFFSET)
     : null;
 }
 
