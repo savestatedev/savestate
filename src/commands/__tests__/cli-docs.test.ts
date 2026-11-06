@@ -3494,6 +3494,7 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('type filter for <code>list</code>');
     expect(aclSection).toContain('criticality filter for <code>list</code>');
     expect(aclSection).toContain('proposer filter for <code>list</code>');
+    expect(aclSection).toContain('verifier filter for <code>list</code>');
     expect(aclSection).toContain('customer_promise');
     expect(aclSection).toContain('Active Commitment Layer');
   });
@@ -3531,6 +3532,7 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('nearest available offset');
     expect(aclSection).toContain('savestate acl list --offset 10 --limit 5 --json-summary');
     expect(aclSection).toContain('savestate acl list --proposer agent-1 --json-summary');
+    expect(aclSection).toContain('savestate acl list --verifier reviewer-1 --json-summary');
     expect(aclBlock).toContain(".option('--json-summary'");
     expect(acl).toContain('export function formatAclListJsonSummary');
   });
