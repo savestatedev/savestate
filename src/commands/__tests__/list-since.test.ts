@@ -27,4 +27,10 @@ describe('savestate list --since', () => {
       'Invalid --since value "2026-02-30". Expected an ISO 8601 date.',
     );
   });
+
+  it('rejects impossible calendar values in timestamps instead of normalizing them', () => {
+    expect(() => parseListSince('2026-02-30T00:00:00Z')).toThrow(
+      'Invalid --since value "2026-02-30T00:00:00Z". Expected an ISO 8601 date.',
+    );
+  });
 });

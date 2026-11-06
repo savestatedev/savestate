@@ -316,20 +316,17 @@ export function parseListSince(value: string | undefined): number | undefined {
 
   // Date-only input is a human-facing calendar boundary. Validate the
   // calendar date before parsing so JavaScript cannot silently normalize an
-  // impossible date such as 2026-02-30 into a later day.
+  // impossible date such as 2026-02-30 into a later day. Apply the same
+  // protection to timestamps, whose calendar prefix is normalized too.
   const normalized = value.trim();
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
   let ms: number;
   if (dateOnly) {
-    const [, year, month, day] = dateOnly;
-    const startOfDay = new Date(`${normalized}T00:00:00.000Z`);
-    const isValidCalendarDate =
-      startOfDay.getUTCFullYear() === Number(year) &&
-      startOfDay.getUTCMonth() + 1 === Number(month) &&
-      startOfDay.getUTCDate() === Number(day);
-    ms = isValidCalendarDate ? startOfDay.getTime() : Number.NaN;
+    ms = isValidListCalendarDate(normalized)
+      ? new Date(`${normalized}T00:00:00.000Z`).getTime()
+      : Number.NaN;
   } else {
-    ms = new Date(value).getTime();
+    ms = hasInvalidListCalendarDate(normalized) ? Number.NaN : new Date(normalized).getTime();
   }
   if (Number.isNaN(ms)) throw new Error(`Invalid --since value "${value}". Expected an ISO 8601 date.`);
   return ms;
@@ -345,15 +342,11 @@ export function parseListUntil(value: string | undefined): number | undefined {
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
   let ms: number;
   if (dateOnly) {
-    const [, year, month, day] = dateOnly;
-    const endOfDay = new Date(`${normalized}T23:59:59.999Z`);
-    const isValidCalendarDate =
-      endOfDay.getUTCFullYear() === Number(year) &&
-      endOfDay.getUTCMonth() + 1 === Number(month) &&
-      endOfDay.getUTCDate() === Number(day);
-    ms = isValidCalendarDate ? endOfDay.getTime() : Number.NaN;
+    ms = isValidListCalendarDate(normalized)
+      ? new Date(`${normalized}T23:59:59.999Z`).getTime()
+      : Number.NaN;
   } else {
-    ms = new Date(value).getTime();
+    ms = hasInvalidListCalendarDate(normalized) ? Number.NaN : new Date(normalized).getTime();
   }
   if (Number.isNaN(ms)) {
     throw new Error(
@@ -361,6 +354,30 @@ export function parseListUntil(value: string | undefined): number | undefined {
     );
   }
   return ms;
+}
+
+/** Reject timestamps whose ISO calendar prefix would otherwise be normalized. */
+function hasInvalidListCalendarDate(value: string): boolean {
+  const datePrefix = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(value);
+  return datePrefix !== null && !isValidListCalendarDate(datePrefix[0].slice(0, 10));
+}
+
+function isValidListCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1) return false;
+
+  const daysInMonth = [31, isLeapListYear(year) ? 29 : 28, 31, 30, 31, 30,
+    31, 31, 30, 31, 30, 31];
+  return day <= daysInMonth[month - 1];
+}
+
+function isLeapListYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
 
 /** Reject an inverted date window before it silently produces an empty result. */
