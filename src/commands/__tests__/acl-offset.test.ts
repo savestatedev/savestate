@@ -4,6 +4,7 @@ import {
   formatAclListEmpty,
   formatAclListHeading,
   parseAclOffset,
+  suggestAclListOffset,
 } from '../acl.js';
 
 describe('savestate acl list --offset', () => {
@@ -51,5 +52,14 @@ describe('savestate acl list --offset', () => {
   it('explains an empty page window in human-readable output', () => {
     expect(formatAclListEmpty(10, 5)).toBe('No commitments found (skipped 10, limit 5).');
     expect(formatAclListEmpty(undefined, undefined)).toBe('No commitments found.');
+  });
+
+  it('suggests the nearest populated page for an exhausted bounded page', () => {
+    expect(suggestAclListOffset(11, 0, 5)).toBe(10);
+    expect(formatAclListEmpty(15, 5, 10)).toBe(
+      'No commitments found (skipped 15, limit 5). Try --offset 10 to open the nearest available page.',
+    );
+    expect(suggestAclListOffset(0, 0, 5)).toBeNull();
+    expect(suggestAclListOffset(11, 0, undefined)).toBeNull();
   });
 });

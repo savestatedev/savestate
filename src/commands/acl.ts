@@ -72,9 +72,7 @@ export function formatAclListJsonSummary(
   const page = limit === undefined
     ? commitments.slice(offset)
     : commitments.slice(offset, offset + limit);
-  const suggestedOffset = page.length === 0 && commitments.length > 0 && limit !== undefined
-    ? Math.floor((commitments.length - 1) / limit) * limit
-    : null;
+  const suggestedOffset = suggestAclListOffset(commitments.length, page.length, limit);
   const hasMore = limit !== undefined && offset + page.length < commitments.length;
   const result: AclListJsonSummary = {
     found: page.length > 0,
@@ -98,6 +96,17 @@ export function formatAclListJsonSummary(
   return JSON.stringify(result, null, 2);
 }
 
+/** Find the nearest populated page when a bounded ACL page is past the collection. */
+export function suggestAclListOffset(
+  total: number,
+  shown: number,
+  limit: number | undefined,
+): number | null {
+  return shown === 0 && total > 0 && limit !== undefined
+    ? Math.floor((total - 1) / limit) * limit
+    : null;
+}
+
 export function formatAclListHeading(
   count: number,
   offset: number | undefined,
@@ -114,13 +123,17 @@ export function formatAclListHeading(
 export function formatAclListEmpty(
   offset: number | undefined,
   limit: number | undefined,
+  suggestedOffset: number | null = null,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
     limit === undefined ? undefined : `limit ${limit}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
-  return `No commitments found${suffix}.`;
+  const recovery = suggestedOffset === null
+    ? ''
+    : ` Try --offset ${suggestedOffset} to open the nearest available page.`;
+  return `No commitments found${suffix}.${recovery}`;
 }
 
 export function formatAclGateJson(result: AclGateResult): string {
@@ -566,7 +579,11 @@ async function aclList(options: AclCommandOptions = {}) {
       return;
     }
     if (commitments.length === 0) {
-      console.log(formatAclListEmpty(offset, limit));
+      console.log(formatAclListEmpty(
+        offset,
+        limit,
+        suggestAclListOffset(allCommitments.length, commitments.length, limit),
+      ));
       return;
     }
     console.log(`${formatAclListHeading(commitments.length, offset, limit)}\n`);
