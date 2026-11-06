@@ -55,6 +55,9 @@ export interface AclListJsonSummary {
   emptyReason: 'collection' | 'page' | null;
   offset: number;
   limit: number | null;
+  pageSize: number | null;
+  page: number;
+  totalPages: number;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
@@ -74,6 +77,9 @@ export function formatAclListJsonSummary(
     : commitments.slice(offset, offset + limit);
   const suggestedOffset = suggestAclListOffset(commitments.length, page.length, limit);
   const hasMore = limit !== undefined && offset + page.length < commitments.length;
+  const totalPages = limit === undefined
+    ? commitments.length > 0 ? 1 : 0
+    : Math.ceil(commitments.length / limit);
   const result: AclListJsonSummary = {
     found: page.length > 0,
     total: commitments.length,
@@ -82,6 +88,11 @@ export function formatAclListJsonSummary(
     emptyReason: page.length > 0 ? null : commitments.length === 0 ? 'collection' : 'page',
     offset,
     limit: limit ?? null,
+    pageSize: limit ?? null,
+    page: limit === undefined
+      ? commitments.length > 0 ? 1 : 0
+      : Math.floor(offset / limit) + 1,
+    totalPages,
     hasPrevious: offset > 0,
     previousOffset: offset > 0
       ? suggestedOffset !== null
