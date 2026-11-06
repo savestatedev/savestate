@@ -51,6 +51,8 @@ export function formatAclCommitmentText(commitment: Commitment): string {
     `  Type: ${commitment.type} (${commitment.criticality})`,
     `  State: ${commitment.state}`,
     `  Proposer: ${commitment.proposer}`,
+    `  Verifier: ${commitment.verifier ?? '—'}`,
+    `  Expires: ${commitment.expiresAt ?? 'Never'}`,
     `  Description: ${commitment.description}`,
     '',
   ].join('\n');

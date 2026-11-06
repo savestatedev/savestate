@@ -20,7 +20,26 @@ describe('savestate acl human-readable output', () => {
       + '  Type: customer_promise (c3)\n'
       + '  State: active\n'
       + '  Proposer: agent-1\n'
+      + '  Verifier: —\n'
+      + '  Expires: Never\n'
       + '  Description: Refund within 24h\n',
+    );
+  });
+
+  it('shows verifier and expiry when a commitment has been verified', () => {
+    expect(formatAclCommitmentText({
+      id: 'cmt-2',
+      type: 'account_tool_write',
+      criticality: 'c1',
+      state: 'verified',
+      description: 'Rotate the API key',
+      proposedAt: '2026-11-06T00:00:00.000Z',
+      proposer: 'agent-1',
+      verifier: 'reviewer-1',
+      expiresAt: '2026-11-07T00:00:00.000Z',
+      auditTrail: [],
+    })).toContain(
+      '  Verifier: reviewer-1\n  Expires: 2026-11-07T00:00:00.000Z\n',
     );
   });
 
