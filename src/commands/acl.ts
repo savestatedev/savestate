@@ -44,6 +44,28 @@ export function formatAclCommitmentJson(commitment: Commitment): string {
   return JSON.stringify(toCommitmentJson(commitment), null, 2);
 }
 
+/** Keep human-readable ACL rows aligned with the fields users filter on. */
+export function formatAclCommitmentText(commitment: Commitment): string {
+  return [
+    `ID: ${commitment.id}`,
+    `  Type: ${commitment.type} (${commitment.criticality})`,
+    `  State: ${commitment.state}`,
+    `  Proposer: ${commitment.proposer}`,
+    `  Description: ${commitment.description}`,
+    '',
+  ].join('\n');
+}
+
+export function formatAclProposeRows(commitment: Commitment): string[] {
+  return [
+    `Commitment proposed: ${commitment.id}`,
+    `State: ${commitment.state}`,
+    `Criticality: ${commitment.criticality}`,
+    `Proposer: ${commitment.proposer}`,
+    `Expires: ${commitment.expiresAt || 'Never'}`,
+  ];
+}
+
 export function formatAclListJson(commitments: Commitment[]): string {
   return JSON.stringify(commitments.map(toCommitmentJson), null, 2);
 }
@@ -61,6 +83,8 @@ export interface AclListJsonSummary {
   state: CommitmentState | null;
   type: CommitmentType | null;
   criticality: Criticality | null;
+  proposer: string | null;
+  verifier: string | null;
   page: number;
   totalPages: number;
   hasPrevious: boolean;
@@ -79,6 +103,8 @@ export function formatAclListJsonSummary(
   state?: CommitmentState,
   type?: CommitmentType,
   criticality?: Criticality,
+  proposer?: string,
+  verifier?: string,
 ): string {
   const page = limit === undefined
     ? commitments.slice(offset)
@@ -108,6 +134,8 @@ export function formatAclListJsonSummary(
     state: state ?? null,
     type: type ?? null,
     criticality: criticality ?? null,
+    proposer: proposer ?? null,
+    verifier: verifier ?? null,
     page: limit === undefined
       ? commitments.length > 0 ? 1 : 0
       : Math.floor(offset / limit) + 1,
@@ -146,6 +174,8 @@ export function formatAclListHeading(
   state?: CommitmentState,
   type?: CommitmentType,
   criticality?: Criticality,
+  proposer?: string,
+  verifier?: string,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
@@ -153,6 +183,8 @@ export function formatAclListHeading(
     state === undefined ? undefined : `state ${state}`,
     type === undefined ? undefined : `type ${type}`,
     criticality === undefined ? undefined : `criticality ${criticality}`,
+    proposer === undefined ? undefined : `proposer ${proposer}`,
+    verifier === undefined ? undefined : `verifier ${verifier}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   return `Found ${count} commitment(s)${suffix}:`;
@@ -165,6 +197,8 @@ export function formatAclListEmpty(
   state?: CommitmentState,
   type?: CommitmentType,
   criticality?: Criticality,
+  proposer?: string,
+  verifier?: string,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
@@ -172,6 +206,8 @@ export function formatAclListEmpty(
     state === undefined ? undefined : `state ${state}`,
     type === undefined ? undefined : `type ${type}`,
     criticality === undefined ? undefined : `criticality ${criticality}`,
+    proposer === undefined ? undefined : `proposer ${proposer}`,
+    verifier === undefined ? undefined : `verifier ${verifier}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   const recovery = suggestedOffset === null
@@ -415,11 +451,15 @@ export function filterAclCommitments(
   state: CommitmentState | undefined,
   type?: CommitmentType,
   criticality?: Criticality,
+  proposer?: string,
+  verifier?: string,
 ): Commitment[] {
   return commitments.filter((commitment) =>
     (state === undefined || commitment.state === state)
     && (type === undefined || commitment.type === type)
-    && (criticality === undefined || commitment.criticality === criticality),
+    && (criticality === undefined || commitment.criticality === criticality)
+    && (proposer === undefined || commitment.proposer === proposer)
+    && (verifier === undefined || commitment.verifier === verifier),
   );
 }
 
@@ -566,13 +606,7 @@ async function aclPropose(options: AclCommandOptions) {
       return;
     }
 
-    const rows = [
-      `Commitment proposed: ${commitment.id}`,
-      `State: ${commitment.state}`,
-      `Criticality: ${commitment.criticality}`,
-      `Expires: ${commitment.expiresAt || 'Never'}`,
-    ];
-    for (const row of selectAclProposeEntries(rows, limit)) {
+    for (const row of selectAclProposeEntries(formatAclProposeRows(commitment), limit)) {
       console.log(row);
     }
   } catch (error: any) {
@@ -649,10 +683,16 @@ async function aclList(options: AclCommandOptions = {}) {
     const criticality = options.criticality === undefined
       ? undefined
       : parseAclCriticality(options.criticality);
-    const allCommitments = filterAclCommitments(listCommitments(), state, type, criticality);
+    const proposer = options.proposer === undefined
+      ? undefined
+      : parseAclProposer(options.proposer);
+    const verifier = options.verifier === undefined
+      ? undefined
+      : parseAclVerifier(options.verifier);
+    const allCommitments = filterAclCommitments(listCommitments(), state, type, criticality, proposer, verifier);
     const commitments = applyAclLimit(applyAclOffset(allCommitments, offset), limit);
     if (options.jsonSummary) {
-      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit, state, type, criticality));
+      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit, state, type, criticality, proposer, verifier));
       return;
     }
     if (options.json) {
@@ -667,17 +707,13 @@ async function aclList(options: AclCommandOptions = {}) {
         state,
         type,
         criticality,
+        proposer,
+        verifier,
       ));
       return;
     }
-    console.log(`${formatAclListHeading(commitments.length, offset, limit, state, type, criticality)}\n`);
-    commitments.forEach((c) => {
-      console.log(`ID: ${c.id}`);
-      console.log(`  Type: ${c.type} (${c.criticality})`);
-      console.log(`  State: ${c.state}`);
-      console.log(`  Description: ${c.description}`);
-      console.log('');
-    });
+    console.log(`${formatAclListHeading(commitments.length, offset, limit, state, type, criticality, proposer, verifier)}\n`);
+    commitments.forEach((commitment) => console.log(formatAclCommitmentText(commitment)));
   } catch (error: any) {
     console.error('Error listing commitments:', error.message);
     process.exit(1);
@@ -705,10 +741,10 @@ export function registerACLCommands(program: Command) {
     .option('-t, --type <type>', 'Commitment type (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .option('-c, --criticality <level>', 'Criticality level (c1, c2, c3)')
     .option('-d, --description <text>', 'Description of the commitment (non-empty)')
-    .option('-p, --proposer <id>', 'ID of the proposing agent (single non-empty id)')
+    .option('-p, --proposer <id>', 'ID of the proposing agent for propose, or a proposer filter for list (single non-empty id)')
     .option('-e, --expires-in <minutes>', 'Minutes until expiration')
     .option('-i, --id <id>', 'Commitment ID (single non-empty id)')
-    .option('-v, --verifier <id>', 'ID of the verifier (single non-empty id)')
+    .option('-v, --verifier <id>', 'ID of the verifying agent for verify, or a verifier filter for list (single non-empty id)')
     .option('--approve', 'Approve the commitment (default is reject)')
     .option('-a, --action <type>', 'Action type to check (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .option('--limit <n>', 'Maximum number of commitments to show on list, or status field rows on verify, gate, or propose')

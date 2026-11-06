@@ -13,6 +13,8 @@ function commitment(
   id: string,
   state: Commitment['state'],
   criticality: Commitment['criticality'] = 'c3',
+  proposer = 'agent-1',
+  verifier?: string,
 ): Commitment {
   return {
     id,
@@ -21,7 +23,8 @@ function commitment(
     state,
     description: id,
     proposedAt: '2026-11-06T00:00:00.000Z',
-    proposer: 'agent-1',
+    proposer,
+    verifier,
     auditTrail: [],
   };
 }
@@ -65,6 +68,25 @@ describe('savestate acl list --state', () => {
     expect(parseAclCriticality(' C2 ')).toBe('c2');
   });
 
+  it('filters by proposer before pagination', () => {
+    const commitments = [
+      commitment('cmt-agent-1', 'active', 'c3', 'agent-1'),
+      commitment('cmt-agent-2', 'active', 'c3', 'agent-2'),
+    ];
+    expect(filterAclCommitments(commitments, undefined, undefined, undefined, 'agent-2')
+      .map(({ id }) => id)).toEqual(['cmt-agent-2']);
+  });
+
+  it('filters by verifier before pagination', () => {
+    const commitments = [
+      commitment('cmt-reviewer-1', 'active', 'c3', 'agent-1', 'reviewer-1'),
+      commitment('cmt-reviewer-2', 'active', 'c3', 'agent-1', 'reviewer-2'),
+      commitment('cmt-unverified', 'proposed'),
+    ];
+    expect(filterAclCommitments(commitments, undefined, undefined, undefined, undefined, 'reviewer-2')
+      .map(({ id }) => id)).toEqual(['cmt-reviewer-2']);
+  });
+
   it('reports the state filter in JSON pagination metadata', () => {
     const summary = JSON.parse(formatAclListJsonSummary(
       [commitment('cmt-active', 'active')],
@@ -73,10 +95,14 @@ describe('savestate acl list --state', () => {
       'active',
       'customer_promise',
       'c2',
+      'agent-2',
+      'reviewer-2',
     ));
     expect(summary.state).toBe('active');
     expect(summary.type).toBe('customer_promise');
     expect(summary.criticality).toBe('c2');
+    expect(summary.proposer).toBe('agent-2');
+    expect(summary.verifier).toBe('reviewer-2');
     expect(summary.entries.map((entry: { id: string }) => entry.id)).toEqual(['cmt-active']);
   });
 
@@ -87,5 +113,7 @@ describe('savestate acl list --state', () => {
     expect(formatAclListEmpty(10, 5, 5, 'active')).toContain('state active');
     expect(formatAclListHeading(1, 0, 5, 'active', 'customer_promise')).toContain('type customer_promise');
     expect(formatAclListHeading(1, 0, 5, undefined, undefined, 'c1')).toContain('criticality c1');
+    expect(formatAclListHeading(1, 0, 5, undefined, undefined, undefined, 'agent-2')).toContain('proposer agent-2');
+    expect(formatAclListHeading(1, 0, 5, undefined, undefined, undefined, undefined, 'reviewer-2')).toContain('verifier reviewer-2');
   });
 });
