@@ -30,6 +30,7 @@ describe('savestate acl list --json-summary', () => {
       remaining: 1,
       emptyReason: null,
       offset: 1,
+      maxOffset: 1000,
       limit: 1,
       pageSize: 1,
       page: 2,

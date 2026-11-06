@@ -54,6 +54,7 @@ export interface AclListJsonSummary {
   remaining: number;
   emptyReason: 'collection' | 'page' | null;
   offset: number;
+  maxOffset: number;
   limit: number | null;
   pageSize: number | null;
   page: number;
@@ -87,6 +88,7 @@ export function formatAclListJsonSummary(
     remaining: Math.max(0, commitments.length - offset - page.length),
     emptyReason: page.length > 0 ? null : commitments.length === 0 ? 'collection' : 'page',
     offset,
+    maxOffset: MAX_ACL_OFFSET,
     limit: limit ?? null,
     pageSize: limit ?? null,
     page: limit === undefined
