@@ -7,7 +7,9 @@ describe('savestate list --until', () => {
   });
 
   it('accepts ISO 8601 dates', () => {
-    expect(parseListUntil('2026-01-01')).toBe(new Date('2026-01-01').getTime());
+    expect(parseListUntil('2026-01-01')).toBe(
+      new Date('2026-01-01T23:59:59.999Z').getTime(),
+    );
     expect(parseListUntil('2026-01-01T00:00:00Z')).toBe(
       new Date('2026-01-01T00:00:00Z').getTime(),
     );
@@ -21,4 +23,10 @@ describe('savestate list --until', () => {
       );
     },
   );
+
+  it('rejects impossible calendar values in timestamps instead of normalizing them', () => {
+    expect(() => parseListUntil('2026-02-30T23:59:59Z')).toThrow(
+      'Invalid --until value "2026-02-30T23:59:59Z". Expected an ISO 8601 date.',
+    );
+  });
 });
