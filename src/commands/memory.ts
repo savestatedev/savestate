@@ -506,7 +506,7 @@ export function filterMemoryListByTags(
   tags?: string[],
 ): MemoryEntry[] {
   if (tags === undefined) return entries;
-  const normalizedTags = tags.map((tag) => tag.trim().toLocaleLowerCase());
+  const normalizedTags = normalizeMemoryTagFilters(tags).map((tag) => tag.toLocaleLowerCase());
   return entries.filter((entry) => {
     const entryTags = getMemoryListTags(entry).map((tag) => tag.toLocaleLowerCase());
     return normalizedTags.every((tag) => entryTags.includes(tag));

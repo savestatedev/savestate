@@ -77,6 +77,16 @@ describe('savestate memory --json', () => {
     expect(parsed.filters.tags).toEqual(['Work', 'URGENT']);
   });
 
+  it('ignores blank and duplicate tag filters during retrieval', () => {
+    const entries = [
+      entry({ id: 'mem-work', content: 'work', metadata: { tags: ['Work'] } }),
+      entry({ id: 'mem-other', content: 'other', metadata: { tags: ['Other'] } }),
+    ];
+
+    expect(filterMemoryListByTags(entries, [' Work ', 'work', ' '])).toEqual([entries[0]]);
+    expect(filterMemoryListByTags(entries, [' '])).toEqual(entries);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
