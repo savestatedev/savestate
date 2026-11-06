@@ -395,9 +395,16 @@ export function formatMemoryListJson(
       source: pagination.filters?.source === undefined
         ? null
         : normalizeMemoryListSource(pagination.filters.source),
-      namespace: pagination.filters?.namespace ?? null,
+      namespace: pagination.filters?.namespace === undefined
+        ? null
+        : normalizeMemoryListNamespace(pagination.filters.namespace),
       content: pagination.filters?.content ?? null,
-      tags: pagination.filters?.tags ?? null,
+      tags: pagination.filters?.tags == null
+        ? null
+        : (() => {
+          const tags = normalizeMemoryTagFilters(pagination.filters.tags);
+          return tags.length > 0 ? tags : null;
+        })(),
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
@@ -473,6 +480,11 @@ export function filterMemoryListByNamespace(
   );
 }
 
+/** Keep padding out of machine-readable memory list filter metadata. */
+export function normalizeMemoryListNamespace(namespace: string | undefined): string {
+  return namespace?.trim() ?? '';
+}
+
 /** Keep memories captured by the requested source id, ignoring letter case. */
 export function filterMemoryListBySource(
   entries: MemoryEntry[],
@@ -504,7 +516,7 @@ export function filterMemoryListByTags(
   tags?: string[],
 ): MemoryEntry[] {
   if (tags === undefined) return entries;
-  const normalizedTags = tags.map((tag) => tag.trim().toLocaleLowerCase());
+  const normalizedTags = normalizeMemoryTagFilters(tags).map((tag) => tag.toLocaleLowerCase());
   return entries.filter((entry) => {
     const entryTags = getMemoryListTags(entry).map((tag) => tag.toLocaleLowerCase());
     return normalizedTags.every((tag) => entryTags.includes(tag));

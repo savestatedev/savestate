@@ -8,6 +8,7 @@ import {
   filterMemoryListByTags,
   getMemoryListSummary,
   countByFreshness,
+  normalizeMemoryListNamespace,
   type MemoryListJson,
 } from '../memory.js';
 
@@ -40,6 +41,15 @@ describe('savestate memory --json', () => {
     expect(filterMemoryListByNamespace(entries, ' org:app:agent ')).toEqual([entries[0]]);
   });
 
+  it('normalizes padded namespaces in JSON filters', () => {
+    const parsed = JSON.parse(formatMemoryListJson([], [], {
+      filters: { namespace: '  org:app:agent  ' },
+    })) as MemoryListJson;
+
+    expect(normalizeMemoryListNamespace('  org:app:agent  ')).toBe('org:app:agent');
+    expect(parsed.filters.namespace).toBe('org:app:agent');
+  });
+
   it('matches every requested tag after normalizing legacy metadata', () => {
     const entries = [
       entry({ id: 'mem-work', content: 'work', metadata: { tags: [' work ', 'urgent', 'urgent'] } }),
@@ -65,6 +75,34 @@ describe('savestate memory --json', () => {
 
     const parsed = JSON.parse(formatMemoryListJson([tagged], [tagged])) as MemoryListJson;
     expect(parsed.entries[0].tags).toEqual(['Work', 'URGENT']);
+  });
+
+  it('normalizes active tag filters at the JSON output boundary', () => {
+    const tagged = entry({ id: 'mem-filter-tags', content: 'filter tags' });
+
+    const parsed = JSON.parse(formatMemoryListJson([tagged], [tagged], {
+      filters: { tags: [' Work ', 'work', 'URGENT', ' '] },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.tags).toEqual(['Work', 'URGENT']);
+  });
+
+  it('reports blank-only tag filters as inactive in JSON', () => {
+    const parsed = JSON.parse(formatMemoryListJson([], [], {
+      filters: { tags: [' ', '\t'] },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.tags).toBeNull();
+  });
+
+  it('ignores blank and duplicate tag filters during retrieval', () => {
+    const entries = [
+      entry({ id: 'mem-work', content: 'work', metadata: { tags: ['Work'] } }),
+      entry({ id: 'mem-other', content: 'other', metadata: { tags: ['Other'] } }),
+    ];
+
+    expect(filterMemoryListByTags(entries, [' Work ', 'work', ' '])).toEqual([entries[0]]);
+    expect(filterMemoryListByTags(entries, [' '])).toEqual(entries);
   });
 
   it('summarizes the filtered collection for table output too', () => {
