@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Commitment } from '../../acl/index.js';
-import { formatAclCommitmentText } from '../acl.js';
+import { formatAclCommitmentText, formatAclProposeRows } from '../acl.js';
 
 describe('savestate acl human-readable output', () => {
   it('shows the proposer alongside the commitment details', () => {
@@ -22,5 +22,24 @@ describe('savestate acl human-readable output', () => {
       + '  Proposer: agent-1\n'
       + '  Description: Refund within 24h\n',
     );
+  });
+
+  it('includes the proposer in the successful propose response', () => {
+    expect(formatAclProposeRows({
+      id: 'cmt-1',
+      type: 'customer_promise',
+      criticality: 'c3',
+      state: 'proposed',
+      description: 'Refund within 24h',
+      proposedAt: '2026-11-06T00:00:00.000Z',
+      proposer: 'agent-1',
+      auditTrail: [],
+    })).toEqual([
+      'Commitment proposed: cmt-1',
+      'State: proposed',
+      'Criticality: c3',
+      'Proposer: agent-1',
+      'Expires: Never',
+    ]);
   });
 });

@@ -56,6 +56,16 @@ export function formatAclCommitmentText(commitment: Commitment): string {
   ].join('\n');
 }
 
+export function formatAclProposeRows(commitment: Commitment): string[] {
+  return [
+    `Commitment proposed: ${commitment.id}`,
+    `State: ${commitment.state}`,
+    `Criticality: ${commitment.criticality}`,
+    `Proposer: ${commitment.proposer}`,
+    `Expires: ${commitment.expiresAt || 'Never'}`,
+  ];
+}
+
 export function formatAclListJson(commitments: Commitment[]): string {
   return JSON.stringify(commitments.map(toCommitmentJson), null, 2);
 }
@@ -587,13 +597,7 @@ async function aclPropose(options: AclCommandOptions) {
       return;
     }
 
-    const rows = [
-      `Commitment proposed: ${commitment.id}`,
-      `State: ${commitment.state}`,
-      `Criticality: ${commitment.criticality}`,
-      `Expires: ${commitment.expiresAt || 'Never'}`,
-    ];
-    for (const row of selectAclProposeEntries(rows, limit)) {
+    for (const row of selectAclProposeEntries(formatAclProposeRows(commitment), limit)) {
       console.log(row);
     }
   } catch (error: any) {
