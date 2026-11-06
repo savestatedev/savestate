@@ -77,6 +77,14 @@ describe('savestate memory --json', () => {
     expect(parsed.filters.tags).toEqual(['Work', 'URGENT']);
   });
 
+  it('reports blank-only tag filters as inactive in JSON', () => {
+    const parsed = JSON.parse(formatMemoryListJson([], [], {
+      filters: { tags: [' ', '\t'] },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.tags).toBeNull();
+  });
+
   it('ignores blank and duplicate tag filters during retrieval', () => {
     const entries = [
       entry({ id: 'mem-work', content: 'work', metadata: { tags: ['Work'] } }),

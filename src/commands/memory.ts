@@ -399,7 +399,10 @@ export function formatMemoryListJson(
       content: pagination.filters?.content ?? null,
       tags: pagination.filters?.tags == null
         ? null
-        : normalizeMemoryTagFilters(pagination.filters.tags),
+        : (() => {
+          const tags = normalizeMemoryTagFilters(pagination.filters.tags);
+          return tags.length > 0 ? tags : null;
+        })(),
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
