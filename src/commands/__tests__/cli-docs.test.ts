@@ -3515,6 +3515,16 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('savestate acl list --json');
   });
 
+  it('documents acl list --json-summary pagination metadata', () => {
+    const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
+    const aclBlock = acl.slice(acl.indexOf("command('acl <subcommand>')"));
+    expect(aclSection).toContain('--json-summary');
+    expect(aclSection).toContain('suggestedOffset');
+    expect(aclSection).toContain('savestate acl list --offset 10 --limit 5 --json-summary');
+    expect(aclBlock).toContain(".option('--json-summary'");
+    expect(acl).toContain('export function formatAclListJsonSummary');
+  });
+
   it('documents acl verify --json when missing', () => {
     const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
     expect(aclSection).toContain('--json');
