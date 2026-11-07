@@ -147,6 +147,17 @@ describe('savestate memory --json', () => {
     expect(parsed.shownBySource).toEqual({ 'Claude-Code': 2 });
   });
 
+  it('keeps source aggregate keys stable when entry order changes', () => {
+    const entries = [
+      entry({ id: 'mem-user', content: 'user', source: 'user' }),
+      entry({ id: 'mem-claude', content: 'claude', source: 'Claude-Code' }),
+    ];
+
+    expect(countBySource(entries)).toEqual({ 'Claude-Code': 1, user: 1 });
+    expect(JSON.parse(formatMemoryListJson(entries, entries)).bySource)
+      .toEqual({ 'Claude-Code': 1, user: 1 });
+  });
+
   it('keeps freshness counts and entries consistent at a TTL boundary', () => {
     const now = new Date('2026-10-15T12:00:00.000Z');
     const entryAtBoundary = entry({
