@@ -16,6 +16,7 @@ export interface AclCommitmentJson {
   criticality: string;
   state: string;
   description: string;
+  proposedAt: string;
   proposer: string;
   verifier: string | null;
   expiresAt: string | null;
@@ -34,6 +35,7 @@ function toCommitmentJson(commitment: Commitment): AclCommitmentJson {
     criticality: commitment.criticality,
     state: commitment.state,
     description: commitment.description,
+    proposedAt: commitment.proposedAt,
     proposer: commitment.proposer,
     verifier: commitment.verifier ?? null,
     expiresAt: commitment.expiresAt ?? null,
@@ -50,6 +52,7 @@ export function formatAclCommitmentText(commitment: Commitment): string {
     `ID: ${commitment.id}`,
     `  Type: ${commitment.type} (${commitment.criticality})`,
     `  State: ${commitment.state}`,
+    `  Proposed: ${commitment.proposedAt}`,
     `  Proposer: ${commitment.proposer}`,
     `  Verifier: ${commitment.verifier ?? '—'}`,
     `  Expires: ${commitment.expiresAt ?? 'Never'}`,

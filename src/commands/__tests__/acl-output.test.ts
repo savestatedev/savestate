@@ -19,6 +19,7 @@ describe('savestate acl human-readable output', () => {
       'ID: cmt-1\n'
       + '  Type: customer_promise (c3)\n'
       + '  State: active\n'
+      + '  Proposed: 2026-11-06T00:00:00.000Z\n'
       + '  Proposer: agent-1\n'
       + '  Verifier: —\n'
       + '  Expires: Never\n'

@@ -29,6 +29,7 @@ describe('savestate acl --json', () => {
         criticality: 'c3',
         state: 'proposed',
         description: 'Refund within 24h',
+        proposedAt: '2026-09-04T12:00:00.000Z',
         proposer: 'agent-1',
         verifier: null,
         expiresAt: null,
