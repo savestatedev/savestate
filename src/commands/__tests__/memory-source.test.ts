@@ -136,6 +136,19 @@ describe('memory list source summary display', () => {
   it('reports an empty source summary without a blank line', () => {
     expect(formatMemoryListSourceSummary([])).toBe('none');
   });
+
+  it('keeps large source summaries compact', () => {
+    const entries = Array.from({ length: 10 }, (_, index) => ({
+      id: `memory-${index}`,
+      content: 'content',
+      source: `source-${String(index + 1).padStart(2, '0')}`,
+      createdAt: '2026-09-01T00:00:00.000Z',
+    }));
+
+    expect(formatMemoryListSourceSummary(entries)).toBe(
+      'source-01 1, source-02 1, source-03 1, source-04 1, source-05 1, source-06 1, source-07 1, source-08 1, +2 more',
+    );
+  });
 });
 
 describe('memory list table content display', () => {
