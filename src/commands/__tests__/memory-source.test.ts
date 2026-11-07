@@ -6,6 +6,7 @@ import {
   formatMemoryListCreatedAt,
   formatMemoryListFreshness,
   formatMemoryListPageFreshnessSummary,
+  formatMemoryListPageSourceSummary,
   formatMemoryListFreshnessSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
@@ -114,6 +115,13 @@ describe('memory list table freshness display', () => {
       { id: 'active', content: 'active', source: 'test', createdAt: '2026-10-15T11:00:00.000Z', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' },
     ], now)).toBe('Page Freshness: 1 active, 0 stale, 0 confirmation needed');
   });
+
+  it('labels source totals for the visible page', () => {
+    expect(formatMemoryListPageSourceSummary([
+      { id: 'a', content: 'a', source: 'Claude-Code', createdAt: '2026-09-01T00:00:00.000Z' },
+      { id: 'b', content: 'b', source: 'user', createdAt: '2026-09-01T00:00:00.000Z' },
+    ])).toBe('Page Sources: Claude-Code 1, user 1');
+  });
 });
 
 describe('memory list source summary display', () => {
@@ -127,6 +135,19 @@ describe('memory list source summary display', () => {
 
   it('reports an empty source summary without a blank line', () => {
     expect(formatMemoryListSourceSummary([])).toBe('none');
+  });
+
+  it('keeps large source summaries compact', () => {
+    const entries = Array.from({ length: 10 }, (_, index) => ({
+      id: `memory-${index}`,
+      content: 'content',
+      source: `source-${String(index + 1).padStart(2, '0')}`,
+      createdAt: '2026-09-01T00:00:00.000Z',
+    }));
+
+    expect(formatMemoryListSourceSummary(entries)).toBe(
+      'source-01 1, source-02 1, source-03 1, source-04 1, source-05 1, source-06 1, source-07 1, source-08 1, +2 more',
+    );
   });
 });
 

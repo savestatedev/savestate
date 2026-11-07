@@ -66,6 +66,7 @@ export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
 };
 
 const DAY_SECONDS = 24 * 60 * 60;
+const MAX_MEMORY_LIST_SOURCE_SUMMARY_ITEMS = 8;
 
 export interface MemoryFreshnessProfile {
   freshnessClass: MemoryFreshnessClass;
@@ -297,9 +298,15 @@ export function formatMemoryListFreshnessSummary(
 /** Format normalized source totals for the human-facing list summary. */
 export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
   const counts = countBySource(memories);
-  return Object.entries(counts)
+  const sources = Object.entries(counts);
+  if (sources.length === 0) return 'none';
+
+  const visibleSources = sources.slice(0, MAX_MEMORY_LIST_SOURCE_SUMMARY_ITEMS);
+  const omittedSourceCount = sources.length - visibleSources.length;
+  return visibleSources
     .map(([source, count]) => `${source} ${count}`)
-    .join(', ') || 'none';
+    .concat(omittedSourceCount > 0 ? [`+${omittedSourceCount} more`] : [])
+    .join(', ');
 }
 
 /** Format freshness totals for the rows visible on a paginated table page. */
@@ -308,6 +315,11 @@ export function formatMemoryListPageFreshnessSummary(
   now = new Date(),
 ): string {
   return `Page Freshness: ${formatMemoryListFreshnessSummary(memories, now)}`;
+}
+
+/** Format source totals for the rows visible on a paginated table page. */
+export function formatMemoryListPageSourceSummary(memories: MemoryEntry[]): string {
+  return `Page Sources: ${formatMemoryListSourceSummary(memories)}`;
 }
 
 export interface MemoryListEntryJson {
@@ -1407,6 +1419,7 @@ export async function listMemories(
   if (pageSummary) {
     console.log(`${pageSummary}`);
     if (entries.length > 0) {
+      console.log(`${formatMemoryListPageSourceSummary(entries)}`);
       console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}\n`);
     }
   }
