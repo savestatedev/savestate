@@ -9,6 +9,10 @@ describe('MCP memory search date filters', () => {
     expect(MemorySearchInputSchema.parse({ source: '  Claude-Code ' }).source).toBe('Claude-Code');
   });
 
+  it('collapses internal source whitespace to match stored labels', () => {
+    expect(MemorySearchInputSchema.parse({ source: '  Claude  Code\t' }).source).toBe('Claude Code');
+  });
+
   it('rejects a blank source metadata filter', () => {
     expect(() => MemorySearchInputSchema.parse({ source: '   ' })).toThrow();
   });

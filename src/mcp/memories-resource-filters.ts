@@ -3,6 +3,7 @@ import {
   INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
 } from './memory-importance-range.js';
 import type { MemoryType } from '../memory/types.js';
+import { normalizeMemorySource } from '../memory/source.js';
 
 const MEMORY_TYPES: readonly MemoryType[] = ['fact', 'event', 'preference', 'conversation'];
 
@@ -39,7 +40,7 @@ export function parseMemoriesResourceSource(value: string | null): string | unde
     throw new Error('Invalid source value. Expected a non-empty source.');
   }
 
-  return normalized;
+  return normalizeMemorySource(normalized);
 }
 
 /** Parse an optional memory resource creation bound and normalize it for SQLite. */

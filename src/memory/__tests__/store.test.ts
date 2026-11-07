@@ -62,6 +62,16 @@ describe('MemoryStore', () => {
         metadata: { source: 'Claude-Code', confidence: 0.7 },
       });
     });
+
+    it('should find memories when a source filter uses normalized internal whitespace', async () => {
+      await store.create({
+        type: 'fact',
+        content: 'The source has a readable label.',
+        metadata: { source: '  Claude  Code\t' },
+      });
+
+      await expect(store.query({ source: 'Claude Code' })).resolves.toHaveLength(1);
+    });
   });
 
   describe('get', () => {
