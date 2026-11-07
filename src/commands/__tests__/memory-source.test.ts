@@ -18,14 +18,15 @@ import {
 } from '../memory.js';
 
 describe('savestate memory list --source', () => {
-  it('trims a single source id', () => {
+  it('normalizes a source id or label', () => {
     expect(parseMemorySource('  claude-code  ')).toBe('claude-code');
+    expect(parseMemorySource(' Chat\t GPT ')).toBe('Chat GPT');
     expect(parseMemorySource(undefined)).toBeUndefined();
   });
 
-  it.each(['', '   ', 'claude code', 'user,agent'])('rejects invalid source %j', (value) => {
+  it.each(['', '   ', 'user,agent'])('rejects invalid source %j', (value) => {
     expect(() => parseMemorySource(value)).toThrow(
-      `Invalid --source value "${value}". Expected a single non-empty source id.`,
+      `Invalid --source value "${value}". Expected a single non-empty source id or label.`,
     );
   });
 

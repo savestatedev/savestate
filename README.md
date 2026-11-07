@@ -218,6 +218,15 @@ Table output also shows matching-collection source totals and, when paginated, s
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
 
+Filter by a source id or the human-readable source label with `--source`. Matching is
+case-insensitive, and repeated whitespace is normalized so labels copied from output remain
+usable:
+
+```bash
+savestate memory list --source "Chat GPT"
+savestate memory explain "inbox preference" --source "claude  code" --json
+```
+
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
   --exclude <types>                  Skip memory, conversation, identity, or knowledge
