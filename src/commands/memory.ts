@@ -266,7 +266,12 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
     keys.set(normalizedKey, key);
     counts[key] = (counts[key] ?? 0) + 1;
   }
-  return counts;
+  // Sort aggregate keys so JSON output is stable when archive ordering changes.
+  return Object.fromEntries(
+    Object.keys(counts)
+      .sort((left, right) => left < right ? -1 : left > right ? 1 : 0)
+      .map((key) => [key, counts[key]]),
+  );
 }
 
 /** Summarize the collection currently being listed, including active filters. */
