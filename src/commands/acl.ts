@@ -395,7 +395,7 @@ export function parseAclVerifier(value: string | undefined): string {
   return verifier;
 }
 
-/** Parse acl --description without writing a blank commitment description. */
+/** Parse acl --description without writing a blank or multiline description. */
 export function parseAclDescription(value: string | undefined): string {
   if (value === undefined) {
     throw new Error(
@@ -404,9 +404,9 @@ export function parseAclDescription(value: string | undefined): string {
   }
 
   const description = value.trim();
-  if (description.length === 0) {
+  if (description.length === 0 || /[\r\n]/.test(description)) {
     throw new Error(
-      `Invalid --description value "${value}". Expected a non-empty commitment description.`,
+      `Invalid --description value "${value}". Expected a non-empty single-line commitment description.`,
     );
   }
 

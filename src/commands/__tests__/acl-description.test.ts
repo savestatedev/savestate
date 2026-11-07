@@ -12,7 +12,14 @@ describe('savestate acl --description', () => {
 
   it.each(['', ' '])('rejects invalid value %s', (value) => {
     expect(() => parseAclDescription(value)).toThrow(
-      `Invalid --description value "${value}". Expected a non-empty commitment description.`,
+      `Invalid --description value "${value}". Expected a non-empty single-line commitment description.`,
+    );
+  });
+
+  it('rejects multiline descriptions so human listings stay one record per line', () => {
+    const value = 'Refund within 24h\nEscalate if delayed';
+    expect(() => parseAclDescription(value)).toThrow(
+      `Invalid --description value "${value}". Expected a non-empty single-line commitment description.`,
     );
   });
 
