@@ -255,6 +255,20 @@ export function countByFreshness(
   return counts;
 }
 
+/** Count memories by normalized source for machine-readable summaries. */
+export function countBySource(memories: MemoryEntry[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  const keys = new Map<string, string>();
+  for (const memory of memories) {
+    const source = normalizeMemoryListSource(memory.source);
+    const normalizedKey = source.toLocaleLowerCase();
+    const key = keys.get(normalizedKey) ?? source;
+    keys.set(normalizedKey, key);
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+}
+
 /** Summarize the collection currently being listed, including active filters. */
 export function getMemoryListSummary(memories: MemoryEntry[]): {
   counts: Record<MemoryTier, number>;
@@ -332,6 +346,8 @@ export interface MemoryListJson {
   };
   byTier: Record<MemoryTier, number>;
   shownByTier: Record<MemoryTier, number>;
+  bySource: Record<string, number>;
+  shownBySource: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: number;
@@ -417,6 +433,8 @@ export function formatMemoryListJson(
     },
     byTier: countByTier(all),
     shownByTier: countByTier(shown),
+    bySource: countBySource(all),
+    shownBySource: countBySource(shown),
     byFreshness: countByFreshness(all, now),
     shownByFreshness: countByFreshness(shown, now),
     pinned: all.filter((entry) => !!entry.pinned).length,

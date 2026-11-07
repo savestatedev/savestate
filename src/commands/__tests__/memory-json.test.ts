@@ -8,6 +8,7 @@ import {
   filterMemoryListByTags,
   getMemoryListSummary,
   countByFreshness,
+  countBySource,
   normalizeMemoryListNamespace,
   type MemoryListJson,
 } from '../memory.js';
@@ -132,6 +133,16 @@ describe('savestate memory --json', () => {
     });
   });
 
+  it('counts sources case-insensitively while preserving the first label', () => {
+    const entries = [
+      entry({ id: 'mem-a', content: 'a', source: 'Claude-Code' }),
+      entry({ id: 'mem-b', content: 'b', source: ' claude-code ' }),
+      entry({ id: 'mem-c', content: 'c', source: 'user' }),
+    ];
+
+    expect(countBySource(entries)).toEqual({ 'Claude-Code': 2, user: 1 });
+  });
+
   it('keeps freshness counts and entries consistent at a TTL boundary', () => {
     const now = new Date('2026-10-15T12:00:00.000Z');
     const entryAtBoundary = entry({
@@ -184,6 +195,8 @@ describe('savestate memory --json', () => {
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
+    expect(parsed.bySource).toEqual({ user: 2, agent: 1 });
+    expect(parsed.shownBySource).toEqual({ user: 1, agent: 1 });
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 3, needs_confirmation: 0 });
     expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 2, needs_confirmation: 0 });
     expect(parsed.pinned).toBe(1);
@@ -266,6 +279,8 @@ describe('savestate memory --json', () => {
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
+    expect(parsed.bySource).toEqual({});
+    expect(parsed.shownBySource).toEqual({});
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(parsed.pinned).toBe(0);
