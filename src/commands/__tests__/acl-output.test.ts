@@ -58,6 +58,7 @@ describe('savestate acl human-readable output', () => {
       'Commitment proposed: cmt-1',
       'State: proposed',
       'Criticality: c3',
+      'Proposed: 2026-11-06T00:00:00.000Z',
       'Proposer: agent-1',
       'Expires: Never',
     ]);

@@ -66,6 +66,7 @@ export function formatAclProposeRows(commitment: Commitment): string[] {
     `Commitment proposed: ${commitment.id}`,
     `State: ${commitment.state}`,
     `Criticality: ${commitment.criticality}`,
+    `Proposed: ${commitment.proposedAt}`,
     `Proposer: ${commitment.proposer}`,
     `Expires: ${commitment.expiresAt || 'Never'}`,
   ];
