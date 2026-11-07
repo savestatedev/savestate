@@ -292,14 +292,14 @@ export function parseMemoryTags(value: string | undefined): string[] | undefined
   return tags;
 }
 
-/** Parse memory --source without treating blank or comma-separated values as filters. */
+/** Parse memory --source while matching the normalized source labels shown in output. */
 export function parseMemorySource(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
 
-  const source = value.trim();
-  if (source.length === 0 || source.includes(',') || /\s/.test(source)) {
+  const source = value.trim().replace(/\s+/g, ' ');
+  if (source.length === 0 || source.includes(',')) {
     throw new Error(
-      `Invalid --source value "${value}". Expected a single non-empty source id.`,
+      `Invalid --source value "${value}". Expected a single non-empty source id or label.`,
     );
   }
 
@@ -541,7 +541,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-p, --pinned', 'Show only pinned memories')
     .option('--unpinned', 'Show only unpinned memories')
-    .option('--source <id>', 'Filter by source id')
+    .option('--source <id>', 'Filter by source id or label (matching is case-insensitive)')
     .option('--until <date>', 'Show memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
     .option('--content <text>', 'Filter by case-insensitive content substring')
@@ -765,7 +765,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
-    .option('--source <id>', 'Source id to search (matching is case-insensitive)')
+    .option('--source <id>', 'Source id or label to search (matching is case-insensitive)')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('-p, --pinned', 'Filter to pinned memories')
     .option('--unpinned', 'Filter to unpinned memories')
