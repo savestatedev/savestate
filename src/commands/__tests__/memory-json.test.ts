@@ -133,14 +133,18 @@ describe('savestate memory --json', () => {
     });
   });
 
-  it('counts sources case-insensitively while preserving the first label', () => {
-    const entries = [
+  it('counts normalized source labels for the full collection and visible page', () => {
+    const all = [
       entry({ id: 'mem-a', content: 'a', source: 'Claude-Code' }),
       entry({ id: 'mem-b', content: 'b', source: ' claude-code ' }),
       entry({ id: 'mem-c', content: 'c', source: 'user' }),
     ];
 
-    expect(countBySource(entries)).toEqual({ 'Claude-Code': 2, user: 1 });
+    expect(countBySource(all)).toEqual({ 'Claude-Code': 2, user: 1 });
+
+    const parsed = JSON.parse(formatMemoryListJson(all, all.slice(0, 2))) as MemoryListJson;
+    expect(parsed.bySource).toEqual({ 'Claude-Code': 2, user: 1 });
+    expect(parsed.shownBySource).toEqual({ 'Claude-Code': 2 });
   });
 
   it('keeps freshness counts and entries consistent at a TTL boundary', () => {
