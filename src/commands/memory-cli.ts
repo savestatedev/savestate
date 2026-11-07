@@ -528,7 +528,9 @@ export function registerMemoryCommands(program: Command): void {
       'after',
       '\nExamples:\n' +
         '  $ savestate memory list --tier L1\n' +
+        '  $ savestate memory list --source chatgpt\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
+        '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +
         '  $ savestate memory log <memory-id>\n',
     );
 

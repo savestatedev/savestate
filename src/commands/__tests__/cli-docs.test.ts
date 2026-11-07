@@ -2669,7 +2669,11 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--source');
     expect(memorySection).toContain('source id');
     expect(memorySection).toContain('matching is case-insensitive');
+    expect(memorySection).toContain('savestate memory list --source chatgpt');
+    expect(memorySection).toContain('savestate memory explain "inbox preference" --source claude-code --json');
     expect(memoryCli).toContain('export function parseMemorySource');
+    expect(memoryCli).toContain('savestate memory list --source chatgpt');
+    expect(memoryCli).toContain('savestate memory explain "preferred editor" --source claude-code --json');
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
     expect(explainBlock).toContain(".option('--source <id>'");
     expect(memoryCli).toContain('source: parseMemorySource(options.source)');
