@@ -289,6 +289,14 @@ export function formatMemoryListFreshnessSummary(
   return `${counts.active} active, ${counts.stale} stale, ${counts.needs_confirmation} confirmation needed`;
 }
 
+/** Format normalized source totals for the human-facing list summary. */
+export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
+  const counts = countBySource(memories);
+  return Object.entries(counts)
+    .map(([source, count]) => `${source} ${count}`)
+    .join(', ') || 'none';
+}
+
 /** Format freshness totals for the rows visible on a paginated table page. */
 export function formatMemoryListPageFreshnessSummary(
   memories: MemoryEntry[],
@@ -1387,6 +1395,7 @@ export async function listMemories(
   console.log(`  L2 (working set): ${counts.L2} items`);
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
+  console.log(`Source Summary: ${formatMemoryListSourceSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
