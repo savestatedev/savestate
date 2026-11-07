@@ -249,10 +249,16 @@ For memory-layer retrieval explanations, use `memory explain` to inspect why
 ranked memories matched a query:
 
 ```bash
+savestate memory list --source chatgpt --json
 savestate memory explain "inbox preference" --json
+savestate memory explain "inbox preference" --source claude-code --json
 savestate memory explain "inbox preference" --offset 10 --limit 5 --json
 savestate memory explain "inbox preference" --snapshot ss-2026-10-18 --offset 10 --limit 5 --json
 ```
+
+Use `--source` to inspect memories captured from one originating platform; matching is
+case-insensitive. The filter applies before pagination, so it can be combined with
+`--limit` and `--offset` for a stable, source-scoped page.
 
 Pass `--snapshot` to explain retrievals from a historical archive. Filters are
 applied before pagination, so the JSON response keeps each result's stable

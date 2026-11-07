@@ -8,6 +8,11 @@ const docs = readFileSync(
   'utf8',
 );
 
+const readme = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../../../README.md'),
+  'utf8',
+);
+
 const cli = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '../../cli.ts'),
   'utf8',
@@ -2677,6 +2682,14 @@ describe('CLI docs', () => {
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));
     expect(explainBlock).toContain(".option('--source <id>'");
     expect(memoryCli).toContain('source: parseMemorySource(options.source)');
+  });
+
+  it('shows source-scoped memory workflows in the README', () => {
+    expect(readme).toContain('savestate memory list --source chatgpt --json');
+    expect(readme).toContain('savestate memory explain "inbox preference" --source claude-code --json');
+    expect(readme).toContain('case-insensitive');
+    expect(readme).toContain('filter applies before pagination');
+    expect(readme).toContain('source-scoped page');
   });
 
   it('documents memory explain --content as a content filter', () => {
