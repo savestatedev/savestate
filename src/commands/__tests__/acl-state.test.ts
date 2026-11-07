@@ -87,6 +87,16 @@ describe('savestate acl list --state', () => {
       .map(({ id }) => id)).toEqual(['cmt-reviewer-2']);
   });
 
+  it('filters by exact description before pagination', () => {
+    const commitments = [
+      commitment('cmt-refund', 'active'),
+      { ...commitment('cmt-escalate', 'active'), description: 'Escalate to a human' },
+      { ...commitment('cmt-refund-again', 'proposed'), description: 'Refund within 24h' },
+    ];
+    expect(filterAclCommitments(commitments, undefined, undefined, undefined, undefined, undefined, 'Refund within 24h')
+      .map(({ id }) => id)).toEqual(['cmt-refund-again']);
+  });
+
   it('reports the state filter in JSON pagination metadata', () => {
     const summary = JSON.parse(formatAclListJsonSummary(
       [commitment('cmt-active', 'active')],
@@ -97,12 +107,14 @@ describe('savestate acl list --state', () => {
       'c2',
       'agent-2',
       'reviewer-2',
+      'cmt-active',
     ));
     expect(summary.state).toBe('active');
     expect(summary.type).toBe('customer_promise');
     expect(summary.criticality).toBe('c2');
     expect(summary.proposer).toBe('agent-2');
     expect(summary.verifier).toBe('reviewer-2');
+    expect(summary.description).toBe('cmt-active');
     expect(summary.entries.map((entry: { id: string }) => entry.id)).toEqual(['cmt-active']);
   });
 
@@ -115,5 +127,7 @@ describe('savestate acl list --state', () => {
     expect(formatAclListHeading(1, 0, 5, undefined, undefined, 'c1')).toContain('criticality c1');
     expect(formatAclListHeading(1, 0, 5, undefined, undefined, undefined, 'agent-2')).toContain('proposer agent-2');
     expect(formatAclListHeading(1, 0, 5, undefined, undefined, undefined, undefined, 'reviewer-2')).toContain('verifier reviewer-2');
+    expect(formatAclListHeading(1, 0, 5, undefined, undefined, undefined, undefined, undefined, 'Refund within 24h'))
+      .toContain('description Refund within 24h');
   });
 });

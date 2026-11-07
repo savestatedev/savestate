@@ -92,6 +92,7 @@ export interface AclListJsonSummary {
   criticality: Criticality | null;
   proposer: string | null;
   verifier: string | null;
+  description: string | null;
   page: number;
   totalPages: number;
   hasPrevious: boolean;
@@ -112,6 +113,7 @@ export function formatAclListJsonSummary(
   criticality?: Criticality,
   proposer?: string,
   verifier?: string,
+  description?: string,
 ): string {
   const page = limit === undefined
     ? commitments.slice(offset)
@@ -143,6 +145,7 @@ export function formatAclListJsonSummary(
     criticality: criticality ?? null,
     proposer: proposer ?? null,
     verifier: verifier ?? null,
+    description: description ?? null,
     page: limit === undefined
       ? commitments.length > 0 ? 1 : 0
       : Math.floor(offset / limit) + 1,
@@ -183,6 +186,7 @@ export function formatAclListHeading(
   criticality?: Criticality,
   proposer?: string,
   verifier?: string,
+  description?: string,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
@@ -192,6 +196,7 @@ export function formatAclListHeading(
     criticality === undefined ? undefined : `criticality ${criticality}`,
     proposer === undefined ? undefined : `proposer ${proposer}`,
     verifier === undefined ? undefined : `verifier ${verifier}`,
+    description === undefined ? undefined : `description ${description}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   return `Found ${count} commitment(s)${suffix}:`;
@@ -206,6 +211,7 @@ export function formatAclListEmpty(
   criticality?: Criticality,
   proposer?: string,
   verifier?: string,
+  description?: string,
 ): string {
   const paging = [
     offset === undefined ? undefined : `skipped ${offset}`,
@@ -215,6 +221,7 @@ export function formatAclListEmpty(
     criticality === undefined ? undefined : `criticality ${criticality}`,
     proposer === undefined ? undefined : `proposer ${proposer}`,
     verifier === undefined ? undefined : `verifier ${verifier}`,
+    description === undefined ? undefined : `description ${description}`,
   ].filter((value): value is string => value !== undefined);
   const suffix = paging.length > 0 ? ` (${paging.join(', ')})` : '';
   const recovery = suggestedOffset === null
@@ -460,13 +467,15 @@ export function filterAclCommitments(
   criticality?: Criticality,
   proposer?: string,
   verifier?: string,
+  description?: string,
 ): Commitment[] {
   return commitments.filter((commitment) =>
     (state === undefined || commitment.state === state)
     && (type === undefined || commitment.type === type)
     && (criticality === undefined || commitment.criticality === criticality)
     && (proposer === undefined || commitment.proposer === proposer)
-    && (verifier === undefined || commitment.verifier === verifier),
+    && (verifier === undefined || commitment.verifier === verifier)
+    && (description === undefined || commitment.description === description),
   );
 }
 
@@ -696,10 +705,31 @@ async function aclList(options: AclCommandOptions = {}) {
     const verifier = options.verifier === undefined
       ? undefined
       : parseAclVerifier(options.verifier);
-    const allCommitments = filterAclCommitments(listCommitments(), state, type, criticality, proposer, verifier);
+    const description = options.description === undefined
+      ? undefined
+      : parseAclDescription(options.description);
+    const allCommitments = filterAclCommitments(
+      listCommitments(),
+      state,
+      type,
+      criticality,
+      proposer,
+      verifier,
+      description,
+    );
     const commitments = applyAclLimit(applyAclOffset(allCommitments, offset), limit);
     if (options.jsonSummary) {
-      console.log(formatAclListJsonSummary(allCommitments, offset ?? 0, limit, state, type, criticality, proposer, verifier));
+      console.log(formatAclListJsonSummary(
+        allCommitments,
+        offset ?? 0,
+        limit,
+        state,
+        type,
+        criticality,
+        proposer,
+        verifier,
+        description,
+      ));
       return;
     }
     if (options.json) {
@@ -716,10 +746,21 @@ async function aclList(options: AclCommandOptions = {}) {
         criticality,
         proposer,
         verifier,
+        description,
       ));
       return;
     }
-    console.log(`${formatAclListHeading(commitments.length, offset, limit, state, type, criticality, proposer, verifier)}\n`);
+    console.log(`${formatAclListHeading(
+      commitments.length,
+      offset,
+      limit,
+      state,
+      type,
+      criticality,
+      proposer,
+      verifier,
+      description,
+    )}\n`);
     commitments.forEach((commitment) => console.log(formatAclCommitmentText(commitment)));
   } catch (error: any) {
     console.error('Error listing commitments:', error.message);
@@ -747,7 +788,7 @@ export function registerACLCommands(program: Command) {
     .description('Manage active commitments (ACL; single non-empty subcommand: propose, verify, gate, or list)')
     .option('-t, --type <type>', 'Commitment type (customer_promise, ticket_status_change, escalation_closure, account_tool_write)')
     .option('-c, --criticality <level>', 'Criticality level (c1, c2, c3)')
-    .option('-d, --description <text>', 'Description of the commitment (non-empty)')
+    .option('-d, --description <text>', 'Description for propose, or an exact description filter for list (non-empty)')
     .option('-p, --proposer <id>', 'ID of the proposing agent for propose, or a proposer filter for list (single non-empty id)')
     .option('-e, --expires-in <minutes>', 'Minutes until expiration')
     .option('-i, --id <id>', 'Commitment ID (single non-empty id)')
