@@ -6,6 +6,7 @@ import {
   formatMemoryListCreatedAt,
   formatMemoryListFreshness,
   formatMemoryListPageFreshnessSummary,
+  formatMemoryListPageSourceSummary,
   formatMemoryListFreshnessSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
@@ -113,6 +114,13 @@ describe('memory list table freshness display', () => {
     expect(formatMemoryListPageFreshnessSummary([
       { id: 'active', content: 'active', source: 'test', createdAt: '2026-10-15T11:00:00.000Z', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' },
     ], now)).toBe('Page Freshness: 1 active, 0 stale, 0 confirmation needed');
+  });
+
+  it('labels source totals for the visible page', () => {
+    expect(formatMemoryListPageSourceSummary([
+      { id: 'a', content: 'a', source: 'Claude-Code', createdAt: '2026-09-01T00:00:00.000Z' },
+      { id: 'b', content: 'b', source: 'user', createdAt: '2026-09-01T00:00:00.000Z' },
+    ])).toBe('Page Sources: Claude-Code 1, user 1');
   });
 });
 
