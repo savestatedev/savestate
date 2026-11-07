@@ -214,6 +214,8 @@ filter metadata is emitted in its normalized, de-duplicated form.
 `savestate memory list --json` includes `bySource` and `shownBySource` counts alongside the
 tier and freshness summaries. Source keys are trimmed and grouped case-insensitively, preserving
 the first spelling seen so scripts can summarize platform coverage without rescanning entries.
+Table output also shows matching-collection source totals and, when paginated, source totals for
+the rows on the visible page.
 
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
