@@ -61,6 +61,7 @@ describe('savestate acl human-readable output', () => {
       'Proposed: 2026-11-06T00:00:00.000Z',
       'Proposer: agent-1',
       'Expires: Never',
+      'Description: Refund within 24h',
     ]);
   });
 });
