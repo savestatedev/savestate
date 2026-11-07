@@ -3571,7 +3571,7 @@ describe('CLI docs', () => {
   it('documents acl --description as a non-empty commitment description', () => {
     const aclSection = docs.slice(docs.indexOf('id="acl"'), docs.indexOf('id="identity"'));
     expect(aclSection).toContain('--description');
-    expect(aclSection).toContain('Must be a non-empty commitment description');
+    expect(aclSection).toContain('Must be a non-empty, single-line commitment description');
     expect(acl).toContain('export function parseAclDescription');
   });
 
