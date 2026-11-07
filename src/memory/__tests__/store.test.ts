@@ -70,7 +70,8 @@ describe('MemoryStore', () => {
         metadata: { source: '  Claude  Code\t' },
       });
 
-      await expect(store.query({ source: 'Claude Code' })).resolves.toHaveLength(1);
+      await expect(store.query({ source: '  Claude  Code\t ' })).resolves.toHaveLength(1);
+      expect(store.count({ source: '\nClaude\tCode ' })).toBe(1);
     });
   });
 

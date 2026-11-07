@@ -15,7 +15,7 @@ import type {
   MemoryQuery,
   MemoryStats
 } from './types.js';
-import { normalizeMemoryMetadata } from './source.js';
+import { normalizeMemoryMetadata, normalizeMemorySource } from './source.js';
 import type { WriteGate } from '../trust-kernel/gates.js';
 
 const DEFAULT_DB_PATH = join(homedir(), '.savestate', 'memory.db');
@@ -41,7 +41,7 @@ function appendSearchFilter(sql: string, params: unknown[], search: string): str
 }
 
 function appendSourceFilter(sql: string, params: unknown[], source: string): string {
-  params.push(source.trim());
+  params.push(normalizeMemorySource(source));
   return `${sql} AND lower(trim(COALESCE(json_extract(metadata, '$.source'), ''))) = lower(?)`;
 }
 
