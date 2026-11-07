@@ -7,11 +7,12 @@ import {
   parseMemoriesResourceDate,
   validateMemoriesResourceDateRange,
 } from './memories-resource-filters.js';
+import { normalizeMemorySource } from '../memory/source.js';
 
 export const MemorySearchInputSchema = z.object({
   query: z.string().optional(),
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
-  source: z.string().trim().min(1).optional(),
+  source: z.string().trim().min(1).transform(normalizeMemorySource).optional(),
   tags: z.array(z.string()).optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),

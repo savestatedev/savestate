@@ -59,6 +59,7 @@ import { resolveStorage } from '../storage/resolve.js';
 import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 import { MemoryStore } from '../memory/store.js';
 import type { MemoryEntry, MemoryType, MemoryQuery } from '../memory/types.js';
+import { normalizeMemorySource } from '../memory/source.js';
 import { parseAddMemoriesLimit, selectAddMemoriesEntries } from './add-memories-limit.js';
 import { parseAddMemoriesOffset, selectAddMemoriesOffsetEntries } from './add-memories-offset.js';
 import { parseDeleteAllMemoriesLimit, selectDeleteAllMemoriesEntries } from './delete-all-memories-limit.js';
@@ -802,7 +803,7 @@ const AddMemoriesInputSchema = z.object({
 
 export const ListMemoriesInputSchema = z.object({
   type: z.enum(['fact', 'event', 'preference', 'conversation']).optional(),
-  source: z.string().trim().min(1).optional(),
+  source: z.string().trim().min(1).transform(normalizeMemorySource).optional(),
   tags: z.array(z.string()).optional(),
   minImportance: z.number().min(0).max(1).optional(),
   maxImportance: z.number().min(0).max(1).optional(),

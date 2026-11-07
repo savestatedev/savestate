@@ -57,6 +57,7 @@ describe('MCP savestate://memories importance filters', () => {
 
   it('parses non-empty source filters', () => {
     expect(parseMemoriesResourceSource('  Claude-Code ')).toBe('Claude-Code');
+    expect(parseMemoriesResourceSource('  Claude  Code\t')).toBe('Claude Code');
     expect(parseMemoriesResourceSource(null)).toBeUndefined();
     expect(() => parseMemoriesResourceSource('   ')).toThrow(
       'Invalid source value. Expected a non-empty source.',
