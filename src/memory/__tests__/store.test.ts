@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { rmSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import Database from 'better-sqlite3';
 
 describe('MemoryStore', () => {
   let store: MemoryStore;
@@ -72,6 +73,34 @@ describe('MemoryStore', () => {
 
       await expect(store.query({ source: '  Claude  Code\t ' })).resolves.toHaveLength(1);
       expect(store.count({ source: '\nClaude\tCode ' })).toBe(1);
+    });
+
+    it('should migrate legacy source metadata before filtering', async () => {
+      const legacyId = randomUUID();
+      const now = new Date().toISOString();
+      store.close();
+
+      const legacyDb = new Database(dbPath);
+      legacyDb.prepare(`
+        INSERT INTO memories (id, type, content, metadata, importance, created_at, updated_at, tags, encrypted)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        legacyId,
+        'fact',
+        'Legacy source metadata',
+        JSON.stringify({ source: '  Claude  Code\t' }),
+        0.5,
+        now,
+        now,
+        null,
+        0,
+      );
+      legacyDb.close();
+
+      store = new MemoryStore({ dbPath, encryptionEnabled: false });
+      await expect(store.query({ source: 'Claude Code' })).resolves.toMatchObject([
+        { id: legacyId, metadata: { source: 'Claude Code' } },
+      ]);
     });
   });
 

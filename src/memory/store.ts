@@ -137,6 +137,36 @@ export class MemoryStore {
       CREATE INDEX IF NOT EXISTS idx_memories_importance ON memories(importance);
       CREATE INDEX IF NOT EXISTS idx_memories_created_at ON memories(created_at);
     `);
+
+    this.normalizeStoredSources();
+  }
+
+  /** Bring source metadata written by older versions in line with current filters. */
+  private normalizeStoredSources(): void {
+    const rows = this.db
+      .prepare('SELECT id, metadata FROM memories WHERE metadata IS NOT NULL')
+      .all() as Array<{ id: string; metadata: string }>;
+    const update = this.db.prepare('UPDATE memories SET metadata = ? WHERE id = ?');
+
+    const migrate = this.db.transaction(() => {
+      for (const row of rows) {
+        let metadata: unknown;
+        try {
+          metadata = JSON.parse(row.metadata);
+        } catch {
+          continue;
+        }
+
+        if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) continue;
+        const normalized = normalizeMemoryMetadata(metadata as Record<string, unknown>);
+        if (!normalized) continue;
+
+        const serialized = JSON.stringify(normalized);
+        if (serialized !== row.metadata) update.run(serialized, row.id);
+      }
+    });
+
+    migrate();
   }
 
   /**
