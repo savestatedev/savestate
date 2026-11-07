@@ -9,6 +9,7 @@ import {
   formatMemoryListFreshnessSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
+  formatMemoryListSourceSummary,
   normalizeMemoryListSource,
   formatMemoryListTags,
   filterMemoryListBySource,
@@ -112,6 +113,20 @@ describe('memory list table freshness display', () => {
     expect(formatMemoryListPageFreshnessSummary([
       { id: 'active', content: 'active', source: 'test', createdAt: '2026-10-15T11:00:00.000Z', freshnessClass: 'fast', lastVerifiedAt: '2026-10-15T10:00:00.000Z' },
     ], now)).toBe('Page Freshness: 1 active, 0 stale, 0 confirmation needed');
+  });
+});
+
+describe('memory list source summary display', () => {
+  it('groups source labels case-insensitively while preserving first spelling', () => {
+    expect(formatMemoryListSourceSummary([
+      { id: 'a', content: 'a', source: 'Claude-Code', createdAt: '2026-09-01T00:00:00.000Z' },
+      { id: 'b', content: 'b', source: ' claude-code ', createdAt: '2026-09-01T00:00:00.000Z' },
+      { id: 'c', content: 'c', source: 'user', createdAt: '2026-09-01T00:00:00.000Z' },
+    ])).toBe('Claude-Code 2, user 1');
+  });
+
+  it('reports an empty source summary without a blank line', () => {
+    expect(formatMemoryListSourceSummary([])).toBe('none');
   });
 });
 

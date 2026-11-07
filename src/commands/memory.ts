@@ -255,6 +255,20 @@ export function countByFreshness(
   return counts;
 }
 
+/** Count memories by normalized source for machine-readable summaries. */
+export function countBySource(memories: MemoryEntry[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  const keys = new Map<string, string>();
+  for (const memory of memories) {
+    const source = normalizeMemoryListSource(memory.source);
+    const normalizedKey = source.toLocaleLowerCase();
+    const key = keys.get(normalizedKey) ?? source;
+    keys.set(normalizedKey, key);
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+}
+
 /** Summarize the collection currently being listed, including active filters. */
 export function getMemoryListSummary(memories: MemoryEntry[]): {
   counts: Record<MemoryTier, number>;
@@ -273,6 +287,14 @@ export function formatMemoryListFreshnessSummary(
 ): string {
   const counts = countByFreshness(memories, now);
   return `${counts.active} active, ${counts.stale} stale, ${counts.needs_confirmation} confirmation needed`;
+}
+
+/** Format normalized source totals for the human-facing list summary. */
+export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
+  const counts = countBySource(memories);
+  return Object.entries(counts)
+    .map(([source, count]) => `${source} ${count}`)
+    .join(', ') || 'none';
 }
 
 /** Format freshness totals for the rows visible on a paginated table page. */
@@ -332,6 +354,8 @@ export interface MemoryListJson {
   };
   byTier: Record<MemoryTier, number>;
   shownByTier: Record<MemoryTier, number>;
+  bySource: Record<string, number>;
+  shownBySource: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: number;
@@ -417,6 +441,8 @@ export function formatMemoryListJson(
     },
     byTier: countByTier(all),
     shownByTier: countByTier(shown),
+    bySource: countBySource(all),
+    shownBySource: countBySource(shown),
     byFreshness: countByFreshness(all, now),
     shownByFreshness: countByFreshness(shown, now),
     pinned: all.filter((entry) => !!entry.pinned).length,
@@ -1369,6 +1395,7 @@ export async function listMemories(
   console.log(`  L2 (working set): ${counts.L2} items`);
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
+  console.log(`Source Summary: ${formatMemoryListSourceSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);

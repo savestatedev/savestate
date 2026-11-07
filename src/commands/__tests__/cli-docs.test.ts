@@ -180,6 +180,7 @@ describe('CLI docs', () => {
     expect(docs).toContain('<code>remaining</code> matching entries after the current page');
     expect(docs).toContain('pass the returned offset back with <code>--offset</code>');
     expect(docs).toContain('namespace (a string or <code>null</code>)');
+    expect(docs).toContain('bySource</code> and <code>shownBySource');
     expect(docs).toContain('byFreshness</code> and <code>shownByFreshness');
   });
 
