@@ -169,6 +169,21 @@ describe('TrustStore', () => {
       expect(metrics.entriesByScope.procedural).toBe(1);
     });
   });
+
+  it('expires zero-second entries immediately', () => {
+    const entry = store.create({
+      content: 'Immediate expiry',
+      scope: 'episodic',
+      confidence: 0.5,
+      source: 'test',
+      ttlSeconds: 0,
+    });
+
+    expect(entry.expiresAt).toBeDefined();
+    expect(store.query({ includeExpired: false })).toHaveLength(0);
+    expect(store.cleanupExpired()).toBe(1);
+    expect(store.get(entry.id)).toBeNull();
+  });
 });
 
 describe('WriteGate', () => {
