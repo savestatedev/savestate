@@ -20,7 +20,7 @@ describe('MCP memory resource entries', () => {
       id: 'memory-1',
       type: 'fact',
       content: 'The archive is encrypted.',
-      metadata: { source: 'security-review', namespace: '  org:app:agent  ', confidence: 0.98 },
+      metadata: { source: 'security-review', namespace: 'org:app:agent', confidence: 0.98 },
       source: 'security-review',
       namespace: 'org:app:agent',
       tags: ['security'],

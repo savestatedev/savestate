@@ -334,8 +334,10 @@ describe('MemoryStore', () => {
     });
 
     it('should filter metadata namespaces case-insensitively', async () => {
-      await store.create({ type: 'fact', content: 'Agent memory', metadata: { namespace: ' Org:App:Agent ' } });
+      const created = await store.create({ type: 'fact', content: 'Agent memory', metadata: { namespace: ' Org:App:Agent ' } });
       await store.create({ type: 'fact', content: 'Other memory', metadata: { namespace: 'org:app:other' } });
+
+      expect(created.metadata).toEqual({ namespace: 'Org:App:Agent' });
 
       const results = await store.query({ namespace: ' org:app:agent ' });
 
