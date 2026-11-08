@@ -154,8 +154,15 @@ import {
   INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
 } from './memory-importance-range.js';
 import { toMemoryResourceEntry } from './memory-resource-entry.js';
-import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
-import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
+import {
+  buildSnapshotsResourcePage,
+  parseSnapshotsResourceLimit,
+  parseSnapshotsResourceLimitQuery,
+} from './snapshots-resource-limit.js';
+import {
+  parseSnapshotsResourceOffset,
+  parseSnapshotsResourceOffsetQuery,
+} from './snapshots-resource-offset.js';
 import { formatSnapshotsResourceEntry } from './snapshots-resource-entry.js';
 import {
   buildSnapshotsResourceUri,
@@ -1754,11 +1761,11 @@ async function handleReadResource(uri: string): Promise<string> {
       const rawOffset = url.searchParams.get('offset');
       const offset = rawOffset === null
         ? undefined
-        : parseSnapshotsResourceOffset(Number(rawOffset));
+        : parseSnapshotsResourceOffsetQuery(rawOffset);
       const rawLimit = url.searchParams.get('limit');
       const limit = rawLimit === null
         ? undefined
-        : parseSnapshotsResourceLimit(Number(rawLimit));
+        : parseSnapshotsResourceLimitQuery(rawLimit);
       const platform = parseSnapshotsResourcePlatform(url.searchParams.get('platform'));
       const adapter = parseSnapshotsResourceAdapter(url.searchParams.get('adapter'));
       const label = parseSnapshotsResourceLabel(url.searchParams.get('label'));

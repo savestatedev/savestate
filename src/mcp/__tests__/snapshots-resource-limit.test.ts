@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   buildSnapshotsResourcePage,
   parseSnapshotsResourceLimit,
+  parseSnapshotsResourceLimitQuery,
   selectSnapshotsResourceEntries,
 } from '../snapshots-resource-limit.js';
+import { parseSnapshotsResourceOffsetQuery } from '../snapshots-resource-offset.js';
 
 describe('MCP savestate://snapshots limit', () => {
   it('defaults to undefined', () => {
@@ -25,6 +27,26 @@ describe('MCP savestate://snapshots limit', () => {
     expect(() => parseSnapshotsResourceLimit(1001)).toThrow(
       'Invalid limit value "1001". Expected a positive integer up to 1000.',
     );
+  });
+
+  it.each(['', '0x10', '1e2', '0'])('rejects non-decimal query limit %j', (value) => {
+    expect(() => parseSnapshotsResourceLimitQuery(value)).toThrow(
+      `Invalid limit value "${value}". Expected a positive decimal integer up to 1000.`,
+    );
+  });
+
+  it('accepts surrounding whitespace in a decimal query limit', () => {
+    expect(parseSnapshotsResourceLimitQuery(' 10 ')).toBe(10);
+  });
+
+  it.each(['', '0x10', '1e2', '-1'])('rejects non-decimal query offset %j', (value) => {
+    expect(() => parseSnapshotsResourceOffsetQuery(value)).toThrow(
+      `Invalid offset value "${value}". Expected a non-negative decimal integer up to 1000.`,
+    );
+  });
+
+  it('accepts surrounding whitespace in a decimal query offset', () => {
+    expect(parseSnapshotsResourceOffsetQuery(' 10 ')).toBe(10);
   });
 
   it('keeps the first N snapshots', () => {
