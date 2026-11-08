@@ -2586,7 +2586,10 @@ export function formatMemoryExplainJson(
       : Math.max(1, results.length));
   // Keep an empty collection from advertising pagination just because --offset was supplied.
   const hasPrevious = offset > 0 && total > 0;
-  const hasMore = pagination.hasMore ?? offset + results.length < total;
+  // An empty page is an exhausted/stale cursor: guide the caller with
+  // suggestedOffset instead of offering a continuation beyond the collection.
+  const emptyPage = results.length === 0 && total > 0;
+  const hasMore = emptyPage ? false : pagination.hasMore ?? offset + results.length < total;
   const remaining = Math.max(0, total - offset - results.length);
   const suggestedOffset = results.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
@@ -2613,7 +2616,7 @@ export function formatMemoryExplainJson(
       hasPrevious,
       previousOffset: hasPrevious ? previousOffset : null,
       hasMore,
-      nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
+      nextOffset: hasMore ? pagination.nextOffset ?? offset + pageSize : null,
     },
     ...(sourceSummary === undefined ? {} : sourceSummary),
     results: results.map((result, index) => {
@@ -2682,10 +2685,11 @@ export function formatMemoryExplainMissingJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
   const pageSize = pagination.pageSize ?? pagination.limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT;
-  // Keep an empty collection from advertising pagination just because --offset was supplied.
-  const hasPrevious = offset > 0 && total > 0;
-  const hasMore = pagination.hasMore ?? offset < total;
-  const remaining = Math.max(0, total - offset);
+  // A missing envelope represents an empty collection, so stale pagination
+  // metadata must never turn it into a navigable result page.
+  const hasPrevious = false;
+  const hasMore = false;
+  const remaining = 0;
   const record: MemoryExplainMissingJson = {
     found: false,
     query,
@@ -2700,9 +2704,9 @@ export function formatMemoryExplainMissingJson(
       remaining,
       pageSize,
       hasPrevious,
-      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
+      previousOffset: null,
       hasMore,
-      nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
+      nextOffset: null,
     },
     results: null,
   };

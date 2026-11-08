@@ -222,6 +222,8 @@ describe('savestate memory explain --json', () => {
     expect(parsed.suggestedOffset).toBe(5);
     expect(parsed.pagination.pageSize).toBe(5);
     expect(parsed.pagination.previousOffset).toBe(5);
+    expect(parsed.pagination.hasMore).toBe(false);
+    expect(parsed.pagination.nextOffset).toBeNull();
   });
 
   it('includes an active freshness filter for JSON consumers', () => {
