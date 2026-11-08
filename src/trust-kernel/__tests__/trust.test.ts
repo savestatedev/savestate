@@ -184,6 +184,23 @@ describe('TrustStore', () => {
     expect(store.cleanupExpired()).toBe(1);
     expect(store.get(entry.id)).toBeNull();
   });
+
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects invalid TTL %s without creating an entry',
+    (ttlSeconds) => {
+      expect(() =>
+        store.create({
+          content: 'Invalid TTL',
+          scope: 'episodic',
+          confidence: 0.5,
+          source: 'test',
+          ttlSeconds,
+        }),
+      ).toThrow('ttlSeconds must be a finite, non-negative number');
+
+      expect(store.query({ includeExpired: true })).toHaveLength(0);
+    },
+  );
 });
 
 describe('WriteGate', () => {

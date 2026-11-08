@@ -105,6 +105,13 @@ export class TrustStore {
    * Create a new trust entry (always starts as candidate).
    */
   create(entry: Omit<TrustEntry, 'id' | 'createdAt' | 'stateChangedAt' | 'state'>): TrustEntry {
+    if (
+      entry.ttlSeconds !== undefined &&
+      (!Number.isFinite(entry.ttlSeconds) || entry.ttlSeconds < 0)
+    ) {
+      throw new Error('ttlSeconds must be a finite, non-negative number');
+    }
+
     const id = randomUUID();
     const now = new Date().toISOString();
 
