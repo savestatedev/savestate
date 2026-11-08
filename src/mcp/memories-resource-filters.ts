@@ -43,16 +43,25 @@ export function parseMemoriesResourceSource(value: string | null): string | unde
   return normalizeMemorySource(normalized);
 }
 
-/** Parse an optional memory resource namespace without widening a blank filter. */
+/** Parse a namespace scope without allowing blank or multi-valued filters. */
 export function parseMemoriesResourceNamespace(value: string | null): string | undefined {
   if (value === null) return undefined;
 
-  const normalized = value.trim();
-  if (normalized.length === 0) {
-    throw new Error('Invalid namespace value. Expected a non-empty namespace.');
+  const namespace = value.trim();
+  const parts = namespace.split(':');
+  if (
+    namespace.length === 0 ||
+    namespace.includes(',') ||
+    /\s/.test(namespace) ||
+    (parts.length !== 3 && parts.length !== 4) ||
+    parts.some((part) => part.length === 0)
+  ) {
+    throw new Error(
+      `Invalid namespace value "${value}". Expected a single non-empty namespace (org:app:agent[:user]).`,
+    );
   }
 
-  return normalized;
+  return namespace;
 }
 
 /** Parse an optional memory resource creation bound and normalize it for SQLite. */

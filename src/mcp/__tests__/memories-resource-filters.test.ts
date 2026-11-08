@@ -65,12 +65,13 @@ describe('MCP savestate://memories importance filters', () => {
     );
   });
 
-  it('parses non-empty namespace filters', () => {
-    expect(parseMemoriesResourceNamespace('  org:app:agent  ')).toBe('org:app:agent');
+  it('parses valid namespaces and rejects ambiguous scopes', () => {
+    expect(parseMemoriesResourceNamespace('  org:app:agent:user ')).toBe('org:app:agent:user');
+    expect(parseMemoriesResourceNamespace(' org:app:agent ')).toBe('org:app:agent');
     expect(parseMemoriesResourceNamespace(null)).toBeUndefined();
-    expect(() => parseMemoriesResourceNamespace('   ')).toThrow(
-      'Invalid namespace value. Expected a non-empty namespace.',
-    );
+    expect(() => parseMemoriesResourceNamespace('   ')).toThrow('Invalid namespace value');
+    expect(() => parseMemoriesResourceNamespace('org:app')).toThrow('Invalid namespace value');
+    expect(() => parseMemoriesResourceNamespace('org:app:agent,other')).toThrow('Invalid namespace value');
   });
 
   it('normalizes inclusive ISO creation bounds', () => {

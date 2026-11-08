@@ -75,6 +75,14 @@ describe('MemoryStore', () => {
       expect(store.count({ source: '\nClaude\tCode ' })).toBe(1);
     });
 
+    it('should filter and count memories by namespace metadata', async () => {
+      await store.create({ type: 'fact', content: 'agent memory', metadata: { namespace: 'org:app:agent' } });
+      await store.create({ type: 'fact', content: 'other memory', metadata: { namespace: 'org:app:other' } });
+
+      await expect(store.query({ namespace: 'org:app:agent' })).resolves.toHaveLength(1);
+      expect(store.count({ namespace: 'org:app:agent' })).toBe(1);
+    });
+
     it('should migrate legacy source metadata before filtering', async () => {
       const legacyId = randomUUID();
       const now = new Date().toISOString();
