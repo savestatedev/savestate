@@ -1875,6 +1875,8 @@ async function handleReadResource(uri: string): Promise<string> {
         pageSize: page.pageSize,
         page: page.page,
         totalPages: page.totalPages,
+        hasMore: page.hasMore,
+        hasPrevious: page.hasPrevious,
         nextOffset: page.nextOffset,
         nextUri: page.nextUri,
         previousOffset: page.previousOffset,
