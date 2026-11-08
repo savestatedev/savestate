@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourceUri,
   formatMemoriesResourceFilters,
+  memoriesResourceNamespacesMatch,
   parseMemoriesResourceDate,
   parseMemoriesResourceImportance,
   parseMemoriesResourceNamespace,
+  parseMemoriesResourcePath,
   parseMemoriesResourceSearch,
   parseMemoriesResourceSource,
   parseMemoriesResourceTag,
@@ -74,6 +76,26 @@ describe('MCP savestate://memories importance filters', () => {
     expect(() => parseMemoriesResourceNamespace('org:app:agent,other')).toThrow('Invalid namespace value');
   });
 
+  it('parses the namespace resource path, including encoded separators', () => {
+    expect(parseMemoriesResourcePath('/org:app:agent')).toBe('org:app:agent');
+    expect(parseMemoriesResourcePath('/org%3Aapp%3Aagent%3Auser')).toBe('org:app:agent:user');
+    expect(parseMemoriesResourcePath('/')).toBeUndefined();
+    expect(() => parseMemoriesResourcePath('//org:app:agent')).toThrow(
+      'Invalid memory resource path',
+    );
+    expect(() => parseMemoriesResourcePath('/org:app:agent/other')).toThrow(
+      'Invalid memory resource path',
+    );
+  });
+
+  it('keeps equivalent namespace path and query scopes case-insensitive', () => {
+    const pathNamespace = parseMemoriesResourcePath('/Org:App:Agent');
+    const queryNamespace = parseMemoriesResourceNamespace('org:app:agent');
+
+    expect(memoriesResourceNamespacesMatch(pathNamespace, queryNamespace)).toBe(true);
+    expect(memoriesResourceNamespacesMatch(pathNamespace, 'org:app:other')).toBe(false);
+  });
+
   it('normalizes inclusive ISO creation bounds', () => {
     expect(parseMemoriesResourceDate('2026-10-01', 'since')).toBe('2026-10-01T00:00:00.000Z');
     expect(parseMemoriesResourceDate('2026-10-01', 'until')).toBe('2026-10-01T23:59:59.999Z');
@@ -91,7 +113,7 @@ describe('MCP savestate://memories importance filters', () => {
 
   it('keeps filters in pagination resource links', () => {
     expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'Claude-Code', 'org:app:agent', 'project', 'encrypted archive', '2026-10-01T00:00:00.000Z', '2026-10-31T23:59:59.999Z')).toBe(
-      'savestate://memories?type=event&source=Claude-Code&namespace=org%3Aapp%3Aagent&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
+      'savestate://memories/org%3Aapp%3Aagent?type=event&source=Claude-Code&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
     );
   });
 

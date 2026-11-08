@@ -64,6 +64,39 @@ export function parseMemoriesResourceNamespace(value: string | null): string | u
   return namespace;
 }
 
+/** Parse the documented savestate://memories/{namespace} resource path. */
+export function parseMemoriesResourcePath(pathname: string): string | undefined {
+  if (pathname === '' || pathname === '/') return undefined;
+  if (!pathname.startsWith('/') || pathname.startsWith('//')) {
+    throw new Error('Invalid memory resource path. Expected one namespace segment.');
+  }
+
+  let value: string;
+  try {
+    value = decodeURIComponent(pathname.slice(1));
+  } catch {
+    throw new Error('Invalid memory resource path. Expected an encoded namespace.');
+  }
+
+  if (value.includes('/')) {
+    throw new Error('Invalid memory resource path. Expected one namespace segment.');
+  }
+
+  return parseMemoriesResourceNamespace(value);
+}
+
+/** Compare path and query namespace scopes using the same case-insensitive matching as storage. */
+export function memoriesResourceNamespacesMatch(
+  pathNamespace: string | undefined,
+  queryNamespace: string | undefined,
+): boolean {
+  return (
+    pathNamespace === undefined ||
+    queryNamespace === undefined ||
+    pathNamespace.toLowerCase() === queryNamespace.toLowerCase()
+  );
+}
+
 /** Parse an optional memory resource creation bound and normalize it for SQLite. */
 export function parseMemoriesResourceDate(
   value: string | null,
@@ -175,7 +208,6 @@ export function buildMemoriesResourceUri(
   const params = new URLSearchParams();
   if (type !== undefined) params.set('type', type);
   if (source !== undefined) params.set('source', source);
-  if (namespace !== undefined) params.set('namespace', namespace);
   if (tag !== undefined) params.set('tag', tag);
   if (search !== undefined) params.set('search', search);
   if (since !== undefined) params.set('since', since);
@@ -183,7 +215,10 @@ export function buildMemoriesResourceUri(
   if (minImportance !== undefined) params.set('minImportance', String(minImportance));
   if (maxImportance !== undefined) params.set('maxImportance', String(maxImportance));
   const query = params.toString();
-  return query.length > 0 ? `savestate://memories?${query}` : 'savestate://memories';
+  const resource = namespace === undefined
+    ? 'savestate://memories'
+    : `savestate://memories/${encodeURIComponent(namespace)}`;
+  return query.length > 0 ? `${resource}?${query}` : resource;
 }
 
 /** Echo every active resource filter so clients can verify the applied scope. */
