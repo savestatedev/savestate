@@ -67,10 +67,13 @@ export function parseMemoriesResourceNamespace(value: string | null): string | u
 /** Parse the documented savestate://memories/{namespace} resource path. */
 export function parseMemoriesResourcePath(pathname: string): string | undefined {
   if (pathname === '' || pathname === '/') return undefined;
+  if (!pathname.startsWith('/') || pathname.startsWith('//')) {
+    throw new Error('Invalid memory resource path. Expected one namespace segment.');
+  }
 
   let value: string;
   try {
-    value = decodeURIComponent(pathname.replace(/^\/+/, ''));
+    value = decodeURIComponent(pathname.slice(1));
   } catch {
     throw new Error('Invalid memory resource path. Expected an encoded namespace.');
   }

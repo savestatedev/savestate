@@ -80,6 +80,9 @@ describe('MCP savestate://memories importance filters', () => {
     expect(parseMemoriesResourcePath('/org:app:agent')).toBe('org:app:agent');
     expect(parseMemoriesResourcePath('/org%3Aapp%3Aagent%3Auser')).toBe('org:app:agent:user');
     expect(parseMemoriesResourcePath('/')).toBeUndefined();
+    expect(() => parseMemoriesResourcePath('//org:app:agent')).toThrow(
+      'Invalid memory resource path',
+    );
     expect(() => parseMemoriesResourcePath('/org:app:agent/other')).toThrow(
       'Invalid memory resource path',
     );
