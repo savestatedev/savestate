@@ -2579,7 +2579,10 @@ export function formatMemoryExplainJson(
       : Math.max(1, results.length));
   // Keep an empty collection from advertising pagination just because --offset was supplied.
   const hasPrevious = offset > 0 && total > 0;
-  const hasMore = pagination.hasMore ?? offset + results.length < total;
+  // An empty page is an exhausted/stale cursor: guide the caller with
+  // suggestedOffset instead of offering a continuation beyond the collection.
+  const emptyPage = results.length === 0 && total > 0;
+  const hasMore = emptyPage ? false : pagination.hasMore ?? offset + results.length < total;
   const remaining = Math.max(0, total - offset - results.length);
   const suggestedOffset = results.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
@@ -2606,7 +2609,7 @@ export function formatMemoryExplainJson(
       hasPrevious,
       previousOffset: hasPrevious ? previousOffset : null,
       hasMore,
-      nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
+      nextOffset: hasMore ? pagination.nextOffset ?? offset + pageSize : null,
     },
     results: results.map((result, index) => {
       const tags = result.tags === undefined ? [] : normalizeMemoryTagFilters(result.tags);
