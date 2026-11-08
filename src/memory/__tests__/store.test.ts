@@ -333,6 +333,16 @@ describe('MemoryStore', () => {
       expect(store.count({ source: 'CLAUDE-CODE' })).toBe(1);
     });
 
+    it('should filter metadata namespaces case-insensitively', async () => {
+      await store.create({ type: 'fact', content: 'Agent memory', metadata: { namespace: ' Org:App:Agent ' } });
+      await store.create({ type: 'fact', content: 'Other memory', metadata: { namespace: 'org:app:other' } });
+
+      const results = await store.query({ namespace: ' org:app:agent ' });
+
+      expect(results.map((entry) => entry.content)).toEqual(['Agent memory']);
+      expect(store.count({ namespace: 'ORG:APP:AGENT' })).toBe(1);
+    });
+
     it('should treat LIKE metacharacters in searches literally', async () => {
       await store.create({ type: 'fact', content: 'Budget is 100% approved' });
       await store.create({ type: 'fact', content: 'Budget is 100x approved' });

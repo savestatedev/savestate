@@ -4,6 +4,7 @@ import {
   formatMemoriesResourceFilters,
   parseMemoriesResourceDate,
   parseMemoriesResourceImportance,
+  parseMemoriesResourceNamespace,
   parseMemoriesResourceSearch,
   parseMemoriesResourceSource,
   parseMemoriesResourceTag,
@@ -64,6 +65,14 @@ describe('MCP savestate://memories importance filters', () => {
     );
   });
 
+  it('parses non-empty namespace filters', () => {
+    expect(parseMemoriesResourceNamespace('  org:app:agent  ')).toBe('org:app:agent');
+    expect(parseMemoriesResourceNamespace(null)).toBeUndefined();
+    expect(() => parseMemoriesResourceNamespace('   ')).toThrow(
+      'Invalid namespace value. Expected a non-empty namespace.',
+    );
+  });
+
   it('normalizes inclusive ISO creation bounds', () => {
     expect(parseMemoriesResourceDate('2026-10-01', 'since')).toBe('2026-10-01T00:00:00.000Z');
     expect(parseMemoriesResourceDate('2026-10-01', 'until')).toBe('2026-10-01T23:59:59.999Z');
@@ -80,8 +89,8 @@ describe('MCP savestate://memories importance filters', () => {
   });
 
   it('keeps filters in pagination resource links', () => {
-    expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'Claude-Code', 'project', 'encrypted archive', '2026-10-01T00:00:00.000Z', '2026-10-31T23:59:59.999Z')).toBe(
-      'savestate://memories?type=event&source=Claude-Code&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
+    expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'Claude-Code', 'org:app:agent', 'project', 'encrypted archive', '2026-10-01T00:00:00.000Z', '2026-10-31T23:59:59.999Z')).toBe(
+      'savestate://memories?type=event&source=Claude-Code&namespace=org%3Aapp%3Aagent&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
     );
   });
 
@@ -89,6 +98,7 @@ describe('MCP savestate://memories importance filters', () => {
     expect(formatMemoriesResourceFilters(
       'event',
       'Claude-Code',
+      'org:app:agent',
       'project',
       'encrypted archive',
       '2026-10-01T00:00:00.000Z',
@@ -98,6 +108,7 @@ describe('MCP savestate://memories importance filters', () => {
     )).toEqual({
       type: 'event',
       source: 'Claude-Code',
+      namespace: 'org:app:agent',
       tag: 'project',
       search: 'encrypted archive',
       since: '2026-10-01T00:00:00.000Z',
