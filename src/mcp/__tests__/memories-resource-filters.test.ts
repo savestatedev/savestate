@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourceUri,
   formatMemoriesResourceFilters,
+  memoriesResourceNamespacesMatch,
   parseMemoriesResourceDate,
   parseMemoriesResourceImportance,
   parseMemoriesResourceNamespace,
@@ -82,6 +83,14 @@ describe('MCP savestate://memories importance filters', () => {
     expect(() => parseMemoriesResourcePath('/org:app:agent/other')).toThrow(
       'Invalid memory resource path',
     );
+  });
+
+  it('keeps equivalent namespace path and query scopes case-insensitive', () => {
+    const pathNamespace = parseMemoriesResourcePath('/Org:App:Agent');
+    const queryNamespace = parseMemoriesResourceNamespace('org:app:agent');
+
+    expect(memoriesResourceNamespacesMatch(pathNamespace, queryNamespace)).toBe(true);
+    expect(memoriesResourceNamespacesMatch(pathNamespace, 'org:app:other')).toBe(false);
   });
 
   it('normalizes inclusive ISO creation bounds', () => {

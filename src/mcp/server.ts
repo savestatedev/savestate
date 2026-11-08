@@ -138,6 +138,7 @@ import {
   parseMemoriesResourceDate,
   parseMemoriesResourceNamespace,
   parseMemoriesResourcePath,
+  memoriesResourceNamespacesMatch,
   parseMemoriesResourceSearch,
   parseMemoriesResourceSource,
   parseMemoriesResourceTag,
@@ -1827,7 +1828,7 @@ async function handleReadResource(uri: string): Promise<string> {
       const source = parseMemoriesResourceSource(url.searchParams.get('source'));
       const pathNamespace = parseMemoriesResourcePath(url.pathname);
       const queryNamespace = parseMemoriesResourceNamespace(url.searchParams.get('namespace'));
-      if (pathNamespace !== undefined && queryNamespace !== undefined && pathNamespace !== queryNamespace) {
+      if (!memoriesResourceNamespacesMatch(pathNamespace, queryNamespace)) {
         throw new Error('Memory resource namespace must match between the path and query string.');
       }
       const namespace = queryNamespace ?? pathNamespace;

@@ -82,6 +82,18 @@ export function parseMemoriesResourcePath(pathname: string): string | undefined 
   return parseMemoriesResourceNamespace(value);
 }
 
+/** Compare path and query namespace scopes using the same case-insensitive matching as storage. */
+export function memoriesResourceNamespacesMatch(
+  pathNamespace: string | undefined,
+  queryNamespace: string | undefined,
+): boolean {
+  return (
+    pathNamespace === undefined ||
+    queryNamespace === undefined ||
+    pathNamespace.toLowerCase() === queryNamespace.toLowerCase()
+  );
+}
+
 /** Parse an optional memory resource creation bound and normalize it for SQLite. */
 export function parseMemoriesResourceDate(
   value: string | null,
