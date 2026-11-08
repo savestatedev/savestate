@@ -137,6 +137,7 @@ import {
   parseMemoriesResourceImportance,
   parseMemoriesResourceDate,
   parseMemoriesResourceSearch,
+  parseMemoriesResourceNamespace,
   parseMemoriesResourceSource,
   parseMemoriesResourceTag,
   parseMemoriesResourceType,
@@ -1823,6 +1824,7 @@ async function handleReadResource(uri: string): Promise<string> {
       const search = parseMemoriesResourceSearch(url.searchParams.get('search'));
       const type = parseMemoriesResourceType(url.searchParams.get('type'));
       const source = parseMemoriesResourceSource(url.searchParams.get('source'));
+      const namespace = parseMemoriesResourceNamespace(url.searchParams.get('namespace'));
       const tag = parseMemoriesResourceTag(url.searchParams.get('tag'));
       const since = parseMemoriesResourceDate(url.searchParams.get('since'), 'since');
       const until = parseMemoriesResourceDate(url.searchParams.get('until'), 'until');
@@ -1831,6 +1833,7 @@ async function handleReadResource(uri: string): Promise<string> {
       const filters = {
         type,
         source,
+        namespace,
         tags: tag === undefined ? undefined : [tag],
         minImportance,
         maxImportance,
@@ -1849,7 +1852,7 @@ async function handleReadResource(uri: string): Promise<string> {
           store.count({ ...filters, type }),
         ]),
       );
-      const resourceUri = buildMemoriesResourceUri(minImportance, maxImportance, type, source, tag, search, since, until);
+      const resourceUri = buildMemoriesResourceUri(minImportance, maxImportance, type, source, namespace, tag, search, since, until);
       const page = buildMemoriesResourcePage(entries, total, offset, limit, resourceUri);
 
       return JSON.stringify({
@@ -1869,6 +1872,7 @@ async function handleReadResource(uri: string): Promise<string> {
         filters: formatMemoriesResourceFilters(
           type,
           source,
+          namespace,
           tag,
           search,
           since,

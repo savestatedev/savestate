@@ -8,7 +8,7 @@ describe('MCP memory resource entries', () => {
       id: 'memory-1',
       type: 'fact',
       content: 'The archive is encrypted.',
-      metadata: { source: 'security-review', confidence: 0.98 },
+      metadata: { source: 'security-review', namespace: '  org:app:agent  ', confidence: 0.98 },
       tags: ['security'],
       importance: 0.9,
       createdAt: '2026-10-01T00:00:00.000Z',
@@ -20,8 +20,9 @@ describe('MCP memory resource entries', () => {
       id: 'memory-1',
       type: 'fact',
       content: 'The archive is encrypted.',
-      metadata: { source: 'security-review', confidence: 0.98 },
+      metadata: { source: 'security-review', namespace: 'org:app:agent', confidence: 0.98 },
       source: 'security-review',
+      namespace: 'org:app:agent',
       tags: ['security'],
       importance: 0.9,
       createdAt: '2026-10-01T00:00:00.000Z',
@@ -57,5 +58,6 @@ describe('MCP memory resource entries', () => {
     };
 
     expect(toMemoryResourceEntry(memory).source).toBe('unknown');
+    expect(toMemoryResourceEntry(memory).namespace).toBeNull();
   });
 });

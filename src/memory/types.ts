@@ -45,6 +45,8 @@ export interface MemoryQuery {
   type?: MemoryType;
   /** Match the string-valued metadata.source field, ignoring letter case. */
   source?: string;
+  /** Match the string-valued metadata.namespace field, ignoring letter case. */
+  namespace?: string;
   tags?: string[];
   minImportance?: number;
   maxImportance?: number;

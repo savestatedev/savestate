@@ -43,6 +43,18 @@ export function parseMemoriesResourceSource(value: string | null): string | unde
   return normalizeMemorySource(normalized);
 }
 
+/** Parse an optional memory resource namespace without widening a blank filter. */
+export function parseMemoriesResourceNamespace(value: string | null): string | undefined {
+  if (value === null) return undefined;
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error('Invalid namespace value. Expected a non-empty namespace.');
+  }
+
+  return normalized;
+}
+
 /** Parse an optional memory resource creation bound and normalize it for SQLite. */
 export function parseMemoriesResourceDate(
   value: string | null,
@@ -145,6 +157,7 @@ export function buildMemoriesResourceUri(
   maxImportance: number | undefined,
   type?: MemoryType,
   source?: string,
+  namespace?: string,
   tag?: string,
   search?: string,
   since?: string,
@@ -153,6 +166,7 @@ export function buildMemoriesResourceUri(
   const params = new URLSearchParams();
   if (type !== undefined) params.set('type', type);
   if (source !== undefined) params.set('source', source);
+  if (namespace !== undefined) params.set('namespace', namespace);
   if (tag !== undefined) params.set('tag', tag);
   if (search !== undefined) params.set('search', search);
   if (since !== undefined) params.set('since', since);
@@ -167,6 +181,7 @@ export function buildMemoriesResourceUri(
 export function formatMemoriesResourceFilters(
   type: MemoryType | undefined,
   source: string | undefined,
+  namespace: string | undefined,
   tag: string | undefined,
   search: string | undefined,
   since: string | undefined,
@@ -176,6 +191,7 @@ export function formatMemoriesResourceFilters(
 ): {
   type: MemoryType | null;
   source: string | null;
+  namespace: string | null;
   tag: string | null;
   search: string | null;
   since: string | null;
@@ -186,6 +202,7 @@ export function formatMemoriesResourceFilters(
   return {
     type: type ?? null,
     source: source ?? null,
+    namespace: namespace ?? null,
     tag: tag ?? null,
     search: search ?? null,
     since: since ?? null,

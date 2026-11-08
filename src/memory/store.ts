@@ -45,6 +45,11 @@ function appendSourceFilter(sql: string, params: unknown[], source: string): str
   return `${sql} AND lower(trim(COALESCE(json_extract(metadata, '$.source'), ''))) = lower(?)`;
 }
 
+function appendNamespaceFilter(sql: string, params: unknown[], namespace: string): string {
+  params.push(namespace.trim());
+  return `${sql} AND lower(trim(COALESCE(json_extract(metadata, '$.namespace'), ''))) = lower(?)`;
+}
+
 function normalizeDateFilter(value: string, boundary: 'start' | 'end'): string {
   const normalized = value.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return normalized;
@@ -308,6 +313,10 @@ export class MemoryStore {
       sql = appendSourceFilter(sql, params, query.source);
     }
 
+    if (query.namespace) {
+      sql = appendNamespaceFilter(sql, params, query.namespace);
+    }
+
     if (query.minImportance !== undefined) {
       sql += ' AND importance >= ?';
       params.push(query.minImportance);
@@ -375,6 +384,10 @@ export class MemoryStore {
 
     if (query.source) {
       sql = appendSourceFilter(sql, params, query.source);
+    }
+
+    if (query.namespace) {
+      sql = appendNamespaceFilter(sql, params, query.namespace);
     }
 
     if (query.minImportance !== undefined) {
