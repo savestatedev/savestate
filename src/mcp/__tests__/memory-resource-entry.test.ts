@@ -21,6 +21,7 @@ describe('MCP memory resource entries', () => {
       type: 'fact',
       content: 'The archive is encrypted.',
       metadata: { source: 'security-review', confidence: 0.98 },
+      source: 'security-review',
       tags: ['security'],
       importance: 0.9,
       createdAt: '2026-10-01T00:00:00.000Z',
@@ -43,5 +44,18 @@ describe('MCP memory resource entries', () => {
       source: 'Claude-Code',
       confidence: 0.7,
     });
+    expect(toMemoryResourceEntry(memory).source).toBe('Claude-Code');
+  });
+
+  it('uses unknown when source metadata is absent', () => {
+    const memory: MemoryEntry = {
+      id: 'memory-3',
+      type: 'fact',
+      content: 'The source is not recorded.',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-01T00:00:00.000Z',
+    };
+
+    expect(toMemoryResourceEntry(memory).source).toBe('unknown');
   });
 });

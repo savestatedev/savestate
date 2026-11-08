@@ -1,16 +1,18 @@
 import type { MemoryEntry } from '../memory/types.js';
-import { normalizeMemoryMetadata } from '../memory/source.js';
+import { normalizeMemoryMetadata, normalizeMemorySource } from '../memory/source.js';
 
 /** Keep memory lifecycle timestamps available to MCP clients consuming the resource. */
 export function toMemoryResourceEntry(memory: MemoryEntry): Pick<
   MemoryEntry,
   'id' | 'type' | 'content' | 'metadata' | 'tags' | 'importance' | 'createdAt' | 'updatedAt' | 'expiresAt'
-> {
+> & { source: string } {
+  const metadata = normalizeMemoryMetadata(memory.metadata);
   return {
     id: memory.id,
     type: memory.type,
     content: memory.content,
-    metadata: normalizeMemoryMetadata(memory.metadata),
+    metadata,
+    source: normalizeMemorySource(typeof metadata?.source === 'string' ? metadata.source : undefined),
     tags: memory.tags,
     importance: memory.importance,
     createdAt: memory.createdAt,

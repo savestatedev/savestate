@@ -21,6 +21,7 @@ describe('MCP list_memories entries', () => {
       '  Use concise answers.',
       '  Tags: style',
       '  Importance: 0.7',
+      '  Source: settings',
       '  Metadata: {"source":"settings","confidence":0.9}',
       '  Created: 2026-10-01T00:00:00.000Z',
       '  Updated: 2026-10-02T00:00:00.000Z',
@@ -42,5 +43,18 @@ describe('MCP list_memories entries', () => {
     expect(formatMemoryListEntry(memory).join('\n')).toContain(
       'Metadata: {"source":"Claude-Code","confidence":0.7}',
     );
+    expect(formatMemoryListEntry(memory).join('\n')).toContain('Source: Claude-Code');
+  });
+
+  it('uses unknown when source metadata is absent', () => {
+    const memory: MemoryEntry = {
+      id: 'memory-3',
+      type: 'fact',
+      content: 'The source is not recorded.',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-01T00:00:00.000Z',
+    };
+
+    expect(formatMemoryListEntry(memory).join('\n')).toContain('Source: unknown');
   });
 });
