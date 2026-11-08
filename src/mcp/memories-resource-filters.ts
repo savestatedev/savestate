@@ -159,6 +159,7 @@ export function parseMemoriesResourceType(value: string | null): MemoryType | un
 
 const MAX_MEMORY_IMPORTANCE = 1;
 const MIN_MEMORY_IMPORTANCE = 0;
+const DECIMAL_IMPORTANCE_PATTERN = /^(?:\d+(?:\.\d*)?|\.\d+)$/;
 
 /** Parse a memory resource importance query without silently widening its scope. */
 export function parseMemoriesResourceImportance(
@@ -168,7 +169,7 @@ export function parseMemoriesResourceImportance(
   if (value === null) return undefined;
 
   const normalized = value.trim();
-  const parsed = Number(normalized);
+  const parsed = DECIMAL_IMPORTANCE_PATTERN.test(normalized) ? Number(normalized) : Number.NaN;
   if (
     normalized.length === 0 ||
     !Number.isFinite(parsed) ||

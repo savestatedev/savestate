@@ -22,10 +22,14 @@ describe('MCP savestate://memories importance filters', () => {
     expect(parseMemoriesResourceImportance(null, 'minImportance')).toBeUndefined();
   });
 
-  it.each(['', 'nope', '-0.1', '1.1'])('rejects invalid score %j', (value) => {
+  it.each(['', 'nope', '-0.1', '1.1', '0x1', '1e-1'])('rejects invalid score %j', (value) => {
     expect(() => parseMemoriesResourceImportance(value, 'minImportance')).toThrow(
       `Invalid minImportance value "${value}". Expected a number between 0 and 1.`,
     );
+  });
+
+  it('accepts decimal scores without requiring a leading zero', () => {
+    expect(parseMemoriesResourceImportance('.75', 'maxImportance')).toBe(0.75);
   });
 
   it('rejects an inverted range', () => {
