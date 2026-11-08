@@ -169,6 +169,38 @@ describe('TrustStore', () => {
       expect(metrics.entriesByScope.procedural).toBe(1);
     });
   });
+
+  it('expires zero-second entries immediately', () => {
+    const entry = store.create({
+      content: 'Immediate expiry',
+      scope: 'episodic',
+      confidence: 0.5,
+      source: 'test',
+      ttlSeconds: 0,
+    });
+
+    expect(entry.expiresAt).toBeDefined();
+    expect(store.query({ includeExpired: false })).toHaveLength(0);
+    expect(store.cleanupExpired()).toBe(1);
+    expect(store.get(entry.id)).toBeNull();
+  });
+
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects invalid TTL %s without creating an entry',
+    (ttlSeconds) => {
+      expect(() =>
+        store.create({
+          content: 'Invalid TTL',
+          scope: 'episodic',
+          confidence: 0.5,
+          source: 'test',
+          ttlSeconds,
+        }),
+      ).toThrow('ttlSeconds must be a finite, non-negative number');
+
+      expect(store.query({ includeExpired: true })).toHaveLength(0);
+    },
+  );
 });
 
 describe('WriteGate', () => {

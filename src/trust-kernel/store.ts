@@ -105,12 +105,19 @@ export class TrustStore {
    * Create a new trust entry (always starts as candidate).
    */
   create(entry: Omit<TrustEntry, 'id' | 'createdAt' | 'stateChangedAt' | 'state'>): TrustEntry {
+    if (
+      entry.ttlSeconds !== undefined &&
+      (!Number.isFinite(entry.ttlSeconds) || entry.ttlSeconds < 0)
+    ) {
+      throw new Error('ttlSeconds must be a finite, non-negative number');
+    }
+
     const id = randomUUID();
     const now = new Date().toISOString();
 
     // Calculate expiration if TTL is set
     let expiresAt: string | undefined;
-    if (entry.ttlSeconds) {
+    if (entry.ttlSeconds !== undefined) {
       const expiry = new Date(Date.now() + entry.ttlSeconds * 1000);
       expiresAt = expiry.toISOString();
     }
@@ -249,7 +256,7 @@ export class TrustStore {
     }
 
     if (!options.includeExpired) {
-      sql += " AND (expires_at IS NULL OR expires_at > datetime('now'))";
+      sql += " AND (expires_at IS NULL OR julianday(expires_at) > julianday('now'))";
     }
 
     sql += ' ORDER BY confidence DESC, created_at DESC';
@@ -276,7 +283,7 @@ export class TrustStore {
       WHERE state = 'candidate'
         AND scope != 'episodic'
         AND created_at <= ?
-        AND (expires_at IS NULL OR expires_at > datetime('now'))
+        AND (expires_at IS NULL OR julianday(expires_at) > julianday('now'))
       ORDER BY confidence DESC
     `);
 
@@ -478,7 +485,7 @@ export class TrustStore {
     const result = this.db.prepare(`
       DELETE FROM trust_entries
       WHERE expires_at IS NOT NULL
-        AND expires_at <= datetime("now")
+        AND julianday(expires_at) <= julianday('now')
     `).run();
 
     return result.changes;
