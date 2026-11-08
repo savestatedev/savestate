@@ -734,7 +734,7 @@ const resources: Resource[] = [
   {
     uri: 'savestate://memories',
     name: 'Memories',
-    description: 'Memory entries (default 50; ?limit= is a positive decimal integer up to 1000; ?offset= is a non-negative decimal integer up to 1000; ?search= accepts a non-empty text query; ?type= accepts fact, event, preference, or conversation; ?source= accepts a non-empty metadata source and matches case-insensitively; ?namespace= accepts org:app:agent[:user] and matches metadata.namespace; ?tag= accepts a non-empty tag; ?since= and ?until= accept ISO-8601 creation bounds; ?minImportance= and ?maxImportance= are inclusive decimal scores from 0 through 1 (for example, 0.75)). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes a normalized top-level source plus metadata, createdAt, updatedAt, and expiresAt when set.',
+    description: 'Memory entries (default 50; ?limit= is a positive decimal integer up to 1000; ?offset= is a non-negative decimal integer up to 1000; ?search= accepts a non-empty text query; ?type= accepts fact, event, preference, or conversation; ?source= accepts a non-empty metadata source and matches case-insensitively; ?namespace= accepts org:app:agent[:user] and matches metadata.namespace; ?tag= accepts a non-empty tag; ?since= and ?until= accept ISO-8601 creation bounds; ?minImportance= and ?maxImportance= are inclusive decimal scores from 0 through 1 (for example, 0.75)). Filters apply before pagination and are preserved in continuation URIs. The JSON response includes total, count, remaining, page, totalPages, offset, pageSize, hasMore, hasPrevious, nextOffset, nextUri, previousOffset, previousUri, suggestedOffset, and suggestedUri for pagination and stale-page recovery. Each memory includes a normalized top-level source plus metadata, createdAt, updatedAt, and expiresAt when set.',
     mimeType: 'application/json',
   },
 ];
@@ -1791,6 +1791,8 @@ async function handleReadResource(uri: string): Promise<string> {
         pageSize: page.pageSize,
         page: page.page,
         totalPages: page.totalPages,
+        hasMore: page.hasMore,
+        hasPrevious: page.hasPrevious,
         nextOffset: page.nextOffset,
         nextUri: page.nextUri,
         previousOffset: page.previousOffset,
