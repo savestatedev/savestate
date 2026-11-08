@@ -5,6 +5,7 @@ import {
   parseMemoriesResourceDate,
   parseMemoriesResourceImportance,
   parseMemoriesResourceNamespace,
+  parseMemoriesResourcePath,
   parseMemoriesResourceSearch,
   parseMemoriesResourceSource,
   parseMemoriesResourceTag,
@@ -72,6 +73,15 @@ describe('MCP savestate://memories importance filters', () => {
     expect(() => parseMemoriesResourceNamespace('   ')).toThrow('Invalid namespace value');
     expect(() => parseMemoriesResourceNamespace('org:app')).toThrow('Invalid namespace value');
     expect(() => parseMemoriesResourceNamespace('org:app:agent,other')).toThrow('Invalid namespace value');
+  });
+
+  it('parses the namespace resource path, including encoded separators', () => {
+    expect(parseMemoriesResourcePath('/org:app:agent')).toBe('org:app:agent');
+    expect(parseMemoriesResourcePath('/org%3Aapp%3Aagent%3Auser')).toBe('org:app:agent:user');
+    expect(parseMemoriesResourcePath('/')).toBeUndefined();
+    expect(() => parseMemoriesResourcePath('/org:app:agent/other')).toThrow(
+      'Invalid memory resource path',
+    );
   });
 
   it('normalizes inclusive ISO creation bounds', () => {

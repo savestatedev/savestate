@@ -64,6 +64,24 @@ export function parseMemoriesResourceNamespace(value: string | null): string | u
   return namespace;
 }
 
+/** Parse the documented savestate://memories/{namespace} resource path. */
+export function parseMemoriesResourcePath(pathname: string): string | undefined {
+  if (pathname === '' || pathname === '/') return undefined;
+
+  let value: string;
+  try {
+    value = decodeURIComponent(pathname.replace(/^\/+/, ''));
+  } catch {
+    throw new Error('Invalid memory resource path. Expected an encoded namespace.');
+  }
+
+  if (value.includes('/')) {
+    throw new Error('Invalid memory resource path. Expected one namespace segment.');
+  }
+
+  return parseMemoriesResourceNamespace(value);
+}
+
 /** Parse an optional memory resource creation bound and normalize it for SQLite. */
 export function parseMemoriesResourceDate(
   value: string | null,
