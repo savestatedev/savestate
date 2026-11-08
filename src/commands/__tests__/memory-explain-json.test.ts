@@ -105,6 +105,25 @@ describe('savestate memory explain --json', () => {
     });
   });
 
+  it('includes normalized source counts for the matching collection and page', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [
+          { id: 'mem-a', source: 'Claude-Code', score: 0.8, summary: 'A', pinned: false, tier: 'L1', freshness: 'active' },
+          { id: 'mem-b', source: 'user', score: 0.7, summary: 'B', pinned: false, tier: 'L2', freshness: 'active' },
+        ],
+        { offset: 0, limit: 1, total: 3 },
+        undefined,
+        undefined,
+        { bySource: { 'Claude-Code': 2, user: 1 }, shownBySource: { 'Claude-Code': 1 } },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.bySource).toEqual({ 'Claude-Code': 2, user: 1 });
+    expect(parsed.shownBySource).toEqual({ 'Claude-Code': 1 });
+  });
+
   it('does not advertise a previous page for an empty collection with an offset', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(

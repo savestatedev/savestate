@@ -2444,6 +2444,9 @@ export interface MemoryExplainJson {
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
   pagination: MemoryExplainPaginationJson;
+  /** Normalized source counts for all matching results and the visible page. */
+  bySource?: Record<string, number>;
+  shownBySource?: Record<string, number>;
   filters?: MemoryExplainFiltersJson;
   results: MemoryExplainResultJson[];
 }
@@ -2567,6 +2570,10 @@ export function formatMemoryExplainJson(
   pagination: Partial<MemoryExplainPaginationJson> = {},
   filters?: MemoryExplainFiltersJson,
   snapshotId?: string,
+  sourceSummary?: {
+    bySource: Record<string, number>;
+    shownBySource: Record<string, number>;
+  },
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
@@ -2608,6 +2615,7 @@ export function formatMemoryExplainJson(
       hasMore,
       nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
     },
+    ...(sourceSummary === undefined ? {} : sourceSummary),
     results: results.map((result, index) => {
       const tags = result.tags === undefined ? [] : normalizeMemoryTagFilters(result.tags);
       return {
@@ -2983,6 +2991,10 @@ export async function explainMemoryCommand(
           pagination,
           getMemoryExplainFilters(options),
           snapshotId,
+          {
+            bySource: countBySource(sorted.map((r) => r.entry)),
+            shownBySource: countBySource(scoredLimited.map((r) => r.entry)),
+          },
         ));
         return;
       }
@@ -3029,6 +3041,10 @@ export async function explainMemoryCommand(
       pagination,
       getMemoryExplainFilters(options),
       snapshotId,
+      {
+        bySource: countBySource(sorted.map((r) => r.entry)),
+        shownBySource: countBySource(scoredLimited.map((r) => r.entry)),
+      },
     ));
     return;
   }
