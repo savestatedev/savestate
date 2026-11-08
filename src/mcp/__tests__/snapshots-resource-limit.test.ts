@@ -56,6 +56,8 @@ describe('MCP savestate://snapshots limit', () => {
       pageSize: 2,
       page: 1,
       totalPages: 2,
+      hasMore: true,
+      hasPrevious: true,
       nextOffset: 3,
       nextUri: 'savestate://snapshots?offset=3&limit=2',
       previousOffset: 0,
@@ -75,6 +77,8 @@ describe('MCP savestate://snapshots limit', () => {
       pageSize: 2,
       page: 1,
       totalPages: 1,
+      hasMore: false,
+      hasPrevious: true,
       nextOffset: null,
       nextUri: null,
       previousOffset: 0,
@@ -91,6 +95,8 @@ describe('MCP savestate://snapshots limit', () => {
       pageSize: 2,
       page: 5,
       totalPages: 2,
+      hasMore: false,
+      hasPrevious: true,
       previousOffset: 2,
       previousUri: 'savestate://snapshots?offset=2&limit=2',
       suggestedOffset: 2,
@@ -109,6 +115,8 @@ describe('MCP savestate://snapshots limit', () => {
     expect(page.nextUri).toBe(
       'savestate://snapshots?platform=Claude-Code&offset=2&limit=2',
     );
+    expect(page.hasMore).toBe(true);
+    expect(page.hasPrevious).toBe(false);
     expect(page.previousUri).toBeNull();
   });
 });
