@@ -113,7 +113,7 @@ describe('MCP savestate://memories importance filters', () => {
 
   it('keeps filters in pagination resource links', () => {
     expect(buildMemoriesResourceUri(0.4, 0.9, 'event', 'Claude-Code', 'org:app:agent', 'project', 'encrypted archive', '2026-10-01T00:00:00.000Z', '2026-10-31T23:59:59.999Z')).toBe(
-      'savestate://memories?type=event&source=Claude-Code&namespace=org%3Aapp%3Aagent&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
+      'savestate://memories/org%3Aapp%3Aagent?type=event&source=Claude-Code&tag=project&search=encrypted+archive&since=2026-10-01T00%3A00%3A00.000Z&until=2026-10-31T23%3A59%3A59.999Z&minImportance=0.4&maxImportance=0.9',
     );
   });
 

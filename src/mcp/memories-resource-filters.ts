@@ -208,7 +208,6 @@ export function buildMemoriesResourceUri(
   const params = new URLSearchParams();
   if (type !== undefined) params.set('type', type);
   if (source !== undefined) params.set('source', source);
-  if (namespace !== undefined) params.set('namespace', namespace);
   if (tag !== undefined) params.set('tag', tag);
   if (search !== undefined) params.set('search', search);
   if (since !== undefined) params.set('since', since);
@@ -216,7 +215,10 @@ export function buildMemoriesResourceUri(
   if (minImportance !== undefined) params.set('minImportance', String(minImportance));
   if (maxImportance !== undefined) params.set('maxImportance', String(maxImportance));
   const query = params.toString();
-  return query.length > 0 ? `savestate://memories?${query}` : 'savestate://memories';
+  const resource = namespace === undefined
+    ? 'savestate://memories'
+    : `savestate://memories/${encodeURIComponent(namespace)}`;
+  return query.length > 0 ? `${resource}?${query}` : resource;
 }
 
 /** Echo every active resource filter so clients can verify the applied scope. */
