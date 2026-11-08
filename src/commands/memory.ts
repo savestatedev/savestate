@@ -2677,10 +2677,11 @@ export function formatMemoryExplainMissingJson(
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? 0;
   const pageSize = pagination.pageSize ?? pagination.limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT;
-  // Keep an empty collection from advertising pagination just because --offset was supplied.
-  const hasPrevious = offset > 0 && total > 0;
-  const hasMore = pagination.hasMore ?? offset < total;
-  const remaining = Math.max(0, total - offset);
+  // A missing envelope represents an empty collection, so stale pagination
+  // metadata must never turn it into a navigable result page.
+  const hasPrevious = false;
+  const hasMore = false;
+  const remaining = 0;
   const record: MemoryExplainMissingJson = {
     found: false,
     query,
@@ -2695,9 +2696,9 @@ export function formatMemoryExplainMissingJson(
       remaining,
       pageSize,
       hasPrevious,
-      previousOffset: hasPrevious ? Math.max(0, offset - pageSize) : null,
+      previousOffset: null,
       hasMore,
-      nextOffset: pagination.nextOffset ?? (hasMore ? offset + pageSize : null),
+      nextOffset: null,
     },
     results: null,
   };
