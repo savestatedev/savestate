@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoriesResourceOffset, selectMemoriesResourceOffsetEntries } from '../memories-resource-offset.js';
+import {
+  parseMemoriesResourceOffset,
+  parseMemoriesResourceOffsetQuery,
+  selectMemoriesResourceOffsetEntries,
+} from '../memories-resource-offset.js';
 
 describe('MCP savestate://memories offset', () => {
   it('defaults to undefined', () => {
@@ -22,6 +26,16 @@ describe('MCP savestate://memories offset', () => {
     expect(() => parseMemoriesResourceOffset(1001)).toThrow(
       'Invalid offset value "1001". Expected a non-negative integer up to 1000.',
     );
+  });
+
+  it.each(['', '0x10', '1e2', '-1'])('rejects non-decimal query offset %j', (value) => {
+    expect(() => parseMemoriesResourceOffsetQuery(value)).toThrow(
+      `Invalid offset value "${value}". Expected a non-negative decimal integer up to 1000.`,
+    );
+  });
+
+  it('accepts surrounding whitespace in a decimal query offset', () => {
+    expect(parseMemoriesResourceOffsetQuery(' 10 ')).toBe(10);
   });
 
   it('skips the first N memories', () => {

@@ -128,9 +128,12 @@ import {
 } from './search-snapshots-limit.js';
 import { parseSearchSnapshotsOffset } from './search-snapshots-offset.js';
 import { parseSearchSnapshotsQuery } from './search-snapshots-query.js';
-import { buildMemoriesResourcePage, parseMemoriesResourceLimit } from './memories-resource-limit.js';
+import {
+  buildMemoriesResourcePage,
+  parseMemoriesResourceLimitQuery,
+} from './memories-resource-limit.js';
 import type { ListMemoriesFilters } from './list-memories-limit.js';
-import { parseMemoriesResourceOffset } from './memories-resource-offset.js';
+import { parseMemoriesResourceOffsetQuery } from './memories-resource-offset.js';
 import {
   buildMemoriesResourceUri,
   formatMemoriesResourceFilters,
@@ -1810,11 +1813,11 @@ async function handleReadResource(uri: string): Promise<string> {
       const rawOffset = url.searchParams.get('offset');
       const offset = rawOffset === null
         ? undefined
-        : parseMemoriesResourceOffset(Number(rawOffset));
+        : parseMemoriesResourceOffsetQuery(rawOffset);
       const rawLimit = url.searchParams.get('limit');
       const limit = rawLimit === null
         ? undefined
-        : parseMemoriesResourceLimit(Number(rawLimit));
+        : parseMemoriesResourceLimitQuery(rawLimit);
       const minImportance = parseMemoriesResourceImportance(
         url.searchParams.get('minImportance'),
         'minImportance',

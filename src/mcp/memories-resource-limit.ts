@@ -1,5 +1,8 @@
 const MAX_MEMORIES_RESOURCE_LIMIT = 1000;
 
+const invalidLimitMessage = (value: string): string =>
+  `Invalid limit value "${value}". Expected a positive decimal integer up to ${MAX_MEMORIES_RESOURCE_LIMIT}.`;
+
 export interface MemoriesResourcePage<T> {
   count: number;
   total: number;
@@ -28,6 +31,24 @@ export function parseMemoriesResourceLimit(value: number | undefined): number | 
     );
   }
   return value;
+}
+
+/** Parse the query-string form without accepting JavaScript-only numeric syntax or blanks. */
+export function parseMemoriesResourceLimitQuery(value: string): number {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(invalidLimitMessage(value));
+  }
+
+  try {
+    const limit = parseMemoriesResourceLimit(Number(normalized));
+    if (limit === undefined) {
+      throw new Error(invalidLimitMessage(value));
+    }
+    return limit;
+  } catch {
+    throw new Error(invalidLimitMessage(value));
+  }
 }
 
 /** Keep the first N memories when savestate://memories limit is set. */

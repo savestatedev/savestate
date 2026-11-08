@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMemoriesResourcePage,
   parseMemoriesResourceLimit,
+  parseMemoriesResourceLimitQuery,
   selectMemoriesResourceEntries,
 } from '../memories-resource-limit.js';
 
@@ -25,6 +26,16 @@ describe('MCP savestate://memories limit', () => {
     expect(() => parseMemoriesResourceLimit(1001)).toThrow(
       'Invalid limit value "1001". Expected a positive integer up to 1000.',
     );
+  });
+
+  it.each(['', '0x10', '1e2', '0'])('rejects non-decimal query limit %j', (value) => {
+    expect(() => parseMemoriesResourceLimitQuery(value)).toThrow(
+      `Invalid limit value "${value}". Expected a positive decimal integer up to 1000.`,
+    );
+  });
+
+  it('accepts surrounding whitespace in a decimal query limit', () => {
+    expect(parseMemoriesResourceLimitQuery(' 10 ')).toBe(10);
   });
 
   it('keeps the first N memories', () => {
