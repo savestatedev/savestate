@@ -210,6 +210,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.suggestedOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
@@ -296,6 +297,7 @@ describe('savestate memory --json', () => {
     expect(parsed.page).toBe(0);
     expect(parsed.totalPages).toBe(0);
     expect(parsed.suggestedOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
@@ -320,6 +322,7 @@ describe('savestate memory --json', () => {
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(false);
     expect(parsed.nextOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
   });
 
   it('clamps negative formatter offsets before calculating navigation', () => {
@@ -542,6 +545,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasPrevious).toBe(true);
     expect(parsed.previousOffset).toBe(40);
     expect(parsed.suggestedOffset).toBe(40);
+    expect(parsed.guidance).toEqual({ action: 'retry', offset: 40 });
   });
 
   it('advances sparse bounded pages by their requested page size', () => {
@@ -577,5 +581,6 @@ describe('savestate memory --json', () => {
     expect(parsed.contentIncluded).toBe(false);
     expect(parsed.total).toBe(1);
     expect(parsed.shown).toBe(1);
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
   });
 });

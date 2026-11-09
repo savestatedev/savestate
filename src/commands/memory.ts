@@ -337,6 +337,11 @@ export interface MemoryListEntryJson {
   freshness: MemoryFreshness;
 }
 
+export interface MemoryListGuidance {
+  action: 'none' | 'next' | 'previous' | 'retry';
+  offset: number | null;
+}
+
 export interface MemoryListJson {
   found: true;
   snapshot: string;
@@ -357,6 +362,8 @@ export interface MemoryListJson {
   nextOffset: number | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
+  /** Machine-readable next step for paginated consumers. */
+  guidance: MemoryListGuidance;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -439,6 +446,13 @@ export function formatMemoryListJson(
       ? suggestedOffset
       : Math.max(0, offset - pageSize)
     : null;
+  const guidance: MemoryListGuidance = emptyPage && suggestedOffset !== null
+    ? { action: 'retry', offset: suggestedOffset }
+    : hasMore
+      ? { action: 'next', offset: offset + continuationStep }
+      : hasPrevious && previousOffset !== null
+        ? { action: 'previous', offset: previousOffset }
+        : { action: 'none', offset: null };
   const record: MemoryListJson = {
     found: true,
     snapshot: pagination.snapshot ?? 'latest',
@@ -457,6 +471,7 @@ export function formatMemoryListJson(
     hasMore,
     nextOffset: hasMore ? offset + continuationStep : null,
     suggestedOffset,
+    guidance,
     filters: {
       tier: pagination.filters?.tier ?? null,
       freshness: pagination.filters?.freshness ?? null,
