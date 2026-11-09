@@ -306,7 +306,7 @@ describe('savestate memory --json', () => {
 
   it('treats an empty filtered collection as terminal at a stale offset', () => {
     const parsed = JSON.parse(
-      formatMemoryListJson([], [], { offset: 20, limit: 10 }),
+      formatMemoryListJson([], [], { offset: 20, limit: 10, hasMore: true }),
     ) as MemoryListJson;
 
     expect(parsed.emptyReason).toBe('collection');

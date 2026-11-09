@@ -400,7 +400,10 @@ export function formatMemoryListJson(
   // An empty filtered collection has no prior page, even when a stale offset was supplied.
   const hasPrevious = offset > 0 && all.length > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
-  const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
+  // An empty collection is terminal even when a caller supplies stale paging metadata.
+  const hasMore = all.length === 0
+    ? false
+    : pagination.hasMore ?? offset + shown.length < all.length;
   // Advance bounded pages by their requested size, even when a sparse page
   // contains fewer entries, so clients do not revisit entries on continuation.
   // Unbounded pages use the number returned as their natural step.
