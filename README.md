@@ -228,7 +228,7 @@ the `entries` metadata shape and omits only each entry's `content` field. The re
 the redacted mode without inspecting entries.
 
 Paginated JSON also includes `guidance`, a small machine-readable next step: `next`, `previous`,
-or `retry` with the recommended offset, or `none` when the page is complete.
+or `retry` with the recommended offset, or `none` when no navigation action is available.
 
 Filter by a source id or the human-readable source label with `--source`. Matching is
 case-insensitive, and repeated whitespace is normalized so labels copied from output remain
