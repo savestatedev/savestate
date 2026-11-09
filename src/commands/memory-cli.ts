@@ -546,7 +546,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--unpinned', 'Show only unpinned memories')
     .option('--source <id>', 'Filter by source id or label (matching is case-insensitive)')
     .option('--until <date>', 'Show memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
-    .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user])')
+    .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user]; matching is case-insensitive)')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
     .option('--since <date>', 'Show memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')

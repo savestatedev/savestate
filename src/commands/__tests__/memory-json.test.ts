@@ -43,6 +43,15 @@ describe('savestate memory --json', () => {
     expect(filterMemoryListByNamespace(entries, ' org:app:agent ')).toEqual([entries[0]]);
   });
 
+  it('matches namespaces case-insensitively', () => {
+    const entries = [
+      entry({ id: 'mem-upper', content: 'upper', metadata: { namespace: 'Org:App:Agent' } }),
+      entry({ id: 'mem-other', content: 'other', metadata: { namespace: 'org:app:other' } }),
+    ];
+
+    expect(filterMemoryListByNamespace(entries, 'ORG:APP:AGENT')).toEqual([entries[0]]);
+  });
+
   it('normalizes padded namespaces in JSON filters', () => {
     const parsed = JSON.parse(formatMemoryListJson([], [], {
       filters: { namespace: '  org:app:agent  ' },

@@ -239,6 +239,13 @@ savestate memory list --source "Chat GPT"
 savestate memory explain "inbox preference" --source "claude  code" --json
 ```
 
+Namespace filters accept the same case-insensitive matching behavior after trimming, so a
+namespace copied from metadata remains usable even when its letter casing differs:
+
+```bash
+savestate memory list --namespace ORG:APP:AGENT --json-summary
+```
+
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
   --exclude <types>                  Skip memory, conversation, identity, or knowledge

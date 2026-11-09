@@ -568,10 +568,12 @@ export function filterMemoryListByNamespace(
   namespace?: string,
 ): MemoryEntry[] {
   if (namespace === undefined) return entries;
-  const normalizedNamespace = namespace.trim();
+  // Namespace filters follow source filters and MCP memory lookup semantics:
+  // identifiers are trimmed, then compared case-insensitively.
+  const normalizedNamespace = namespace.trim().toLowerCase();
   return entries.filter((entry) =>
     typeof entry.metadata?.namespace === 'string' &&
-    entry.metadata.namespace.trim() === normalizedNamespace,
+    entry.metadata.namespace.trim().toLowerCase() === normalizedNamespace,
   );
 }
 

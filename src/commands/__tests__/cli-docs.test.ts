@@ -2684,6 +2684,15 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('source: parseMemorySource(options.source)');
   });
 
+  it('documents case-insensitive memory namespace matching', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('namespace matches');
+    expect(memorySection).toContain('matching is case-insensitive after trimming');
+    expect(listBlock).toContain('matching is case-insensitive');
+    expect(readme).toContain('savestate memory list --namespace ORG:APP:AGENT --json-summary');
+  });
+
   it('shows source-scoped memory workflows in the README', () => {
     expect(readme).toContain('savestate memory list --source chatgpt --json');
     expect(readme).toContain('savestate memory explain "inbox preference" --source claude-code --json');
