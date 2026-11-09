@@ -541,7 +541,7 @@ export interface MemoryListMissingJson {
   snapshot: string;
   total: 0;
   shown: 0;
-  contentIncluded?: boolean;
+  contentIncluded: boolean;
 }
 
 export function formatMemoryListMissingJson(
@@ -554,7 +554,7 @@ export function formatMemoryListMissingJson(
       snapshot,
       total: 0,
       shown: 0,
-      ...(options.includeContent === false ? { contentIncluded: false } : {}),
+      contentIncluded: options.includeContent !== false,
     },
     null,
     2,
