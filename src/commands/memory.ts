@@ -499,15 +499,20 @@ export interface MemoryListMissingJson {
   snapshot: string;
   total: 0;
   shown: 0;
+  contentIncluded?: boolean;
 }
 
-export function formatMemoryListMissingJson(snapshot: string): string {
+export function formatMemoryListMissingJson(
+  snapshot: string,
+  options: { includeContent?: boolean } = {},
+): string {
   return JSON.stringify(
     {
       found: false,
       snapshot,
       total: 0,
       shown: 0,
+      ...(options.includeContent === false ? { contentIncluded: false } : {}),
     },
     null,
     2,
@@ -1340,13 +1345,17 @@ export async function listMemories(
     if (snapshotId && snapshotId !== 'latest') {
       const entry = await findEntry(snapshotId);
       if (!entry) {
-        console.log(formatMemoryListMissingJson(snapshotId));
+        console.log(formatMemoryListMissingJson(snapshotId, {
+          includeContent: options.format !== 'json-summary',
+        }));
         return;
       }
     } else {
       const latest = await getLatestEntry();
       if (!latest) {
-        console.log(formatMemoryListMissingJson(snapshotId ?? 'latest'));
+        console.log(formatMemoryListMissingJson(snapshotId ?? 'latest', {
+          includeContent: options.format !== 'json-summary',
+        }));
         return;
       }
     }
