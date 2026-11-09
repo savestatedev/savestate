@@ -163,6 +163,7 @@ import {
   parseSnapshotsResourceOffset,
   parseSnapshotsResourceOffsetQuery,
 } from './snapshots-resource-offset.js';
+import { getSnapshotsResourcePaginationQueryValue } from './snapshots-resource-query.js';
 import { formatSnapshotsResourceEntry } from './snapshots-resource-entry.js';
 import {
   buildSnapshotsResourceUri,
@@ -1758,11 +1759,11 @@ async function handleReadResource(uri: string): Promise<string> {
         return JSON.stringify({ error: 'SaveState not initialized' });
       }
 
-      const rawOffset = url.searchParams.get('offset');
+      const rawOffset = getSnapshotsResourcePaginationQueryValue(url.searchParams, 'offset');
       const offset = rawOffset === null
         ? undefined
         : parseSnapshotsResourceOffsetQuery(rawOffset);
-      const rawLimit = url.searchParams.get('limit');
+      const rawLimit = getSnapshotsResourcePaginationQueryValue(url.searchParams, 'limit');
       const limit = rawLimit === null
         ? undefined
         : parseSnapshotsResourceLimitQuery(rawLimit);

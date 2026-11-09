@@ -6,6 +6,7 @@ import {
   selectSnapshotsResourceEntries,
 } from '../snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffsetQuery } from '../snapshots-resource-offset.js';
+import { getSnapshotsResourcePaginationQueryValue } from '../snapshots-resource-query.js';
 
 describe('MCP savestate://snapshots limit', () => {
   it('defaults to undefined', () => {
@@ -47,6 +48,16 @@ describe('MCP savestate://snapshots limit', () => {
 
   it('accepts surrounding whitespace in a decimal query offset', () => {
     expect(parseSnapshotsResourceOffsetQuery(' 10 ')).toBe(10);
+  });
+
+  it('rejects duplicate pagination query parameters instead of choosing one', () => {
+    const query = new URLSearchParams('limit=10&limit=20&offset=3');
+
+    expect(() => getSnapshotsResourcePaginationQueryValue(query, 'limit')).toThrow(
+      'Duplicate limit query parameter. Provide only one value.',
+    );
+    expect(getSnapshotsResourcePaginationQueryValue(query, 'offset')).toBe('3');
+    expect(getSnapshotsResourcePaginationQueryValue(new URLSearchParams(), 'limit')).toBeNull();
   });
 
   it('keeps the first N snapshots', () => {
