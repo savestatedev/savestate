@@ -397,7 +397,8 @@ export function formatMemoryListJson(
 ): string {
   const now = pagination.now ?? new Date();
   const offset = pagination.offset ?? 0;
-  const hasPrevious = offset > 0;
+  // An empty filtered collection has no prior page, even when a stale offset was supplied.
+  const hasPrevious = offset > 0 && all.length > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
   const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
   // Advance bounded pages by their requested size, even when a sparse page

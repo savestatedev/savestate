@@ -304,6 +304,18 @@ describe('savestate memory --json', () => {
     expect(parsed.entries).toEqual([]);
   });
 
+  it('treats an empty filtered collection as terminal at a stale offset', () => {
+    const parsed = JSON.parse(
+      formatMemoryListJson([], [], { offset: 20, limit: 10 }),
+    ) as MemoryListJson;
+
+    expect(parsed.emptyReason).toBe('collection');
+    expect(parsed.hasPrevious).toBe(false);
+    expect(parsed.previousOffset).toBeNull();
+    expect(parsed.hasMore).toBe(false);
+    expect(parsed.nextOffset).toBeNull();
+  });
+
   it('exposes the continuation offset for filtered pages', () => {
     const all = [
       entry({ id: 'mem-l1', content: 'first', tier: 'L1' }),
