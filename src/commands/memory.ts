@@ -262,7 +262,8 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
   const keys = new Map<string, string>();
   for (const memory of memories) {
     const source = normalizeMemoryListSource(memory.source);
-    const normalizedKey = source.toLocaleLowerCase();
+    // Use locale-independent keys so JSON aggregates are stable across hosts.
+    const normalizedKey = source.toLowerCase();
     const key = keys.get(normalizedKey) ?? source;
     keys.set(normalizedKey, key);
     counts[key] = (counts[key] ?? 0) + 1;
@@ -337,6 +338,11 @@ export interface MemoryListEntryJson {
   freshness: MemoryFreshness;
 }
 
+export interface MemoryListGuidance {
+  action: 'none' | 'next' | 'previous' | 'retry';
+  offset: number | null;
+}
+
 export interface MemoryListJson {
   found: true;
   snapshot: string;
@@ -349,12 +355,16 @@ export interface MemoryListJson {
   offset: number;
   limit: number | null;
   pageSize: number;
+  page: number;
+  totalPages: number;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
+  /** Machine-readable next step for paginated consumers. */
+  guidance: MemoryListGuidance;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -396,26 +406,56 @@ export function formatMemoryListJson(
   } = {},
 ): string {
   const now = pagination.now ?? new Date();
-  const offset = pagination.offset ?? 0;
-  const hasPrevious = offset > 0;
-  const pageSize = pagination.limit ?? Math.max(1, shown.length);
-  const hasMore = pagination.hasMore ?? offset + shown.length < all.length;
+  // Keep the JSON navigation envelope valid for callers using the formatter
+  // directly, even though the CLI parser already rejects negative offsets.
+  const offset = pagination.offset !== undefined && Number.isFinite(pagination.offset) && pagination.offset >= 0
+    ? Math.floor(pagination.offset)
+    : 0;
+  // Treat invalid direct-call limits as unbounded instead of emitting broken
+  // page math (for example, division by zero or NaN in JSON output).
+  const limit = pagination.limit !== undefined && Number.isFinite(pagination.limit) && pagination.limit > 0
+    ? Math.floor(pagination.limit)
+    : undefined;
+  // An empty filtered collection has no prior page, even when a stale offset was supplied.
+  const hasPrevious = offset > 0 && all.length > 0;
+  const pageSize = limit ?? Math.max(1, shown.length);
+  const page = all.length === 0
+    ? 0
+    : limit === undefined
+      ? 1
+      : Math.floor(offset / limit) + 1;
+  const totalPages = limit === undefined
+    ? all.length > 0 ? 1 : 0
+    : Math.ceil(all.length / limit);
+  const emptyPage = shown.length === 0 && all.length > 0;
+  // An empty collection is terminal even when a caller supplies stale paging metadata.
+  // An empty page is an exhausted/stale cursor: retry the suggested page
+  // instead of advertising a continuation beyond the collection.
+  const hasMore = all.length === 0 || emptyPage
+    ? false
+    : pagination.hasMore ?? offset + shown.length < all.length;
   // Advance bounded pages by their requested size, even when a sparse page
   // contains fewer entries, so clients do not revisit entries on continuation.
   // Unbounded pages use the number returned as their natural step.
-  const continuationStep = pagination.limit ?? Math.max(1, shown.length);
+  const continuationStep = limit ?? Math.max(1, shown.length);
   const remaining = Math.max(0, all.length - offset - shown.length);
-  const emptyPage = shown.length === 0 && all.length > 0;
   const suggestedOffset = emptyPage
-    ? pagination.limit === undefined
+    ? limit === undefined
       ? 0
       : Math.floor((all.length - 1) / pageSize) * pageSize
     : null;
   const previousOffset = hasPrevious
-    ? emptyPage && pagination.limit !== undefined
+    ? emptyPage && limit !== undefined
       ? suggestedOffset
       : Math.max(0, offset - pageSize)
     : null;
+  const guidance: MemoryListGuidance = emptyPage && suggestedOffset !== null
+    ? { action: 'retry', offset: suggestedOffset }
+    : hasMore
+      ? { action: 'next', offset: offset + continuationStep }
+      : hasPrevious && previousOffset !== null
+        ? { action: 'previous', offset: previousOffset }
+        : { action: 'none', offset: null };
   const record: MemoryListJson = {
     found: true,
     snapshot: pagination.snapshot ?? 'latest',
@@ -425,13 +465,16 @@ export function formatMemoryListJson(
     shown: shown.length,
     remaining,
     offset,
-    limit: pagination.limit ?? null,
+    limit: limit ?? null,
     pageSize,
+    page,
+    totalPages,
     hasPrevious,
     previousOffset,
     hasMore,
     nextOffset: hasMore ? offset + continuationStep : null,
     suggestedOffset,
+    guidance,
     filters: {
       tier: pagination.filters?.tier ?? null,
       freshness: pagination.filters?.freshness ?? null,
@@ -499,7 +542,7 @@ export interface MemoryListMissingJson {
   snapshot: string;
   total: 0;
   shown: 0;
-  contentIncluded?: boolean;
+  contentIncluded: boolean;
 }
 
 export function formatMemoryListMissingJson(
@@ -512,7 +555,7 @@ export function formatMemoryListMissingJson(
       snapshot,
       total: 0,
       shown: 0,
-      ...(options.includeContent === false ? { contentIncluded: false } : {}),
+      contentIncluded: options.includeContent !== false,
     },
     null,
     2,
@@ -543,8 +586,8 @@ export function filterMemoryListBySource(
   source?: string,
 ): MemoryEntry[] {
   if (source === undefined) return entries;
-  const normalizedSource = normalizeMemoryListSource(source).toLocaleLowerCase();
-  return entries.filter((entry) => normalizeMemoryListSource(entry.source).toLocaleLowerCase() === normalizedSource);
+  const normalizedSource = normalizeMemoryListSource(source).toLowerCase();
+  return entries.filter((entry) => normalizeMemoryListSource(entry.source).toLowerCase() === normalizedSource);
 }
 
 /** Keep legacy padding out of machine-readable and terminal memory output. */
@@ -558,8 +601,9 @@ export function filterMemoryListByContent(
   content?: string,
 ): MemoryEntry[] {
   if (content === undefined) return entries;
-  const query = content.toLocaleLowerCase();
-  return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+  // Keep machine-facing filters stable across hosts with different locales.
+  const query = content.toLowerCase();
+  return entries.filter((entry) => entry.content.toLowerCase().includes(query));
 }
 
 /** Keep memories containing every requested metadata tag. */
@@ -568,9 +612,9 @@ export function filterMemoryListByTags(
   tags?: string[],
 ): MemoryEntry[] {
   if (tags === undefined) return entries;
-  const normalizedTags = normalizeMemoryTagFilters(tags).map((tag) => tag.toLocaleLowerCase());
+  const normalizedTags = normalizeMemoryTagFilters(tags).map((tag) => tag.toLowerCase());
   return entries.filter((entry) => {
-    const entryTags = getMemoryListTags(entry).map((tag) => tag.toLocaleLowerCase());
+    const entryTags = getMemoryListTags(entry).map((tag) => tag.toLowerCase());
     return normalizedTags.every((tag) => entryTags.includes(tag));
   });
 }
@@ -643,7 +687,7 @@ export function getMemoryListTags(entry: MemoryEntry): string[] {
     .map((tag) => tag.trim())
     .filter((tag) => {
       if (tag.length === 0) return false;
-      const normalized = tag.toLocaleLowerCase();
+      const normalized = tag.toLowerCase();
       if (seen.has(normalized)) return false;
       seen.add(normalized);
       return true;
@@ -657,7 +701,7 @@ function normalizeMemoryTagFilters(tags: string[]): string[] {
     .map((tag) => tag.trim())
     .filter((tag) => {
       if (tag.length === 0) return false;
-      const normalized = tag.toLocaleLowerCase();
+      const normalized = tag.toLowerCase();
       if (seen.has(normalized)) return false;
       seen.add(normalized);
       return true;

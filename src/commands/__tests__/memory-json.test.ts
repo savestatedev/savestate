@@ -3,6 +3,7 @@ import type { MemoryEntry } from '../../types.js';
 import {
   formatMemoryListJson,
   filterMemoryListByCreatedSince,
+  filterMemoryListBySource,
   filterMemoryListByNamespace,
   filterMemoryListByContent,
   filterMemoryListByTags,
@@ -106,6 +107,17 @@ describe('savestate memory --json', () => {
     expect(filterMemoryListByTags(entries, [' '])).toEqual(entries);
   });
 
+  it('keeps content and tag matching independent of the host locale', () => {
+    const entries = [entry({
+      id: 'mem-locale-stable',
+      content: 'I prefer a terminal workflow',
+      metadata: { tags: ['CLI'] },
+    })];
+
+    expect(filterMemoryListByContent(entries, 'i prefer')).toEqual(entries);
+    expect(filterMemoryListByTags(entries, ['cli'])).toEqual(entries);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
@@ -158,6 +170,16 @@ describe('savestate memory --json', () => {
       .toEqual({ 'Claude-Code': 1, user: 1 });
   });
 
+  it('uses locale-independent source keys for aggregates and filters', () => {
+    const entries = [
+      entry({ id: 'mem-source-a', content: 'a', source: '  Claude-Code  ' }),
+      entry({ id: 'mem-source-b', content: 'b', source: 'claude-code' }),
+    ];
+
+    expect(countBySource(entries)).toEqual({ 'Claude-Code': 2 });
+    expect(filterMemoryListBySource(entries, 'CLAUDE-CODE')).toEqual(entries);
+  });
+
   it('keeps freshness counts and entries consistent at a TTL boundary', () => {
     const now = new Date('2026-10-15T12:00:00.000Z');
     const entryAtBoundary = entry({
@@ -203,11 +225,14 @@ describe('savestate memory --json', () => {
     expect(parsed.offset).toBe(0);
     expect(parsed.limit).toBeNull();
     expect(parsed.pageSize).toBe(2);
+    expect(parsed.page).toBe(1);
+    expect(parsed.totalPages).toBe(1);
     expect(parsed.hasPrevious).toBe(false);
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(true);
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.suggestedOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
@@ -291,7 +316,10 @@ describe('savestate memory --json', () => {
     expect(parsed.hasPrevious).toBe(false);
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.nextOffset).toBeNull();
+    expect(parsed.page).toBe(0);
+    expect(parsed.totalPages).toBe(0);
     expect(parsed.suggestedOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
@@ -302,6 +330,74 @@ describe('savestate memory --json', () => {
     expect(parsed.pinned).toBe(0);
     expect(parsed.shownPinned).toBe(0);
     expect(parsed.entries).toEqual([]);
+  });
+
+  it('treats an empty filtered collection as terminal at a stale offset', () => {
+    const parsed = JSON.parse(
+      formatMemoryListJson([], [], { offset: 20, limit: 10, hasMore: true }),
+    ) as MemoryListJson;
+
+    expect(parsed.emptyReason).toBe('collection');
+    expect(parsed.page).toBe(0);
+    expect(parsed.totalPages).toBe(0);
+    expect(parsed.hasPrevious).toBe(false);
+    expect(parsed.previousOffset).toBeNull();
+    expect(parsed.hasMore).toBe(false);
+    expect(parsed.nextOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
+  });
+
+  it('clamps negative formatter offsets before calculating navigation', () => {
+    const entries = [
+      entry({ id: 'mem-first', content: 'first' }),
+      entry({ id: 'mem-second', content: 'second' }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(entries, entries.slice(0, 1), { offset: -5, limit: 1 }),
+    ) as MemoryListJson;
+
+    expect(parsed.offset).toBe(0);
+    expect(parsed.page).toBe(1);
+    expect(parsed.totalPages).toBe(2);
+    expect(parsed.previousOffset).toBeNull();
+    expect(parsed.nextOffset).toBe(1);
+  });
+
+  it('normalizes non-finite and fractional formatter offsets', () => {
+    const entries = [
+      entry({ id: 'mem-first', content: 'first' }),
+      entry({ id: 'mem-second', content: 'second' }),
+    ];
+
+    const nonFinite = JSON.parse(
+      formatMemoryListJson(entries, entries.slice(0, 1), { offset: Number.POSITIVE_INFINITY, limit: 1 }),
+    ) as MemoryListJson;
+    expect(nonFinite.offset).toBe(0);
+    expect(nonFinite.page).toBe(1);
+    expect(nonFinite.nextOffset).toBe(1);
+
+    const fractional = JSON.parse(
+      formatMemoryListJson(entries, entries.slice(1), { offset: 1.9, limit: 1 }),
+    ) as MemoryListJson;
+    expect(fractional.offset).toBe(1);
+    expect(fractional.page).toBe(2);
+    expect(fractional.previousOffset).toBe(0);
+  });
+
+  it('ignores invalid direct formatter limits before calculating navigation', () => {
+    const entries = [
+      entry({ id: 'mem-first', content: 'first' }),
+      entry({ id: 'mem-second', content: 'second' }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(entries, entries, { offset: 0, limit: 0 }),
+    ) as MemoryListJson;
+
+    expect(parsed.limit).toBeNull();
+    expect(parsed.page).toBe(1);
+    expect(parsed.totalPages).toBe(1);
+    expect(parsed.hasMore).toBe(false);
+    expect(parsed.nextOffset).toBeNull();
   });
 
   it('exposes the continuation offset for filtered pages', () => {
@@ -318,6 +414,8 @@ describe('savestate memory --json', () => {
     expect(parsed.limit).toBe(1);
     expect(parsed.remaining).toBe(1);
     expect(parsed.pageSize).toBe(1);
+    expect(parsed.page).toBe(2);
+    expect(parsed.totalPages).toBe(3);
     expect(parsed.hasPrevious).toBe(true);
     expect(parsed.previousOffset).toBe(0);
     expect(parsed.hasMore).toBe(true);
@@ -444,7 +542,7 @@ describe('savestate memory --json', () => {
     expect(parsed.suggestedOffset).toBe(0);
   });
 
-  it('advances empty bounded pages by their requested page size', () => {
+  it('keeps empty bounded pages terminal while suggesting recovery', () => {
     const parsed = JSON.parse(
       formatMemoryListJson(
         [{ id: 'mem-1', content: 'first' } as MemoryEntry],
@@ -453,8 +551,9 @@ describe('savestate memory --json', () => {
       ),
     ) as MemoryListJson;
 
-    expect(parsed.nextOffset).toBe(12);
+    expect(parsed.nextOffset).toBeNull();
     expect(parsed.suggestedOffset).toBe(0);
+    expect(parsed.guidance).toEqual({ action: 'retry', offset: 0 });
   });
 
   it('points exhausted bounded pages to the nearest populated page', () => {
@@ -469,6 +568,7 @@ describe('savestate memory --json', () => {
     expect(parsed.hasPrevious).toBe(true);
     expect(parsed.previousOffset).toBe(40);
     expect(parsed.suggestedOffset).toBe(40);
+    expect(parsed.guidance).toEqual({ action: 'retry', offset: 40 });
   });
 
   it('advances sparse bounded pages by their requested page size', () => {
@@ -504,5 +604,6 @@ describe('savestate memory --json', () => {
     expect(parsed.contentIncluded).toBe(false);
     expect(parsed.total).toBe(1);
     expect(parsed.shown).toBe(1);
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
   });
 });

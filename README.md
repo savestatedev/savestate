@@ -218,11 +218,17 @@ Table output also shows matching-collection source totals and, when paginated, s
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
 
+The same JSON envelope includes `page` and `totalPages`, with unbounded results reported as a
+single page when entries exist (or zero pages when the collection is empty).
+
 Use `savestate memory list --json-summary` when a script needs the same pagination, filters, and
 aggregate metadata without copying memory content into logs or downstream payloads. It preserves
 the `entries` metadata shape and omits only each entry's `content` field. The response sets
 `contentIncluded: false`—including when the requested snapshot is missing—so consumers can detect
 the redacted mode without inspecting entries.
+
+Paginated JSON also includes `guidance`, a small machine-readable next step: `next`, `previous`,
+or `retry` with the recommended offset, or `none` when no navigation action is available.
 
 Filter by a source id or the human-readable source label with `--source`. Matching is
 case-insensitive, and repeated whitespace is normalized so labels copied from output remain
