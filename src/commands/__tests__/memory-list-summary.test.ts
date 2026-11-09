@@ -74,4 +74,21 @@ describe('savestate memory list table pagination summary', () => {
       '(showing 0 of 45 matching memories; offset 100, limit 20; previous offset 40)',
     );
   });
+
+  it('keeps stale JSON pages terminal even when callers pass hasMore', () => {
+    const parsed = JSON.parse(formatMemoryListJson(
+      [memory(), memory('other')],
+      [],
+      { offset: 10, limit: 2, hasMore: true },
+    ));
+
+    expect(parsed).toMatchObject({
+      empty: true,
+      emptyReason: 'page',
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: 0,
+      guidance: { action: 'retry', offset: 0 },
+    });
+  });
 });

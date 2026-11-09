@@ -426,8 +426,11 @@ export function formatMemoryListJson(
   const totalPages = limit === undefined
     ? all.length > 0 ? 1 : 0
     : Math.ceil(all.length / limit);
+  const emptyPage = shown.length === 0 && all.length > 0;
   // An empty collection is terminal even when a caller supplies stale paging metadata.
-  const hasMore = all.length === 0
+  // An empty page is an exhausted/stale cursor: retry the suggested page
+  // instead of advertising a continuation beyond the collection.
+  const hasMore = all.length === 0 || emptyPage
     ? false
     : pagination.hasMore ?? offset + shown.length < all.length;
   // Advance bounded pages by their requested size, even when a sparse page
@@ -435,7 +438,6 @@ export function formatMemoryListJson(
   // Unbounded pages use the number returned as their natural step.
   const continuationStep = limit ?? Math.max(1, shown.length);
   const remaining = Math.max(0, all.length - offset - shown.length);
-  const emptyPage = shown.length === 0 && all.length > 0;
   const suggestedOffset = emptyPage
     ? limit === undefined
       ? 0
