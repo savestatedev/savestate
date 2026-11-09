@@ -1,9 +1,17 @@
-export type SnapshotsResourcePaginationParameter = 'limit' | 'offset';
+export type SnapshotsResourceQueryParameter =
+  | 'limit'
+  | 'offset'
+  | 'platform'
+  | 'adapter'
+  | 'label'
+  | 'tag'
+  | 'since'
+  | 'until';
 
-/** Reject ambiguous pagination queries instead of silently choosing one duplicate value. */
-export function getSnapshotsResourcePaginationQueryValue(
+/** Reject ambiguous single-valued queries instead of silently choosing one duplicate value. */
+export function getSnapshotsResourceQueryValue(
   searchParams: URLSearchParams,
-  name: SnapshotsResourcePaginationParameter,
+  name: SnapshotsResourceQueryParameter,
 ): string | null {
   const values = searchParams.getAll(name);
   if (values.length > 1) {

@@ -6,7 +6,7 @@ import {
   selectSnapshotsResourceEntries,
 } from '../snapshots-resource-limit.js';
 import { parseSnapshotsResourceOffsetQuery } from '../snapshots-resource-offset.js';
-import { getSnapshotsResourcePaginationQueryValue } from '../snapshots-resource-query.js';
+import { getSnapshotsResourceQueryValue } from '../snapshots-resource-query.js';
 
 describe('MCP savestate://snapshots limit', () => {
   it('defaults to undefined', () => {
@@ -53,11 +53,19 @@ describe('MCP savestate://snapshots limit', () => {
   it('rejects duplicate pagination query parameters instead of choosing one', () => {
     const query = new URLSearchParams('limit=10&limit=20&offset=3');
 
-    expect(() => getSnapshotsResourcePaginationQueryValue(query, 'limit')).toThrow(
+    expect(() => getSnapshotsResourceQueryValue(query, 'limit')).toThrow(
       'Duplicate limit query parameter. Provide only one value.',
     );
-    expect(getSnapshotsResourcePaginationQueryValue(query, 'offset')).toBe('3');
-    expect(getSnapshotsResourcePaginationQueryValue(new URLSearchParams(), 'limit')).toBeNull();
+    expect(getSnapshotsResourceQueryValue(query, 'offset')).toBe('3');
+    expect(getSnapshotsResourceQueryValue(new URLSearchParams(), 'limit')).toBeNull();
+  });
+
+  it('rejects duplicate single-valued snapshot filters', () => {
+    const query = new URLSearchParams('platform=claude&platform=chatgpt');
+
+    expect(() => getSnapshotsResourceQueryValue(query, 'platform')).toThrow(
+      'Duplicate platform query parameter. Provide only one value.',
+    );
   });
 
   it('keeps the first N snapshots', () => {
