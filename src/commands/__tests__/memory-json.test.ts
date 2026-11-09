@@ -322,6 +322,22 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBeNull();
   });
 
+  it('clamps negative formatter offsets before calculating navigation', () => {
+    const entries = [
+      entry({ id: 'mem-first', content: 'first' }),
+      entry({ id: 'mem-second', content: 'second' }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(entries, entries.slice(0, 1), { offset: -5, limit: 1 }),
+    ) as MemoryListJson;
+
+    expect(parsed.offset).toBe(0);
+    expect(parsed.page).toBe(1);
+    expect(parsed.totalPages).toBe(2);
+    expect(parsed.previousOffset).toBeNull();
+    expect(parsed.nextOffset).toBe(1);
+  });
+
   it('exposes the continuation offset for filtered pages', () => {
     const all = [
       entry({ id: 'mem-l1', content: 'first', tier: 'L1' }),
