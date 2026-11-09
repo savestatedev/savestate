@@ -377,6 +377,8 @@ export interface MemoryListJson {
   shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: number;
   shownPinned: number;
+  /** Whether each returned entry includes its memory content. */
+  contentIncluded: boolean;
   entries: MemoryListEntryJson[];
 }
 
@@ -465,6 +467,7 @@ export function formatMemoryListJson(
     shownByFreshness: countByFreshness(shown, now),
     pinned: all.filter((entry) => !!entry.pinned).length,
     shownPinned: shown.filter((entry) => !!entry.pinned).length,
+    contentIncluded: pagination.includeContent !== false,
     entries: shown.map((entry) => ({
       id: entry.id,
       tier: getEffectiveTier(entry),

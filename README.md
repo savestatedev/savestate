@@ -220,7 +220,8 @@ compactly report any additional sources; JSON counts remain complete.
 
 Use `savestate memory list --json-summary` when a script needs the same pagination, filters, and
 aggregate metadata without copying memory content into logs or downstream payloads. It preserves
-the `entries` metadata shape and omits only each entry's `content` field.
+the `entries` metadata shape and omits only each entry's `content` field. The response sets
+`contentIncluded: false` so consumers can detect the redacted mode without inspecting entries.
 
 Filter by a source id or the human-readable source label with `--source`. Matching is
 case-insensitive, and repeated whitespace is normalized so labels copied from output remain

@@ -174,6 +174,7 @@ describe('savestate memory --json', () => {
     )) as MemoryListJson;
 
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 1 });
+    expect(parsed.contentIncluded).toBe(true);
     expect(parsed.entries[0].freshness.state).toBe('needs_confirmation');
   });
 
@@ -500,6 +501,7 @@ describe('savestate memory --json', () => {
       source: 'agent',
     });
     expect(parsed.entries[0].content).toBeUndefined();
+    expect(parsed.contentIncluded).toBe(false);
     expect(parsed.total).toBe(1);
     expect(parsed.shown).toBe(1);
   });
