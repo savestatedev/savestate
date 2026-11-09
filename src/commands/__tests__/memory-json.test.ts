@@ -3,6 +3,7 @@ import type { MemoryEntry } from '../../types.js';
 import {
   formatMemoryListJson,
   filterMemoryListByCreatedSince,
+  filterMemoryListBySource,
   filterMemoryListByNamespace,
   filterMemoryListByContent,
   filterMemoryListByTags,
@@ -156,6 +157,16 @@ describe('savestate memory --json', () => {
     expect(countBySource(entries)).toEqual({ 'Claude-Code': 1, user: 1 });
     expect(JSON.parse(formatMemoryListJson(entries, entries)).bySource)
       .toEqual({ 'Claude-Code': 1, user: 1 });
+  });
+
+  it('uses locale-independent source keys for aggregates and filters', () => {
+    const entries = [
+      entry({ id: 'mem-source-a', content: 'a', source: '  Claude-Code  ' }),
+      entry({ id: 'mem-source-b', content: 'b', source: 'claude-code' }),
+    ];
+
+    expect(countBySource(entries)).toEqual({ 'Claude-Code': 2 });
+    expect(filterMemoryListBySource(entries, 'CLAUDE-CODE')).toEqual(entries);
   });
 
   it('keeps freshness counts and entries consistent at a TTL boundary', () => {
@@ -520,7 +531,7 @@ describe('savestate memory --json', () => {
     expect(parsed.suggestedOffset).toBe(0);
   });
 
-  it('advances empty bounded pages by their requested page size', () => {
+  it('keeps empty bounded pages terminal while suggesting recovery', () => {
     const parsed = JSON.parse(
       formatMemoryListJson(
         [{ id: 'mem-1', content: 'first' } as MemoryEntry],
@@ -529,8 +540,9 @@ describe('savestate memory --json', () => {
       ),
     ) as MemoryListJson;
 
-    expect(parsed.nextOffset).toBe(12);
+    expect(parsed.nextOffset).toBeNull();
     expect(parsed.suggestedOffset).toBe(0);
+    expect(parsed.guidance).toEqual({ action: 'retry', offset: 0 });
   });
 
   it('points exhausted bounded pages to the nearest populated page', () => {

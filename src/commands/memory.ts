@@ -262,7 +262,8 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
   const keys = new Map<string, string>();
   for (const memory of memories) {
     const source = normalizeMemoryListSource(memory.source);
-    const normalizedKey = source.toLocaleLowerCase();
+    // Use locale-independent keys so JSON aggregates are stable across hosts.
+    const normalizedKey = source.toLowerCase();
     const key = keys.get(normalizedKey) ?? source;
     keys.set(normalizedKey, key);
     counts[key] = (counts[key] ?? 0) + 1;
@@ -585,8 +586,8 @@ export function filterMemoryListBySource(
   source?: string,
 ): MemoryEntry[] {
   if (source === undefined) return entries;
-  const normalizedSource = normalizeMemoryListSource(source).toLocaleLowerCase();
-  return entries.filter((entry) => normalizeMemoryListSource(entry.source).toLocaleLowerCase() === normalizedSource);
+  const normalizedSource = normalizeMemoryListSource(source).toLowerCase();
+  return entries.filter((entry) => normalizeMemoryListSource(entry.source).toLowerCase() === normalizedSource);
 }
 
 /** Keep legacy padding out of machine-readable and terminal memory output. */
