@@ -1,5 +1,8 @@
 const MAX_SNAPSHOTS_RESOURCE_LIMIT = 1000;
 
+const invalidLimitMessage = (value: string): string =>
+  `Invalid limit value "${value}". Expected a positive decimal integer up to ${MAX_SNAPSHOTS_RESOURCE_LIMIT}.`;
+
 export interface SnapshotsResourcePage<T> {
   count: number;
   total: number;
@@ -30,6 +33,24 @@ export function parseSnapshotsResourceLimit(value: number | undefined): number |
     );
   }
   return value;
+}
+
+/** Parse the query-string form without accepting JavaScript-only numeric syntax or blanks. */
+export function parseSnapshotsResourceLimitQuery(value: string): number {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(invalidLimitMessage(value));
+  }
+
+  try {
+    const limit = parseSnapshotsResourceLimit(Number(normalized));
+    if (limit === undefined) {
+      throw new Error(invalidLimitMessage(value));
+    }
+    return limit;
+  } catch {
+    throw new Error(invalidLimitMessage(value));
+  }
 }
 
 /** Keep the first N snapshots when savestate://snapshots limit is set. */

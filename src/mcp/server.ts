@@ -154,8 +154,16 @@ import {
   INVALID_MEMORY_IMPORTANCE_RANGE_MESSAGE,
 } from './memory-importance-range.js';
 import { toMemoryResourceEntry } from './memory-resource-entry.js';
-import { buildSnapshotsResourcePage, parseSnapshotsResourceLimit } from './snapshots-resource-limit.js';
-import { parseSnapshotsResourceOffset } from './snapshots-resource-offset.js';
+import {
+  buildSnapshotsResourcePage,
+  parseSnapshotsResourceLimit,
+  parseSnapshotsResourceLimitQuery,
+} from './snapshots-resource-limit.js';
+import {
+  parseSnapshotsResourceOffset,
+  parseSnapshotsResourceOffsetQuery,
+} from './snapshots-resource-offset.js';
+import { getSnapshotsResourceQueryValue } from './snapshots-resource-query.js';
 import { formatSnapshotsResourceEntry } from './snapshots-resource-entry.js';
 import {
   buildSnapshotsResourceUri,
@@ -1751,20 +1759,20 @@ async function handleReadResource(uri: string): Promise<string> {
         return JSON.stringify({ error: 'SaveState not initialized' });
       }
 
-      const rawOffset = url.searchParams.get('offset');
+      const rawOffset = getSnapshotsResourceQueryValue(url.searchParams, 'offset');
       const offset = rawOffset === null
         ? undefined
-        : parseSnapshotsResourceOffset(Number(rawOffset));
-      const rawLimit = url.searchParams.get('limit');
+        : parseSnapshotsResourceOffsetQuery(rawOffset);
+      const rawLimit = getSnapshotsResourceQueryValue(url.searchParams, 'limit');
       const limit = rawLimit === null
         ? undefined
-        : parseSnapshotsResourceLimit(Number(rawLimit));
-      const platform = parseSnapshotsResourcePlatform(url.searchParams.get('platform'));
-      const adapter = parseSnapshotsResourceAdapter(url.searchParams.get('adapter'));
-      const label = parseSnapshotsResourceLabel(url.searchParams.get('label'));
-      const tag = parseSnapshotsResourceTag(url.searchParams.get('tag'));
-      const since = parseSnapshotsResourceDate(url.searchParams.get('since'), 'since');
-      const until = parseSnapshotsResourceDate(url.searchParams.get('until'), 'until');
+        : parseSnapshotsResourceLimitQuery(rawLimit);
+      const platform = parseSnapshotsResourcePlatform(getSnapshotsResourceQueryValue(url.searchParams, 'platform'));
+      const adapter = parseSnapshotsResourceAdapter(getSnapshotsResourceQueryValue(url.searchParams, 'adapter'));
+      const label = parseSnapshotsResourceLabel(getSnapshotsResourceQueryValue(url.searchParams, 'label'));
+      const tag = parseSnapshotsResourceTag(getSnapshotsResourceQueryValue(url.searchParams, 'tag'));
+      const since = parseSnapshotsResourceDate(getSnapshotsResourceQueryValue(url.searchParams, 'since'), 'since');
+      const until = parseSnapshotsResourceDate(getSnapshotsResourceQueryValue(url.searchParams, 'until'), 'until');
       validateSnapshotsResourceDateRange(since, until);
 
       const index = await loadIndex();
