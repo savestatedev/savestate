@@ -349,6 +349,8 @@ export interface MemoryListJson {
   offset: number;
   limit: number | null;
   pageSize: number;
+  page: number;
+  totalPages: number;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
@@ -400,6 +402,12 @@ export function formatMemoryListJson(
   // An empty filtered collection has no prior page, even when a stale offset was supplied.
   const hasPrevious = offset > 0 && all.length > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
+  const page = pagination.limit === undefined
+    ? shown.length > 0 ? 1 : 0
+    : Math.floor(offset / pagination.limit) + 1;
+  const totalPages = pagination.limit === undefined
+    ? all.length > 0 ? 1 : 0
+    : Math.ceil(all.length / pagination.limit);
   // An empty collection is terminal even when a caller supplies stale paging metadata.
   const hasMore = all.length === 0
     ? false
@@ -431,6 +439,8 @@ export function formatMemoryListJson(
     offset,
     limit: pagination.limit ?? null,
     pageSize,
+    page,
+    totalPages,
     hasPrevious,
     previousOffset,
     hasMore,
