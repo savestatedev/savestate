@@ -107,6 +107,17 @@ describe('savestate memory --json', () => {
     expect(filterMemoryListByTags(entries, [' '])).toEqual(entries);
   });
 
+  it('keeps content and tag matching independent of the host locale', () => {
+    const entries = [entry({
+      id: 'mem-locale-stable',
+      content: 'I prefer a terminal workflow',
+      metadata: { tags: ['CLI'] },
+    })];
+
+    expect(filterMemoryListByContent(entries, 'i prefer')).toEqual(entries);
+    expect(filterMemoryListByTags(entries, ['cli'])).toEqual(entries);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),

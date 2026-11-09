@@ -601,8 +601,9 @@ export function filterMemoryListByContent(
   content?: string,
 ): MemoryEntry[] {
   if (content === undefined) return entries;
-  const query = content.toLocaleLowerCase();
-  return entries.filter((entry) => entry.content.toLocaleLowerCase().includes(query));
+  // Keep machine-facing filters stable across hosts with different locales.
+  const query = content.toLowerCase();
+  return entries.filter((entry) => entry.content.toLowerCase().includes(query));
 }
 
 /** Keep memories containing every requested metadata tag. */
@@ -611,9 +612,9 @@ export function filterMemoryListByTags(
   tags?: string[],
 ): MemoryEntry[] {
   if (tags === undefined) return entries;
-  const normalizedTags = normalizeMemoryTagFilters(tags).map((tag) => tag.toLocaleLowerCase());
+  const normalizedTags = normalizeMemoryTagFilters(tags).map((tag) => tag.toLowerCase());
   return entries.filter((entry) => {
-    const entryTags = getMemoryListTags(entry).map((tag) => tag.toLocaleLowerCase());
+    const entryTags = getMemoryListTags(entry).map((tag) => tag.toLowerCase());
     return normalizedTags.every((tag) => entryTags.includes(tag));
   });
 }
@@ -686,7 +687,7 @@ export function getMemoryListTags(entry: MemoryEntry): string[] {
     .map((tag) => tag.trim())
     .filter((tag) => {
       if (tag.length === 0) return false;
-      const normalized = tag.toLocaleLowerCase();
+      const normalized = tag.toLowerCase();
       if (seen.has(normalized)) return false;
       seen.add(normalized);
       return true;
@@ -700,7 +701,7 @@ function normalizeMemoryTagFilters(tags: string[]): string[] {
     .map((tag) => tag.trim())
     .filter((tag) => {
       if (tag.length === 0) return false;
-      const normalized = tag.toLocaleLowerCase();
+      const normalized = tag.toLowerCase();
       if (seen.has(normalized)) return false;
       seen.add(normalized);
       return true;
