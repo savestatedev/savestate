@@ -401,17 +401,22 @@ export function formatMemoryListJson(
   // Keep the JSON navigation envelope valid for callers using the formatter
   // directly, even though the CLI parser already rejects negative offsets.
   const offset = Math.max(0, pagination.offset ?? 0);
+  // Treat invalid direct-call limits as unbounded instead of emitting broken
+  // page math (for example, division by zero or NaN in JSON output).
+  const limit = pagination.limit !== undefined && Number.isFinite(pagination.limit) && pagination.limit > 0
+    ? Math.floor(pagination.limit)
+    : undefined;
   // An empty filtered collection has no prior page, even when a stale offset was supplied.
   const hasPrevious = offset > 0 && all.length > 0;
-  const pageSize = pagination.limit ?? Math.max(1, shown.length);
+  const pageSize = limit ?? Math.max(1, shown.length);
   const page = all.length === 0
     ? 0
-    : pagination.limit === undefined
+    : limit === undefined
       ? 1
-      : Math.floor(offset / pagination.limit) + 1;
-  const totalPages = pagination.limit === undefined
+      : Math.floor(offset / limit) + 1;
+  const totalPages = limit === undefined
     ? all.length > 0 ? 1 : 0
-    : Math.ceil(all.length / pagination.limit);
+    : Math.ceil(all.length / limit);
   // An empty collection is terminal even when a caller supplies stale paging metadata.
   const hasMore = all.length === 0
     ? false
@@ -419,16 +424,16 @@ export function formatMemoryListJson(
   // Advance bounded pages by their requested size, even when a sparse page
   // contains fewer entries, so clients do not revisit entries on continuation.
   // Unbounded pages use the number returned as their natural step.
-  const continuationStep = pagination.limit ?? Math.max(1, shown.length);
+  const continuationStep = limit ?? Math.max(1, shown.length);
   const remaining = Math.max(0, all.length - offset - shown.length);
   const emptyPage = shown.length === 0 && all.length > 0;
   const suggestedOffset = emptyPage
-    ? pagination.limit === undefined
+    ? limit === undefined
       ? 0
       : Math.floor((all.length - 1) / pageSize) * pageSize
     : null;
   const previousOffset = hasPrevious
-    ? emptyPage && pagination.limit !== undefined
+    ? emptyPage && limit !== undefined
       ? suggestedOffset
       : Math.max(0, offset - pageSize)
     : null;
@@ -441,7 +446,7 @@ export function formatMemoryListJson(
     shown: shown.length,
     remaining,
     offset,
-    limit: pagination.limit ?? null,
+    limit: limit ?? null,
     pageSize,
     page,
     totalPages,

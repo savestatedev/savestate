@@ -338,6 +338,22 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBe(1);
   });
 
+  it('ignores invalid direct formatter limits before calculating navigation', () => {
+    const entries = [
+      entry({ id: 'mem-first', content: 'first' }),
+      entry({ id: 'mem-second', content: 'second' }),
+    ];
+    const parsed = JSON.parse(
+      formatMemoryListJson(entries, entries, { offset: 0, limit: 0 }),
+    ) as MemoryListJson;
+
+    expect(parsed.limit).toBeNull();
+    expect(parsed.page).toBe(1);
+    expect(parsed.totalPages).toBe(1);
+    expect(parsed.hasMore).toBe(false);
+    expect(parsed.nextOffset).toBeNull();
+  });
+
   it('exposes the continuation offset for filtered pages', () => {
     const all = [
       entry({ id: 'mem-l1', content: 'first', tier: 'L1' }),
