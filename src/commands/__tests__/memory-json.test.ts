@@ -486,4 +486,21 @@ describe('savestate memory --json', () => {
 
     expect(parsed.nextOffset).toBe(20);
   });
+
+  it('supports a content-free JSON summary for metadata consumers', () => {
+    const memory = entry({ id: 'mem-summary', content: 'private preference', source: 'agent' });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      includeContent: false,
+      snapshot: 'ss-summary',
+    })) as MemoryListJson;
+
+    expect(parsed.snapshot).toBe('ss-summary');
+    expect(parsed.entries[0]).toMatchObject({
+      id: 'mem-summary',
+      source: 'agent',
+    });
+    expect(parsed.entries[0].content).toBeUndefined();
+    expect(parsed.total).toBe(1);
+    expect(parsed.shown).toBe(1);
+  });
 });
