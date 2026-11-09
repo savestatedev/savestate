@@ -27,4 +27,18 @@ describe('savestate memory list --json when missing', () => {
     expect(Object.keys(parsed).sort()).toEqual(['found', 'shown', 'snapshot', 'total']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
+
+  it('marks missing summary responses as content-free when requested', () => {
+    const parsed = JSON.parse(
+      formatMemoryListMissingJson('ss-missing', { includeContent: false }),
+    ) as MemoryListMissingJson;
+
+    expect(parsed).toEqual({
+      found: false,
+      snapshot: 'ss-missing',
+      total: 0,
+      shown: 0,
+      contentIncluded: false,
+    });
+  });
 });

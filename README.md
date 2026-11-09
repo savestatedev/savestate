@@ -218,6 +218,12 @@ Table output also shows matching-collection source totals and, when paginated, s
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
 
+Use `savestate memory list --json-summary` when a script needs the same pagination, filters, and
+aggregate metadata without copying memory content into logs or downstream payloads. It preserves
+the `entries` metadata shape and omits only each entry's `content` field. The response sets
+`contentIncluded: false`—including when the requested snapshot is missing—so consumers can detect
+the redacted mode without inspecting entries.
+
 Filter by a source id or the human-readable source label with `--source`. Matching is
 case-insensitive, and repeated whitespace is normalized so labels copied from output remain
 usable:

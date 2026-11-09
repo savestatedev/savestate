@@ -333,7 +333,7 @@ export interface MemoryListEntryJson {
   updatedAt?: string;
   lastAccessedAt?: string;
   tags?: string[];
-  content: string;
+  content?: string;
   freshness: MemoryFreshness;
 }
 
@@ -377,6 +377,8 @@ export interface MemoryListJson {
   shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: number;
   shownPinned: number;
+  /** Whether each returned entry includes its memory content. */
+  contentIncluded: boolean;
   entries: MemoryListEntryJson[];
 }
 
@@ -388,6 +390,7 @@ export function formatMemoryListJson(
     offset?: number;
     limit?: number;
     hasMore?: boolean;
+    includeContent?: boolean;
     filters?: Partial<MemoryListJson['filters']>;
     now?: Date;
   } = {},
@@ -464,6 +467,7 @@ export function formatMemoryListJson(
     shownByFreshness: countByFreshness(shown, now),
     pinned: all.filter((entry) => !!entry.pinned).length,
     shownPinned: shown.filter((entry) => !!entry.pinned).length,
+    contentIncluded: pagination.includeContent !== false,
     entries: shown.map((entry) => ({
       id: entry.id,
       tier: getEffectiveTier(entry),
@@ -483,7 +487,7 @@ export function formatMemoryListJson(
         const tags = getMemoryListTags(entry);
         return tags.length > 0 ? { tags } : {};
       })(),
-      content: entry.content,
+      ...(pagination.includeContent === false ? {} : { content: entry.content }),
       freshness: getMemoryFreshness(entry, now),
     })),
   };
@@ -495,15 +499,20 @@ export interface MemoryListMissingJson {
   snapshot: string;
   total: 0;
   shown: 0;
+  contentIncluded?: boolean;
 }
 
-export function formatMemoryListMissingJson(snapshot: string): string {
+export function formatMemoryListMissingJson(
+  snapshot: string,
+  options: { includeContent?: boolean } = {},
+): string {
   return JSON.stringify(
     {
       found: false,
       snapshot,
       total: 0,
       shown: 0,
+      ...(options.includeContent === false ? { contentIncluded: false } : {}),
     },
     null,
     2,
@@ -1328,21 +1337,25 @@ export async function listMemories(
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
-    format?: 'table' | 'json';
+    format?: 'table' | 'json' | 'json-summary';
   },
 ): Promise<void> {
-  if (options?.format === 'json') {
+  if (options?.format === 'json' || options?.format === 'json-summary') {
     const snapshotId = options.snapshotId;
     if (snapshotId && snapshotId !== 'latest') {
       const entry = await findEntry(snapshotId);
       if (!entry) {
-        console.log(formatMemoryListMissingJson(snapshotId));
+        console.log(formatMemoryListMissingJson(snapshotId, {
+          includeContent: options.format !== 'json-summary',
+        }));
         return;
       }
     } else {
       const latest = await getLatestEntry();
       if (!latest) {
-        console.log(formatMemoryListMissingJson(snapshotId ?? 'latest'));
+        console.log(formatMemoryListMissingJson(snapshotId ?? 'latest', {
+          includeContent: options.format !== 'json-summary',
+        }));
         return;
       }
     }
@@ -1381,12 +1394,13 @@ export async function listMemories(
     options?.limit,
   );
 
-  if (options?.format === 'json') {
+  if (options?.format === 'json' || options?.format === 'json-summary') {
     console.log(formatMemoryListJson(filteredEntries, entries, {
       snapshot: snapshot.manifest.id,
       offset,
       limit: options?.limit,
       hasMore: offset + entries.length < filteredEntries.length,
+      includeContent: options.format !== 'json-summary',
       filters: {
         tier: options?.tier,
         freshness: options?.freshness,
