@@ -338,6 +338,27 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBe(1);
   });
 
+  it('normalizes non-finite and fractional formatter offsets', () => {
+    const entries = [
+      entry({ id: 'mem-first', content: 'first' }),
+      entry({ id: 'mem-second', content: 'second' }),
+    ];
+
+    const nonFinite = JSON.parse(
+      formatMemoryListJson(entries, entries.slice(0, 1), { offset: Number.POSITIVE_INFINITY, limit: 1 }),
+    ) as MemoryListJson;
+    expect(nonFinite.offset).toBe(0);
+    expect(nonFinite.page).toBe(1);
+    expect(nonFinite.nextOffset).toBe(1);
+
+    const fractional = JSON.parse(
+      formatMemoryListJson(entries, entries.slice(1), { offset: 1.9, limit: 1 }),
+    ) as MemoryListJson;
+    expect(fractional.offset).toBe(1);
+    expect(fractional.page).toBe(2);
+    expect(fractional.previousOffset).toBe(0);
+  });
+
   it('ignores invalid direct formatter limits before calculating navigation', () => {
     const entries = [
       entry({ id: 'mem-first', content: 'first' }),

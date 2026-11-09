@@ -400,7 +400,9 @@ export function formatMemoryListJson(
   const now = pagination.now ?? new Date();
   // Keep the JSON navigation envelope valid for callers using the formatter
   // directly, even though the CLI parser already rejects negative offsets.
-  const offset = Math.max(0, pagination.offset ?? 0);
+  const offset = pagination.offset !== undefined && Number.isFinite(pagination.offset) && pagination.offset >= 0
+    ? Math.floor(pagination.offset)
+    : 0;
   // Treat invalid direct-call limits as unbounded instead of emitting broken
   // page math (for example, division by zero or NaN in JSON output).
   const limit = pagination.limit !== undefined && Number.isFinite(pagination.limit) && pagination.limit > 0
