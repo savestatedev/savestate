@@ -2807,6 +2807,8 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--json-summary');
     expect(memorySection).toContain("omitting each entry's");
     expect(memorySection).toContain('contentIncluded');
+    expect(memorySection).toContain('guidance');
+    expect(memorySection).toContain('recommended <code>offset</code>');
     expect(memoryCli).toContain('savestate memory list --json-summary');
   });
 
