@@ -402,9 +402,11 @@ export function formatMemoryListJson(
   // An empty filtered collection has no prior page, even when a stale offset was supplied.
   const hasPrevious = offset > 0 && all.length > 0;
   const pageSize = pagination.limit ?? Math.max(1, shown.length);
-  const page = pagination.limit === undefined
-    ? shown.length > 0 ? 1 : 0
-    : Math.floor(offset / pagination.limit) + 1;
+  const page = all.length === 0
+    ? 0
+    : pagination.limit === undefined
+      ? 1
+      : Math.floor(offset / pagination.limit) + 1;
   const totalPages = pagination.limit === undefined
     ? all.length > 0 ? 1 : 0
     : Math.ceil(all.length / pagination.limit);

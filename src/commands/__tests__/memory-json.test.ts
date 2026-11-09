@@ -314,6 +314,8 @@ describe('savestate memory --json', () => {
     ) as MemoryListJson;
 
     expect(parsed.emptyReason).toBe('collection');
+    expect(parsed.page).toBe(0);
+    expect(parsed.totalPages).toBe(0);
     expect(parsed.hasPrevious).toBe(false);
     expect(parsed.previousOffset).toBeNull();
     expect(parsed.hasMore).toBe(false);
