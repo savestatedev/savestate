@@ -3,6 +3,7 @@ import {
   formatMemoryListJson,
   formatMemoryListNamespace,
   formatMemoryListPageSummary,
+  formatMemoryListPageTagSummary,
   formatMemoryListTagSummary,
   shouldShowMemoryListNamespace,
 } from '../memory.js';
@@ -95,6 +96,13 @@ describe('savestate memory list table pagination summary', () => {
 });
 
 describe('savestate memory list tag summary', () => {
+  it('formats tags for the visible page', () => {
+    expect(formatMemoryListPageTagSummary([
+      { ...memory(), metadata: { tags: [' Work ', 'urgent'] } },
+      { ...memory(), id: 'memory-2', metadata: { tags: ['work'] } },
+    ])).toBe('Page Tags: urgent 1, Work 2');
+  });
+
   it('normalizes, sorts, and counts tags', () => {
     expect(formatMemoryListTagSummary([
       memory(),

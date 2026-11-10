@@ -362,6 +362,11 @@ export function formatMemoryListPageSourceSummary(memories: MemoryEntry[]): stri
   return `Page Sources: ${formatMemoryListSourceSummary(memories)}`;
 }
 
+/** Format tag totals for the rows visible on a paginated table page. */
+export function formatMemoryListPageTagSummary(memories: MemoryEntry[]): string {
+  return `Page Tags: ${formatMemoryListTagSummary(memories)}`;
+}
+
 export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
@@ -1524,6 +1529,7 @@ export async function listMemories(
     console.log(`${pageSummary}`);
     if (entries.length > 0) {
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
+      console.log(`${formatMemoryListPageTagSummary(entries)}`);
       console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}\n`);
     }
   }
