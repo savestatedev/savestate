@@ -358,6 +358,19 @@ export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
     .join(', ');
 }
 
+/** Format namespace totals for the human-facing list summary. */
+export function formatMemoryListNamespaceSummary(memories: MemoryEntry[]): string {
+  const namespaces = Object.entries(countByNamespace(memories));
+  if (namespaces.length === 0) return 'none';
+
+  const visibleNamespaces = namespaces.slice(0, MAX_MEMORY_LIST_SOURCE_SUMMARY_ITEMS);
+  const omittedNamespaceCount = namespaces.length - visibleNamespaces.length;
+  return visibleNamespaces
+    .map(([namespace, count]) => `${namespace} ${count}`)
+    .concat(omittedNamespaceCount > 0 ? [`+${omittedNamespaceCount} more`] : [])
+    .join(', ');
+}
+
 /** Format normalized tag totals for the human-facing list summary. */
 export function formatMemoryListTagSummary(memories: MemoryEntry[]): string {
   const tags = Object.entries(countByTag(memories));
@@ -382,6 +395,11 @@ export function formatMemoryListPageFreshnessSummary(
 /** Format source totals for the rows visible on a paginated table page. */
 export function formatMemoryListPageSourceSummary(memories: MemoryEntry[]): string {
   return `Page Sources: ${formatMemoryListSourceSummary(memories)}`;
+}
+
+/** Format namespace totals for the rows visible on a paginated table page. */
+export function formatMemoryListPageNamespaceSummary(memories: MemoryEntry[]): string {
+  return `Page Namespaces: ${formatMemoryListNamespaceSummary(memories)}`;
 }
 
 /** Format tag totals for the rows visible on a paginated table page. */
@@ -1547,6 +1565,7 @@ export async function listMemories(
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
   console.log(`Source Summary: ${formatMemoryListSourceSummary(filteredEntries)}\n`);
+  console.log(`Namespace Summary: ${formatMemoryListNamespaceSummary(filteredEntries)}\n`);
   console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
@@ -1555,6 +1574,7 @@ export async function listMemories(
     console.log(`${pageSummary}`);
     if (entries.length > 0) {
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
+      console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
       console.log(`${formatMemoryListPageTagSummary(entries)}`);
       console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}\n`);
     }
