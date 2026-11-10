@@ -226,6 +226,11 @@ The same envelope includes `byNamespace` and `shownByNamespace` counts for non-e
 namespaces. Namespace keys are trimmed and grouped case-insensitively, preserving the first
 spelling seen; unassigned memories are omitted from these aggregates.
 
+`savestate memory explain <query> --json` exposes the same namespace aggregates for the matching
+results and the current page, plus `unassignedNamespaceCount` and
+`shownUnassignedNamespaceCount` so consumers can distinguish scoped results from unassigned
+memory without rescanning the result list.
+
 The same JSON envelope includes `page` and `totalPages`, with unbounded results reported as a
 single page when entries exist (or zero pages when the collection is empty).
 

@@ -124,6 +124,34 @@ describe('savestate memory explain --json', () => {
     expect(parsed.shownBySource).toEqual({ 'Claude-Code': 1 });
   });
 
+  it('includes normalized namespace counts and unassigned totals', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [
+          { id: 'mem-a', namespace: ' Work:Mail:Assistant ', score: 0.8, summary: 'A', pinned: false, tier: 'L1', freshness: 'active' },
+          { id: 'mem-b', namespace: 'work:mail:assistant', score: 0.7, summary: 'B', pinned: false, tier: 'L2', freshness: 'active' },
+        ],
+        { offset: 0, limit: 2, total: 3 },
+        undefined,
+        undefined,
+        {
+          bySource: {},
+          shownBySource: {},
+          byNamespace: { 'Work:Mail:Assistant': 2 },
+          shownByNamespace: { 'Work:Mail:Assistant': 1 },
+          unassignedNamespaceCount: 1,
+          shownUnassignedNamespaceCount: 1,
+        },
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.byNamespace).toEqual({ 'Work:Mail:Assistant': 2 });
+    expect(parsed.shownByNamespace).toEqual({ 'Work:Mail:Assistant': 1 });
+    expect(parsed.unassignedNamespaceCount).toBe(1);
+    expect(parsed.shownUnassignedNamespaceCount).toBe(1);
+  });
+
   it('does not advertise a previous page for an empty collection with an offset', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson(

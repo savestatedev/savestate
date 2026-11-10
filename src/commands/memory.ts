@@ -2623,6 +2623,13 @@ export interface MemoryExplainJson {
   /** Normalized source counts for all matching results and the visible page. */
   bySource?: Record<string, number>;
   shownBySource?: Record<string, number>;
+  /** Normalized namespace counts for all matching results and the visible page. */
+  byNamespace?: Record<string, number>;
+  shownByNamespace?: Record<string, number>;
+  /** Number of matching results without a namespace. */
+  unassignedNamespaceCount?: number;
+  /** Number of visible results without a namespace. */
+  shownUnassignedNamespaceCount?: number;
   filters?: MemoryExplainFiltersJson;
   results: MemoryExplainResultJson[];
 }
@@ -2749,6 +2756,10 @@ export function formatMemoryExplainJson(
   sourceSummary?: {
     bySource: Record<string, number>;
     shownBySource: Record<string, number>;
+    byNamespace?: Record<string, number>;
+    shownByNamespace?: Record<string, number>;
+    unassignedNamespaceCount?: number;
+    shownUnassignedNamespaceCount?: number;
   },
 ): string {
   const offset = pagination.offset ?? 0;
@@ -3174,6 +3185,10 @@ export async function explainMemoryCommand(
           {
             bySource: countBySource(sorted.map((r) => r.entry)),
             shownBySource: countBySource(scoredLimited.map((r) => r.entry)),
+            byNamespace: countByNamespace(sorted.map((r) => r.entry)),
+            shownByNamespace: countByNamespace(scoredLimited.map((r) => r.entry)),
+            unassignedNamespaceCount: sorted.length - Object.values(countByNamespace(sorted.map((r) => r.entry))).reduce((total, count) => total + count, 0),
+            shownUnassignedNamespaceCount: scoredLimited.length - Object.values(countByNamespace(scoredLimited.map((r) => r.entry))).reduce((total, count) => total + count, 0),
           },
         ));
         return;
@@ -3224,6 +3239,10 @@ export async function explainMemoryCommand(
       {
         bySource: countBySource(sorted.map((r) => r.entry)),
         shownBySource: countBySource(scoredLimited.map((r) => r.entry)),
+        byNamespace: countByNamespace(sorted.map((r) => r.entry)),
+        shownByNamespace: countByNamespace(scoredLimited.map((r) => r.entry)),
+        unassignedNamespaceCount: sorted.length - Object.values(countByNamespace(sorted.map((r) => r.entry))).reduce((total, count) => total + count, 0),
+        shownUnassignedNamespaceCount: scoredLimited.length - Object.values(countByNamespace(scoredLimited.map((r) => r.entry))).reduce((total, count) => total + count, 0),
       },
     ));
     return;
