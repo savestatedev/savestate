@@ -218,6 +218,10 @@ Table output also shows matching-collection source totals and, when paginated, s
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
 
+The same envelope includes `byNamespace` and `shownByNamespace` counts for non-empty memory
+namespaces. Namespace keys are trimmed and grouped case-insensitively, preserving the first
+spelling seen; unassigned memories are omitted from these aggregates.
+
 The same JSON envelope includes `page` and `totalPages`, with unbounded results reported as a
 single page when entries exist (or zero pages when the collection is empty).
 

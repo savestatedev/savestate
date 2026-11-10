@@ -10,6 +10,7 @@ import {
   getMemoryListSummary,
   countByFreshness,
   countBySource,
+  countByNamespace,
   countByTag,
   normalizeMemoryListNamespace,
   type MemoryListJson,
@@ -178,6 +179,27 @@ describe('savestate memory --json', () => {
     expect(countBySource(entries)).toEqual({ 'Claude-Code': 1, user: 1 });
     expect(JSON.parse(formatMemoryListJson(entries, entries)).bySource)
       .toEqual({ 'Claude-Code': 1, user: 1 });
+  });
+
+  it('counts normalized namespaces for the full collection and visible page', () => {
+    const entries = [
+      entry({ id: 'mem-a', content: 'a', metadata: { namespace: 'Org:App:Agent' } }),
+      entry({ id: 'mem-b', content: 'b', metadata: { namespace: ' org:app:agent ' } }),
+      entry({ id: 'mem-c', content: 'c', metadata: { namespace: 'org:app:other' } }),
+      entry({ id: 'mem-d', content: 'd' }),
+    ];
+
+    expect(countByNamespace(entries)).toEqual({
+      'Org:App:Agent': 2,
+      'org:app:other': 1,
+    });
+
+    const parsed = JSON.parse(formatMemoryListJson(entries, entries.slice(0, 2))) as MemoryListJson;
+    expect(parsed.byNamespace).toEqual({
+      'Org:App:Agent': 2,
+      'org:app:other': 1,
+    });
+    expect(parsed.shownByNamespace).toEqual({ 'Org:App:Agent': 2 });
   });
 
   it('counts normalized tags for the full collection and visible page', () => {
