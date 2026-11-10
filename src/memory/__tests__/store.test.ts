@@ -282,6 +282,24 @@ describe('MemoryStore', () => {
       expect(tagged[0].content).toBe('Pref 1');
     });
 
+    it('should require every requested tag to match', async () => {
+      await store.create({
+        type: 'fact',
+        content: 'Both tags',
+        tags: ['ui', 'preferences'],
+      });
+      await store.create({
+        type: 'fact',
+        content: 'Only one tag',
+        tags: ['ui'],
+      });
+
+      const tagged = await store.query({ tags: ['ui', 'preferences'] });
+
+      expect(tagged.map((entry) => entry.content)).toEqual(['Both tags']);
+      expect(store.count({ tags: ['ui', 'preferences'] })).toBe(1);
+    });
+
     it('should match tags case-insensitively', async () => {
       const tagged = await store.query({ tags: ['UI'] });
 
