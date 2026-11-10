@@ -424,11 +424,20 @@ export function formatContextCompilePaginationMessages(
   return messages;
 }
 
-export function formatContextConfigJson(limit?: number, offset?: number): string {
-  const weightEntries = selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset);
-  const budgetEntries = selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset);
-  const totalWeights = Object.keys(DEFAULT_SCORING_WEIGHTS).length;
-  const totalBudget = Object.keys(DEFAULT_BUDGET_ALLOCATION).length;
+export function formatContextConfigJson(
+  limit?: number,
+  offset?: number,
+  showWeights = true,
+  showBudget = true,
+): string {
+  const weightEntries = showWeights
+    ? selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset)
+    : [];
+  const budgetEntries = showBudget
+    ? selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset)
+    : [];
+  const totalWeights = showWeights ? Object.keys(DEFAULT_SCORING_WEIGHTS).length : 0;
+  const totalBudget = showBudget ? Object.keys(DEFAULT_BUDGET_ALLOCATION).length : 0;
   const pageOffset = offset ?? 0;
   const pageSize = limit ?? Math.max(totalWeights, totalBudget);
   const hasMoreWeights = pageOffset + weightEntries.length < totalWeights;
@@ -967,7 +976,9 @@ export function registerContextCommands(program: Command): void {
       const limit = parseContextConfigLimit(options.limit);
       const offset = parseContextConfigOffset(options.offset);
       if (options.json) {
-        console.log(formatContextConfigJson(limit, offset));
+        const showWeights = options.weights || (!options.weights && !options.budget);
+        const showBudget = options.budget || (!options.weights && !options.budget);
+        console.log(formatContextConfigJson(limit, offset, showWeights, showBudget));
         return;
       }
       

@@ -250,6 +250,15 @@ describe('savestate context --json', () => {
     expect(parsed.pagination.previousOffset).toBe(0);
   });
 
+  it('applies section filters to context config JSON output', () => {
+    const parsed = JSON.parse(formatContextConfigJson(undefined, undefined, true, false)) as ContextConfigJson;
+    expect(Object.keys(parsed.weights).length).toBeGreaterThan(0);
+    expect(parsed.budget).toEqual({});
+    expect(parsed.pagination.totalWeights).toBeGreaterThan(0);
+    expect(parsed.pagination.totalBudget).toBe(0);
+    expect(parsed.pagination.hasMoreBudget).toBe(false);
+  });
+
   it('suggests the last config page for a stale offset', () => {
     const parsed = JSON.parse(formatContextConfigJson(2, 1000)) as ContextConfigJson;
     expect(parsed.weights).toEqual({});
