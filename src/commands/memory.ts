@@ -277,6 +277,28 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
   );
 }
 
+/** Count non-empty memory namespaces while keeping JSON keys stable. */
+export function countByNamespace(memories: MemoryEntry[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  const keys = new Map<string, string>();
+  for (const memory of memories) {
+    const namespace = typeof memory.metadata?.namespace === 'string'
+      ? memory.metadata.namespace.trim()
+      : '';
+    if (!namespace) continue;
+
+    const normalizedKey = namespace.toLowerCase();
+    const key = keys.get(normalizedKey) ?? namespace;
+    keys.set(normalizedKey, key);
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return Object.fromEntries(
+    Object.keys(counts)
+      .sort((left, right) => left < right ? -1 : left > right ? 1 : 0)
+      .map((key) => [key, counts[key]]),
+  );
+}
+
 /** Count normalized tags while keeping JSON keys stable across archive ordering. */
 export function countByTag(memories: MemoryEntry[]): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -427,6 +449,8 @@ export interface MemoryListJson {
   shownByTier: Record<MemoryTier, number>;
   bySource: Record<string, number>;
   shownBySource: Record<string, number>;
+  byNamespace: Record<string, number>;
+  shownByNamespace: Record<string, number>;
   byTag: Record<string, number>;
   shownByTag: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
@@ -552,6 +576,8 @@ export function formatMemoryListJson(
     shownByTier: countByTier(shown),
     bySource: countBySource(all),
     shownBySource: countBySource(shown),
+    byNamespace: countByNamespace(all),
+    shownByNamespace: countByNamespace(shown),
     byTag: countByTag(all),
     shownByTag: countByTag(shown),
     byFreshness: countByFreshness(all, now),
