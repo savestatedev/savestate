@@ -289,9 +289,19 @@ export function countByNamespace(memories: MemoryEntry[]): Record<string, number
     if (!namespace) continue;
 
     const normalizedKey = namespace.toLowerCase();
-    const key = keys.get(normalizedKey) ?? namespace;
-    keys.set(normalizedKey, key);
-    counts[key] = (counts[key] ?? 0) + 1;
+    const existingKey = keys.get(normalizedKey);
+    // Pick a stable representative when archives contain casing variants.
+    // Using the first entry would make JSON keys depend on archive ordering.
+    if (existingKey === undefined) {
+      keys.set(normalizedKey, namespace);
+      counts[namespace] = 1;
+    } else if (namespace < existingKey) {
+      counts[namespace] = (counts[existingKey] ?? 0) + 1;
+      delete counts[existingKey];
+      keys.set(normalizedKey, namespace);
+    } else {
+      counts[existingKey] = (counts[existingKey] ?? 0) + 1;
+    }
   }
   return Object.fromEntries(
     Object.keys(counts)

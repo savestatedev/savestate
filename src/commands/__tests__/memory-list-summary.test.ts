@@ -43,6 +43,20 @@ describe('savestate memory list namespace display', () => {
     ]);
   });
 
+  it('keeps namespace aggregate keys stable when archive order changes', () => {
+    const firstOrder = JSON.parse(formatMemoryListJson(
+      [memory('org:app:agent'), { ...memory(' Org:App:Agent '), id: 'memory-2' }],
+      [],
+    ));
+    const reverseOrder = JSON.parse(formatMemoryListJson(
+      [{ ...memory(' Org:App:Agent '), id: 'memory-2' }, memory('org:app:agent')],
+      [],
+    ));
+
+    expect(firstOrder.byNamespace).toEqual({ 'Org:App:Agent': 2 });
+    expect(reverseOrder.byNamespace).toEqual(firstOrder.byNamespace);
+  });
+
   it('summarizes namespaces for the collection and visible page', () => {
     const entries = [
       memory(' Org:App:Agent '),
