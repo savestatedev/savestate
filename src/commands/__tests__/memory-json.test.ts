@@ -10,6 +10,7 @@ import {
   getMemoryListSummary,
   countByFreshness,
   countBySource,
+  countByTag,
   normalizeMemoryListNamespace,
   type MemoryListJson,
 } from '../memory.js';
@@ -177,6 +178,18 @@ describe('savestate memory --json', () => {
     expect(countBySource(entries)).toEqual({ 'Claude-Code': 1, user: 1 });
     expect(JSON.parse(formatMemoryListJson(entries, entries)).bySource)
       .toEqual({ 'Claude-Code': 1, user: 1 });
+  });
+
+  it('counts normalized tags for the full collection and visible page', () => {
+    const entries = [
+      entry({ id: 'mem-a', content: 'a', metadata: { tags: [' Work ', 'urgent'] } }),
+      entry({ id: 'mem-b', content: 'b', metadata: { tags: ['work', 'other'] } }),
+    ];
+
+    expect(countByTag(entries)).toEqual({ other: 1, urgent: 1, Work: 2 });
+    const parsed = JSON.parse(formatMemoryListJson(entries, entries.slice(0, 1))) as MemoryListJson;
+    expect(parsed.byTag).toEqual({ other: 1, urgent: 1, Work: 2 });
+    expect(parsed.shownByTag).toEqual({ urgent: 1, Work: 1 });
   });
 
   it('uses locale-independent source keys for aggregates and filters', () => {

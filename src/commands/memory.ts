@@ -67,6 +67,7 @@ export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
 
 const DAY_SECONDS = 24 * 60 * 60;
 const MAX_MEMORY_LIST_SOURCE_SUMMARY_ITEMS = 8;
+const MAX_MEMORY_LIST_TAG_SUMMARY_ITEMS = 8;
 
 export interface MemoryFreshnessProfile {
   freshnessClass: MemoryFreshnessClass;
@@ -276,6 +277,31 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
   );
 }
 
+/** Count normalized tags while keeping JSON keys stable across archive ordering. */
+export function countByTag(memories: MemoryEntry[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  const keys = new Map<string, string>();
+  for (const memory of memories) {
+    for (const tag of getMemoryListTags(memory)) {
+      const normalizedKey = tag.toLowerCase();
+      const key = keys.get(normalizedKey) ?? tag;
+      keys.set(normalizedKey, key);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+  }
+  return Object.fromEntries(
+    Object.keys(counts)
+      .sort((left, right) => {
+        const normalizedLeft = left.toLowerCase();
+        const normalizedRight = right.toLowerCase();
+        return normalizedLeft < normalizedRight ? -1
+          : normalizedLeft > normalizedRight ? 1
+            : left < right ? -1 : left > right ? 1 : 0;
+      })
+      .map((key) => [key, counts[key]]),
+  );
+}
+
 /** Summarize the collection currently being listed, including active filters. */
 export function getMemoryListSummary(memories: MemoryEntry[]): {
   counts: Record<MemoryTier, number>;
@@ -307,6 +333,19 @@ export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
   return visibleSources
     .map(([source, count]) => `${source} ${count}`)
     .concat(omittedSourceCount > 0 ? [`+${omittedSourceCount} more`] : [])
+    .join(', ');
+}
+
+/** Format normalized tag totals for the human-facing list summary. */
+export function formatMemoryListTagSummary(memories: MemoryEntry[]): string {
+  const tags = Object.entries(countByTag(memories));
+  if (tags.length === 0) return 'none';
+
+  const visibleTags = tags.slice(0, MAX_MEMORY_LIST_TAG_SUMMARY_ITEMS);
+  const omittedTagCount = tags.length - visibleTags.length;
+  return visibleTags
+    .map(([tag, count]) => `${tag} ${count}`)
+    .concat(omittedTagCount > 0 ? [`+${omittedTagCount} more`] : [])
     .join(', ');
 }
 
@@ -383,6 +422,8 @@ export interface MemoryListJson {
   shownByTier: Record<MemoryTier, number>;
   bySource: Record<string, number>;
   shownBySource: Record<string, number>;
+  byTag: Record<string, number>;
+  shownByTag: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: number;
@@ -506,6 +547,8 @@ export function formatMemoryListJson(
     shownByTier: countByTier(shown),
     bySource: countBySource(all),
     shownBySource: countBySource(shown),
+    byTag: countByTag(all),
+    shownByTag: countByTag(shown),
     byFreshness: countByFreshness(all, now),
     shownByFreshness: countByFreshness(shown, now),
     pinned: all.filter((entry) => !!entry.pinned).length,
@@ -1473,6 +1516,7 @@ export async function listMemories(
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
   console.log(`Source Summary: ${formatMemoryListSourceSummary(filteredEntries)}\n`);
+  console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
