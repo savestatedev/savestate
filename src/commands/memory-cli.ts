@@ -277,7 +277,9 @@ export function parseMemoryTags(value: string | undefined): string[] | undefined
   const tags: string[] = [];
   const seen = new Set<string>();
   for (const token of value.split(',').map((part) => part.trim())) {
-    const normalized = token.toLocaleLowerCase();
+    // Keep CLI de-duplication stable across hosts; retrieval uses the same
+    // locale-independent case normalization for legacy tag metadata.
+    const normalized = token.toLowerCase();
     if (!seen.has(normalized)) {
       seen.add(normalized);
       tags.push(token);

@@ -14,6 +14,10 @@ describe('savestate memory --tags', () => {
     expect(parseMemoryTags('prefs,weekly,prefs')).toEqual(['prefs', 'weekly']);
   });
 
+  it('uses locale-independent case folding for duplicate tags', () => {
+    expect(parseMemoryTags('İ, i')).toEqual(['İ', 'i']);
+  });
+
   it.each(['', ' ', ',', 'prefs,', ',v2', 'a,,b'])('rejects invalid value %s', (value) => {
     expect(() => parseMemoryTags(value)).toThrow(
       `Invalid --tags value "${value}". Expected one or more non-empty memory tags (comma-separated).`,
