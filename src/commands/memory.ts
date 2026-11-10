@@ -2688,6 +2688,11 @@ export function formatMemoryExplainPrettySummary(
   return `Showing ${first}-${last} of ${total} relevant memories.${navigation.length > 0 ? ` ${navigation.join(' ')}` : ''}`;
 }
 
+/** Keep the human-readable explain view aligned with its JSON namespace aggregates. */
+export function formatMemoryExplainPrettyNamespaceSummary(memories: MemoryEntry[]): string {
+  return `Namespace summary: ${formatMemoryListNamespaceSummary(memories)}`;
+}
+
 /** Keep the empty-state message aligned with whether the collection or page is empty. */
 export function formatMemoryExplainEmptyMessage(total: number): string {
   return total === 0
@@ -3259,6 +3264,9 @@ export async function explainMemoryCommand(
     offset: offset ?? 0,
     pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
   })}\n`);
+  if (scoredLimited.length > 0) {
+    console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(scoredLimited.map((r) => r.entry))}\n`);
+  }
   console.log('─'.repeat(80));
 
   for (const [index, result] of scoredLimited.entries()) {

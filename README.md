@@ -231,6 +231,9 @@ results and the current page, plus `unassignedNamespaceCount` and
 `shownUnassignedNamespaceCount` so consumers can distinguish scoped results from unassigned
 memory without rescanning the result list.
 
+Human-readable `memory explain` output also shows a compact namespace summary for the visible page,
+including an unassigned count when applicable.
+
 The same JSON envelope includes `page` and `totalPages`, with unbounded results reported as a
 single page when entries exist (or zero pages when the collection is empty).
 

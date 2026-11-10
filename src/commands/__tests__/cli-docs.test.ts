@@ -3357,6 +3357,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('byNamespace</code>/<code>shownByNamespace');
     expect(memorySection).toContain('unassignedNamespaceCount');
     expect(memory).toContain('byNamespace: countByNamespace(sorted.map((r) => r.entry))');
+    expect(memory).toContain('formatMemoryExplainPrettyNamespaceSummary');
   });
 
   it('documents memory explain --offset as a bounded non-negative integer', () => {

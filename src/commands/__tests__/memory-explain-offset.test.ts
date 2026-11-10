@@ -3,6 +3,7 @@ import {
   applyMemoryExplainFilters,
   formatMemoryExplainEmptyMessage,
   formatMemoryExplainEmptyTips,
+  formatMemoryExplainPrettyNamespaceSummary,
   formatMemoryExplainPrettySummary,
   parseMemoryExplainOffset,
   selectMemoryExplainOffsetEntries,
@@ -59,6 +60,14 @@ describe('savestate memory explain --offset', () => {
     expect(formatMemoryExplainPrettySummary(2, 5, { offset: 2, pageSize: 2 })).toBe(
       'Showing 3-4 of 5 relevant memories. Previous page: use --offset 0 --limit 2. Next page: use --offset 4 --limit 2.',
     );
+  });
+
+  it('summarizes namespaces on the visible explain page', () => {
+    expect(formatMemoryExplainPrettyNamespaceSummary([
+      { id: 'm1', content: '', createdAt: '', metadata: { namespace: ' Work:Mail ' } },
+      { id: 'm2', content: '', createdAt: '', metadata: { namespace: 'work:mail' } },
+      { id: 'm3', content: '', createdAt: '', metadata: {} },
+    ])).toBe('Namespace summary: Work:Mail 2, 1 unassigned');
   });
 
   it('summarizes the previous page when a result page is not the first page', () => {
