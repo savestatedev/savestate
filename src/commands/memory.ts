@@ -67,6 +67,7 @@ export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
 
 const DAY_SECONDS = 24 * 60 * 60;
 const MAX_MEMORY_LIST_SOURCE_SUMMARY_ITEMS = 8;
+const MAX_MEMORY_LIST_NAMESPACE_SUMMARY_ITEMS = 8;
 const MAX_MEMORY_LIST_TAG_SUMMARY_ITEMS = 8;
 
 export interface MemoryFreshnessProfile {
@@ -367,13 +368,16 @@ export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
 /** Format namespace totals for the human-facing list summary. */
 export function formatMemoryListNamespaceSummary(memories: MemoryEntry[]): string {
   const namespaces = Object.entries(countByNamespace(memories));
-  if (namespaces.length === 0) return 'none';
+  const assigned = namespaces.reduce((total, [, count]) => total + count, 0);
+  const unassigned = memories.length - assigned;
+  if (namespaces.length === 0) return unassigned > 0 ? `${unassigned} unassigned` : 'none';
 
-  const visibleNamespaces = namespaces.slice(0, MAX_MEMORY_LIST_SOURCE_SUMMARY_ITEMS);
+  const visibleNamespaces = namespaces.slice(0, MAX_MEMORY_LIST_NAMESPACE_SUMMARY_ITEMS);
   const omittedNamespaceCount = namespaces.length - visibleNamespaces.length;
   return visibleNamespaces
     .map(([namespace, count]) => `${namespace} ${count}`)
     .concat(omittedNamespaceCount > 0 ? [`+${omittedNamespaceCount} more`] : [])
+    .concat(unassigned > 0 ? [`${unassigned} unassigned`] : [])
     .join(', ');
 }
 

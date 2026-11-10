@@ -51,10 +51,19 @@ describe('savestate memory list namespace display', () => {
       { ...memory('  '), id: 'memory-4' },
     ];
 
-    expect(formatMemoryListNamespaceSummary(entries)).toBe('Org:App:Agent 2, org:app:other 1');
+    expect(formatMemoryListNamespaceSummary(entries)).toBe(
+      'Org:App:Agent 2, org:app:other 1, 1 unassigned',
+    );
     expect(formatMemoryListPageNamespaceSummary(entries.slice(0, 2))).toBe(
       'Page Namespaces: Org:App:Agent 2',
     );
+  });
+
+  it('reports unassigned memories when no namespace is present', () => {
+    expect(formatMemoryListNamespaceSummary([
+      memory(''),
+      { ...memory('  '), id: 'memory-2' },
+    ])).toBe('2 unassigned');
   });
 });
 
