@@ -294,7 +294,13 @@ export function countByNamespace(memories: MemoryEntry[]): Record<string, number
   }
   return Object.fromEntries(
     Object.keys(counts)
-      .sort((left, right) => left < right ? -1 : left > right ? 1 : 0)
+      .sort((left, right) => {
+        const normalizedLeft = left.toLowerCase();
+        const normalizedRight = right.toLowerCase();
+        return normalizedLeft < normalizedRight ? -1
+          : normalizedLeft > normalizedRight ? 1
+            : left < right ? -1 : left > right ? 1 : 0;
+      })
       .map((key) => [key, counts[key]]),
   );
 }

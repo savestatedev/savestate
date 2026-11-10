@@ -202,6 +202,15 @@ describe('savestate memory --json', () => {
     expect(parsed.shownByNamespace).toEqual({ 'Org:App:Agent': 2 });
   });
 
+  it('sorts namespace aggregates without case-sensitive surprises', () => {
+    const entries = [
+      entry({ id: 'mem-zeta', content: 'zeta', metadata: { namespace: 'Zeta' } }),
+      entry({ id: 'mem-alpha', content: 'alpha', metadata: { namespace: 'alpha' } }),
+    ];
+
+    expect(countByNamespace(entries)).toEqual({ alpha: 1, Zeta: 1 });
+  });
+
   it('counts normalized tags for the full collection and visible page', () => {
     const entries = [
       entry({ id: 'mem-a', content: 'a', metadata: { tags: [' Work ', 'urgent'] } }),
