@@ -43,6 +43,48 @@ describe('savestate memory list namespace display', () => {
     ]);
   });
 
+  it('keeps namespace aggregate keys stable when archive order changes', () => {
+    const firstOrder = JSON.parse(formatMemoryListJson(
+      [memory('org:app:agent'), { ...memory(' Org:App:Agent '), id: 'memory-2' }],
+      [],
+    ));
+    const reverseOrder = JSON.parse(formatMemoryListJson(
+      [{ ...memory(' Org:App:Agent '), id: 'memory-2' }, memory('org:app:agent')],
+      [],
+    ));
+
+    expect(firstOrder.byNamespace).toEqual({ 'Org:App:Agent': 2 });
+    expect(reverseOrder.byNamespace).toEqual(firstOrder.byNamespace);
+  });
+
+  it('keeps reserved namespace names in JSON aggregates', () => {
+    const output = JSON.parse(formatMemoryListJson([
+      memory('__proto__'),
+      { ...memory('constructor'), id: 'memory-2' },
+      { ...memory('toString'), id: 'memory-3' },
+    ], []));
+
+    expect(Object.entries(output.byNamespace)).toEqual([
+      ['__proto__', 1],
+      ['constructor', 1],
+      ['toString', 1],
+    ]);
+  });
+
+  it('keeps reserved source names in JSON aggregates', () => {
+    const output = JSON.parse(formatMemoryListJson([
+      { ...memory(), source: '__proto__' },
+      { ...memory(), id: 'memory-2', source: 'constructor' },
+      { ...memory(), id: 'memory-3', source: 'toString' },
+    ], []));
+
+    expect(Object.entries(output.bySource)).toEqual([
+      ['__proto__', 1],
+      ['constructor', 1],
+      ['toString', 1],
+    ]);
+  });
+
   it('summarizes namespaces for the collection and visible page', () => {
     const entries = [
       memory(' Org:App:Agent '),

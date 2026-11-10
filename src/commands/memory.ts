@@ -260,7 +260,9 @@ export function countByFreshness(
 
 /** Count memories by normalized source for machine-readable summaries. */
 export function countBySource(memories: MemoryEntry[]): Record<string, number> {
-  const counts: Record<string, number> = {};
+  // Source metadata comes from encrypted archives, so reserved object keys
+  // must remain ordinary aggregate keys instead of mutating the accumulator.
+  const counts: Record<string, number> = Object.create(null) as Record<string, number>;
   const keys = new Map<string, string>();
   for (const memory of memories) {
     const source = normalizeMemoryListSource(memory.source);
@@ -280,7 +282,9 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
 
 /** Count non-empty memory namespaces while keeping JSON keys stable. */
 export function countByNamespace(memories: MemoryEntry[]): Record<string, number> {
-  const counts: Record<string, number> = {};
+  // Namespace metadata comes from encrypted archives, so reserved object keys
+  // must remain ordinary aggregate keys instead of mutating the accumulator.
+  const counts: Record<string, number> = Object.create(null) as Record<string, number>;
   const keys = new Map<string, string>();
   for (const memory of memories) {
     const namespace = typeof memory.metadata?.namespace === 'string'
@@ -289,9 +293,19 @@ export function countByNamespace(memories: MemoryEntry[]): Record<string, number
     if (!namespace) continue;
 
     const normalizedKey = namespace.toLowerCase();
-    const key = keys.get(normalizedKey) ?? namespace;
-    keys.set(normalizedKey, key);
-    counts[key] = (counts[key] ?? 0) + 1;
+    const existingKey = keys.get(normalizedKey);
+    // Pick a stable representative when archives contain casing variants.
+    // Using the first entry would make JSON keys depend on archive ordering.
+    if (existingKey === undefined) {
+      keys.set(normalizedKey, namespace);
+      counts[namespace] = 1;
+    } else if (namespace < existingKey) {
+      counts[namespace] = (counts[existingKey] ?? 0) + 1;
+      delete counts[existingKey];
+      keys.set(normalizedKey, namespace);
+    } else {
+      counts[existingKey] = (counts[existingKey] ?? 0) + 1;
+    }
   }
   return Object.fromEntries(
     Object.keys(counts)
@@ -308,7 +322,9 @@ export function countByNamespace(memories: MemoryEntry[]): Record<string, number
 
 /** Count normalized tags while keeping JSON keys stable across archive ordering. */
 export function countByTag(memories: MemoryEntry[]): Record<string, number> {
-  const counts: Record<string, number> = {};
+  // Tag metadata comes from encrypted archives, so reserved object keys
+  // must remain ordinary aggregate keys instead of mutating the accumulator.
+  const counts: Record<string, number> = Object.create(null) as Record<string, number>;
   const keys = new Map<string, string>();
   for (const memory of memories) {
     for (const tag of getMemoryListTags(memory)) {

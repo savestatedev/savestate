@@ -225,6 +225,18 @@ describe('savestate memory --json', () => {
     expect(parsed.shownByTag).toEqual({ urgent: 1, Work: 1 });
   });
 
+  it('keeps reserved tag names as ordinary aggregate keys', () => {
+    const entries = [
+      entry({ id: 'mem-proto', content: 'proto', metadata: { tags: ['__proto__'] } }),
+      entry({ id: 'mem-constructor', content: 'constructor', metadata: { tags: ['constructor'] } }),
+    ];
+
+    expect(countByTag(entries)).toEqual(Object.fromEntries([
+      ['__proto__', 1],
+      ['constructor', 1],
+    ]));
+  });
+
   it('uses locale-independent source keys for aggregates and filters', () => {
     const entries = [
       entry({ id: 'mem-source-a', content: 'a', source: '  Claude-Code  ' }),
