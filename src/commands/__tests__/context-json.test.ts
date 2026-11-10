@@ -222,6 +222,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
+      pageSize: Math.max(Object.keys(parsed.weights).length, Object.keys(parsed.budget).length),
       shownWeights: Object.keys(parsed.weights).length,
       shownBudget: Object.keys(parsed.budget).length,
       totalWeights: Object.keys(parsed.weights).length,
@@ -240,6 +241,7 @@ describe('savestate context --json', () => {
     expect(Object.keys(parsed.budget)).toHaveLength(1);
     expect(parsed.pagination.offset).toBe(1);
     expect(parsed.pagination.limit).toBe(1);
+    expect(parsed.pagination.pageSize).toBe(1);
     expect(parsed.pagination.shownWeights).toBe(1);
     expect(parsed.pagination.shownBudget).toBe(1);
     expect(parsed.pagination.totalWeights).toBeGreaterThan(1);
@@ -248,6 +250,15 @@ describe('savestate context --json', () => {
     expect(parsed.pagination.hasMoreBudget).toBe(true);
     expect(parsed.pagination.nextOffset).toBe(2);
     expect(parsed.pagination.previousOffset).toBe(0);
+  });
+
+  it('applies section filters to context config JSON output', () => {
+    const parsed = JSON.parse(formatContextConfigJson(undefined, undefined, true, false)) as ContextConfigJson;
+    expect(Object.keys(parsed.weights).length).toBeGreaterThan(0);
+    expect(parsed.budget).toEqual({});
+    expect(parsed.pagination.totalWeights).toBeGreaterThan(0);
+    expect(parsed.pagination.totalBudget).toBe(0);
+    expect(parsed.pagination.hasMoreBudget).toBe(false);
   });
 
   it('suggests the last config page for a stale offset', () => {

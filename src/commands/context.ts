@@ -51,6 +51,7 @@ export interface ContextConfigJson {
   pagination: {
     offset: number;
     limit: number | null;
+    pageSize: number;
     shownWeights: number;
     shownBudget: number;
     totalWeights: number;
@@ -424,11 +425,20 @@ export function formatContextCompilePaginationMessages(
   return messages;
 }
 
-export function formatContextConfigJson(limit?: number, offset?: number): string {
-  const weightEntries = selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset);
-  const budgetEntries = selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset);
-  const totalWeights = Object.keys(DEFAULT_SCORING_WEIGHTS).length;
-  const totalBudget = Object.keys(DEFAULT_BUDGET_ALLOCATION).length;
+export function formatContextConfigJson(
+  limit?: number,
+  offset?: number,
+  showWeights = true,
+  showBudget = true,
+): string {
+  const weightEntries = showWeights
+    ? selectContextConfigEntries(Object.entries(DEFAULT_SCORING_WEIGHTS), limit, offset)
+    : [];
+  const budgetEntries = showBudget
+    ? selectContextConfigEntries(Object.entries(DEFAULT_BUDGET_ALLOCATION), limit, offset)
+    : [];
+  const totalWeights = showWeights ? Object.keys(DEFAULT_SCORING_WEIGHTS).length : 0;
+  const totalBudget = showBudget ? Object.keys(DEFAULT_BUDGET_ALLOCATION).length : 0;
   const pageOffset = offset ?? 0;
   const pageSize = limit ?? Math.max(totalWeights, totalBudget);
   const hasMoreWeights = pageOffset + weightEntries.length < totalWeights;
@@ -452,6 +462,7 @@ export function formatContextConfigJson(limit?: number, offset?: number): string
     pagination: {
       offset: pageOffset,
       limit: limit ?? null,
+      pageSize,
       shownWeights: weightEntries.length,
       shownBudget: budgetEntries.length,
       totalWeights,
@@ -464,6 +475,37 @@ export function formatContextConfigJson(limit?: number, offset?: number): string
     },
   };
   return JSON.stringify(record, null, 2);
+}
+
+/** Explain how to navigate a bounded context config page in human output. */
+export function formatContextConfigPaginationMessages(
+  limit?: number,
+  offset?: number,
+  showWeights = true,
+  showBudget = true,
+): string[] {
+  const total = Math.max(
+    showWeights ? Object.keys(DEFAULT_SCORING_WEIGHTS).length : 0,
+    showBudget ? Object.keys(DEFAULT_BUDGET_ALLOCATION).length : 0,
+  );
+  const pageOffset = offset ?? 0;
+  const pageSize = limit ?? total;
+  const shown = Math.min(Math.max(total - pageOffset, 0), pageSize);
+  const messages: string[] = [];
+
+  if (pageOffset + shown < total) {
+    messages.push(`More context config rows available; rerun with --offset ${pageOffset + shown}.`);
+  }
+  if (limit !== undefined && pageOffset > 0) {
+    messages.push(`Earlier context config rows available; rerun with --offset ${Math.max(0, pageOffset - pageSize)}.`);
+  }
+  if (shown === 0 && total > 0) {
+    const suggestedOffset = limit === undefined
+      ? 0
+      : Math.floor((total - 1) / pageSize) * pageSize;
+    messages.push(`No context config rows found at this offset; rerun with --offset ${suggestedOffset}.`);
+  }
+  return messages;
 }
 
 export function formatContextValidateJson(
@@ -938,7 +980,9 @@ export function registerContextCommands(program: Command): void {
       const limit = parseContextConfigLimit(options.limit);
       const offset = parseContextConfigOffset(options.offset);
       if (options.json) {
-        console.log(formatContextConfigJson(limit, offset));
+        const showWeights = options.weights || (!options.weights && !options.budget);
+        const showBudget = options.budget || (!options.weights && !options.budget);
+        console.log(formatContextConfigJson(limit, offset, showWeights, showBudget));
         return;
       }
       
@@ -956,6 +1000,12 @@ export function registerContextCommands(program: Command): void {
           const percent = ((value as number) * 100).toFixed(0);
           console.log(`   ${key}: ${percent}%`);
         }
+      }
+
+      const showWeights = options.weights || (!options.weights && !options.budget);
+      const showBudget = options.budget || (!options.weights && !options.budget);
+      for (const message of formatContextConfigPaginationMessages(limit, offset, showWeights, showBudget)) {
+        console.log(message);
       }
     });
 }
