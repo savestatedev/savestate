@@ -280,7 +280,9 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
 
 /** Count non-empty memory namespaces while keeping JSON keys stable. */
 export function countByNamespace(memories: MemoryEntry[]): Record<string, number> {
-  const counts: Record<string, number> = {};
+  // Namespace metadata comes from encrypted archives, so reserved object keys
+  // must remain ordinary aggregate keys instead of mutating the accumulator.
+  const counts: Record<string, number> = Object.create(null) as Record<string, number>;
   const keys = new Map<string, string>();
   for (const memory of memories) {
     const namespace = typeof memory.metadata?.namespace === 'string'
