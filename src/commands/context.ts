@@ -466,6 +466,35 @@ export function formatContextConfigJson(limit?: number, offset?: number): string
   return JSON.stringify(record, null, 2);
 }
 
+/** Explain how to navigate a bounded context config page in human output. */
+export function formatContextConfigPaginationMessages(
+  limit?: number,
+  offset?: number,
+): string[] {
+  const total = Math.max(
+    Object.keys(DEFAULT_SCORING_WEIGHTS).length,
+    Object.keys(DEFAULT_BUDGET_ALLOCATION).length,
+  );
+  const pageOffset = offset ?? 0;
+  const pageSize = limit ?? total;
+  const shown = Math.min(Math.max(total - pageOffset, 0), pageSize);
+  const messages: string[] = [];
+
+  if (pageOffset + shown < total) {
+    messages.push(`More context config rows available; rerun with --offset ${pageOffset + shown}.`);
+  }
+  if (limit !== undefined && pageOffset > 0) {
+    messages.push(`Earlier context config rows available; rerun with --offset ${Math.max(0, pageOffset - pageSize)}.`);
+  }
+  if (shown === 0 && total > 0) {
+    const suggestedOffset = limit === undefined
+      ? 0
+      : Math.floor((total - 1) / pageSize) * pageSize;
+    messages.push(`No context config rows found at this offset; rerun with --offset ${suggestedOffset}.`);
+  }
+  return messages;
+}
+
 export function formatContextValidateJson(
   file: string,
   result: ValidationResult,
@@ -956,6 +985,10 @@ export function registerContextCommands(program: Command): void {
           const percent = ((value as number) * 100).toFixed(0);
           console.log(`   ${key}: ${percent}%`);
         }
+      }
+
+      for (const message of formatContextConfigPaginationMessages(limit, offset)) {
+        console.log(message);
       }
     });
 }
