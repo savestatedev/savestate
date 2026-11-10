@@ -260,7 +260,9 @@ export function countByFreshness(
 
 /** Count memories by normalized source for machine-readable summaries. */
 export function countBySource(memories: MemoryEntry[]): Record<string, number> {
-  const counts: Record<string, number> = {};
+  // Source metadata comes from encrypted archives, so reserved object keys
+  // must remain ordinary aggregate keys instead of mutating the accumulator.
+  const counts: Record<string, number> = Object.create(null) as Record<string, number>;
   const keys = new Map<string, string>();
   for (const memory of memories) {
     const source = normalizeMemoryListSource(memory.source);

@@ -71,6 +71,20 @@ describe('savestate memory list namespace display', () => {
     ]);
   });
 
+  it('keeps reserved source names in JSON aggregates', () => {
+    const output = JSON.parse(formatMemoryListJson([
+      { ...memory(), source: '__proto__' },
+      { ...memory(), id: 'memory-2', source: 'constructor' },
+      { ...memory(), id: 'memory-3', source: 'toString' },
+    ], []));
+
+    expect(Object.entries(output.bySource)).toEqual([
+      ['__proto__', 1],
+      ['constructor', 1],
+      ['toString', 1],
+    ]);
+  });
+
   it('summarizes namespaces for the collection and visible page', () => {
     const entries = [
       memory(' Org:App:Agent '),
