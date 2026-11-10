@@ -26,6 +26,12 @@ describe('MCP importance tool schemas', () => {
 });
 
 describe('MCP list_memories search schema', () => {
+  it.each(['search_memory', 'list_memories'])('documents all-tag matching for %s', (name) => {
+    expect((getTool(name).inputSchema as any).properties.tags.description).toContain(
+      'all requested tags must match',
+    );
+  });
+
   it('advertises the implemented default result limit', () => {
     expect(getTool('list_memories').description).toContain('default result limit is 50');
     expect((getTool('list_memories').inputSchema as any).properties.limit.description).toContain(
