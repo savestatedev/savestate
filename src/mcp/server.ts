@@ -406,7 +406,7 @@ export const tools: Tool[] = [
         tags: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Filter by tags',
+          description: 'Filter by tags; all requested tags must match',
         },
         limit: {
           type: 'number',

@@ -27,7 +27,7 @@ function appendTagFilters(sql: string, params: unknown[], tags: string[]): strin
     () => 'EXISTS (SELECT 1 FROM json_each(memories.tags) WHERE lower(trim(json_each.value)) = lower(trim(?)))',
   );
   params.push(...tags);
-  return `${sql} AND (${tagConditions.join(' OR ')})`;
+  return `${sql} AND (${tagConditions.join(' AND ')})`;
 }
 
 function appendSearchFilter(sql: string, params: unknown[], search: string): string {
