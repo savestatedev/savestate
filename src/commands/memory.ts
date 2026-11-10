@@ -67,6 +67,7 @@ export const DEFAULT_TIER_CONFIG: MemoryTierConfig = {
 
 const DAY_SECONDS = 24 * 60 * 60;
 const MAX_MEMORY_LIST_SOURCE_SUMMARY_ITEMS = 8;
+const MAX_MEMORY_LIST_NAMESPACE_SUMMARY_ITEMS = 8;
 const MAX_MEMORY_LIST_TAG_SUMMARY_ITEMS = 8;
 
 export interface MemoryFreshnessProfile {
@@ -294,7 +295,13 @@ export function countByNamespace(memories: MemoryEntry[]): Record<string, number
   }
   return Object.fromEntries(
     Object.keys(counts)
-      .sort((left, right) => left < right ? -1 : left > right ? 1 : 0)
+      .sort((left, right) => {
+        const normalizedLeft = left.toLowerCase();
+        const normalizedRight = right.toLowerCase();
+        return normalizedLeft < normalizedRight ? -1
+          : normalizedLeft > normalizedRight ? 1
+            : left < right ? -1 : left > right ? 1 : 0;
+      })
       .map((key) => [key, counts[key]]),
   );
 }
@@ -358,6 +365,22 @@ export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
     .join(', ');
 }
 
+/** Format namespace totals for the human-facing list summary. */
+export function formatMemoryListNamespaceSummary(memories: MemoryEntry[]): string {
+  const namespaces = Object.entries(countByNamespace(memories));
+  const assigned = namespaces.reduce((total, [, count]) => total + count, 0);
+  const unassigned = memories.length - assigned;
+  if (namespaces.length === 0) return unassigned > 0 ? `${unassigned} unassigned` : 'none';
+
+  const visibleNamespaces = namespaces.slice(0, MAX_MEMORY_LIST_NAMESPACE_SUMMARY_ITEMS);
+  const omittedNamespaceCount = namespaces.length - visibleNamespaces.length;
+  return visibleNamespaces
+    .map(([namespace, count]) => `${namespace} ${count}`)
+    .concat(omittedNamespaceCount > 0 ? [`+${omittedNamespaceCount} more`] : [])
+    .concat(unassigned > 0 ? [`${unassigned} unassigned`] : [])
+    .join(', ');
+}
+
 /** Format normalized tag totals for the human-facing list summary. */
 export function formatMemoryListTagSummary(memories: MemoryEntry[]): string {
   const tags = Object.entries(countByTag(memories));
@@ -382,6 +405,11 @@ export function formatMemoryListPageFreshnessSummary(
 /** Format source totals for the rows visible on a paginated table page. */
 export function formatMemoryListPageSourceSummary(memories: MemoryEntry[]): string {
   return `Page Sources: ${formatMemoryListSourceSummary(memories)}`;
+}
+
+/** Format namespace totals for the rows visible on a paginated table page. */
+export function formatMemoryListPageNamespaceSummary(memories: MemoryEntry[]): string {
+  return `Page Namespaces: ${formatMemoryListNamespaceSummary(memories)}`;
 }
 
 /** Format tag totals for the rows visible on a paginated table page. */
@@ -451,6 +479,10 @@ export interface MemoryListJson {
   shownBySource: Record<string, number>;
   byNamespace: Record<string, number>;
   shownByNamespace: Record<string, number>;
+  /** Number of matching memories without a namespace. */
+  unassignedNamespaceCount: number;
+  /** Number of visible memories without a namespace. */
+  shownUnassignedNamespaceCount: number;
   byTag: Record<string, number>;
   shownByTag: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
@@ -578,6 +610,12 @@ export function formatMemoryListJson(
     shownBySource: countBySource(shown),
     byNamespace: countByNamespace(all),
     shownByNamespace: countByNamespace(shown),
+    unassignedNamespaceCount: all.filter((entry) => !normalizeMemoryListNamespace(
+      typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
+    )).length,
+    shownUnassignedNamespaceCount: shown.filter((entry) => !normalizeMemoryListNamespace(
+      typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
+    )).length,
     byTag: countByTag(all),
     shownByTag: countByTag(shown),
     byFreshness: countByFreshness(all, now),
@@ -1547,6 +1585,7 @@ export async function listMemories(
   console.log(`  L3 (archive):     ${counts.L3} items`);
   console.log(`  Total:            ${total} items\n`);
   console.log(`Source Summary: ${formatMemoryListSourceSummary(filteredEntries)}\n`);
+  console.log(`Namespace Summary: ${formatMemoryListNamespaceSummary(filteredEntries)}\n`);
   console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
 
@@ -1555,6 +1594,7 @@ export async function listMemories(
     console.log(`${pageSummary}`);
     if (entries.length > 0) {
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
+      console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
       console.log(`${formatMemoryListPageTagSummary(entries)}`);
       console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}\n`);
     }

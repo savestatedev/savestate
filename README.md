@@ -218,6 +218,10 @@ Table output also shows matching-collection source totals and, when paginated, s
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
 
+Table output also shows matching-collection namespace totals and, when paginated, namespace
+totals for the rows on the visible page. Namespace summaries show the first eight non-empty
+namespace labels, compactly report any additional namespaces, and include unassigned memories.
+
 The same envelope includes `byNamespace` and `shownByNamespace` counts for non-empty memory
 namespaces. Namespace keys are trimmed and grouped case-insensitively, preserving the first
 spelling seen; unassigned memories are omitted from these aggregates.

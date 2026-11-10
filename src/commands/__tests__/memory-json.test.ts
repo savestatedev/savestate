@@ -200,6 +200,17 @@ describe('savestate memory --json', () => {
       'org:app:other': 1,
     });
     expect(parsed.shownByNamespace).toEqual({ 'Org:App:Agent': 2 });
+    expect(parsed.unassignedNamespaceCount).toBe(1);
+    expect(parsed.shownUnassignedNamespaceCount).toBe(0);
+  });
+
+  it('sorts namespace aggregates without case-sensitive surprises', () => {
+    const entries = [
+      entry({ id: 'mem-zeta', content: 'zeta', metadata: { namespace: 'Zeta' } }),
+      entry({ id: 'mem-alpha', content: 'alpha', metadata: { namespace: 'alpha' } }),
+    ];
+
+    expect(countByNamespace(entries)).toEqual({ alpha: 1, Zeta: 1 });
   });
 
   it('counts normalized tags for the full collection and visible page', () => {
