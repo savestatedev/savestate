@@ -51,6 +51,7 @@ export interface ContextConfigJson {
   pagination: {
     offset: number;
     limit: number | null;
+    pageSize: number;
     shownWeights: number;
     shownBudget: number;
     totalWeights: number;
@@ -461,6 +462,7 @@ export function formatContextConfigJson(
     pagination: {
       offset: pageOffset,
       limit: limit ?? null,
+      pageSize,
       shownWeights: weightEntries.length,
       shownBudget: budgetEntries.length,
       totalWeights,

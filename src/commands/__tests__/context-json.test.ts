@@ -222,6 +222,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
+      pageSize: Math.max(Object.keys(parsed.weights).length, Object.keys(parsed.budget).length),
       shownWeights: Object.keys(parsed.weights).length,
       shownBudget: Object.keys(parsed.budget).length,
       totalWeights: Object.keys(parsed.weights).length,
@@ -240,6 +241,7 @@ describe('savestate context --json', () => {
     expect(Object.keys(parsed.budget)).toHaveLength(1);
     expect(parsed.pagination.offset).toBe(1);
     expect(parsed.pagination.limit).toBe(1);
+    expect(parsed.pagination.pageSize).toBe(1);
     expect(parsed.pagination.shownWeights).toBe(1);
     expect(parsed.pagination.shownBudget).toBe(1);
     expect(parsed.pagination.totalWeights).toBeGreaterThan(1);
