@@ -479,6 +479,10 @@ export interface MemoryListJson {
   shownBySource: Record<string, number>;
   byNamespace: Record<string, number>;
   shownByNamespace: Record<string, number>;
+  /** Number of matching memories without a namespace. */
+  unassignedNamespaceCount: number;
+  /** Number of visible memories without a namespace. */
+  shownUnassignedNamespaceCount: number;
   byTag: Record<string, number>;
   shownByTag: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
@@ -606,6 +610,12 @@ export function formatMemoryListJson(
     shownBySource: countBySource(shown),
     byNamespace: countByNamespace(all),
     shownByNamespace: countByNamespace(shown),
+    unassignedNamespaceCount: all.filter((entry) => !normalizeMemoryListNamespace(
+      typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
+    )).length,
+    shownUnassignedNamespaceCount: shown.filter((entry) => !normalizeMemoryListNamespace(
+      typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
+    )).length,
     byTag: countByTag(all),
     shownByTag: countByTag(shown),
     byFreshness: countByFreshness(all, now),

@@ -200,6 +200,8 @@ describe('savestate memory --json', () => {
       'org:app:other': 1,
     });
     expect(parsed.shownByNamespace).toEqual({ 'Org:App:Agent': 2 });
+    expect(parsed.unassignedNamespaceCount).toBe(1);
+    expect(parsed.shownUnassignedNamespaceCount).toBe(0);
   });
 
   it('sorts namespace aggregates without case-sensitive surprises', () => {
