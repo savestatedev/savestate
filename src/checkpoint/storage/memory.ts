@@ -125,6 +125,14 @@ function daysBetween(aIso: string, bIso: string): number {
   return Math.max(0, (b - a) / (24 * 60 * 60 * 1000));
 }
 
+/** Keep checkpoint tag retrieval aligned with the CLI's case-insensitive filters. */
+function hasAllMemoryTags(memoryTags: string[] | undefined, queryTags: string[]): boolean {
+  const normalizedMemoryTags = new Set(
+    (memoryTags ?? []).map((tag) => tag.trim().toLowerCase()),
+  );
+  return queryTags.every((tag) => normalizedMemoryTags.has(tag.trim().toLowerCase()));
+}
+
 /**
  * Generate a detailed explanation for why a memory was retrieved.
  */
@@ -377,9 +385,7 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
     
     // Filter by tags
     if (query.tags && query.tags.length > 0) {
-      candidates = candidates.filter(mem =>
-        query.tags!.every(tag => mem.tags.includes(tag))
-      );
+      candidates = candidates.filter(mem => hasAllMemoryTags(mem.tags, query.tags!));
     }
     
     // Filter by source types
@@ -543,9 +549,7 @@ export class InMemoryCheckpointStorage implements CheckpointStorage {
 
     // Filter by tags
     if (query.tags && query.tags.length > 0) {
-      candidates = candidates.filter(mem =>
-        query.tags!.every(tag => mem.tags.includes(tag))
-      );
+      candidates = candidates.filter(mem => hasAllMemoryTags(mem.tags, query.tags!));
     }
 
     // Filter by source types

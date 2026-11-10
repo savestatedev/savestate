@@ -253,6 +253,22 @@ describe('KnowledgeLane', () => {
       expect(results[0].content).toContain('production server');
     });
 
+    it('should match checkpoint tags case-insensitively and ignore legacy padding', async () => {
+      const results = await knowledge.searchMemories({
+        namespace: testNamespace,
+        tags: [' DEPLOYMENT '],
+      });
+      const response = await storage.searchMemoriesWithResponse({
+        namespace: testNamespace,
+        tags: ['DEPLOYMENT'],
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0].content).toContain('production server');
+      expect(response.results).toHaveLength(1);
+      expect(response.results[0].content).toContain('production server');
+    });
+
     it('should filter by source type', async () => {
       const results = await knowledge.searchMemories({
         namespace: testNamespace,

@@ -277,7 +277,9 @@ export function parseMemoryTags(value: string | undefined): string[] | undefined
   const tags: string[] = [];
   const seen = new Set<string>();
   for (const token of value.split(',').map((part) => part.trim())) {
-    const normalized = token.toLocaleLowerCase();
+    // Keep CLI de-duplication stable across hosts; retrieval uses the same
+    // locale-independent case normalization for legacy tag metadata.
+    const normalized = token.toLowerCase();
     if (!seen.has(normalized)) {
       seen.add(normalized);
       tags.push(token);
@@ -529,6 +531,7 @@ export function registerMemoryCommands(program: Command): void {
       '\nExamples:\n' +
         '  $ savestate memory list --tier L1\n' +
         '  $ savestate memory list --source chatgpt\n' +
+        '  $ savestate memory list --tags work,urgent\n' +
         '  $ savestate memory list --json-summary\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
         '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +
