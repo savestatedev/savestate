@@ -68,6 +68,9 @@ describe('savestate memory explain --offset', () => {
       { id: 'm2', content: '', createdAt: '', metadata: { namespace: 'work:mail' } },
       { id: 'm3', content: '', createdAt: '', metadata: {} },
     ])).toBe('Namespace summary: Work:Mail 2, 1 unassigned');
+    expect(formatMemoryExplainPrettyNamespaceSummary([
+      { id: 'm1', content: '', createdAt: '', metadata: { namespace: ' Work:Mail ' } },
+    ], 'Page namespace summary')).toBe('Page namespace summary: Work:Mail 1');
   });
 
   it('summarizes the previous page when a result page is not the first page', () => {

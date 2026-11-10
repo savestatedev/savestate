@@ -2689,8 +2689,11 @@ export function formatMemoryExplainPrettySummary(
 }
 
 /** Keep the human-readable explain view aligned with its JSON namespace aggregates. */
-export function formatMemoryExplainPrettyNamespaceSummary(memories: MemoryEntry[]): string {
-  return `Namespace summary: ${formatMemoryListNamespaceSummary(memories)}`;
+export function formatMemoryExplainPrettyNamespaceSummary(
+  memories: MemoryEntry[],
+  label = 'Namespace summary',
+): string {
+  return `${label}: ${formatMemoryListNamespaceSummary(memories)}`;
 }
 
 /** Keep the empty-state message aligned with whether the collection or page is empty. */
@@ -3265,7 +3268,14 @@ export async function explainMemoryCommand(
     pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
   })}\n`);
   if (scoredLimited.length > 0) {
-    console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(scoredLimited.map((r) => r.entry))}\n`);
+    console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(sorted.map((r) => r.entry))}`);
+    if (scoredLimited.length !== sorted.length) {
+      console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(
+        scoredLimited.map((r) => r.entry),
+        'Page namespace summary',
+      )}`);
+    }
+    console.log();
   }
   console.log('─'.repeat(80));
 
