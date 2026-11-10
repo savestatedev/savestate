@@ -18,4 +18,8 @@ describe('savestate context config pagination guidance', () => {
   it('stays quiet when the full config fits on one page', () => {
     expect(formatContextConfigPaginationMessages()).toEqual([]);
   });
+
+  it('uses only the selected section when guiding filtered output', () => {
+    expect(formatContextConfigPaginationMessages(6, 0, true, false)).toEqual([]);
+  });
 });

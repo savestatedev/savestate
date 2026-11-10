@@ -479,10 +479,12 @@ export function formatContextConfigJson(
 export function formatContextConfigPaginationMessages(
   limit?: number,
   offset?: number,
+  showWeights = true,
+  showBudget = true,
 ): string[] {
   const total = Math.max(
-    Object.keys(DEFAULT_SCORING_WEIGHTS).length,
-    Object.keys(DEFAULT_BUDGET_ALLOCATION).length,
+    showWeights ? Object.keys(DEFAULT_SCORING_WEIGHTS).length : 0,
+    showBudget ? Object.keys(DEFAULT_BUDGET_ALLOCATION).length : 0,
   );
   const pageOffset = offset ?? 0;
   const pageSize = limit ?? total;
@@ -998,7 +1000,9 @@ export function registerContextCommands(program: Command): void {
         }
       }
 
-      for (const message of formatContextConfigPaginationMessages(limit, offset)) {
+      const showWeights = options.weights || (!options.weights && !options.budget);
+      const showBudget = options.budget || (!options.weights && !options.budget);
+      for (const message of formatContextConfigPaginationMessages(limit, offset, showWeights, showBudget)) {
         console.log(message);
       }
     });
