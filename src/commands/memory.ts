@@ -3311,9 +3311,7 @@ export async function explainMemoryCommand(
     const namespace = typeof entry.metadata?.namespace === 'string'
       ? entry.metadata.namespace.trim()
       : '';
-    if (namespace) {
-      console.log(`      • Namespace: ${formatMemoryExplainNamespace(namespace)}`);
-    }
+    console.log(`      • Namespace: ${formatMemoryExplainNamespace(namespace)}`);
     if (displayTags.length) {
       console.log(`      • Tags: ${displayTags.join(', ')}`);
     }
