@@ -69,6 +69,12 @@ describe('savestate list --label', () => {
     expect(getListLabelWidth([entry({ id: 'legacy', adapter: 'chatgpt', label: '  backup  ' })])).toBe(6);
   });
 
+  it('canonicalizes label casing in JSON filter metadata', async () => {
+    const { formatListJson } = await import('../list.js');
+    const result = JSON.parse(formatListJson([], 50, 0, false, { label: '  Nightly Backup  ' }));
+    expect(result.filters.label).toBe('nightly backup');
+  });
+
   it('ANDs --adapter with --label', () => {
     expect(
       applyListFilters(

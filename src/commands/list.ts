@@ -115,8 +115,10 @@ export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): Lis
         .filter(Boolean),
     )],
     snapshot: filters.snapshot?.trim() ?? null,
-    tag: filters.tag?.trim() ?? null,
-    label: filters.label?.trim() ?? null,
+    // Tag and label matching is case-insensitive, so expose the canonical
+    // form that downstream consumers can compare with filtered results.
+    tag: filters.tag?.trim().toLowerCase() ?? null,
+    label: filters.label?.trim().toLowerCase() ?? null,
   };
 }
 
