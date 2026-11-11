@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatListMissingJson,
+  formatListMissingJsonSummary,
   type ListMissingJson,
 } from '../list.js';
 
@@ -68,5 +69,31 @@ describe('savestate list --json when missing', () => {
       'totalPages',
     ]);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
+  });
+
+  it('omits entries from the missing JSON summary shape', () => {
+    const parsed = JSON.parse(formatListMissingJsonSummary()) as Record<string, unknown>;
+
+    expect(parsed).toMatchObject({
+      found: false,
+      total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      page: 1,
+      totalPages: 0,
+      nextOffset: null,
+      filters: {
+        since: null,
+        until: null,
+        platform: null,
+        adapter: null,
+        exclude: [],
+        snapshot: null,
+        tag: null,
+        label: null,
+      },
+    });
+    expect(parsed).not.toHaveProperty('entries');
+    expect(parsed).not.toHaveProperty('storage');
   });
 });
