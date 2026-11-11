@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatListJson,
+  formatListJsonSummary,
   normalizeListJsonLabel,
   normalizeListJsonFilters,
   normalizeListJsonTags,
@@ -108,6 +109,22 @@ describe('savestate list --json', () => {
       nextOffset: null,
     });
     expect(parsed.entries[0]?.id).toBe('ss-older');
+  });
+
+  it('omits snapshot records from the JSON summary while preserving navigation', () => {
+    const parsed = JSON.parse(formatListJsonSummary([older, newer], 1, 1)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      found: true,
+      total: 2,
+      shown: 1,
+      remaining: 0,
+      offset: 1,
+      limit: 1,
+      hasPrevious: true,
+      hasMore: false,
+    });
+    expect(parsed).not.toHaveProperty('entries');
   });
 
   it('reports matching snapshots remaining after the visible page', () => {
