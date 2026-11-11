@@ -556,6 +556,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
+    .option('--important-first', 'Show highest-importance memories first (ties use creation date)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
     .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
@@ -587,6 +588,7 @@ export function registerMemoryCommands(program: Command): void {
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
           maxImportance,
+          importantFirst: options.importantFirst,
           oldestFirst: options.oldestFirst || options.reverse,
           limit: parseMemoryLimit(options.limit, 20),
           offset: parseMemoryListOffset(options.offset),

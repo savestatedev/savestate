@@ -2580,6 +2580,16 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain(".option('--reverse'");
   });
 
+  it('documents memory list --important-first ordering', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
+    expect(memorySection).toContain('--important-first');
+    expect(memorySection).toContain('highest-importance memories first');
+    expect(memorySection).toContain('savestate memory list --important-first --limit 5');
+    expect(listBlock).toContain(".option('--important-first'");
+    expect(readme).toContain('savestate memory list --important-first --limit 5');
+  });
+
   it('documents memory --snapshot as a single snapshot id', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--snapshot');
