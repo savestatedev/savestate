@@ -263,6 +263,14 @@ namespace copied from metadata remains usable even when its letter casing differ
 savestate memory list --namespace ORG:APP:AGENT --json-summary
 ```
 
+Use `--important-first` to put the highest-importance memories at the top of a list. Equal
+importance scores keep the normal creation-date ordering; combine it with `--oldest-first` when
+older memories should win ties:
+
+```bash
+savestate memory list --important-first --limit 5
+```
+
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
   --exclude <types>                  Skip memory, conversation, identity, or knowledge
