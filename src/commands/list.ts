@@ -8,6 +8,7 @@ import { loadIndex, type SnapshotIndexEntry } from '../index-file.js';
 
 interface ListOptions {
   json?: boolean;
+  jsonSummary?: boolean;
   oldestFirst?: boolean;
   reverse?: boolean;
   limit?: string;
@@ -81,6 +82,8 @@ export interface ListJson {
   entries: ListSnapshotJson[];
 }
 
+export type ListJsonSummary = Omit<ListJson, 'entries'>;
+
 /** Keep JSON tag values stable when older indexes contain whitespace or duplicates. */
 export function normalizeListJsonTags(tags?: string[]): string[] {
   const seen = new Set<string>();
@@ -144,12 +147,12 @@ export function formatListJson(
   filters: Partial<ListJsonFilters> = {},
 ): string {
   const offsetValue = offset ?? 0;
-  const records: ListSnapshotJson[] = selectListOffsetEntries(
+  const visible = selectListOffsetEntries(
     sortListEntries(snapshots, oldestFirst),
     offset,
   )
-    .slice(0, limit)
-    .map((snapshot) => ({
+    .slice(0, limit);
+  const records: ListSnapshotJson[] = visible.map((snapshot) => ({
       id: snapshot.id,
       timestamp: snapshot.timestamp,
       platform: snapshot.platform,
@@ -198,11 +201,67 @@ export function formatListJson(
   return JSON.stringify(result, null, 2);
 }
 
+/** Keep list pagination metadata available without loading snapshot records. */
+export function formatListJsonSummary(
+  snapshots: SnapshotIndexEntry[],
+  limit = 50,
+  offset?: number,
+  oldestFirst = false,
+  filters: Partial<ListJsonFilters> = {},
+): string {
+  const offsetValue = offset ?? 0;
+  const visible = selectListOffsetEntries(
+    sortListEntries(snapshots, oldestFirst),
+    offset,
+  ).slice(0, limit);
+  const shown = visible.length;
+  const suggestedOffset = shown === 0 && snapshots.length > 0
+    ? Math.floor((snapshots.length - 1) / limit) * limit
+    : null;
+  const summary: ListJsonSummary = {
+    found: shown > 0,
+    total: snapshots.length,
+    shown,
+    remaining: Math.max(0, snapshots.length - offsetValue - shown),
+    emptyReason: shown > 0 ? null : snapshots.length === 0 ? 'collection' : 'page',
+    offset: offsetValue,
+    limit,
+    pageSize: limit,
+    page: Math.floor(offsetValue / limit) + 1,
+    totalPages: Math.ceil(snapshots.length / limit),
+    hasPrevious: offsetValue > 0,
+    previousOffset: offsetValue > 0
+      ? shown === 0 && suggestedOffset !== null
+        ? suggestedOffset
+        : Math.max(0, offsetValue - limit)
+      : null,
+    hasMore: offsetValue + shown < snapshots.length,
+    nextOffset: offsetValue + shown < snapshots.length ? offsetValue + shown : null,
+    suggestedOffset,
+    oldestFirst,
+    filters: normalizeListJsonFilters(filters),
+  };
+  return JSON.stringify(summary, null, 2);
+}
+
 export interface ListMissingJson {
   found: false;
   total: 0;
   shown: 0;
+  remaining: 0;
   emptyReason: 'collection';
+  offset: 0;
+  limit: 50;
+  pageSize: 50;
+  page: 1;
+  totalPages: 0;
+  hasPrevious: false;
+  previousOffset: null;
+  hasMore: false;
+  nextOffset: null;
+  suggestedOffset: null;
+  oldestFirst: false;
+  filters: ListJsonFilters;
   entries: [];
   storage: null;
 }
@@ -213,13 +272,48 @@ export function formatListMissingJson(): string {
       found: false,
       total: 0,
       shown: 0,
+      remaining: 0,
       emptyReason: 'collection',
+      offset: 0,
+      limit: 50,
+      pageSize: 50,
+      page: 1,
+      totalPages: 0,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: null,
+      oldestFirst: false,
+      filters: normalizeListJsonFilters({}),
       entries: [],
       storage: null,
     },
     null,
     2,
   );
+}
+
+export function formatListMissingJsonSummary(): string {
+  return JSON.stringify({
+    found: false,
+    total: 0,
+    shown: 0,
+    remaining: 0,
+    emptyReason: 'collection',
+    offset: 0,
+    limit: 50,
+    pageSize: 50,
+    page: 1,
+    totalPages: 0,
+    hasPrevious: false,
+    previousOffset: null,
+    hasMore: false,
+    nextOffset: null,
+    suggestedOffset: null,
+    oldestFirst: false,
+    filters: normalizeListJsonFilters({}),
+  } satisfies ListJsonSummary, null, 2);
 }
 
 /** Parse a snapshot-list limit without turning user input errors into empty output. */
@@ -499,13 +593,14 @@ export async function listCommand(options: ListOptions): Promise<void> {
   parseListTag(options.tag);
   parseListLabel(options.label);
 
-  if (!options.json) {
+  const jsonOutput = options.json === true || options.jsonSummary === true;
+  if (!jsonOutput) {
     console.log();
   }
 
   if (!isInitialized()) {
-    if (options.json) {
-      console.log(formatListMissingJson());
+    if (jsonOutput) {
+      console.log(options.jsonSummary ? formatListMissingJsonSummary() : formatListMissingJson());
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -520,9 +615,20 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const filtered = applyListFilters(index.snapshots, options);
   const oldestFirst = Boolean(options.oldestFirst || options.reverse);
 
-  if (options.json) {
+  if (jsonOutput) {
     console.log(
-      formatListJson(filtered, limit, offset, oldestFirst, {
+      options.jsonSummary
+        ? formatListJsonSummary(filtered, limit, offset, oldestFirst, {
+          since: options.since,
+          until: options.until,
+          platform: options.platform,
+          adapter: options.adapter,
+          exclude: options.exclude ? parseListExclude(options.exclude) : undefined,
+          snapshot: options.snapshot,
+          tag: options.tag,
+          label: options.label,
+        })
+        : formatListJson(filtered, limit, offset, oldestFirst, {
         since: options.since,
         until: options.until,
         platform: options.platform,
@@ -531,7 +637,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
         snapshot: options.snapshot,
         tag: options.tag,
         label: options.label,
-      }),
+        }),
     );
     return;
   }

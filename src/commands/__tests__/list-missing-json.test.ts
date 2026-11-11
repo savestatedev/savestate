@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatListMissingJson,
+  formatListMissingJsonSummary,
   type ListMissingJson,
 } from '../list.js';
 
@@ -16,7 +17,29 @@ describe('savestate list --json when missing', () => {
       found: false,
       total: 0,
       shown: 0,
+      remaining: 0,
       emptyReason: 'collection',
+      offset: 0,
+      limit: 50,
+      pageSize: 50,
+      page: 1,
+      totalPages: 0,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: null,
+      oldestFirst: false,
+      filters: {
+        since: null,
+        until: null,
+        platform: null,
+        adapter: null,
+        exclude: [],
+        snapshot: null,
+        tag: null,
+        label: null,
+      },
       entries: [],
       storage: null,
     });
@@ -27,11 +50,50 @@ describe('savestate list --json when missing', () => {
     expect(Object.keys(parsed).sort()).toEqual([
       'emptyReason',
       'entries',
+      'filters',
       'found',
+      'hasMore',
+      'hasPrevious',
+      'limit',
+      'nextOffset',
+      'offset',
+      'oldestFirst',
+      'page',
+      'pageSize',
+      'previousOffset',
+      'remaining',
       'shown',
       'storage',
+      'suggestedOffset',
       'total',
+      'totalPages',
     ]);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
+  });
+
+  it('omits entries from the missing JSON summary shape', () => {
+    const parsed = JSON.parse(formatListMissingJsonSummary()) as Record<string, unknown>;
+
+    expect(parsed).toMatchObject({
+      found: false,
+      total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      page: 1,
+      totalPages: 0,
+      nextOffset: null,
+      filters: {
+        since: null,
+        until: null,
+        platform: null,
+        adapter: null,
+        exclude: [],
+        snapshot: null,
+        tag: null,
+        label: null,
+      },
+    });
+    expect(parsed).not.toHaveProperty('entries');
+    expect(parsed).not.toHaveProperty('storage');
   });
 });
