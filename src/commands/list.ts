@@ -72,6 +72,10 @@ export interface ListJson {
   pageSize: number;
   page: number;
   totalPages: number;
+  previousPage: number | null;
+  nextPage: number | null;
+  /** Maximum supported offset for a list page. */
+  maxOffset: number;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
@@ -162,7 +166,10 @@ export function formatListJson(
       filename: snapshot.filename,
       size: snapshot.size,
     }));
-  const hasPrevious = offsetValue > 0;
+  // An empty collection has no navigable pages, even if a caller supplied a
+  // stale offset. Keep the requested offset visible, but do not advertise a
+  // previous page that cannot exist.
+  const hasPrevious = offsetValue > 0 && snapshots.length > 0;
   const hasMore = offsetValue + records.length < snapshots.length;
   const remaining = Math.max(0, snapshots.length - offsetValue - records.length);
   const emptyReason = records.length > 0
@@ -174,6 +181,12 @@ export function formatListJson(
     ? Math.floor((snapshots.length - 1) / limit) * limit
     : null;
   const totalPages = Math.ceil(snapshots.length / limit);
+  const previousOffset = hasPrevious
+    ? records.length === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, offsetValue - limit)
+    : null;
+  const nextOffset = hasMore ? offsetValue + records.length : null;
   const result: ListJson = {
     found: records.length > 0,
     total: snapshots.length,
@@ -185,14 +198,13 @@ export function formatListJson(
     pageSize: limit,
     page: Math.floor(offsetValue / limit) + 1,
     totalPages,
+    previousPage: previousOffset === null ? null : Math.floor(previousOffset / limit) + 1,
+    nextPage: nextOffset === null ? null : Math.floor(nextOffset / limit) + 1,
+    maxOffset: MAX_LIST_OFFSET,
     hasPrevious,
-    previousOffset: hasPrevious
-      ? records.length === 0 && suggestedOffset !== null
-        ? suggestedOffset
-        : Math.max(0, offsetValue - limit)
-      : null,
+    previousOffset,
     hasMore,
-    nextOffset: hasMore ? offsetValue + records.length : null,
+    nextOffset,
     suggestedOffset,
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
@@ -218,6 +230,17 @@ export function formatListJsonSummary(
   const suggestedOffset = shown === 0 && snapshots.length > 0
     ? Math.floor((snapshots.length - 1) / limit) * limit
     : null;
+  // An empty collection has no navigable pages, even if a caller supplied a
+  // stale offset. Keep the requested offset visible, but do not advertise a
+  // previous page that cannot exist.
+  const hasPrevious = offsetValue > 0 && snapshots.length > 0;
+  const previousOffset = hasPrevious
+    ? shown === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, offsetValue - limit)
+    : null;
+  const hasMore = offsetValue + shown < snapshots.length;
+  const nextOffset = hasMore ? offsetValue + shown : null;
   const summary: ListJsonSummary = {
     found: shown > 0,
     total: snapshots.length,
@@ -229,14 +252,13 @@ export function formatListJsonSummary(
     pageSize: limit,
     page: Math.floor(offsetValue / limit) + 1,
     totalPages: Math.ceil(snapshots.length / limit),
-    hasPrevious: offsetValue > 0,
-    previousOffset: offsetValue > 0
-      ? shown === 0 && suggestedOffset !== null
-        ? suggestedOffset
-        : Math.max(0, offsetValue - limit)
-      : null,
-    hasMore: offsetValue + shown < snapshots.length,
-    nextOffset: offsetValue + shown < snapshots.length ? offsetValue + shown : null,
+    previousPage: previousOffset === null ? null : Math.floor(previousOffset / limit) + 1,
+    nextPage: nextOffset === null ? null : Math.floor(nextOffset / limit) + 1,
+    maxOffset: MAX_LIST_OFFSET,
+    hasPrevious,
+    previousOffset,
+    hasMore,
+    nextOffset,
     suggestedOffset,
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
@@ -255,6 +277,9 @@ export interface ListMissingJson {
   pageSize: 50;
   page: 1;
   totalPages: 0;
+  previousPage: null;
+  nextPage: null;
+  maxOffset: 1000;
   hasPrevious: false;
   previousOffset: null;
   hasMore: false;
@@ -279,6 +304,9 @@ export function formatListMissingJson(): string {
       pageSize: 50,
       page: 1,
       totalPages: 0,
+      previousPage: null,
+      nextPage: null,
+      maxOffset: 1000,
       hasPrevious: false,
       previousOffset: null,
       hasMore: false,
@@ -306,6 +334,9 @@ export function formatListMissingJsonSummary(): string {
     pageSize: 50,
     page: 1,
     totalPages: 0,
+    previousPage: null,
+    nextPage: null,
+    maxOffset: 1000,
     hasPrevious: false,
     previousOffset: null,
     hasMore: false,

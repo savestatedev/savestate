@@ -86,6 +86,19 @@ describe('savestate list --json', () => {
     });
   });
 
+  it('does not advertise navigation for an empty collection at a stale offset', () => {
+    const parsed = JSON.parse(formatListJson([], 10, 20)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      emptyReason: 'collection',
+      offset: 20,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('supports oldest-first ordering for JSON consumers', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 50, undefined, true)) as ListJson;
     expect(parsed.entries.map((snapshot) => snapshot.id)).toEqual(['ss-older', 'ss-newer']);
@@ -103,6 +116,9 @@ describe('savestate list --json', () => {
       pageSize: 1,
       page: 2,
       totalPages: 2,
+      previousPage: 1,
+      nextPage: null,
+      maxOffset: 1000,
       hasPrevious: true,
       previousOffset: 0,
       hasMore: false,
@@ -121,10 +137,24 @@ describe('savestate list --json', () => {
       remaining: 0,
       offset: 1,
       limit: 1,
+      previousPage: 1,
+      nextPage: null,
       hasPrevious: true,
       hasMore: false,
     });
     expect(parsed).not.toHaveProperty('entries');
+  });
+
+  it('exposes page navigation alongside offsets', () => {
+    const parsed = JSON.parse(formatListJson([older, newer], 1)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      page: 1,
+      totalPages: 2,
+      previousPage: null,
+      nextPage: 2,
+      nextOffset: 1,
+    });
   });
 
   it('does not read payload-only fields in summary mode', () => {
