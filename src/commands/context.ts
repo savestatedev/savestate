@@ -48,6 +48,11 @@ export interface ContextCompileJson {
 export interface ContextConfigJson {
   weights: ScoringWeights;
   budget: BudgetAllocation;
+  guidance: {
+    action: 'next' | 'previous' | 'retry' | 'none';
+    offset: number | null;
+  };
+  emptyReason: 'collection' | 'page' | null;
   pagination: {
     offset: number;
     limit: number | null;
@@ -447,7 +452,9 @@ export function formatContextConfigJson(
   const previousOffset = limit !== undefined && pageOffset > 0
     ? Math.max(0, pageOffset - limit)
     : null;
-  const suggestedOffset = !hasMore && weightEntries.length === 0 && budgetEntries.length === 0
+  const totalEntries = Math.max(totalWeights, totalBudget);
+  const suggestedOffset = !hasMore && totalEntries > 0
+    && weightEntries.length === 0 && budgetEntries.length === 0
     ? Math.floor((Math.max(totalWeights, totalBudget) - 1) / pageSize) * pageSize
     : null;
   const weights = Object.fromEntries(
@@ -456,9 +463,20 @@ export function formatContextConfigJson(
   const budget = Object.fromEntries(
     budgetEntries,
   ) as BudgetAllocation;
+  const guidance = hasMore
+    ? { action: 'next' as const, offset: pageOffset + pageSize }
+    : suggestedOffset !== null
+      ? { action: 'retry' as const, offset: suggestedOffset }
+      : previousOffset !== null
+        ? { action: 'previous' as const, offset: previousOffset }
+        : { action: 'none' as const, offset: null };
+  const shown = weightEntries.length + budgetEntries.length;
+  const emptyReason = shown > 0 ? null : totalEntries === 0 ? 'collection' : 'page';
   const record: ContextConfigJson = {
     weights,
     budget,
+    guidance,
+    emptyReason,
     pagination: {
       offset: pageOffset,
       limit: limit ?? null,

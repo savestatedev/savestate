@@ -311,6 +311,33 @@ applied before pagination, so the JSON response keeps each result's stable
 after the visible page; an empty later page is marked `emptyReason: "page"` and provides
 `suggestedOffset` so clients can recover from a stale offset.
 
+savestate context compile              Compile context for an agent run
+  --agent <id>                         Agent identifier
+  --task <text>                        Task intent to compile for
+  --limit <n>                          Max RunBrief sections to show
+  --offset <n>                         Skip RunBrief sections before --limit
+  --json                               Output section counts and pagination metadata
+savestate context explain <run_id>     Explain a compiled context run
+  --limit <n>                          Max candidates to show
+  --offset <n>                         Skip candidates before --limit
+  --json                               Output candidates and pagination metadata
+savestate context validate --file <f>  Validate a context brief JSON file
+  --limit <n>                          Max errors or warnings to show
+  --offset <n>                         Skip issues before --limit
+  --json                               Output validation and pagination metadata
+savestate context config               View scoring weights and budget allocation
+  --weights                            Show scoring weights only
+  --budget                             Show budget allocation only
+  --limit <n>                          Max config rows to show
+  --offset <n>                         Skip config rows before --limit
+  --json                               Output config, pagination, and guidance metadata
+
+Context JSON pages include `guidance` with a single recommended action (`next`,
+`previous`, `retry`, or `none`) and offset, so scripts can navigate without
+reimplementing pagination rules. The `context config --json` envelope also
+includes `emptyReason` (`collection`, `page`, or `null`) so scripts can
+distinguish an intentionally empty config from a stale offset.
+
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration
   --set <key=value>                  Set a config value
