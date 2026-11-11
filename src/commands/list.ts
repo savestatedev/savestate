@@ -72,6 +72,8 @@ export interface ListJson {
   pageSize: number;
   page: number;
   totalPages: number;
+  /** Maximum supported offset for a list page. */
+  maxOffset: number;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
@@ -185,6 +187,7 @@ export function formatListJson(
     pageSize: limit,
     page: Math.floor(offsetValue / limit) + 1,
     totalPages,
+    maxOffset: MAX_LIST_OFFSET,
     hasPrevious,
     previousOffset: hasPrevious
       ? records.length === 0 && suggestedOffset !== null
@@ -229,6 +232,7 @@ export function formatListJsonSummary(
     pageSize: limit,
     page: Math.floor(offsetValue / limit) + 1,
     totalPages: Math.ceil(snapshots.length / limit),
+    maxOffset: MAX_LIST_OFFSET,
     hasPrevious: offsetValue > 0,
     previousOffset: offsetValue > 0
       ? shown === 0 && suggestedOffset !== null
@@ -255,6 +259,7 @@ export interface ListMissingJson {
   pageSize: 50;
   page: 1;
   totalPages: 0;
+  maxOffset: 1000;
   hasPrevious: false;
   previousOffset: null;
   hasMore: false;
@@ -279,6 +284,7 @@ export function formatListMissingJson(): string {
       pageSize: 50,
       page: 1,
       totalPages: 0,
+      maxOffset: 1000,
       hasPrevious: false,
       previousOffset: null,
       hasMore: false,
@@ -306,6 +312,7 @@ export function formatListMissingJsonSummary(): string {
     pageSize: 50,
     page: 1,
     totalPages: 0,
+    maxOffset: 1000,
     hasPrevious: false,
     previousOffset: null,
     hasMore: false,

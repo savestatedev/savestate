@@ -103,6 +103,7 @@ describe('savestate list --json', () => {
       pageSize: 1,
       page: 2,
       totalPages: 2,
+      maxOffset: 1000,
       hasPrevious: true,
       previousOffset: 0,
       hasMore: false,
