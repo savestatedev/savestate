@@ -6,6 +6,7 @@ import {
   getListLabelWidth,
   normalizeListLabel,
   parseListLabel,
+  formatListPageSummary,
 } from '../list.js';
 
 function entry(
@@ -69,6 +70,12 @@ describe('savestate list --label', () => {
     expect(getListLabelWidth([entry({ id: 'legacy', adapter: 'chatgpt', label: '  backup  ' })])).toBe(6);
   });
 
+  it('canonicalizes label casing in JSON filter metadata', async () => {
+    const { formatListJson } = await import('../list.js');
+    const result = JSON.parse(formatListJson([], 50, 0, false, { label: '  Nightly Backup  ' }));
+    expect(result.filters.label).toBe('nightly backup');
+  });
+
   it('ANDs --adapter with --label', () => {
     expect(
       applyListFilters(
@@ -80,5 +87,12 @@ describe('savestate list --label', () => {
         { adapter: 'chatgpt', label: 'pre-update' },
       ).map((snapshot) => snapshot.id),
     ).toEqual(['keep']);
+  });
+
+  it('suggests the nearest page when an offset skips past every snapshot', () => {
+    expect(formatListPageSummary(5, 0, 8, 2)).toBe(
+      '(no snapshots shown: offset 8 skips past 5 after filters; ' +
+      'try --offset 4 to open the nearest available page)',
+    );
   });
 });

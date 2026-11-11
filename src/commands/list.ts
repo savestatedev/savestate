@@ -115,8 +115,10 @@ export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): Lis
         .filter(Boolean),
     )],
     snapshot: filters.snapshot?.trim() ?? null,
-    tag: filters.tag?.trim() ?? null,
-    label: filters.label?.trim() ?? null,
+    // Tag and label matching is case-insensitive, so expose the canonical
+    // form that downstream consumers can compare with filtered results.
+    tag: filters.tag?.trim().toLowerCase() ?? null,
+    label: filters.label?.trim().toLowerCase() ?? null,
   };
 }
 
@@ -285,6 +287,11 @@ export function formatListEmptyState(
 /** Describe the visible list page without treating an offset as part of the limit. */
 export function formatListPageSummary(total: number, shown: number, offset = 0, limit = 50): string {
   const pageEnd = Math.min(offset + limit, total);
+  if (shown === 0 && total > 0 && offset >= total) {
+    const suggestedOffset = Math.floor((total - 1) / limit) * limit;
+    return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
+      `try --offset ${suggestedOffset} to open the nearest available page)`;
+  }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
   const hints = [`offset ${offset}`, `limit ${limit}`];
