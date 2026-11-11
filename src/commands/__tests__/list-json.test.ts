@@ -127,6 +127,18 @@ describe('savestate list --json', () => {
     expect(parsed).not.toHaveProperty('entries');
   });
 
+  it('does not read payload-only fields in summary mode', () => {
+    const summarySnapshot = { ...newer } as SnapshotIndexEntry;
+    Object.defineProperty(summarySnapshot, 'filename', {
+      get: () => { throw new Error('summary mode should not load filenames'); },
+    });
+    Object.defineProperty(summarySnapshot, 'size', {
+      get: () => { throw new Error('summary mode should not load sizes'); },
+    });
+
+    expect(() => formatListJsonSummary([summarySnapshot])).not.toThrow();
+  });
+
   it('reports matching snapshots remaining after the visible page', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 1)) as ListJson;
 

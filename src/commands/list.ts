@@ -147,12 +147,12 @@ export function formatListJson(
   filters: Partial<ListJsonFilters> = {},
 ): string {
   const offsetValue = offset ?? 0;
-  const records: ListSnapshotJson[] = selectListOffsetEntries(
+  const visible = selectListOffsetEntries(
     sortListEntries(snapshots, oldestFirst),
     offset,
   )
-    .slice(0, limit)
-    .map((snapshot) => ({
+    .slice(0, limit);
+  const records: ListSnapshotJson[] = visible.map((snapshot) => ({
       id: snapshot.id,
       timestamp: snapshot.timestamp,
       platform: snapshot.platform,
@@ -209,8 +209,38 @@ export function formatListJsonSummary(
   oldestFirst = false,
   filters: Partial<ListJsonFilters> = {},
 ): string {
-  const full = JSON.parse(formatListJson(snapshots, limit, offset, oldestFirst, filters)) as ListJson;
-  const { entries: _entries, ...summary } = full;
+  const offsetValue = offset ?? 0;
+  const visible = selectListOffsetEntries(
+    sortListEntries(snapshots, oldestFirst),
+    offset,
+  ).slice(0, limit);
+  const shown = visible.length;
+  const suggestedOffset = shown === 0 && snapshots.length > 0
+    ? Math.floor((snapshots.length - 1) / limit) * limit
+    : null;
+  const summary: ListJsonSummary = {
+    found: shown > 0,
+    total: snapshots.length,
+    shown,
+    remaining: Math.max(0, snapshots.length - offsetValue - shown),
+    emptyReason: shown > 0 ? null : snapshots.length === 0 ? 'collection' : 'page',
+    offset: offsetValue,
+    limit,
+    pageSize: limit,
+    page: Math.floor(offsetValue / limit) + 1,
+    totalPages: Math.ceil(snapshots.length / limit),
+    hasPrevious: offsetValue > 0,
+    previousOffset: offsetValue > 0
+      ? shown === 0 && suggestedOffset !== null
+        ? suggestedOffset
+        : Math.max(0, offsetValue - limit)
+      : null,
+    hasMore: offsetValue + shown < snapshots.length,
+    nextOffset: offsetValue + shown < snapshots.length ? offsetValue + shown : null,
+    suggestedOffset,
+    oldestFirst,
+    filters: normalizeListJsonFilters(filters),
+  };
   return JSON.stringify(summary, null, 2);
 }
 
