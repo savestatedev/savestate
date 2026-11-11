@@ -86,6 +86,19 @@ describe('savestate list --json', () => {
     });
   });
 
+  it('does not advertise navigation for an empty collection at a stale offset', () => {
+    const parsed = JSON.parse(formatListJson([], 10, 20)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      emptyReason: 'collection',
+      offset: 20,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+    });
+  });
+
   it('supports oldest-first ordering for JSON consumers', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 50, undefined, true)) as ListJson;
     expect(parsed.entries.map((snapshot) => snapshot.id)).toEqual(['ss-older', 'ss-newer']);

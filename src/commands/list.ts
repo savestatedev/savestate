@@ -166,7 +166,10 @@ export function formatListJson(
       filename: snapshot.filename,
       size: snapshot.size,
     }));
-  const hasPrevious = offsetValue > 0;
+  // An empty collection has no navigable pages, even if a caller supplied a
+  // stale offset. Keep the requested offset visible, but do not advertise a
+  // previous page that cannot exist.
+  const hasPrevious = offsetValue > 0 && snapshots.length > 0;
   const hasMore = offsetValue + records.length < snapshots.length;
   const remaining = Math.max(0, snapshots.length - offsetValue - records.length);
   const emptyReason = records.length > 0
@@ -227,7 +230,10 @@ export function formatListJsonSummary(
   const suggestedOffset = shown === 0 && snapshots.length > 0
     ? Math.floor((snapshots.length - 1) / limit) * limit
     : null;
-  const hasPrevious = offsetValue > 0;
+  // An empty collection has no navigable pages, even if a caller supplied a
+  // stale offset. Keep the requested offset visible, but do not advertise a
+  // previous page that cannot exist.
+  const hasPrevious = offsetValue > 0 && snapshots.length > 0;
   const previousOffset = hasPrevious
     ? shown === 0 && suggestedOffset !== null
       ? suggestedOffset
