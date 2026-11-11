@@ -1281,8 +1281,19 @@ export function sortMemoryListEntries(
   oldestFirst = false,
 ): MemoryEntry[] {
   return [...entries].sort((a, b) => {
-    const createdAt = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    const chronological = Number.isNaN(createdAt) ? a.createdAt.localeCompare(b.createdAt) : createdAt;
+    const aTime = new Date(a.createdAt).getTime();
+    const bTime = new Date(b.createdAt).getTime();
+    const aInvalid = Number.isNaN(aTime);
+    const bInvalid = Number.isNaN(bTime);
+
+    // Keep malformed imported timestamps deterministic and out of the way of
+    // valid dates instead of feeding a NaN comparator result to Array.sort.
+    if (aInvalid || bInvalid) {
+      if (aInvalid !== bInvalid) return aInvalid ? 1 : -1;
+      return a.id.localeCompare(b.id);
+    }
+
+    const chronological = aTime - bTime;
     return (oldestFirst ? chronological : -chronological) || a.id.localeCompare(b.id);
   });
 }

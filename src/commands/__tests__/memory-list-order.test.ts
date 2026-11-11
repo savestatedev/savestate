@@ -32,4 +32,20 @@ describe('savestate memory list ordering', () => {
     ]);
     expect(entries.map(({ id }) => id)).toEqual(['newer', 'older', 'middle']);
   });
+
+  it('keeps malformed timestamps after valid dates in either direction', () => {
+    const imported = [
+      entry('invalid-b', 'not-a-date'),
+      entry('newer', '2026-01-03T00:00:00.000Z'),
+      entry('invalid-a', 'also-not-a-date'),
+      entry('older', '2026-01-01T00:00:00.000Z'),
+    ];
+
+    expect(sortMemoryListEntries(imported).map(({ id }) => id)).toEqual([
+      'newer', 'older', 'invalid-a', 'invalid-b',
+    ]);
+    expect(sortMemoryListEntries(imported, true).map(({ id }) => id)).toEqual([
+      'older', 'newer', 'invalid-a', 'invalid-b',
+    ]);
+  });
 });
