@@ -248,7 +248,20 @@ export interface ListMissingJson {
   found: false;
   total: 0;
   shown: 0;
+  remaining: 0;
   emptyReason: 'collection';
+  offset: 0;
+  limit: 50;
+  pageSize: 50;
+  page: 1;
+  totalPages: 0;
+  hasPrevious: false;
+  previousOffset: null;
+  hasMore: false;
+  nextOffset: null;
+  suggestedOffset: null;
+  oldestFirst: false;
+  filters: ListJsonFilters;
   entries: [];
   storage: null;
 }
@@ -259,7 +272,20 @@ export function formatListMissingJson(): string {
       found: false,
       total: 0,
       shown: 0,
+      remaining: 0,
       emptyReason: 'collection',
+      offset: 0,
+      limit: 50,
+      pageSize: 50,
+      page: 1,
+      totalPages: 0,
+      hasPrevious: false,
+      previousOffset: null,
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: null,
+      oldestFirst: false,
+      filters: normalizeListJsonFilters({}),
       entries: [],
       storage: null,
     },
