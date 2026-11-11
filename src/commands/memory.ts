@@ -1279,8 +1279,14 @@ export function selectMemoryListOffsetEntries<T>(entries: T[], offset?: number):
 export function sortMemoryListEntries(
   entries: MemoryEntry[],
   oldestFirst = false,
+  importantFirst = false,
 ): MemoryEntry[] {
   return [...entries].sort((a, b) => {
+    if (importantFirst) {
+      const importanceDifference = getMemoryListImportance(b) - getMemoryListImportance(a);
+      if (importanceDifference !== 0) return importanceDifference;
+    }
+
     const aTime = new Date(a.createdAt).getTime();
     const bTime = new Date(b.createdAt).getTime();
     const aInvalid = Number.isNaN(aTime);
@@ -1519,6 +1525,7 @@ export async function listMemories(
     freshness?: MemoryFreshnessState;
     minImportance?: number;
     maxImportance?: number;
+    importantFirst?: boolean;
     oldestFirst?: boolean;
     limit?: number;
     offset?: number;
@@ -1549,7 +1556,11 @@ export async function listMemories(
   const { snapshot } = await loadSnapshot(storage, passphrase, options?.snapshotId);
   const normalized = normalizeMemory(snapshot.memory);
 
-  let entries = sortMemoryListEntries(normalized.core, options?.oldestFirst);
+  let entries = sortMemoryListEntries(
+    normalized.core,
+    options?.oldestFirst,
+    options?.importantFirst,
+  );
 
   // Filter by tier
   if (options?.tier) {

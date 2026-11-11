@@ -48,4 +48,16 @@ describe('savestate memory list ordering', () => {
       'older', 'newer', 'invalid-a', 'invalid-b',
     ]);
   });
+
+  it('can prioritize importance while keeping equal scores date-ordered', () => {
+    const ranked = [
+      { ...entry('low-new', '2026-01-03T00:00:00.000Z'), metadata: { importance: 0.2 } },
+      { ...entry('high-old', '2026-01-01T00:00:00.000Z'), metadata: { importance: 0.9 } },
+      { ...entry('high-new', '2026-01-02T00:00:00.000Z'), metadata: { importance: 0.9 } },
+    ];
+
+    expect(sortMemoryListEntries(ranked, false, true).map(({ id }) => id)).toEqual([
+      'high-new', 'high-old', 'low-new',
+    ]);
+  });
 });
