@@ -212,13 +212,14 @@ const MAX_CLOUD_LIST_LIMIT = 1000;
 export function parseCloudListLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_LIST_LIMIT}.`,
     );
   }
 
-  const limit = Number(value);
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_LIST_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_LIST_LIMIT}.`,
@@ -239,13 +240,14 @@ const MAX_CLOUD_LIST_OFFSET = 1000;
 export function parseCloudListOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  if (!/^\d+$/.test(value)) {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_LIST_OFFSET}.`,
     );
   }
 
-  const offset = Number(value);
+  const offset = Number(normalized);
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_CLOUD_LIST_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_CLOUD_LIST_OFFSET}.`,
