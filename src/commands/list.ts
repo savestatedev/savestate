@@ -170,7 +170,10 @@ export function formatListJson(
   // stale offset. Keep the requested offset visible, but do not advertise a
   // previous page that cannot exist.
   const hasPrevious = offsetValue > 0 && snapshots.length > 0;
-  const hasMore = offsetValue + records.length < snapshots.length;
+  const candidateNextOffset = offsetValue + records.length;
+  // Keep machine-readable navigation actionable: the CLI rejects offsets
+  // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
+  const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
   const remaining = Math.max(0, snapshots.length - offsetValue - records.length);
   const emptyReason = records.length > 0
     ? null
@@ -178,7 +181,7 @@ export function formatListJson(
       ? 'collection'
       : 'page';
   const suggestedOffset = records.length === 0 && snapshots.length > 0
-    ? Math.floor((snapshots.length - 1) / limit) * limit
+    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / limit) * limit)
     : null;
   const totalPages = Math.ceil(snapshots.length / limit);
   const previousOffset = hasPrevious
@@ -186,7 +189,7 @@ export function formatListJson(
       ? suggestedOffset
       : Math.max(0, offsetValue - limit)
     : null;
-  const nextOffset = hasMore ? offsetValue + records.length : null;
+  const nextOffset = hasMore ? candidateNextOffset : null;
   const result: ListJson = {
     found: records.length > 0,
     total: snapshots.length,
@@ -228,7 +231,7 @@ export function formatListJsonSummary(
   ).slice(0, limit);
   const shown = visible.length;
   const suggestedOffset = shown === 0 && snapshots.length > 0
-    ? Math.floor((snapshots.length - 1) / limit) * limit
+    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / limit) * limit)
     : null;
   // An empty collection has no navigable pages, even if a caller supplied a
   // stale offset. Keep the requested offset visible, but do not advertise a
@@ -239,8 +242,11 @@ export function formatListJsonSummary(
       ? suggestedOffset
       : Math.max(0, offsetValue - limit)
     : null;
-  const hasMore = offsetValue + shown < snapshots.length;
-  const nextOffset = hasMore ? offsetValue + shown : null;
+  const candidateNextOffset = offsetValue + shown;
+  // Keep machine-readable navigation actionable: the CLI rejects offsets
+  // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
+  const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
+  const nextOffset = hasMore ? candidateNextOffset : null;
   const summary: ListJsonSummary = {
     found: shown > 0,
     total: snapshots.length,
@@ -411,6 +417,8 @@ export function formatListEmptyState(
 
 /** Describe the visible list page without treating an offset as part of the limit. */
 export function formatListPageSummary(total: number, shown: number, offset = 0, limit = 50): string {
+  if (total === 0) return '(no snapshots found after filters)';
+
   const pageEnd = Math.min(offset + limit, total);
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = Math.floor((total - 1) / limit) * limit;
@@ -420,7 +428,8 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
   const hints = [`offset ${offset}`, `limit ${limit}`];
-  if (pageEnd < total) hints.push(`next offset ${offset + shown}`);
+  const nextOffset = offset + shown;
+  if (pageEnd < total && nextOffset <= MAX_LIST_OFFSET) hints.push(`next offset ${nextOffset}`);
   if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - limit)}`);
   return `(showing ${shown} of ${total} after filters; ${hints.join('; ')})`;
 }

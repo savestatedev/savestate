@@ -182,6 +182,40 @@ describe('savestate list --json', () => {
     });
   });
 
+  it('does not advertise a next offset beyond the CLI ceiling', () => {
+    const snapshots = Array.from({ length: 1_051 }, (_, index) => ({
+      ...older,
+      id: `ss-${index}`,
+      timestamp: new Date(Date.UTC(2026, 0, 1, 0, index % 60, index)).toISOString(),
+    }));
+
+    for (const formatter of [formatListJson, formatListJsonSummary]) {
+      const parsed = JSON.parse(formatter(snapshots, 50, 1_000)) as ListJson;
+      expect(parsed.shown).toBe(50);
+      expect(parsed.remaining).toBe(1);
+      expect(parsed.hasMore).toBe(false);
+      expect(parsed.nextOffset).toBeNull();
+    }
+  });
+
+  it('caps stale-page recovery offsets at the CLI ceiling', () => {
+    const snapshots = Array.from({ length: 1_051 }, (_, index) => ({
+      ...older,
+      id: `ss-${index}`,
+      timestamp: new Date(Date.UTC(2026, 0, 1, 0, index % 60, index)).toISOString(),
+    }));
+
+    for (const formatter of [formatListJson, formatListJsonSummary]) {
+      const parsed = JSON.parse(formatter(snapshots, 50, 1_051)) as ListJson;
+      expect(parsed).toMatchObject({
+        shown: 0,
+        emptyReason: 'page',
+        suggestedOffset: 1_000,
+        previousOffset: 1_000,
+      });
+    }
+  });
+
   it('suggests the nearest page when an offset is past the filtered list', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 1, 5)) as ListJson;
 
