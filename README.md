@@ -334,7 +334,9 @@ savestate context config               View scoring weights and budget allocatio
 
 Context JSON pages include `guidance` with a single recommended action (`next`,
 `previous`, `retry`, or `none`) and offset, so scripts can navigate without
-reimplementing pagination rules.
+reimplementing pagination rules. The `context config --json` envelope also
+includes `emptyReason` (`collection`, `page`, or `null`) so scripts can
+distinguish an intentionally empty config from a stale offset.
 
 savestate diff <a> <b>                Compare two snapshots
 savestate config                      View/edit configuration

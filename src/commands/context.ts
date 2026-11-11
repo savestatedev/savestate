@@ -52,6 +52,7 @@ export interface ContextConfigJson {
     action: 'next' | 'previous' | 'retry' | 'none';
     offset: number | null;
   };
+  emptyReason: 'collection' | 'page' | null;
   pagination: {
     offset: number;
     limit: number | null;
@@ -469,10 +470,13 @@ export function formatContextConfigJson(
       : previousOffset !== null
         ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
+  const shown = weightEntries.length + budgetEntries.length;
+  const emptyReason = shown > 0 ? null : totalEntries === 0 ? 'collection' : 'page';
   const record: ContextConfigJson = {
     weights,
     budget,
     guidance,
+    emptyReason,
     pagination: {
       offset: pageOffset,
       limit: limit ?? null,

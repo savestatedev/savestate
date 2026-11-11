@@ -219,6 +219,7 @@ describe('savestate context --json', () => {
     expect(parsed.weights.criticality).toBe(0.25);
     expect(parsed.budget.must_know_facts_min).toBe(0.15);
     expect(parsed.budget.citations_max).toBe(0.05);
+    expect(parsed.emptyReason).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
     expect(parsed.pagination).toEqual({
       offset: 0,
@@ -275,6 +276,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination.nextOffset).toBeNull();
     expect(parsed.pagination.previousOffset).toBe(998);
     expect(parsed.pagination.suggestedOffset).toBe(6);
+    expect(parsed.emptyReason).toBe('page');
     expect(parsed.guidance).toEqual({ action: 'retry', offset: 6 });
   });
 
@@ -289,6 +291,7 @@ describe('savestate context --json', () => {
       formatContextConfigJson(undefined, 1000, false, false),
     ) as ContextConfigJson;
     expect(parsed.pagination.suggestedOffset).toBeNull();
+    expect(parsed.emptyReason).toBe('collection');
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
   });
 
