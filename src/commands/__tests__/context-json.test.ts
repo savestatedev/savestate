@@ -278,6 +278,12 @@ describe('savestate context --json', () => {
     expect(parsed.guidance).toEqual({ action: 'retry', offset: 6 });
   });
 
+  it('retries a stale offset when no page size was requested', () => {
+    const parsed = JSON.parse(formatContextConfigJson(undefined, 1000)) as ContextConfigJson;
+    expect(parsed.pagination.suggestedOffset).toBe(0);
+    expect(parsed.guidance).toEqual({ action: 'retry', offset: 0 });
+  });
+
   it('prints explain inclusion counts as JSON', () => {
     const parsed = JSON.parse(
       formatContextExplainJson(

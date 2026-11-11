@@ -462,7 +462,7 @@ export function formatContextConfigJson(
   ) as BudgetAllocation;
   const guidance = hasMore
     ? { action: 'next' as const, offset: pageOffset + pageSize }
-    : previousOffset !== null && weightEntries.length === 0 && budgetEntries.length === 0
+    : suggestedOffset !== null
       ? { action: 'retry' as const, offset: suggestedOffset }
       : previousOffset !== null
         ? { action: 'previous' as const, offset: previousOffset }
