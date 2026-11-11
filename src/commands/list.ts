@@ -72,6 +72,8 @@ export interface ListJson {
   pageSize: number;
   page: number;
   totalPages: number;
+  previousPage: number | null;
+  nextPage: number | null;
   /** Maximum supported offset for a list page. */
   maxOffset: number;
   hasPrevious: boolean;
@@ -176,6 +178,12 @@ export function formatListJson(
     ? Math.floor((snapshots.length - 1) / limit) * limit
     : null;
   const totalPages = Math.ceil(snapshots.length / limit);
+  const previousOffset = hasPrevious
+    ? records.length === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, offsetValue - limit)
+    : null;
+  const nextOffset = hasMore ? offsetValue + records.length : null;
   const result: ListJson = {
     found: records.length > 0,
     total: snapshots.length,
@@ -187,15 +195,13 @@ export function formatListJson(
     pageSize: limit,
     page: Math.floor(offsetValue / limit) + 1,
     totalPages,
+    previousPage: previousOffset === null ? null : Math.floor(previousOffset / limit) + 1,
+    nextPage: nextOffset === null ? null : Math.floor(nextOffset / limit) + 1,
     maxOffset: MAX_LIST_OFFSET,
     hasPrevious,
-    previousOffset: hasPrevious
-      ? records.length === 0 && suggestedOffset !== null
-        ? suggestedOffset
-        : Math.max(0, offsetValue - limit)
-      : null,
+    previousOffset,
     hasMore,
-    nextOffset: hasMore ? offsetValue + records.length : null,
+    nextOffset,
     suggestedOffset,
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
@@ -221,6 +227,14 @@ export function formatListJsonSummary(
   const suggestedOffset = shown === 0 && snapshots.length > 0
     ? Math.floor((snapshots.length - 1) / limit) * limit
     : null;
+  const hasPrevious = offsetValue > 0;
+  const previousOffset = hasPrevious
+    ? shown === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, offsetValue - limit)
+    : null;
+  const hasMore = offsetValue + shown < snapshots.length;
+  const nextOffset = hasMore ? offsetValue + shown : null;
   const summary: ListJsonSummary = {
     found: shown > 0,
     total: snapshots.length,
@@ -232,15 +246,13 @@ export function formatListJsonSummary(
     pageSize: limit,
     page: Math.floor(offsetValue / limit) + 1,
     totalPages: Math.ceil(snapshots.length / limit),
+    previousPage: previousOffset === null ? null : Math.floor(previousOffset / limit) + 1,
+    nextPage: nextOffset === null ? null : Math.floor(nextOffset / limit) + 1,
     maxOffset: MAX_LIST_OFFSET,
-    hasPrevious: offsetValue > 0,
-    previousOffset: offsetValue > 0
-      ? shown === 0 && suggestedOffset !== null
-        ? suggestedOffset
-        : Math.max(0, offsetValue - limit)
-      : null,
-    hasMore: offsetValue + shown < snapshots.length,
-    nextOffset: offsetValue + shown < snapshots.length ? offsetValue + shown : null,
+    hasPrevious,
+    previousOffset,
+    hasMore,
+    nextOffset,
     suggestedOffset,
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
@@ -259,6 +271,8 @@ export interface ListMissingJson {
   pageSize: 50;
   page: 1;
   totalPages: 0;
+  previousPage: null;
+  nextPage: null;
   maxOffset: 1000;
   hasPrevious: false;
   previousOffset: null;
@@ -284,6 +298,8 @@ export function formatListMissingJson(): string {
       pageSize: 50,
       page: 1,
       totalPages: 0,
+      previousPage: null,
+      nextPage: null,
       maxOffset: 1000,
       hasPrevious: false,
       previousOffset: null,
@@ -312,6 +328,8 @@ export function formatListMissingJsonSummary(): string {
     pageSize: 50,
     page: 1,
     totalPages: 0,
+    previousPage: null,
+    nextPage: null,
     maxOffset: 1000,
     hasPrevious: false,
     previousOffset: null,

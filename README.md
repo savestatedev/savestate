@@ -206,7 +206,7 @@ the current page contains snapshots, alongside `total`, `shown`, `offset`,
 `limit`, and `entries`. When a page is empty, `emptyReason` distinguishes an
 empty collection from a stale offset, and `suggestedOffset` identifies the
 nearest page to retry. The response also includes `page`, `pageSize`,
-`totalPages`, and `maxOffset` (the highest supported offset, currently 1000)
+`totalPages`, `previousPage`, `nextPage`, and `maxOffset` (the highest supported offset, currently 1000)
 for paginated scripting consumers. Before initialization, the
 response keeps a page-compatible shape with `shown: 0`,
 `emptyReason: "collection"`, and `entries: []`.
@@ -215,7 +215,8 @@ filter metadata is emitted in its normalized, de-duplicated form.
 
 Use `savestate list --json-summary` when a script needs the same pagination and filter metadata
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
-`shown`, `remaining`, `hasMore`, `nextOffset`, and the normalized `filters` envelope.
+`shown`, `remaining`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized
+`filters` envelope.
 
 `savestate memory list --json` includes `bySource` and `shownBySource` counts alongside the
 tier and freshness summaries. Source keys are trimmed and grouped case-insensitively, preserving
