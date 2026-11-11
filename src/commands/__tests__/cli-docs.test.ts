@@ -5135,6 +5135,7 @@ describe('CLI docs', () => {
   it('documents list --since, --until, --adapter, --exclude, and --tag', () => {
     const listSection = docs.slice(docs.indexOf('id="list"'), docs.indexOf('id="stats"'));
     expect(listSection).toContain('--json');
+    expect(listSection).toContain('(implies <code>--json</code>)');
     expect(listSection).toContain('--limit');
     expect(listSection).toContain('--since');
     expect(listSection).toContain('--until');

@@ -187,7 +187,7 @@ savestate restore [snapshot-id]       Restore from a snapshot (default: latest)
   --label <label>                    Restore the newest snapshot with this label
 savestate list                        List all snapshots
   --json                             Output as JSON
-  --json-summary                     Output pagination metadata without snapshot records
+  --json-summary                     Output pagination metadata without snapshot records (implies --json)
   --oldest-first                     Show snapshots from oldest to newest
   --platform <id>                    Only snapshots recorded from this platform
   --adapter <id>                     Only snapshots recorded by this adapter
