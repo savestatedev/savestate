@@ -65,6 +65,10 @@ describe('savestate list --offset', () => {
     );
   });
 
+  it('keeps an empty filtered list from advertising pagination', () => {
+    expect(formatListPageSummary(0, 0, 10, 50)).toBe('(no snapshots found after filters)');
+  });
+
   it('points to the next page when more snapshots remain', () => {
     expect(formatListPageSummary(12, 2, 0, 2)).toBe(
       '(showing 2 of 12 after filters; offset 0; limit 2; next offset 2)',

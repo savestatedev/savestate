@@ -417,6 +417,8 @@ export function formatListEmptyState(
 
 /** Describe the visible list page without treating an offset as part of the limit. */
 export function formatListPageSummary(total: number, shown: number, offset = 0, limit = 50): string {
+  if (total === 0) return '(no snapshots found after filters)';
+
   const pageEnd = Math.min(offset + limit, total);
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = Math.floor((total - 1) / limit) * limit;
