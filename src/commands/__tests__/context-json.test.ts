@@ -219,6 +219,7 @@ describe('savestate context --json', () => {
     expect(parsed.weights.criticality).toBe(0.25);
     expect(parsed.budget.must_know_facts_min).toBe(0.15);
     expect(parsed.budget.citations_max).toBe(0.05);
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
     expect(parsed.pagination).toEqual({
       offset: 0,
       limit: null,
@@ -250,6 +251,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination.hasMoreBudget).toBe(true);
     expect(parsed.pagination.nextOffset).toBe(2);
     expect(parsed.pagination.previousOffset).toBe(0);
+    expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
   });
 
   it('applies section filters to context config JSON output', () => {
@@ -259,6 +261,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination.totalWeights).toBeGreaterThan(0);
     expect(parsed.pagination.totalBudget).toBe(0);
     expect(parsed.pagination.hasMoreBudget).toBe(false);
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
   });
 
   it('suggests the last config page for a stale offset', () => {
@@ -272,6 +275,7 @@ describe('savestate context --json', () => {
     expect(parsed.pagination.nextOffset).toBeNull();
     expect(parsed.pagination.previousOffset).toBe(998);
     expect(parsed.pagination.suggestedOffset).toBe(6);
+    expect(parsed.guidance).toEqual({ action: 'retry', offset: 6 });
   });
 
   it('prints explain inclusion counts as JSON', () => {
