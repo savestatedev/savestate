@@ -426,7 +426,8 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
   const hints = [`offset ${offset}`, `limit ${limit}`];
-  if (pageEnd < total) hints.push(`next offset ${offset + shown}`);
+  const nextOffset = offset + shown;
+  if (pageEnd < total && nextOffset <= MAX_LIST_OFFSET) hints.push(`next offset ${nextOffset}`);
   if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - limit)}`);
   return `(showing ${shown} of ${total} after filters; ${hints.join('; ')})`;
 }

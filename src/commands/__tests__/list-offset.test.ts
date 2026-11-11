@@ -71,6 +71,12 @@ describe('savestate list --offset', () => {
     );
   });
 
+  it('does not advertise a next offset above the CLI ceiling', () => {
+    expect(formatListPageSummary(1_051, 50, 1_000, 50)).toBe(
+      '(showing 50 of 1051 after filters; offset 1000; limit 50; previous offset 950)',
+    );
+  });
+
   it('suggests the nearest page when an offset skips past all matches', () => {
     expect(formatListEmptyState(12, 12, 5)).toBe(
       'No snapshots shown: offset 12 skips past 12 matching snapshots. Try --offset 10 to open the nearest available page.',
