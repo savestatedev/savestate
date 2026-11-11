@@ -136,7 +136,8 @@ export async function saveReceipts(store: ReceiptStore, cwd?: string): Promise<v
   const path = receiptsPath(cwd);
 
   // Atomic write with temp file
-  const tempPath = `${path}.tmp.${Date.now()}`;
+  // Use a per-write suffix so concurrent saves never share a staging file.
+  const tempPath = `${path}.tmp.${randomUUID()}`;
   const content = JSON.stringify(store, null, 2) + '\n';
 
   try {
