@@ -181,7 +181,7 @@ export function formatListJson(
       ? 'collection'
       : 'page';
   const suggestedOffset = records.length === 0 && snapshots.length > 0
-    ? Math.floor((snapshots.length - 1) / limit) * limit
+    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / limit) * limit)
     : null;
   const totalPages = Math.ceil(snapshots.length / limit);
   const previousOffset = hasPrevious
@@ -231,7 +231,7 @@ export function formatListJsonSummary(
   ).slice(0, limit);
   const shown = visible.length;
   const suggestedOffset = shown === 0 && snapshots.length > 0
-    ? Math.floor((snapshots.length - 1) / limit) * limit
+    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / limit) * limit)
     : null;
   // An empty collection has no navigable pages, even if a caller supplied a
   // stale offset. Keep the requested offset visible, but do not advertise a
