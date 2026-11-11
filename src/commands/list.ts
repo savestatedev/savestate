@@ -170,7 +170,10 @@ export function formatListJson(
   // stale offset. Keep the requested offset visible, but do not advertise a
   // previous page that cannot exist.
   const hasPrevious = offsetValue > 0 && snapshots.length > 0;
-  const hasMore = offsetValue + records.length < snapshots.length;
+  const candidateNextOffset = offsetValue + records.length;
+  // Keep machine-readable navigation actionable: the CLI rejects offsets
+  // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
+  const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
   const remaining = Math.max(0, snapshots.length - offsetValue - records.length);
   const emptyReason = records.length > 0
     ? null
@@ -186,7 +189,7 @@ export function formatListJson(
       ? suggestedOffset
       : Math.max(0, offsetValue - limit)
     : null;
-  const nextOffset = hasMore ? offsetValue + records.length : null;
+  const nextOffset = hasMore ? candidateNextOffset : null;
   const result: ListJson = {
     found: records.length > 0,
     total: snapshots.length,
@@ -239,8 +242,11 @@ export function formatListJsonSummary(
       ? suggestedOffset
       : Math.max(0, offsetValue - limit)
     : null;
-  const hasMore = offsetValue + shown < snapshots.length;
-  const nextOffset = hasMore ? offsetValue + shown : null;
+  const candidateNextOffset = offsetValue + shown;
+  // Keep machine-readable navigation actionable: the CLI rejects offsets
+  // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
+  const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
+  const nextOffset = hasMore ? candidateNextOffset : null;
   const summary: ListJsonSummary = {
     found: shown > 0,
     total: snapshots.length,
