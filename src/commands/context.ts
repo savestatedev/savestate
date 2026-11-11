@@ -451,7 +451,9 @@ export function formatContextConfigJson(
   const previousOffset = limit !== undefined && pageOffset > 0
     ? Math.max(0, pageOffset - limit)
     : null;
-  const suggestedOffset = !hasMore && weightEntries.length === 0 && budgetEntries.length === 0
+  const totalEntries = Math.max(totalWeights, totalBudget);
+  const suggestedOffset = !hasMore && totalEntries > 0
+    && weightEntries.length === 0 && budgetEntries.length === 0
     ? Math.floor((Math.max(totalWeights, totalBudget) - 1) / pageSize) * pageSize
     : null;
   const weights = Object.fromEntries(

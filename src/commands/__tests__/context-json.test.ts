@@ -284,6 +284,14 @@ describe('savestate context --json', () => {
     expect(parsed.guidance).toEqual({ action: 'retry', offset: 0 });
   });
 
+  it('does not suggest an invalid retry offset when both config sections are hidden', () => {
+    const parsed = JSON.parse(
+      formatContextConfigJson(undefined, 1000, false, false),
+    ) as ContextConfigJson;
+    expect(parsed.pagination.suggestedOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
+  });
+
   it('prints explain inclusion counts as JSON', () => {
     const parsed = JSON.parse(
       formatContextExplainJson(
