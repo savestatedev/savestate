@@ -137,9 +137,9 @@ export function sortListEntries(
   return [...snapshots].sort((a, b) => {
     const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
-    // Keep ties deterministic in both directions so pagination does not reshuffle
-    // snapshots that share a timestamp when users toggle --oldest-first.
-    return a.id.localeCompare(b.id);
+    // Keep ties deterministic and reverse them with the primary sort so toggling
+    // --oldest-first produces the exact inverse order for equal timestamps too.
+    return oldestFirst ? b.id.localeCompare(a.id) : a.id.localeCompare(b.id);
   });
 }
 
@@ -297,7 +297,12 @@ export interface ListMissingJson {
   storage: null;
 }
 
-export function formatListMissingJson(): string {
+export function formatListMissingJson(
+  limit = 50,
+  offset = 0,
+  oldestFirst = false,
+  filters: Partial<ListJsonFilters> = {},
+): string {
   return JSON.stringify(
     {
       found: false,
@@ -305,10 +310,10 @@ export function formatListMissingJson(): string {
       shown: 0,
       remaining: 0,
       emptyReason: 'collection',
-      offset: 0,
-      limit: 50,
-      pageSize: 50,
-      page: 1,
+      offset,
+      limit,
+      pageSize: limit,
+      page: Math.floor(offset / limit) + 1,
       totalPages: 0,
       previousPage: null,
       nextPage: null,
@@ -318,8 +323,8 @@ export function formatListMissingJson(): string {
       hasMore: false,
       nextOffset: null,
       suggestedOffset: null,
-      oldestFirst: false,
-      filters: normalizeListJsonFilters({}),
+      oldestFirst,
+      filters: normalizeListJsonFilters(filters),
       entries: [],
       storage: null,
     },
@@ -328,17 +333,22 @@ export function formatListMissingJson(): string {
   );
 }
 
-export function formatListMissingJsonSummary(): string {
+export function formatListMissingJsonSummary(
+  limit = 50,
+  offset = 0,
+  oldestFirst = false,
+  filters: Partial<ListJsonFilters> = {},
+): string {
   return JSON.stringify({
     found: false,
     total: 0,
     shown: 0,
     remaining: 0,
     emptyReason: 'collection',
-    offset: 0,
-    limit: 50,
-    pageSize: 50,
-    page: 1,
+    offset,
+    limit,
+    pageSize: limit,
+    page: Math.floor(offset / limit) + 1,
     totalPages: 0,
     previousPage: null,
     nextPage: null,
@@ -348,8 +358,8 @@ export function formatListMissingJsonSummary(): string {
     hasMore: false,
     nextOffset: null,
     suggestedOffset: null,
-    oldestFirst: false,
-    filters: normalizeListJsonFilters({}),
+    oldestFirst,
+    filters: normalizeListJsonFilters(filters),
   } satisfies ListJsonSummary, null, 2);
 }
 
@@ -632,6 +642,19 @@ export async function listCommand(options: ListOptions): Promise<void> {
   parseListSnapshot(options.snapshot);
   parseListTag(options.tag);
   parseListLabel(options.label);
+  const limit = parseListLimit(options.limit);
+  const offset = parseListOffset(options.offset) ?? 0;
+  const oldestFirst = Boolean(options.oldestFirst || options.reverse);
+  const filters = {
+    since: options.since,
+    until: options.until,
+    platform: options.platform,
+    adapter: options.adapter,
+    exclude: options.exclude ? parseListExclude(options.exclude) : undefined,
+    snapshot: options.snapshot,
+    tag: options.tag,
+    label: options.label,
+  };
 
   const jsonOutput = options.json === true || options.jsonSummary === true;
   if (!jsonOutput) {
@@ -640,7 +663,9 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   if (!isInitialized()) {
     if (jsonOutput) {
-      console.log(options.jsonSummary ? formatListMissingJsonSummary() : formatListMissingJson());
+      console.log(options.jsonSummary
+        ? formatListMissingJsonSummary(limit, offset, oldestFirst, filters)
+        : formatListMissingJson(limit, offset, oldestFirst, filters));
       return;
     }
     console.log(chalk.red('✗ SaveState not initialized. Run `savestate init` first.'));
@@ -648,35 +673,18 @@ export async function listCommand(options: ListOptions): Promise<void> {
   }
 
   const config = await loadConfig();
-  const limit = parseListLimit(options.limit);
-  const offset = parseListOffset(options.offset);
   const index = await loadIndex();
 
   const filtered = applyListFilters(index.snapshots, options);
-  const oldestFirst = Boolean(options.oldestFirst || options.reverse);
 
   if (jsonOutput) {
     console.log(
       options.jsonSummary
         ? formatListJsonSummary(filtered, limit, offset, oldestFirst, {
-          since: options.since,
-          until: options.until,
-          platform: options.platform,
-          adapter: options.adapter,
-          exclude: options.exclude ? parseListExclude(options.exclude) : undefined,
-          snapshot: options.snapshot,
-          tag: options.tag,
-          label: options.label,
+          ...filters,
         })
         : formatListJson(filtered, limit, offset, oldestFirst, {
-        since: options.since,
-        until: options.until,
-        platform: options.platform,
-        adapter: options.adapter,
-        exclude: options.exclude ? parseListExclude(options.exclude) : undefined,
-        snapshot: options.snapshot,
-        tag: options.tag,
-        label: options.label,
+        ...filters,
         }),
     );
     return;

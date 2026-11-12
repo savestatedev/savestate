@@ -24,10 +24,13 @@ describe('savestate list --json when missing', () => {
       pageSize: 50,
       page: 1,
       totalPages: 0,
+      previousPage: null,
       hasPrevious: false,
       previousOffset: null,
       hasMore: false,
+      nextPage: null,
       nextOffset: null,
+      maxOffset: 1000,
       suggestedOffset: null,
       oldestFirst: false,
       filters: {
@@ -55,12 +58,15 @@ describe('savestate list --json when missing', () => {
       'hasMore',
       'hasPrevious',
       'limit',
+      'maxOffset',
       'nextOffset',
+      'nextPage',
       'offset',
       'oldestFirst',
       'page',
       'pageSize',
       'previousOffset',
+      'previousPage',
       'remaining',
       'shown',
       'storage',
@@ -95,5 +101,26 @@ describe('savestate list --json when missing', () => {
     });
     expect(parsed).not.toHaveProperty('entries');
     expect(parsed).not.toHaveProperty('storage');
+  });
+
+  it('preserves requested page metadata when filters are supplied', () => {
+    const parsed = JSON.parse(formatListMissingJson(2, 4, true, {
+      platform: ' ChatGPT ',
+      exclude: [' Claude-Web '],
+      label: ' Nightly ',
+    }));
+
+    expect(parsed).toMatchObject({
+      offset: 4,
+      limit: 2,
+      pageSize: 2,
+      page: 3,
+      oldestFirst: true,
+      filters: {
+        platform: 'chatgpt',
+        exclude: ['claude-web'],
+        label: 'nightly',
+      },
+    });
   });
 });
