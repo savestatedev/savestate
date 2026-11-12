@@ -21,6 +21,7 @@ describe('savestate trace export --json when missing', () => {
       runCount: 0,
       eventCount: 0,
       pagination: {
+        maxOffset: 1000,
         offset: 4,
         limit: 2,
         total: 0,

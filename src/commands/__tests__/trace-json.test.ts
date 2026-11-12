@@ -102,6 +102,7 @@ describe('savestate trace --json', () => {
       total: 4,
     })) as { pagination: Record<string, unknown> };
     expect(list.pagination).toEqual({
+      maxOffset: 1000,
       offset: 2,
       limit: 1,
       total: 4,
