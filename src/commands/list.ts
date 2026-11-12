@@ -116,11 +116,12 @@ export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): Lis
     until: normalizeOptionalListFilter(filters.until),
     platform: normalizeOptionalListFilter(filters.platform)?.toLowerCase() ?? null,
     adapter: normalizeOptionalListFilter(filters.adapter)?.toLowerCase() ?? null,
+    // Sort after deduplication so equivalent filter sets serialize identically.
     exclude: [...new Set(
       (filters.exclude ?? [])
         .map((adapter) => adapter.trim().toLowerCase())
         .filter(Boolean),
-    )],
+    )].sort(),
     snapshot: normalizeOptionalListFilter(filters.snapshot),
     // Tag and label matching is case-insensitive, so expose the canonical
     // form that downstream consumers can compare with filtered results.

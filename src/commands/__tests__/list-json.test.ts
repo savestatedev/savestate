@@ -74,6 +74,12 @@ describe('savestate list --json', () => {
     expect(normalizeListJsonLabel(undefined)).toBeNull();
   });
 
+  it('sorts excluded adapters for stable filter metadata', () => {
+    expect(normalizeListJsonFilters({
+      exclude: [' Gemini ', 'chatgpt', 'CHATGPT', 'claude-code'],
+    }).exclude).toEqual(['chatgpt', 'claude-code', 'gemini']);
+  });
+
   it('prints an empty array when there are no snapshots', () => {
     expect(JSON.parse(formatListJson([]))).toMatchObject({
       found: false,
