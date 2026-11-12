@@ -112,9 +112,10 @@ export interface EvalQualityMissingJson {
   passed: 0;
   total: 0;
   passRate: 0;
+  pagination?: EvalPagination;
 }
 
-export function formatEvalQualityMissingJson(suite: string): string {
+export function formatEvalQualityMissingJson(suite: string, pagination?: EvalPagination): string {
   return JSON.stringify(
     {
       found: false,
@@ -123,6 +124,7 @@ export function formatEvalQualityMissingJson(suite: string): string {
       passed: 0,
       total: 0,
       passRate: 0,
+      ...(pagination ? { pagination } : {}),
     },
     null,
     2,
@@ -193,7 +195,12 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
 
   if (suitesToRun.length === 0) {
     if (options.json) {
-      console.log(formatEvalQualityMissingJson(suite ?? ''));
+      console.log(
+        formatEvalQualityMissingJson(
+          suite ?? '',
+          createOptionalEvalQualityPagination(options, suite ? 0 : suites.length, 0),
+        ),
+      );
       return;
     }
     console.log(chalk.red(`  Suite not found: ${suite}`));
@@ -225,7 +232,12 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
   await benchmark.saveResults(resultsPath);
 
   if (options.json) {
-    console.log(formatEvalJson(results));
+    console.log(
+      formatEvalJson(
+        results,
+        createOptionalEvalQualityPagination(options, suites.length, results.length),
+      ),
+    );
     return;
   }
 
@@ -319,6 +331,34 @@ function createOptionalEvalPagination(
   return options.offset !== undefined || options.limit !== undefined
     ? createEvalPagination(total, shown, options)
     : undefined;
+}
+
+function createOptionalEvalQualityPagination(
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+  total: number,
+  shown: number,
+): EvalPagination | undefined {
+  if (options.offset === undefined && options.limit === undefined) return undefined;
+
+  const offset = parseEvalQualityOffset(options.offset) ?? 0;
+  const limit = parseEvalQualityLimit(options.limit) ?? null;
+  const hasMore = limit !== null && offset + shown < total;
+  const hasPrevious = limit !== null && offset > 0;
+
+  return {
+    offset,
+    limit,
+    total,
+    shown,
+    emptyReason: total === 0 ? 'collection' : shown === 0 ? 'page' : null,
+    suggestedOffset: shown === 0 && limit !== null && total > 0
+      ? Math.floor((total - 1) / limit) * limit
+      : null,
+    hasMore,
+    nextOffset: hasMore ? offset + shown : null,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offset - limit!) : null,
+  };
 }
 
 export function formatEvalReportPageSummary(pagination: EvalPagination): string {
