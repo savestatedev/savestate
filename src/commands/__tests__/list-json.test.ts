@@ -217,6 +217,17 @@ describe('savestate list --json', () => {
     }
   });
 
+  it.each([0, 0.5, -5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'normalizes invalid direct-call limits (%s) in both JSON modes',
+    (limit) => {
+      const full = JSON.parse(formatListJson([older, newer], limit)) as ListJson;
+      const summary = JSON.parse(formatListJsonSummary([older, newer], limit)) as ListJson;
+
+      expect(full).toMatchObject({ limit: 50, pageSize: 50, shown: 2, totalPages: 1 });
+      expect(summary).toMatchObject({ limit: 50, pageSize: 50, shown: 2, totalPages: 1 });
+    },
+  );
+
   it('caps stale-page recovery offsets at the CLI ceiling', () => {
     const snapshots = Array.from({ length: 1_051 }, (_, index) => ({
       ...older,
