@@ -240,6 +240,16 @@ describe('savestate list --json', () => {
     });
   });
 
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1.5, 2.9])(
+    'normalizes invalid direct-call offsets (%s)',
+    (offset) => {
+      const parsed = JSON.parse(formatListJson([older], 1, offset)) as ListJson;
+
+      expect(parsed.offset).toBe(Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0);
+      expect(Number.isFinite(parsed.page)).toBe(true);
+    },
+  );
+
   it('caps stale-page recovery offsets at the CLI ceiling', () => {
     const snapshots = Array.from({ length: 1_051 }, (_, index) => ({
       ...older,
