@@ -462,6 +462,17 @@ export function applyImportFilters<T>(
 
 const MAX_CONTAINER_IMPORT_LIMIT = 1000;
 
+/** Resolve the canonical import path while rejecting conflicting aliases. */
+export function resolveContainerImportInput(
+  inputPath: string | undefined,
+  inputAlias: string | undefined,
+): string | undefined {
+  if (inputPath !== undefined && inputAlias !== undefined && inputPath !== inputAlias) {
+    throw new Error('Conflicting import paths: --in and --input must match when both are provided.');
+  }
+  return inputPath ?? inputAlias;
+}
+
 /** Parse container import --limit without turning user input errors into an empty component list. */
 export function parseContainerImportLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -2243,7 +2254,13 @@ export function registerContainerCommands(program: Command) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
       }
-      const input = opts.in ?? opts.input;
+      let input: string | undefined;
+      try {
+        input = resolveContainerImportInput(opts.in, opts.input);
+      } catch (error: any) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+      }
       if (typeof input !== 'string' || input.trim() === '') {
         console.error('Error: Import requires an input file path via --in (or its --input alias).');
         process.exit(1);
