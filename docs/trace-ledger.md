@@ -94,3 +94,15 @@ By default, SaveState applies a conservative redaction pass before persisting ev
 - `savestate trace list`
 - `savestate trace show <run_id>`
 - `savestate trace export [--run <id>] --format jsonl`
+
+For automation, use `--json-summary` with `--offset` and `--limit` to get
+the selected records together with `nextOffset`, `previousOffset`, and a
+`suggestedOffset` when a page is empty:
+
+```bash
+savestate trace list --json-summary --offset 0 --limit 20
+savestate trace show run-123 --json-summary --offset 20 --limit 20
+```
+
+The summary keeps `--json` output stable while providing enough metadata for
+clients to recover from a page past the end of the collection.
