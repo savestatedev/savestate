@@ -141,7 +141,12 @@ export async function evalCommand(rawSubcommand: string, options: EvalOptions): 
 
   if (!isInitialized()) {
     if (options.json && subcommand === 'quality') {
-      console.log(formatEvalQualityMissingJson(suite ?? ''));
+      console.log(
+        formatEvalQualityMissingJson(
+          suite ?? '',
+          createOptionalEvalQualityPagination(options, 0, 0),
+        ),
+      );
       return;
     }
     if (options.json && subcommand === 'report') {
@@ -177,7 +182,12 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
 
   if (suites.length === 0) {
     if (options.json) {
-      console.log(formatEvalJson([]));
+      console.log(
+        formatEvalJson(
+          [],
+          createOptionalEvalQualityPagination(options, 0, 0),
+        ),
+      );
       return;
     }
     console.log(chalk.yellow('  No benchmark suites found.'));

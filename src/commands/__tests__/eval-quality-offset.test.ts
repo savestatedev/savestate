@@ -89,4 +89,21 @@ describe('savestate eval quality --offset', () => {
       previousOffset: 0,
     });
   });
+
+  it('keeps requested pagination metadata for empty quality collections', () => {
+    const pagination = createEvalQualityPagination(0, 0, { offset: '4', limit: '2' });
+
+    expect(JSON.parse(formatEvalQualityMissingJson('recall', pagination)).pagination).toEqual({
+      offset: 4,
+      limit: 2,
+      total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      suggestedOffset: null,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 2,
+    });
+  });
 });
