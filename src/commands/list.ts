@@ -451,20 +451,21 @@ export function formatListEmptyState(
 
 /** Describe the visible list page without treating an offset as part of the limit. */
 export function formatListPageSummary(total: number, shown: number, offset = 0, limit = 50): string {
+  const pageLimit = normalizeListPageLimit(limit);
   if (total === 0) return '(no snapshots found after filters)';
 
-  const pageEnd = Math.min(offset + limit, total);
+  const pageEnd = Math.min(offset + pageLimit, total);
   if (shown === 0 && total > 0 && offset >= total) {
-    const suggestedOffset = Math.floor((total - 1) / limit) * limit;
+    const suggestedOffset = Math.floor((total - 1) / pageLimit) * pageLimit;
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
       `try --offset ${suggestedOffset} to open the nearest available page)`;
   }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
-  const hints = [`offset ${offset}`, `limit ${limit}`];
+  const hints = [`offset ${offset}`, `limit ${pageLimit}`];
   const nextOffset = offset + shown;
   if (pageEnd < total && nextOffset <= MAX_LIST_OFFSET) hints.push(`next offset ${nextOffset}`);
-  if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+  if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - pageLimit)}`);
   return `(showing ${shown} of ${total} after filters; ${hints.join('; ')})`;
 }
 

@@ -3,6 +3,7 @@ import {
   formatListJson,
   formatListJsonSummary,
   formatListMissingJsonSummary,
+  formatListPageSummary,
   normalizeListJsonLabel,
   normalizeListJsonFilters,
   normalizeListJsonTags,
@@ -247,6 +248,18 @@ describe('savestate list --json', () => {
 
       expect(parsed.offset).toBe(Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0);
       expect(Number.isFinite(parsed.page)).toBe(true);
+    },
+  );
+
+  it.each([0, 0.5, -5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'normalizes invalid page-summary limits (%s)',
+    (limit) => {
+      expect(formatListPageSummary(100, 2, 0, limit)).toBe(
+        '(showing 2 of 100 after filters; offset 0; limit 50; next offset 2)',
+      );
+      expect(formatListPageSummary(100, 0, 100, limit)).toBe(
+        '(no snapshots shown: offset 100 skips past 100 after filters; try --offset 50 to open the nearest available page)',
+      );
     },
   );
 
