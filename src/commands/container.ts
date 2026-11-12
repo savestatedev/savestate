@@ -462,6 +462,17 @@ export function applyImportFilters<T>(
 
 const MAX_CONTAINER_IMPORT_LIMIT = 1000;
 
+/** Resolve the canonical import path while rejecting conflicting aliases. */
+export function resolveContainerImportInput(
+  inputPath: string | undefined,
+  inputAlias: string | undefined,
+): string | undefined {
+  if (inputPath !== undefined && inputAlias !== undefined && inputPath !== inputAlias) {
+    throw new Error('Conflicting import paths: --in and --input must match when both are provided.');
+  }
+  return inputPath ?? inputAlias;
+}
+
 /** Parse container import --limit without turning user input errors into an empty component list. */
 export function parseContainerImportLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -2221,7 +2232,8 @@ export function registerContainerCommands(program: Command) {
   container
     .command('import')
     .description('Import agent state from an encrypted file. Prints byte-size progress.')
-    .requiredOption('-i, --in <file>', 'Input file path (.savestate, single non-empty path)')
+    .option('-i, --in <file>', 'Input file path (.savestate, single non-empty path)')
+    .option('--input <file>', 'Alias for --in')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to restore (one or more of: personality, memory, tools, preferences, conversation_history)')
@@ -2242,8 +2254,19 @@ export function registerContainerCommands(program: Command) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
       }
+      let input: string | undefined;
+      try {
+        input = resolveContainerImportInput(opts.in, opts.input);
+      } catch (error: any) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+      }
+      if (typeof input !== 'string' || input.trim() === '') {
+        console.error('Error: Import requires an input file path via --in (or its --input alias).');
+        process.exit(1);
+      }
       const result = await importState({
-        in: opts.in,
+        in: input,
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
         merge: opts.merge,

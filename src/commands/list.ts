@@ -153,7 +153,14 @@ export function sortListEntries(
   oldestFirst = false,
 ): SnapshotIndexEntry[] {
   return [...snapshots].sort((a, b) => {
-    const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    const aTime = new Date(a.timestamp).getTime();
+    const bTime = new Date(b.timestamp).getTime();
+    const aInvalid = Number.isNaN(aTime);
+    const bInvalid = Number.isNaN(bTime);
+    // Legacy indexes may contain invalid timestamps. Keep those entries after
+    // dated snapshots so pagination stays deterministic in either direction.
+    if (aInvalid !== bInvalid) return aInvalid ? 1 : -1;
+    const timestampOrder = bTime - aTime;
     if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
     // Keep ties deterministic and reverse them with the primary sort so toggling
     // --oldest-first produces the exact inverse order for equal timestamps too.
@@ -835,6 +842,7 @@ function parseDateOrThrow(input: string, flag: string): number {
 
 export function formatListDate(iso: string): string {
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 'Unknown date';
   return d.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
