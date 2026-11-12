@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatListJson,
   formatListJsonSummary,
+  formatListMissingJsonSummary,
   normalizeListJsonLabel,
   normalizeListJsonFilters,
   normalizeListJsonTags,
@@ -227,6 +228,17 @@ describe('savestate list --json', () => {
       expect(summary).toMatchObject({ limit: 50, pageSize: 50, shown: 2, totalPages: 1 });
     },
   );
+
+  it('normalizes invalid limits for missing-snapshot JSON summaries', () => {
+    const parsed = JSON.parse(formatListMissingJsonSummary(0, 50)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      limit: 50,
+      pageSize: 50,
+      page: 2,
+      totalPages: 0,
+    });
+  });
 
   it('caps stale-page recovery offsets at the CLI ceiling', () => {
     const snapshots = Array.from({ length: 1_051 }, (_, index) => ({

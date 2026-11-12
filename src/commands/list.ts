@@ -354,6 +354,7 @@ export function formatListMissingJsonSummary(
   oldestFirst = false,
   filters: Partial<ListJsonFilters> = {},
 ): string {
+  const pageLimit = normalizeListPageLimit(limit);
   return JSON.stringify({
     found: false,
     total: 0,
@@ -361,9 +362,9 @@ export function formatListMissingJsonSummary(
     remaining: 0,
     emptyReason: 'collection',
     offset,
-    limit,
-    pageSize: limit,
-    page: Math.floor(offset / limit) + 1,
+    limit: pageLimit,
+    pageSize: pageLimit,
+    page: Math.floor(offset / pageLimit) + 1,
     totalPages: 0,
     previousPage: null,
     nextPage: null,
