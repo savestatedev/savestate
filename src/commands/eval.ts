@@ -592,7 +592,7 @@ const MAX_EVAL_QUALITY_OFFSET = 1000;
 export function parseEvalQualityOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const offset = Number(value.trim());
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_EVAL_QUALITY_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_EVAL_QUALITY_OFFSET}.`,

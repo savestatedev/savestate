@@ -16,6 +16,7 @@ describe('savestate eval quality --offset', () => {
   it('accepts zero and positive integers', () => {
     expect(parseEvalQualityOffset('0')).toBe(0);
     expect(parseEvalQualityOffset('12')).toBe(12);
+    expect(parseEvalQualityOffset(' 12 ')).toBe(12);
   });
 
   it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
