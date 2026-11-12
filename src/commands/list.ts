@@ -112,21 +112,26 @@ export function normalizeListJsonLabel(label?: string | null): string | null {
 /** Keep JSON filter metadata aligned with the values used by the filter parser. */
 export function normalizeListJsonFilters(filters: Partial<ListJsonFilters>): ListJsonFilters {
   return {
-    since: filters.since?.trim() ?? null,
-    until: filters.until?.trim() ?? null,
-    platform: filters.platform?.trim().toLowerCase() ?? null,
-    adapter: filters.adapter?.trim().toLowerCase() ?? null,
+    since: normalizeOptionalListFilter(filters.since),
+    until: normalizeOptionalListFilter(filters.until),
+    platform: normalizeOptionalListFilter(filters.platform)?.toLowerCase() ?? null,
+    adapter: normalizeOptionalListFilter(filters.adapter)?.toLowerCase() ?? null,
     exclude: [...new Set(
       (filters.exclude ?? [])
         .map((adapter) => adapter.trim().toLowerCase())
         .filter(Boolean),
     )],
-    snapshot: filters.snapshot?.trim() ?? null,
+    snapshot: normalizeOptionalListFilter(filters.snapshot),
     // Tag and label matching is case-insensitive, so expose the canonical
     // form that downstream consumers can compare with filtered results.
-    tag: filters.tag?.trim().toLowerCase() ?? null,
-    label: filters.label?.trim().toLowerCase() ?? null,
+    tag: normalizeOptionalListFilter(filters.tag)?.toLowerCase() ?? null,
+    label: normalizeOptionalListFilter(filters.label)?.toLowerCase() ?? null,
   };
+}
+
+function normalizeOptionalListFilter(value: string | null | undefined): string | null {
+  const normalized = value?.trim() ?? '';
+  return normalized.length > 0 ? normalized : null;
 }
 
 /** Keep list pagination stable when snapshots share the same timestamp. */

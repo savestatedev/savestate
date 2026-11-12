@@ -288,4 +288,24 @@ describe('savestate list --json', () => {
       label: 'pre-update',
     });
   });
+
+  it('serializes blank filter values as null', () => {
+    expect(normalizeListJsonFilters({
+      since: '  ',
+      until: '',
+      platform: '  ',
+      adapter: '',
+      snapshot: '  ',
+      tag: '',
+      label: '   ',
+    })).toMatchObject({
+      since: null,
+      until: null,
+      platform: null,
+      adapter: null,
+      snapshot: null,
+      tag: null,
+      label: null,
+    });
+  });
 });
