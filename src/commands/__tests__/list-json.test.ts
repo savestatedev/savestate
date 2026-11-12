@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   formatListJson,
   formatListJsonSummary,
+  formatListMissingJsonSummary,
+  formatListPageSummary,
   normalizeListJsonLabel,
   normalizeListJsonFilters,
   normalizeListJsonTags,
@@ -216,6 +218,50 @@ describe('savestate list --json', () => {
       expect(parsed.nextOffset).toBeNull();
     }
   });
+
+  it.each([0, 0.5, -5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'normalizes invalid direct-call limits (%s) in both JSON modes',
+    (limit) => {
+      const full = JSON.parse(formatListJson([older, newer], limit)) as ListJson;
+      const summary = JSON.parse(formatListJsonSummary([older, newer], limit)) as ListJson;
+
+      expect(full).toMatchObject({ limit: 50, pageSize: 50, shown: 2, totalPages: 1 });
+      expect(summary).toMatchObject({ limit: 50, pageSize: 50, shown: 2, totalPages: 1 });
+    },
+  );
+
+  it('normalizes invalid limits for missing-snapshot JSON summaries', () => {
+    const parsed = JSON.parse(formatListMissingJsonSummary(0, 50)) as ListJson;
+
+    expect(parsed).toMatchObject({
+      limit: 50,
+      pageSize: 50,
+      page: 2,
+      totalPages: 0,
+    });
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1.5, 2.9])(
+    'normalizes invalid direct-call offsets (%s)',
+    (offset) => {
+      const parsed = JSON.parse(formatListJson([older], 1, offset)) as ListJson;
+
+      expect(parsed.offset).toBe(Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0);
+      expect(Number.isFinite(parsed.page)).toBe(true);
+    },
+  );
+
+  it.each([0, 0.5, -5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'normalizes invalid page-summary limits (%s)',
+    (limit) => {
+      expect(formatListPageSummary(100, 2, 0, limit)).toBe(
+        '(showing 2 of 100 after filters; offset 0; limit 50; next offset 2)',
+      );
+      expect(formatListPageSummary(100, 0, 100, limit)).toBe(
+        '(no snapshots shown: offset 100 skips past 100 after filters; try --offset 50 to open the nearest available page)',
+      );
+    },
+  );
 
   it('caps stale-page recovery offsets at the CLI ceiling', () => {
     const snapshots = Array.from({ length: 1_051 }, (_, index) => ({
