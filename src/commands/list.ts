@@ -594,7 +594,7 @@ export function parseListExclude(value: string | undefined): string[] | undefine
     );
   }
 
-  return adapters;
+  return [...new Set(adapters)];
 }
 
 /** Parse list --snapshot without treating blank ids as an empty snapshot list. */
