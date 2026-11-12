@@ -104,6 +104,19 @@ describe('savestate list --json', () => {
     expect(parsed.entries.map((snapshot) => snapshot.id)).toEqual(['ss-older', 'ss-newer']);
   });
 
+  it('reverses same-timestamp ties for oldest-first pagination', () => {
+    const sameTimestamp = [
+      { ...older, id: 'ss-a', timestamp: '2026-01-25T09:30:00.000Z' },
+      { ...older, id: 'ss-b', timestamp: '2026-01-25T09:30:00.000Z' },
+    ];
+
+    const newestFirst = JSON.parse(formatListJson(sameTimestamp)) as ListJson;
+    const oldestFirst = JSON.parse(formatListJson(sameTimestamp, 50, undefined, true)) as ListJson;
+
+    expect(newestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-a', 'ss-b']);
+    expect(oldestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-b', 'ss-a']);
+  });
+
   it('reports navigation metadata for bounded pages', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 1, 1)) as ListJson;
     expect(parsed).toMatchObject({

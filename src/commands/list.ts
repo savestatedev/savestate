@@ -137,9 +137,9 @@ export function sortListEntries(
   return [...snapshots].sort((a, b) => {
     const timestampOrder = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
-    // Keep ties deterministic in both directions so pagination does not reshuffle
-    // snapshots that share a timestamp when users toggle --oldest-first.
-    return a.id.localeCompare(b.id);
+    // Keep ties deterministic and reverse them with the primary sort so toggling
+    // --oldest-first produces the exact inverse order for equal timestamps too.
+    return oldestFirst ? b.id.localeCompare(a.id) : a.id.localeCompare(b.id);
   });
 }
 
