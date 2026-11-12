@@ -2221,7 +2221,8 @@ export function registerContainerCommands(program: Command) {
   container
     .command('import')
     .description('Import agent state from an encrypted file. Prints byte-size progress.')
-    .requiredOption('-i, --in <file>', 'Input file path (.savestate, single non-empty path)')
+    .option('-i, --in <file>', 'Input file path (.savestate, single non-empty path)')
+    .option('--input <file>', 'Alias for --in')
     .option('-p, --passphrase <pass>', 'Passphrase for decryption (or SAVESTATE_PASSPHRASE / prompt; non-empty)')
     .option('-k, --keyfile <path>', 'Keyfile for decryption (single non-empty path)')
     .option('--include <paths>', 'Comma-separated state paths to restore (one or more of: personality, memory, tools, preferences, conversation_history)')
@@ -2242,8 +2243,13 @@ export function registerContainerCommands(program: Command) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
       }
+      const input = opts.in ?? opts.input;
+      if (typeof input !== 'string' || input.trim() === '') {
+        console.error('Error: Import requires an input file path via --in (or its --input alias).');
+        process.exit(1);
+      }
       const result = await importState({
-        in: opts.in,
+        in: input,
         passphrase: opts.passphrase,
         keyfile: opts.keyfile,
         merge: opts.merge,
