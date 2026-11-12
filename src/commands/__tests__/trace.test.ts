@@ -311,6 +311,7 @@ describe.sequential('trace commands', () => {
 
     expect(parsed.found).toBe(false);
     expect(parsed.pagination).toEqual({
+      maxOffset: 1000,
       offset: 0,
       limit: null,
       total: 0,

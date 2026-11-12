@@ -85,7 +85,8 @@ export function parseTraceShowRunId(value: string | undefined): string {
 }
 
 const MAX_TRACE_LIST_LIMIT = 1000;
-const MAX_TRACE_LIST_OFFSET = 1000;
+const MAX_TRACE_OFFSET = 1000;
+const MAX_TRACE_LIST_OFFSET = MAX_TRACE_OFFSET;
 
 /** Parse trace list --limit without turning user input errors into an empty run list. */
 export function parseTraceListLimit(value: string | undefined): number | undefined {
@@ -353,6 +354,7 @@ export interface TraceEventJson {
 }
 
 export interface TracePaginationJson {
+  maxOffset: number;
   offset: number;
   limit: number | null;
   total: number;
@@ -377,6 +379,7 @@ function getTracePagination(
     ? Math.max(0, offset - pageLimit)
     : null;
   return {
+    maxOffset: MAX_TRACE_OFFSET,
     offset,
     limit: pageLimit,
     total,
@@ -544,6 +547,7 @@ export interface TraceExportJson {
 }
 
 export interface TraceExportPaginationJson {
+  maxOffset: number;
   offset: number;
   limit: number | null;
   total: number;
@@ -627,6 +631,7 @@ export function formatTraceExportJson(input: {
       runCount: runs.length,
       eventCount: runs.reduce((sum, run) => sum + run.eventCount, 0),
       pagination: {
+        maxOffset: MAX_TRACE_OFFSET,
         offset,
         limit,
         total,

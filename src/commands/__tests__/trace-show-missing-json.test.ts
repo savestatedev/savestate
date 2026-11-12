@@ -38,6 +38,7 @@ describe('savestate trace show --json when missing', () => {
       runId: 'run-123',
       events: [],
       pagination: {
+        maxOffset: 1000,
         offset: 5,
         limit: 2,
         total: 0,

@@ -4547,6 +4547,7 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('--json');
     expect(traceSection).toContain('scripting');
     expect(traceSection).toContain('omits event payloads and on-disk file paths');
+    expect(traceSection).toContain('maxOffset');
     expect(traceSection).toContain('savestate trace export --json');
     expect(trace).toContain('export function formatTraceExportJson');
   });

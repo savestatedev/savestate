@@ -37,6 +37,7 @@ describe('savestate trace list --json when missing', () => {
       found: false,
       runs: [],
       pagination: {
+        maxOffset: 1000,
         offset: 5,
         limit: 2,
         total: 0,

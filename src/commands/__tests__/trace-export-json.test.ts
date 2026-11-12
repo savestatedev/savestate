@@ -36,6 +36,7 @@ describe('savestate trace export --json', () => {
       runCount: 1,
       eventCount: 2,
       pagination: {
+        maxOffset: 1000,
         offset: 0,
         limit: null,
         total: 1,
@@ -75,6 +76,7 @@ describe('savestate trace export --json', () => {
     expect(parsed.runCount).toBe(0);
     expect(parsed.eventCount).toBe(0);
     expect(parsed.pagination).toEqual({
+      maxOffset: 1000,
       offset: 0,
       limit: null,
       total: 0,
@@ -109,6 +111,7 @@ describe('savestate trace export --json', () => {
     })) as TraceExportJson;
 
     expect(parsed.pagination).toEqual({
+      maxOffset: 1000,
       offset: 2,
       limit: 1,
       total: 4,
