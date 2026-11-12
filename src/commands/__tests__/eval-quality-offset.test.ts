@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyEvalQualityFilters,
+  createEvalQualityPagination,
   formatEvalJson,
   formatEvalQualityMissingJson,
   parseEvalQualityOffset,
@@ -71,5 +72,20 @@ describe('savestate eval quality --offset', () => {
     expect(JSON.parse(formatEvalQualityMissingJson('recall', pagination)).pagination).toEqual(
       pagination,
     );
+  });
+
+  it('reports pagination against the suite-filtered collection', () => {
+    expect(createEvalQualityPagination(1, 0, { offset: '1', limit: '1' })).toEqual({
+      offset: 1,
+      limit: 1,
+      total: 1,
+      shown: 0,
+      emptyReason: 'page',
+      suggestedOffset: 0,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 0,
+    });
   });
 });

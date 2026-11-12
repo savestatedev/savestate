@@ -192,13 +192,14 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
     suite ? suites.filter((s) => s.name === suite) : suites,
     options,
   );
+  const paginationTotal = suite ? suites.filter((s) => s.name === suite).length : suites.length;
 
   if (suitesToRun.length === 0) {
     if (options.json) {
       console.log(
         formatEvalQualityMissingJson(
           suite ?? '',
-          createOptionalEvalQualityPagination(options, suite ? 0 : suites.length, 0),
+          createOptionalEvalQualityPagination(options, paginationTotal, 0),
         ),
       );
       return;
@@ -235,7 +236,7 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
     console.log(
       formatEvalJson(
         results,
-        createOptionalEvalQualityPagination(options, suites.length, results.length),
+        createOptionalEvalQualityPagination(options, paginationTotal, results.length),
       ),
     );
     return;
@@ -333,13 +334,11 @@ function createOptionalEvalPagination(
     : undefined;
 }
 
-function createOptionalEvalQualityPagination(
-  options: Pick<EvalOptions, 'offset' | 'limit'>,
+export function createEvalQualityPagination(
   total: number,
   shown: number,
-): EvalPagination | undefined {
-  if (options.offset === undefined && options.limit === undefined) return undefined;
-
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+): EvalPagination {
   const offset = parseEvalQualityOffset(options.offset) ?? 0;
   const limit = parseEvalQualityLimit(options.limit) ?? null;
   const hasMore = limit !== null && offset + shown < total;
@@ -359,6 +358,15 @@ function createOptionalEvalQualityPagination(
     hasPrevious,
     previousOffset: hasPrevious ? Math.max(0, offset - limit!) : null,
   };
+}
+
+function createOptionalEvalQualityPagination(
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+  total: number,
+  shown: number,
+): EvalPagination | undefined {
+  if (options.offset === undefined && options.limit === undefined) return undefined;
+  return createEvalQualityPagination(total, shown, options);
 }
 
 export function formatEvalReportPageSummary(pagination: EvalPagination): string {
