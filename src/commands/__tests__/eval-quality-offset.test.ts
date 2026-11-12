@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyEvalQualityFilters,
+  createEvalQualityPagination,
+  formatEvalJson,
+  formatEvalQualityMissingJson,
   parseEvalQualityOffset,
   selectEvalQualityOffsetEntries,
 } from '../eval.js';
@@ -13,6 +16,7 @@ describe('savestate eval quality --offset', () => {
   it('accepts zero and positive integers', () => {
     expect(parseEvalQualityOffset('0')).toBe(0);
     expect(parseEvalQualityOffset('12')).toBe(12);
+    expect(parseEvalQualityOffset(' 12 ')).toBe(12);
   });
 
   it.each(['-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
@@ -49,5 +53,57 @@ describe('savestate eval quality --offset', () => {
         { offset: '1', limit: '1' },
       ).map((suite) => suite.name),
     ).toEqual(['precision']);
+  });
+
+  it('preserves pagination metadata in JSON output for quality pages', () => {
+    const pagination = {
+      offset: 1,
+      limit: 1,
+      total: 3,
+      shown: 1,
+      emptyReason: null as const,
+      suggestedOffset: null,
+      hasMore: true,
+      nextOffset: 2,
+      hasPrevious: true,
+      previousOffset: 0,
+    };
+
+    expect(JSON.parse(formatEvalJson([], pagination)).pagination).toEqual(pagination);
+    expect(JSON.parse(formatEvalQualityMissingJson('recall', pagination)).pagination).toEqual(
+      pagination,
+    );
+  });
+
+  it('reports pagination against the suite-filtered collection', () => {
+    expect(createEvalQualityPagination(1, 0, { offset: '1', limit: '1' })).toEqual({
+      offset: 1,
+      limit: 1,
+      total: 1,
+      shown: 0,
+      emptyReason: 'page',
+      suggestedOffset: 0,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 0,
+    });
+  });
+
+  it('keeps requested pagination metadata for empty quality collections', () => {
+    const pagination = createEvalQualityPagination(0, 0, { offset: '4', limit: '2' });
+
+    expect(JSON.parse(formatEvalQualityMissingJson('recall', pagination)).pagination).toEqual({
+      offset: 4,
+      limit: 2,
+      total: 0,
+      shown: 0,
+      emptyReason: 'collection',
+      suggestedOffset: null,
+      hasMore: false,
+      nextOffset: null,
+      hasPrevious: true,
+      previousOffset: 2,
+    });
   });
 });

@@ -112,9 +112,10 @@ export interface EvalQualityMissingJson {
   passed: 0;
   total: 0;
   passRate: 0;
+  pagination?: EvalPagination;
 }
 
-export function formatEvalQualityMissingJson(suite: string): string {
+export function formatEvalQualityMissingJson(suite: string, pagination?: EvalPagination): string {
   return JSON.stringify(
     {
       found: false,
@@ -123,6 +124,7 @@ export function formatEvalQualityMissingJson(suite: string): string {
       passed: 0,
       total: 0,
       passRate: 0,
+      ...(pagination ? { pagination } : {}),
     },
     null,
     2,
@@ -139,7 +141,12 @@ export async function evalCommand(rawSubcommand: string, options: EvalOptions): 
 
   if (!isInitialized()) {
     if (options.json && subcommand === 'quality') {
-      console.log(formatEvalQualityMissingJson(suite ?? ''));
+      console.log(
+        formatEvalQualityMissingJson(
+          suite ?? '',
+          createOptionalEvalQualityPagination(options, 0, 0),
+        ),
+      );
       return;
     }
     if (options.json && subcommand === 'report') {
@@ -175,7 +182,12 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
 
   if (suites.length === 0) {
     if (options.json) {
-      console.log(formatEvalJson([]));
+      console.log(
+        formatEvalJson(
+          [],
+          createOptionalEvalQualityPagination(options, 0, 0),
+        ),
+      );
       return;
     }
     console.log(chalk.yellow('  No benchmark suites found.'));
@@ -190,10 +202,16 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
     suite ? suites.filter((s) => s.name === suite) : suites,
     options,
   );
+  const paginationTotal = suite ? suites.filter((s) => s.name === suite).length : suites.length;
 
   if (suitesToRun.length === 0) {
     if (options.json) {
-      console.log(formatEvalQualityMissingJson(suite ?? ''));
+      console.log(
+        formatEvalQualityMissingJson(
+          suite ?? '',
+          createOptionalEvalQualityPagination(options, paginationTotal, 0),
+        ),
+      );
       return;
     }
     console.log(chalk.red(`  Suite not found: ${suite}`));
@@ -225,7 +243,12 @@ async function runQualityBenchmarks(options: EvalOptions): Promise<void> {
   await benchmark.saveResults(resultsPath);
 
   if (options.json) {
-    console.log(formatEvalJson(results));
+    console.log(
+      formatEvalJson(
+        results,
+        createOptionalEvalQualityPagination(options, paginationTotal, results.length),
+      ),
+    );
     return;
   }
 
@@ -319,6 +342,41 @@ function createOptionalEvalPagination(
   return options.offset !== undefined || options.limit !== undefined
     ? createEvalPagination(total, shown, options)
     : undefined;
+}
+
+export function createEvalQualityPagination(
+  total: number,
+  shown: number,
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+): EvalPagination {
+  const offset = parseEvalQualityOffset(options.offset) ?? 0;
+  const limit = parseEvalQualityLimit(options.limit) ?? null;
+  const hasMore = limit !== null && offset + shown < total;
+  const hasPrevious = limit !== null && offset > 0;
+
+  return {
+    offset,
+    limit,
+    total,
+    shown,
+    emptyReason: total === 0 ? 'collection' : shown === 0 ? 'page' : null,
+    suggestedOffset: shown === 0 && limit !== null && total > 0
+      ? Math.floor((total - 1) / limit) * limit
+      : null,
+    hasMore,
+    nextOffset: hasMore ? offset + shown : null,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offset - limit!) : null,
+  };
+}
+
+function createOptionalEvalQualityPagination(
+  options: Pick<EvalOptions, 'offset' | 'limit'>,
+  total: number,
+  shown: number,
+): EvalPagination | undefined {
+  if (options.offset === undefined && options.limit === undefined) return undefined;
+  return createEvalQualityPagination(total, shown, options);
 }
 
 export function formatEvalReportPageSummary(pagination: EvalPagination): string {
@@ -544,7 +602,7 @@ const MAX_EVAL_QUALITY_OFFSET = 1000;
 export function parseEvalQualityOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const offset = Number(value);
+  const offset = Number(value.trim());
   if (!Number.isInteger(offset) || offset < 0 || offset > MAX_EVAL_QUALITY_OFFSET) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_EVAL_QUALITY_OFFSET}.`,
