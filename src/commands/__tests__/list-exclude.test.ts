@@ -26,6 +26,10 @@ describe('savestate list --exclude', () => {
     expect(parseListExclude(' Windsurf ')).toEqual(['windsurf']);
   });
 
+  it('deduplicates repeated adapters for stable filter metadata', () => {
+    expect(parseListExclude('chatgpt, CHATGPT, gemini, chatgpt')).toEqual(['chatgpt', 'gemini']);
+  });
+
   it.each(['', ' ', 'nope', 'claude', 'chatgpt,bogus', ',,'])(
     'rejects invalid value %s',
     (value) => {

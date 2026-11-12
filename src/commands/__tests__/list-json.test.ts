@@ -74,6 +74,12 @@ describe('savestate list --json', () => {
     expect(normalizeListJsonLabel(undefined)).toBeNull();
   });
 
+  it('sorts excluded adapters for stable filter metadata', () => {
+    expect(normalizeListJsonFilters({
+      exclude: [' Gemini ', 'chatgpt', 'CHATGPT', 'claude-code'],
+    }).exclude).toEqual(['chatgpt', 'claude-code', 'gemini']);
+  });
+
   it('prints an empty array when there are no snapshots', () => {
     expect(JSON.parse(formatListJson([]))).toMatchObject({
       found: false,
@@ -286,6 +292,26 @@ describe('savestate list --json', () => {
       snapshot: 'ss-1',
       tag: 'weekly',
       label: 'pre-update',
+    });
+  });
+
+  it('serializes blank filter values as null', () => {
+    expect(normalizeListJsonFilters({
+      since: '  ',
+      until: '',
+      platform: '  ',
+      adapter: '',
+      snapshot: '  ',
+      tag: '',
+      label: '   ',
+    })).toMatchObject({
+      since: null,
+      until: null,
+      platform: null,
+      adapter: null,
+      snapshot: null,
+      tag: null,
+      label: null,
     });
   });
 });
