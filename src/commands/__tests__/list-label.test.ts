@@ -27,6 +27,15 @@ describe('savestate list --label', () => {
     expect(formatListDate('not-a-timestamp')).toBe('Unknown date');
   });
 
+  it('keeps invalid legacy timestamps after dated snapshots when sorting', async () => {
+    const { sortListEntries } = await import('../list.js');
+    const sorted = sortListEntries([
+      entry({ id: 'unknown', adapter: 'chatgpt', timestamp: 'not-a-timestamp' }),
+      entry({ id: 'dated', adapter: 'chatgpt', timestamp: '2026-01-02T00:00:00Z' }),
+    ]);
+    expect(sorted.map((snapshot) => snapshot.id)).toEqual(['dated', 'unknown']);
+  });
+
   it('leaves the label unset when omitted', () => {
     expect(parseListLabel(undefined)).toBeUndefined();
   });
