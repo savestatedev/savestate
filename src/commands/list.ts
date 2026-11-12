@@ -835,6 +835,7 @@ function parseDateOrThrow(input: string, flag: string): number {
 
 export function formatListDate(iso: string): string {
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 'Unknown date';
   return d.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',

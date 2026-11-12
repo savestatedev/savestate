@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 import {
   applyListFilters,
+  formatListDate,
   formatListLabelCell,
   getListLabelWidth,
   normalizeListLabel,
@@ -22,6 +23,10 @@ function entry(
 }
 
 describe('savestate list --label', () => {
+  it('uses a readable fallback for legacy entries with invalid timestamps', () => {
+    expect(formatListDate('not-a-timestamp')).toBe('Unknown date');
+  });
+
   it('leaves the label unset when omitted', () => {
     expect(parseListLabel(undefined)).toBeUndefined();
   });
