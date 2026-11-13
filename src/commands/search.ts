@@ -84,6 +84,17 @@ export interface SearchSummaryJson {
   pagination: SearchSummaryPagination;
 }
 
+function suggestedSearchOffset(offset: number, limit: number, total: number | null): number | null {
+  if (offset <= 0) return null;
+  const previousOffset = Math.max(0, offset - limit);
+  if (total === null || total <= 0) return previousOffset;
+
+  // When the total is known, skip directly to the last reachable page rather
+  // than making callers walk back through several empty pages.
+  const lastPageOffset = Math.floor((total - 1) / limit) * limit;
+  return Math.min(previousOffset, lastPageOffset);
+}
+
 /** Keep both JSON modes free of interactive banners and progress output. */
 export function isSearchJsonOutput(
   options: Pick<SearchOptions, 'json' | 'jsonSummary'>,
@@ -172,8 +183,8 @@ export function formatSearchResultsSummaryJson(input: {
       : shown === limit && offset < MAX_SEARCH_OFFSET
   )) && shown > 0 && offset < MAX_SEARCH_OFFSET && offset + shown <= MAX_SEARCH_OFFSET
     && (total === null || offset + shown < total);
-  const suggestedOffset = shown === 0 && offset > 0
-    ? Math.max(0, offset - limit)
+  const suggestedOffset = shown === 0
+    ? suggestedSearchOffset(offset, limit, total)
     : null;
   return JSON.stringify(
     {
@@ -214,9 +225,11 @@ export function formatSearchPageHint(
   offset = 0,
   limit = 20,
   hasMore?: boolean,
+  total?: number,
 ): string | undefined {
   if (shown === 0 && offset > 0) {
-    return `No matches found at offset ${offset}. Try --offset ${Math.max(0, offset - limit)} --limit ${limit}.`;
+    const suggestedOffset = suggestedSearchOffset(offset, limit, total ?? null);
+    return `No matches found at offset ${offset}. Try --offset ${suggestedOffset ?? Math.max(0, offset - limit)} --limit ${limit}.`;
   }
   const more = hasMore ?? shown === limit;
   if (shown > 0 && more) {
@@ -813,7 +826,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     }
 
     if (results.length === 0) {
-      const hint = formatSearchPageHint(results.length, offset, limit, page.hasMore);
+      const hint = formatSearchPageHint(results.length, offset, limit, page.hasMore, page.total);
       console.log(chalk.dim(`  ${hint ?? 'No matches found.'}`));
       console.log();
       return;
@@ -826,7 +839,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
       printResult(r);
     }
 
-    const hint = formatSearchPageHint(results.length, offset, limit, page.hasMore);
+    const hint = formatSearchPageHint(results.length, offset, limit, page.hasMore, page.total);
     if (hint) {
       console.log(chalk.dim(`  ${hint}`));
     }

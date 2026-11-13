@@ -54,6 +54,12 @@ describe('savestate search --offset', () => {
     );
   });
 
+  it('jumps to the last reachable page when the total is known', () => {
+    expect(formatSearchPageHint(0, 100, 5, false, 6)).toBe(
+      'No matches found at offset 100. Try --offset 5 --limit 5.',
+    );
+  });
+
   it('caps the next-page hint at the maximum offset', () => {
     expect(formatSearchPageHint(20, 995, 20)).toBe(
       'More matches may be available; try --offset 1000 --limit 20 (maximum).',

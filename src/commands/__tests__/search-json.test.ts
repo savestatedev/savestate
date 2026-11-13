@@ -157,6 +157,24 @@ describe('savestate search --json', () => {
     });
   });
 
+  it('suggests the last reachable page when a known total is far behind the offset', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'cocktail recommendations',
+        results: [],
+        offset: 1000,
+        limit: 20,
+        total: 3,
+      }),
+    ) as { pagination: Record<string, unknown> };
+
+    expect(parsed.pagination).toMatchObject({
+      emptyReason: 'page',
+      suggestedOffset: 0,
+      previousOffset: 980,
+    });
+  });
+
   it('does not advertise a repeating continuation when a page reaches the boundary', () => {
     const parsed = JSON.parse(
       formatSearchResultsSummaryJson({

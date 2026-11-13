@@ -5533,6 +5533,12 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchUntil');
   });
 
+  it('describes inclusive search date boundaries in CLI help', () => {
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchBlock).toContain('on or after this date (ISO 8601)');
+    expect(searchBlock).toContain('on or before this date (date-only values include the full UTC day)');
+  });
+
   it('documents search --type, --limit, --snapshot, and --json', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('--type');
