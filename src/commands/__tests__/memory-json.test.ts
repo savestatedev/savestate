@@ -30,9 +30,9 @@ describe('savestate memory --json', () => {
     expect(formatMemoryListOrderingSummary()).toBe('Ordering: newest first');
     expect(formatMemoryListOrderingSummary(true)).toBe('Ordering: oldest first');
     expect(formatMemoryListOrderingSummary(false, true))
-      .toBe('Ordering: highest importance first (ties newest first)');
+      .toBe('Ordering: highest importance first (ties newest first, then id)');
     expect(formatMemoryListOrderingSummary(true, true))
-      .toBe('Ordering: highest importance first (ties oldest first)');
+      .toBe('Ordering: highest importance first (ties oldest first, then id)');
   });
 
   it('reports important-first ordering in the normalized filter envelope', () => {
