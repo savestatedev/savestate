@@ -55,6 +55,7 @@ describe('savestate memory --json', () => {
       direction: 'desc',
       tieBreaker: 'createdAt',
       tieDirection: 'asc',
+      finalTieBreaker: 'id',
     });
   });
 

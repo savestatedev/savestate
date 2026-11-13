@@ -458,6 +458,8 @@ export interface MemoryListOrdering {
   direction: 'asc' | 'desc';
   tieBreaker: 'createdAt' | 'id';
   tieDirection: 'asc' | 'desc';
+  /** Final deterministic tie-break used when the primary keys are equal. */
+  finalTieBreaker: 'id';
 }
 
 export interface MemoryListJson {
@@ -610,6 +612,7 @@ export function formatMemoryListJson(
       direction: importantFirst || !oldestFirst ? 'desc' : 'asc',
       tieBreaker: importantFirst ? 'createdAt' : 'id',
       tieDirection: importantFirst ? (oldestFirst ? 'asc' : 'desc') : 'asc',
+      finalTieBreaker: 'id',
     },
     filters: {
       tier: pagination.filters?.tier ?? null,
