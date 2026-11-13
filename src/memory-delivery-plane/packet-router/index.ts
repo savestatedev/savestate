@@ -225,7 +225,11 @@ export class PacketRouter {
           break;
       }
       
-      return scoreB - scoreA;
+      const scoreDelta = scoreB - scoreA;
+      if (scoreDelta !== 0) return scoreDelta;
+
+      // Keep equal-score routing stable so callers receive reproducible packets.
+      return a.packet_id.localeCompare(b.packet_id);
     });
   }
 

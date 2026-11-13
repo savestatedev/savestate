@@ -155,6 +155,17 @@ describe('PacketRouter', () => {
       expect(result.packets[3].priority).toBe(Prio.LOW);
     });
 
+    it('should keep equal-score packets deterministic', () => {
+      const packets = [
+        createPacket({ packet_id: 'pkt_z', priority: Prio.HIGH }),
+        createPacket({ packet_id: 'pkt_a', priority: Prio.HIGH }),
+      ];
+
+      const result = router.route(packets, {}, { strategy: RoutingStrategy.PRIORITY });
+
+      expect(result.packets.map(packet => packet.packet_id)).toEqual(['pkt_a', 'pkt_z']);
+    });
+
     it('should sort by recency strategy', () => {
       const packets = [
         createPacket({ created_at: '2026-01-01T00:00:00Z' }),
