@@ -100,12 +100,25 @@ export class PacketBuilder {
   private config: DistillationConfig;
 
   constructor(config: Partial<DistillationConfig> = {}) {
-    this.config = {
+    this.config = this.validateConfig({
       maxTokens: config.maxTokens ?? 4000,
       minImportance: config.minImportance ?? 0.3,
       maxMemories: config.maxMemories ?? 50,
       includeTags: config.includeTags ?? true,
-    };
+    });
+  }
+
+  private validateConfig(config: DistillationConfig): DistillationConfig {
+    if (!Number.isSafeInteger(config.maxTokens) || config.maxTokens <= 0) {
+      throw new Error('maxTokens must be a positive safe integer');
+    }
+    if (!Number.isFinite(config.minImportance) || config.minImportance < 0 || config.minImportance > 1) {
+      throw new Error('minImportance must be between 0 and 1');
+    }
+    if (!Number.isSafeInteger(config.maxMemories) || config.maxMemories <= 0) {
+      throw new Error('maxMemories must be a positive safe integer');
+    }
+    return { ...config };
   }
 
   /**
@@ -236,10 +249,10 @@ export class PacketBuilder {
    * Update configuration
    */
   updateConfig(config: Partial<DistillationConfig>): void {
-    this.config = {
+    this.config = this.validateConfig({
       ...this.config,
       ...config,
-    };
+    });
   }
 }
 

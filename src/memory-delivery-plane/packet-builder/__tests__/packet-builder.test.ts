@@ -28,6 +28,16 @@ const memory = (id: string, importance: number, content: string): MemoryObject =
 });
 
 describe('packet builder package entrypoint', () => {
+  it('rejects invalid distillation limits', () => {
+    expect(() => new PacketBuilder({ maxTokens: 0 })).toThrow('maxTokens must be a positive safe integer');
+    expect(() => new PacketBuilder({ minImportance: 1.1 })).toThrow('minImportance must be between 0 and 1');
+
+    const builder = new PacketBuilder();
+    expect(() => builder.updateConfig({ maxMemories: -1 })).toThrow(
+      'maxMemories must be a positive safe integer'
+    );
+  });
+
   it('uses the typed implementation and applies its distillation rules', () => {
     const builder = new PacketBuilder({ maxTokens: 20, minImportance: 0.5 });
     const result = builder.distill([
