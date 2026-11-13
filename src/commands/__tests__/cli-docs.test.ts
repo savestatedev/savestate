@@ -2772,6 +2772,13 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function formatMemoryLogMissingJson');
   });
 
+  it('documents memory list missing snapshots as page-compatible JSON', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('page-compatible missing summary');
+    expect(memorySection).toContain('requested <code>offset</code>/<code>limit</code>');
+    expect(memorySection).toContain('<code>contentIncluded</code>');
+  });
+
   it('documents memory log --limit as a bounded positive integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const logBlock = memoryCli.slice(memoryCli.indexOf("command('log"));
@@ -2835,7 +2842,8 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
     expect(memorySection).toContain('scripting');
-    expect(memorySection).toContain('found, snapshot, total, shown');
+    expect(memorySection).toContain('page-compatible missing summary');
+    expect(memorySection).toContain('requested <code>offset</code>/<code>limit</code>');
     expect(memorySection).toContain('savestate memory list --snapshot ss-missing --json');
     expect(memory).toContain('export function formatMemoryListMissingJson');
   });
