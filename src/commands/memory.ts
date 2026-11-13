@@ -693,12 +693,13 @@ export interface MemoryListMissingJson {
   total: 0;
   shown: 0;
   limit: number | null;
+  offset: number;
   contentIncluded: boolean;
 }
 
 export function formatMemoryListMissingJson(
   snapshot: string,
-  options: { includeContent?: boolean; limit?: number } = {},
+  options: { includeContent?: boolean; limit?: number; offset?: number } = {},
 ): string {
   return JSON.stringify(
     {
@@ -707,6 +708,7 @@ export function formatMemoryListMissingJson(
       total: 0,
       shown: 0,
       limit: options.limit ?? null,
+      offset: options.offset ?? 0,
       contentIncluded: options.includeContent !== false,
     },
     null,
@@ -1575,6 +1577,7 @@ export async function listMemories(
         console.log(formatMemoryListMissingJson(snapshotId, {
           includeContent: options.format !== 'json-summary',
           limit: options.limit,
+          offset: options.offset,
         }));
         return;
       }
@@ -1584,6 +1587,7 @@ export async function listMemories(
         console.log(formatMemoryListMissingJson(snapshotId ?? 'latest', {
           includeContent: options.format !== 'json-summary',
           limit: options.limit,
+          offset: options.offset,
         }));
         return;
       }
