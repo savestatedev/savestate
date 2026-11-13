@@ -453,6 +453,13 @@ export interface MemoryListGuidance {
   offset: number | null;
 }
 
+export interface MemoryListOrdering {
+  primary: 'importance' | 'createdAt';
+  direction: 'asc' | 'desc';
+  tieBreaker: 'createdAt' | 'id';
+  tieDirection: 'asc' | 'desc';
+}
+
 export interface MemoryListJson {
   found: true;
   snapshot: string;
@@ -475,6 +482,8 @@ export interface MemoryListJson {
   suggestedOffset: number | null;
   /** Machine-readable next step for paginated consumers. */
   guidance: MemoryListGuidance;
+  /** The stable ordering applied before pagination. */
+  ordering: MemoryListOrdering;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -485,6 +494,7 @@ export interface MemoryListJson {
     tags: string[] | null;
     until: string | null;
     since: string | null;
+    importantFirst: boolean;
     oldestFirst: boolean;
     minImportance?: number;
     maxImportance?: number;
@@ -574,6 +584,8 @@ export function formatMemoryListJson(
       : hasPrevious && previousOffset !== null
         ? { action: 'previous', offset: previousOffset }
         : { action: 'none', offset: null };
+  const importantFirst = pagination.filters?.importantFirst ?? false;
+  const oldestFirst = pagination.filters?.oldestFirst ?? false;
   const record: MemoryListJson = {
     found: true,
     snapshot: pagination.snapshot ?? 'latest',
@@ -593,14 +605,20 @@ export function formatMemoryListJson(
     nextOffset: hasMore ? offset + continuationStep : null,
     suggestedOffset,
     guidance,
+    ordering: {
+      primary: importantFirst ? 'importance' : 'createdAt',
+      direction: importantFirst || !oldestFirst ? 'desc' : 'asc',
+      tieBreaker: importantFirst ? 'createdAt' : 'id',
+      tieDirection: importantFirst ? (oldestFirst ? 'asc' : 'desc') : 'asc',
+    },
     filters: {
       tier: pagination.filters?.tier ?? null,
       freshness: pagination.filters?.freshness ?? null,
       pinned: pagination.filters?.pinned ?? null,
-      source: pagination.filters?.source === undefined
+      source: pagination.filters?.source == null
         ? null
         : normalizeMemoryListSource(pagination.filters.source),
-      namespace: pagination.filters?.namespace === undefined
+      namespace: pagination.filters?.namespace == null
         ? null
         : normalizeMemoryListNamespace(pagination.filters.namespace),
       content: pagination.filters?.content ?? null,
@@ -612,7 +630,8 @@ export function formatMemoryListJson(
         })(),
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
-      oldestFirst: pagination.filters?.oldestFirst ?? false,
+      importantFirst,
+      oldestFirst,
       ...(pagination.filters?.minImportance !== undefined
         ? { minImportance: pagination.filters.minImportance }
         : {}),
@@ -1315,6 +1334,17 @@ export function formatMemoryListImportance(entry: MemoryEntry): string {
   return getMemoryListImportance(entry).toFixed(2);
 }
 
+/** Explain the active table ordering so an importance-ranked page is self-describing. */
+export function formatMemoryListOrderingSummary(
+  oldestFirst = false,
+  importantFirst = false,
+): string {
+  if (importantFirst) {
+    return `Ordering: highest importance first (ties ${oldestFirst ? 'oldest first' : 'newest first'})`;
+  }
+  return `Ordering: ${oldestFirst ? 'oldest first' : 'newest first'}`;
+}
+
 /** Keep namespace labels readable in the human-facing memory table. */
 export function formatMemoryListNamespace(namespace: string | undefined): string {
   const normalized = namespace?.trim();
@@ -1607,6 +1637,7 @@ export async function listMemories(
         tags: options?.tags,
         since: options?.since,
         until: options?.until,
+        importantFirst: options?.importantFirst,
         oldestFirst: options?.oldestFirst,
         minImportance: options?.minImportance,
         maxImportance: options?.maxImportance,
@@ -1626,6 +1657,7 @@ export async function listMemories(
   console.log(`Namespace Summary: ${formatMemoryListNamespaceSummary(filteredEntries)}\n`);
   console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
+  console.log(formatMemoryListOrderingSummary(options?.oldestFirst, options?.importantFirst));
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
   if (pageSummary) {
