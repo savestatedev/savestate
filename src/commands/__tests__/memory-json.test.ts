@@ -44,6 +44,20 @@ describe('savestate memory --json', () => {
     expect(parsed.filters.importantFirst).toBe(true);
   });
 
+  it('reports the stable ordering contract for machine consumers', () => {
+    const memory = entry({ id: 'mem-a', content: 'a', createdAt: '2026-09-01T00:00:00.000Z' });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      filters: { importantFirst: true, oldestFirst: true },
+    })) as MemoryListJson;
+
+    expect(parsed.ordering).toEqual({
+      primary: 'importance',
+      direction: 'desc',
+      tieBreaker: 'createdAt',
+      tieDirection: 'asc',
+    });
+  });
+
   it('filters entries by their metadata namespace', () => {
     const entries = [
       entry({ id: 'mem-a', content: 'a', metadata: { namespace: 'org:app:agent' } }),

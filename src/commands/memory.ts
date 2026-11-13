@@ -453,6 +453,13 @@ export interface MemoryListGuidance {
   offset: number | null;
 }
 
+export interface MemoryListOrdering {
+  primary: 'importance' | 'createdAt';
+  direction: 'asc' | 'desc';
+  tieBreaker: 'createdAt' | 'id';
+  tieDirection: 'asc' | 'desc';
+}
+
 export interface MemoryListJson {
   found: true;
   snapshot: string;
@@ -475,6 +482,8 @@ export interface MemoryListJson {
   suggestedOffset: number | null;
   /** Machine-readable next step for paginated consumers. */
   guidance: MemoryListGuidance;
+  /** The stable ordering applied before pagination. */
+  ordering: MemoryListOrdering;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -575,6 +584,8 @@ export function formatMemoryListJson(
       : hasPrevious && previousOffset !== null
         ? { action: 'previous', offset: previousOffset }
         : { action: 'none', offset: null };
+  const importantFirst = pagination.filters?.importantFirst ?? false;
+  const oldestFirst = pagination.filters?.oldestFirst ?? false;
   const record: MemoryListJson = {
     found: true,
     snapshot: pagination.snapshot ?? 'latest',
@@ -594,6 +605,12 @@ export function formatMemoryListJson(
     nextOffset: hasMore ? offset + continuationStep : null,
     suggestedOffset,
     guidance,
+    ordering: {
+      primary: importantFirst ? 'importance' : 'createdAt',
+      direction: importantFirst || !oldestFirst ? 'desc' : 'asc',
+      tieBreaker: importantFirst ? 'createdAt' : 'id',
+      tieDirection: importantFirst ? (oldestFirst ? 'asc' : 'desc') : 'asc',
+    },
     filters: {
       tier: pagination.filters?.tier ?? null,
       freshness: pagination.filters?.freshness ?? null,
@@ -613,8 +630,8 @@ export function formatMemoryListJson(
         })(),
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
-      importantFirst: pagination.filters?.importantFirst ?? false,
-      oldestFirst: pagination.filters?.oldestFirst ?? false,
+      importantFirst,
+      oldestFirst,
       ...(pagination.filters?.minImportance !== undefined
         ? { minImportance: pagination.filters.minImportance }
         : {}),
