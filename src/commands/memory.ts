@@ -485,6 +485,7 @@ export interface MemoryListJson {
     tags: string[] | null;
     until: string | null;
     since: string | null;
+    importantFirst: boolean;
     oldestFirst: boolean;
     minImportance?: number;
     maxImportance?: number;
@@ -597,10 +598,10 @@ export function formatMemoryListJson(
       tier: pagination.filters?.tier ?? null,
       freshness: pagination.filters?.freshness ?? null,
       pinned: pagination.filters?.pinned ?? null,
-      source: pagination.filters?.source === undefined
+      source: pagination.filters?.source == null
         ? null
         : normalizeMemoryListSource(pagination.filters.source),
-      namespace: pagination.filters?.namespace === undefined
+      namespace: pagination.filters?.namespace == null
         ? null
         : normalizeMemoryListNamespace(pagination.filters.namespace),
       content: pagination.filters?.content ?? null,
@@ -612,6 +613,7 @@ export function formatMemoryListJson(
         })(),
       until: pagination.filters?.until ?? null,
       since: pagination.filters?.since ?? null,
+      importantFirst: pagination.filters?.importantFirst ?? false,
       oldestFirst: pagination.filters?.oldestFirst ?? false,
       ...(pagination.filters?.minImportance !== undefined
         ? { minImportance: pagination.filters.minImportance }
@@ -1607,6 +1609,7 @@ export async function listMemories(
         tags: options?.tags,
         since: options?.since,
         until: options?.until,
+        importantFirst: options?.importantFirst,
         oldestFirst: options?.oldestFirst,
         minImportance: options?.minImportance,
         maxImportance: options?.maxImportance,

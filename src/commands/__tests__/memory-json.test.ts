@@ -25,6 +25,15 @@ function entry(partial: Partial<MemoryEntry> & Pick<MemoryEntry, 'id' | 'content
 }
 
 describe('savestate memory --json', () => {
+  it('reports important-first ordering in the normalized filter envelope', () => {
+    const memory = entry({ id: 'mem-important', content: 'important', metadata: { importance: 0.9 } });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      filters: { importantFirst: true },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.importantFirst).toBe(true);
+  });
+
   it('filters entries by their metadata namespace', () => {
     const entries = [
       entry({ id: 'mem-a', content: 'a', metadata: { namespace: 'org:app:agent' } }),
@@ -300,7 +309,7 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
-    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.bySource).toEqual({ user: 2, agent: 1 });
@@ -387,7 +396,7 @@ describe('savestate memory --json', () => {
     expect(parsed.totalPages).toBe(0);
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
-    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.bySource).toEqual({});
@@ -525,11 +534,11 @@ describe('savestate memory --json', () => {
     ];
     const parsed = JSON.parse(
       formatMemoryListJson(all, all, {
-        filters: { tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', oldestFirst: true },
+        filters: { tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', importantFirst: false, oldestFirst: true },
       }),
     ) as MemoryListJson;
 
-    expect(parsed.filters).toEqual({ tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, tags: null, until: null, since: null, oldestFirst: true });
+    expect(parsed.filters).toEqual({ tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: true });
   });
 
   it('filters content case-insensitively and reports the active filter', () => {
