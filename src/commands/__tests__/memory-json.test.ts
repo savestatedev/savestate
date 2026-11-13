@@ -27,8 +27,8 @@ function entry(partial: Partial<MemoryEntry> & Pick<MemoryEntry, 'id' | 'content
 
 describe('savestate memory --json', () => {
   it('describes the active human-readable list ordering', () => {
-    expect(formatMemoryListOrderingSummary()).toBe('Ordering: newest first');
-    expect(formatMemoryListOrderingSummary(true)).toBe('Ordering: oldest first');
+    expect(formatMemoryListOrderingSummary()).toBe('Ordering: newest first (ties by id)');
+    expect(formatMemoryListOrderingSummary(true)).toBe('Ordering: oldest first (ties by id)');
     expect(formatMemoryListOrderingSummary(false, true))
       .toBe('Ordering: highest importance first (ties newest first, then id)');
     expect(formatMemoryListOrderingSummary(true, true))

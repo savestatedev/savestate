@@ -1345,7 +1345,7 @@ export function formatMemoryListOrderingSummary(
   if (importantFirst) {
     return `Ordering: highest importance first (ties ${oldestFirst ? 'oldest first' : 'newest first'}, then id)`;
   }
-  return `Ordering: ${oldestFirst ? 'oldest first' : 'newest first'}`;
+  return `Ordering: ${oldestFirst ? 'oldest first' : 'newest first'} (ties by id)`;
 }
 
 /** Keep namespace labels readable in the human-facing memory table. */
