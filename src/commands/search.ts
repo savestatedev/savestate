@@ -84,6 +84,17 @@ export interface SearchSummaryJson {
   pagination: SearchSummaryPagination;
 }
 
+function suggestedSearchOffset(offset: number, limit: number, total: number | null): number | null {
+  if (offset <= 0) return null;
+  const previousOffset = Math.max(0, offset - limit);
+  if (total === null || total <= 0) return previousOffset;
+
+  // When the total is known, skip directly to the last reachable page rather
+  // than making callers walk back through several empty pages.
+  const lastPageOffset = Math.floor((total - 1) / limit) * limit;
+  return Math.min(previousOffset, lastPageOffset);
+}
+
 /** Keep both JSON modes free of interactive banners and progress output. */
 export function isSearchJsonOutput(
   options: Pick<SearchOptions, 'json' | 'jsonSummary'>,
@@ -172,8 +183,8 @@ export function formatSearchResultsSummaryJson(input: {
       : shown === limit && offset < MAX_SEARCH_OFFSET
   )) && shown > 0 && offset < MAX_SEARCH_OFFSET && offset + shown <= MAX_SEARCH_OFFSET
     && (total === null || offset + shown < total);
-  const suggestedOffset = shown === 0 && offset > 0
-    ? Math.max(0, offset - limit)
+  const suggestedOffset = shown === 0
+    ? suggestedSearchOffset(offset, limit, total)
     : null;
   return JSON.stringify(
     {
