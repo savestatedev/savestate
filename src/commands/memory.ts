@@ -692,12 +692,14 @@ export interface MemoryListMissingJson {
   snapshot: string;
   total: 0;
   shown: 0;
+  limit: number | null;
+  offset: number;
   contentIncluded: boolean;
 }
 
 export function formatMemoryListMissingJson(
   snapshot: string,
-  options: { includeContent?: boolean } = {},
+  options: { includeContent?: boolean; limit?: number; offset?: number } = {},
 ): string {
   return JSON.stringify(
     {
@@ -705,6 +707,8 @@ export function formatMemoryListMissingJson(
       snapshot,
       total: 0,
       shown: 0,
+      limit: options.limit ?? null,
+      offset: options.offset ?? 0,
       contentIncluded: options.includeContent !== false,
     },
     null,
@@ -1345,7 +1349,7 @@ export function formatMemoryListOrderingSummary(
   if (importantFirst) {
     return `Ordering: highest importance first (ties ${oldestFirst ? 'oldest first' : 'newest first'}, then id)`;
   }
-  return `Ordering: ${oldestFirst ? 'oldest first' : 'newest first'}`;
+  return `Ordering: ${oldestFirst ? 'oldest first' : 'newest first'} (ties by id)`;
 }
 
 /** Keep namespace labels readable in the human-facing memory table. */
@@ -1572,6 +1576,8 @@ export async function listMemories(
       if (!entry) {
         console.log(formatMemoryListMissingJson(snapshotId, {
           includeContent: options.format !== 'json-summary',
+          limit: options.limit,
+          offset: options.offset,
         }));
         return;
       }
@@ -1580,6 +1586,8 @@ export async function listMemories(
       if (!latest) {
         console.log(formatMemoryListMissingJson(snapshotId ?? 'latest', {
           includeContent: options.format !== 'json-summary',
+          limit: options.limit,
+          offset: options.offset,
         }));
         return;
       }
