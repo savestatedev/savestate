@@ -737,7 +737,12 @@ export function formatMemoryListMissingJson(
         source: filters.source == null ? null : normalizeMemoryListSource(filters.source),
         namespace: filters.namespace == null ? null : normalizeMemoryListNamespace(filters.namespace),
         content: filters.content ?? null,
-        tags: filters.tags ?? null,
+        tags: filters.tags == null
+          ? null
+          : (() => {
+            const tags = normalizeMemoryTagFilters(filters.tags);
+            return tags.length > 0 ? tags : null;
+          })(),
         until: filters.until ?? null,
         since: filters.since ?? null,
         importantFirst: filters.importantFirst ?? false,

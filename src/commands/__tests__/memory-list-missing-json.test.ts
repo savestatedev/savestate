@@ -115,4 +115,12 @@ describe('savestate memory list --json when missing', () => {
       oldestFirst: false,
     });
   });
+
+  it('normalizes missing-snapshot tag filters like populated results', () => {
+    const parsed = JSON.parse(formatMemoryListMissingJson('ss-missing', {
+      filters: { tags: [' Work ', 'work', 'URGENT'] },
+    })) as MemoryListMissingJson;
+
+    expect(parsed.filters.tags).toEqual(['Work', 'URGENT']);
+  });
 });
