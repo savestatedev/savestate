@@ -123,4 +123,24 @@ describe('savestate memory list --json when missing', () => {
 
     expect(parsed.filters.tags).toEqual(['Work', 'URGENT']);
   });
+
+  it('sanitizes invalid pagination values like populated results', () => {
+    const parsed = JSON.parse(formatMemoryListMissingJson('ss-missing', {
+      limit: Number.NaN,
+      offset: -4,
+    })) as MemoryListMissingJson;
+
+    expect(parsed.limit).toBeNull();
+    expect(parsed.offset).toBe(0);
+  });
+
+  it('floors valid pagination values for stable JSON metadata', () => {
+    const parsed = JSON.parse(formatMemoryListMissingJson('ss-missing', {
+      limit: 2.9,
+      offset: 4.8,
+    })) as MemoryListMissingJson;
+
+    expect(parsed.limit).toBe(2);
+    expect(parsed.offset).toBe(4);
+  });
 });

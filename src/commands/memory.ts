@@ -722,14 +722,20 @@ export function formatMemoryListMissingJson(
   } = {},
 ): string {
   const filters = options.filters ?? {};
+  const limit = options.limit !== undefined && Number.isFinite(options.limit) && options.limit > 0
+    ? Math.floor(options.limit)
+    : null;
+  const offset = options.offset !== undefined && Number.isFinite(options.offset) && options.offset >= 0
+    ? Math.floor(options.offset)
+    : 0;
   return JSON.stringify(
     {
       found: false,
       snapshot,
       total: 0,
       shown: 0,
-      limit: options.limit ?? null,
-      offset: options.offset ?? 0,
+      limit,
+      offset,
       filters: {
         tier: filters.tier ?? null,
         freshness: filters.freshness ?? null,
