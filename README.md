@@ -290,8 +290,8 @@ savestate memory list --since 2026-10-01 --until 2026-10-31 --json-summary
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
   --exclude <types>                  Skip memory, conversation, identity, or knowledge
-  --since <date>                     Only search snapshots taken after an ISO 8601 date
-  --until <date>                     Only search snapshots taken before an ISO 8601 date
+  --since <date>                     Only search snapshots taken on or after an ISO 8601 date
+  --until <date>                     Only search snapshots taken on or before this date (date-only values include the full UTC day)
   --snapshot <id>                    Search within one snapshot
   --adapter <id>                     Only search snapshots from this adapter
   --tag <tag>                        Only search snapshots with this tag
