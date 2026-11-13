@@ -1317,6 +1317,17 @@ export function formatMemoryListImportance(entry: MemoryEntry): string {
   return getMemoryListImportance(entry).toFixed(2);
 }
 
+/** Explain the active table ordering so an importance-ranked page is self-describing. */
+export function formatMemoryListOrderingSummary(
+  oldestFirst = false,
+  importantFirst = false,
+): string {
+  if (importantFirst) {
+    return `Ordering: highest importance first (ties ${oldestFirst ? 'oldest first' : 'newest first'})`;
+  }
+  return `Ordering: ${oldestFirst ? 'oldest first' : 'newest first'}`;
+}
+
 /** Keep namespace labels readable in the human-facing memory table. */
 export function formatMemoryListNamespace(namespace: string | undefined): string {
   const normalized = namespace?.trim();
@@ -1629,6 +1640,7 @@ export async function listMemories(
   console.log(`Namespace Summary: ${formatMemoryListNamespaceSummary(filteredEntries)}\n`);
   console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
+  console.log(formatMemoryListOrderingSummary(options?.oldestFirst, options?.importantFirst));
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
   if (pageSummary) {

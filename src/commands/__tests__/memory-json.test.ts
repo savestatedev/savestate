@@ -13,6 +13,7 @@ import {
   countByNamespace,
   countByTag,
   normalizeMemoryListNamespace,
+  formatMemoryListOrderingSummary,
   type MemoryListJson,
 } from '../memory.js';
 
@@ -25,6 +26,15 @@ function entry(partial: Partial<MemoryEntry> & Pick<MemoryEntry, 'id' | 'content
 }
 
 describe('savestate memory --json', () => {
+  it('describes the active human-readable list ordering', () => {
+    expect(formatMemoryListOrderingSummary()).toBe('Ordering: newest first');
+    expect(formatMemoryListOrderingSummary(true)).toBe('Ordering: oldest first');
+    expect(formatMemoryListOrderingSummary(false, true))
+      .toBe('Ordering: highest importance first (ties newest first)');
+    expect(formatMemoryListOrderingSummary(true, true))
+      .toBe('Ordering: highest importance first (ties oldest first)');
+  });
+
   it('reports important-first ordering in the normalized filter envelope', () => {
     const memory = entry({ id: 'mem-important', content: 'important', metadata: { importance: 0.9 } });
     const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
