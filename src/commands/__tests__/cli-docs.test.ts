@@ -5521,6 +5521,12 @@ describe('CLI docs', () => {
     expect(searchBlock).toContain(".option('--json'");
   });
 
+  it('explains search pagination defaults in the CLI help', () => {
+    const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));
+    expect(searchBlock).toContain("Maximum results (default: 20; positive integer up to 1000)");
+    expect(searchBlock).toContain("Output paginated JSON with navigation metadata (implies --json)");
+  });
+
   it('documents search --until as an ISO 8601 date', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));

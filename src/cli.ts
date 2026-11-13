@@ -343,14 +343,14 @@ program
   .option('--exclude <types>', 'Skip search types (one or more of: memory, conversation, identity, knowledge)')
   .option('--since <date>', 'Only snapshots taken after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken before this date (ISO 8601)')
-  .option('--limit <n>', 'Maximum results')
-  .option('--offset <n>', 'Skip the first N ranked results after filters (non-negative integer up to 1000)')
+  .option('--limit <n>', 'Maximum results (default: 20; positive integer up to 1000)')
+  .option('--offset <n>', 'Skip ranked results after filters (non-negative integer up to 1000)')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--adapter <id>', 'Only search snapshots from this adapter')
   .option('--tag <tag>', 'Only search snapshots with this tag (case-insensitive)')
   .option('--label <label>', 'Only search snapshots with this label (case-insensitive)')
   .option('--json', 'Output as JSON')
-  .option('--json-summary', 'Output paginated JSON with navigation metadata')
+  .option('--json-summary', 'Output paginated JSON with navigation metadata (implies --json)')
   .action(searchCommand);
 
 // ─── savestate login ─────────────────────────────────────────
