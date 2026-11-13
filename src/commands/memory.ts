@@ -694,13 +694,34 @@ export interface MemoryListMissingJson {
   shown: 0;
   limit: number | null;
   offset: number;
+  filters: {
+    tier: MemoryTier | null;
+    freshness: MemoryFreshnessState | null;
+    pinned: boolean | null;
+    source: string | null;
+    namespace: string | null;
+    content: string | null;
+    tags: string[] | null;
+    until: string | null;
+    since: string | null;
+    importantFirst: boolean;
+    oldestFirst: boolean;
+    minImportance?: number;
+    maxImportance?: number;
+  };
   contentIncluded: boolean;
 }
 
 export function formatMemoryListMissingJson(
   snapshot: string,
-  options: { includeContent?: boolean; limit?: number; offset?: number } = {},
+  options: {
+    includeContent?: boolean;
+    limit?: number;
+    offset?: number;
+    filters?: Partial<MemoryListJson['filters']>;
+  } = {},
 ): string {
+  const filters = options.filters ?? {};
   return JSON.stringify(
     {
       found: false,
@@ -709,6 +730,21 @@ export function formatMemoryListMissingJson(
       shown: 0,
       limit: options.limit ?? null,
       offset: options.offset ?? 0,
+      filters: {
+        tier: filters.tier ?? null,
+        freshness: filters.freshness ?? null,
+        pinned: filters.pinned ?? null,
+        source: filters.source == null ? null : normalizeMemoryListSource(filters.source),
+        namespace: filters.namespace == null ? null : normalizeMemoryListNamespace(filters.namespace),
+        content: filters.content ?? null,
+        tags: filters.tags ?? null,
+        until: filters.until ?? null,
+        since: filters.since ?? null,
+        importantFirst: filters.importantFirst ?? false,
+        oldestFirst: filters.oldestFirst ?? false,
+        ...(filters.minImportance === undefined ? {} : { minImportance: filters.minImportance }),
+        ...(filters.maxImportance === undefined ? {} : { maxImportance: filters.maxImportance }),
+      },
       contentIncluded: options.includeContent !== false,
     },
     null,
@@ -1578,6 +1614,21 @@ export async function listMemories(
           includeContent: options.format !== 'json-summary',
           limit: options.limit,
           offset: options.offset,
+          filters: {
+            tier: options.tier,
+            freshness: options.freshness,
+            pinned: options.pinned,
+            source: options.source,
+            namespace: options.namespace,
+            content: options.content,
+            tags: options.tags,
+            until: options.until,
+            since: options.since,
+            importantFirst: options.importantFirst,
+            oldestFirst: options.oldestFirst,
+            minImportance: options.minImportance,
+            maxImportance: options.maxImportance,
+          },
         }));
         return;
       }
@@ -1588,6 +1639,21 @@ export async function listMemories(
           includeContent: options.format !== 'json-summary',
           limit: options.limit,
           offset: options.offset,
+          filters: {
+            tier: options.tier,
+            freshness: options.freshness,
+            pinned: options.pinned,
+            source: options.source,
+            namespace: options.namespace,
+            content: options.content,
+            tags: options.tags,
+            until: options.until,
+            since: options.since,
+            importantFirst: options.importantFirst,
+            oldestFirst: options.oldestFirst,
+            minImportance: options.minImportance,
+            maxImportance: options.maxImportance,
+          },
         }));
         return;
       }
