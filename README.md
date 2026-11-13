@@ -278,6 +278,15 @@ older memories should win ties:
 savestate memory list --important-first --limit 5
 ```
 
+Use `--since` and `--until` to inspect a time window. ISO date-only values are interpreted in UTC;
+`--since 2026-10-01` starts at midnight, while `--until 2026-10-01` includes the full day. The
+filters apply before pagination, so the JSON totals and `--offset` navigation stay scoped to the
+selected window:
+
+```bash
+savestate memory list --since 2026-10-01 --until 2026-10-31 --json-summary
+```
+
 savestate search <query>              Search across snapshot contents
   --type <types>                     Limit to memory, conversation, identity, or knowledge
   --exclude <types>                  Skip memory, conversation, identity, or knowledge
