@@ -1343,7 +1343,7 @@ export function formatMemoryListOrderingSummary(
   importantFirst = false,
 ): string {
   if (importantFirst) {
-    return `Ordering: highest importance first (ties ${oldestFirst ? 'oldest first' : 'newest first'})`;
+    return `Ordering: highest importance first (ties ${oldestFirst ? 'oldest first' : 'newest first'}, then id)`;
   }
   return `Ordering: ${oldestFirst ? 'oldest first' : 'newest first'}`;
 }
