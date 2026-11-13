@@ -190,9 +190,15 @@ export class PacketBuilder {
     );
 
     // Sort by importance (descending)
-    const sorted = [...filtered].sort(
-      (a, b) => (b.importance ?? 0.5) - (a.importance ?? 0.5)
-    );
+    const sorted = [...filtered].sort((a, b) => {
+      const importanceDelta = (b.importance ?? 0.5) - (a.importance ?? 0.5);
+      if (importanceDelta !== 0) return importanceDelta;
+
+      // Keep packet contents stable when memories have the same importance.
+      const createdAtDelta = (b.created_at ?? '').localeCompare(a.created_at ?? '');
+      if (createdAtDelta !== 0) return createdAtDelta;
+      return a.memory_id.localeCompare(b.memory_id);
+    });
 
     // Build packet memories and track token count
     const packetMemories: PacketMemory[] = [];

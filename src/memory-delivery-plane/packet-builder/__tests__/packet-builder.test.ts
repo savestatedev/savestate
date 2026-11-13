@@ -50,4 +50,16 @@ describe('packet builder package entrypoint', () => {
     expect(result.packet.priority).toBe(PacketPriority.CRITICAL);
     expect(result.packet.estimated_tokens).toBeLessThanOrEqual(20);
   });
+
+  it('keeps equal-priority memories deterministic', () => {
+    const builder = new PacketBuilder({ maxMemories: 2 });
+    const newer = memory('newer', 0.8, 'Newer memory.');
+    newer.created_at = '2026-11-13T02:00:00.000Z';
+    const older = memory('older', 0.8, 'Older memory.');
+    older.created_at = '2026-11-13T01:00:00.000Z';
+
+    const result = builder.distill([older, newer], namespace);
+
+    expect(result.packet.memories.map(({ memory_id }) => memory_id)).toEqual(['newer', 'older']);
+  });
 });
