@@ -207,6 +207,7 @@ the current page contains snapshots, alongside `total`, `shown`, `offset`,
 empty collection from a stale offset, and `suggestedOffset` identifies the
 nearest page to retry. The response also includes `page`, `pageSize`,
 `totalPages`, `lastPage`, `lastPageOffset`, `previousPage`, `nextPage`, and `maxOffset` (the highest supported offset, currently 1000).
+The `isLastPage` boolean is true when the current page has no supported next page.
 The `guidance` object gives paginated scripts the next machine-readable step:
 `action` is `next`, `previous`, `retry`, or `none`, and `offset` is the value
 to pass to the next request (or `null` when no navigation is available).

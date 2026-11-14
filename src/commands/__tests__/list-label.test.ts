@@ -120,7 +120,10 @@ describe('savestate list --label', () => {
 
     expect(JSON.parse(formatListJson(snapshots, 2, 0)).guidance)
       .toEqual({ action: 'next', offset: 2 });
-    expect(JSON.parse(formatListJson(snapshots, 2, 8)).guidance)
-      .toEqual({ action: 'retry', offset: 2 });
+    const firstPage = JSON.parse(formatListJson(snapshots, 2, 0));
+    expect(firstPage.isLastPage).toBe(false);
+    const stalePage = JSON.parse(formatListJson(snapshots, 2, 8));
+    expect(stalePage.guidance).toEqual({ action: 'retry', offset: 2 });
+    expect(stalePage.isLastPage).toBe(true);
   });
 });

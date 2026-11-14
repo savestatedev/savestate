@@ -123,6 +123,8 @@ export interface ListJson {
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
+  /** Whether the current page is terminal for the supported offset range. */
+  isLastPage: boolean;
   nextOffset: number | null;
   suggestedOffset: number | null;
   /** Machine-readable next step for paginated consumers. */
@@ -250,6 +252,7 @@ export function formatListJson(
       : Math.max(0, offsetValue - pageLimit)
     : null;
   const nextOffset = hasMore ? candidateNextOffset : null;
+  const isLastPage = !hasMore;
   const guidance: ListJsonGuidance = records.length === 0 && suggestedOffset !== null
     ? { action: 'retry', offset: suggestedOffset }
     : hasMore && nextOffset !== null
@@ -276,6 +279,7 @@ export function formatListJson(
     hasPrevious,
     previousOffset,
     hasMore,
+    isLastPage,
     nextOffset,
     suggestedOffset,
     guidance,
@@ -318,6 +322,7 @@ export function formatListJsonSummary(
   // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
   const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
   const nextOffset = hasMore ? candidateNextOffset : null;
+  const isLastPage = !hasMore;
   const guidance: ListJsonGuidance = shown === 0 && suggestedOffset !== null
     ? { action: 'retry', offset: suggestedOffset }
     : hasMore && nextOffset !== null
@@ -344,6 +349,7 @@ export function formatListJsonSummary(
     hasPrevious,
     previousOffset,
     hasMore,
+    isLastPage,
     nextOffset,
     suggestedOffset,
     guidance,
@@ -372,6 +378,7 @@ export interface ListMissingJson {
   hasPrevious: false;
   previousOffset: null;
   hasMore: false;
+  isLastPage: true;
   nextOffset: null;
   suggestedOffset: null;
   guidance: ListJsonGuidance;
@@ -409,6 +416,7 @@ export function formatListMissingJson(
       hasPrevious: false,
       previousOffset: null,
       hasMore: false,
+      isLastPage: true,
       nextOffset: null,
       suggestedOffset: null,
       guidance: { action: 'none', offset: null },
@@ -449,6 +457,7 @@ export function formatListMissingJsonSummary(
     hasPrevious: false,
     previousOffset: null,
     hasMore: false,
+    isLastPage: true,
     nextOffset: null,
     suggestedOffset: null,
     guidance: { action: 'none', offset: null },
