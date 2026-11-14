@@ -501,6 +501,15 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   return `(showing ${shown} of ${total} after filters; ${hints.join('; ')})`;
 }
 
+/** Show pagination details only when the caller paged or another page exists. */
+export function shouldShowListPageSummary(
+  offsetWasProvided: boolean,
+  total: number,
+  limit: number,
+): boolean {
+  return offsetWasProvided || total > normalizeListPageLimit(limit);
+}
+
 /** Pad the visible label text before applying terminal styling to placeholders. */
 export function formatListLabelCell(label: string | null, width: number): string {
   if (label !== null) return label.trim().padEnd(width);
@@ -815,7 +824,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   console.log();
   console.log(chalk.dim(`  ${sorted.length} snapshot${sorted.length !== 1 ? 's' : ''}`));
-  if (offset !== undefined || filtered.length > limit) {
+  if (shouldShowListPageSummary(options.offset !== undefined, filtered.length, limit)) {
     console.log(chalk.dim(`  ${formatListPageSummary(filtered.length, sorted.length, offset, limit)}`));
   } else if (filtered.length !== index.snapshots.length) {
     console.log(chalk.dim(`  (filtered from ${index.snapshots.length} total)`));

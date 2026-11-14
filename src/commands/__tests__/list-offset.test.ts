@@ -9,6 +9,7 @@ import {
   parseListOffset,
   parseListUntil,
   selectListOffsetEntries,
+  shouldShowListPageSummary,
   sortListEntries,
   validateListDateRange,
 } from '../list.js';
@@ -73,6 +74,12 @@ describe('savestate list --offset', () => {
     expect(formatListPageSummary(12, 2, 0, 2)).toBe(
       '(showing 2 of 12 after filters; offset 0; limit 2; next offset 2)',
     );
+  });
+
+  it('does not show pagination metadata for an unpaged single page', () => {
+    expect(shouldShowListPageSummary(false, 2, 50)).toBe(false);
+    expect(shouldShowListPageSummary(false, 51, 50)).toBe(true);
+    expect(shouldShowListPageSummary(true, 2, 50)).toBe(true);
   });
 
   it('does not advertise a next offset above the CLI ceiling', () => {
