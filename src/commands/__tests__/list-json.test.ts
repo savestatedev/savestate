@@ -219,6 +219,19 @@ describe('savestate list --json', () => {
     }
   });
 
+  it('counts only pages reachable within the CLI offset ceiling', () => {
+    const snapshots = Array.from({ length: 1_051 }, (_, index) => ({
+      ...older,
+      id: `ss-${index}`,
+      timestamp: new Date(Date.UTC(2026, 0, 1, 0, index % 60, index)).toISOString(),
+    }));
+
+    for (const formatter of [formatListJson, formatListJsonSummary]) {
+      const parsed = JSON.parse(formatter(snapshots, 50)) as ListJson;
+      expect(parsed.totalPages).toBe(21);
+    }
+  });
+
   it.each([0, 0.5, -5, Number.NaN, Number.POSITIVE_INFINITY])(
     'normalizes invalid direct-call limits (%s) in both JSON modes',
     (limit) => {

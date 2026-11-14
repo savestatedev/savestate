@@ -49,6 +49,14 @@ function normalizeListPageOffset(offset: number | undefined): number {
   return Math.max(0, Math.floor(offset));
 }
 
+/** Count only pages whose starting offset the CLI can accept. */
+function getListTotalPages(total: number, pageLimit: number): number {
+  return Math.min(
+    Math.ceil(total / pageLimit),
+    Math.floor(MAX_LIST_OFFSET / pageLimit) + 1,
+  );
+}
+
 export interface ListSnapshotJson {
   id: string;
   timestamp: string;
@@ -226,7 +234,7 @@ export function formatListJson(
     limit: pageLimit,
     pageSize: pageLimit,
     page: Math.floor(offsetValue / pageLimit) + 1,
-    totalPages,
+    totalPages: getListTotalPages(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
@@ -284,7 +292,7 @@ export function formatListJsonSummary(
     limit: pageLimit,
     pageSize: pageLimit,
     page: Math.floor(offsetValue / pageLimit) + 1,
-    totalPages: Math.ceil(snapshots.length / pageLimit),
+    totalPages: getListTotalPages(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
