@@ -189,6 +189,11 @@ describe('CLI docs', () => {
     expect(docs).toContain('byFreshness</code> and <code>shownByFreshness');
   });
 
+  it('documents a copy-paste list JSON pagination loop', () => {
+    expect(docs).toContain('Follow the returned guidance offset until the last page');
+    expect(docs).toContain('.guidance | select(.action == "next") | .offset');
+  });
+
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
     expect(docs).toContain('id="import"');
