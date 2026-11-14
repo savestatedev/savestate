@@ -214,12 +214,15 @@ to pass to the next request (or `null` when no navigation is available).
 Before initialization, the
 response keeps a page-compatible shape with `shown: 0`,
 `emptyReason: "collection"`, and `entries: []`.
+When the requested snapshot cannot be found, `found` is `false` and
+`emptyReason` is `"snapshot"`, so clients can distinguish a missing snapshot
+from an initialized snapshot with no matching memories.
 Legacy tag whitespace and case-insensitive duplicate tags are removed from JSON entries, while
 filter metadata is emitted in its normalized, de-duplicated form.
 
 Use `savestate list --json-summary` when a script needs the same pagination and filter metadata
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
-`shown`, `remaining`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized
+`shown`, `remaining`, `maxOffset`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized
 `filters` envelope.
 
 `savestate memory list --json` includes `bySource` and `shownBySource` counts alongside the
@@ -248,6 +251,8 @@ count when applicable.
 
 The same JSON envelope includes `page` and `totalPages`, with unbounded results reported as a
 single page when entries exist (or zero pages when the collection is empty).
+It also includes `lastPageOffset` and `isLastPage`; pagination stops at the supported
+`maxOffset` ceiling instead of advertising an unreachable next page.
 
 Use `savestate memory list --json-summary` when a script needs the same pagination, filters, and
 aggregate metadata without copying memory content into logs or downstream payloads. It preserves

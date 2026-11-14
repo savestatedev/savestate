@@ -472,13 +472,19 @@ export interface MemoryListJson {
   /** Number of matching entries after this page. */
   remaining: number;
   offset: number;
+  /** Highest offset accepted by the memory list CLI. */
+  maxOffset: number;
   limit: number | null;
   pageSize: number;
   page: number;
   totalPages: number;
+  /** Offset for the last page that can be opened within the supported ceiling. */
+  lastPageOffset: number | null;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
+  /** Whether the current page is terminal for the supported offset range. */
+  isLastPage: boolean;
   nextOffset: number | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
@@ -561,7 +567,7 @@ export function formatMemoryListJson(
   // An empty collection is terminal even when a caller supplies stale paging metadata.
   // An empty page is an exhausted/stale cursor: retry the suggested page
   // instead of advertising a continuation beyond the collection.
-  const hasMore = all.length === 0 || emptyPage
+  const hasMoreFromCollection = all.length === 0 || emptyPage
     ? false
     : pagination.hasMore ?? offset + shown.length < all.length;
   // Advance bounded pages by their requested size, even when a sparse page
@@ -569,10 +575,18 @@ export function formatMemoryListJson(
   // Unbounded pages use the number returned as their natural step.
   const continuationStep = limit ?? Math.max(1, shown.length);
   const remaining = Math.max(0, all.length - offset - shown.length);
+  const lastPageOffset = all.length === 0
+    ? null
+    : limit === undefined
+      ? 0
+      : Math.floor(Math.min(MAX_MEMORY_LIST_OFFSET, all.length - 1) / pageSize) * pageSize;
+  const canAdvanceWithinOffsetCeiling = offset + continuationStep <= MAX_MEMORY_LIST_OFFSET;
+  const hasMore = hasMoreFromCollection && canAdvanceWithinOffsetCeiling;
+  const isLastPage = !hasMore;
   const suggestedOffset = emptyPage
     ? limit === undefined
       ? 0
-      : Math.floor((all.length - 1) / pageSize) * pageSize
+      : Math.floor(Math.min(MAX_MEMORY_LIST_OFFSET, all.length - 1) / pageSize) * pageSize
     : null;
   const previousOffset = hasPrevious
     ? emptyPage && limit !== undefined
@@ -597,13 +611,16 @@ export function formatMemoryListJson(
     shown: shown.length,
     remaining,
     offset,
+    maxOffset: MAX_MEMORY_LIST_OFFSET,
     limit: limit ?? null,
     pageSize,
     page,
     totalPages,
+    lastPageOffset,
     hasPrevious,
     previousOffset,
     hasMore,
+    isLastPage,
     nextOffset: hasMore ? offset + continuationStep : null,
     suggestedOffset,
     guidance,
@@ -690,10 +707,13 @@ export function formatMemoryListJson(
 export interface MemoryListMissingJson {
   found: false;
   snapshot: string;
+  /** Why no memory rows are available for this request. */
+  emptyReason: 'snapshot';
   total: 0;
   shown: 0;
   limit: number | null;
   offset: number;
+  maxOffset: number;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -732,10 +752,12 @@ export function formatMemoryListMissingJson(
     {
       found: false,
       snapshot,
+      emptyReason: 'snapshot',
       total: 0,
       shown: 0,
       limit,
       offset,
+      maxOffset: MAX_MEMORY_LIST_OFFSET,
       filters: {
         tier: filters.tier ?? null,
         freshness: filters.freshness ?? null,

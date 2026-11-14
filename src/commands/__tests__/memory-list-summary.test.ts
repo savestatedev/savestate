@@ -157,6 +157,7 @@ describe('savestate memory list table pagination summary', () => {
       hasMore: false,
       nextOffset: null,
       suggestedOffset: 0,
+      maxOffset: 1000,
       guidance: { action: 'retry', offset: 0 },
     });
   });
