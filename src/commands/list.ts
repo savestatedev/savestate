@@ -101,6 +101,8 @@ export interface ListJson {
   pageSize: number;
   page: number;
   totalPages: number;
+  /** Last page number that can be opened within the supported offset ceiling. */
+  lastPage: number;
   previousPage: number | null;
   nextPage: number | null;
   /** Maximum supported offset for a list page. */
@@ -179,9 +181,9 @@ export function sortListEntries(
     if (aInvalid !== bInvalid) return aInvalid ? 1 : -1;
     const timestampOrder = bTime - aTime;
     if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
-    // Keep ties deterministic and reverse them with the primary sort so toggling
-    // --oldest-first produces the exact inverse order for equal timestamps too.
-    return oldestFirst ? b.id.localeCompare(a.id) : a.id.localeCompare(b.id);
+    // Keep ties deterministic without reversing equal-timestamp records when
+    // toggling --oldest-first; only the timestamp direction should change.
+    return a.id.localeCompare(b.id);
   });
 }
 
@@ -244,6 +246,7 @@ export function formatListJson(
     pageSize: pageLimit,
     page: Math.floor(offsetValue / pageLimit) + 1,
     totalPages: getListTotalPages(snapshots.length, pageLimit),
+    lastPage: getListTotalPages(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
@@ -302,6 +305,7 @@ export function formatListJsonSummary(
     pageSize: pageLimit,
     page: Math.floor(offsetValue / pageLimit) + 1,
     totalPages: getListTotalPages(snapshots.length, pageLimit),
+    lastPage: getListTotalPages(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
@@ -327,6 +331,7 @@ export interface ListMissingJson {
   pageSize: 50;
   page: 1;
   totalPages: 0;
+  lastPage: 0;
   previousPage: null;
   nextPage: null;
   maxOffset: 1000;
@@ -361,6 +366,7 @@ export function formatListMissingJson(
       pageSize: pageLimit,
       page: Math.floor(pageOffset / pageLimit) + 1,
       totalPages: 0,
+      lastPage: 0,
       previousPage: null,
       nextPage: null,
       maxOffset: 1000,
@@ -398,6 +404,7 @@ export function formatListMissingJsonSummary(
     pageSize: pageLimit,
     page: Math.floor(pageOffset / pageLimit) + 1,
     totalPages: 0,
+    lastPage: 0,
     previousPage: null,
     nextPage: null,
     maxOffset: 1000,

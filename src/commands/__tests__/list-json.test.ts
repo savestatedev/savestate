@@ -112,7 +112,7 @@ describe('savestate list --json', () => {
     expect(parsed.entries.map((snapshot) => snapshot.id)).toEqual(['ss-older', 'ss-newer']);
   });
 
-  it('reverses same-timestamp ties for oldest-first pagination', () => {
+  it('keeps same-timestamp ties stable for oldest-first pagination', () => {
     const sameTimestamp = [
       { ...older, id: 'ss-a', timestamp: '2026-01-25T09:30:00.000Z' },
       { ...older, id: 'ss-b', timestamp: '2026-01-25T09:30:00.000Z' },
@@ -122,7 +122,7 @@ describe('savestate list --json', () => {
     const oldestFirst = JSON.parse(formatListJson(sameTimestamp, 50, undefined, true)) as ListJson;
 
     expect(newestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-a', 'ss-b']);
-    expect(oldestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-b', 'ss-a']);
+    expect(oldestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-a', 'ss-b']);
   });
 
   it('reports navigation metadata for bounded pages', () => {
@@ -137,6 +137,7 @@ describe('savestate list --json', () => {
       pageSize: 1,
       page: 2,
       totalPages: 2,
+      lastPage: 2,
       previousPage: 1,
       nextPage: null,
       maxOffset: 1000,
@@ -172,6 +173,7 @@ describe('savestate list --json', () => {
     expect(parsed).toMatchObject({
       page: 1,
       totalPages: 2,
+      lastPage: 2,
       previousPage: null,
       nextPage: 2,
       nextOffset: 1,
