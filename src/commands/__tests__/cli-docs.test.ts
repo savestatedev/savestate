@@ -2524,6 +2524,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('needs_confirmation');
     expect(memorySection).toContain('L1/L2/L3');
     expect(memorySection).toContain('savestate init');
+    expect(memoryCli).toContain('savestate memory list --limit 20 --offset 20');
   });
 
   it('documents memory list pin filters, --limit, and promote --to', () => {
