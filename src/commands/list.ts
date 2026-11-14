@@ -506,8 +506,9 @@ export function shouldShowListPageSummary(
   offsetWasProvided: boolean,
   total: number,
   limit: number,
+  limitWasProvided = false,
 ): boolean {
-  return offsetWasProvided || total > normalizeListPageLimit(limit);
+  return offsetWasProvided || limitWasProvided || total > normalizeListPageLimit(limit);
 }
 
 /** Pad the visible label text before applying terminal styling to placeholders. */
@@ -824,7 +825,12 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   console.log();
   console.log(chalk.dim(`  ${sorted.length} snapshot${sorted.length !== 1 ? 's' : ''}`));
-  if (shouldShowListPageSummary(options.offset !== undefined, filtered.length, limit)) {
+  if (shouldShowListPageSummary(
+    options.offset !== undefined,
+    filtered.length,
+    limit,
+    options.limit !== undefined,
+  )) {
     console.log(chalk.dim(`  ${formatListPageSummary(filtered.length, sorted.length, offset, limit)}`));
   } else if (filtered.length !== index.snapshots.length) {
     console.log(chalk.dim(`  (filtered from ${index.snapshots.length} total)`));

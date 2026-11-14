@@ -82,6 +82,10 @@ describe('savestate list --offset', () => {
     expect(shouldShowListPageSummary(true, 2, 50)).toBe(true);
   });
 
+  it('shows pagination metadata when the caller explicitly sets a page size', () => {
+    expect(shouldShowListPageSummary(false, 2, 50, true)).toBe(true);
+  });
+
   it('does not advertise a next offset above the CLI ceiling', () => {
     expect(formatListPageSummary(1_051, 50, 1_000, 50)).toBe(
       '(showing 50 of 1051 after filters; offset 1000; limit 50; previous offset 950)',
