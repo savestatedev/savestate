@@ -206,8 +206,11 @@ the current page contains snapshots, alongside `total`, `shown`, `offset`,
 `limit`, and `entries`. When a page is empty, `emptyReason` distinguishes an
 empty collection from a stale offset, and `suggestedOffset` identifies the
 nearest page to retry. The response also includes `page`, `pageSize`,
-`totalPages`, `lastPage`, `lastPageOffset`, `previousPage`, `nextPage`, and `maxOffset` (the highest supported offset, currently 1000)
-for paginated scripting consumers. Before initialization, the
+`totalPages`, `lastPage`, `lastPageOffset`, `previousPage`, `nextPage`, and `maxOffset` (the highest supported offset, currently 1000).
+The `guidance` object gives paginated scripts the next machine-readable step:
+`action` is `next`, `previous`, `retry`, or `none`, and `offset` is the value
+to pass to the next request (or `null` when no navigation is available).
+Before initialization, the
 response keeps a page-compatible shape with `shown: 0`,
 `emptyReason: "collection"`, and `entries: []`.
 Legacy tag whitespace and case-insensitive duplicate tags are removed from JSON entries, while
