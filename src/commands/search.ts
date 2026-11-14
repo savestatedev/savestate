@@ -63,6 +63,10 @@ export interface SearchSummaryPagination {
   nextOffset: number | null;
   hasPrevious: boolean;
   previousOffset: number | null;
+  guidance: {
+    action: 'none' | 'next' | 'previous' | 'retry';
+    offset: number | null;
+  };
 }
 
 export interface SearchSummaryFilters {
@@ -186,6 +190,15 @@ export function formatSearchResultsSummaryJson(input: {
   const suggestedOffset = shown === 0
     ? suggestedSearchOffset(offset, limit, total)
     : null;
+  const nextOffset = hasMore ? Math.min(MAX_SEARCH_OFFSET, offset + shown) : null;
+  const previousOffset = offset > 0 ? Math.max(0, offset - limit) : null;
+  const guidance = shown === 0 && suggestedOffset !== null
+    ? { action: 'retry' as const, offset: suggestedOffset }
+    : hasMore && nextOffset !== null
+      ? { action: 'next' as const, offset: nextOffset }
+      : previousOffset !== null
+        ? { action: 'previous' as const, offset: previousOffset }
+        : { action: 'none' as const, offset: null };
   return JSON.stringify(
     {
       found: shown > 0,
@@ -207,11 +220,10 @@ export function formatSearchResultsSummaryJson(input: {
         emptyReason: shown === 0 ? (offset > 0 ? 'page' : 'collection') : null,
         suggestedOffset,
         hasMore,
-        nextOffset: hasMore
-          ? Math.min(MAX_SEARCH_OFFSET, offset + shown)
-          : null,
+        nextOffset,
         hasPrevious: offset > 0,
-        previousOffset: offset > 0 ? Math.max(0, offset - limit) : null,
+        previousOffset,
+        guidance,
       },
     } satisfies SearchSummaryJson,
     null,
@@ -318,6 +330,9 @@ export function formatSearchMissingSummaryJson(
         nextOffset: null,
         hasPrevious: offset > 0,
         previousOffset: offset > 0 ? Math.max(0, offset - limit) : null,
+        guidance: offset > 0
+          ? { action: 'retry', offset: Math.max(0, offset - limit) }
+          : { action: 'none', offset: null },
       },
     } satisfies SearchMissingSummaryJson,
     null,

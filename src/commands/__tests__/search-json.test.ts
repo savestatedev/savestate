@@ -89,6 +89,7 @@ describe('savestate search --json', () => {
       nextOffset: 11,
       hasPrevious: true,
       previousOffset: 5,
+      guidance: { action: 'next', offset: 11 },
     });
   });
 

@@ -322,6 +322,9 @@ also includes `pagination.page`, `pagination.pageSize`, and `pagination.totalPag
 empty first page as `collection` and an empty later page as `page`, with a
 `suggestedOffset` for retrying the nearest earlier page (including when a
 snapshot is missing or SaveState is not initialized).
+The `guidance` object gives scripts one next step: `action` is `next`,
+`previous`, `retry`, or `none`, and `offset` is the recommended offset (or
+`null` when navigation is complete).
 
 For memory-layer retrieval explanations, use `memory explain` to inspect why
 ranked memories matched a query:
