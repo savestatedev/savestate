@@ -477,7 +477,8 @@ export function formatListEmptyState(
   const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
-  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+  }. Try --offset ${suggestedOffset} --limit ${normalizeListPageLimit(limit)} ` +
+    'to open the nearest available page.';
 }
 
 /** Describe the visible list page without treating an offset as part of the limit. */
@@ -489,7 +490,7 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = getNearestListOffset(total, pageLimit);
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
-      `try --offset ${suggestedOffset} to open the nearest available page)`;
+      `try --offset ${suggestedOffset} --limit ${pageLimit} to open the nearest available page)`;
   }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
