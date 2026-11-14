@@ -294,6 +294,20 @@ describe('savestate list --json', () => {
     }
   });
 
+  it('keeps stale-page recovery offsets aligned to the page size', () => {
+    const snapshots = Array.from({ length: 2_001 }, (_, index) => ({
+      ...older,
+      id: `ss-${index}`,
+      timestamp: new Date(Date.UTC(2026, 0, 1, 0, index % 60, index)).toISOString(),
+    }));
+
+    for (const formatter of [formatListJson, formatListJsonSummary]) {
+      const parsed = JSON.parse(formatter(snapshots, 128, 2_001)) as ListJson;
+      expect(parsed.suggestedOffset).toBe(896);
+      expect(parsed.previousOffset).toBe(896);
+    }
+  });
+
   it('suggests the nearest page when an offset is past the filtered list', () => {
     const parsed = JSON.parse(formatListJson([older, newer], 1, 5)) as ListJson;
 

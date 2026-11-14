@@ -59,10 +59,11 @@ function getListTotalPages(total: number, pageLimit: number): number {
 
 /** Return the last page the CLI can actually open for a collection. */
 function getNearestListOffset(total: number, pageLimit: number): number {
-  return Math.min(
-    MAX_LIST_OFFSET,
-    Math.floor((total - 1) / pageLimit) * pageLimit,
-  );
+  // Keep recovery on a real page boundary when the offset ceiling is not
+  // divisible by the requested page size (for example, limit 128).
+  return Math.floor(
+    Math.min(MAX_LIST_OFFSET, total - 1) / pageLimit,
+  ) * pageLimit;
 }
 
 export interface ListSnapshotJson {
