@@ -472,6 +472,8 @@ export interface MemoryListJson {
   /** Number of matching entries after this page. */
   remaining: number;
   offset: number;
+  /** Highest offset accepted by the memory list CLI. */
+  maxOffset: number;
   limit: number | null;
   pageSize: number;
   page: number;
@@ -597,6 +599,7 @@ export function formatMemoryListJson(
     shown: shown.length,
     remaining,
     offset,
+    maxOffset: MAX_MEMORY_LIST_OFFSET,
     limit: limit ?? null,
     pageSize,
     page,
@@ -694,6 +697,7 @@ export interface MemoryListMissingJson {
   shown: 0;
   limit: number | null;
   offset: number;
+  maxOffset: number;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -736,6 +740,7 @@ export function formatMemoryListMissingJson(
       shown: 0,
       limit,
       offset,
+      maxOffset: MAX_MEMORY_LIST_OFFSET,
       filters: {
         tier: filters.tier ?? null,
         freshness: filters.freshness ?? null,

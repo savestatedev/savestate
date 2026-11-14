@@ -219,7 +219,7 @@ filter metadata is emitted in its normalized, de-duplicated form.
 
 Use `savestate list --json-summary` when a script needs the same pagination and filter metadata
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
-`shown`, `remaining`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized
+`shown`, `remaining`, `maxOffset`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized
 `filters` envelope.
 
 `savestate memory list --json` includes `bySource` and `shownBySource` counts alongside the
