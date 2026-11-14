@@ -248,6 +248,8 @@ count when applicable.
 
 The same JSON envelope includes `page` and `totalPages`, with unbounded results reported as a
 single page when entries exist (or zero pages when the collection is empty).
+It also includes `lastPageOffset` and `isLastPage`; pagination stops at the supported
+`maxOffset` ceiling instead of advertising an unreachable next page.
 
 Use `savestate memory list --json-summary` when a script needs the same pagination, filters, and
 aggregate metadata without copying memory content into logs or downstream payloads. It preserves

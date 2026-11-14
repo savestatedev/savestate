@@ -386,6 +386,23 @@ describe('savestate memory --json', () => {
     ]);
   });
 
+  it('stops pagination at the supported offset ceiling', () => {
+    const all = Array.from({ length: 1101 }, (_, index) => entry({
+      id: `mem-${index}`,
+      content: `memory ${index}`,
+    }));
+    const parsed = JSON.parse(formatMemoryListJson(all, all.slice(896, 1024), {
+      offset: 896,
+      limit: 128,
+    })) as MemoryListJson;
+
+    expect(parsed.lastPageOffset).toBe(896);
+    expect(parsed.hasMore).toBe(false);
+    expect(parsed.isLastPage).toBe(true);
+    expect(parsed.nextOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'previous', offset: 768 });
+  });
+
   it('normalizes the source filter alongside serialized source entries', () => {
     const legacy = entry({ id: 'mem-source', content: 'source', source: '  Claude-Code  ' });
 
