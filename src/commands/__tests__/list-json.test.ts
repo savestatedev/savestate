@@ -112,7 +112,7 @@ describe('savestate list --json', () => {
     expect(parsed.entries.map((snapshot) => snapshot.id)).toEqual(['ss-older', 'ss-newer']);
   });
 
-  it('reverses same-timestamp ties for oldest-first pagination', () => {
+  it('keeps same-timestamp ties stable for oldest-first pagination', () => {
     const sameTimestamp = [
       { ...older, id: 'ss-a', timestamp: '2026-01-25T09:30:00.000Z' },
       { ...older, id: 'ss-b', timestamp: '2026-01-25T09:30:00.000Z' },
@@ -122,7 +122,7 @@ describe('savestate list --json', () => {
     const oldestFirst = JSON.parse(formatListJson(sameTimestamp, 50, undefined, true)) as ListJson;
 
     expect(newestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-a', 'ss-b']);
-    expect(oldestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-b', 'ss-a']);
+    expect(oldestFirst.entries.map((snapshot) => snapshot.id)).toEqual(['ss-a', 'ss-b']);
   });
 
   it('reports navigation metadata for bounded pages', () => {
@@ -137,6 +137,7 @@ describe('savestate list --json', () => {
       pageSize: 1,
       page: 2,
       totalPages: 2,
+      lastPage: 2,
       previousPage: 1,
       nextPage: null,
       maxOffset: 1000,
@@ -172,6 +173,7 @@ describe('savestate list --json', () => {
     expect(parsed).toMatchObject({
       page: 1,
       totalPages: 2,
+      lastPage: 2,
       previousPage: null,
       nextPage: 2,
       nextOffset: 1,
@@ -216,6 +218,19 @@ describe('savestate list --json', () => {
       expect(parsed.remaining).toBe(1);
       expect(parsed.hasMore).toBe(false);
       expect(parsed.nextOffset).toBeNull();
+    }
+  });
+
+  it('counts only pages reachable within the CLI offset ceiling', () => {
+    const snapshots = Array.from({ length: 1_051 }, (_, index) => ({
+      ...older,
+      id: `ss-${index}`,
+      timestamp: new Date(Date.UTC(2026, 0, 1, 0, index % 60, index)).toISOString(),
+    }));
+
+    for (const formatter of [formatListJson, formatListJsonSummary]) {
+      const parsed = JSON.parse(formatter(snapshots, 50)) as ListJson;
+      expect(parsed.totalPages).toBe(21);
     }
   });
 
@@ -278,6 +293,20 @@ describe('savestate list --json', () => {
         suggestedOffset: 1_000,
         previousOffset: 1_000,
       });
+    }
+  });
+
+  it('keeps stale-page recovery offsets aligned to the page size', () => {
+    const snapshots = Array.from({ length: 2_001 }, (_, index) => ({
+      ...older,
+      id: `ss-${index}`,
+      timestamp: new Date(Date.UTC(2026, 0, 1, 0, index % 60, index)).toISOString(),
+    }));
+
+    for (const formatter of [formatListJson, formatListJsonSummary]) {
+      const parsed = JSON.parse(formatter(snapshots, 128, 2_001)) as ListJson;
+      expect(parsed.suggestedOffset).toBe(896);
+      expect(parsed.previousOffset).toBe(896);
     }
   });
 

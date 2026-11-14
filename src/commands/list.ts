@@ -49,6 +49,23 @@ function normalizeListPageOffset(offset: number | undefined): number {
   return Math.max(0, Math.floor(offset));
 }
 
+/** Count only pages whose starting offset the CLI can accept. */
+function getListTotalPages(total: number, pageLimit: number): number {
+  return Math.min(
+    Math.ceil(total / pageLimit),
+    Math.floor(MAX_LIST_OFFSET / pageLimit) + 1,
+  );
+}
+
+/** Return the last page the CLI can actually open for a collection. */
+function getNearestListOffset(total: number, pageLimit: number): number {
+  // Keep recovery on a real page boundary when the offset ceiling is not
+  // divisible by the requested page size (for example, limit 128).
+  return Math.floor(
+    Math.min(MAX_LIST_OFFSET, total - 1) / pageLimit,
+  ) * pageLimit;
+}
+
 export interface ListSnapshotJson {
   id: string;
   timestamp: string;
@@ -84,6 +101,8 @@ export interface ListJson {
   pageSize: number;
   page: number;
   totalPages: number;
+  /** Last page number that can be opened within the supported offset ceiling. */
+  lastPage: number;
   previousPage: number | null;
   nextPage: number | null;
   /** Maximum supported offset for a list page. */
@@ -162,9 +181,9 @@ export function sortListEntries(
     if (aInvalid !== bInvalid) return aInvalid ? 1 : -1;
     const timestampOrder = bTime - aTime;
     if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
-    // Keep ties deterministic and reverse them with the primary sort so toggling
-    // --oldest-first produces the exact inverse order for equal timestamps too.
-    return oldestFirst ? b.id.localeCompare(a.id) : a.id.localeCompare(b.id);
+    // Keep ties deterministic without reversing equal-timestamp records when
+    // toggling --oldest-first; only the timestamp direction should change.
+    return a.id.localeCompare(b.id);
   });
 }
 
@@ -207,7 +226,7 @@ export function formatListJson(
       ? 'collection'
       : 'page';
   const suggestedOffset = records.length === 0 && snapshots.length > 0
-    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / pageLimit) * pageLimit)
+    ? getNearestListOffset(snapshots.length, pageLimit)
     : null;
   const totalPages = Math.ceil(snapshots.length / pageLimit);
   const previousOffset = hasPrevious
@@ -226,7 +245,8 @@ export function formatListJson(
     limit: pageLimit,
     pageSize: pageLimit,
     page: Math.floor(offsetValue / pageLimit) + 1,
-    totalPages,
+    totalPages: getListTotalPages(snapshots.length, pageLimit),
+    lastPage: getListTotalPages(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
@@ -258,7 +278,7 @@ export function formatListJsonSummary(
   ).slice(0, pageLimit);
   const shown = visible.length;
   const suggestedOffset = shown === 0 && snapshots.length > 0
-    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / pageLimit) * pageLimit)
+    ? getNearestListOffset(snapshots.length, pageLimit)
     : null;
   // An empty collection has no navigable pages, even if a caller supplied a
   // stale offset. Keep the requested offset visible, but do not advertise a
@@ -284,7 +304,8 @@ export function formatListJsonSummary(
     limit: pageLimit,
     pageSize: pageLimit,
     page: Math.floor(offsetValue / pageLimit) + 1,
-    totalPages: Math.ceil(snapshots.length / pageLimit),
+    totalPages: getListTotalPages(snapshots.length, pageLimit),
+    lastPage: getListTotalPages(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
@@ -310,6 +331,7 @@ export interface ListMissingJson {
   pageSize: 50;
   page: 1;
   totalPages: 0;
+  lastPage: 0;
   previousPage: null;
   nextPage: null;
   maxOffset: 1000;
@@ -344,6 +366,7 @@ export function formatListMissingJson(
       pageSize: pageLimit,
       page: Math.floor(pageOffset / pageLimit) + 1,
       totalPages: 0,
+      lastPage: 0,
       previousPage: null,
       nextPage: null,
       maxOffset: 1000,
@@ -381,6 +404,7 @@ export function formatListMissingJsonSummary(
     pageSize: pageLimit,
     page: Math.floor(pageOffset / pageLimit) + 1,
     totalPages: 0,
+    lastPage: 0,
     previousPage: null,
     nextPage: null,
     maxOffset: 1000,
@@ -450,7 +474,7 @@ export function formatListEmptyState(
     return 'No snapshots found matching the criteria. Try adjusting the filters.';
   }
 
-  const suggestedOffset = Math.floor((matchingCount - 1) / limit) * limit;
+  const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
@@ -463,7 +487,7 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
 
   const pageEnd = Math.min(offset + pageLimit, total);
   if (shown === 0 && total > 0 && offset >= total) {
-    const suggestedOffset = Math.floor((total - 1) / pageLimit) * pageLimit;
+    const suggestedOffset = getNearestListOffset(total, pageLimit);
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
       `try --offset ${suggestedOffset} to open the nearest available page)`;
   }
