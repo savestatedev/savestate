@@ -144,6 +144,18 @@ describe('savestate memory list table pagination summary', () => {
     );
   });
 
+  it('caps the next table page at the supported offset ceiling', () => {
+    expect(formatMemoryListPageSummary(1100, 100, 900, 100)).toBe(
+      '(showing 100 of 1100 matching memories; offset 900, limit 100; next offset 1000 (maximum); previous offset 800)',
+    );
+  });
+
+  it('does not offer a repeated page when the offset ceiling is reached', () => {
+    expect(formatMemoryListPageSummary(1200, 100, 1000, 100)).toBe(
+      '(showing 100 of 1200 matching memories; offset 1000, limit 100; no later page is available within the offset limit; previous offset 900)',
+    );
+  });
+
   it('keeps stale JSON pages terminal even when callers pass hasMore', () => {
     const parsed = JSON.parse(formatMemoryListJson(
       [memory(), memory('other')],
