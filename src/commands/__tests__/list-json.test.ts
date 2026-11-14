@@ -90,6 +90,7 @@ describe('savestate list --json', () => {
       emptyReason: 'collection',
       page: 1,
       totalPages: 0,
+      lastPageOffset: null,
       entries: [],
     });
   });
@@ -138,6 +139,7 @@ describe('savestate list --json', () => {
       page: 2,
       totalPages: 2,
       lastPage: 2,
+      lastPageOffset: 1,
       previousPage: 1,
       nextPage: null,
       maxOffset: 1000,
@@ -174,6 +176,7 @@ describe('savestate list --json', () => {
       page: 1,
       totalPages: 2,
       lastPage: 2,
+      lastPageOffset: 1,
       previousPage: null,
       nextPage: 2,
       nextOffset: 1,
@@ -253,6 +256,7 @@ describe('savestate list --json', () => {
       pageSize: 50,
       page: 2,
       totalPages: 0,
+      lastPageOffset: null,
     });
   });
 

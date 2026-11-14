@@ -57,6 +57,12 @@ function getListTotalPages(total: number, pageLimit: number): number {
   );
 }
 
+/** Return the offset for the last page the CLI can actually open. */
+function getListLastPageOffset(total: number, pageLimit: number): number | null {
+  const totalPages = getListTotalPages(total, pageLimit);
+  return totalPages === 0 ? null : (totalPages - 1) * pageLimit;
+}
+
 /** Return the last page the CLI can actually open for a collection. */
 function getNearestListOffset(total: number, pageLimit: number): number {
   // Keep recovery on a real page boundary when the offset ceiling is not
@@ -103,6 +109,8 @@ export interface ListJson {
   totalPages: number;
   /** Last page number that can be opened within the supported offset ceiling. */
   lastPage: number;
+  /** Offset for the last page that can be opened within the supported ceiling. */
+  lastPageOffset: number | null;
   previousPage: number | null;
   nextPage: number | null;
   /** Maximum supported offset for a list page. */
@@ -247,6 +255,7 @@ export function formatListJson(
     page: Math.floor(offsetValue / pageLimit) + 1,
     totalPages: getListTotalPages(snapshots.length, pageLimit),
     lastPage: getListTotalPages(snapshots.length, pageLimit),
+    lastPageOffset: getListLastPageOffset(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
@@ -306,6 +315,7 @@ export function formatListJsonSummary(
     page: Math.floor(offsetValue / pageLimit) + 1,
     totalPages: getListTotalPages(snapshots.length, pageLimit),
     lastPage: getListTotalPages(snapshots.length, pageLimit),
+    lastPageOffset: getListLastPageOffset(snapshots.length, pageLimit),
     previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageLimit) + 1,
     nextPage: nextOffset === null ? null : Math.floor(nextOffset / pageLimit) + 1,
     maxOffset: MAX_LIST_OFFSET,
@@ -332,6 +342,7 @@ export interface ListMissingJson {
   page: 1;
   totalPages: 0;
   lastPage: 0;
+  lastPageOffset: null;
   previousPage: null;
   nextPage: null;
   maxOffset: 1000;
@@ -367,6 +378,7 @@ export function formatListMissingJson(
       page: Math.floor(pageOffset / pageLimit) + 1,
       totalPages: 0,
       lastPage: 0,
+      lastPageOffset: null,
       previousPage: null,
       nextPage: null,
       maxOffset: 1000,
@@ -405,6 +417,7 @@ export function formatListMissingJsonSummary(
     page: Math.floor(pageOffset / pageLimit) + 1,
     totalPages: 0,
     lastPage: 0,
+    lastPageOffset: null,
     previousPage: null,
     nextPage: null,
     maxOffset: 1000,
