@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatMemoryListEmptyState,
   formatMemoryListJson,
   formatMemoryListNamespace,
   formatMemoryListNamespaceSummary,
@@ -141,6 +142,12 @@ describe('savestate memory list table pagination summary', () => {
   it('points exhausted bounded pages to the nearest available page', () => {
     expect(formatMemoryListPageSummary(45, 0, 100, 20)).toBe(
       '(showing 0 of 45 matching memories; offset 100, limit 20; previous offset 40)',
+    );
+  });
+
+  it('keeps the empty-state recovery offset within the supported ceiling', () => {
+    expect(formatMemoryListEmptyState(5000, 0, 100, true)).toContain(
+      'Try --offset 1000 to open the nearest available page.',
     );
   });
 

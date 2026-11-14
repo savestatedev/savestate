@@ -1539,7 +1539,10 @@ export function formatMemoryListEmptyState(
 
   const suggestedOffset = limit === undefined
     ? 0
-    : Math.floor((matchingCount - 1) / limit) * limit;
+    : Math.min(
+      MAX_MEMORY_LIST_OFFSET,
+      Math.floor((matchingCount - 1) / limit) * limit,
+    );
   const filterContext = filterSummary ? ` for these filters: ${filterSummary}` : '';
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
