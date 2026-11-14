@@ -533,6 +533,7 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --source chatgpt\n' +
         '  $ savestate memory list --tags work,urgent\n' +
         '  $ savestate memory list --json-summary\n' +
+        '  $ savestate memory list --limit 20 --offset 20\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
         '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +
         '  $ savestate memory log <memory-id>\n',

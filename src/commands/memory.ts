@@ -1539,7 +1539,10 @@ export function formatMemoryListEmptyState(
 
   const suggestedOffset = limit === undefined
     ? 0
-    : Math.floor((matchingCount - 1) / limit) * limit;
+    : Math.min(
+      MAX_MEMORY_LIST_OFFSET,
+      Math.floor((matchingCount - 1) / limit) * limit,
+    );
   const filterContext = filterSummary ? ` for these filters: ${filterSummary}` : '';
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
@@ -1596,10 +1599,14 @@ export function formatMemoryListPageSummary(
 
   const pageDescription = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const hasNextPage = pageEnd < total;
-  const nextOffset = limit === undefined ? pageEnd : offset + limit;
+  const rawNextOffset = limit === undefined ? pageEnd : offset + limit;
+  const nextOffset = Math.min(rawNextOffset, MAX_MEMORY_LIST_OFFSET);
+  const nextOffsetIsCapped = rawNextOffset >= MAX_MEMORY_LIST_OFFSET;
   const hints = [pageDescription];
-  if (hasNextPage) {
-    hints.push(`next offset ${nextOffset}`);
+  if (hasNextPage && nextOffset > offset) {
+    hints.push(`next offset ${nextOffset}${nextOffsetIsCapped ? ' (maximum)' : ''}`);
+  } else if (hasNextPage) {
+    hints.push('no later page is available within the offset limit');
   }
   if (offset > 0) {
     const previousOffset = shown === 0
