@@ -490,7 +490,8 @@ export function formatListEmptyState(
   const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
-  }. Try --offset ${suggestedOffset} to open the nearest available page.`;
+  }. Try --offset ${suggestedOffset} --limit ${normalizeListPageLimit(limit)} ` +
+    'to open the nearest available page.';
 }
 
 /** Describe the visible list page without treating an offset as part of the limit. */
@@ -502,7 +503,7 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = getNearestListOffset(total, pageLimit);
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
-      `try --offset ${suggestedOffset} to open the nearest available page)`;
+      `try --offset ${suggestedOffset} --limit ${pageLimit} to open the nearest available page)`;
   }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
@@ -511,6 +512,16 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   if (pageEnd < total && nextOffset <= MAX_LIST_OFFSET) hints.push(`next offset ${nextOffset}`);
   if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - pageLimit)}`);
   return `(showing ${shown} of ${total} after filters; ${hints.join('; ')})`;
+}
+
+/** Show pagination details only when the caller paged or another page exists. */
+export function shouldShowListPageSummary(
+  offsetWasProvided: boolean,
+  total: number,
+  limit: number,
+  limitWasProvided = false,
+): boolean {
+  return offsetWasProvided || limitWasProvided || total > normalizeListPageLimit(limit);
 }
 
 /** Pad the visible label text before applying terminal styling to placeholders. */
@@ -827,7 +838,12 @@ export async function listCommand(options: ListOptions): Promise<void> {
 
   console.log();
   console.log(chalk.dim(`  ${sorted.length} snapshot${sorted.length !== 1 ? 's' : ''}`));
-  if (offset !== undefined || filtered.length > limit) {
+  if (shouldShowListPageSummary(
+    options.offset !== undefined,
+    filtered.length,
+    limit,
+    options.limit !== undefined,
+  )) {
     console.log(chalk.dim(`  ${formatListPageSummary(filtered.length, sorted.length, offset, limit)}`));
   } else if (filtered.length !== index.snapshots.length) {
     console.log(chalk.dim(`  (filtered from ${index.snapshots.length} total)`));
