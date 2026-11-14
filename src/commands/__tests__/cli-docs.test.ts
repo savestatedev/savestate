@@ -194,6 +194,11 @@ describe('CLI docs', () => {
     expect(docs).toContain('.guidance | select(.action == "next") | .offset');
   });
 
+  it('documents a copy-paste search JSON pagination loop', () => {
+    expect(docs).toContain('Follow matching pages until the search is exhausted');
+    expect(docs).toContain('.pagination | select(.hasMore == true) | .nextOffset');
+  });
+
   it('lists savestate export and import in the command overview', () => {
     expect(docs).toContain('id="export"');
     expect(docs).toContain('id="import"');

@@ -633,6 +633,9 @@
 <span class="code-comment"># Scriptable JSON with page navigation</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --offset 10 --limit 5 --json-summary
 
+<span class="code-comment"># Follow matching pages until the search is exhausted</span>
+<span class="code-prompt">$</span> offset=0; while :; do page=$(savestate search <span class="code-string">"cocktail recommendations"</span> --json-summary --offset "$offset" --limit 20); echo "$page"; next=$(printf '%s' "$page" | jq -r '.pagination | select(.hasMore == true) | .nextOffset // empty'); [ -n "$next" ] || break; offset="$next"; done
+
 <span class="code-comment"># Scriptable JSON when the snapshot is missing</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --snapshot missing --json</code></pre>
 
