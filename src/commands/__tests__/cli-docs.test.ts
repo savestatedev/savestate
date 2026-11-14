@@ -2537,6 +2537,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('20');
     expect(memorySection).toContain('pinned memories');
     expect(memorySection).toContain('Target tier');
+    expect(memorySection).toContain('savestate memory list --limit 20 --offset 20');
   });
 
   it('documents memory list --min-importance', () => {
