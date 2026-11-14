@@ -331,7 +331,10 @@
 <span class="code-prompt">$</span> savestate list --json</code></pre>
 
     <pre><code><span class="code-comment"># Pagination metadata without snapshot records</span>
-<span class="code-prompt">$</span> savestate list --json-summary --limit 50</code></pre>
+<span class="code-prompt">$</span> savestate list --json-summary --limit 50
+
+<span class="code-comment"># Follow the returned guidance offset until the last page</span>
+<span class="code-prompt">$</span> offset=0; while :; do page=$(savestate list --json --offset "$offset" --limit 50); echo "$page"; next=$(printf '%s' "$page" | jq -r '.guidance | select(.action == "next") | .offset // empty'); [ -n "$next" ] || break; offset="$next"; done</code></pre>
 
     <!-- stats -->
     <h2 id="stats"><code>savestate stats</code></h2>
