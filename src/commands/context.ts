@@ -101,6 +101,7 @@ export interface ContextExplainJson {
     pageSize: number;
     hasMore: boolean;
     nextOffset: number | null;
+    previousOffset: number | null;
     suggestedOffset: number | null;
   };
   candidates: ContextExplainCandidateJson[];
