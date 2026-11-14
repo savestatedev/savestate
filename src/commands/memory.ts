@@ -582,7 +582,7 @@ export function formatMemoryListJson(
       : Math.floor(Math.min(MAX_MEMORY_LIST_OFFSET, all.length - 1) / pageSize) * pageSize;
   const canAdvanceWithinOffsetCeiling = offset + continuationStep <= MAX_MEMORY_LIST_OFFSET;
   const hasMore = hasMoreFromCollection && canAdvanceWithinOffsetCeiling;
-  const isLastPage = all.length === 0 || emptyPage || !canAdvanceWithinOffsetCeiling;
+  const isLastPage = !hasMore;
   const suggestedOffset = emptyPage
     ? limit === undefined
       ? 0
