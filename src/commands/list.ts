@@ -57,6 +57,14 @@ function getListTotalPages(total: number, pageLimit: number): number {
   );
 }
 
+/** Return the last page the CLI can actually open for a collection. */
+function getNearestListOffset(total: number, pageLimit: number): number {
+  return Math.min(
+    MAX_LIST_OFFSET,
+    Math.floor((total - 1) / pageLimit) * pageLimit,
+  );
+}
+
 export interface ListSnapshotJson {
   id: string;
   timestamp: string;
@@ -215,7 +223,7 @@ export function formatListJson(
       ? 'collection'
       : 'page';
   const suggestedOffset = records.length === 0 && snapshots.length > 0
-    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / pageLimit) * pageLimit)
+    ? getNearestListOffset(snapshots.length, pageLimit)
     : null;
   const totalPages = Math.ceil(snapshots.length / pageLimit);
   const previousOffset = hasPrevious
@@ -266,7 +274,7 @@ export function formatListJsonSummary(
   ).slice(0, pageLimit);
   const shown = visible.length;
   const suggestedOffset = shown === 0 && snapshots.length > 0
-    ? Math.min(MAX_LIST_OFFSET, Math.floor((snapshots.length - 1) / pageLimit) * pageLimit)
+    ? getNearestListOffset(snapshots.length, pageLimit)
     : null;
   // An empty collection has no navigable pages, even if a caller supplied a
   // stale offset. Keep the requested offset visible, but do not advertise a
@@ -458,7 +466,7 @@ export function formatListEmptyState(
     return 'No snapshots found matching the criteria. Try adjusting the filters.';
   }
 
-  const suggestedOffset = Math.floor((matchingCount - 1) / limit) * limit;
+  const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
@@ -471,7 +479,7 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
 
   const pageEnd = Math.min(offset + pageLimit, total);
   if (shown === 0 && total > 0 && offset >= total) {
-    const suggestedOffset = Math.floor((total - 1) / pageLimit) * pageLimit;
+    const suggestedOffset = getNearestListOffset(total, pageLimit);
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
       `try --offset ${suggestedOffset} to open the nearest available page)`;
   }
