@@ -109,4 +109,18 @@ describe('savestate list --label', () => {
       'try --offset 4 --limit 2 to open the nearest available page)',
     );
   });
+
+  it('exposes an actionable JSON navigation step', async () => {
+    const { formatListJson } = await import('../list.js');
+    const snapshots = [
+      entry({ id: 'newest', adapter: 'chatgpt', timestamp: '2026-01-03T00:00:00Z' }),
+      entry({ id: 'older', adapter: 'chatgpt', timestamp: '2026-01-02T00:00:00Z' }),
+      entry({ id: 'oldest', adapter: 'chatgpt', timestamp: '2026-01-01T00:00:00Z' }),
+    ];
+
+    expect(JSON.parse(formatListJson(snapshots, 2, 0)).guidance)
+      .toEqual({ action: 'next', offset: 2 });
+    expect(JSON.parse(formatListJson(snapshots, 2, 8)).guidance)
+      .toEqual({ action: 'retry', offset: 2 });
+  });
 });

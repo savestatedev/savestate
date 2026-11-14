@@ -94,6 +94,11 @@ export interface ListJsonFilters {
   label: string | null;
 }
 
+export interface ListJsonGuidance {
+  action: 'none' | 'next' | 'previous' | 'retry';
+  offset: number | null;
+}
+
 export interface ListJson {
   /** Whether the current page contains at least one matching snapshot. */
   found: boolean;
@@ -120,6 +125,8 @@ export interface ListJson {
   hasMore: boolean;
   nextOffset: number | null;
   suggestedOffset: number | null;
+  /** Machine-readable next step for paginated consumers. */
+  guidance: ListJsonGuidance;
   oldestFirst: boolean;
   filters: ListJsonFilters;
   entries: ListSnapshotJson[];
@@ -243,6 +250,13 @@ export function formatListJson(
       : Math.max(0, offsetValue - pageLimit)
     : null;
   const nextOffset = hasMore ? candidateNextOffset : null;
+  const guidance: ListJsonGuidance = records.length === 0 && suggestedOffset !== null
+    ? { action: 'retry', offset: suggestedOffset }
+    : hasMore && nextOffset !== null
+      ? { action: 'next', offset: nextOffset }
+      : hasPrevious && previousOffset !== null
+        ? { action: 'previous', offset: previousOffset }
+        : { action: 'none', offset: null };
   const result: ListJson = {
     found: records.length > 0,
     total: snapshots.length,
@@ -264,6 +278,7 @@ export function formatListJson(
     hasMore,
     nextOffset,
     suggestedOffset,
+    guidance,
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
     entries: records,
@@ -303,6 +318,13 @@ export function formatListJsonSummary(
   // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
   const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
   const nextOffset = hasMore ? candidateNextOffset : null;
+  const guidance: ListJsonGuidance = shown === 0 && suggestedOffset !== null
+    ? { action: 'retry', offset: suggestedOffset }
+    : hasMore && nextOffset !== null
+      ? { action: 'next', offset: nextOffset }
+      : hasPrevious && previousOffset !== null
+        ? { action: 'previous', offset: previousOffset }
+        : { action: 'none', offset: null };
   const summary: ListJsonSummary = {
     found: shown > 0,
     total: snapshots.length,
@@ -324,6 +346,7 @@ export function formatListJsonSummary(
     hasMore,
     nextOffset,
     suggestedOffset,
+    guidance,
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
   };
@@ -351,6 +374,7 @@ export interface ListMissingJson {
   hasMore: false;
   nextOffset: null;
   suggestedOffset: null;
+  guidance: ListJsonGuidance;
   oldestFirst: false;
   filters: ListJsonFilters;
   entries: [];
@@ -387,6 +411,7 @@ export function formatListMissingJson(
       hasMore: false,
       nextOffset: null,
       suggestedOffset: null,
+      guidance: { action: 'none', offset: null },
       oldestFirst,
       filters: normalizeListJsonFilters(filters),
       entries: [],
@@ -426,6 +451,7 @@ export function formatListMissingJsonSummary(
     hasMore: false,
     nextOffset: null,
     suggestedOffset: null,
+    guidance: { action: 'none', offset: null },
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
   } satisfies ListJsonSummary, null, 2);
