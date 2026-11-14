@@ -707,6 +707,8 @@ export function formatMemoryListJson(
 export interface MemoryListMissingJson {
   found: false;
   snapshot: string;
+  /** Why no memory rows are available for this request. */
+  emptyReason: 'snapshot';
   total: 0;
   shown: 0;
   limit: number | null;
@@ -750,6 +752,7 @@ export function formatMemoryListMissingJson(
     {
       found: false,
       snapshot,
+      emptyReason: 'snapshot',
       total: 0,
       shown: 0,
       limit,

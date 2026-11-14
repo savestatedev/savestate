@@ -214,6 +214,9 @@ to pass to the next request (or `null` when no navigation is available).
 Before initialization, the
 response keeps a page-compatible shape with `shown: 0`,
 `emptyReason: "collection"`, and `entries: []`.
+When the requested snapshot cannot be found, `found` is `false` and
+`emptyReason` is `"snapshot"`, so clients can distinguish a missing snapshot
+from an initialized snapshot with no matching memories.
 Legacy tag whitespace and case-insensitive duplicate tags are removed from JSON entries, while
 filter metadata is emitted in its normalized, de-duplicated form.
 
