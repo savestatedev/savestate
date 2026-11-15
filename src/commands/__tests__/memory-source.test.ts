@@ -9,6 +9,7 @@ import {
   formatMemoryListPageSourceSummary,
   formatMemoryListFreshnessSummary,
   formatMemoryListImportanceSummary,
+  formatMemoryListPageImportanceSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
   formatMemoryListSourceSummary,
@@ -134,6 +135,13 @@ describe('memory list table importance display', () => {
       { id: 'low', content: 'low', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', metadata: { importance: 0.2 } },
     ])).toBe('min 0.20, max 0.90, average 0.53');
     expect(formatMemoryListImportanceSummary([])).toBe('none');
+  });
+
+  it('labels importance totals for the visible page', () => {
+    expect(formatMemoryListPageImportanceSummary([
+      { id: 'high', content: 'high', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', metadata: { importance: 0.9 } },
+      { id: 'default', content: 'default', source: 'test', createdAt: '2026-09-01T00:00:00.000Z' },
+    ])).toBe('Page Importance: min 0.50, max 0.90, average 0.70');
   });
 });
 

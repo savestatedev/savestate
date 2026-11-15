@@ -460,6 +460,11 @@ export function formatMemoryListPageTagSummary(memories: MemoryEntry[]): string 
   return `Page Tags: ${formatMemoryListTagSummary(memories)}`;
 }
 
+/** Label effective importance totals for the visible page. */
+export function formatMemoryListPageImportanceSummary(memories: MemoryEntry[]): string {
+  return `Page Importance: ${formatMemoryListImportanceSummary(memories)}`;
+}
+
 export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
@@ -1815,7 +1820,8 @@ export async function listMemories(
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
       console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
       console.log(`${formatMemoryListPageTagSummary(entries)}`);
-      console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}\n`);
+      console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}`);
+      console.log(`${formatMemoryListPageImportanceSummary(entries)}\n`);
     }
   }
 
