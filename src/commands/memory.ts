@@ -367,6 +367,17 @@ export function formatMemoryListFreshnessSummary(
   return `${counts.active} active, ${counts.stale} stale, ${counts.needs_confirmation} confirmation needed`;
 }
 
+/** Format effective importance bounds and average for the human-facing list summary. */
+export function formatMemoryListImportanceSummary(memories: MemoryEntry[]): string {
+  if (memories.length === 0) return 'none';
+
+  const scores = memories.map(getMemoryListImportance);
+  const minimum = Math.min(...scores);
+  const maximum = Math.max(...scores);
+  const average = scores.reduce((total, score) => total + score, 0) / scores.length;
+  return `min ${minimum.toFixed(2)}, max ${maximum.toFixed(2)}, average ${average.toFixed(2)}`;
+}
+
 /** Format normalized source totals for the human-facing list summary. */
 export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
   const counts = countBySource(memories);
@@ -1774,6 +1785,7 @@ export async function listMemories(
   console.log(`Namespace Summary: ${formatMemoryListNamespaceSummary(filteredEntries)}\n`);
   console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
+  console.log(`Importance Summary: ${formatMemoryListImportanceSummary(filteredEntries)}\n`);
   console.log(formatMemoryListOrderingSummary(options?.oldestFirst, options?.importantFirst));
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
