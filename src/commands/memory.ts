@@ -378,6 +378,12 @@ export function formatMemoryListImportanceSummary(memories: MemoryEntry[]): stri
   return `min ${minimum.toFixed(2)}, max ${maximum.toFixed(2)}, average ${average.toFixed(2)}`;
 }
 
+/** Format pinned totals for the human-facing list summary. */
+export function formatMemoryListPinnedSummary(memories: MemoryEntry[]): string {
+  const pinned = memories.filter((memory) => memory.pinned).length;
+  return `${pinned} of ${memories.length}`;
+}
+
 /** Return numeric importance aggregates for machine-readable list consumers. */
 export function getMemoryListImportanceSummary(memories: MemoryEntry[]): {
   min: number | null;
@@ -1817,6 +1823,7 @@ export async function listMemories(
   console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
   console.log(`Importance Summary: ${formatMemoryListImportanceSummary(filteredEntries)}\n`);
+  console.log(`Pinned Summary: ${formatMemoryListPinnedSummary(filteredEntries)}\n`);
   console.log(formatMemoryListOrderingSummary(options?.oldestFirst, options?.importantFirst));
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
