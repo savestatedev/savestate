@@ -544,7 +544,13 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
 
   const hints = [`offset ${offset}`, `limit ${pageLimit}`];
   const nextOffset = offset + shown;
-  if (pageEnd < total && nextOffset <= MAX_LIST_OFFSET) hints.push(`next offset ${nextOffset}`);
+  if (pageEnd < total && nextOffset <= MAX_LIST_OFFSET) {
+    hints.push(`next offset ${nextOffset}`);
+  } else if (pageEnd < total) {
+    // Tell users why there is no normal continuation when the CLI's offset
+    // ceiling is reached, and point them at the last page they can open.
+    hints.push(`last reachable offset ${getNearestListOffset(total, pageLimit)}`);
+  }
   if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - pageLimit)}`);
   return `(showing ${shown} of ${total} after filters; ${hints.join('; ')})`;
 }
