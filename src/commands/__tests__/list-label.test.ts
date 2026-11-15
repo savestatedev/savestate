@@ -74,6 +74,15 @@ describe('savestate list --label', () => {
     ).toEqual(['legacy']);
   });
 
+  it('matches snapshot ids from legacy indexes with surrounding whitespace', () => {
+    expect(
+      applyListFilters(
+        [entry({ id: ' ss-legacy ', adapter: 'chatgpt' })],
+        { snapshot: 'ss-legacy' },
+      ).map((snapshot) => snapshot.id),
+    ).toEqual([' ss-legacy ']);
+  });
+
   it('normalizes legacy whitespace for list output', () => {
     expect(normalizeListLabel('  Pre-update backup  ')).toBe('Pre-update backup');
     expect(normalizeListLabel('   ')).toBeNull();

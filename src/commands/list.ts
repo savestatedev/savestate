@@ -918,7 +918,9 @@ export function applyListFilters(
     if (adapter && s.adapter.trim().toLowerCase() !== adapter) return false;
     if (platform && s.platform.trim().toLowerCase() !== platform) return false;
     if (exclude !== undefined && exclude.includes(s.adapter.trim().toLowerCase())) return false;
-    if (snapshotId !== undefined && s.id !== snapshotId) return false;
+    // Indexes created by older adapters may preserve surrounding whitespace in
+    // IDs. Match the normalized CLI value against the normalized index value.
+    if (snapshotId !== undefined && s.id.trim() !== snapshotId) return false;
     if (
       tag &&
       !(s.tags ?? []).some((value) => value.trim().toLowerCase() === tag.toLowerCase())
