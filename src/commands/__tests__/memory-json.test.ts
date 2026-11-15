@@ -61,6 +61,8 @@ describe('savestate memory --json', () => {
 
     expect(parsed.importance).toEqual({ min: null, max: null, average: null });
     expect(parsed.shownImportance).toEqual({ min: null, max: null, average: null });
+    expect(parsed.pinnedPercentage).toBe(0);
+    expect(parsed.shownPinnedPercentage).toBe(0);
   });
 
   it('reports the stable ordering contract for machine consumers', () => {
