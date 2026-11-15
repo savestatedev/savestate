@@ -589,6 +589,12 @@ export function normalizeListLabel(label: string | null | undefined): string | n
   return label.trim();
 }
 
+/** Render tags compactly in the table while keeping legacy whitespace out. */
+export function formatListTags(tags: string[] | undefined): string {
+  const normalized = normalizeListJsonTags(tags);
+  return normalized.length > 0 ? normalized.join(', ') : '—';
+}
+
 /** Size the label column from the text users actually see. */
 export function getListLabelWidth(snapshots: SnapshotIndexEntry[]): number {
   return Math.max(5, ...snapshots.map((snapshot) => normalizeListLabel(snapshot.label)?.length ?? 0));
@@ -858,6 +864,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const dateWidth = 20;
   const adapterWidth = Math.max(7, ...sorted.map((s) => s.adapter.length));
   const labelWidth = getListLabelWidth(sorted);
+  const tagsWidth = Math.max(4, ...sorted.map((s) => formatListTags(s.tags).length));
   const sizeWidth = 10;
 
   // Header
@@ -866,6 +873,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
     'Date'.padEnd(dateWidth),
     'Adapter'.padEnd(adapterWidth),
     'Label'.padEnd(labelWidth),
+    'Tags'.padEnd(tagsWidth),
     'Size'.padStart(sizeWidth),
   ].join('  ');
 
@@ -876,6 +884,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   for (const s of sorted) {
     const date = formatListDate(s.timestamp);
     const label = formatListLabelCell(normalizeListLabel(s.label), labelWidth);
+    const tags = formatListTags(s.tags).padEnd(tagsWidth);
     const size = formatBytes(s.size);
 
     const row = [
@@ -883,6 +892,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
       date.padEnd(dateWidth),
       s.adapter.padEnd(adapterWidth),
       label,
+      tags,
       size.padStart(sizeWidth),
     ].join('  ');
 
