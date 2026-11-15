@@ -44,6 +44,25 @@ describe('savestate memory --json', () => {
     expect(parsed.filters.importantFirst).toBe(true);
   });
 
+  it('reports importance aggregates for the matching collection and visible page', () => {
+    const entries = [
+      entry({ id: 'mem-high', content: 'high', metadata: { importance: 0.9 } }),
+      entry({ id: 'mem-default', content: 'default' }),
+      entry({ id: 'mem-low', content: 'low', metadata: { importance: 0.1 } }),
+    ];
+    const parsed = JSON.parse(formatMemoryListJson(entries, entries.slice(0, 2))) as MemoryListJson;
+
+    expect(parsed.importance).toEqual({ min: 0.1, max: 0.9, average: 0.5 });
+    expect(parsed.shownImportance).toEqual({ min: 0.5, max: 0.9, average: 0.7 });
+  });
+
+  it('uses null importance aggregates for an empty collection or page', () => {
+    const parsed = JSON.parse(formatMemoryListJson([], [])) as MemoryListJson;
+
+    expect(parsed.importance).toEqual({ min: null, max: null, average: null });
+    expect(parsed.shownImportance).toEqual({ min: null, max: null, average: null });
+  });
+
   it('reports the stable ordering contract for machine consumers', () => {
     const memory = entry({ id: 'mem-a', content: 'a', createdAt: '2026-09-01T00:00:00.000Z' });
     const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {

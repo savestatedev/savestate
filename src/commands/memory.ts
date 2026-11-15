@@ -378,6 +378,22 @@ export function formatMemoryListImportanceSummary(memories: MemoryEntry[]): stri
   return `min ${minimum.toFixed(2)}, max ${maximum.toFixed(2)}, average ${average.toFixed(2)}`;
 }
 
+/** Return numeric importance aggregates for machine-readable list consumers. */
+export function getMemoryListImportanceSummary(memories: MemoryEntry[]): {
+  min: number | null;
+  max: number | null;
+  average: number | null;
+} {
+  if (memories.length === 0) return { min: null, max: null, average: null };
+
+  const scores = memories.map(getMemoryListImportance);
+  return {
+    min: Math.min(...scores),
+    max: Math.max(...scores),
+    average: scores.reduce((total, score) => total + score, 0) / scores.length,
+  };
+}
+
 /** Format normalized source totals for the human-facing list summary. */
 export function formatMemoryListSourceSummary(memories: MemoryEntry[]): string {
   const counts = countBySource(memories);
@@ -532,6 +548,8 @@ export interface MemoryListJson {
   shownByTag: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
+  importance: ReturnType<typeof getMemoryListImportanceSummary>;
+  shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
   pinned: number;
   shownPinned: number;
   /** Whether each returned entry includes its memory content. */
@@ -686,6 +704,8 @@ export function formatMemoryListJson(
     shownByTag: countByTag(shown),
     byFreshness: countByFreshness(all, now),
     shownByFreshness: countByFreshness(shown, now),
+    importance: getMemoryListImportanceSummary(all),
+    shownImportance: getMemoryListImportanceSummary(shown),
     pinned: all.filter((entry) => !!entry.pinned).length,
     shownPinned: shown.filter((entry) => !!entry.pinned).length,
     contentIncluded: pagination.includeContent !== false,

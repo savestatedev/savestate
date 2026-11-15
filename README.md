@@ -232,6 +232,10 @@ Table output also shows matching-collection source totals and, when paginated, s
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
 
+The same JSON response includes `importance` and `shownImportance` objects with numeric `min`,
+`max`, and `average` values for the matching collection and visible page. Empty collections or
+pages use `null` for each value; memories without a valid score use the default `0.5`.
+
 Table output also shows matching-collection namespace totals and, when paginated, namespace
 totals for the rows on the visible page. Namespace summaries show the first eight non-empty
 namespace labels, compactly report any additional namespaces, and include unassigned memories.
