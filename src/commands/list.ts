@@ -136,6 +136,16 @@ export interface ListJson {
 
 export type ListJsonSummary = Omit<ListJson, 'entries'>;
 
+/** Keep legacy snapshot ids stable when older indexes contain whitespace. */
+export function normalizeListId(id: string): string {
+  return id.trim();
+}
+
+/** Keep the JSON formatter's public helper name stable. */
+export function normalizeListJsonId(id: string): string {
+  return normalizeListId(id);
+}
+
 /** Keep JSON tag values stable when older indexes contain whitespace or duplicates. */
 export function normalizeListJsonTags(tags?: string[]): string[] {
   const seen = new Set<string>();
@@ -219,7 +229,7 @@ export function formatListJson(
   )
     .slice(0, pageLimit);
   const records: ListSnapshotJson[] = visible.map((snapshot) => ({
-      id: snapshot.id,
+      id: normalizeListId(snapshot.id),
       timestamp: snapshot.timestamp,
       platform: snapshot.platform,
       adapter: snapshot.adapter,
@@ -844,7 +854,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   ).slice(0, limit);
 
   // Calculate column widths
-  const idWidth = Math.max(10, ...sorted.map((s) => s.id.length));
+  const idWidth = Math.max(10, ...sorted.map((s) => normalizeListId(s.id).length));
   const dateWidth = 20;
   const adapterWidth = Math.max(7, ...sorted.map((s) => s.adapter.length));
   const labelWidth = getListLabelWidth(sorted);
@@ -869,7 +879,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
     const size = formatBytes(s.size);
 
     const row = [
-      chalk.cyan(s.id.padEnd(idWidth)),
+      chalk.cyan(normalizeListId(s.id).padEnd(idWidth)),
       date.padEnd(dateWidth),
       s.adapter.padEnd(adapterWidth),
       label,
