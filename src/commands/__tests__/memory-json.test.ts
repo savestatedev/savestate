@@ -363,6 +363,8 @@ describe('savestate memory --json', () => {
     expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 2, needs_confirmation: 0 });
     expect(parsed.pinned).toBe(1);
     expect(parsed.shownPinned).toBe(1);
+    expect(parsed.pinnedPercentage).toBeCloseTo(33.333333);
+    expect(parsed.shownPinnedPercentage).toBe(50);
     expect(parsed.entries).toEqual([
       {
         id: 'mem-l1',
