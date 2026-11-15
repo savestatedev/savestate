@@ -762,6 +762,11 @@ export interface MemoryListMissingJson {
   limit: number | null;
   offset: number;
   maxOffset: number;
+  /** Empty collection summaries keep the successful list schema predictable. */
+  importance: ReturnType<typeof getMemoryListImportanceSummary>;
+  shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
+  pinned: 0;
+  shownPinned: 0;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -806,6 +811,10 @@ export function formatMemoryListMissingJson(
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
+      importance: { min: null, max: null, average: null },
+      shownImportance: { min: null, max: null, average: null },
+      pinned: 0,
+      shownPinned: 0,
       filters: {
         tier: filters.tier ?? null,
         freshness: filters.freshness ?? null,

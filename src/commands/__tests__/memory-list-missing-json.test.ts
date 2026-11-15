@@ -23,6 +23,10 @@ describe('savestate memory list --json when missing', () => {
       limit: null,
       offset: 0,
       maxOffset: 1000,
+      importance: { min: null, max: null, average: null },
+      shownImportance: { min: null, max: null, average: null },
+      pinned: 0,
+      shownPinned: 0,
       filters: {
         tier: null,
         freshness: null,
@@ -40,9 +44,9 @@ describe('savestate memory list --json when missing', () => {
     });
     expect(parsed.entries).toBeUndefined();
     expect(parsed.byTier).toBeUndefined();
-    expect(parsed.pinned).toBeUndefined();
+    expect(parsed.pinned).toBe(0);
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['contentIncluded', 'emptyReason', 'filters', 'found', 'limit', 'maxOffset', 'offset', 'shown', 'snapshot', 'total']);
+    expect(Object.keys(parsed).sort()).toEqual(['contentIncluded', 'emptyReason', 'filters', 'found', 'importance', 'limit', 'maxOffset', 'offset', 'pinned', 'shown', 'shownImportance', 'shownPinned', 'snapshot', 'total']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
 
@@ -60,6 +64,10 @@ describe('savestate memory list --json when missing', () => {
       limit: null,
       offset: 0,
       maxOffset: 1000,
+      importance: { min: null, max: null, average: null },
+      shownImportance: { min: null, max: null, average: null },
+      pinned: 0,
+      shownPinned: 0,
       filters: {
         tier: null,
         freshness: null,
