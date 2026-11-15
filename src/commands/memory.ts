@@ -465,6 +465,12 @@ export function formatMemoryListPageImportanceSummary(memories: MemoryEntry[]): 
   return `Page Importance: ${formatMemoryListImportanceSummary(memories)}`;
 }
 
+/** Label pinned totals for the rows visible on a paginated table page. */
+export function formatMemoryListPagePinnedSummary(memories: MemoryEntry[]): string {
+  const pinned = memories.filter((memory) => memory.pinned).length;
+  return `Page Pinned: ${pinned} of ${memories.length}`;
+}
+
 export interface MemoryListEntryJson {
   id: string;
   tier: MemoryTier;
@@ -1821,7 +1827,8 @@ export async function listMemories(
       console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
       console.log(`${formatMemoryListPageTagSummary(entries)}`);
       console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}`);
-      console.log(`${formatMemoryListPageImportanceSummary(entries)}\n`);
+      console.log(`${formatMemoryListPageImportanceSummary(entries)}`);
+      console.log(`${formatMemoryListPagePinnedSummary(entries)}\n`);
     }
   }
 
