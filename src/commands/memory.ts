@@ -385,6 +385,12 @@ export function formatMemoryListPinnedSummary(memories: MemoryEntry[]): string {
   return `${pinned} of ${memories.length} (${percentage.toFixed(0)}%)`;
 }
 
+/** Return a stable percentage for machine-readable pinned aggregates. */
+export function getMemoryListPinnedPercentage(memories: MemoryEntry[]): number {
+  if (memories.length === 0) return 0;
+  return (memories.filter((memory) => memory.pinned).length / memories.length) * 100;
+}
+
 /** Return numeric importance aggregates for machine-readable list consumers. */
 export function getMemoryListImportanceSummary(memories: MemoryEntry[]): {
   min: number | null;
@@ -569,6 +575,8 @@ export interface MemoryListJson {
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
   pinned: number;
   shownPinned: number;
+  pinnedPercentage: number;
+  shownPinnedPercentage: number;
   /** Whether each returned entry includes its memory content. */
   contentIncluded: boolean;
   entries: MemoryListEntryJson[];
@@ -725,6 +733,8 @@ export function formatMemoryListJson(
     shownImportance: getMemoryListImportanceSummary(shown),
     pinned: all.filter((entry) => !!entry.pinned).length,
     shownPinned: shown.filter((entry) => !!entry.pinned).length,
+    pinnedPercentage: getMemoryListPinnedPercentage(all),
+    shownPinnedPercentage: getMemoryListPinnedPercentage(shown),
     contentIncluded: pagination.includeContent !== false,
     entries: shown.map((entry) => ({
       id: entry.id,
@@ -767,6 +777,8 @@ export interface MemoryListMissingJson {
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
   pinned: 0;
   shownPinned: 0;
+  pinnedPercentage: 0;
+  shownPinnedPercentage: 0;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -815,6 +827,8 @@ export function formatMemoryListMissingJson(
       shownImportance: { min: null, max: null, average: null },
       pinned: 0,
       shownPinned: 0,
+      pinnedPercentage: 0,
+      shownPinnedPercentage: 0,
       filters: {
         tier: filters.tier ?? null,
         freshness: filters.freshness ?? null,
