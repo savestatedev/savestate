@@ -550,7 +550,7 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
     // Tell users why there is no normal continuation when the CLI's offset
     // ceiling is reached, and point them at the last page they can open.
     hints.push(
-      `last reachable offset ${getNearestListOffset(total, pageLimit)} (max offset ${MAX_LIST_OFFSET})`,
+      `last page-aligned offset ${getNearestListOffset(total, pageLimit)} (max offset ${MAX_LIST_OFFSET})`,
     );
   }
   if (offset > 0) hints.push(`previous offset ${Math.max(0, offset - pageLimit)}`);

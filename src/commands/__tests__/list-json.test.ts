@@ -300,6 +300,12 @@ describe('savestate list --json', () => {
     }
   });
 
+  it('labels the page-aligned recovery point when the offset ceiling interrupts paging', () => {
+    expect(formatListPageSummary(2_001, 128, 1_000, 128)).toContain(
+      'last page-aligned offset 896 (max offset 1000)',
+    );
+  });
+
   it('keeps stale-page recovery offsets aligned to the page size', () => {
     const snapshots = Array.from({ length: 2_001 }, (_, index) => ({
       ...older,
