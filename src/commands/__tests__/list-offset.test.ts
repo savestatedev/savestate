@@ -4,6 +4,7 @@ import {
   formatListEmptyState,
   formatListPageSummary,
   formatListLabelCell,
+  formatListTags,
   formatListDate,
   applyListFilters,
   parseListOffset,
@@ -18,6 +19,11 @@ describe('savestate list --offset', () => {
   it('pads labels before styling an empty placeholder', () => {
     expect(formatListLabelCell(null, 5)).toBe('—    ');
     expect(formatListLabelCell('work', 5)).toBe('work ');
+  });
+
+  it('normalizes tags for the human-readable table', () => {
+    expect(formatListTags([' weekly ', 'weekly', '  '])).toBe('weekly');
+    expect(formatListTags(undefined)).toBe('—');
   });
 
   it('defaults to undefined', () => {
