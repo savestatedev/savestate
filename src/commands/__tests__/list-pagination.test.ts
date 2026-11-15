@@ -6,6 +6,7 @@ describe('list pagination summaries', () => {
     expect(formatListPageSummary(1200, 100, 1000, 100)).toContain(
       'last reachable offset 1000',
     );
+    expect(formatListPageSummary(1200, 100, 1000, 100)).toContain('max offset 1000');
   });
 
   it('keeps offering a next offset while it is still reachable', () => {
