@@ -2859,6 +2859,14 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('savestate memory list --json-summary');
   });
 
+  it('documents pinned percentages in memory list JSON summaries', () => {
+    const memorySection = docs.slice(docs.indexOf('<h2 id="memory">'));
+
+    expect(memorySection).toContain('pinnedPercentage');
+    expect(memorySection).toContain('shownPinnedPercentage');
+    expect(memorySection).toContain('Percentage fields are numeric');
+  });
+
   it('documents memory list --json when missing', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--json');
