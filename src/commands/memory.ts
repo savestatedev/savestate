@@ -381,7 +381,8 @@ export function formatMemoryListImportanceSummary(memories: MemoryEntry[]): stri
 /** Format pinned totals for the human-facing list summary. */
 export function formatMemoryListPinnedSummary(memories: MemoryEntry[]): string {
   const pinned = memories.filter((memory) => memory.pinned).length;
-  return `${pinned} of ${memories.length}`;
+  const percentage = memories.length === 0 ? 0 : (pinned / memories.length) * 100;
+  return `${pinned} of ${memories.length} (${percentage.toFixed(0)}%)`;
 }
 
 /** Return numeric importance aggregates for machine-readable list consumers. */
@@ -473,8 +474,7 @@ export function formatMemoryListPageImportanceSummary(memories: MemoryEntry[]): 
 
 /** Label pinned totals for the rows visible on a paginated table page. */
 export function formatMemoryListPagePinnedSummary(memories: MemoryEntry[]): string {
-  const pinned = memories.filter((memory) => memory.pinned).length;
-  return `Page Pinned: ${pinned} of ${memories.length}`;
+  return `Page Pinned: ${formatMemoryListPinnedSummary(memories)}`;
 }
 
 export interface MemoryListEntryJson {
