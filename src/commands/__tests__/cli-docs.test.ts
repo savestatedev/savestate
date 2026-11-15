@@ -2569,6 +2569,15 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('export function parseMemoryMaxImportance');
   });
 
+  it('shows the importance range in memory command examples', () => {
+    expect(memoryCli).toContain(
+      'savestate memory list --min-importance 0.8 --max-importance 1 --json',
+    );
+    expect(readme).toContain(
+      'Memories without a valid score use the default `0.5` value',
+    );
+  });
+
   it('documents memory explain criticality bounds', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const explainBlock = memoryCli.slice(memoryCli.indexOf("command('explain"), memoryCli.indexOf("command('edit"));

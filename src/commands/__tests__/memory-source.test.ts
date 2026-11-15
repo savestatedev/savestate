@@ -8,6 +8,7 @@ import {
   formatMemoryListPageFreshnessSummary,
   formatMemoryListPageSourceSummary,
   formatMemoryListFreshnessSummary,
+  formatMemoryListImportanceSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
   formatMemoryListSourceSummary,
@@ -122,6 +123,17 @@ describe('memory list table freshness display', () => {
       { id: 'a', content: 'a', source: 'Claude-Code', createdAt: '2026-09-01T00:00:00.000Z' },
       { id: 'b', content: 'b', source: 'user', createdAt: '2026-09-01T00:00:00.000Z' },
     ])).toBe('Page Sources: Claude-Code 1, user 1');
+  });
+});
+
+describe('memory list table importance display', () => {
+  it('summarizes effective importance scores for the matching collection', () => {
+    expect(formatMemoryListImportanceSummary([
+      { id: 'high', content: 'high', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', metadata: { importance: 0.9 } },
+      { id: 'default', content: 'default', source: 'test', createdAt: '2026-09-01T00:00:00.000Z' },
+      { id: 'low', content: 'low', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', metadata: { importance: 0.2 } },
+    ])).toBe('min 0.20, max 0.90, average 0.53');
+    expect(formatMemoryListImportanceSummary([])).toBe('none');
   });
 });
 
