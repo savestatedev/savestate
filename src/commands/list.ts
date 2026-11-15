@@ -136,6 +136,11 @@ export interface ListJson {
 
 export type ListJsonSummary = Omit<ListJson, 'entries'>;
 
+/** Keep legacy snapshot ids stable when older indexes contain whitespace. */
+export function normalizeListJsonId(id: string): string {
+  return id.trim();
+}
+
 /** Keep JSON tag values stable when older indexes contain whitespace or duplicates. */
 export function normalizeListJsonTags(tags?: string[]): string[] {
   const seen = new Set<string>();
@@ -219,7 +224,7 @@ export function formatListJson(
   )
     .slice(0, pageLimit);
   const records: ListSnapshotJson[] = visible.map((snapshot) => ({
-      id: snapshot.id,
+      id: normalizeListJsonId(snapshot.id),
       timestamp: snapshot.timestamp,
       platform: snapshot.platform,
       adapter: snapshot.adapter,

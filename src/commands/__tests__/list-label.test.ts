@@ -80,6 +80,14 @@ describe('savestate list --label', () => {
     expect(formatListLabelCell('  backup  ', 10)).toBe('backup    ');
   });
 
+  it('normalizes legacy snapshot id whitespace in JSON output', async () => {
+    const { formatListJson } = await import('../list.js');
+    const result = JSON.parse(formatListJson([
+      entry({ id: '  ss-legacy  ', adapter: 'chatgpt' }),
+    ]));
+    expect(result.entries[0].id).toBe('ss-legacy');
+  });
+
   it('sizes the label column from normalized labels', () => {
     expect(getListLabelWidth([entry({ id: 'legacy', adapter: 'chatgpt', label: '  backup  ' })])).toBe(6);
   });
