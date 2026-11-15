@@ -4,7 +4,7 @@ import { formatListPageSummary } from '../list.js';
 describe('list pagination summaries', () => {
   it('explains when more matches exist beyond the supported offset ceiling', () => {
     expect(formatListPageSummary(1200, 100, 1000, 100)).toContain(
-      'last reachable offset 1000',
+      'last page-aligned offset 1000',
     );
     expect(formatListPageSummary(1200, 100, 1000, 100)).toContain('max offset 1000');
   });
