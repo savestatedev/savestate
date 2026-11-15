@@ -378,6 +378,12 @@ export function formatMemoryListImportanceSummary(memories: MemoryEntry[]): stri
   return `min ${minimum.toFixed(2)}, max ${maximum.toFixed(2)}, average ${average.toFixed(2)}`;
 }
 
+/** Format pinned totals for the human-facing list summary. */
+export function formatMemoryListPinnedSummary(memories: MemoryEntry[]): string {
+  const pinned = memories.filter((memory) => memory.pinned).length;
+  return `${pinned} of ${memories.length}`;
+}
+
 /** Return numeric importance aggregates for machine-readable list consumers. */
 export function getMemoryListImportanceSummary(memories: MemoryEntry[]): {
   min: number | null;
@@ -458,6 +464,17 @@ export function formatMemoryListPageNamespaceSummary(memories: MemoryEntry[]): s
 /** Format tag totals for the rows visible on a paginated table page. */
 export function formatMemoryListPageTagSummary(memories: MemoryEntry[]): string {
   return `Page Tags: ${formatMemoryListTagSummary(memories)}`;
+}
+
+/** Label effective importance totals for the visible page. */
+export function formatMemoryListPageImportanceSummary(memories: MemoryEntry[]): string {
+  return `Page Importance: ${formatMemoryListImportanceSummary(memories)}`;
+}
+
+/** Label pinned totals for the rows visible on a paginated table page. */
+export function formatMemoryListPagePinnedSummary(memories: MemoryEntry[]): string {
+  const pinned = memories.filter((memory) => memory.pinned).length;
+  return `Page Pinned: ${pinned} of ${memories.length}`;
 }
 
 export interface MemoryListEntryJson {
@@ -745,6 +762,11 @@ export interface MemoryListMissingJson {
   limit: number | null;
   offset: number;
   maxOffset: number;
+  /** Empty collection summaries keep the successful list schema predictable. */
+  importance: ReturnType<typeof getMemoryListImportanceSummary>;
+  shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
+  pinned: 0;
+  shownPinned: 0;
   filters: {
     tier: MemoryTier | null;
     freshness: MemoryFreshnessState | null;
@@ -789,6 +811,10 @@ export function formatMemoryListMissingJson(
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
+      importance: { min: null, max: null, average: null },
+      shownImportance: { min: null, max: null, average: null },
+      pinned: 0,
+      shownPinned: 0,
       filters: {
         tier: filters.tier ?? null,
         freshness: filters.freshness ?? null,
@@ -1806,6 +1832,7 @@ export async function listMemories(
   console.log(`Tag Summary: ${formatMemoryListTagSummary(filteredEntries)}\n`);
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
   console.log(`Importance Summary: ${formatMemoryListImportanceSummary(filteredEntries)}\n`);
+  console.log(`Pinned Summary: ${formatMemoryListPinnedSummary(filteredEntries)}\n`);
   console.log(formatMemoryListOrderingSummary(options?.oldestFirst, options?.importantFirst));
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
@@ -1815,7 +1842,9 @@ export async function listMemories(
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
       console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
       console.log(`${formatMemoryListPageTagSummary(entries)}`);
-      console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}\n`);
+      console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}`);
+      console.log(`${formatMemoryListPageImportanceSummary(entries)}`);
+      console.log(`${formatMemoryListPagePinnedSummary(entries)}\n`);
     }
   }
 

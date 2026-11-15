@@ -9,6 +9,9 @@ import {
   formatMemoryListPageSourceSummary,
   formatMemoryListFreshnessSummary,
   formatMemoryListImportanceSummary,
+  formatMemoryListPageImportanceSummary,
+  formatMemoryListPinnedSummary,
+  formatMemoryListPagePinnedSummary,
   formatMemoryListLastAccessed,
   formatMemoryListSource,
   formatMemoryListSourceSummary,
@@ -134,6 +137,28 @@ describe('memory list table importance display', () => {
       { id: 'low', content: 'low', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', metadata: { importance: 0.2 } },
     ])).toBe('min 0.20, max 0.90, average 0.53');
     expect(formatMemoryListImportanceSummary([])).toBe('none');
+  });
+
+  it('labels importance totals for the visible page', () => {
+    expect(formatMemoryListPageImportanceSummary([
+      { id: 'high', content: 'high', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', metadata: { importance: 0.9 } },
+      { id: 'default', content: 'default', source: 'test', createdAt: '2026-09-01T00:00:00.000Z' },
+    ])).toBe('Page Importance: min 0.50, max 0.90, average 0.70');
+  });
+
+  it('labels pinned totals for the visible page', () => {
+    expect(formatMemoryListPagePinnedSummary([
+      { id: 'pinned', content: 'pinned', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', pinned: true },
+      { id: 'regular', content: 'regular', source: 'test', createdAt: '2026-09-01T00:00:00.000Z' },
+    ])).toBe('Page Pinned: 1 of 2');
+  });
+
+  it('summarizes pinned totals for the matching collection', () => {
+    expect(formatMemoryListPinnedSummary([
+      { id: 'pinned', content: 'pinned', source: 'test', createdAt: '2026-09-01T00:00:00.000Z', pinned: true },
+      { id: 'regular', content: 'regular', source: 'test', createdAt: '2026-09-01T00:00:00.000Z' },
+    ])).toBe('1 of 2');
+    expect(formatMemoryListPinnedSummary([])).toBe('0 of 0');
   });
 });
 
