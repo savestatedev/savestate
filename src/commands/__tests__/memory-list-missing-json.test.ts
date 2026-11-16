@@ -23,6 +23,7 @@ describe('savestate memory list --json when missing', () => {
       limit: null,
       offset: 0,
       maxOffset: 1000,
+      guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
       pinned: 0,
@@ -48,7 +49,7 @@ describe('savestate memory list --json when missing', () => {
     expect(parsed.byTier).toBeUndefined();
     expect(parsed.pinned).toBe(0);
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['contentIncluded', 'emptyReason', 'filters', 'found', 'importance', 'limit', 'maxOffset', 'offset', 'pinned', 'pinnedPercentage', 'shown', 'shownImportance', 'shownPinned', 'shownPinnedPercentage', 'snapshot', 'total']);
+    expect(Object.keys(parsed).sort()).toEqual(['contentIncluded', 'emptyReason', 'filters', 'found', 'guidance', 'importance', 'limit', 'maxOffset', 'offset', 'pinned', 'pinnedPercentage', 'shown', 'shownImportance', 'shownPinned', 'shownPinnedPercentage', 'snapshot', 'total']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
 
@@ -66,6 +67,7 @@ describe('savestate memory list --json when missing', () => {
       limit: null,
       offset: 0,
       maxOffset: 1000,
+      guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
       pinned: 0,
@@ -95,6 +97,14 @@ describe('savestate memory list --json when missing', () => {
     ) as MemoryListMissingJson;
 
     expect(parsed.limit).toBe(25);
+  });
+
+  it('marks missing snapshots as terminal for paginated consumers', () => {
+    const parsed = JSON.parse(
+      formatMemoryListMissingJson('ss-missing', { limit: 25, offset: 50 }),
+    ) as MemoryListMissingJson;
+
+    expect(parsed.guidance).toEqual({ action: 'none', offset: null });
   });
 
   it('preserves a requested offset for missing snapshots', () => {
