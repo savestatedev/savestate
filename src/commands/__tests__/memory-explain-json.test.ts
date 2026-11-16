@@ -2,10 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   formatMemoryExplainJson,
   normalizeMemoryExplainRank,
+  parseMemoryExplainLimit,
+  parseMemoryExplainOffset,
   type MemoryExplainJson,
 } from '../memory.js';
 
 describe('savestate memory explain --json', () => {
+  it('accepts CLI-normalized numeric pagination values', () => {
+    expect(parseMemoryExplainLimit(25)).toBe(25);
+    expect(parseMemoryExplainOffset(50)).toBe(50);
+  });
+
   it('prints retrieval scores and summaries as JSON without content', () => {
     const parsed = JSON.parse(
       formatMemoryExplainJson('inbox preference', [
