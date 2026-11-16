@@ -1697,7 +1697,11 @@ export function formatMemoryListPageSummary(
   const nextOffsetIsCapped = rawNextOffset >= MAX_MEMORY_LIST_OFFSET;
   const hints = [pageDescription];
   if (hasNextPage && nextOffset > offset) {
-    hints.push(`next offset ${nextOffset}${nextOffsetIsCapped ? ' (maximum)' : ''}`);
+    hints.push(
+      `next offset ${nextOffset}${nextOffsetIsCapped ? ' (maximum)' : ''}${
+        limit === undefined ? '' : `, limit ${limit}`
+      }`,
+    );
   } else if (hasNextPage) {
     hints.push('no later page is available within the offset limit');
   }
@@ -1707,7 +1711,11 @@ export function formatMemoryListPageSummary(
         ? 0
         : Math.floor((total - 1) / limit) * limit
       : offset - (limit === undefined ? shown : limit);
-    hints.push(`previous offset ${Math.max(0, previousOffset)}`);
+    hints.push(
+      `previous offset ${Math.max(0, previousOffset)}${
+        limit === undefined ? '' : `, limit ${limit}`
+      }`,
+    );
   }
   return `(showing ${shown} of ${total} matching memories; ${hints.join('; ')})`;
 }
