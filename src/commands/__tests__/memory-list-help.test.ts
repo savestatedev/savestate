@@ -11,5 +11,6 @@ describe('savestate memory list help', () => {
     const help = memory?.commands.find((command) => command.name() === 'list')?.helpInformation();
 
     expect(help).toContain('--json-summary, --summary');
+    expect(help).toContain('--summary is the short alias');
   });
 });
