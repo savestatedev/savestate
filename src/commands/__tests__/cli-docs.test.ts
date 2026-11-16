@@ -2541,6 +2541,7 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--pinned');
     expect(memorySection).toContain('--unpinned');
+    expect(memoryCli).toContain(".option('-u, --unpinned'");
     expect(memorySection).toContain('mutually exclusive');
     expect(memorySection).toContain('--limit');
     expect(memorySection).toContain('--to');
@@ -3348,7 +3349,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scope retrieval explanations to pinned memories');
     expect(memorySection).toContain('scope retrieval explanations to unpinned memories');
     expect(explainBlock).toContain(".option('-p, --pinned'");
-    expect(explainBlock).toContain(".option('--unpinned'");
+    expect(explainBlock).toContain(".option('-u, --unpinned'");
     expect(memoryCli).toContain('parseMemoryPinnedFilter(options.pinned, options.unpinned)');
   });
 
