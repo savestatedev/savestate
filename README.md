@@ -239,6 +239,10 @@ pages use `null` for each value; memories without a valid score use the default 
 Table output shows pinned memories as both a count and percentage, for example `2 of 10 (20%)`,
 for the matching collection and the visible page.
 
+The JSON response exposes the same values as numeric `pinnedPercentage` and
+`shownPinnedPercentage` fields. The first uses all memories matching the filters; the second
+uses only the current page. Both return `0` when their collection is empty.
+
 Table output also shows matching-collection namespace totals and, when paginated, namespace
 totals for the rows on the visible page. Namespace summaries show the first eight non-empty
 namespace labels, compactly report any additional namespaces, and include unassigned memories.

@@ -2541,6 +2541,7 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--pinned');
     expect(memorySection).toContain('--unpinned');
+    expect(memoryCli).toContain(".option('-u, --unpinned'");
     expect(memorySection).toContain('mutually exclusive');
     expect(memorySection).toContain('--limit');
     expect(memorySection).toContain('--to');
@@ -2851,12 +2852,21 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--json');
     expect(memorySection).toContain('scripting');
     expect(memorySection).toContain('savestate memory list --json');
+    expect(memorySection).toContain('savestate memory list --json-summary');
     expect(memorySection).toContain('--json-summary');
     expect(memorySection).toContain("omitting each entry's");
     expect(memorySection).toContain('contentIncluded');
     expect(memorySection).toContain('guidance');
     expect(memorySection).toContain('recommended <code>offset</code>');
     expect(memoryCli).toContain('savestate memory list --json-summary');
+  });
+
+  it('documents pinned percentages in memory list JSON summaries', () => {
+    const memorySection = docs.slice(docs.indexOf('<h2 id="memory">'));
+
+    expect(memorySection).toContain('pinnedPercentage');
+    expect(memorySection).toContain('shownPinnedPercentage');
+    expect(memorySection).toContain('Percentage fields are numeric');
   });
 
   it('documents memory list --json when missing', () => {
@@ -3339,7 +3349,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('scope retrieval explanations to pinned memories');
     expect(memorySection).toContain('scope retrieval explanations to unpinned memories');
     expect(explainBlock).toContain(".option('-p, --pinned'");
-    expect(explainBlock).toContain(".option('--unpinned'");
+    expect(explainBlock).toContain(".option('-u, --unpinned'");
     expect(memoryCli).toContain('parseMemoryPinnedFilter(options.pinned, options.unpinned)');
   });
 
