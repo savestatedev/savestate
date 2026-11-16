@@ -519,6 +519,16 @@ export function parseMemoryContentFilter(value: string | undefined): string | un
   return value === undefined ? undefined : parseMemoryContent(value);
 }
 
+/** Reject contradictory ordering flags before loading encrypted storage. */
+export function validateMemoryListOrdering(
+  oldestFirst: boolean | undefined,
+  reverse: boolean | undefined,
+): void {
+  if (oldestFirst && reverse) {
+    throw new Error('Cannot use --oldest-first and --reverse together; choose one ordering flag.');
+  }
+}
+
 /**
  * Register memory-related commands on the CLI program.
  */
@@ -534,6 +544,7 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --tags work,urgent\n' +
         '  $ savestate memory list --min-importance 0.8 --max-importance 1 --json\n' +
         '  $ savestate memory list --summary\n' +
+        '  $ savestate memory list --important-first --oldest-first --json-summary\n' +
         '  $ savestate memory list --limit 20 --offset 20\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
         '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +
@@ -574,6 +585,7 @@ export function registerMemoryCommands(program: Command): void {
         const minImportance = parseMemoryMinImportance(options.minImportance);
         const maxImportance = parseMemoryMaxImportance(options.maxImportance);
         validateMemoryImportanceRange(minImportance, maxImportance);
+        validateMemoryListOrdering(options.oldestFirst, options.reverse);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
