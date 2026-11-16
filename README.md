@@ -256,6 +256,10 @@ results and the current page, plus `unassignedNamespaceCount` and
 `shownUnassignedNamespaceCount` so consumers can distinguish scoped results from unassigned
 memory without rescanning the result list.
 
+Explain results accept bounded pagination controls: `--limit` sets the page size (default 10,
+maximum 1000) and `--offset` continues through results (0-1000). Invalid values fail before
+encrypted storage is opened, giving automation a safe input-validation boundary.
+
 Human-readable `memory explain` output shows a compact namespace summary for matching results and,
 when pagination hides results, a second summary for the visible page. Both include an unassigned
 count when applicable.
