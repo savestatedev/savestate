@@ -84,6 +84,8 @@ export async function createSnapshot(
   storage: StorageBackend,
   passphrase: string,
   options?: {
+    /** Directory where the local save receipt should be persisted. */
+    cwd?: string;
     label?: string;
     tags?: string[];
     parentId?: string;
@@ -242,7 +244,7 @@ export async function createSnapshot(
   });
 
   // Store receipt for later verification
-  await storeReceipt(receipt);
+  await storeReceipt(receipt, options?.cwd);
 
   // Step 13: Update local index
   // Issue #126: If index update fails, we have the receipt as backup
