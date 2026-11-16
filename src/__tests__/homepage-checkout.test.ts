@@ -68,6 +68,12 @@ describe('homepage checkout CTAs', () => {
     expect(hrefForCta(homepage, 'nav-pro-checkout')).toBe(stripe.products.pro.payment_link);
   });
 
+  it('surfaces the memory explain workflow in the CLI reference', () => {
+    expect(homepage).toContain('Ten commands. Full control.');
+    expect(homepage).toMatch(/savestate memory<\/span> <span class="desc">explain<\/span>/);
+    expect(homepage).toContain('Explain ranked memory matches and their freshness');
+  });
+
   it('points the Get Started footer CTAs at the live Payment Links', () => {
     expect(hrefForCta(homepage, 'footer-pro-checkout')).toBe(stripe.products.pro.payment_link);
     expect(hrefForCta(homepage, 'footer-team-checkout')).toBe(stripe.products.team.payment_link);
