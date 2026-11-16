@@ -271,6 +271,9 @@ the `entries` metadata shape and omits only each entry's `content` field. The re
 `contentIncluded: false`—including when the requested snapshot is missing—so consumers can detect
 the redacted mode without inspecting entries.
 
+For a shorter interactive command, `savestate memory list --summary` is an alias for
+`--json-summary`.
+
 Paginated JSON also includes `guidance`, a small machine-readable next step: `next`, `previous`,
 or `retry` with the recommended offset, or `none` when no navigation action is available.
 
