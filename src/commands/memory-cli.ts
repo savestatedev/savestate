@@ -565,7 +565,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--offset <n>', 'Skip the first N memories (non-negative integer up to 1000)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--json', 'Output as JSON')
-    .option('--json-summary', 'Output as JSON without memory content')
+    .option('--json-summary', 'Output JSON metadata without memory content (implies --json)')
     .action(async (options) => {
       try {
         const until = parseMemoryListUntil(options.until);

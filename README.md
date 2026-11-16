@@ -355,6 +355,9 @@ savestate memory explain "inbox preference" --offset 10 --limit 5 --json
 savestate memory explain "inbox preference" --snapshot ss-2026-10-18 --offset 10 --limit 5 --json
 ```
 
+For automation that needs pagination and filter metadata without copying memory content,
+use `savestate memory list --json-summary` (it already implies JSON output).
+
 Use `--source` to inspect memories captured from one originating platform; matching is
 case-insensitive. The filter applies before pagination, so it can be combined with
 `--limit` and `--offset` for a stable, source-scoped page.
