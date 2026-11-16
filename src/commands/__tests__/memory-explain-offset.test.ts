@@ -5,6 +5,7 @@ import {
   formatMemoryExplainEmptyTips,
   formatMemoryExplainPrettyNamespaceSummary,
   formatMemoryExplainPrettySummary,
+  formatMemoryExplainJson,
   parseMemoryExplainOffset,
   selectMemoryExplainOffsetEntries,
 } from '../memory.js';
@@ -99,5 +100,24 @@ describe('savestate memory explain --offset', () => {
       'Check if memories exist with `savestate memory list`',
       'Verify the namespace is correct',
     ]);
+  });
+
+  it('can emit pagination metadata without retrieval details', () => {
+    const summary = JSON.parse(formatMemoryExplainJson(
+      'editor',
+      [{
+        id: 'm1', score: 0.9, summary: 'VS Code', pinned: false, tier: 'L1',
+        freshness: 'active', namespace: 'work',
+      }],
+      { offset: 2, limit: 1, total: 4, pageSize: 1 },
+      undefined,
+      undefined,
+      undefined,
+      false,
+    ));
+
+    expect(summary.shown).toBe(1);
+    expect(summary.pagination.nextOffset).toBe(3);
+    expect(summary.results).toEqual([]);
   });
 });

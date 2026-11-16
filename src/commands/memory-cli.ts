@@ -803,6 +803,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--min-criticality <n>', 'Show explain matches with criticality at least this score (0-1)')
     .option('--max-criticality <n>', 'Show explain matches with criticality at most this score (0-1)')
     .option('--json', 'Output as JSON')
+    .option('--json-summary, --summary', 'Output JSON pagination metadata without retrieval details; --summary is the short alias (implies --json)')
     .action(async (query, options) => {
       try {
         const parsedQuery = parseMemoryQuery(query);
@@ -836,7 +837,7 @@ export function registerMemoryCommands(program: Command): void {
           maxImportance,
           minCriticality,
           maxCriticality,
-          format: options.json ? 'json' : 'pretty',
+          format: options.jsonSummary ? 'json-summary' : options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);

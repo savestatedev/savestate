@@ -3061,6 +3061,7 @@ export function formatMemoryExplainJson(
     unassignedNamespaceCount?: number;
     shownUnassignedNamespaceCount?: number;
   },
+  includeResults = true,
 ): string {
   const offset = pagination.offset ?? 0;
   const total = pagination.total ?? results.length;
@@ -3106,7 +3107,7 @@ export function formatMemoryExplainJson(
       nextOffset: hasMore ? pagination.nextOffset ?? offset + pageSize : null,
     },
     ...(sourceSummary === undefined ? {} : sourceSummary),
-    results: results.map((result, index) => {
+    results: includeResults ? results.map((result, index) => {
       const tags = result.tags === undefined ? [] : normalizeMemoryTagFilters(result.tags);
       return {
         id: result.id,
@@ -3131,7 +3132,7 @@ export function formatMemoryExplainJson(
           ? undefined
           : normalizeMemorySource(result.verificationSource),
       };
-    }),
+    }) : [],
   };
   if (filters && Object.keys(filters).length > 0) {
     record.filters = {
@@ -3473,7 +3474,7 @@ export async function explainMemoryCommand(
     pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
   };
 
-  if (options?.format === 'json') {
+  if (options?.format === 'json' || options?.format === 'json-summary') {
     if (scoredLimited.length === 0) {
       if (sorted.length > 0) {
         console.log(formatMemoryExplainJson(
@@ -3490,6 +3491,7 @@ export async function explainMemoryCommand(
             unassignedNamespaceCount: sorted.length - Object.values(countByNamespace(sorted.map((r) => r.entry))).reduce((total, count) => total + count, 0),
             shownUnassignedNamespaceCount: scoredLimited.length - Object.values(countByNamespace(scoredLimited.map((r) => r.entry))).reduce((total, count) => total + count, 0),
           },
+          options.format === 'json',
         ));
         return;
       }
@@ -3544,6 +3546,7 @@ export async function explainMemoryCommand(
         unassignedNamespaceCount: sorted.length - Object.values(countByNamespace(sorted.map((r) => r.entry))).reduce((total, count) => total + count, 0),
         shownUnassignedNamespaceCount: scoredLimited.length - Object.values(countByNamespace(scoredLimited.map((r) => r.entry))).reduce((total, count) => total + count, 0),
       },
+      options.format === 'json',
     ));
     return;
   }
