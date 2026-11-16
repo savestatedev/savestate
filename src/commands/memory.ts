@@ -1634,9 +1634,12 @@ export function formatMemoryListEmptyState(
       Math.floor((matchingCount - 1) / limit) * limit,
     );
   const filterContext = filterSummary ? ` for these filters: ${filterSummary}` : '';
+  const pageHint = limit === undefined
+    ? `--offset ${suggestedOffset}`
+    : `--offset ${suggestedOffset} --limit ${limit}`;
   return `No memories shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'memory' : 'memories'
-  }${filterContext}. Try --offset ${suggestedOffset} to open the nearest available page.`;
+  }${filterContext}. Try ${pageHint} to open the nearest available page.`;
 }
 
 /** Summarize active list filters so an empty human-facing result is actionable. */
@@ -1694,7 +1697,11 @@ export function formatMemoryListPageSummary(
   const nextOffsetIsCapped = rawNextOffset >= MAX_MEMORY_LIST_OFFSET;
   const hints = [pageDescription];
   if (hasNextPage && nextOffset > offset) {
-    hints.push(`next offset ${nextOffset}${nextOffsetIsCapped ? ' (maximum)' : ''}`);
+    hints.push(
+      `next offset ${nextOffset}${nextOffsetIsCapped ? ' (maximum)' : ''}${
+        limit === undefined ? '' : `, limit ${limit}`
+      }`,
+    );
   } else if (hasNextPage) {
     hints.push('no later page is available within the offset limit');
   }
@@ -1704,7 +1711,11 @@ export function formatMemoryListPageSummary(
         ? 0
         : Math.floor((total - 1) / limit) * limit
       : offset - (limit === undefined ? shown : limit);
-    hints.push(`previous offset ${Math.max(0, previousOffset)}`);
+    hints.push(
+      `previous offset ${Math.max(0, previousOffset)}${
+        limit === undefined ? '' : `, limit ${limit}`
+      }`,
+    );
   }
   return `(showing ${shown} of ${total} matching memories; ${hints.join('; ')})`;
 }
@@ -2957,7 +2968,7 @@ export function formatMemoryExplainPrettySummary(
   if (shown === 0) {
     const suggestedOffset = Math.floor((total - 1) / pageSize) * pageSize;
     return `No memories on this page (offset ${offset}; ${total} relevant memories matched). ` +
-      `Try --offset ${suggestedOffset} to open the nearest available page.`;
+      `Try --offset ${suggestedOffset} --limit ${pageSize} to open the nearest available page.`;
   }
 
   const first = offset + 1;
