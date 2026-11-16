@@ -533,7 +533,7 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --source chatgpt\n' +
         '  $ savestate memory list --tags work,urgent\n' +
         '  $ savestate memory list --min-importance 0.8 --max-importance 1 --json\n' +
-        '  $ savestate memory list --json-summary\n' +
+        '  $ savestate memory list --summary\n' +
         '  $ savestate memory list --limit 20 --offset 20\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
         '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +
@@ -565,7 +565,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--offset <n>', 'Skip the first N memories (non-negative integer up to 1000)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--json', 'Output as JSON')
-    .option('--json-summary', 'Output JSON metadata without memory content (implies --json)')
+    .option('--json-summary, --summary', 'Output JSON metadata without memory content (implies --json)')
     .action(async (options) => {
       try {
         const until = parseMemoryListUntil(options.until);
