@@ -774,6 +774,11 @@ export interface MemoryListMissingJson {
   limit: number | null;
   offset: number;
   maxOffset: number;
+  hasMore: false;
+  isLastPage: true;
+  nextOffset: null;
+  previousOffset: null;
+  suggestedOffset: null;
   /** Missing snapshots are terminal and therefore have no follow-up page. */
   guidance: MemoryListGuidance;
   /** Empty collection summaries keep the successful list schema predictable. */
@@ -828,6 +833,11 @@ export function formatMemoryListMissingJson(
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
+      hasMore: false,
+      isLastPage: true,
+      nextOffset: null,
+      previousOffset: null,
+      suggestedOffset: null,
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
