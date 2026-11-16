@@ -765,6 +765,8 @@ export function formatMemoryListJson(
 export interface MemoryListMissingJson {
   found: false;
   snapshot: string;
+  /** Missing snapshots are empty result sets, just like an empty collection. */
+  empty: true;
   /** Why no memory rows are available for this request. */
   emptyReason: 'snapshot';
   total: 0;
@@ -819,6 +821,7 @@ export function formatMemoryListMissingJson(
     {
       found: false,
       snapshot,
+      empty: true,
       emptyReason: 'snapshot',
       total: 0,
       shown: 0,

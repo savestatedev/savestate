@@ -17,6 +17,7 @@ describe('savestate memory list --json when missing', () => {
     expect(parsed).toEqual({
       found: false,
       snapshot: 'ss-missing',
+      empty: true,
       emptyReason: 'snapshot',
       total: 0,
       shown: 0,
@@ -49,7 +50,7 @@ describe('savestate memory list --json when missing', () => {
     expect(parsed.byTier).toBeUndefined();
     expect(parsed.pinned).toBe(0);
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['contentIncluded', 'emptyReason', 'filters', 'found', 'guidance', 'importance', 'limit', 'maxOffset', 'offset', 'pinned', 'pinnedPercentage', 'shown', 'shownImportance', 'shownPinned', 'shownPinnedPercentage', 'snapshot', 'total']);
+    expect(Object.keys(parsed).sort()).toEqual(['contentIncluded', 'empty', 'emptyReason', 'filters', 'found', 'guidance', 'importance', 'limit', 'maxOffset', 'offset', 'pinned', 'pinnedPercentage', 'shown', 'shownImportance', 'shownPinned', 'shownPinnedPercentage', 'snapshot', 'total']);
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
 
@@ -61,6 +62,7 @@ describe('savestate memory list --json when missing', () => {
     expect(parsed).toEqual({
       found: false,
       snapshot: 'ss-missing',
+      empty: true,
       emptyReason: 'snapshot',
       total: 0,
       shown: 0,
