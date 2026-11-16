@@ -497,6 +497,7 @@ describe('Full Snapshot E2E (Issue #126)', () => {
 
     // Create snapshot
     const result = await createSnapshot(adapter, storage, passphrase, {
+      cwd: testDir,
       label: 'E2E Test Snapshot',
     });
 
@@ -505,7 +506,7 @@ describe('Full Snapshot E2E (Issue #126)', () => {
     expect(result.receipt.verified).toBe(true);
 
     // Verify receipt is stored
-    const storedReceipt = await findReceipt(result.snapshot.manifest.id);
+    const storedReceipt = await findReceipt(result.snapshot.manifest.id, testDir);
     expect(storedReceipt).not.toBeNull();
 
     // Read back encrypted data and verify against receipt

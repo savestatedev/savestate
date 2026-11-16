@@ -347,6 +347,7 @@ export async function snapshotCommand(options: SnapshotOptions): Promise<void> {
     const spinner = options.json ? null : ora(`Extracting state via ${adapter.name} adapter...`).start();
 
     const result = await createSnapshot(adapter, storage, passphrase, {
+      cwd: process.cwd(),
       label,
       tags,
       full: options.full,
