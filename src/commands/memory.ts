@@ -3243,10 +3243,10 @@ const MAX_MEMORY_EXPLAIN_LIMIT = 1000;
 const MAX_MEMORY_EXPLAIN_OFFSET = 1000;
 
 /** Parse memory explain --limit without turning user input errors into an empty result list. */
-export function parseMemoryExplainLimit(value: string | undefined): number | undefined {
+export function parseMemoryExplainLimit(value: string | number | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const normalized = value.trim();
+  const normalized = String(value).trim();
   if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_MEMORY_EXPLAIN_LIMIT}.`,
@@ -3268,10 +3268,10 @@ export function selectMemoryExplainEntries<T>(entries: T[], limit?: number): T[]
 }
 
 /** Parse memory explain --offset without turning user input errors into an empty result list. */
-export function parseMemoryExplainOffset(value: string | undefined): number | undefined {
+export function parseMemoryExplainOffset(value: string | number | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const normalized = value.trim();
+  const normalized = String(value).trim();
   if (!/^\d+$/.test(normalized)) {
     throw new Error(
       `Invalid --offset value "${value}". Expected a non-negative integer up to ${MAX_MEMORY_EXPLAIN_OFFSET}.`,
@@ -3296,7 +3296,7 @@ export function selectMemoryExplainOffsetEntries<T>(entries: T[], offset?: numbe
 /** Apply memory explain --offset then --limit. */
 export function applyMemoryExplainFilters<T>(
   entries: T[],
-  options: { offset?: string; limit?: string } = {},
+  options: { offset?: string | number; limit?: string | number } = {},
 ): T[] {
   return selectMemoryExplainEntries(
     selectMemoryExplainOffsetEntries(entries, parseMemoryExplainOffset(options.offset)),
@@ -3341,8 +3341,8 @@ export async function explainMemoryCommand(
     namespace?: string;
     source?: string;
     content?: string;
-    limit?: string;
-    offset?: string;
+    limit?: string | number;
+    offset?: string | number;
     tags?: string[];
     freshness?: MemoryFreshnessState;
     pinned?: boolean;

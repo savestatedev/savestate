@@ -572,8 +572,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--important-first', 'Show highest-importance memories first (ties use creation date)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
-    .option('-l, --limit <n>', 'Maximum number of entries to show', '20')
-    .option('--offset <n>', 'Skip the first N memories (non-negative integer up to 1000)')
+    .option('-l, --limit <n>', 'Entries per page (positive integer up to 1000; default: 20)', '20')
+    .option('--offset <n>', 'Skip the first N memories (0-1000; use nextOffset for continuation)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON metadata without memory content (implies --json)')
@@ -828,8 +828,8 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           until,
           since,
-          limit: options.limit,
-          offset: options.offset,
+          limit: parseMemoryLimit(options.limit, 10),
+          offset: parseMemoryListOffset(options.offset),
           tags: parseMemoryTags(options.tags),
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
