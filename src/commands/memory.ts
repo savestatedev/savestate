@@ -765,13 +765,24 @@ export function formatMemoryListJson(
 export interface MemoryListMissingJson {
   found: false;
   snapshot: string;
+  /** Missing snapshots are empty result sets, just like an empty collection. */
+  empty: true;
   /** Why no memory rows are available for this request. */
   emptyReason: 'snapshot';
   total: 0;
   shown: 0;
+  /** Number of matching entries after this page. */
+  remaining: 0;
   limit: number | null;
   offset: number;
   maxOffset: number;
+  hasMore: false;
+  isLastPage: true;
+  nextOffset: null;
+  previousOffset: null;
+  suggestedOffset: null;
+  /** Missing snapshots are terminal and therefore have no follow-up page. */
+  guidance: MemoryListGuidance;
   /** Empty collection summaries keep the successful list schema predictable. */
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
@@ -817,12 +828,20 @@ export function formatMemoryListMissingJson(
     {
       found: false,
       snapshot,
+      empty: true,
       emptyReason: 'snapshot',
       total: 0,
       shown: 0,
+      remaining: 0,
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
+      hasMore: false,
+      isLastPage: true,
+      nextOffset: null,
+      previousOffset: null,
+      suggestedOffset: null,
+      guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
       pinned: 0,
