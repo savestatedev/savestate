@@ -189,6 +189,13 @@ describe('CLI docs', () => {
     expect(docs).toContain('byFreshness</code> and <code>shownByFreshness');
   });
 
+  it('keeps the memory explain default limit aligned with the CLI', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(memorySection).toContain('maximum retrieval results to show on <code>explain</code> (default 10)');
+    expect(memorySection).not.toContain('maximum retrieval results to show on <code>explain</code> (default 5)');
+    expect(memoryCli).toContain("parseMemoryLimit(options.limit, 10)");
+  });
+
   it('documents a copy-paste list JSON pagination loop', () => {
     expect(docs).toContain('Follow the returned guidance offset until the last page');
     expect(docs).toContain('.guidance | select(.action == "next") | .offset');
