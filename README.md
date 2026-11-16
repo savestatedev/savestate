@@ -269,7 +269,21 @@ Use `savestate memory list --json-summary` when a script needs the same paginati
 aggregate metadata without copying memory content into logs or downstream payloads. It preserves
 the `entries` metadata shape and omits only each entry's `content` field. The response sets
 `contentIncluded: false`—including when the requested snapshot is missing—so consumers can detect
-the redacted mode without inspecting entries.
+the redacted mode without inspecting entries. For example, a page can be safely forwarded to a
+dashboard while retaining navigation and ranking metadata:
+
+```json
+{
+  "shown": 2,
+  "remaining": 8,
+  "nextOffset": 2,
+  "contentIncluded": false,
+  "entries": [{ "id": "memory-1", "importance": 0.9, "source": "chatgpt" }]
+}
+```
+
+Consumers should use `nextOffset` (or the `guidance` object) for continuation rather than
+calculating offsets from the number of returned entries.
 
 For a shorter interactive command, `savestate memory list --summary` is an alias for
 `--json-summary`.
