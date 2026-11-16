@@ -301,6 +301,8 @@ older memories should win ties:
 savestate memory list --important-first --limit 5
 ```
 
+`--oldest-first` and its `--reverse` alias are mutually exclusive; use either ordering flag, not both.
+
 Use `--min-importance` and `--max-importance` to keep only memories within an importance-score
 range (inclusive). Memories without a valid score use the default `0.5` value:
 
