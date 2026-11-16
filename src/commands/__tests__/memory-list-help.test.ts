@@ -7,9 +7,8 @@ describe('savestate memory list help', () => {
     const program = new Command();
     registerMemoryCommands(program);
 
-    const help = program.commands.find((command) => command.name() === 'memory')
-      ?.commands.find((command) => command.name() === 'list')
-      ?.helpInformation();
+    const memory = program.commands.find((command) => command.name() === 'memory');
+    const help = memory?.commands.find((command) => command.name() === 'list')?.helpInformation();
 
     expect(help).toContain('--json-summary, --summary');
   });

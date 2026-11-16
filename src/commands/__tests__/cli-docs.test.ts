@@ -2844,7 +2844,7 @@ describe('CLI docs', () => {
   it('registers --json on savestate memory list', () => {
     const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
     expect(listBlock).toContain(".option('--json'");
-    expect(listBlock).toContain(".option('--json-summary'");
+    expect(listBlock).toContain(".option('--json-summary, --summary'");
   });
 
   it('documents memory --json', () => {
@@ -2858,7 +2858,7 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('contentIncluded');
     expect(memorySection).toContain('guidance');
     expect(memorySection).toContain('recommended <code>offset</code>');
-    expect(memoryCli).toContain('savestate memory list --json-summary');
+    expect(memoryCli).toContain('savestate memory list --summary');
   });
 
   it('documents pinned percentages in memory list JSON summaries', () => {
