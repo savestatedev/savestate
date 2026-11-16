@@ -771,6 +771,8 @@ export interface MemoryListMissingJson {
   emptyReason: 'snapshot';
   total: 0;
   shown: 0;
+  /** Number of matching entries after this page. */
+  remaining: 0;
   limit: number | null;
   offset: number;
   maxOffset: number;
@@ -830,6 +832,7 @@ export function formatMemoryListMissingJson(
       emptyReason: 'snapshot',
       total: 0,
       shown: 0,
+      remaining: 0,
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
