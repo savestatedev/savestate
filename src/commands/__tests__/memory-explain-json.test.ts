@@ -47,6 +47,7 @@ describe('savestate memory explain --json', () => {
       empty: false,
       emptyReason: null,
       suggestedOffset: null,
+      guidance: { action: 'none', offset: 0 },
       pagination: {
         offset: 0,
         limit: null,
@@ -122,6 +123,7 @@ describe('savestate memory explain --json', () => {
       empty: true,
       emptyReason: 'collection',
       suggestedOffset: null,
+      guidance: { action: 'none', offset: 0 },
       pagination: {
         offset: 0,
         limit: null,
@@ -241,6 +243,7 @@ describe('savestate memory explain --json', () => {
       empty: true,
       emptyReason: 'page',
       suggestedOffset: 2,
+      guidance: { action: 'retry', offset: 2 },
       pagination: {
         offset: 4,
         limit: 2,
