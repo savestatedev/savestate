@@ -5779,6 +5779,7 @@ describe('CLI docs', () => {
   it('registers --json on savestate adapters', () => {
     const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
     expect(adaptersBlock).toContain(".option('--json'");
+    expect(adaptersBlock).toContain(".option('--json-summary, --summary'");
   });
 
   it('documents adapters --limit as a bounded positive integer', () => {

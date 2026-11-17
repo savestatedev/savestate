@@ -424,6 +424,7 @@ savestate config                      View/edit configuration
   --set <key=value>                  Set a config value
   --json                             Output as JSON
 savestate adapters                    List available adapters
+  --json-summary, --summary          Output paginated JSON with navigation metadata (implies --json)
 savestate schedule                    Configure auto-backups (Pro/Team)
   --every <interval>                 Backup interval (1h, 6h, 12h, 1d)
   --disable                          Disable scheduled backups
