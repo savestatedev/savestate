@@ -3631,7 +3631,9 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('savestate acl list --offset 10 --limit 5 --json-summary');
     expect(aclSection).toContain('savestate acl list --proposer agent-1 --json-summary');
     expect(aclSection).toContain('savestate acl list --verifier reviewer-1 --json-summary');
+    expect(aclSection).toContain('savestate acl list --state active --summary');
     expect(aclBlock).toContain(".option('--json-summary, --summary'");
+    expect(aclSection).toContain('short <code>--summary</code> alias');
     expect(acl).toContain('export function formatAclListJsonSummary');
   });
 
