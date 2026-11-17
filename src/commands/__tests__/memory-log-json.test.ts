@@ -70,6 +70,8 @@ describe('savestate memory log --json', () => {
       pagination: {
         offset: 0,
         limit: null,
+        page: 1,
+        totalPages: 1,
         total: 3,
         shown: 3,
         hasMore: false,
@@ -116,6 +118,8 @@ describe('savestate memory log --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 10,
       limit: 5,
+      page: 3,
+      totalPages: 1,
       total: 3,
       shown: 0,
       hasMore: false,

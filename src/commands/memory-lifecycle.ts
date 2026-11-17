@@ -41,6 +41,8 @@ export interface MemoryLogGuidanceJson {
 export interface MemoryLogPaginationJson {
   offset: number;
   limit: number | null;
+  page: number;
+  totalPages: number;
   total: number;
   shown: number;
   hasMore: boolean;
@@ -82,6 +84,8 @@ export function formatMemoryLogJson(
   const limit = pagination.limit ?? null;
   const total = pagination.total ?? log.length;
   const shown = pagination.shown ?? log.length;
+  const page = limit === null ? 1 : Math.floor(offset / limit) + 1;
+  const totalPages = limit === null ? 1 : Math.ceil(total / limit);
   const hasMore = pagination.hasMore ?? false;
   const nextOffset = pagination.nextOffset ?? (hasMore && limit !== null ? offset + limit : null);
   const previousOffset = pagination.previousOffset ?? (offset > 0 && limit !== null ? Math.max(0, offset - limit) : null);
@@ -92,6 +96,8 @@ export function formatMemoryLogJson(
   const responsePagination: MemoryLogPaginationJson = {
     offset,
     limit,
+    page,
+    totalPages,
     total,
     shown,
     hasMore,
