@@ -3,6 +3,7 @@ import type { ProvenanceEntry } from '../../checkpoint/types.js';
 import {
   formatMemoryLogEmptyPage,
   formatMemoryLogJson,
+  getMemoryLogGuidance,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
 
@@ -65,6 +66,7 @@ describe('savestate memory log --json', () => {
           mergedFrom: ['mem-a', 'mem-b'],
         },
       ],
+      guidance: { action: 'none', offset: 0 },
       pagination: {
         offset: 0,
         limit: null,
@@ -98,6 +100,7 @@ describe('savestate memory log --json', () => {
     })) as MemoryLogJson;
 
     expect(parsed.pagination.nextOffset).toBe(2);
+    expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
   });
 
   it('describes an exhausted page without exposing previous content', () => {
@@ -121,6 +124,16 @@ describe('savestate memory log --json', () => {
       emptyReason: 'page',
       suggestedOffset: 0,
     });
+    expect(parsed.guidance).toEqual({ action: 'retry', offset: 0 });
+  });
+
+  it('selects the previous page when the log is exhausted without a suggested page', () => {
+    expect(getMemoryLogGuidance({
+      offset: 5,
+      previousOffset: 0,
+      nextOffset: null,
+      hasMore: false,
+    }, null)).toEqual({ action: 'previous', offset: 0 });
   });
 
   it('explains an exhausted table page instead of calling the memory missing', () => {

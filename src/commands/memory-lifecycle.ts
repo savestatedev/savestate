@@ -29,7 +29,13 @@ export interface MemoryLogEventJson {
 export interface MemoryLogJson {
   memoryId: string;
   events: MemoryLogEventJson[];
+  guidance: MemoryLogGuidanceJson;
   pagination: MemoryLogPaginationJson;
+}
+
+export interface MemoryLogGuidanceJson {
+  action: 'next' | 'previous' | 'retry' | 'none';
+  offset: number;
 }
 
 export interface MemoryLogPaginationJson {
@@ -42,6 +48,17 @@ export interface MemoryLogPaginationJson {
   previousOffset: number | null;
   emptyReason: 'collection' | 'page' | null;
   suggestedOffset: number | null;
+}
+
+/** Turn audit-log pagination state into one actionable instruction for JSON consumers. */
+export function getMemoryLogGuidance(
+  pagination: Pick<MemoryLogPaginationJson, 'offset' | 'previousOffset' | 'nextOffset' | 'hasMore'>,
+  suggestedOffset: number | null,
+): MemoryLogGuidanceJson {
+  if (suggestedOffset !== null) return { action: 'retry', offset: suggestedOffset };
+  if (pagination.hasMore && pagination.nextOffset !== null) return { action: 'next', offset: pagination.nextOffset };
+  if (pagination.previousOffset !== null) return { action: 'previous', offset: pagination.previousOffset };
+  return { action: 'none', offset: pagination.offset };
 }
 
 function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
@@ -72,22 +89,24 @@ export function formatMemoryLogJson(
   const suggestedOffset = pagination.suggestedOffset ?? (
     shown === 0 && total > 0 && limit !== null ? Math.floor((total - 1) / limit) * limit : null
   );
+  const responsePagination: MemoryLogPaginationJson = {
+    offset,
+    limit,
+    total,
+    shown,
+    hasMore,
+    nextOffset,
+    previousOffset,
+    emptyReason,
+    suggestedOffset,
+  };
 
   return JSON.stringify(
     {
       memoryId,
       events: log.map(toLogEventJson),
-      pagination: {
-        offset,
-        limit,
-        total,
-        shown,
-        hasMore,
-        nextOffset,
-        previousOffset,
-        emptyReason,
-        suggestedOffset,
-      },
+      guidance: getMemoryLogGuidance(responsePagination, suggestedOffset),
+      pagination: responsePagination,
     },
     null,
     2,
