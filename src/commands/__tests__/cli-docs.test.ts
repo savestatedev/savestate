@@ -3631,7 +3631,9 @@ describe('CLI docs', () => {
     expect(aclSection).toContain('savestate acl list --offset 10 --limit 5 --json-summary');
     expect(aclSection).toContain('savestate acl list --proposer agent-1 --json-summary');
     expect(aclSection).toContain('savestate acl list --verifier reviewer-1 --json-summary');
-    expect(aclBlock).toContain(".option('--json-summary'");
+    expect(aclSection).toContain('savestate acl list --state active --summary');
+    expect(aclBlock).toContain(".option('--json-summary, --summary'");
+    expect(aclSection).toContain('short <code>--summary</code> alias');
     expect(acl).toContain('export function formatAclListJsonSummary');
   });
 
@@ -5681,6 +5683,14 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('any empty later page');
     expect(searchSection).toContain('including a missing snapshot or uninitialized state');
     expect(search).toContain('formatSearchResultsSummaryJson');
+  });
+
+  it('documents the search summary short alias with a copy-paste example', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('Concise scriptable summary (short alias)');
+    expect(searchSection).toContain(
+      'savestate search <span class="code-string">"cocktail recommendations"</span> --summary --limit 20',
+    );
   });
 
   it('documents search --adapter as a known adapter', () => {

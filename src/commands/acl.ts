@@ -799,6 +799,6 @@ export function registerACLCommands(program: Command) {
     .option('--offset <n>', 'Skip the first N commitments on list before applying --limit (non-negative integer up to 1000)')
     .option('--state <state>', 'Only show commitments in a lifecycle state (proposed, verified, active, fulfilled, rejected, expired)')
     .option('--json', 'Output as JSON')
-    .option('--json-summary', 'Output list pagination metadata and entries as JSON')
+    .option('--json-summary, --summary', 'Output list pagination metadata and entries as JSON (the --summary alias implies JSON)')
     .action(aclCommand);
 }

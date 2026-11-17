@@ -633,6 +633,9 @@
 <span class="code-comment"># Scriptable JSON with page navigation</span>
 <span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --offset 10 --limit 5 --json-summary
 
+<span class="code-comment"># Concise scriptable summary (short alias)</span>
+<span class="code-prompt">$</span> savestate search <span class="code-string">"cocktail recommendations"</span> --summary --limit 20
+
 <span class="code-comment"># Follow matching pages until the search is exhausted</span>
 <span class="code-prompt">$</span> offset=0; while :; do page=$(savestate search <span class="code-string">"cocktail recommendations"</span> --json-summary --offset "$offset" --limit 20); echo "$page"; next=$(printf '%s' "$page" | jq -r '.pagination | select(.hasMore == true) | .nextOffset // empty'); [ -n "$next" ] || break; offset="$next"; done
 
@@ -1748,7 +1751,7 @@
 
     <!-- acl -->
     <h2 id="acl"><code>savestate acl</code></h2>
-    <p>Manage Active Commitment Layer (ACL) commitments that gate high-impact agent actions. Subcommands: <code>propose</code>, <code>verify</code>, <code>gate</code>, and <code>list</code>. Must be a single non-empty subcommand (propose, verify, gate, or list). <code>propose</code> records a commitment with type, criticality, proposal time, description, and proposer, optionally capped with <code>--limit</code>; its human-readable response includes the recorded proposal time and description. <code>verify</code> approves or rejects a proposed commitment, optionally capped with <code>--limit</code>. <code>gate</code> checks whether an action type is allowed, optionally capped with <code>--limit</code>. <code>list</code> prints commitments with proposal time, proposer, verifier, expiry, and description, optionally filtered by <code>--state</code>, <code>--type</code>, <code>--criticality</code>, <code>--proposer</code>, <code>--verifier</code>, or the exact <code>--description</code>, paged with <code>--offset</code>, and capped with <code>--limit</code>. Use <code>--json-summary</code> for machine-readable page metadata and entries.</p>
+    <p>Manage Active Commitment Layer (ACL) commitments that gate high-impact agent actions. Subcommands: <code>propose</code>, <code>verify</code>, <code>gate</code>, and <code>list</code>. Must be a single non-empty subcommand (propose, verify, gate, or list). <code>propose</code> records a commitment with type, criticality, proposal time, description, and proposer, optionally capped with <code>--limit</code>; its human-readable response includes the recorded proposal time and description. <code>verify</code> approves or rejects a proposed commitment, optionally capped with <code>--limit</code>. <code>gate</code> checks whether an action type is allowed, optionally capped with <code>--limit</code>. <code>list</code> prints commitments with proposal time, proposer, verifier, expiry, and description, optionally filtered by <code>--state</code>, <code>--type</code>, <code>--criticality</code>, <code>--proposer</code>, <code>--verifier</code>, or the exact <code>--description</code>, paged with <code>--offset</code>, and capped with <code>--limit</code>. Use <code>--json-summary</code> (or its short <code>--summary</code> alias) for machine-readable page metadata and entries; both imply JSON output.</p>
     <pre><code><span class="code-prompt">$</span> savestate acl &lt;subcommand&gt; [options]</code></pre>
 
     <table>
@@ -1770,7 +1773,7 @@
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N commitments on <code>list</code> before applying <code>--limit</code>. Must be a non-negative integer up to 1000. An empty page suggests the nearest available offset, including <code>0</code> for an offset-only request.</td></tr>
         <tr><td><code>--state &lt;state&gt;</code></td><td>Only show <code>list</code> commitments in one lifecycle state: <code>proposed</code>, <code>verified</code>, <code>active</code>, <code>fulfilled</code>, <code>rejected</code>, or <code>expired</code>. Filtering happens before offset and limit pagination.</td></tr>
         <tr><td><code>--json</code></td><td>Emit commitments or gate status as JSON. Commitment objects include proposal time, proposer, verifier, and expiry, and omit the audit trail. When no commitment exists, <code>verify</code> emits a missing summary (found, id, state, verifier; omits extra fields). Useful for scripting.</td></tr>
-        <tr><td><code>--json-summary</code></td><td>On <code>list</code>, emit pagination metadata (<code>found</code>, <code>total</code>, <code>shown</code>, <code>remaining</code>, <code>emptyReason</code>, <code>offset</code>, <code>maxOffset</code> (1000), <code>limit</code>, <code>state</code>, <code>type</code>, <code>criticality</code>, <code>proposer</code>, <code>verifier</code>, <code>description</code>, <code>page</code>/<code>pageSize</code>/<code>totalPages</code>, previous/next offsets, and <code>suggestedOffset</code>) plus <code>entries</code>. <code>totalPages</code> counts only pages reachable within <code>maxOffset</code>; <code>hasMore</code>, <code>nextOffset</code>, and stale-page recovery offsets never advertise a value beyond that ceiling. Preserves the array shape of <code>--json</code>; interactive list output gives the same recovery hint for an exhausted page.</td></tr>
+        <tr><td><code>--json-summary</code>, <code>--summary</code></td><td>On <code>list</code>, emit pagination metadata (<code>found</code>, <code>total</code>, <code>shown</code>, <code>remaining</code>, <code>emptyReason</code>, <code>offset</code>, <code>maxOffset</code> (1000), <code>limit</code>, <code>state</code>, <code>type</code>, <code>criticality</code>, <code>proposer</code>, <code>verifier</code>, <code>description</code>, <code>page</code>/<code>pageSize</code>/<code>totalPages</code>, previous/next offsets, and <code>suggestedOffset</code>) plus <code>entries</code>. <code>--summary</code> is the short alias and implies JSON output. <code>totalPages</code> counts only pages reachable within <code>maxOffset</code>; <code>hasMore</code>, <code>nextOffset</code>, and stale-page recovery offsets never advertise a value beyond that ceiling. Preserves the array shape of <code>--json</code>; interactive list output gives the same recovery hint for an exhausted page.</td></tr>
       </tbody>
     </table>
 
@@ -1796,7 +1799,7 @@
 <span class="code-prompt">$</span> savestate acl list --offset 10 --limit 5
 
 <span class="code-comment"># Inspect only active commitments</span>
-<span class="code-prompt">$</span> savestate acl list --state active --json-summary
+<span class="code-prompt">$</span> savestate acl list --state active --summary
 
 <span class="code-comment"># Inspect customer promises only</span>
 <span class="code-prompt">$</span> savestate acl list --type customer_promise --json-summary

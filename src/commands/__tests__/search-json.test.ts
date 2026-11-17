@@ -436,6 +436,27 @@ describe('savestate search --json', () => {
     expect(laterPage.pagination.suggestedOffset).toBe(5);
   });
 
+  it('reports an exact empty total when every search type is excluded', () => {
+    const parsed = JSON.parse(
+      formatSearchResultsSummaryJson({
+        query: 'missing',
+        results: [],
+        total: 0,
+        hasMore: false,
+        filters: { type: [], exclude: ['memory', 'conversation', 'identity', 'knowledge'] },
+      }),
+    ) as { pagination: Record<string, unknown>; filters: Record<string, unknown> };
+
+    expect(parsed.filters.type).toEqual([]);
+    expect(parsed.pagination).toMatchObject({
+      total: 0,
+      remaining: 0,
+      hasMore: false,
+      nextOffset: null,
+      emptyReason: 'collection',
+    });
+  });
+
   it('keeps the summary envelope complete for missing snapshots', () => {
     const parsed = JSON.parse(
       formatSearchMissingSummaryJson('missing', '  ss-missing  ', 5, 2, {
