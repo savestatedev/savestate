@@ -171,7 +171,10 @@ export function formatTracePaginationHint(
     hints.push(`previous offset ${Math.max(0, offset - limit)}`);
   }
   if (limit !== undefined && shown === 0 && total > 0) {
-    hints.push(`try offset ${Math.floor((total - 1) / limit) * limit}`);
+    hints.push(`try offset ${Math.min(
+      Math.floor((total - 1) / limit) * limit,
+      MAX_TRACE_OFFSET,
+    )}`);
   }
 
   return `${hints.join('; ')}.`;
