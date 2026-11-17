@@ -179,4 +179,16 @@ describe('savestate trace --json', () => {
 
     expect(summary.pagination.suggestedOffset).toBe(1000);
   });
+
+  it('does not advertise a repeated next page for an empty page', () => {
+    const summary = JSON.parse(formatTraceListSummaryJson({
+      runs: [],
+      offset: 100,
+      limit: 20,
+      total: 5_000,
+    })) as { pagination: Record<string, unknown> };
+
+    expect(summary.pagination.hasMore).toBe(false);
+    expect(summary.pagination.nextOffset).toBeNull();
+  });
 });
