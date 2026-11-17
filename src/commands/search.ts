@@ -725,6 +725,10 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
           results: [],
           offset: offset ?? 0,
           limit,
+          // Excluding every searchable type is an exact empty result set;
+          // do not make callers treat its total as unknown.
+          total: 0,
+          hasMore: false,
           filters: {
             type: types,
             exclude: excludedTypes ?? null,
