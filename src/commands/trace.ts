@@ -391,7 +391,7 @@ function getTracePagination(
     hasPrevious: previousOffset !== null,
     previousOffset,
     suggestedOffset: pageLimit !== null && shown === 0 && total > 0
-      ? Math.floor((total - 1) / pageLimit) * pageLimit
+      ? Math.min(Math.floor((total - 1) / pageLimit) * pageLimit, MAX_TRACE_OFFSET)
       : null,
   };
 }
