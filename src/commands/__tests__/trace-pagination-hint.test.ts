@@ -14,6 +14,12 @@ describe('trace pagination hints', () => {
     );
   });
 
+  it('keeps stale-page recovery within the CLI offset maximum', () => {
+    expect(formatTracePaginationHint('trace runs', 0, 5_000, 1_000, 1_000)).toBe(
+      'Showing 0 of 5000 trace runs (offset 1000, limit 1000); previous offset 0; try offset 1000.',
+    );
+  });
+
   it('stays quiet when the complete collection is shown', () => {
     expect(formatTracePaginationHint('trace runs', 2, 2)).toBe('');
   });

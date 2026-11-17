@@ -168,4 +168,27 @@ describe('savestate trace --json', () => {
     expect(maxPage.pagination.hasMore).toBe(false);
     expect(maxPage.pagination.nextOffset).toBeNull();
   });
+
+  it('keeps empty-page recovery guidance within the CLI maximum', () => {
+    const summary = JSON.parse(formatTraceListSummaryJson({
+      runs: [],
+      offset: 1000,
+      limit: 1000,
+      total: 5_000,
+    })) as { pagination: Record<string, unknown> };
+
+    expect(summary.pagination.suggestedOffset).toBe(1000);
+  });
+
+  it('does not advertise a repeated next page for an empty page', () => {
+    const summary = JSON.parse(formatTraceListSummaryJson({
+      runs: [],
+      offset: 100,
+      limit: 20,
+      total: 5_000,
+    })) as { pagination: Record<string, unknown> };
+
+    expect(summary.pagination.hasMore).toBe(false);
+    expect(summary.pagination.nextOffset).toBeNull();
+  });
 });

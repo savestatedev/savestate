@@ -164,14 +164,17 @@ export function formatTracePaginationHint(
   const page = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const hints = [`Showing ${shown} of ${total} ${noun} (${page})`];
 
-  if (limit !== undefined && offset + shown < total) {
+  if (limit !== undefined && shown > 0 && offset + shown < total) {
     hints.push(`next offset ${offset + shown}`);
   }
   if (limit !== undefined && offset > 0) {
     hints.push(`previous offset ${Math.max(0, offset - limit)}`);
   }
   if (limit !== undefined && shown === 0 && total > 0) {
-    hints.push(`try offset ${Math.floor((total - 1) / limit) * limit}`);
+    hints.push(`try offset ${Math.min(
+      Math.floor((total - 1) / limit) * limit,
+      MAX_TRACE_OFFSET,
+    )}`);
   }
 
   return `${hints.join('; ')}.`;
@@ -375,7 +378,10 @@ function getTracePagination(
 ): TracePaginationJson {
   const pageLimit = limit ?? null;
   // Never advertise a follow-up page beyond the bounded offset accepted by the CLI.
-  const hasMore = pageLimit !== null && offset < MAX_TRACE_OFFSET && offset + shown < total;
+  const hasMore = pageLimit !== null
+    && shown > 0
+    && offset < MAX_TRACE_OFFSET
+    && offset + shown < total;
   const previousOffset = pageLimit !== null && offset > 0
     ? Math.max(0, offset - pageLimit)
     : null;
@@ -391,7 +397,7 @@ function getTracePagination(
     hasPrevious: previousOffset !== null,
     previousOffset,
     suggestedOffset: pageLimit !== null && shown === 0 && total > 0
-      ? Math.floor((total - 1) / pageLimit) * pageLimit
+      ? Math.min(Math.floor((total - 1) / pageLimit) * pageLimit, MAX_TRACE_OFFSET)
       : null,
   };
 }
