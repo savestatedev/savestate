@@ -3000,7 +3000,7 @@ export function formatMemoryExplainPrettySummary(
   const last = offset + shown;
   const navigation = [
     ...(offset > 0 ? [`Previous page: use --offset ${Math.max(0, offset - pageSize)} --limit ${pageSize}.`] : []),
-    ...(last < total ? [`Next page: use --offset ${last} --limit ${pageSize}.`] : []),
+    ...(last < total ? [`Next page: use --offset ${Math.min(offset + pageSize, MAX_MEMORY_LIST_OFFSET)} --limit ${pageSize}.`] : []),
   ];
   return `Showing ${first}-${last} of ${total} relevant memories.${navigation.length > 0 ? ` ${navigation.join(' ')}` : ''}`;
 }

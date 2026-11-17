@@ -64,6 +64,12 @@ describe('savestate memory explain --offset', () => {
     );
   });
 
+  it('advances by the page size when a sparse page still has matches', () => {
+    expect(formatMemoryExplainPrettySummary(1, 5, { offset: 0, pageSize: 2 })).toBe(
+      'Showing 1-1 of 5 relevant memories. Next page: use --offset 2 --limit 2.',
+    );
+  });
+
   it('summarizes namespaces on the visible explain page', () => {
     expect(formatMemoryExplainPrettyNamespaceSummary([
       { id: 'm1', content: '', createdAt: '', metadata: { namespace: ' Work:Mail ' } },
