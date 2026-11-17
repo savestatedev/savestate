@@ -5594,6 +5594,7 @@ describe('CLI docs', () => {
     expect(searchSection).toContain('--limit');
     expect(searchSection).toContain('--snapshot');
     expect(searchSection).toContain('--json');
+    expect(searchSection).toContain('<code>--json-summary</code>, <code>--summary</code>');
     expect(searchSection).toContain('memory');
     expect(searchSection).toContain('conversation');
     expect(searchSection).toContain('identity');
