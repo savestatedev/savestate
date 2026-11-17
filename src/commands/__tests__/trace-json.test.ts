@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TraceEvent, TraceRunIndexEntry } from '../../trace/index.js';
 import {
   formatTraceEventsJson,
+  formatTraceExportJson,
   formatTraceListSummaryJson,
   formatTraceRunsJson,
   formatTraceShowSummaryJson,
@@ -138,6 +139,27 @@ describe('savestate trace --json', () => {
     expect(summary.pagination.nextOffset).toBe(1000);
 
     const maxPage = JSON.parse(formatTraceListSummaryJson({
+      runs: Array.from({ length: 20 }, () => run),
+      offset: 1000,
+      limit: 20,
+      total: 2_000,
+    })) as { pagination: Record<string, unknown> };
+    expect(maxPage.pagination.hasMore).toBe(false);
+    expect(maxPage.pagination.nextOffset).toBeNull();
+  });
+
+  it('bounds export pagination at the CLI maximum', () => {
+    const summary = JSON.parse(formatTraceExportJson({
+      runs: Array.from({ length: 20 }, () => run),
+      offset: 990,
+      limit: 20,
+      total: 2_000,
+    })) as { pagination: Record<string, unknown> };
+
+    expect(summary.pagination.hasMore).toBe(true);
+    expect(summary.pagination.nextOffset).toBe(1000);
+
+    const maxPage = JSON.parse(formatTraceExportJson({
       runs: Array.from({ length: 20 }, () => run),
       offset: 1000,
       limit: 20,
