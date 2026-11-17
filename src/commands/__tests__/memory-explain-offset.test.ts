@@ -6,6 +6,7 @@ import {
   formatMemoryExplainPrettyNamespaceSummary,
   formatMemoryExplainPrettySummary,
   formatMemoryExplainJson,
+  getMemoryExplainGuidance,
   parseMemoryExplainOffset,
   selectMemoryExplainOffsetEntries,
 } from '../memory.js';
@@ -60,6 +61,12 @@ describe('savestate memory explain --offset', () => {
   it('summarizes a visible page and its continuation', () => {
     expect(formatMemoryExplainPrettySummary(2, 5, { offset: 2, pageSize: 2 })).toBe(
       'Showing 3-4 of 5 relevant memories. Previous page: use --offset 0 --limit 2. Next page: use --offset 4 --limit 2.',
+    );
+  });
+
+  it('advances by the page size when a sparse page still has matches', () => {
+    expect(formatMemoryExplainPrettySummary(1, 5, { offset: 0, pageSize: 2 })).toBe(
+      'Showing 1-1 of 5 relevant memories. Next page: use --offset 2 --limit 2.',
     );
   });
 
@@ -119,5 +126,23 @@ describe('savestate memory explain --offset', () => {
     expect(summary.shown).toBe(1);
     expect(summary.pagination.nextOffset).toBe(3);
     expect(summary.results).toEqual([]);
+  });
+
+  it('gives JSON consumers one actionable pagination instruction', () => {
+    expect(getMemoryExplainGuidance(
+      { offset: 0, hasPrevious: false, previousOffset: null, hasMore: true, nextOffset: 5 },
+      false,
+      null,
+    )).toEqual({ action: 'next', offset: 5 });
+    expect(getMemoryExplainGuidance(
+      { offset: 10, hasPrevious: true, previousOffset: 5, hasMore: false, nextOffset: null },
+      true,
+      5,
+    )).toEqual({ action: 'retry', offset: 5 });
+    expect(getMemoryExplainGuidance(
+      { offset: 5, hasPrevious: true, previousOffset: 0, hasMore: false, nextOffset: null },
+      false,
+      null,
+    )).toEqual({ action: 'previous', offset: 0 });
   });
 });

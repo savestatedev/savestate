@@ -29,7 +29,13 @@ export interface MemoryLogEventJson {
 export interface MemoryLogJson {
   memoryId: string;
   events: MemoryLogEventJson[];
+  guidance: MemoryLogGuidanceJson;
   pagination: MemoryLogPaginationJson;
+}
+
+export interface MemoryLogGuidanceJson {
+  action: 'next' | 'previous' | 'retry' | 'none';
+  offset: number;
 }
 
 export interface MemoryLogPaginationJson {
@@ -42,6 +48,17 @@ export interface MemoryLogPaginationJson {
   previousOffset: number | null;
   emptyReason: 'collection' | 'page' | null;
   suggestedOffset: number | null;
+}
+
+/** Turn audit-log pagination state into one actionable instruction for JSON consumers. */
+export function getMemoryLogGuidance(
+  pagination: Pick<MemoryLogPaginationJson, 'offset' | 'previousOffset' | 'nextOffset' | 'hasMore'>,
+  suggestedOffset: number | null,
+): MemoryLogGuidanceJson {
+  if (suggestedOffset !== null) return { action: 'retry', offset: suggestedOffset };
+  if (pagination.hasMore && pagination.nextOffset !== null) return { action: 'next', offset: pagination.nextOffset };
+  if (pagination.previousOffset !== null) return { action: 'previous', offset: pagination.previousOffset };
+  return { action: 'none', offset: pagination.offset };
 }
 
 function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
@@ -66,28 +83,30 @@ export function formatMemoryLogJson(
   const total = pagination.total ?? log.length;
   const shown = pagination.shown ?? log.length;
   const hasMore = pagination.hasMore ?? false;
-  const nextOffset = pagination.nextOffset ?? (hasMore && limit !== null ? offset + shown : null);
+  const nextOffset = pagination.nextOffset ?? (hasMore && limit !== null ? offset + limit : null);
   const previousOffset = pagination.previousOffset ?? (offset > 0 && limit !== null ? Math.max(0, offset - limit) : null);
   const emptyReason = pagination.emptyReason ?? (shown === 0 ? (total === 0 ? 'collection' : 'page') : null);
   const suggestedOffset = pagination.suggestedOffset ?? (
     shown === 0 && total > 0 && limit !== null ? Math.floor((total - 1) / limit) * limit : null
   );
+  const responsePagination: MemoryLogPaginationJson = {
+    offset,
+    limit,
+    total,
+    shown,
+    hasMore,
+    nextOffset,
+    previousOffset,
+    emptyReason,
+    suggestedOffset,
+  };
 
   return JSON.stringify(
     {
       memoryId,
       events: log.map(toLogEventJson),
-      pagination: {
-        offset,
-        limit,
-        total,
-        shown,
-        hasMore,
-        nextOffset,
-        previousOffset,
-        emptyReason,
-        suggestedOffset,
-      },
+      guidance: getMemoryLogGuidance(responsePagination, suggestedOffset),
+      pagination: responsePagination,
     },
     null,
     2,
@@ -976,7 +995,7 @@ export async function memoryLogCommand(
         total: allLog.length,
         shown: log.length,
         hasMore,
-        nextOffset: hasMore && limit !== null ? offset + log.length : null,
+        nextOffset: hasMore && limit !== null ? offset + limit : null,
         previousOffset: offset > 0 && limit !== null ? Math.max(0, offset - limit) : null,
         emptyReason: log.length === 0 ? 'page' : null,
         suggestedOffset: log.length === 0 && limit !== null
