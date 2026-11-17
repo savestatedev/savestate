@@ -88,6 +88,18 @@ describe('savestate memory log --json', () => {
     expect(parsed.events).toEqual([]);
   });
 
+  it('advances by the page size when a sparse page still has matches', () => {
+    const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created], {
+      offset: 0,
+      limit: 2,
+      total: 5,
+      shown: 1,
+      hasMore: true,
+    })) as MemoryLogJson;
+
+    expect(parsed.pagination.nextOffset).toBe(2);
+  });
+
   it('describes an exhausted page without exposing previous content', () => {
     const parsed = JSON.parse(formatMemoryLogJson('mem-123', [], {
       offset: 10,

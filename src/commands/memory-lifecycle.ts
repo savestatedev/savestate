@@ -66,7 +66,7 @@ export function formatMemoryLogJson(
   const total = pagination.total ?? log.length;
   const shown = pagination.shown ?? log.length;
   const hasMore = pagination.hasMore ?? false;
-  const nextOffset = pagination.nextOffset ?? (hasMore && limit !== null ? offset + shown : null);
+  const nextOffset = pagination.nextOffset ?? (hasMore && limit !== null ? offset + limit : null);
   const previousOffset = pagination.previousOffset ?? (offset > 0 && limit !== null ? Math.max(0, offset - limit) : null);
   const emptyReason = pagination.emptyReason ?? (shown === 0 ? (total === 0 ? 'collection' : 'page') : null);
   const suggestedOffset = pagination.suggestedOffset ?? (
@@ -976,7 +976,7 @@ export async function memoryLogCommand(
         total: allLog.length,
         shown: log.length,
         hasMore,
-        nextOffset: hasMore && limit !== null ? offset + log.length : null,
+        nextOffset: hasMore && limit !== null ? offset + limit : null,
         previousOffset: offset > 0 && limit !== null ? Math.max(0, offset - limit) : null,
         emptyReason: log.length === 0 ? 'page' : null,
         suggestedOffset: log.length === 0 && limit !== null
