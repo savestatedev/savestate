@@ -70,6 +70,8 @@ describe('savestate memory log --json', () => {
       pagination: {
         offset: 0,
         limit: null,
+        page: 1,
+        totalPages: 1,
         total: 3,
         shown: 3,
         hasMore: false,
@@ -116,6 +118,8 @@ describe('savestate memory log --json', () => {
     expect(parsed.pagination).toEqual({
       offset: 10,
       limit: 5,
+      page: 3,
+      totalPages: 1,
       total: 3,
       shown: 0,
       hasMore: false,
@@ -134,6 +138,21 @@ describe('savestate memory log --json', () => {
       nextOffset: null,
       hasMore: false,
     }, null)).toEqual({ action: 'previous', offset: 0 });
+  });
+
+  it('does not advertise a next page beyond the CLI offset ceiling', () => {
+    const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created], {
+      offset: 1000,
+      limit: 5,
+      total: 2000,
+      shown: 1,
+      hasMore: true,
+      nextOffset: 1005,
+    })) as MemoryLogJson;
+
+    expect(parsed.pagination.hasMore).toBe(false);
+    expect(parsed.pagination.nextOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'previous', offset: 995 });
   });
 
   it('explains an exhausted table page instead of calling the memory missing', () => {

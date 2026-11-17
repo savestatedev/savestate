@@ -374,7 +374,8 @@ function getTracePagination(
   limit: number | undefined,
 ): TracePaginationJson {
   const pageLimit = limit ?? null;
-  const hasMore = pageLimit !== null && offset + shown < total;
+  // Never advertise a follow-up page beyond the bounded offset accepted by the CLI.
+  const hasMore = pageLimit !== null && offset < MAX_TRACE_OFFSET && offset + shown < total;
   const previousOffset = pageLimit !== null && offset > 0
     ? Math.max(0, offset - pageLimit)
     : null;
@@ -386,7 +387,7 @@ function getTracePagination(
     shown,
     emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page',
     hasMore,
-    nextOffset: hasMore ? offset + shown : null,
+    nextOffset: hasMore ? Math.min(offset + shown, MAX_TRACE_OFFSET) : null,
     hasPrevious: previousOffset !== null,
     previousOffset,
     suggestedOffset: pageLimit !== null && shown === 0 && total > 0
@@ -616,7 +617,11 @@ export function formatTraceExportJson(input: {
     : total === 0
       ? 'collection'
       : 'page';
-  const hasMore = limit !== null && offset + runs.length < total;
+  // Keep export pagination aligned with list/show: never advertise an offset
+  // beyond the bounded value accepted by the CLI.
+  const hasMore = limit !== null
+    && offset < MAX_TRACE_OFFSET
+    && offset + runs.length < total;
   const previousOffset = limit !== null && offset > 0
     ? Math.max(0, offset - limit)
     : null;
@@ -638,7 +643,7 @@ export function formatTraceExportJson(input: {
         shown: runs.length,
         emptyReason,
         hasMore,
-        nextOffset: hasMore ? offset + runs.length : null,
+        nextOffset: hasMore ? Math.min(offset + runs.length, MAX_TRACE_OFFSET) : null,
         hasPrevious: previousOffset !== null,
         previousOffset,
         suggestedOffset,
