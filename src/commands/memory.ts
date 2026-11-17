@@ -358,6 +358,15 @@ export function getMemoryListSummary(memories: MemoryEntry[]): {
   };
 }
 
+/** Keep the table tier summary compact and stable for terminal users. */
+export function formatMemoryListTierSummary(counts: Record<MemoryTier, number>): string {
+  return [
+    `  L1 (short-term):  ${counts.L1} items`,
+    `  L2 (working set): ${counts.L2} items`,
+    `  L3 (archive):     ${counts.L3} items`,
+  ].join('\n');
+}
+
 /** Format freshness totals for the human-facing list summary. */
 export function formatMemoryListFreshnessSummary(
   memories: MemoryEntry[],
@@ -1867,9 +1876,7 @@ export async function listMemories(
   // Table format
   const { counts, total } = getMemoryListSummary(filteredEntries);
   console.log(`\nMemory Tiers Summary:`);
-  console.log(`  L1 (short-term):  ${counts.L1} items`);
-  console.log(`  L2 (working set): ${counts.L2} items`);
-  console.log(`  L3 (archive):     ${counts.L3} items`);
+  console.log(formatMemoryListTierSummary(counts));
   console.log(`  Total:            ${total} items\n`);
   console.log(`Source Summary: ${formatMemoryListSourceSummary(filteredEntries)}\n`);
   console.log(`Namespace Summary: ${formatMemoryListNamespaceSummary(filteredEntries)}\n`);
