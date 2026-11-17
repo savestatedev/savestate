@@ -140,6 +140,21 @@ describe('savestate memory log --json', () => {
     }, null)).toEqual({ action: 'previous', offset: 0 });
   });
 
+  it('does not advertise a next page beyond the CLI offset ceiling', () => {
+    const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created], {
+      offset: 1000,
+      limit: 5,
+      total: 2000,
+      shown: 1,
+      hasMore: true,
+      nextOffset: 1005,
+    })) as MemoryLogJson;
+
+    expect(parsed.pagination.hasMore).toBe(false);
+    expect(parsed.pagination.nextOffset).toBeNull();
+    expect(parsed.guidance).toEqual({ action: 'previous', offset: 995 });
+  });
+
   it('explains an exhausted table page instead of calling the memory missing', () => {
     expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3)).toBe(
       '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +

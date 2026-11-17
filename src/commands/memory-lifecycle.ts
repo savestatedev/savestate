@@ -86,8 +86,13 @@ export function formatMemoryLogJson(
   const shown = pagination.shown ?? log.length;
   const page = limit === null ? 1 : Math.floor(offset / limit) + 1;
   const totalPages = limit === null ? 1 : Math.ceil(total / limit);
-  const hasMore = pagination.hasMore ?? false;
-  const nextOffset = pagination.nextOffset ?? (hasMore && limit !== null ? offset + limit : null);
+  // Keep formatter callers aligned with the CLI parser: never advertise a
+  // continuation offset that the command will reject.
+  const hasMore = (pagination.hasMore ?? false)
+    && (limit === null || offset < MAX_MEMORY_LOG_OFFSET);
+  const nextOffset = hasMore && limit !== null
+    ? Math.min(pagination.nextOffset ?? offset + limit, MAX_MEMORY_LOG_OFFSET)
+    : null;
   const previousOffset = pagination.previousOffset ?? (offset > 0 && limit !== null ? Math.max(0, offset - limit) : null);
   const emptyReason = pagination.emptyReason ?? (shown === 0 ? (total === 0 ? 'collection' : 'page') : null);
   const suggestedOffset = pagination.suggestedOffset ?? (
