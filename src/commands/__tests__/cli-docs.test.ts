@@ -5272,6 +5272,7 @@ describe('CLI docs', () => {
   it('registers --json on savestate list', () => {
     const listBlock = cli.slice(cli.indexOf("command('list')"), cli.indexOf("command('stats')"));
     expect(listBlock).toContain(".option('--json'");
+    expect(listBlock).toContain(".option('--json-summary, --summary'");
   });
 
   it('documents list --json', () => {

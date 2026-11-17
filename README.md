@@ -187,7 +187,7 @@ savestate restore [snapshot-id]       Restore from a snapshot (default: latest)
   --label <label>                    Restore the newest snapshot with this label
 savestate list                        List all snapshots
   --json                             Output as JSON
-  --json-summary                     Output pagination metadata without snapshot records (implies --json)
+  --json-summary, --summary          Output pagination metadata without snapshot records (implies --json)
   --oldest-first                     Show snapshots from oldest to newest
   --platform <id>                    Only snapshots recorded from this platform
   --adapter <id>                     Only snapshots recorded by this adapter
@@ -220,7 +220,7 @@ from an initialized snapshot with no matching memories.
 Legacy tag whitespace and case-insensitive duplicate tags are removed from JSON entries, while
 filter metadata is emitted in its normalized, de-duplicated form.
 
-Use `savestate list --json-summary` when a script needs the same pagination and filter metadata
+Use `savestate list --json-summary` (or its `--summary` alias) when a script needs the same pagination and filter metadata
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
 `shown`, `remaining`, `maxOffset`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized
 `filters` envelope.
