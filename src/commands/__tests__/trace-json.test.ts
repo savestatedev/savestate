@@ -125,4 +125,25 @@ describe('savestate trace --json', () => {
     expect(show.pagination.hasMore).toBe(true);
     expect(show.pagination.nextOffset).toBe(1);
   });
+
+  it('does not advertise a next page beyond the bounded offset', () => {
+    const summary = JSON.parse(formatTraceListSummaryJson({
+      runs: Array.from({ length: 20 }, () => run),
+      offset: 990,
+      limit: 20,
+      total: 2_000,
+    })) as { pagination: Record<string, unknown> };
+
+    expect(summary.pagination.hasMore).toBe(true);
+    expect(summary.pagination.nextOffset).toBe(1000);
+
+    const maxPage = JSON.parse(formatTraceListSummaryJson({
+      runs: Array.from({ length: 20 }, () => run),
+      offset: 1000,
+      limit: 20,
+      total: 2_000,
+    })) as { pagination: Record<string, unknown> };
+    expect(maxPage.pagination.hasMore).toBe(false);
+    expect(maxPage.pagination.nextOffset).toBeNull();
+  });
 });
