@@ -5685,6 +5685,14 @@ describe('CLI docs', () => {
     expect(search).toContain('formatSearchResultsSummaryJson');
   });
 
+  it('documents the search summary short alias with a copy-paste example', () => {
+    const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
+    expect(searchSection).toContain('Concise scriptable summary (short alias)');
+    expect(searchSection).toContain(
+      'savestate search <span class="code-string">"cocktail recommendations"</span> --summary --limit 20',
+    );
+  });
+
   it('documents search --adapter as a known adapter', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     const searchBlock = cli.slice(cli.indexOf("command('search <query>')"), cli.indexOf("command('login')"));

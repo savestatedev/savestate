@@ -367,6 +367,12 @@ The `guidance` object gives scripts one next step: `action` is `next`,
 `previous`, `retry`, or `none`, and `offset` is the recommended offset (or
 `null` when navigation is complete).
 
+For a concise scriptable summary, use the short alias:
+
+```bash
+savestate search "cocktail recommendations" --summary --limit 20
+```
+
 For memory-layer retrieval explanations, use `memory explain` to inspect why
 ranked memories matched a query:
 
