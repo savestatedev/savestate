@@ -2911,6 +2911,8 @@ export interface MemoryExplainJson {
   emptyReason: 'collection' | 'page' | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
+  /** Recommended pagination action for clients consuming explain output. */
+  guidance: MemoryExplainGuidanceJson;
   pagination: MemoryExplainPaginationJson;
   /** Normalized source counts for all matching results and the visible page. */
   bySource?: Record<string, number>;
@@ -2924,6 +2926,11 @@ export interface MemoryExplainJson {
   shownUnassignedNamespaceCount?: number;
   filters?: MemoryExplainFiltersJson;
   results: MemoryExplainResultJson[];
+}
+
+export interface MemoryExplainGuidanceJson {
+  action: 'next' | 'previous' | 'retry' | 'none';
+  offset: number;
 }
 
 export interface MemoryExplainFiltersJson {
@@ -2953,6 +2960,24 @@ export interface MemoryExplainPaginationJson {
   previousOffset: number | null;
   hasMore: boolean;
   nextOffset: number | null;
+}
+
+/** Turn pagination state into one actionable instruction for JSON consumers. */
+export function getMemoryExplainGuidance(
+  pagination: Pick<MemoryExplainPaginationJson, 'offset' | 'hasPrevious' | 'previousOffset' | 'hasMore' | 'nextOffset'>,
+  empty: boolean,
+  suggestedOffset: number | null,
+): MemoryExplainGuidanceJson {
+  if (empty && suggestedOffset !== null) {
+    return { action: 'retry', offset: suggestedOffset };
+  }
+  if (pagination.hasMore && pagination.nextOffset !== null) {
+    return { action: 'next', offset: pagination.nextOffset };
+  }
+  if (pagination.hasPrevious && pagination.previousOffset !== null) {
+    return { action: 'previous', offset: pagination.previousOffset };
+  }
+  return { action: 'none', offset: pagination.offset };
 }
 
 /** Describe the visible page so human output remains useful with --offset/--limit. */
@@ -3087,6 +3112,17 @@ export function formatMemoryExplainJson(
       ? suggestedOffset
       : Math.max(0, offset - pageSize)
     : null;
+  const responsePagination: MemoryExplainPaginationJson = {
+    offset,
+    limit: pagination.limit ?? null,
+    total,
+    remaining,
+    pageSize,
+    hasPrevious,
+    previousOffset: hasPrevious ? previousOffset : null,
+    hasMore,
+    nextOffset: hasMore ? pagination.nextOffset ?? offset + pageSize : null,
+  };
   const record: MemoryExplainJson = {
     found: true,
     query,
@@ -3095,17 +3131,8 @@ export function formatMemoryExplainJson(
     empty: results.length === 0,
     emptyReason: results.length > 0 ? null : total === 0 ? 'collection' : 'page',
     suggestedOffset,
-    pagination: {
-      offset,
-      limit: pagination.limit ?? null,
-      total,
-      remaining,
-      pageSize,
-      hasPrevious,
-      previousOffset: hasPrevious ? previousOffset : null,
-      hasMore,
-      nextOffset: hasMore ? pagination.nextOffset ?? offset + pageSize : null,
-    },
+    guidance: getMemoryExplainGuidance(responsePagination, results.length === 0, suggestedOffset),
+    pagination: responsePagination,
     ...(sourceSummary === undefined ? {} : sourceSummary),
     results: includeResults ? results.map((result, index) => {
       const tags = result.tags === undefined ? [] : normalizeMemoryTagFilters(result.tags);

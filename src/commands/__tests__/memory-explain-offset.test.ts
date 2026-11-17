@@ -6,6 +6,7 @@ import {
   formatMemoryExplainPrettyNamespaceSummary,
   formatMemoryExplainPrettySummary,
   formatMemoryExplainJson,
+  getMemoryExplainGuidance,
   parseMemoryExplainOffset,
   selectMemoryExplainOffsetEntries,
 } from '../memory.js';
@@ -119,5 +120,23 @@ describe('savestate memory explain --offset', () => {
     expect(summary.shown).toBe(1);
     expect(summary.pagination.nextOffset).toBe(3);
     expect(summary.results).toEqual([]);
+  });
+
+  it('gives JSON consumers one actionable pagination instruction', () => {
+    expect(getMemoryExplainGuidance(
+      { offset: 0, hasPrevious: false, previousOffset: null, hasMore: true, nextOffset: 5 },
+      false,
+      null,
+    )).toEqual({ action: 'next', offset: 5 });
+    expect(getMemoryExplainGuidance(
+      { offset: 10, hasPrevious: true, previousOffset: 5, hasMore: false, nextOffset: null },
+      true,
+      5,
+    )).toEqual({ action: 'retry', offset: 5 });
+    expect(getMemoryExplainGuidance(
+      { offset: 5, hasPrevious: true, previousOffset: 0, hasMore: false, nextOffset: null },
+      false,
+      null,
+    )).toEqual({ action: 'previous', offset: 0 });
   });
 });
