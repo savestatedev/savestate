@@ -467,6 +467,12 @@ export function formatMemoryListPageFreshnessSummary(
   return `Page Freshness: ${formatMemoryListFreshnessSummary(memories, now)}`;
 }
 
+/** Format tier totals for the rows visible on a paginated table page. */
+export function formatMemoryListPageTierSummary(memories: MemoryEntry[]): string {
+  const counts = countByTier(memories);
+  return `Page Tiers: L1 ${counts.L1}, L2 ${counts.L2}, L3 ${counts.L3}`;
+}
+
 /** Format source totals for the rows visible on a paginated table page. */
 export function formatMemoryListPageSourceSummary(memories: MemoryEntry[]): string {
   return `Page Sources: ${formatMemoryListSourceSummary(memories)}`;
@@ -1891,6 +1897,7 @@ export async function listMemories(
     console.log(`${pageSummary}`);
     if (entries.length > 0) {
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
+      console.log(`${formatMemoryListPageTierSummary(entries)}`);
       console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
       console.log(`${formatMemoryListPageTagSummary(entries)}`);
       console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}`);
