@@ -88,6 +88,31 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results[0]?.content).toBeUndefined();
   });
 
+  it('supports a summary payload without retrieval details', () => {
+    const parsed = JSON.parse(
+      formatMemoryExplainJson(
+        'inbox preference',
+        [{
+          id: 'mem-123',
+          score: 0.82,
+          summary: 'Strong match for the query.',
+          pinned: true,
+          tier: 'L1',
+          freshness: 'active',
+        }],
+        { offset: 0, limit: 1, total: 1 },
+        undefined,
+        undefined,
+        undefined,
+        false,
+      ),
+    ) as MemoryExplainJson;
+
+    expect(parsed.shown).toBe(1);
+    expect(parsed.pagination.total).toBe(1);
+    expect(parsed.results).toEqual([]);
+  });
+
   it('records no matches as an empty list', () => {
     const parsed = JSON.parse(formatMemoryExplainJson('unknown query', [])) as MemoryExplainJson;
     expect(parsed).toEqual({

@@ -3364,7 +3364,7 @@ export async function explainMemoryCommand(
     maxImportance?: number;
     minCriticality?: number;
     maxCriticality?: number;
-    format?: 'pretty' | 'json';
+    format?: 'pretty' | 'json' | 'json-summary';
   },
 ): Promise<void> {
   const limit = parseMemoryExplainLimit(options?.limit);
