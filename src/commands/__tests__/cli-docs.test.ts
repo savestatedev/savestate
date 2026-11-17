@@ -4586,6 +4586,7 @@ describe('CLI docs', () => {
   it('registers --json on savestate trace export', () => {
     const traceBlock = trace.slice(trace.indexOf("command('trace"));
     expect(traceBlock).toContain(".option('--json'");
+    expect(traceBlock).toContain(".option('--json-summary, --summary'");
   });
 
   it('documents trace export --json', () => {
@@ -4603,6 +4604,7 @@ describe('CLI docs', () => {
     expect(traceSection).toContain('On <code>export</code>, it aliases the export summary');
     expect(trace).toContain('jsonSummary?: boolean');
     expect(trace).toContain('wantsJsonSummary');
+    expect(traceSection).toContain('<code>--summary</code> is the short alias');
   });
 
   it('documents trace export --json when missing', () => {
