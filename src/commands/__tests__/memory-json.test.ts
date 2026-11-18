@@ -280,6 +280,26 @@ describe('savestate memory --json', () => {
     expect(parsed.shownByTag).toEqual({ urgent: 1, Work: 1 });
   });
 
+  it('counts a duplicated tag once per memory', () => {
+    const entries = [
+      entry({ id: 'mem-a', content: 'a', metadata: { tags: ['work', ' Work ', 'WORK'] } }),
+      entry({ id: 'mem-b', content: 'b', metadata: { tags: ['work'] } }),
+    ];
+
+    expect(countByTag(entries)).toEqual({ work: 2 });
+  });
+
+  it('keeps tag aggregate keys stable when archive order changes', () => {
+    const first = [
+      entry({ id: 'mem-a', content: 'a', metadata: { tags: ['work'] } }),
+      entry({ id: 'mem-b', content: 'b', metadata: { tags: [' Work '] } }),
+    ];
+    const reverse = [...first].reverse();
+
+    expect(countByTag(first)).toEqual({ Work: 2 });
+    expect(countByTag(reverse)).toEqual({ Work: 2 });
+  });
+
   it('uses a stable representative when tag casing varies by archive order', () => {
     const entries = [
       entry({ id: 'mem-lower', content: 'lower', metadata: { tags: ['alpha'] } }),

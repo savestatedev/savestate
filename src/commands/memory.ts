@@ -327,8 +327,13 @@ export function countByTag(memories: MemoryEntry[]): Record<string, number> {
   const counts: Record<string, number> = Object.create(null) as Record<string, number>;
   const keys = new Map<string, string>();
   for (const memory of memories) {
+    // A memory should contribute once per tag, even when legacy metadata
+    // contains the same label more than once.
+    const seenTags = new Set<string>();
     for (const tag of getMemoryListTags(memory)) {
       const normalizedKey = tag.toLowerCase();
+      if (seenTags.has(normalizedKey)) continue;
+      seenTags.add(normalizedKey);
       const existingKey = keys.get(normalizedKey);
       // Pick a stable representative when archives contain casing variants.
       // Using the first entry would make JSON keys depend on archive ordering.
@@ -811,6 +816,8 @@ export interface MemoryListMissingJson {
   /** Empty collection summaries keep the successful list schema predictable. */
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
+  byFreshness: Record<MemoryFreshnessState, number>;
+  shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: 0;
   shownPinned: 0;
   pinnedPercentage: 0;
@@ -869,6 +876,8 @@ export function formatMemoryListMissingJson(
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
+      byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       pinned: 0,
       shownPinned: 0,
       pinnedPercentage: 0,
