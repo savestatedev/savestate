@@ -1204,7 +1204,10 @@ export function formatMemoryExplainFilterMatches(
   if (options.unassigned !== undefined) filters.push(`unassigned=${options.unassigned}`);
   if (options.source !== undefined) filters.push(`source=${normalizeMemoryListSource(options.source)}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
-  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
+  if (options.tags !== undefined) {
+    const tags = normalizeMemoryTagFilters(options.tags);
+    if (tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
+  }
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
   if (options.pinned !== undefined) filters.push(`pinned=${options.pinned}`);
   if (options.since !== undefined) filters.push(`since=${options.since}`);
