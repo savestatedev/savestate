@@ -358,6 +358,15 @@ export function getMemoryListSummary(memories: MemoryEntry[]): {
   };
 }
 
+/** Keep the table tier summary compact and stable for terminal users. */
+export function formatMemoryListTierSummary(counts: Record<MemoryTier, number>): string {
+  return [
+    `  L1 (short-term):  ${counts.L1} items`,
+    `  L2 (working set): ${counts.L2} items`,
+    `  L3 (archive):     ${counts.L3} items`,
+  ].join('\n');
+}
+
 /** Format freshness totals for the human-facing list summary. */
 export function formatMemoryListFreshnessSummary(
   memories: MemoryEntry[],
@@ -456,6 +465,12 @@ export function formatMemoryListPageFreshnessSummary(
   now = new Date(),
 ): string {
   return `Page Freshness: ${formatMemoryListFreshnessSummary(memories, now)}`;
+}
+
+/** Format tier totals for the rows visible on a paginated table page. */
+export function formatMemoryListPageTierSummary(memories: MemoryEntry[]): string {
+  const counts = countByTier(memories);
+  return `Page Tiers: L1 ${counts.L1}, L2 ${counts.L2}, L3 ${counts.L3}`;
 }
 
 /** Format source totals for the rows visible on a paginated table page. */
@@ -1720,6 +1735,16 @@ export function formatMemoryListPageSummary(
   return `(showing ${shown} of ${total} matching memories; ${hints.join('; ')})`;
 }
 
+/** Make the remaining matching count explicit for users browsing a page. */
+export function formatMemoryListPageRemainingSummary(
+  total: number,
+  shown: number,
+  offset = 0,
+): string {
+  const remaining = Math.max(0, total - offset - shown);
+  return `Page Remaining: ${remaining} matching memories`;
+}
+
 /**
  * List memories with tier information.
  */
@@ -1867,9 +1892,7 @@ export async function listMemories(
   // Table format
   const { counts, total } = getMemoryListSummary(filteredEntries);
   console.log(`\nMemory Tiers Summary:`);
-  console.log(`  L1 (short-term):  ${counts.L1} items`);
-  console.log(`  L2 (working set): ${counts.L2} items`);
-  console.log(`  L3 (archive):     ${counts.L3} items`);
+  console.log(formatMemoryListTierSummary(counts));
   console.log(`  Total:            ${total} items\n`);
   console.log(`Source Summary: ${formatMemoryListSourceSummary(filteredEntries)}\n`);
   console.log(`Namespace Summary: ${formatMemoryListNamespaceSummary(filteredEntries)}\n`);
@@ -1883,7 +1906,9 @@ export async function listMemories(
   if (pageSummary) {
     console.log(`${pageSummary}`);
     if (entries.length > 0) {
+      console.log(`${formatMemoryListPageRemainingSummary(total, entries.length, offset)}`);
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
+      console.log(`${formatMemoryListPageTierSummary(entries)}`);
       console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
       console.log(`${formatMemoryListPageTagSummary(entries)}`);
       console.log(`${formatMemoryListPageFreshnessSummary(entries, freshnessNow)}`);
