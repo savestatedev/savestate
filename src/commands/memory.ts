@@ -1735,6 +1735,16 @@ export function formatMemoryListPageSummary(
   return `(showing ${shown} of ${total} matching memories; ${hints.join('; ')})`;
 }
 
+/** Make the remaining matching count explicit for users browsing a page. */
+export function formatMemoryListPageRemainingSummary(
+  total: number,
+  shown: number,
+  offset = 0,
+): string {
+  const remaining = Math.max(0, total - offset - shown);
+  return `Page Remaining: ${remaining} matching memories`;
+}
+
 /**
  * List memories with tier information.
  */
@@ -1896,6 +1906,7 @@ export async function listMemories(
   if (pageSummary) {
     console.log(`${pageSummary}`);
     if (entries.length > 0) {
+      console.log(`${formatMemoryListPageRemainingSummary(total, entries.length, offset)}`);
       console.log(`${formatMemoryListPageSourceSummary(entries)}`);
       console.log(`${formatMemoryListPageTierSummary(entries)}`);
       console.log(`${formatMemoryListPageNamespaceSummary(entries)}`);
