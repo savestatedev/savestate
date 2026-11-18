@@ -989,6 +989,7 @@ export function filterMemoryExplainEntries(
   options: {
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     tags?: string[];
@@ -1009,7 +1010,10 @@ export function filterMemoryExplainEntries(
         filterMemoryListByTags(
           filterMemoryListBySource(
             filterMemoryListByContent(
-              filterMemoryListByNamespace(entries, options.namespace),
+              filterMemoryListByUnassignedNamespace(
+                filterMemoryListByNamespace(entries, options.namespace),
+                options.unassigned,
+              ),
               options.content,
             ),
             options.source,
@@ -1180,6 +1184,7 @@ export function formatMemoryExplainFilterMatches(
   options: {
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     tags?: string[];
@@ -1196,9 +1201,13 @@ export function formatMemoryExplainFilterMatches(
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.namespace !== undefined) filters.push(`namespace=${options.namespace.trim()}`);
+  if (options.unassigned !== undefined) filters.push(`unassigned=${options.unassigned}`);
   if (options.source !== undefined) filters.push(`source=${normalizeMemoryListSource(options.source)}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
-  if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
+  if (options.tags !== undefined) {
+    const tags = normalizeMemoryTagFilters(options.tags);
+    if (tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
+  }
   if (options.freshness !== undefined) filters.push(`freshness=${options.freshness}`);
   if (options.pinned !== undefined) filters.push(`pinned=${options.pinned}`);
   if (options.since !== undefined) filters.push(`since=${options.since}`);
@@ -1214,6 +1223,7 @@ export function formatMemoryExplainFilterSummary(
   options: {
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     tags?: string[];
@@ -1229,6 +1239,11 @@ export function formatMemoryExplainFilterSummary(
 ): string | undefined {
   const filters = formatMemoryExplainFilterMatches(options);
   return filters.length > 0 ? filters.join(', ') : undefined;
+}
+
+/** Normalize explain queries consistently for CLI and programmatic callers. */
+export function normalizeMemoryExplainQuery(query: string): string {
+  return query.replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -3002,6 +3017,7 @@ export interface MemoryExplainGuidanceJson {
 export interface MemoryExplainFiltersJson {
   tier?: MemoryTier;
   namespace?: string;
+  unassigned?: boolean;
   source?: string;
   content?: string;
   tags?: string[];
@@ -3312,6 +3328,7 @@ export function formatMemoryExplainMissingJson(
 export function getMemoryExplainFilters(options?: {
   tier?: MemoryTier;
   namespace?: string;
+  unassigned?: boolean;
   source?: string;
   content?: string;
   tags?: string[];
@@ -3329,6 +3346,7 @@ export function getMemoryExplainFilters(options?: {
   const filters: MemoryExplainFiltersJson = {};
   if (options.tier !== undefined) filters.tier = options.tier;
   if (options.namespace !== undefined) filters.namespace = options.namespace.trim();
+  if (options.unassigned !== undefined) filters.unassigned = options.unassigned;
   if (options.source !== undefined) filters.source = normalizeMemoryListSource(options.source);
   if (options.content !== undefined) filters.content = options.content;
   if (options.tags !== undefined) filters.tags = normalizeMemoryTagFilters(options.tags);
@@ -3444,6 +3462,7 @@ export async function explainMemoryCommand(
     snapshotId?: string;
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     limit?: string | number;
@@ -3460,6 +3479,10 @@ export async function explainMemoryCommand(
     format?: 'pretty' | 'json' | 'json-summary';
   },
 ): Promise<void> {
+  const normalizedQuery = normalizeMemoryExplainQuery(query);
+  if (normalizedQuery.length === 0) {
+    throw new Error('Invalid memory query. Expected a non-empty query.');
+  }
   const limit = parseMemoryExplainLimit(options?.limit);
   const offset = parseMemoryExplainOffset(options?.offset);
   const { snapshot, snapshotId } = await loadSnapshot(storage, passphrase, options?.snapshotId);
@@ -3470,7 +3493,7 @@ export async function explainMemoryCommand(
   const entries = filterMemoryExplainEntries(normalized.core, options);
 
   // Simple relevance scoring for demonstration
-  const queryLower = query.toLowerCase();
+  const queryLower = normalizedQuery.toLowerCase();
   const scored = entries
     .map((entry) => {
       const contentLower = entry.content.toLowerCase();
@@ -3553,7 +3576,7 @@ export async function explainMemoryCommand(
             ],
           },
           final_score: finalScore,
-          summary: generateSummary(entry, semanticScore, query),
+          summary: generateSummary(entry, semanticScore, normalizedQuery),
         },
       };
     })
@@ -3571,7 +3594,7 @@ export async function explainMemoryCommand(
     if (scoredLimited.length === 0) {
       if (sorted.length > 0) {
         console.log(formatMemoryExplainJson(
-          query,
+          normalizedQuery,
           [],
           pagination,
           getMemoryExplainFilters(options),
@@ -3589,7 +3612,7 @@ export async function explainMemoryCommand(
         return;
       }
       console.log(formatMemoryExplainMissingJson(
-        query,
+        normalizedQuery,
         pagination,
         getMemoryExplainFilters(options),
         snapshotId,
@@ -3597,7 +3620,7 @@ export async function explainMemoryCommand(
       return;
     }
     console.log(formatMemoryExplainJson(
-      query,
+      normalizedQuery,
       scoredLimited.map((r, index) => {
         const freshness = getMemoryFreshness(r.entry);
         return {
@@ -3645,7 +3668,7 @@ export async function explainMemoryCommand(
   }
 
   // Pretty print format
-  console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
+  console.log(`\n🔍 Memory Retrieval Explanation for: "${normalizedQuery}"\n`);
   console.log(`   Snapshot: ${snapshotId}\n`);
   const filterSummary = formatMemoryExplainFilterSummary(options);
   if (filterSummary) {

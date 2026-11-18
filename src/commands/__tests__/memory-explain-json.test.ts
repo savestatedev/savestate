@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatMemoryExplainJson,
+  normalizeMemoryExplainQuery,
   normalizeMemoryExplainRank,
   parseMemoryExplainLimit,
   parseMemoryExplainOffset,
@@ -8,6 +9,11 @@ import {
 } from '../memory.js';
 
 describe('savestate memory explain --json', () => {
+  it('normalizes whitespace for programmatic explain callers', () => {
+    expect(normalizeMemoryExplainQuery('  preferred\t  editor  ')).toBe('preferred editor');
+    expect(normalizeMemoryExplainQuery('\n')).toBe('');
+  });
+
   it('accepts CLI-normalized numeric pagination values', () => {
     expect(parseMemoryExplainLimit(25)).toBe(25);
     expect(parseMemoryExplainOffset(50)).toBe(50);
@@ -112,6 +118,17 @@ describe('savestate memory explain --json', () => {
     expect(parsed.shown).toBe(1);
     expect(parsed.pagination.total).toBe(1);
     expect(parsed.results).toEqual([]);
+  });
+
+  it('preserves the unassigned namespace filter for JSON consumers', () => {
+    const parsed = JSON.parse(formatMemoryExplainJson(
+      'preference',
+      [],
+      { total: 0 },
+      { unassigned: true },
+    )) as MemoryExplainJson;
+
+    expect(parsed.filters).toEqual({ unassigned: true });
   });
 
   it('records no matches as an empty list', () => {

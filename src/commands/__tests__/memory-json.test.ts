@@ -5,6 +5,8 @@ import {
   filterMemoryListByCreatedSince,
   filterMemoryListBySource,
   filterMemoryListByNamespace,
+  filterMemoryListByUnassignedNamespace,
+  filterMemoryExplainEntries,
   filterMemoryListByContent,
   filterMemoryListByTags,
   getMemoryListSummary,
@@ -107,6 +109,19 @@ describe('savestate memory --json', () => {
     ];
 
     expect(filterMemoryListByNamespace(entries, 'ORG:APP:AGENT')).toEqual([entries[0]]);
+  });
+
+  it('lets explain target only memories without a namespace', () => {
+    const entries = [
+      entry({ id: 'mem-assigned', content: 'shared preference', metadata: { namespace: 'org:app:agent' } }),
+      entry({ id: 'mem-unassigned', content: 'shared preference' }),
+      entry({ id: 'mem-blank', content: 'shared preference', metadata: { namespace: '  ' } }),
+    ];
+
+    expect(filterMemoryExplainEntries(entries, { unassigned: true }).map(({ id }) => id))
+      .toEqual(['mem-unassigned', 'mem-blank']);
+    expect(filterMemoryListByUnassignedNamespace(entries, true).map(({ id }) => id))
+      .toEqual(['mem-unassigned', 'mem-blank']);
   });
 
   it('normalizes padded namespaces in JSON filters', () => {

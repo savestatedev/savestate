@@ -320,6 +320,9 @@ namespace copied from metadata remains usable even when its letter casing differ
 savestate memory list --namespace ORG:APP:AGENT --json-summary
 ```
 
+Use `--unassigned` with `memory list` or `memory explain` to show only memories
+without an assigned namespace. It cannot be combined with `--namespace`.
+
 Use `--freshness` to narrow results by verification state: `active` is within its soft TTL,
 `stale` is past the soft TTL but still usable, and `needs_confirmation` has reached its hard
 TTL or has no usable verification timestamp. The CLI also accepts `needs-confirmation` for the
