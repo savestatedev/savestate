@@ -989,6 +989,7 @@ export function filterMemoryExplainEntries(
   options: {
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     tags?: string[];
@@ -1009,7 +1010,10 @@ export function filterMemoryExplainEntries(
         filterMemoryListByTags(
           filterMemoryListBySource(
             filterMemoryListByContent(
-              filterMemoryListByNamespace(entries, options.namespace),
+              filterMemoryListByUnassignedNamespace(
+                filterMemoryListByNamespace(entries, options.namespace),
+                options.unassigned,
+              ),
               options.content,
             ),
             options.source,
@@ -3444,6 +3448,7 @@ export async function explainMemoryCommand(
     snapshotId?: string;
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     limit?: string | number;

@@ -817,6 +817,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')
+    .option('--unassigned', 'Search only memories without an assigned namespace')
     .option('--source <id>', 'Source id or label to search (matching is case-insensitive)')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('-p, --pinned', 'Filter to pinned memories')
@@ -846,6 +847,8 @@ export function registerMemoryCommands(program: Command): void {
         const maxCriticality = parseMemoryMaxCriticality(options.maxCriticality);
         validateMemoryImportanceRange(minImportance, maxImportance);
         validateMemoryScoreRange(minCriticality, maxCriticality, 'criticality');
+        const namespace = parseMemoryNamespace(options.namespace);
+        validateMemoryNamespaceFilters(namespace, options.unassigned);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -853,7 +856,8 @@ export function registerMemoryCommands(program: Command): void {
         await explainMemoryCommand(storage, passphrase, parsedQuery, {
           snapshotId: parseMemorySnapshot(options.snapshot),
           tier: parseMemoryTier(options.tier),
-          namespace: parseMemoryNamespace(options.namespace),
+          namespace,
+          unassigned: options.unassigned,
           source: parseMemorySource(options.source),
           content: parseMemoryContentFilter(options.content),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
