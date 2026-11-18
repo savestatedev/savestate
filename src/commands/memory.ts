@@ -329,9 +329,19 @@ export function countByTag(memories: MemoryEntry[]): Record<string, number> {
   for (const memory of memories) {
     for (const tag of getMemoryListTags(memory)) {
       const normalizedKey = tag.toLowerCase();
-      const key = keys.get(normalizedKey) ?? tag;
-      keys.set(normalizedKey, key);
-      counts[key] = (counts[key] ?? 0) + 1;
+      const existingKey = keys.get(normalizedKey);
+      // Pick a stable representative when archives contain casing variants.
+      // Using the first entry would make JSON keys depend on archive ordering.
+      if (existingKey === undefined) {
+        keys.set(normalizedKey, tag);
+        counts[tag] = 1;
+      } else if (tag < existingKey) {
+        counts[tag] = (counts[existingKey] ?? 0) + 1;
+        delete counts[existingKey];
+        keys.set(normalizedKey, tag);
+      } else {
+        counts[existingKey] = (counts[existingKey] ?? 0) + 1;
+      }
     }
   }
   return Object.fromEntries(

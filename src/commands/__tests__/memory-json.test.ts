@@ -280,6 +280,17 @@ describe('savestate memory --json', () => {
     expect(parsed.shownByTag).toEqual({ urgent: 1, Work: 1 });
   });
 
+  it('keeps tag aggregate keys stable when archive order changes', () => {
+    const first = [
+      entry({ id: 'mem-a', content: 'a', metadata: { tags: ['work'] } }),
+      entry({ id: 'mem-b', content: 'b', metadata: { tags: [' Work '] } }),
+    ];
+    const reverse = [...first].reverse();
+
+    expect(countByTag(first)).toEqual({ Work: 2 });
+    expect(countByTag(reverse)).toEqual({ Work: 2 });
+  });
+
   it('keeps reserved tag names as ordinary aggregate keys', () => {
     const entries = [
       entry({ id: 'mem-proto', content: 'proto', metadata: { tags: ['__proto__'] } }),
