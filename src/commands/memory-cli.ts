@@ -442,6 +442,16 @@ export function parseMemoryNamespace(value: string | undefined): string | undefi
   return namespace;
 }
 
+/** Reject contradictory namespace selectors before loading encrypted storage. */
+export function validateMemoryNamespaceFilters(
+  namespace: string | undefined,
+  unassigned: boolean | undefined,
+): void {
+  if (namespace !== undefined && unassigned) {
+    throw new Error('The --namespace and --unassigned options cannot be used together.');
+  }
+}
+
 /** Resolve the mutually exclusive memory list pin filters. */
 export function parseMemoryPinnedFilter(
   pinned: boolean | undefined,
@@ -577,6 +587,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--source <id>', 'Filter by source id or label (matching is case-insensitive)')
     .option('--until <date>', 'Show memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user]; matching is case-insensitive)')
+    .option('--unassigned', 'Show only memories without an assigned namespace')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
     .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
@@ -601,6 +612,8 @@ export function registerMemoryCommands(program: Command): void {
         const maxImportance = parseMemoryMaxImportance(options.maxImportance);
         validateMemoryImportanceRange(minImportance, maxImportance);
         validateMemoryListOrdering(options.oldestFirst, options.reverse);
+        const namespace = parseMemoryNamespace(options.namespace);
+        validateMemoryNamespaceFilters(namespace, options.unassigned);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -610,7 +623,8 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
           until,
-          namespace: parseMemoryNamespace(options.namespace),
+          namespace,
+          unassignedNamespace: options.unassigned,
           content: parseMemoryContentFilter(options.content),
           tags: parseMemoryTagOptions(options.tags, options.tag),
           since,

@@ -578,6 +578,7 @@ export interface MemoryListJson {
     pinned: boolean | null;
     source: string | null;
     namespace: string | null;
+    unassignedNamespace: boolean;
     content: string | null;
     tags: string[] | null;
     until: string | null;
@@ -725,6 +726,7 @@ export function formatMemoryListJson(
       namespace: pagination.filters?.namespace == null
         ? null
         : normalizeMemoryListNamespace(pagination.filters.namespace),
+      unassignedNamespace: pagination.filters?.unassignedNamespace ?? false,
       content: pagination.filters?.content ?? null,
       tags: pagination.filters?.tags == null
         ? null
@@ -828,6 +830,7 @@ export interface MemoryListMissingJson {
     pinned: boolean | null;
     source: string | null;
     namespace: string | null;
+    unassignedNamespace: boolean;
     content: string | null;
     tags: string[] | null;
     until: string | null;
@@ -888,6 +891,7 @@ export function formatMemoryListMissingJson(
         pinned: filters.pinned ?? null,
         source: filters.source == null ? null : normalizeMemoryListSource(filters.source),
         namespace: filters.namespace == null ? null : normalizeMemoryListNamespace(filters.namespace),
+        unassignedNamespace: filters.unassignedNamespace ?? false,
         content: filters.content ?? null,
         tags: filters.tags == null
           ? null
@@ -922,6 +926,17 @@ export function filterMemoryListByNamespace(
     typeof entry.metadata?.namespace === 'string' &&
     entry.metadata.namespace.trim().toLowerCase() === normalizedNamespace,
   );
+}
+
+/** Keep only memories that have no assigned namespace. */
+export function filterMemoryListByUnassignedNamespace(
+  entries: MemoryEntry[],
+  unassigned?: boolean,
+): MemoryEntry[] {
+  if (!unassigned) return entries;
+  return entries.filter((entry) => normalizeMemoryListNamespace(
+    typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
+  ) === '');
 }
 
 /** Keep padding out of machine-readable memory list filter metadata. */
@@ -1683,6 +1698,7 @@ export function formatMemoryListFilterSummary(
     pinned?: boolean;
     source?: string;
     namespace?: string;
+    unassignedNamespace?: boolean;
     content?: string;
     tags?: string[];
     until?: string;
@@ -1700,6 +1716,7 @@ export function formatMemoryListFilterSummary(
   if (source) filters.push(`source=${source}`);
   const namespace = options.namespace === undefined ? undefined : normalizeFilterText(options.namespace);
   if (namespace) filters.push(`namespace=${namespace}`);
+  if (options.unassignedNamespace) filters.push('unassigned');
   const content = options.content === undefined ? undefined : normalizeFilterText(options.content);
   if (content) filters.push(`content=${JSON.stringify(content)}`);
   const tags = options.tags?.map(normalizeFilterText).filter(Boolean);
@@ -1776,6 +1793,7 @@ export async function listMemories(
     pinned?: boolean;
     source?: string;
     namespace?: string;
+    unassignedNamespace?: boolean;
     content?: string;
     tags?: string[];
     until?: string;
@@ -1805,6 +1823,7 @@ export async function listMemories(
             pinned: options.pinned,
             source: options.source,
             namespace: options.namespace,
+            unassignedNamespace: options.unassignedNamespace,
             content: options.content,
             tags: options.tags,
             until: options.until,
@@ -1867,6 +1886,7 @@ export async function listMemories(
   entries = filterMemoryListBySource(entries, options?.source);
 
   entries = filterMemoryListByNamespace(entries, options?.namespace);
+  entries = filterMemoryListByUnassignedNamespace(entries, options?.unassignedNamespace);
   entries = filterMemoryListByContent(entries, options?.content);
   entries = filterMemoryListByTags(entries, options?.tags);
   entries = filterMemoryListByCreatedUntil(entries, options?.until);
@@ -1895,6 +1915,7 @@ export async function listMemories(
         pinned: options?.pinned,
         source: options?.source,
         namespace: options?.namespace,
+        unassignedNamespace: options?.unassignedNamespace,
         content: options?.content,
         tags: options?.tags,
         since: options?.since,
@@ -1948,6 +1969,7 @@ export async function listMemories(
         pinned: options?.pinned,
         source: options?.source,
         namespace: options?.namespace,
+        unassignedNamespace: options?.unassignedNamespace,
         content: options?.content,
         tags: options?.tags,
         since: options?.since,
