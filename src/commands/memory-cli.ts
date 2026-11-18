@@ -48,7 +48,7 @@ export function parseMemoryFreshness(value: string | undefined): MemoryFreshness
   }
 
   throw new Error(
-    `Invalid --freshness value "${value}". Expected one of active, stale, or needs_confirmation.`,
+    `Invalid --freshness value "${value}". Expected one of active, stale, or needs_confirmation (needs-confirmation is also accepted).`,
   );
 }
 
@@ -568,7 +568,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
     .option('--since <date>', 'Show memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
-    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
+    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--important-first', 'Show highest-importance memories first (ties use creation date)')
@@ -799,7 +799,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
-    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
+    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--min-criticality <n>', 'Show explain matches with criticality at least this score (0-1)')
