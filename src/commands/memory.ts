@@ -1184,6 +1184,7 @@ export function formatMemoryExplainFilterMatches(
   options: {
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     tags?: string[];
@@ -1200,6 +1201,7 @@ export function formatMemoryExplainFilterMatches(
   const filters: string[] = [];
   if (options.tier !== undefined) filters.push(`tier=${options.tier}`);
   if (options.namespace !== undefined) filters.push(`namespace=${options.namespace.trim()}`);
+  if (options.unassigned !== undefined) filters.push(`unassigned=${options.unassigned}`);
   if (options.source !== undefined) filters.push(`source=${normalizeMemoryListSource(options.source)}`);
   if (options.content !== undefined) filters.push(`content=${options.content}`);
   if (options.tags !== undefined) filters.push(`tags=[${options.tags.join(', ')}]`);
@@ -1218,6 +1220,7 @@ export function formatMemoryExplainFilterSummary(
   options: {
     tier?: MemoryTier;
     namespace?: string;
+    unassigned?: boolean;
     source?: string;
     content?: string;
     tags?: string[];
@@ -3006,6 +3009,7 @@ export interface MemoryExplainGuidanceJson {
 export interface MemoryExplainFiltersJson {
   tier?: MemoryTier;
   namespace?: string;
+  unassigned?: boolean;
   source?: string;
   content?: string;
   tags?: string[];
@@ -3316,6 +3320,7 @@ export function formatMemoryExplainMissingJson(
 export function getMemoryExplainFilters(options?: {
   tier?: MemoryTier;
   namespace?: string;
+  unassigned?: boolean;
   source?: string;
   content?: string;
   tags?: string[];
@@ -3333,6 +3338,7 @@ export function getMemoryExplainFilters(options?: {
   const filters: MemoryExplainFiltersJson = {};
   if (options.tier !== undefined) filters.tier = options.tier;
   if (options.namespace !== undefined) filters.namespace = options.namespace.trim();
+  if (options.unassigned !== undefined) filters.unassigned = options.unassigned;
   if (options.source !== undefined) filters.source = normalizeMemoryListSource(options.source);
   if (options.content !== undefined) filters.content = options.content;
   if (options.tags !== undefined) filters.tags = normalizeMemoryTagFilters(options.tags);

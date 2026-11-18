@@ -83,6 +83,10 @@ describe('savestate memory explain pretty freshness', () => {
     expect(formatMemoryExplainFilterMatches({ source: ' Chat\t GPT ' })).toEqual(['source=Chat GPT']);
   });
 
+  it('shows the unassigned namespace scope in the pretty filter summary', () => {
+    expect(formatMemoryExplainFilterMatches({ unassigned: true })).toEqual(['unassigned=true']);
+  });
+
   it('normalizes padded namespaces in the pretty filter summary', () => {
     expect(formatMemoryExplainFilterMatches({ namespace: '  org:app:agent  ' }))
       .toEqual(['namespace=org:app:agent']);

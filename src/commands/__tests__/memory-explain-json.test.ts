@@ -114,6 +114,17 @@ describe('savestate memory explain --json', () => {
     expect(parsed.results).toEqual([]);
   });
 
+  it('preserves the unassigned namespace filter for JSON consumers', () => {
+    const parsed = JSON.parse(formatMemoryExplainJson(
+      'preference',
+      [],
+      { total: 0 },
+      { unassigned: true },
+    )) as MemoryExplainJson;
+
+    expect(parsed.filters).toEqual({ unassigned: true });
+  });
+
   it('records no matches as an empty list', () => {
     const parsed = JSON.parse(formatMemoryExplainJson('unknown query', [])) as MemoryExplainJson;
     expect(parsed).toEqual({
