@@ -555,6 +555,7 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --tier L1\n' +
         '  $ savestate memory list --source chatgpt\n' +
         '  $ savestate memory list --tags work,urgent\n' +
+        '  $ savestate memory list --freshness active\n' +
         '  $ savestate memory list --min-importance 0.8 --max-importance 1 --json\n' +
         '  $ savestate memory list --summary\n' +
         '  $ savestate memory list --important-first --oldest-first --json-summary\n' +
