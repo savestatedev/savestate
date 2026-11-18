@@ -327,8 +327,13 @@ export function countByTag(memories: MemoryEntry[]): Record<string, number> {
   const counts: Record<string, number> = Object.create(null) as Record<string, number>;
   const keys = new Map<string, string>();
   for (const memory of memories) {
+    // A memory should contribute once per tag, even when legacy metadata
+    // contains the same label more than once.
+    const seenTags = new Set<string>();
     for (const tag of getMemoryListTags(memory)) {
       const normalizedKey = tag.toLowerCase();
+      if (seenTags.has(normalizedKey)) continue;
+      seenTags.add(normalizedKey);
       const existingKey = keys.get(normalizedKey);
       // Pick a stable representative when archives contain casing variants.
       // Using the first entry would make JSON keys depend on archive ordering.
