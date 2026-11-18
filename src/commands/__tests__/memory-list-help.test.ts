@@ -23,4 +23,8 @@ describe('savestate memory list help', () => {
   it('explains the accepted hyphenated spelling for invalid values', () => {
     expect(() => parseMemoryFreshness('unknown')).toThrow('needs-confirmation is also accepted');
   });
+
+  it('normalizes the hyphenated confirmation state for CLI users', () => {
+    expect(parseMemoryFreshness(' needs-confirmation ')).toBe('needs_confirmation');
+  });
 });
