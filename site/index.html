@@ -544,6 +544,14 @@ nav .container {
   margin-bottom: 16px;
 }
 
+.hero-trust {
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  margin: 0 auto 10px;
+  animation: fadeInUp 0.92s ease-out;
+}
+
 .hero-fulfillment {
   font-size: 13px;
   color: var(--text-dim);
@@ -1727,6 +1735,9 @@ nav .container {
         Start free with the CLI
       </a>
     </div>
+    <p class="hero-trust" aria-label="SaveState trust details">
+      Open source <span aria-hidden="true">·</span> MIT licensed <span aria-hidden="true">·</span> Your encryption keys stay with you
+    </p>
     <p class="hero-fulfillment">Start free with the CLI. Pro adds encrypted cloud sync and scheduled backups while your encryption key stays with you.</p>
     <div class="hero-install">
       <code>npm install -g @savestate/cli</code>
@@ -2195,15 +2206,22 @@ async function copyText(text) {
 
 async function copyInstall(btn, text) {
   const command = text || 'npm install -g @savestate/cli';
+  const defaultLabel = 'Copy the SaveState CLI install command';
   try {
     await copyText(command);
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.setAttribute('aria-label', 'SaveState CLI install command copied');
     setTimeout(() => {
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
+      btn.setAttribute('aria-label', defaultLabel);
     }, 2000);
   } catch {
     btn.textContent = 'Select and copy';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    btn.setAttribute('aria-label', 'Copy the SaveState CLI install command manually');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.setAttribute('aria-label', defaultLabel);
+    }, 2000);
   }
 }
 

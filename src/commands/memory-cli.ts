@@ -40,13 +40,15 @@ const MEMORY_FRESHNESS_STATES = ['active', 'stale', 'needs_confirmation'] as con
 export function parseMemoryFreshness(value: string | undefined): MemoryFreshnessState | undefined {
   if (value === undefined) return undefined;
 
-  const freshness = value.trim().toLowerCase();
+  // Accept the CLI-friendly hyphenated spelling while keeping the JSON/API
+  // state name stable for consumers.
+  const freshness = value.trim().toLowerCase().replace(/-/g, '_');
   if ((MEMORY_FRESHNESS_STATES as readonly string[]).includes(freshness)) {
     return freshness as MemoryFreshnessState;
   }
 
   throw new Error(
-    `Invalid --freshness value "${value}". Expected one of active, stale, or needs_confirmation.`,
+    `Invalid --freshness value "${value}". Expected one of active, stale, or needs_confirmation (needs-confirmation is also accepted).`,
   );
 }
 
@@ -292,6 +294,17 @@ export function parseMemoryTags(value: string | undefined): string[] | undefined
   }
 
   return tags;
+}
+
+/** Reject ambiguous use of the canonical and singular tag flags together. */
+export function parseMemoryTagOptions(
+  tags: string | undefined,
+  tag: string | undefined,
+): string[] | undefined {
+  if (tags !== undefined && tag !== undefined) {
+    throw new Error('Use either --tags or --tag, not both.');
+  }
+  return parseMemoryTags(tags ?? tag);
 }
 
 /** Parse memory --source while matching the normalized source labels shown in output. */
@@ -565,8 +578,9 @@ export function registerMemoryCommands(program: Command): void {
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user]; matching is case-insensitive)')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
+    .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
     .option('--since <date>', 'Show memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
-    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
+    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--important-first', 'Show highest-importance memories first (ties use creation date)')
@@ -597,7 +611,7 @@ export function registerMemoryCommands(program: Command): void {
           until,
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
-          tags: parseMemoryTags(options.tags),
+          tags: parseMemoryTagOptions(options.tags, options.tag),
           since,
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
@@ -797,7 +811,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
-    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation)')
+    .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
+    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--min-criticality <n>', 'Show explain matches with criticality at least this score (0-1)')
@@ -831,7 +846,7 @@ export function registerMemoryCommands(program: Command): void {
           since,
           limit: parseMemoryLimit(options.limit, 10),
           offset: parseMemoryListOffset(options.offset),
-          tags: parseMemoryTags(options.tags),
+          tags: parseMemoryTagOptions(options.tags, options.tag),
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
           maxImportance,
