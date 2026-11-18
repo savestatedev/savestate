@@ -33,9 +33,11 @@ const MAX_SEARCH_LIMIT = 1000;
 const MAX_SEARCH_OFFSET = 1000;
 const SEARCH_TYPE_LIST = SEARCH_TYPES.join(', ');
 // Keep search validation aligned with the adapters that can actually create
-// snapshots. A second hard-coded list drifts whenever a new adapter ships.
-const SEARCH_ADAPTERS = listAdapters();
-const SEARCH_ADAPTER_LIST = SEARCH_ADAPTERS.join(', ');
+// snapshots. Resolve this at validation time so runtime registrations are not
+// hidden by a list captured during module initialization.
+function getSearchAdapters(): string[] {
+  return listAdapters();
+}
 
 export function formatSearchResultsJson(results: SearchResult[]): string {
   return JSON.stringify(results, null, 2);
@@ -458,12 +460,13 @@ export function parseSearchAdapter(value: string | undefined): string | undefine
   if (value === undefined) return undefined;
 
   const adapter = value.trim().toLowerCase();
-  if (SEARCH_ADAPTERS.includes(adapter)) {
+  const searchAdapters = getSearchAdapters();
+  if (searchAdapters.includes(adapter)) {
     return adapter;
   }
 
   throw new Error(
-    `Invalid --adapter value "${value}". Expected one of: ${SEARCH_ADAPTER_LIST}.`,
+    `Invalid --adapter value "${value}". Expected one of: ${searchAdapters.join(', ')}.`,
   );
 }
 

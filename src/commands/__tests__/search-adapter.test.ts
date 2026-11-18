@@ -41,7 +41,7 @@ describe('savestate search --adapter', () => {
 
   it.each(['', ' ', 'nope', 'claude', '1', 'chat gpt'])('rejects invalid value %s', (value) => {
     expect(() => parseSearchAdapter(value)).toThrow(
-      `Invalid --adapter value "${value}". Expected one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.`,
+      `Invalid --adapter value "${value}". Expected one of: ${listAdapters().join(', ')}.`,
     );
   });
 });
