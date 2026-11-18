@@ -296,6 +296,17 @@ export function parseMemoryTags(value: string | undefined): string[] | undefined
   return tags;
 }
 
+/** Reject ambiguous use of the canonical and singular tag flags together. */
+export function parseMemoryTagOptions(
+  tags: string | undefined,
+  tag: string | undefined,
+): string[] | undefined {
+  if (tags !== undefined && tag !== undefined) {
+    throw new Error('Use either --tags or --tag, not both.');
+  }
+  return parseMemoryTags(tags ?? tag);
+}
+
 /** Parse memory --source while matching the normalized source labels shown in output. */
 export function parseMemorySource(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -600,7 +611,7 @@ export function registerMemoryCommands(program: Command): void {
           until,
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
-          tags: parseMemoryTags(options.tags ?? options.tag),
+          tags: parseMemoryTagOptions(options.tags, options.tag),
           since,
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
@@ -835,7 +846,7 @@ export function registerMemoryCommands(program: Command): void {
           since,
           limit: parseMemoryLimit(options.limit, 10),
           offset: parseMemoryListOffset(options.offset),
-          tags: parseMemoryTags(options.tags ?? options.tag),
+          tags: parseMemoryTagOptions(options.tags, options.tag),
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
           maxImportance,
