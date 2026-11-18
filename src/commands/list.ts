@@ -141,6 +141,11 @@ export function normalizeListId(id: string): string {
   return id.trim();
 }
 
+/** Keep legacy adapter whitespace out of human and machine-readable output. */
+export function normalizeListAdapter(adapter: string): string {
+  return adapter.trim();
+}
+
 /** Keep the JSON formatter's public helper name stable. */
 export function normalizeListJsonId(id: string): string {
   return normalizeListId(id);
@@ -232,7 +237,7 @@ export function formatListJson(
       id: normalizeListId(snapshot.id),
       timestamp: snapshot.timestamp,
       platform: snapshot.platform,
-      adapter: snapshot.adapter,
+      adapter: normalizeListAdapter(snapshot.adapter),
       label: normalizeListJsonLabel(snapshot.label),
       tags: normalizeListJsonTags(snapshot.tags),
       filename: snapshot.filename,
@@ -862,7 +867,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   // Calculate column widths
   const idWidth = Math.max(10, ...sorted.map((s) => normalizeListId(s.id).length));
   const dateWidth = 20;
-  const adapterWidth = Math.max(7, ...sorted.map((s) => s.adapter.length));
+  const adapterWidth = Math.max(7, ...sorted.map((s) => normalizeListAdapter(s.adapter).length));
   const labelWidth = getListLabelWidth(sorted);
   const tagsWidth = Math.max(4, ...sorted.map((s) => formatListTags(s.tags).length));
   const sizeWidth = 10;
@@ -890,7 +895,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
     const row = [
       chalk.cyan(normalizeListId(s.id).padEnd(idWidth)),
       date.padEnd(dateWidth),
-      s.adapter.padEnd(adapterWidth),
+      normalizeListAdapter(s.adapter).padEnd(adapterWidth),
       label,
       tags,
       size.padStart(sizeWidth),
