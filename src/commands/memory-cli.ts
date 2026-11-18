@@ -442,6 +442,16 @@ export function parseMemoryNamespace(value: string | undefined): string | undefi
   return namespace;
 }
 
+/** Reject contradictory namespace selectors before loading encrypted storage. */
+export function validateMemoryNamespaceFilters(
+  namespace: string | undefined,
+  unassigned: boolean | undefined,
+): void {
+  if (namespace !== undefined && unassigned) {
+    throw new Error('The --namespace and --unassigned options cannot be used together.');
+  }
+}
+
 /** Resolve the mutually exclusive memory list pin filters. */
 export function parseMemoryPinnedFilter(
   pinned: boolean | undefined,
@@ -555,6 +565,7 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --tier L1\n' +
         '  $ savestate memory list --source chatgpt\n' +
         '  $ savestate memory list --tags work,urgent\n' +
+        '  $ savestate memory list --freshness active\n' +
         '  $ savestate memory list --min-importance 0.8 --max-importance 1 --json\n' +
         '  $ savestate memory list --summary\n' +
         '  $ savestate memory list --important-first --oldest-first --json-summary\n' +
@@ -576,11 +587,12 @@ export function registerMemoryCommands(program: Command): void {
     .option('--source <id>', 'Filter by source id or label (matching is case-insensitive)')
     .option('--until <date>', 'Show memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user]; matching is case-insensitive)')
+    .option('--unassigned', 'Show only memories without an assigned namespace')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
     .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
     .option('--since <date>', 'Show memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
-    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
+    .option('-f, --freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--important-first', 'Show highest-importance memories first (ties use creation date)')
@@ -600,6 +612,8 @@ export function registerMemoryCommands(program: Command): void {
         const maxImportance = parseMemoryMaxImportance(options.maxImportance);
         validateMemoryImportanceRange(minImportance, maxImportance);
         validateMemoryListOrdering(options.oldestFirst, options.reverse);
+        const namespace = parseMemoryNamespace(options.namespace);
+        validateMemoryNamespaceFilters(namespace, options.unassigned);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -609,7 +623,8 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           source: parseMemorySource(options.source),
           until,
-          namespace: parseMemoryNamespace(options.namespace),
+          namespace,
+          unassignedNamespace: options.unassigned,
           content: parseMemoryContentFilter(options.content),
           tags: parseMemoryTagOptions(options.tags, options.tag),
           since,
@@ -812,7 +827,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
-    .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
+    .option('-f, --freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--min-criticality <n>', 'Show explain matches with criticality at least this score (0-1)')
