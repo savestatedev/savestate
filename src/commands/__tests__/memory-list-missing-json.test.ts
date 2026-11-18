@@ -33,6 +33,8 @@ describe('savestate memory list --json when missing', () => {
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
+      byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       pinned: 0,
       shownPinned: 0,
       pinnedPercentage: 0,
@@ -56,7 +58,9 @@ describe('savestate memory list --json when missing', () => {
     expect(parsed.byTier).toBeUndefined();
     expect(parsed.pinned).toBe(0);
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['contentIncluded', 'empty', 'emptyReason', 'filters', 'found', 'guidance', 'hasMore', 'importance', 'isLastPage', 'limit', 'maxOffset', 'nextOffset', 'offset', 'pinned', 'pinnedPercentage', 'previousOffset', 'remaining', 'shown', 'shownImportance', 'shownPinned', 'shownPinnedPercentage', 'snapshot', 'suggestedOffset', 'total']);
+    expect(Object.keys(parsed).sort()).toEqual(['byFreshness', 'contentIncluded', 'empty', 'emptyReason', 'filters', 'found', 'guidance', 'hasMore', 'importance', 'isLastPage', 'limit', 'maxOffset', 'nextOffset', 'offset', 'pinned', 'pinnedPercentage', 'previousOffset', 'remaining', 'shown', 'shownByFreshness', 'shownImportance', 'shownPinned', 'shownPinnedPercentage', 'snapshot', 'suggestedOffset', 'total']);
+    expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
+    expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(JSON.stringify(parsed)).not.toContain('ss_live_SECRET');
   });
 
@@ -84,6 +88,8 @@ describe('savestate memory list --json when missing', () => {
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
+      byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       pinned: 0,
       shownPinned: 0,
       pinnedPercentage: 0,

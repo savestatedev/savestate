@@ -816,6 +816,8 @@ export interface MemoryListMissingJson {
   /** Empty collection summaries keep the successful list schema predictable. */
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
+  byFreshness: Record<MemoryFreshnessState, number>;
+  shownByFreshness: Record<MemoryFreshnessState, number>;
   pinned: 0;
   shownPinned: 0;
   pinnedPercentage: 0;
@@ -874,6 +876,8 @@ export function formatMemoryListMissingJson(
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
+      byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       pinned: 0,
       shownPinned: 0,
       pinnedPercentage: 0,
