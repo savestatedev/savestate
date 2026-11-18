@@ -232,6 +232,11 @@ Table output also shows matching-collection source totals and, when paginated, s
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
 
+Use `--freshness active`, `--freshness stale`, or `--freshness needs_confirmation` to narrow
+memory results to entries that are current, past their soft TTL, or due for re-verification.
+The CLI also accepts `needs-confirmation`; JSON output keeps the stable `needs_confirmation`
+state name for scripts.
+
 Table output also shows matching-collection tier totals and, when paginated, a `Page Tiers` line
 for the rows currently visible. This makes it possible to see whether a filtered page is weighted
 toward hot (L1), working (L2), or archive (L3) memory without opening JSON output.
