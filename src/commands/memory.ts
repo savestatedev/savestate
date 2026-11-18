@@ -1241,6 +1241,11 @@ export function formatMemoryExplainFilterSummary(
   return filters.length > 0 ? filters.join(', ') : undefined;
 }
 
+/** Normalize explain queries consistently for CLI and programmatic callers. */
+export function normalizeMemoryExplainQuery(query: string): string {
+  return query.replace(/\s+/g, ' ').trim();
+}
+
 /**
  * Promote a memory entry to a higher tier.
  */
@@ -3474,6 +3479,10 @@ export async function explainMemoryCommand(
     format?: 'pretty' | 'json' | 'json-summary';
   },
 ): Promise<void> {
+  const normalizedQuery = normalizeMemoryExplainQuery(query);
+  if (normalizedQuery.length === 0) {
+    throw new Error('Invalid memory query. Expected a non-empty query.');
+  }
   const limit = parseMemoryExplainLimit(options?.limit);
   const offset = parseMemoryExplainOffset(options?.offset);
   const { snapshot, snapshotId } = await loadSnapshot(storage, passphrase, options?.snapshotId);
@@ -3484,7 +3493,7 @@ export async function explainMemoryCommand(
   const entries = filterMemoryExplainEntries(normalized.core, options);
 
   // Simple relevance scoring for demonstration
-  const queryLower = query.toLowerCase();
+  const queryLower = normalizedQuery.toLowerCase();
   const scored = entries
     .map((entry) => {
       const contentLower = entry.content.toLowerCase();
@@ -3567,7 +3576,7 @@ export async function explainMemoryCommand(
             ],
           },
           final_score: finalScore,
-          summary: generateSummary(entry, semanticScore, query),
+          summary: generateSummary(entry, semanticScore, normalizedQuery),
         },
       };
     })
@@ -3585,7 +3594,7 @@ export async function explainMemoryCommand(
     if (scoredLimited.length === 0) {
       if (sorted.length > 0) {
         console.log(formatMemoryExplainJson(
-          query,
+          normalizedQuery,
           [],
           pagination,
           getMemoryExplainFilters(options),
@@ -3603,7 +3612,7 @@ export async function explainMemoryCommand(
         return;
       }
       console.log(formatMemoryExplainMissingJson(
-        query,
+        normalizedQuery,
         pagination,
         getMemoryExplainFilters(options),
         snapshotId,
@@ -3611,7 +3620,7 @@ export async function explainMemoryCommand(
       return;
     }
     console.log(formatMemoryExplainJson(
-      query,
+      normalizedQuery,
       scoredLimited.map((r, index) => {
         const freshness = getMemoryFreshness(r.entry);
         return {
@@ -3659,7 +3668,7 @@ export async function explainMemoryCommand(
   }
 
   // Pretty print format
-  console.log(`\n🔍 Memory Retrieval Explanation for: "${query}"\n`);
+  console.log(`\n🔍 Memory Retrieval Explanation for: "${normalizedQuery}"\n`);
   console.log(`   Snapshot: ${snapshotId}\n`);
   const filterSummary = formatMemoryExplainFilterSummary(options);
   if (filterSummary) {
