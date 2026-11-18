@@ -320,6 +320,15 @@ namespace copied from metadata remains usable even when its letter casing differ
 savestate memory list --namespace ORG:APP:AGENT --json-summary
 ```
 
+Use `--freshness` to narrow results by verification state: `active` is within its soft TTL,
+`stale` is past the soft TTL but still usable, and `needs_confirmation` has reached its hard
+TTL or has no usable verification timestamp. The CLI also accepts `needs-confirmation` for the
+last state; JSON output always uses the underscore spelling.
+
+```bash
+savestate memory list --freshness needs-confirmation --json-summary
+```
+
 Use `--important-first` to put the highest-importance memories at the top of a list. Equal
 importance scores keep the normal creation-date ordering; combine it with `--oldest-first` when
 older memories should win ties:
