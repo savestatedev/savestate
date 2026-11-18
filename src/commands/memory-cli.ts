@@ -567,6 +567,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-n, --namespace <ns>', 'Filter by namespace (org:app:agent[:user]; matching is case-insensitive)')
     .option('--content <text>', 'Filter by case-insensitive content substring')
     .option('--tags <tags>', 'Filter by tags (comma-separated; all must match)')
+    .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
     .option('--since <date>', 'Show memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
@@ -599,7 +600,7 @@ export function registerMemoryCommands(program: Command): void {
           until,
           namespace: parseMemoryNamespace(options.namespace),
           content: parseMemoryContentFilter(options.content),
-          tags: parseMemoryTags(options.tags),
+          tags: parseMemoryTags(options.tags ?? options.tag),
           since,
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
@@ -799,6 +800,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
+    .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
     .option('--freshness <state>', 'Filter by freshness (active, stale, needs_confirmation/needs-confirmation)')
     .option('--min-importance <n>', 'Show memories with importance at least this score (0-1)')
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
@@ -833,7 +835,7 @@ export function registerMemoryCommands(program: Command): void {
           since,
           limit: parseMemoryLimit(options.limit, 10),
           offset: parseMemoryListOffset(options.offset),
-          tags: parseMemoryTags(options.tags),
+          tags: parseMemoryTags(options.tags ?? options.tag),
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,
           maxImportance,
