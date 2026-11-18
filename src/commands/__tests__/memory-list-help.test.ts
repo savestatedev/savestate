@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Command } from 'commander';
-import { registerMemoryCommands } from '../memory-cli.js';
+import { parseMemoryFreshness, registerMemoryCommands } from '../memory-cli.js';
 
 describe('savestate memory list help', () => {
   it('documents the short summary alias', () => {
@@ -12,5 +12,9 @@ describe('savestate memory list help', () => {
 
     expect(help).toContain('--json-summary, --summary');
     expect(help).toContain('--summary is the short alias');
+  });
+
+  it('normalizes the hyphenated confirmation state for CLI users', () => {
+    expect(parseMemoryFreshness(' needs-confirmation ')).toBe('needs_confirmation');
   });
 });

@@ -102,6 +102,15 @@ describe('savestate list --label', () => {
     expect(normalizeListId('  ss-legacy  ')).toBe('ss-legacy');
   });
 
+  it('normalizes legacy adapter whitespace at the output boundary', async () => {
+    const { formatListJson, normalizeListAdapter } = await import('../list.js');
+    expect(normalizeListAdapter('  chatgpt  ')).toBe('chatgpt');
+    const result = JSON.parse(formatListJson([
+      entry({ id: 'legacy', adapter: '  chatgpt  ' }),
+    ]));
+    expect(result.entries[0].adapter).toBe('chatgpt');
+  });
+
   it('sizes the label column from normalized labels', () => {
     expect(getListLabelWidth([entry({ id: 'legacy', adapter: 'chatgpt', label: '  backup  ' })])).toBe(6);
   });

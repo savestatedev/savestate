@@ -40,7 +40,9 @@ const MEMORY_FRESHNESS_STATES = ['active', 'stale', 'needs_confirmation'] as con
 export function parseMemoryFreshness(value: string | undefined): MemoryFreshnessState | undefined {
   if (value === undefined) return undefined;
 
-  const freshness = value.trim().toLowerCase();
+  // Accept the CLI-friendly hyphenated spelling while keeping the JSON/API
+  // state name stable for consumers.
+  const freshness = value.trim().toLowerCase().replace(/-/g, '_');
   if ((MEMORY_FRESHNESS_STATES as readonly string[]).includes(freshness)) {
     return freshness as MemoryFreshnessState;
   }
