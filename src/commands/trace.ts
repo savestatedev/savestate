@@ -632,7 +632,7 @@ export function formatTraceExportJson(input: {
     ? Math.max(0, offset - limit)
     : null;
   const suggestedOffset = limit !== null && runs.length === 0 && total > 0
-    ? Math.floor((total - 1) / limit) * limit
+    ? Math.min(Math.floor((total - 1) / limit) * limit, MAX_TRACE_OFFSET)
     : null;
   return JSON.stringify(
     {
