@@ -30,6 +30,7 @@ export interface MemoryLogJson {
   memoryId: string;
   events: MemoryLogEventJson[];
   eventsIncluded: boolean;
+  actionCounts: Record<string, number>;
   guidance: MemoryLogGuidanceJson;
   pagination: MemoryLogPaginationJson;
 }
@@ -76,10 +77,24 @@ function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
   };
 }
 
+/** Count lifecycle actions across the complete audit log, including hidden pages. */
+export function countMemoryLogActions(log: ProvenanceEntry[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const entry of log) {
+    counts[entry.action] = (counts[entry.action] ?? 0) + 1;
+  }
+  return Object.fromEntries(
+    Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
-  pagination: Partial<MemoryLogPaginationJson> & { includeEvents?: boolean } = {},
+  pagination: Partial<MemoryLogPaginationJson> & {
+    includeEvents?: boolean;
+    actionLog?: ProvenanceEntry[];
+  } = {},
 ): string {
   const offset = pagination.offset ?? 0;
   const limit = pagination.limit ?? null;
@@ -118,6 +133,7 @@ export function formatMemoryLogJson(
       memoryId,
       events: pagination.includeEvents === false ? [] : log.map(toLogEventJson),
       eventsIncluded: pagination.includeEvents !== false,
+      actionCounts: countMemoryLogActions(pagination.actionLog ?? log),
       guidance: getMemoryLogGuidance(responsePagination, suggestedOffset),
       pagination: responsePagination,
     },
@@ -1016,6 +1032,7 @@ export async function memoryLogCommand(
           ? Math.floor((allLog.length - 1) / limit) * limit
           : null,
         includeEvents: options?.includeEvents,
+        actionLog: allLog,
       }));
       return;
     }

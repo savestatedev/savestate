@@ -39,10 +39,12 @@ describe('savestate memory log --json', () => {
       limit: 1,
       hasMore: true,
       nextOffset: 1,
+      actionLog: [created, edited, merged],
     })) as MemoryLogJson & { eventsIncluded: boolean };
 
     expect(parsed.events).toEqual([]);
     expect(parsed.eventsIncluded).toBe(false);
+    expect(parsed.actionCounts).toEqual({ created: 1, edited: 1, merged: 1 });
     expect(parsed.pagination).toMatchObject({ total: 3, shown: 1, hasMore: true, nextOffset: 1 });
   });
 
@@ -53,6 +55,7 @@ describe('savestate memory log --json', () => {
     expect(parsed).toEqual({
       memoryId: 'mem-123',
       eventsIncluded: true,
+      actionCounts: { created: 1, edited: 1, merged: 1 },
       events: [
         {
           action: 'created',
