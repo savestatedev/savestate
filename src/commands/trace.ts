@@ -906,6 +906,11 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
 
   const store = new TraceStore();
 
+  const failForMissingRun = (): void => {
+    console.error(chalk.red(`✗ Trace run not found: ${run}`));
+    process.exit(1);
+  };
+
   if (wantsJsonSummary) {
     const allRuns = await store.listRuns();
     const runs = applyTraceExportFilters(
@@ -933,6 +938,12 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   }
 
   if (offset === undefined && options.limit === undefined) {
+    if (run !== 'all') {
+      const matchingRuns = await store.listRuns();
+      if (!matchingRuns.some((entry) => entry.run_id === run)) {
+        failForMissingRun();
+      }
+    }
     const output = await store.export(run, format);
     process.stdout.write(output);
     return;
@@ -940,6 +951,9 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
 
   const allRuns = await store.listRuns();
   const candidateRuns = run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run);
+  if (run !== 'all' && candidateRuns.length === 0) {
+    failForMissingRun();
+  }
   const runs = applyTraceExportFilters(candidateRuns, {
     offset: options.offset,
     limit: options.limit,
