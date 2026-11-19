@@ -77,4 +77,19 @@ describe('getAuditLog', () => {
     expect(getAuditLog(Number.NaN)).toEqual([]);
     expect(getAuditLog(Number.POSITIVE_INFINITY)).toEqual([]);
   });
+
+  it('returns snapshots that cannot mutate the audit history', () => {
+    logAudit({
+      timestamp: new Date().toISOString(),
+      operation: 'save',
+      resource_id: 'memory-1',
+      resource_type: 'memory',
+      success: true,
+    });
+
+    const result = getAuditLog();
+    result[0].resource_id = 'tampered';
+
+    expect(getAuditLog()[0].resource_id).toBe('memory-1');
+  });
 });

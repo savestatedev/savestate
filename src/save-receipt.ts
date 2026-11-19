@@ -296,7 +296,9 @@ export function getAuditLog(limit = 100): SaveAuditEntry[] {
   if (!Number.isInteger(limit) || limit <= 0) {
     return [];
   }
-  return auditLog.slice(-limit);
+
+  // Keep callers from mutating the in-memory audit history through a read.
+  return auditLog.slice(-limit).map((entry) => ({ ...entry }));
 }
 
 /**
