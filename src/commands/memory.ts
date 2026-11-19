@@ -568,6 +568,8 @@ export interface MemoryListJson {
   pageSize: number;
   page: number;
   totalPages: number;
+  /** Last 1-based page that can be opened within the supported offset ceiling. */
+  lastPage: number;
   /** Offset for the last page that can be opened within the supported ceiling. */
   lastPageOffset: number | null;
   hasPrevious: boolean;
@@ -675,6 +677,7 @@ export function formatMemoryListJson(
     : limit === undefined
       ? 0
       : Math.floor(Math.min(MAX_MEMORY_LIST_OFFSET, all.length - 1) / pageSize) * pageSize;
+  const lastPage = lastPageOffset === null ? 0 : Math.floor(lastPageOffset / pageSize) + 1;
   const canAdvanceWithinOffsetCeiling = offset + continuationStep <= MAX_MEMORY_LIST_OFFSET;
   const hasMore = hasMoreFromCollection && canAdvanceWithinOffsetCeiling;
   const isLastPage = !hasMore;
@@ -711,6 +714,7 @@ export function formatMemoryListJson(
     pageSize,
     page,
     totalPages,
+    lastPage,
     lastPageOffset,
     hasPrevious,
     previousOffset,

@@ -484,6 +484,7 @@ describe('savestate memory --json', () => {
     })) as MemoryListJson;
 
     expect(parsed.lastPageOffset).toBe(896);
+    expect(parsed.lastPage).toBe(8);
     expect(parsed.hasMore).toBe(false);
     expect(parsed.isLastPage).toBe(true);
     expect(parsed.nextOffset).toBeNull();
@@ -524,6 +525,7 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBeNull();
     expect(parsed.page).toBe(0);
     expect(parsed.totalPages).toBe(0);
+    expect(parsed.lastPage).toBe(0);
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
