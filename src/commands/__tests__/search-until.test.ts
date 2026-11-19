@@ -15,7 +15,7 @@ describe('savestate search --until', () => {
     );
   });
 
-  it.each(['', ' ', 'nope', '2026-02-30', '2026-13-01', 'not-a-date'])(
+  it.each(['', ' ', 'nope', 'April 1, 2026', '2026-02-30', '2026-13-01', 'not-a-date'])(
     'rejects invalid value %s',
     (value) => {
       expect(() => parseSearchUntil(value)).toThrow(

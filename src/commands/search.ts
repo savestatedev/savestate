@@ -32,6 +32,10 @@ const VALID_TYPES = new Set<string>(SEARCH_TYPES);
 const MAX_SEARCH_LIMIT = 1000;
 const MAX_SEARCH_OFFSET = 1000;
 const SEARCH_TYPE_LIST = SEARCH_TYPES.join(', ');
+// Date parsing is intentionally stricter than `new Date`, which accepts
+// implementation-dependent locale strings despite the CLI contract promising
+// ISO 8601 input.
+const ISO_SEARCH_DATE_PREFIX = /^\d{4}-\d{2}-\d{2}(?:$|T)/;
 // Keep search validation aligned with the adapters that can actually create
 // snapshots. Resolve this at validation time so runtime registrations are not
 // hidden by a list captured during module initialization.
@@ -486,6 +490,11 @@ export function parseSearchSince(value: string | undefined): number | undefined 
   // 2026-02-30) instead of rejecting them. Validate date-only input before
   // converting it so --since agrees with --until.
   const normalized = value.trim();
+  if (!ISO_SEARCH_DATE_PREFIX.test(normalized)) {
+    throw new Error(
+      `Invalid --since value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
   let ms: number;
   if (dateOnly) {
@@ -515,6 +524,11 @@ export function parseSearchUntil(value: string | undefined): number | undefined 
   // UTC day, matching snapshot list filtering and avoiding a surprising
   // midnight cutoff for `search --until 2026-10-12`.
   const normalized = value.trim();
+  if (!ISO_SEARCH_DATE_PREFIX.test(normalized)) {
+    throw new Error(
+      `Invalid --until value "${value}". Expected an ISO 8601 date.`,
+    );
+  }
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
   let ms: number;
   if (dateOnly) {
@@ -610,10 +624,19 @@ export function resolveSearchSnapshots(
   return snapshots
     .filter((entry) => {
       if (snapshotId !== undefined && entry.id !== snapshotId) return false;
-      if (since !== undefined && new Date(entry.timestamp).getTime() < since) {
+      const timestamp = new Date(entry.timestamp).getTime();
+      // Indexes can contain legacy or manually edited timestamps. An invalid
+      // timestamp must not bypass date filters because NaN compares false.
+      if (
+        (since !== undefined || until !== undefined) &&
+        !Number.isFinite(timestamp)
+      ) {
         return false;
       }
-      if (until !== undefined && new Date(entry.timestamp).getTime() > until) {
+      if (since !== undefined && timestamp < since) {
+        return false;
+      }
+      if (until !== undefined && timestamp > until) {
         return false;
       }
       if (
