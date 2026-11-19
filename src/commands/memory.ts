@@ -1865,6 +1865,7 @@ export async function listMemories(
             pinned: options.pinned,
             source: options.source,
             namespace: options.namespace,
+            unassignedNamespace: options.unassignedNamespace,
             content: options.content,
             tags: options.tags,
             until: options.until,
