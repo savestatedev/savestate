@@ -3,6 +3,7 @@ import type { TraceEvent, TraceRunIndexEntry } from '../../trace/index.js';
 import {
   formatTraceEventsJson,
   formatTraceExportJson,
+  formatTracePaginationHint,
   formatTraceListSummaryJson,
   formatTraceRunsJson,
   formatTraceShowSummaryJson,
@@ -190,5 +191,10 @@ describe('savestate trace --json', () => {
 
     expect(summary.pagination.hasMore).toBe(false);
     expect(summary.pagination.nextOffset).toBeNull();
+  });
+
+  it('bounds human pagination hints at the CLI maximum', () => {
+    expect(formatTracePaginationHint('trace runs', 20, 2_000, 990, 20))
+      .toContain('next offset 1000');
   });
 });
