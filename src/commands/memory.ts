@@ -822,6 +822,8 @@ export interface MemoryListMissingJson {
   limit: number | null;
   offset: number;
   maxOffset: number;
+  /** Missing snapshots have no pages to open. */
+  lastPage: 0;
   hasMore: false;
   isLastPage: true;
   nextOffset: null;
@@ -885,6 +887,7 @@ export function formatMemoryListMissingJson(
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
+      lastPage: 0,
       hasMore: false,
       isLastPage: true,
       nextOffset: null,
