@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { getAuditLog, loadReceipts, logAudit, clearAuditLog, saveReceipts } from '../save-receipt.js';
+import { getAuditLog, loadReceipts, logAudit, clearAuditLog, saveReceipts, storeReceipt } from '../save-receipt.js';
 
 const testDir = join(process.cwd(), '.tmp-save-receipt-test');
 
@@ -59,6 +59,32 @@ describe('saveReceipts', () => {
 
     await expect(Promise.all(writes)).resolves.toHaveLength(20);
     await expect(loadReceipts(testDir)).resolves.toMatchObject({ receipts: expect.any(Array) });
+  });
+});
+
+describe('storeReceipt', () => {
+  it('preserves receipts when saves happen concurrently', async () => {
+    const receipts = Array.from({ length: 20 }, (_, index) => ({
+      receipt_id: `receipt-${index}`,
+      resource_id: `memory-${index}`,
+      resource_type: 'memory' as const,
+      content_hash: 'a'.repeat(64),
+      encrypted_hash: 'b'.repeat(64),
+      size: index,
+      storage_location: `memory-${index}.saf.enc`,
+      storage_backend: 'local',
+      saved_at: '2026-10-09T00:00:00.000Z',
+      receipt_created_at: '2026-10-09T00:00:01.000Z',
+      verified: true,
+    }));
+
+    await Promise.all(receipts.map((receipt) => storeReceipt(receipt, testDir)));
+
+    const stored = await loadReceipts(testDir);
+    expect(stored.receipts).toHaveLength(receipts.length);
+    expect(new Set(stored.receipts.map((receipt) => receipt.receipt_id))).toEqual(
+      new Set(receipts.map((receipt) => receipt.receipt_id)),
+    );
   });
 });
 
