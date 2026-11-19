@@ -9,12 +9,17 @@ describe('savestate memory list help', () => {
 
     const memory = program.commands.find((command) => command.name() === 'memory');
     const help = memory?.commands.find((command) => command.name() === 'list')?.helpInformation();
+    let renderedHelp = '';
+    program.exitOverride();
+    program.configureOutput({ writeOut: (value) => { renderedHelp += value; } });
+    expect(() => program.parse(['node', 'savestate', 'memory', 'list', '--help'])).toThrow();
 
     expect(help).toContain('--json-summary, --summary');
     expect(help).toContain('--tag <tag>');
     expect(help).toContain('-f, --freshness <state>');
     expect(help).toContain('--summary is the short alias');
     expect(help).toContain('needs_confirmation/needs-confirmation');
+    expect(renderedHelp).toContain('--since 2026-01-01 --until 2026-01-31');
   });
 
   it('normalizes the hyphenated confirmation state for CLI users', () => {

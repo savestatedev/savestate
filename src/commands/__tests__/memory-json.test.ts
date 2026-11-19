@@ -261,6 +261,14 @@ describe('savestate memory --json', () => {
       .toEqual({ 'Claude-Code': 1, user: 1 });
   });
 
+  it('keeps source aggregate casing stable when legacy entries disagree', () => {
+    const upper = entry({ id: 'mem-upper', content: 'upper', source: 'Claude-Code' });
+    const lower = entry({ id: 'mem-lower', content: 'lower', source: 'claude-code' });
+
+    expect(countBySource([upper, lower])).toEqual({ 'Claude-Code': 2 });
+    expect(countBySource([lower, upper])).toEqual({ 'Claude-Code': 2 });
+  });
+
   it('counts normalized namespaces for the full collection and visible page', () => {
     const entries = [
       entry({ id: 'mem-a', content: 'a', metadata: { namespace: 'Org:App:Agent' } }),
@@ -476,6 +484,7 @@ describe('savestate memory --json', () => {
     })) as MemoryListJson;
 
     expect(parsed.lastPageOffset).toBe(896);
+    expect(parsed.lastPage).toBe(8);
     expect(parsed.hasMore).toBe(false);
     expect(parsed.isLastPage).toBe(true);
     expect(parsed.nextOffset).toBeNull();
@@ -516,6 +525,7 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBeNull();
     expect(parsed.page).toBe(0);
     expect(parsed.totalPages).toBe(0);
+    expect(parsed.lastPage).toBe(0);
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });

@@ -268,9 +268,19 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
     const source = normalizeMemoryListSource(memory.source);
     // Use locale-independent keys so JSON aggregates are stable across hosts.
     const normalizedKey = source.toLowerCase();
-    const key = keys.get(normalizedKey) ?? source;
-    keys.set(normalizedKey, key);
-    counts[key] = (counts[key] ?? 0) + 1;
+    const existingKey = keys.get(normalizedKey);
+    if (existingKey === undefined) {
+      keys.set(normalizedKey, source);
+      counts[source] = 1;
+    } else if (source < existingKey) {
+      // Pick a stable representative when archives contain casing variants.
+      // Using the first entry would make JSON keys depend on archive ordering.
+      counts[source] = (counts[existingKey] ?? 0) + 1;
+      delete counts[existingKey];
+      keys.set(normalizedKey, source);
+    } else {
+      counts[existingKey] = (counts[existingKey] ?? 0) + 1;
+    }
   }
   // Sort aggregate keys so JSON output is stable when archive ordering changes.
   return Object.fromEntries(
@@ -558,6 +568,8 @@ export interface MemoryListJson {
   pageSize: number;
   page: number;
   totalPages: number;
+  /** Last 1-based page that can be opened within the supported offset ceiling. */
+  lastPage: number;
   /** Offset for the last page that can be opened within the supported ceiling. */
   lastPageOffset: number | null;
   hasPrevious: boolean;
@@ -665,6 +677,7 @@ export function formatMemoryListJson(
     : limit === undefined
       ? 0
       : Math.floor(Math.min(MAX_MEMORY_LIST_OFFSET, all.length - 1) / pageSize) * pageSize;
+  const lastPage = lastPageOffset === null ? 0 : Math.floor(lastPageOffset / pageSize) + 1;
   const canAdvanceWithinOffsetCeiling = offset + continuationStep <= MAX_MEMORY_LIST_OFFSET;
   const hasMore = hasMoreFromCollection && canAdvanceWithinOffsetCeiling;
   const isLastPage = !hasMore;
@@ -701,6 +714,7 @@ export function formatMemoryListJson(
     pageSize,
     page,
     totalPages,
+    lastPage,
     lastPageOffset,
     hasPrevious,
     previousOffset,
@@ -808,6 +822,8 @@ export interface MemoryListMissingJson {
   limit: number | null;
   offset: number;
   maxOffset: number;
+  /** Missing snapshots have no pages to open. */
+  lastPage: 0;
   hasMore: false;
   isLastPage: true;
   nextOffset: null;
@@ -871,6 +887,7 @@ export function formatMemoryListMissingJson(
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
+      lastPage: 0,
       hasMore: false,
       isLastPage: true,
       nextOffset: null,
