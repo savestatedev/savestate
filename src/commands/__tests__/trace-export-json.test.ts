@@ -34,6 +34,22 @@ describe('savestate trace export --json', () => {
     });
   });
 
+  it('does not advertise another page when the current page is empty', () => {
+    const parsed = JSON.parse(formatTraceExportJson({
+      runs: [],
+      offset: 9,
+      limit: 3,
+      total: 8,
+    })) as TraceExportJson;
+
+    expect(parsed.pagination).toMatchObject({
+      emptyReason: 'page',
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: 6,
+    });
+  });
+
   it('prints an export summary as JSON without extra fields', () => {
     const input = {
       format: 'jsonl',

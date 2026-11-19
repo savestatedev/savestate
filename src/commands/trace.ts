@@ -626,6 +626,7 @@ export function formatTraceExportJson(input: {
   // Keep export pagination aligned with list/show: never advertise an offset
   // beyond the bounded value accepted by the CLI.
   const hasMore = limit !== null
+    && runs.length > 0
     && offset < MAX_TRACE_OFFSET
     && offset + runs.length < total;
   const previousOffset = limit !== null && offset > 0
