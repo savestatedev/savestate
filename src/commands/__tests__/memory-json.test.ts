@@ -199,6 +199,16 @@ describe('savestate memory --json', () => {
     expect(filterMemoryListByTags(entries, ['cli'])).toEqual(entries);
   });
 
+  it('matches content across imported whitespace', () => {
+    const entries = [
+      entry({ id: 'mem-formatted', content: 'I prefer a\nlocal\teditor' }),
+      entry({ id: 'mem-other', content: 'Remote workflows are fine' }),
+    ];
+
+    expect(filterMemoryListByContent(entries, 'prefer a local editor').map(({ id }) => id))
+      .toEqual(['mem-formatted']);
+  });
+
   it('summarizes the filtered collection for table output too', () => {
     const filtered = [
       entry({ id: 'mem-l1', content: 'preference', tier: 'L1' }),
