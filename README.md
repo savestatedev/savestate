@@ -513,7 +513,14 @@ run list, so it cannot be combined with `--run <id>`.
 
 # Get a machine-readable event page with recovery metadata
 savestate trace show run-123 --json-summary --offset 5 --limit 5
+
+# Get machine-readable export page metadata without mixing it into JSONL stdout
+savestate trace export --json --offset 5 --limit 5
 ```
+
+`trace export --json` emits a summary envelope with the selected run metadata and
+pagination recovery fields; use the default export mode when you need JSONL event
+payloads on stdout.
 
 ## Storage
 
