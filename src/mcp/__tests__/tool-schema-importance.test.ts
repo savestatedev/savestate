@@ -127,3 +127,23 @@ describe('MCP snapshot search schema', () => {
     });
   });
 });
+
+describe('MCP memory search pagination schema', () => {
+  it('advertises the same bounded integer pagination enforced at runtime', () => {
+    const schema = getTool('savestate_memory_search').inputSchema as any;
+    expect(schema.properties.limit).toMatchObject({
+      type: 'number',
+      minimum: 1,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 10,
+    });
+    expect(schema.properties.offset).toMatchObject({
+      type: 'number',
+      minimum: 0,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 0,
+    });
+  });
+});

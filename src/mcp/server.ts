@@ -94,10 +94,12 @@ import {
 import { parseSavestateMemoryDeleteLimit, selectSavestateMemoryDeleteEntries } from './savestate-memory-delete-limit.js';
 import { parseSavestateMemoryDeleteOffset, selectSavestateMemoryDeleteOffsetEntries } from './savestate-memory-delete-offset.js';
 import {
+  MAX_SAVESTATE_MEMORY_SEARCH_LIMIT,
   parseSavestateMemorySearchLimit,
   selectSavestateMemorySearchEntries,
 } from './savestate-memory-search-limit.js';
 import {
+  MAX_SAVESTATE_MEMORY_SEARCH_OFFSET,
   parseSavestateMemorySearchOffset,
   selectSavestateMemorySearchOffsetEntries,
 } from './savestate-memory-search-offset.js';
@@ -410,11 +412,19 @@ export const tools: Tool[] = [
         },
         limit: {
           type: 'number',
-          description: 'Maximum results to return (default: 10; positive integer up to 1000)',
+          minimum: 1,
+          maximum: MAX_SAVESTATE_MEMORY_SEARCH_LIMIT,
+          multipleOf: 1,
+          default: 10,
+          description: `Maximum results (default: 10; positive integer up to ${MAX_SAVESTATE_MEMORY_SEARCH_LIMIT})`,
         },
         offset: {
           type: 'number',
-          description: 'Pagination offset (non-negative integer up to 1000)',
+          minimum: 0,
+          maximum: MAX_SAVESTATE_MEMORY_SEARCH_OFFSET,
+          multipleOf: 1,
+          default: 0,
+          description: `Pagination offset (non-negative integer up to ${MAX_SAVESTATE_MEMORY_SEARCH_OFFSET})`,
         },
         minImportance: importanceFilterSchema,
         maxImportance: importanceFilterSchema,
