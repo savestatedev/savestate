@@ -282,12 +282,17 @@ export function scoreMatch(query: string, content: string): number {
   // here so API and CLI searches rank the same way.
   const lowerQuery = query.trim().toLowerCase();
   const lowerContent = content.toLowerCase();
+  // Imported conversations commonly preserve line wrapping. Treat runs of
+  // whitespace as a single separator so a phrase remains searchable when its
+  // words cross a newline or other formatting boundary.
+  const normalizedQuery = lowerQuery.replace(/\s+/g, ' ');
+  const normalizedContent = lowerContent.replace(/\s+/g, ' ');
 
   // An empty query is not a match, even when the content is empty. The CLI
   // rejects blank queries, but this helper is public to SDK callers too.
   if (lowerQuery.length === 0) return 0;
 
-  if (!lowerContent.includes(lowerQuery)) {
+  if (!normalizedContent.includes(normalizedQuery)) {
     // Allow partial word-level matches when full phrase is absent.
     const words = lowerQuery.split(/\s+/).filter(Boolean);
     if (words.length === 0) return 0;
@@ -297,15 +302,15 @@ export function scoreMatch(query: string, content: string): number {
     return (matched / words.length) * 0.4;
   }
 
-  if (lowerContent === lowerQuery) return 1;
+  if (normalizedContent === normalizedQuery) return 1;
 
   const words = lowerQuery.split(/\s+/).filter(Boolean);
   let matchedWords = 0;
   for (const word of words) if (lowerContent.includes(word)) matchedWords++;
   const wordScore = words.length > 0 ? matchedWords / words.length : 0;
 
-  const position = lowerContent.indexOf(lowerQuery);
-  const positionScore = Math.max(0, 1 - position / Math.max(lowerContent.length, 1));
+  const position = normalizedContent.indexOf(normalizedQuery);
+  const positionScore = Math.max(0, 1 - position / Math.max(normalizedContent.length, 1));
 
   return wordScore * 0.7 + positionScore * 0.3;
 }

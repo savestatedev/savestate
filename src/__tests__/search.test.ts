@@ -320,6 +320,12 @@ describe('scoreMatch', () => {
     expect(exact).toBeGreaterThan(partial);
   });
 
+  it('treats line breaks as spaces in phrase matches', () => {
+    const wrapped = scoreMatch('hello world', 'hello\nworld');
+    const reordered = scoreMatch('hello world', 'world hello text');
+    expect(wrapped).toBeGreaterThan(reordered);
+  });
+
   it('partially scores word-level fallback', () => {
     const score = scoreMatch('alpha beta', 'something alpha here');
     expect(score).toBeGreaterThan(0);
