@@ -3,6 +3,7 @@ import type { ProvenanceEntry } from '../../checkpoint/types.js';
 import {
   formatMemoryLogEmptyPage,
   formatMemoryLogJson,
+  formatMemoryLogActionSummary,
   getMemoryLogGuidance,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
@@ -31,6 +32,13 @@ const merged: ProvenanceEntry = {
 };
 
 describe('savestate memory log --json', () => {
+  it('formats a deterministic action summary for table output', () => {
+    expect(formatMemoryLogActionSummary([merged, created, edited, created])).toBe(
+      'Action summary: created 2, edited 1, merged 1',
+    );
+    expect(formatMemoryLogActionSummary([])).toBe('Action summary: none');
+  });
+
   it('supports a metadata-only summary without audit events', () => {
     const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created], {
       includeEvents: false,

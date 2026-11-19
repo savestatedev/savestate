@@ -88,6 +88,15 @@ export function countMemoryLogActions(log: ProvenanceEntry[]): Record<string, nu
   );
 }
 
+/** Render a stable, compact action summary for the human-readable audit log. */
+export function formatMemoryLogActionSummary(log: ProvenanceEntry[]): string {
+  const counts = countMemoryLogActions(log);
+  const summary = Object.entries(counts)
+    .map(([action, count]) => `${action} ${count}`)
+    .join(', ');
+  return `Action summary: ${summary || 'none'}`;
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
@@ -1071,6 +1080,7 @@ export async function memoryLogCommand(
       }
     }
 
+    console.log(`\n${formatMemoryLogActionSummary(allLog)}`);
     console.log(`\nShowing ${log.length} of ${allLog.length} entries (offset ${offset}${limit === null ? '' : `, limit ${limit}`})`);
     if (hasMore && limit !== null) {
       console.log(`Next page: use --offset ${offset + log.length}.`);
