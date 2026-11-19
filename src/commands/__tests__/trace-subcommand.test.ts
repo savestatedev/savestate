@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTraceSubcommand } from '../trace.js';
+import { parseTraceSubcommand, validateTraceCommandArgs } from '../trace.js';
 
 describe('savestate trace subcommand', () => {
   it('accepts a single trace subcommand', () => {
@@ -22,5 +22,23 @@ describe('savestate trace subcommand', () => {
     expect(() => parseTraceSubcommand(undefined)).toThrow(
       'Invalid subcommand. Expected a single non-empty trace subcommand (list, show, export).',
     );
+  });
+
+  it('rejects extra positional arguments instead of ignoring them', () => {
+    expect(() => validateTraceCommandArgs('show', ['run-123', 'run-456'])).toThrow(
+      'Invalid arguments for trace show. Expected a single run id.',
+    );
+    expect(() => validateTraceCommandArgs('list', ['unexpected'])).toThrow(
+      'Invalid arguments for trace list. Expected no positional arguments.',
+    );
+    expect(() => validateTraceCommandArgs('export', ['unexpected'])).toThrow(
+      'Invalid arguments for trace export. Expected no positional arguments.',
+    );
+  });
+
+  it('accepts the positional arguments owned by each action', () => {
+    expect(() => validateTraceCommandArgs('show', ['run-123'])).not.toThrow();
+    expect(() => validateTraceCommandArgs('list', [])).not.toThrow();
+    expect(() => validateTraceCommandArgs('export', [])).not.toThrow();
   });
 });

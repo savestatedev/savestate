@@ -339,6 +339,20 @@ export function parseTraceSubcommand(value: string | undefined): TraceSubcommand
   );
 }
 
+/** Reject positional arguments that the selected trace action cannot consume. */
+export function validateTraceCommandArgs(
+  subcommand: TraceSubcommand,
+  args: string[],
+): void {
+  const expected = subcommand === 'show' ? 'a single run id' : 'no positional arguments';
+  const valid = subcommand === 'show' ? args.length === 1 : args.length === 0;
+  if (!valid) {
+    throw new Error(
+      `Invalid arguments for trace ${subcommand}. Expected ${expected}.`,
+    );
+  }
+}
+
 export interface TraceRunJson {
   runId: string;
   adapter: string;
@@ -677,6 +691,7 @@ export async function traceCommand(
   options: TraceCommandOptions,
 ): Promise<void> {
   const subcommand = parseTraceSubcommand(rawSubcommand);
+  validateTraceCommandArgs(subcommand, args);
   switch (subcommand) {
     case 'list':
       return traceListCommand(options);
