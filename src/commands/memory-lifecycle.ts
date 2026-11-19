@@ -29,6 +29,7 @@ export interface MemoryLogEventJson {
 export interface MemoryLogJson {
   memoryId: string;
   events: MemoryLogEventJson[];
+  eventsIncluded: boolean;
   guidance: MemoryLogGuidanceJson;
   pagination: MemoryLogPaginationJson;
 }
@@ -78,7 +79,7 @@ function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
-  pagination: Partial<MemoryLogPaginationJson> = {},
+  pagination: Partial<MemoryLogPaginationJson> & { includeEvents?: boolean } = {},
 ): string {
   const offset = pagination.offset ?? 0;
   const limit = pagination.limit ?? null;
@@ -115,7 +116,8 @@ export function formatMemoryLogJson(
   return JSON.stringify(
     {
       memoryId,
-      events: log.map(toLogEventJson),
+      events: pagination.includeEvents === false ? [] : log.map(toLogEventJson),
+      eventsIncluded: pagination.includeEvents !== false,
       guidance: getMemoryLogGuidance(responsePagination, suggestedOffset),
       pagination: responsePagination,
     },
@@ -979,6 +981,7 @@ export async function memoryLogCommand(
   memoryId: string,
   options?: {
     format?: 'table' | 'json';
+    includeEvents?: boolean;
     limit?: string;
     offset?: string;
   }
@@ -1012,6 +1015,7 @@ export async function memoryLogCommand(
         suggestedOffset: log.length === 0 && limit !== null
           ? Math.floor((allLog.length - 1) / limit) * limit
           : null,
+        includeEvents: options?.includeEvents,
       }));
       return;
     }

@@ -1013,6 +1013,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--limit <n>', 'Maximum number of audit events to show')
     .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
+    .option('--json-summary, --summary', 'Output JSON pagination metadata without audit events; --summary is the short alias (implies --json)')
     .action(async (memoryId, options) => {
       try {
         const id = parseMemoryId(memoryId);
@@ -1021,7 +1022,8 @@ export function registerMemoryCommands(program: Command): void {
         const passphrase = await promptPassphrase();
 
         await memoryLogCommand(storage, passphrase, id, {
-          format: options.json ? 'json' : 'table',
+          format: options.json || options.jsonSummary ? 'json' : 'table',
+          includeEvents: !options.jsonSummary,
           limit: options.limit,
           offset: options.offset,
         });

@@ -31,12 +31,28 @@ const merged: ProvenanceEntry = {
 };
 
 describe('savestate memory log --json', () => {
+  it('supports a metadata-only summary without audit events', () => {
+    const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created], {
+      includeEvents: false,
+      total: 3,
+      shown: 1,
+      limit: 1,
+      hasMore: true,
+      nextOffset: 1,
+    })) as MemoryLogJson & { eventsIncluded: boolean };
+
+    expect(parsed.events).toEqual([]);
+    expect(parsed.eventsIncluded).toBe(false);
+    expect(parsed.pagination).toMatchObject({ total: 3, shown: 1, hasMore: true, nextOffset: 1 });
+  });
+
   it('prints audit events as JSON without previous content', () => {
     const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created, edited, merged])) as MemoryLogJson & {
       events: Array<MemoryLogJson['events'][number] & { previous_content?: unknown; actor_id?: unknown }>;
     };
     expect(parsed).toEqual({
       memoryId: 'mem-123',
+      eventsIncluded: true,
       events: [
         {
           action: 'created',
