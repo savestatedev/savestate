@@ -78,4 +78,16 @@ describe('savestate search --label', () => {
       ),
     ).toEqual(['mid']);
   });
+
+  it('excludes malformed timestamps from date-scoped searches', () => {
+    expect(
+      resolveSearchSnapshots(
+        [
+          { id: 'valid', timestamp: '2026-05-01T00:00:00Z', label: 'backup' },
+          { id: 'malformed', timestamp: 'not-a-date', label: 'backup' },
+        ],
+        { since: '2026-04-01', label: 'backup' },
+      ),
+    ).toEqual(['valid']);
+  });
 });

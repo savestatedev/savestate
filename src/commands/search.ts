@@ -610,10 +610,19 @@ export function resolveSearchSnapshots(
   return snapshots
     .filter((entry) => {
       if (snapshotId !== undefined && entry.id !== snapshotId) return false;
-      if (since !== undefined && new Date(entry.timestamp).getTime() < since) {
+      const timestamp = new Date(entry.timestamp).getTime();
+      // Indexes can contain legacy or manually edited timestamps. An invalid
+      // timestamp must not bypass date filters because NaN compares false.
+      if (
+        (since !== undefined || until !== undefined) &&
+        !Number.isFinite(timestamp)
+      ) {
         return false;
       }
-      if (until !== undefined && new Date(entry.timestamp).getTime() > until) {
+      if (since !== undefined && timestamp < since) {
+        return false;
+      }
+      if (until !== undefined && timestamp > until) {
         return false;
       }
       if (
