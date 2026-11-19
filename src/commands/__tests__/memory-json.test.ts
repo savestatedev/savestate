@@ -261,6 +261,14 @@ describe('savestate memory --json', () => {
       .toEqual({ 'Claude-Code': 1, user: 1 });
   });
 
+  it('keeps source aggregate casing stable when legacy entries disagree', () => {
+    const upper = entry({ id: 'mem-upper', content: 'upper', source: 'Claude-Code' });
+    const lower = entry({ id: 'mem-lower', content: 'lower', source: 'claude-code' });
+
+    expect(countBySource([upper, lower])).toEqual({ 'Claude-Code': 2 });
+    expect(countBySource([lower, upper])).toEqual({ 'Claude-Code': 2 });
+  });
+
   it('counts normalized namespaces for the full collection and visible page', () => {
     const entries = [
       entry({ id: 'mem-a', content: 'a', metadata: { namespace: 'Org:App:Agent' } }),

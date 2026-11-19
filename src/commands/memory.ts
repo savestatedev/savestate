@@ -268,9 +268,19 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
     const source = normalizeMemoryListSource(memory.source);
     // Use locale-independent keys so JSON aggregates are stable across hosts.
     const normalizedKey = source.toLowerCase();
-    const key = keys.get(normalizedKey) ?? source;
-    keys.set(normalizedKey, key);
-    counts[key] = (counts[key] ?? 0) + 1;
+    const existingKey = keys.get(normalizedKey);
+    if (existingKey === undefined) {
+      keys.set(normalizedKey, source);
+      counts[source] = 1;
+    } else if (source < existingKey) {
+      // Pick a stable representative when archives contain casing variants.
+      // Using the first entry would make JSON keys depend on archive ordering.
+      counts[source] = (counts[existingKey] ?? 0) + 1;
+      delete counts[existingKey];
+      keys.set(normalizedKey, source);
+    } else {
+      counts[existingKey] = (counts[existingKey] ?? 0) + 1;
+    }
   }
   // Sort aggregate keys so JSON output is stable when archive ordering changes.
   return Object.fromEntries(
