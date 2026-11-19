@@ -245,6 +245,7 @@ export class TrustGate {
     const startTime = Date.now();
     const trusted: TrustEntry[] = [];
     const filtered: TrustEntry[] = [];
+    const shadowFiltered: TrustEntry[] = [];
     const blockers: string[] = [];
 
     for (const entry of entries) {
@@ -254,6 +255,7 @@ export class TrustGate {
         // Shadow mode: log but don't filter
         trusted.push(entry);
         if (!isTrusted) {
+          shadowFiltered.push(entry);
           console.debug(`[shadow] Would filter entry ${entry.id}: state=${entry.state}`);
         }
       } else if (this.mode === 'enforce_query' || this.mode === 'enforce_action') {
@@ -273,6 +275,7 @@ export class TrustGate {
     return {
       trustedEntries: trusted,
       filteredEntries: filtered,
+      shadowFilteredEntries: this.mode === 'shadow' ? shadowFiltered : undefined,
       decision,
       latencyMs,
     };

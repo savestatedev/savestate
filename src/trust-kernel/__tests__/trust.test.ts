@@ -79,6 +79,29 @@ describe('TrustStore', () => {
     });
   });
 
+  it('reports entries that would be filtered during shadow evaluation', () => {
+    const stable = store.create({
+      content: 'Trusted fact',
+      scope: 'semantic',
+      confidence: 0.9,
+      source: 'test',
+    });
+    store.transition(stable.id, 'stable', 'Promoted', 'test');
+    const candidate = store.create({
+      content: 'Unreviewed fact',
+      scope: 'semantic',
+      confidence: 0.2,
+      source: 'test',
+    });
+    const gate = new TrustGate({ store, mode: 'shadow' });
+
+    const result = gate.evaluate([stable, candidate]);
+
+    expect(result.trustedEntries.map((entry) => entry.id)).toEqual([stable.id, candidate.id]);
+    expect(result.filteredEntries).toEqual([]);
+    expect(result.shadowFilteredEntries?.map((entry) => entry.id)).toEqual([candidate.id]);
+  });
+
   describe('State Transitions', () => {
     it('should transition candidate to stable', () => {
       const entry = store.create({
