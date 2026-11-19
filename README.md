@@ -489,23 +489,27 @@ savestate verify <file>               Verify a .savestate file and list componen
                                      Prints checksum, size, content type, encryption, and key derivation
                                      (including when the container has no agent_state payload)
 
-savestate trace list                  List Askable Echoes trace runs
+savestate trace list                  List Askable Echoes trace runs (no positional arguments)
   --json                             Output as JSON
   --json-summary, --summary          Output an envelope with pagination metadata (including maxOffset)
   --offset <n>                       Skip the first N runs (0–1000)
   --limit <n>                        Max runs to show (1–1000)
-savestate trace show <run_id>         Show events for a trace run
+savestate trace show <run_id>         Show events for one trace run (exactly one run id)
   --json                             Output as JSON
   --json-summary, --summary          Output an envelope with pagination metadata (including maxOffset)
   --offset <n>                       Skip the first N events (0–1000)
   --limit <n>                        Max events to show (1–1000)
-savestate trace export                Export trace as JSONL (stdout)
+savestate trace export                Export trace as JSONL (stdout; no positional arguments)
   --json                             Output an export summary as JSON
   --json-summary, --summary          Alias for --json on export (pagination includes maxOffset)
   --run <id>                         Export only a specific run
   --format jsonl                     Export format
   --offset <n>                       Skip the first N runs (0–1000)
   --limit <n>                        Max runs to export (1–1000)
+
+`trace show` rejects extra run ids instead of silently ignoring them. `trace list` and
+`trace export` reject positional arguments. For an export, `--offset` paginates the full
+run list, so it cannot be combined with `--run <id>`.
 
 # Get a machine-readable event page with recovery metadata
 savestate trace show run-123 --json-summary --offset 5 --limit 5

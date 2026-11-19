@@ -339,6 +339,20 @@ export function parseTraceSubcommand(value: string | undefined): TraceSubcommand
   );
 }
 
+/** Reject positional arguments that the selected trace action cannot consume. */
+export function validateTraceCommandArgs(
+  subcommand: TraceSubcommand,
+  args: string[],
+): void {
+  const expected = subcommand === 'show' ? 'a single run id' : 'no positional arguments';
+  const valid = subcommand === 'show' ? args.length === 1 : args.length === 0;
+  if (!valid) {
+    throw new Error(
+      `Invalid arguments for trace ${subcommand}. Expected ${expected}.`,
+    );
+  }
+}
+
 export interface TraceRunJson {
   runId: string;
   adapter: string;
@@ -626,13 +640,14 @@ export function formatTraceExportJson(input: {
   // Keep export pagination aligned with list/show: never advertise an offset
   // beyond the bounded value accepted by the CLI.
   const hasMore = limit !== null
+    && runs.length > 0
     && offset < MAX_TRACE_OFFSET
     && offset + runs.length < total;
   const previousOffset = limit !== null && offset > 0
     ? Math.max(0, offset - limit)
     : null;
   const suggestedOffset = limit !== null && runs.length === 0 && total > 0
-    ? Math.floor((total - 1) / limit) * limit
+    ? Math.min(Math.floor((total - 1) / limit) * limit, MAX_TRACE_OFFSET)
     : null;
   return JSON.stringify(
     {
@@ -676,6 +691,7 @@ export async function traceCommand(
   options: TraceCommandOptions,
 ): Promise<void> {
   const subcommand = parseTraceSubcommand(rawSubcommand);
+  validateTraceCommandArgs(subcommand, args);
   switch (subcommand) {
     case 'list':
       return traceListCommand(options);

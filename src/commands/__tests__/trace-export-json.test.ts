@@ -15,6 +15,41 @@ const run: TraceRunIndexEntry & { secret?: string; payload?: unknown } = {
 };
 
 describe('savestate trace export --json', () => {
+  it('bounds the suggested recovery offset to the CLI maximum', () => {
+    const parsed = JSON.parse(formatTraceExportJson({
+      runs: [],
+      offset: 1000,
+      limit: 1,
+      total: 2001,
+    })) as TraceExportJson;
+
+    expect(parsed.pagination).toMatchObject({
+      maxOffset: 1000,
+      offset: 1000,
+      limit: 1,
+      total: 2001,
+      shown: 0,
+      emptyReason: 'page',
+      suggestedOffset: 1000,
+    });
+  });
+
+  it('does not advertise another page when the current page is empty', () => {
+    const parsed = JSON.parse(formatTraceExportJson({
+      runs: [],
+      offset: 9,
+      limit: 3,
+      total: 8,
+    })) as TraceExportJson;
+
+    expect(parsed.pagination).toMatchObject({
+      emptyReason: 'page',
+      hasMore: false,
+      nextOffset: null,
+      suggestedOffset: 6,
+    });
+  });
+
   it('prints an export summary as JSON without extra fields', () => {
     const input = {
       format: 'jsonl',
