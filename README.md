@@ -394,6 +394,9 @@ For a concise scriptable summary, use the short alias:
 savestate search "cocktail recommendations" --summary --limit 20
 ```
 
+Use `--adapter` to scope results to one registered adapter; adapter IDs are matched
+case-insensitively and validation follows the adapters available in the running CLI.
+
 For memory-layer retrieval explanations, use `memory explain` to inspect why
 ranked memories matched a query:
 

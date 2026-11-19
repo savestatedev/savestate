@@ -965,9 +965,10 @@ export function filterMemoryListByContent(
   content?: string,
 ): MemoryEntry[] {
   if (content === undefined) return entries;
-  // Keep machine-facing filters stable across hosts with different locales.
-  const query = content.toLowerCase();
-  return entries.filter((entry) => entry.content.toLowerCase().includes(query));
+  // Match copied phrases across imported line breaks and repeated whitespace.
+  const normalize = (value: string): string => value.replace(/\s+/g, ' ').trim().toLowerCase();
+  const query = normalize(content);
+  return entries.filter((entry) => normalize(entry.content).includes(query));
 }
 
 /** Keep memories containing every requested metadata tag. */

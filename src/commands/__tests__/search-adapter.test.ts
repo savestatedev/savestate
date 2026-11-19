@@ -4,6 +4,7 @@ import {
   parseSearchAdapter,
   resolveSearchSnapshots,
 } from '../search.js';
+import { listAdapters } from '../../adapters/registry.js';
 
 describe('savestate search --adapter', () => {
   it('defaults to undefined', () => {
@@ -15,6 +16,12 @@ describe('savestate search --adapter', () => {
     expect(parseSearchAdapter('claude-code')).toBe('claude-code');
     expect(parseSearchAdapter('CLAUDE-WEB')).toBe('claude-web');
     expect(parseSearchAdapter(' Windsurf ')).toBe('windsurf');
+  });
+
+  it('accepts every adapter registered by the runtime', () => {
+    for (const adapter of listAdapters()) {
+      expect(parseSearchAdapter(adapter)).toBe(adapter);
+    }
   });
 
   it('matches legacy adapter metadata without regard to case or padding', () => {
@@ -34,7 +41,7 @@ describe('savestate search --adapter', () => {
 
   it.each(['', ' ', 'nope', 'claude', '1', 'chat gpt'])('rejects invalid value %s', (value) => {
     expect(() => parseSearchAdapter(value)).toThrow(
-      `Invalid --adapter value "${value}". Expected one of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.`,
+      `Invalid --adapter value "${value}". Expected one of: ${listAdapters().join(', ')}.`,
     );
   });
 });
