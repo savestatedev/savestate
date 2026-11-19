@@ -188,16 +188,24 @@ export function generateReceipt(params: {
  * Store a receipt for later verification
  */
 export async function storeReceipt(receipt: SaveReceipt, cwd?: string): Promise<void> {
-  const store = await loadReceipts(cwd);
-  store.receipts.push(receipt);
+  // Serialize the read-modify-write sequence so concurrent saves cannot
+  // overwrite each other's receipts after reading the same prior store.
+  const write = receiptWriteQueue.then(async () => {
+    const store = await loadReceipts(cwd);
+    store.receipts.push(receipt);
 
-  // Keep only last 1000 receipts to prevent unbounded growth
-  if (store.receipts.length > 1000) {
-    store.receipts = store.receipts.slice(-1000);
-  }
+    // Keep only last 1000 receipts to prevent unbounded growth
+    if (store.receipts.length > 1000) {
+      store.receipts = store.receipts.slice(-1000);
+    }
 
-  await saveReceipts(store, cwd);
+    await saveReceipts(store, cwd);
+  });
+  receiptWriteQueue = write.catch(() => undefined);
+  await write;
 }
+
+let receiptWriteQueue: Promise<void> = Promise.resolve();
 
 /**
  * Find a receipt by resource ID
@@ -296,7 +304,9 @@ export function getAuditLog(limit = 100): SaveAuditEntry[] {
   if (!Number.isInteger(limit) || limit <= 0) {
     return [];
   }
-  return auditLog.slice(-limit);
+
+  // Keep callers from mutating the in-memory audit history through a read.
+  return auditLog.slice(-limit).map((entry) => ({ ...entry }));
 }
 
 /**

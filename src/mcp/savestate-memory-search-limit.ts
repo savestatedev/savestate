@@ -1,4 +1,4 @@
-const MAX_SAVESTATE_MEMORY_SEARCH_LIMIT = 1000;
+export const MAX_SAVESTATE_MEMORY_SEARCH_LIMIT = 1000;
 
 /** Parse savestate_memory_search limit without turning user input errors into an unbounded memory search. */
 export function parseSavestateMemorySearchLimit(value: number | undefined): number | undefined {

@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { getAuditLog, loadReceipts, logAudit, clearAuditLog, saveReceipts } from '../save-receipt.js';
+import { getAuditLog, loadReceipts, logAudit, clearAuditLog, saveReceipts, storeReceipt } from '../save-receipt.js';
 
 const testDir = join(process.cwd(), '.tmp-save-receipt-test');
 
@@ -62,6 +62,32 @@ describe('saveReceipts', () => {
   });
 });
 
+describe('storeReceipt', () => {
+  it('preserves receipts when saves happen concurrently', async () => {
+    const receipts = Array.from({ length: 20 }, (_, index) => ({
+      receipt_id: `receipt-${index}`,
+      resource_id: `memory-${index}`,
+      resource_type: 'memory' as const,
+      content_hash: 'a'.repeat(64),
+      encrypted_hash: 'b'.repeat(64),
+      size: index,
+      storage_location: `memory-${index}.saf.enc`,
+      storage_backend: 'local',
+      saved_at: '2026-10-09T00:00:00.000Z',
+      receipt_created_at: '2026-10-09T00:00:01.000Z',
+      verified: true,
+    }));
+
+    await Promise.all(receipts.map((receipt) => storeReceipt(receipt, testDir)));
+
+    const stored = await loadReceipts(testDir);
+    expect(stored.receipts).toHaveLength(receipts.length);
+    expect(new Set(stored.receipts.map((receipt) => receipt.receipt_id))).toEqual(
+      new Set(receipts.map((receipt) => receipt.receipt_id)),
+    );
+  });
+});
+
 describe('getAuditLog', () => {
   it('returns an empty page for non-positive or non-finite limits', () => {
     logAudit({
@@ -76,5 +102,20 @@ describe('getAuditLog', () => {
     expect(getAuditLog(-1)).toEqual([]);
     expect(getAuditLog(Number.NaN)).toEqual([]);
     expect(getAuditLog(Number.POSITIVE_INFINITY)).toEqual([]);
+  });
+
+  it('returns snapshots that cannot mutate the audit history', () => {
+    logAudit({
+      timestamp: new Date().toISOString(),
+      operation: 'save',
+      resource_id: 'memory-1',
+      resource_type: 'memory',
+      success: true,
+    });
+
+    const result = getAuditLog();
+    result[0].resource_id = 'tampered';
+
+    expect(getAuditLog()[0].resource_id).toBe('memory-1');
   });
 });

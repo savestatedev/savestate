@@ -1,4 +1,4 @@
-const MAX_SAVESTATE_MEMORY_SEARCH_OFFSET = 1000;
+export const MAX_SAVESTATE_MEMORY_SEARCH_OFFSET = 1000;
 
 /** Parse savestate_memory_search offset without turning user input errors into an unbounded skip. */
 export function parseSavestateMemorySearchOffset(value: number | undefined): number | undefined {
