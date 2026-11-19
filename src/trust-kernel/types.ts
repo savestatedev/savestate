@@ -252,6 +252,9 @@ export interface TrustGateResult {
   /** Entries that were filtered out */
   filteredEntries: TrustEntry[];
 
+  /** Entries that would be filtered in shadow mode, without changing retrieval */
+  shadowFilteredEntries?: TrustEntry[];
+
   /** Trust decision for this query */
   decision: TrustDecision;
 

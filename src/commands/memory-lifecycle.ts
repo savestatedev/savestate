@@ -29,6 +29,8 @@ export interface MemoryLogEventJson {
 export interface MemoryLogJson {
   memoryId: string;
   events: MemoryLogEventJson[];
+  eventsIncluded: boolean;
+  actionCounts: Record<string, number>;
   guidance: MemoryLogGuidanceJson;
   pagination: MemoryLogPaginationJson;
 }
@@ -75,10 +77,33 @@ function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
   };
 }
 
+/** Count lifecycle actions across the complete audit log, including hidden pages. */
+export function countMemoryLogActions(log: ProvenanceEntry[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const entry of log) {
+    counts[entry.action] = (counts[entry.action] ?? 0) + 1;
+  }
+  return Object.fromEntries(
+    Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
+/** Render a stable, compact action summary for the human-readable audit log. */
+export function formatMemoryLogActionSummary(log: ProvenanceEntry[]): string {
+  const counts = countMemoryLogActions(log);
+  const summary = Object.entries(counts)
+    .map(([action, count]) => `${action} ${count}`)
+    .join(', ');
+  return `Action summary: ${summary || 'none'}`;
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
-  pagination: Partial<MemoryLogPaginationJson> = {},
+  pagination: Partial<MemoryLogPaginationJson> & {
+    includeEvents?: boolean;
+    actionLog?: ProvenanceEntry[];
+  } = {},
 ): string {
   const offset = pagination.offset ?? 0;
   const limit = pagination.limit ?? null;
@@ -115,7 +140,9 @@ export function formatMemoryLogJson(
   return JSON.stringify(
     {
       memoryId,
-      events: log.map(toLogEventJson),
+      events: pagination.includeEvents === false ? [] : log.map(toLogEventJson),
+      eventsIncluded: pagination.includeEvents !== false,
+      actionCounts: countMemoryLogActions(pagination.actionLog ?? log),
       guidance: getMemoryLogGuidance(responsePagination, suggestedOffset),
       pagination: responsePagination,
     },
@@ -979,6 +1006,7 @@ export async function memoryLogCommand(
   memoryId: string,
   options?: {
     format?: 'table' | 'json';
+    includeEvents?: boolean;
     limit?: string;
     offset?: string;
   }
@@ -1012,6 +1040,8 @@ export async function memoryLogCommand(
         suggestedOffset: log.length === 0 && limit !== null
           ? Math.floor((allLog.length - 1) / limit) * limit
           : null,
+        includeEvents: options?.includeEvents,
+        actionLog: allLog,
       }));
       return;
     }
@@ -1050,6 +1080,7 @@ export async function memoryLogCommand(
       }
     }
 
+    console.log(`\n${formatMemoryLogActionSummary(allLog)}`);
     console.log(`\nShowing ${log.length} of ${allLog.length} entries (offset ${offset}${limit === null ? '' : `, limit ${limit}`})`);
     if (hasMore && limit !== null) {
       console.log(`Next page: use --offset ${offset + log.length}.`);
