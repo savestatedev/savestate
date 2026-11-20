@@ -14,6 +14,7 @@ import {
   countBySource,
   getMemoryListSourcePercentages,
   countByNamespace,
+  getMemoryListNamespacePercentages,
   countByTag,
   normalizeMemoryListNamespace,
   formatMemoryListOrderingSummary,
@@ -252,6 +253,20 @@ describe('savestate memory --json', () => {
     expect(parsed.sourcePercentages['Claude-Code']).toBeCloseTo(66.6666667);
     expect(parsed.sourcePercentages.user).toBeCloseTo(33.3333333);
     expect(parsed.shownSourcePercentages).toEqual({ 'Claude-Code': 100 });
+  });
+
+  it('reports namespace shares for the full collection and visible page', () => {
+    const all = [
+      entry({ id: 'mem-a', content: 'a', metadata: { namespace: 'Org:App' } }),
+      entry({ id: 'mem-b', content: 'b', metadata: { namespace: 'org:app' } }),
+      entry({ id: 'mem-c', content: 'c', metadata: { namespace: 'other' } }),
+      entry({ id: 'mem-d', content: 'd' }),
+    ];
+
+    expect(getMemoryListNamespacePercentages(all)).toEqual({ 'Org:App': 50, other: 25 });
+    const parsed = JSON.parse(formatMemoryListJson(all, all.slice(0, 2))) as MemoryListJson;
+    expect(parsed.namespacePercentages).toEqual({ 'Org:App': 50, other: 25 });
+    expect(parsed.shownNamespacePercentages).toEqual({ 'Org:App': 100 });
   });
 
   it('returns an empty source distribution for an empty collection', () => {
