@@ -542,6 +542,43 @@ export function parseMemoryContentFilter(value: string | undefined): string | un
   return value === undefined ? undefined : parseMemoryContent(value);
 }
 
+/** Parse memory list --page as a 1-based page number. */
+export function parseMemoryListPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  const page = Number(normalized);
+  if (!/^\d+$/.test(normalized) || !Number.isSafeInteger(page) || page < 1) {
+    throw new Error(
+      `Invalid --page value "${value}". Expected a positive integer page number.`,
+    );
+  }
+
+  return page;
+}
+
+/** Resolve a page number into the existing bounded offset contract. */
+export function resolveMemoryListOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  limit: number,
+): number | undefined {
+  const offset = parseMemoryListOffset(offsetValue);
+  const page = parseMemoryListPage(pageValue);
+  if (offset !== undefined && page !== undefined) {
+    throw new Error('Cannot use --page with --offset; choose one pagination mode.');
+  }
+  if (page === undefined) return offset;
+
+  const resolved = (page - 1) * limit;
+  if (!Number.isSafeInteger(resolved) || resolved > 1000) {
+    throw new Error(
+      `Invalid --page value "${pageValue}". The requested page exceeds the maximum supported offset of 1000.`,
+    );
+  }
+  return resolved;
+}
+
 /** Reject contradictory ordering flags before loading encrypted storage. */
 export function validateMemoryListOrdering(
   oldestFirst: boolean | undefined,
@@ -572,6 +609,7 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --min-importance 0.8 --max-importance 1 --json\n' +
         '  $ savestate memory list --summary\n' +
         '  $ savestate memory list --important-first --oldest-first --json-summary\n' +
+        '  $ savestate memory list --page 2 --limit 20\n' +
         '  $ savestate memory list --limit 20 --offset 20\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
         '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +
@@ -609,6 +647,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
     .option('-l, --limit <n>', 'Entries per page (positive integer up to 1000; default: 20)', '20')
+    .option('--page <n>', '1-based page number (use instead of --offset)')
     .option('--offset <n>', 'Skip the first N memories (0-1000; use nextOffset for continuation)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--json', 'Output as JSON')
@@ -628,6 +667,7 @@ export function registerMemoryCommands(program: Command): void {
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
+        const limit = parseMemoryLimit(options.limit, 20);
         await listMemories(storage, passphrase, {
           tier: parseMemoryTier(options.tier),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
@@ -643,8 +683,8 @@ export function registerMemoryCommands(program: Command): void {
           maxImportance,
           importantFirst: options.importantFirst,
           oldestFirst: options.oldestFirst || options.reverse,
-          limit: parseMemoryLimit(options.limit, 20),
-          offset: parseMemoryListOffset(options.offset),
+          limit,
+          offset: resolveMemoryListOffset(options.offset, options.page, limit),
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.jsonSummary ? 'json-summary' : options.json ? 'json' : 'table',
         });
