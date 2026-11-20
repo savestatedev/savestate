@@ -1851,11 +1851,19 @@ export function formatMemoryListPageSummary(
   if (offset === 0 && pageEnd === total) return '';
 
   const pageDescription = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
+  const pageNumber = limit === undefined ? undefined : Math.floor(offset / limit) + 1;
+  const totalPages = limit === undefined ? undefined : Math.ceil(total / limit);
   const hasNextPage = pageEnd < total;
   const rawNextOffset = limit === undefined ? pageEnd : offset + limit;
   const nextOffset = Math.min(rawNextOffset, MAX_MEMORY_LIST_OFFSET);
   const nextOffsetIsCapped = rawNextOffset >= MAX_MEMORY_LIST_OFFSET;
-  const hints = [pageDescription];
+  const hints = [
+    pageNumber === undefined
+      ? pageDescription
+      : pageNumber !== undefined && totalPages !== undefined && pageNumber <= totalPages
+        ? `${pageDescription}, page ${pageNumber} of ${totalPages}`
+        : `${pageDescription}, page ${pageNumber} (last page ${totalPages})`,
+  ];
   if (hasNextPage && nextOffset > offset) {
     hints.push(
       `next offset ${nextOffset}${nextOffsetIsCapped ? ' (maximum)' : ''}${
