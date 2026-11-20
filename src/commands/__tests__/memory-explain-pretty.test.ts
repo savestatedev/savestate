@@ -4,6 +4,7 @@ import {
   formatMemoryExplainFreshness,
   formatMemoryExplainFilterMatches,
   formatMemoryExplainNamespace,
+  formatMemoryExplainPrettySourceSummary,
   formatMemoryExplainScoreBreakdown,
   formatMemoryExplainSource,
   getMemoryExplainCriticality,
@@ -11,6 +12,14 @@ import {
 } from '../memory.js';
 
 describe('savestate memory explain pretty freshness', () => {
+  it('shows source counts and percentage shares', () => {
+    expect(formatMemoryExplainPrettySourceSummary([
+      { id: 'one', content: 'a', source: 'ChatGPT', createdAt: '2026-10-01T00:00:00.000Z' },
+      { id: 'two', content: 'b', source: 'chatgpt', createdAt: '2026-10-02T00:00:00.000Z' },
+      { id: 'three', content: 'c', source: 'claude', createdAt: '2026-10-03T00:00:00.000Z' },
+    ])).toBe('Source summary: ChatGPT 2 (66.7%), claude 1 (33.3%)');
+  });
+
   it('shows every score component exposed by JSON explanations', () => {
     expect(formatMemoryExplainScoreBreakdown({
       semanticSimilarity: 0.8,

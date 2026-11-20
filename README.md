@@ -267,6 +267,9 @@ results and the current page, plus `unassignedNamespaceCount` and
 `shownUnassignedNamespaceCount` so consumers can distinguish scoped results from unassigned
 memory without rescanning the result list.
 
+The same explain response includes `sourcePercentages` and `shownSourcePercentages`, while
+human-readable output shows matching and visible-page source summaries alongside namespace totals.
+
 Explain results accept bounded pagination controls: `--limit` sets the page size (default 10,
 maximum 1000) and `--offset` continues through results (0-1000). Invalid values fail before
 encrypted storage is opened, giving automation a safe input-validation boundary.

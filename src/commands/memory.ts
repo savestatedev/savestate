@@ -3116,6 +3116,9 @@ export interface MemoryExplainJson {
   /** Normalized source counts for all matching results and the visible page. */
   bySource?: Record<string, number>;
   shownBySource?: Record<string, number>;
+  /** Percentage shares for all matching results and the visible page. */
+  sourcePercentages?: Record<string, number>;
+  shownSourcePercentages?: Record<string, number>;
   /** Normalized namespace counts for all matching results and the visible page. */
   byNamespace?: Record<string, number>;
   shownByNamespace?: Record<string, number>;
@@ -3217,6 +3220,17 @@ export function formatMemoryExplainPrettyNamespaceSummary(
   return `${label}: ${formatMemoryListNamespaceSummary(memories)}`;
 }
 
+/** Keep the human-readable explain view aligned with its JSON source aggregates. */
+export function formatMemoryExplainPrettySourceSummary(
+  memories: MemoryEntry[],
+  label = 'Source summary',
+): string {
+  const counts = countBySource(memories);
+  const percentages = getMemoryListSourcePercentages(memories);
+  const parts = Object.keys(counts).map((source) => `${source} ${counts[source]} (${percentages[source].toFixed(1)}%)`);
+  return `${label}: ${parts.length > 0 ? parts.join(', ') : 'none'}`;
+}
+
 /** Keep the empty-state message aligned with whether the collection or page is empty. */
 export function formatMemoryExplainEmptyMessage(total: number): string {
   return total === 0
@@ -3285,6 +3299,8 @@ export function formatMemoryExplainJson(
   sourceSummary?: {
     bySource: Record<string, number>;
     shownBySource: Record<string, number>;
+    sourcePercentages?: Record<string, number>;
+    shownSourcePercentages?: Record<string, number>;
     byNamespace?: Record<string, number>;
     shownByNamespace?: Record<string, number>;
     unassignedNamespaceCount?: number;
@@ -3730,6 +3746,8 @@ export async function explainMemoryCommand(
           {
             bySource: countBySource(sorted.map((r) => r.entry)),
             shownBySource: countBySource(scoredLimited.map((r) => r.entry)),
+            sourcePercentages: getMemoryListSourcePercentages(sorted.map((r) => r.entry)),
+            shownSourcePercentages: getMemoryListSourcePercentages(scoredLimited.map((r) => r.entry)),
             byNamespace: countByNamespace(sorted.map((r) => r.entry)),
             shownByNamespace: countByNamespace(scoredLimited.map((r) => r.entry)),
             unassignedNamespaceCount: sorted.length - Object.values(countByNamespace(sorted.map((r) => r.entry))).reduce((total, count) => total + count, 0),
@@ -3785,6 +3803,8 @@ export async function explainMemoryCommand(
       {
         bySource: countBySource(sorted.map((r) => r.entry)),
         shownBySource: countBySource(scoredLimited.map((r) => r.entry)),
+        sourcePercentages: getMemoryListSourcePercentages(sorted.map((r) => r.entry)),
+        shownSourcePercentages: getMemoryListSourcePercentages(scoredLimited.map((r) => r.entry)),
         byNamespace: countByNamespace(sorted.map((r) => r.entry)),
         shownByNamespace: countByNamespace(scoredLimited.map((r) => r.entry)),
         unassignedNamespaceCount: sorted.length - Object.values(countByNamespace(sorted.map((r) => r.entry))).reduce((total, count) => total + count, 0),
@@ -3807,6 +3827,13 @@ export async function explainMemoryCommand(
     pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
   })}\n`);
   if (scoredLimited.length > 0) {
+    console.log(`   ${formatMemoryExplainPrettySourceSummary(sorted.map((r) => r.entry))}`);
+    if (scoredLimited.length !== sorted.length) {
+      console.log(`   ${formatMemoryExplainPrettySourceSummary(
+        scoredLimited.map((r) => r.entry),
+        'Page source summary',
+      )}`);
+    }
     console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(sorted.map((r) => r.entry))}`);
     if (scoredLimited.length !== sorted.length) {
       console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(
