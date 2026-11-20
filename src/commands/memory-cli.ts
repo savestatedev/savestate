@@ -902,6 +902,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--since <date>', 'Search memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
     .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
+    .option('--page <n>', '1-based result page number (use instead of --offset)')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
@@ -926,6 +927,7 @@ export function registerMemoryCommands(program: Command): void {
         validateMemoryScoreRange(minCriticality, maxCriticality, 'criticality');
         const namespace = parseMemoryNamespace(options.namespace);
         validateMemoryNamespaceFilters(namespace, options.unassigned);
+        const limit = resolveMemoryExplainLimit(options.limit, options.pageSize);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -940,8 +942,12 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           until,
           since,
-          limit: resolveMemoryExplainLimit(options.limit, options.pageSize),
-          offset: parseMemoryListOffset(options.offset),
+          limit,
+          offset: resolveMemoryListOffset(
+            options.offset,
+            options.page,
+            limit,
+          ),
           tags: parseMemoryTagOptions(options.tags, options.tag),
           freshness: parseMemoryFreshness(options.freshness),
           minImportance,

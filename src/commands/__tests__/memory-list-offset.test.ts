@@ -93,6 +93,19 @@ describe('savestate memory explain --page-size', () => {
   });
 });
 
+describe('savestate memory explain --page', () => {
+  it('resolves one-based result pages using explain\'s page size', () => {
+    expect(resolveMemoryListOffset(undefined, '3', 10)).toBe(20);
+    expect(resolveMemoryListOffset(undefined, '3', 25)).toBe(50);
+  });
+
+  it('rejects mixing explain page and offset modes', () => {
+    expect(() => resolveMemoryListOffset('20', '2', 10)).toThrow(
+      'Cannot use --page with --offset; choose one pagination mode.',
+    );
+  });
+});
+
 describe('savestate memory list --page-size', () => {
   it('uses the alias while preserving list\'s default page size', () => {
     expect(resolveMemoryListLimit('7', undefined)).toBe(7);
