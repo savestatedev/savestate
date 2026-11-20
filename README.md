@@ -303,6 +303,10 @@ calculating offsets from the number of returned entries.
 For a shorter interactive command, `savestate memory list --summary` is an alias for
 `--json-summary`.
 
+Use `--page-size` as a readable alias for `--limit` when paging memory lists or explain
+results. The two option names are mutually exclusive; both commands default to their
+existing page sizes when neither is provided.
+
 Paginated JSON also includes `guidance`, a small machine-readable next step: `next`, `previous`,
 or `retry` with the recommended offset, or `none` when no navigation action is available.
 

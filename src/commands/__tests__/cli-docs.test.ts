@@ -193,7 +193,7 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('maximum retrieval results to show on <code>explain</code> (default 10)');
     expect(memorySection).not.toContain('maximum retrieval results to show on <code>explain</code> (default 5)');
-    expect(memoryCli).toContain("parseMemoryLimit(options.limit, 10)");
+    expect(memoryCli).toContain("resolveMemoryExplainLimit(options.limit, options.pageSize)");
   });
 
   it('documents a copy-paste list JSON pagination loop', () => {
@@ -2544,13 +2544,15 @@ describe('CLI docs', () => {
     expect(memoryCli).toContain('savestate memory list --limit 20 --offset 20');
   });
 
-  it('documents memory list pin filters, --limit, and promote --to', () => {
+  it('documents memory list pin filters, page-size aliases, and promote --to', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('--pinned');
     expect(memorySection).toContain('--unpinned');
     expect(memoryCli).toContain(".option('-u, --unpinned'");
     expect(memorySection).toContain('mutually exclusive');
     expect(memorySection).toContain('--limit');
+    expect(memoryCli).toContain(".option('--page-size <n>'");
+    expect(memorySection).toContain('--page-size');
     expect(memorySection).toContain('--to');
     expect(memorySection).toContain('20');
     expect(memorySection).toContain('pinned memories');

@@ -7,6 +7,7 @@ import {
 import {
   parseMemoryListPage,
   resolveMemoryExplainLimit,
+  resolveMemoryListLimit,
   resolveMemoryListOffset,
 } from '../memory-cli.js';
 
@@ -87,6 +88,20 @@ describe('savestate memory explain --page-size', () => {
 
   it('rejects mixing page-size option names', () => {
     expect(() => resolveMemoryExplainLimit('7', '12')).toThrow(
+      'Cannot use --limit with --page-size; choose one page-size option.',
+    );
+  });
+});
+
+describe('savestate memory list --page-size', () => {
+  it('uses the alias while preserving list\'s default page size', () => {
+    expect(resolveMemoryListLimit('7', undefined)).toBe(7);
+    expect(resolveMemoryListLimit(undefined, '12')).toBe(12);
+    expect(resolveMemoryListLimit(undefined, undefined)).toBe(20);
+  });
+
+  it('rejects mixing page-size option names', () => {
+    expect(() => resolveMemoryListLimit('7', '12')).toThrow(
       'Cannot use --limit with --page-size; choose one page-size option.',
     );
   });
