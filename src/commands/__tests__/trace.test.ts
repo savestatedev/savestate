@@ -218,6 +218,20 @@ describe.sequential('trace commands', () => {
     expect(JSON.parse(runLines[0]) as { run_id: string }).toMatchObject({ run_id: 'run-2' });
   });
 
+  it('trace export exits when an explicitly requested run is missing', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation(((code?: number) => {
+        throw new Error(`process.exit:${code ?? 0}`);
+      }) as never);
+
+    await expect(traceExportCommand({ format: 'jsonl', run: 'does-not-exist' }))
+      .rejects.toThrow('process.exit:1');
+    expect(errorSpy).toHaveBeenCalledWith('✗ Trace run not found: does-not-exist');
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
   it('trace export keeps pagination hints off stdout', async () => {
     const store = new TraceStore({ cwd, redactSecrets: false });
     for (const [runId, minute] of [['run-1', '00'], ['run-2', '01']] as const) {
