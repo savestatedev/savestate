@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryLogLimit, selectMemoryLogEntries } from '../memory-lifecycle.js';
+import {
+  parseMemoryLogLimit,
+  resolveMemoryLogLimit,
+  selectMemoryLogEntries,
+} from '../memory-lifecycle.js';
 
 describe('savestate memory log --limit', () => {
   it('defaults to undefined', () => {
@@ -25,6 +29,13 @@ describe('savestate memory log --limit', () => {
     expect(parseMemoryLogLimit('1000')).toBe(1000);
     expect(() => parseMemoryLogLimit('1001')).toThrow(
       'Invalid --limit value "1001". Expected a positive integer up to 1000.',
+    );
+  });
+
+  it('supports --page-size as an alias', () => {
+    expect(resolveMemoryLogLimit(undefined, '7')).toBe(7);
+    expect(() => resolveMemoryLogLimit('5', '7')).toThrow(
+      'Cannot use --limit with --page-size; choose one page-size option.',
     );
   });
 

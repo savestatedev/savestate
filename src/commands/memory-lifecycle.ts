@@ -211,6 +211,17 @@ export function parseMemoryLogLimit(value: string | undefined): number | undefin
   return limit;
 }
 
+/** Resolve the audit-log page-size alias while rejecting ambiguous settings. */
+export function resolveMemoryLogLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number | undefined {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseMemoryLogLimit(pageSizeValue ?? limitValue);
+}
+
 /** Keep the first N audit events when --limit is set. */
 export function selectMemoryLogEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
@@ -1008,6 +1019,7 @@ export async function memoryLogCommand(
     format?: 'table' | 'json';
     includeEvents?: boolean;
     limit?: string;
+    pageSize?: string;
     offset?: string;
   }
 ): Promise<void> {
@@ -1017,7 +1029,7 @@ export async function memoryLogCommand(
   try {
     const allLog = await knowledgeLane.memoryAuditLog(memoryId);
     const offset = parseMemoryLogOffset(options?.offset) ?? 0;
-    const limit = parseMemoryLogLimit(options?.limit) ?? null;
+    const limit = resolveMemoryLogLimit(options?.limit, options?.pageSize) ?? null;
     const log = limit === null
       ? allLog.slice(offset)
       : allLog.slice(offset, offset + limit);
