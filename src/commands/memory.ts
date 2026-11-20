@@ -400,6 +400,20 @@ export function countByTag(memories: MemoryEntry[]): Record<string, number> {
   );
 }
 
+/** Return tag shares as percentages for dashboards that should not rescan entries. */
+export function getMemoryListTagPercentages(
+  memories: MemoryEntry[],
+): Record<string, number> {
+  const counts = countByTag(memories);
+  const total = memories.length;
+  return Object.fromEntries(
+    Object.entries(counts).map(([tag, count]) => [
+      tag,
+      total === 0 ? 0 : (count / total) * 100,
+    ]),
+  );
+}
+
 /** Summarize the collection currently being listed, including active filters. */
 export function getMemoryListSummary(memories: MemoryEntry[]): {
   counts: Record<MemoryTier, number>;
@@ -648,6 +662,8 @@ export interface MemoryListJson {
   shownUnassignedNamespaceCount: number;
   byTag: Record<string, number>;
   shownByTag: Record<string, number>;
+  tagPercentages: Record<string, number>;
+  shownTagPercentages: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
@@ -813,6 +829,8 @@ export function formatMemoryListJson(
     )).length,
     byTag: countByTag(all),
     shownByTag: countByTag(shown),
+    tagPercentages: getMemoryListTagPercentages(all),
+    shownTagPercentages: getMemoryListTagPercentages(shown),
     byFreshness: countByFreshness(all, now),
     shownByFreshness: countByFreshness(shown, now),
     importance: getMemoryListImportanceSummary(all),
