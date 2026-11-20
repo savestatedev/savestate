@@ -97,6 +97,22 @@ export function formatMemoryLogActionSummary(log: ProvenanceEntry[]): string {
   return `Action summary: ${summary || 'none'}`;
 }
 
+/** Keep table output's pagination language aligned with the JSON metadata. */
+export function formatMemoryLogTablePageSummary(
+  shown: number,
+  total: number,
+  offset: number,
+  limit: number | null,
+): string {
+  if (limit === null) {
+    return `Showing ${shown} of ${total} entries (offset ${offset})`;
+  }
+
+  const page = Math.floor(offset / limit) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  return `Showing ${shown} of ${total} entries (page ${page} of ${totalPages}, offset ${offset}, limit ${limit})`;
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
@@ -1134,7 +1150,7 @@ export async function memoryLogCommand(
     }
 
     console.log(`\n${formatMemoryLogActionSummary(allLog)}`);
-    console.log(`\nShowing ${log.length} of ${allLog.length} entries (offset ${offset}${limit === null ? '' : `, limit ${limit}`})`);
+    console.log(`\n${formatMemoryLogTablePageSummary(log.length, allLog.length, offset, limit)}`);
     if (hasMore && limit !== null) {
       console.log(`Next page: use --offset ${offset + log.length}.`);
     }
