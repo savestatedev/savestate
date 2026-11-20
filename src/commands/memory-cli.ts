@@ -632,6 +632,7 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --summary\n' +
         '  $ savestate memory list --important-first --oldest-first --json-summary\n' +
         '  $ savestate memory list --page 2 --limit 20\n' +
+        '  $ savestate memory list --page 2 --page-size 20\n' +
         '  $ savestate memory list --limit 20 --offset 20\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
         '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +

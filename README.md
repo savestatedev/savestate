@@ -422,6 +422,13 @@ Use `--source` to inspect memories captured from one originating platform; match
 case-insensitive. The filter applies before pagination, so it can be combined with
 `--limit` and `--offset` for a stable, source-scoped page.
 
+For page-oriented scripts, `--page` is a 1-based page number and `--page-size` is an
+alias for `--limit`; use one page-size option at a time:
+
+```bash
+savestate memory list --page 2 --page-size 20 --json
+```
+
 Pass `--snapshot` to explain retrievals from a historical archive. Filters are
 applied before pagination, so the JSON response keeps each result's stable
 1-based `rank` across pages. `pagination.remaining` reports matching results
