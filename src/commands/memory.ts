@@ -3826,16 +3826,16 @@ export async function explainMemoryCommand(
     offset: offset ?? 0,
     pageSize: limit ?? DEFAULT_MEMORY_EXPLAIN_LIMIT,
   })}\n`);
-  if (scoredLimited.length > 0) {
+  if (sorted.length > 0) {
     console.log(`   ${formatMemoryExplainPrettySourceSummary(sorted.map((r) => r.entry))}`);
-    if (scoredLimited.length !== sorted.length) {
+    if (scoredLimited.length > 0 && scoredLimited.length !== sorted.length) {
       console.log(`   ${formatMemoryExplainPrettySourceSummary(
         scoredLimited.map((r) => r.entry),
         'Page source summary',
       )}`);
     }
     console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(sorted.map((r) => r.entry))}`);
-    if (scoredLimited.length !== sorted.length) {
+    if (scoredLimited.length > 0 && scoredLimited.length !== sorted.length) {
       console.log(`   ${formatMemoryExplainPrettyNamespaceSummary(
         scoredLimited.map((r) => r.entry),
         'Page namespace summary',
