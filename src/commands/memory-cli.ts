@@ -557,6 +557,17 @@ export function parseMemoryListPage(value: string | undefined): number | undefin
   return page;
 }
 
+/** Resolve the explain page-size alias while rejecting ambiguous pagination settings. */
+export function resolveMemoryExplainLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseMemoryLimit(pageSizeValue ?? limitValue, 10);
+}
+
 /** Resolve a page number into the existing bounded offset contract. */
 export function resolveMemoryListOffset(
   offsetValue: string | undefined,
@@ -877,6 +888,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--until <date>', 'Search memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
     .option('--since <date>', 'Search memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
+    .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
@@ -915,7 +927,7 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           until,
           since,
-          limit: parseMemoryLimit(options.limit, 10),
+          limit: resolveMemoryExplainLimit(options.limit, options.pageSize),
           offset: parseMemoryListOffset(options.offset),
           tags: parseMemoryTagOptions(options.tags, options.tag),
           freshness: parseMemoryFreshness(options.freshness),
