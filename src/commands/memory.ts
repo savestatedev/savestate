@@ -3148,6 +3148,10 @@ export interface MemoryExplainPaginationJson {
   /** Number of matching results after the visible page. */
   remaining: number;
   pageSize: number;
+  /** 1-based page number, or 0 when there are no matching results. */
+  page: number;
+  /** Number of pages addressable with the requested page size. */
+  totalPages: number;
   hasPrevious: boolean;
   previousOffset: number | null;
   hasMore: boolean;
@@ -3296,6 +3300,8 @@ export function formatMemoryExplainJson(
   const emptyPage = results.length === 0 && total > 0;
   const hasMore = emptyPage ? false : pagination.hasMore ?? offset + results.length < total;
   const remaining = Math.max(0, total - offset - results.length);
+  const page = total === 0 ? 0 : Math.floor(offset / pageSize) + 1;
+  const totalPages = Math.ceil(total / pageSize);
   const suggestedOffset = results.length === 0 && total > 0
     ? Math.floor((total - 1) / pageSize) * pageSize
     : null;
@@ -3310,6 +3316,8 @@ export function formatMemoryExplainJson(
     total,
     remaining,
     pageSize,
+    page,
+    totalPages,
     hasPrevious,
     previousOffset: hasPrevious ? previousOffset : null,
     hasMore,
@@ -3410,6 +3418,8 @@ export function formatMemoryExplainMissingJson(
       total,
       remaining,
       pageSize,
+      page: total === 0 ? 0 : Math.floor(offset / pageSize) + 1,
+      totalPages: Math.ceil(total / pageSize),
       hasPrevious,
       previousOffset: null,
       hasMore,
