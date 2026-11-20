@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseMemoryLogLimit,
+  parseMemoryLogPage,
+  resolveMemoryLogOffset,
   resolveMemoryLogLimit,
   selectMemoryLogEntries,
 } from '../memory-lifecycle.js';
@@ -51,5 +53,22 @@ describe('savestate memory log --limit', () => {
   it('returns all events when --limit is omitted', () => {
     const entries = [{ action: 'created' }, { action: 'edited' }];
     expect(selectMemoryLogEntries(entries, undefined)).toEqual(entries);
+  });
+
+  it('resolves a 1-based page into an offset', () => {
+    expect(resolveMemoryLogOffset(undefined, '2', 5)).toBe(5);
+    expect(() => resolveMemoryLogOffset('5', '2', 5)).toThrow(
+      'Cannot use --page with --offset; choose one pagination mode.',
+    );
+  });
+
+  it('requires a page size and bounds page offsets', () => {
+    expect(parseMemoryLogPage(' 3 ')).toBe(3);
+    expect(() => resolveMemoryLogOffset(undefined, '2', undefined)).toThrow(
+      'Cannot use --page without --limit or --page-size.',
+    );
+    expect(() => resolveMemoryLogOffset(undefined, '202', 5)).toThrow(
+      'The requested page exceeds the maximum supported offset of 1000.',
+    );
   });
 });

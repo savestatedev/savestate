@@ -248,6 +248,46 @@ export function parseMemoryLogOffset(value: string | undefined): number | undefi
   return offset;
 }
 
+/** Parse memory log --page as a 1-based page number. */
+export function parseMemoryLogPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  const page = Number(normalized);
+  if (!/^\d+$/.test(normalized) || !Number.isSafeInteger(page) || page < 1) {
+    throw new Error(
+      `Invalid --page value "${value}". Expected a positive integer page number.`,
+    );
+  }
+
+  return page;
+}
+
+/** Resolve memory log pagination while keeping raw offsets backward compatible. */
+export function resolveMemoryLogOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  limit: number | undefined,
+): number {
+  const offset = parseMemoryLogOffset(offsetValue);
+  const page = parseMemoryLogPage(pageValue);
+  if (offset !== undefined && page !== undefined) {
+    throw new Error('Cannot use --page with --offset; choose one pagination mode.');
+  }
+  if (page === undefined) return offset ?? 0;
+  if (limit === undefined) {
+    throw new Error('Cannot use --page without --limit or --page-size.');
+  }
+
+  const resolved = (page - 1) * limit;
+  if (!Number.isSafeInteger(resolved) || resolved > MAX_MEMORY_LOG_OFFSET) {
+    throw new Error(
+      `Invalid --page value "${pageValue}". The requested page exceeds the maximum supported offset of ${MAX_MEMORY_LOG_OFFSET}.`,
+    );
+  }
+  return resolved;
+}
+
 /** Skip the first N audit events when --offset is set. */
 export function selectMemoryLogOffsetEntries<T>(entries: T[], offset?: number): T[] {
   if (offset === undefined) return entries;
@@ -1021,6 +1061,7 @@ export async function memoryLogCommand(
     limit?: string;
     pageSize?: string;
     offset?: string;
+    page?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -1028,8 +1069,8 @@ export async function memoryLogCommand(
 
   try {
     const allLog = await knowledgeLane.memoryAuditLog(memoryId);
-    const offset = parseMemoryLogOffset(options?.offset) ?? 0;
     const limit = resolveMemoryLogLimit(options?.limit, options?.pageSize) ?? null;
+    const offset = resolveMemoryLogOffset(options?.offset, options?.page, limit ?? undefined);
     const log = limit === null
       ? allLog.slice(offset)
       : allLog.slice(offset, offset + limit);
