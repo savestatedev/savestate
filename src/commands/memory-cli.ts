@@ -661,13 +661,15 @@ export function registerMemoryCommands(program: Command): void {
         const maxImportance = parseMemoryMaxImportance(options.maxImportance);
         validateMemoryImportanceRange(minImportance, maxImportance);
         validateMemoryListOrdering(options.oldestFirst, options.reverse);
+        // Validate pagination before touching encrypted storage or prompting for a passphrase.
+        const limit = parseMemoryLimit(options.limit, 20);
+        const offset = resolveMemoryListOffset(options.offset, options.page, limit);
         const namespace = parseMemoryNamespace(options.namespace);
         validateMemoryNamespaceFilters(namespace, options.unassigned);
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        const limit = parseMemoryLimit(options.limit, 20);
         await listMemories(storage, passphrase, {
           tier: parseMemoryTier(options.tier),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
@@ -684,7 +686,7 @@ export function registerMemoryCommands(program: Command): void {
           importantFirst: options.importantFirst,
           oldestFirst: options.oldestFirst || options.reverse,
           limit,
-          offset: resolveMemoryListOffset(options.offset, options.page, limit),
+          offset,
           snapshotId: parseMemorySnapshot(options.snapshot),
           format: options.jsonSummary ? 'json-summary' : options.json ? 'json' : 'table',
         });
