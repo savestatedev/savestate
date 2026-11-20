@@ -693,7 +693,6 @@ export function registerMemoryCommands(program: Command): void {
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
-        const limit = parseMemoryLimit(options.limit, 20);
         await listMemories(storage, passphrase, {
           tier: parseMemoryTier(options.tier),
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
