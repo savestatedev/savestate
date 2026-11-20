@@ -195,6 +195,6 @@ describe('savestate trace --json', () => {
 
   it('bounds human pagination hints at the CLI maximum', () => {
     expect(formatTracePaginationHint('trace runs', 20, 2_000, 990, 20))
-      .toContain('next offset 1000');
+      .toContain('next offset 1000 (maximum)');
   });
 });
