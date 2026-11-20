@@ -557,6 +557,28 @@ export function parseMemoryListPage(value: string | undefined): number | undefin
   return page;
 }
 
+/** Resolve the explain page-size alias while rejecting ambiguous pagination settings. */
+export function resolveMemoryExplainLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseMemoryLimit(pageSizeValue ?? limitValue, 10);
+}
+
+/** Resolve the list page-size alias while rejecting ambiguous pagination settings. */
+export function resolveMemoryListLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseMemoryLimit(pageSizeValue ?? limitValue, 20);
+}
+
 /** Resolve a page number into the existing bounded offset contract. */
 export function resolveMemoryListOffset(
   offsetValue: string | undefined,
@@ -646,7 +668,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--important-first', 'Show highest-importance memories first (ties use creation date)')
     .option('--oldest-first', 'Show oldest memories first (default: newest first)')
     .option('--reverse', 'Alias for --oldest-first')
-    .option('-l, --limit <n>', 'Entries per page (positive integer up to 1000; default: 20)', '20')
+    .option('-l, --limit <n>', 'Entries per page (positive integer up to 1000; default: 20)')
+    .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--page <n>', '1-based page number (use instead of --offset)')
     .option('--offset <n>', 'Skip the first N memories (0-1000; use nextOffset for continuation)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
@@ -662,7 +685,7 @@ export function registerMemoryCommands(program: Command): void {
         validateMemoryImportanceRange(minImportance, maxImportance);
         validateMemoryListOrdering(options.oldestFirst, options.reverse);
         // Validate pagination before touching encrypted storage or prompting for a passphrase.
-        const limit = parseMemoryLimit(options.limit, 20);
+        const limit = resolveMemoryListLimit(options.limit, options.pageSize);
         const offset = resolveMemoryListOffset(options.offset, options.page, limit);
         const namespace = parseMemoryNamespace(options.namespace);
         validateMemoryNamespaceFilters(namespace, options.unassigned);
@@ -877,6 +900,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--until <date>', 'Search memories created on or before an ISO-8601 date or timestamp (date-only values include the full UTC day)')
     .option('--since <date>', 'Search memories created on or after an ISO-8601 date or timestamp (date-only values start at 00:00 UTC)')
     .option('-l, --limit <n>', 'Maximum number of retrieval results to show')
+    .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N retrieval results (non-negative integer up to 1000)')
     .option('--tags <tags>', 'Filter by tags (comma-separated non-empty tags)')
     .option('--tag <tag>', 'Alias for --tags (also accepts comma-separated tags)')
@@ -915,7 +939,7 @@ export function registerMemoryCommands(program: Command): void {
           pinned: parseMemoryPinnedFilter(options.pinned, options.unpinned),
           until,
           since,
-          limit: parseMemoryLimit(options.limit, 10),
+          limit: resolveMemoryExplainLimit(options.limit, options.pageSize),
           offset: parseMemoryListOffset(options.offset),
           tags: parseMemoryTagOptions(options.tags, options.tag),
           freshness: parseMemoryFreshness(options.freshness),
