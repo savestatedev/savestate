@@ -228,6 +228,8 @@ without loading snapshot payload fields. It omits `entries` while preserving `fo
 `savestate memory list --json` includes `bySource` and `shownBySource` counts alongside the
 tier and freshness summaries. Source keys are trimmed and grouped case-insensitively, preserving
 the first spelling seen so scripts can summarize platform coverage without rescanning entries.
+It also includes `sourcePercentages` and `shownSourcePercentages`, with percentage shares for the
+matching collection and visible page.
 Table output also shows matching-collection source totals and, when paginated, source totals for
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
@@ -520,7 +522,9 @@ savestate trace export --json --offset 5 --limit 5
 
 `trace export --json` emits a summary envelope with the selected run metadata and
 pagination recovery fields; use the default export mode when you need JSONL event
-payloads on stdout.
+payloads on stdout. For `trace list` and `trace show`, `--json` keeps the existing
+array shape for scripts; add `--json-summary` (or `--summary`) when you need the
+selected page plus pagination metadata such as `nextOffset` and `suggestedOffset`.
 
 ## Storage
 
