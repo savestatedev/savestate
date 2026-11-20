@@ -26,6 +26,8 @@ describe('savestate memory explain --json when missing', () => {
         total: 0,
         remaining: 0,
         pageSize: 5,
+        page: 0,
+        totalPages: 0,
         hasPrevious: false,
         previousOffset: null,
         hasMore: false,

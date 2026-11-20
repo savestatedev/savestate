@@ -4,6 +4,7 @@ import {
   parseMemoryListOffset,
   selectMemoryListOffsetEntries,
 } from '../memory.js';
+import { parseMemoryListPage, resolveMemoryListOffset } from '../memory-cli.js';
 
 describe('savestate memory list --offset', () => {
   it('defaults to undefined', () => {
@@ -49,5 +50,26 @@ describe('savestate memory list --offset', () => {
         { offset: '1', limit: '1' },
       ).map((entry) => entry.id),
     ).toEqual(['mem-2']);
+  });
+});
+
+describe('savestate memory list --page', () => {
+  it('resolves one-based pages using the requested limit', () => {
+    expect(parseMemoryListPage('2')).toBe(2);
+    expect(resolveMemoryListOffset(undefined, '3', 20)).toBe(40);
+  });
+
+  it('rejects page zero and conflicting pagination flags', () => {
+    expect(() => parseMemoryListPage('0')).toThrow('Expected a positive integer page number.');
+    expect(() => resolveMemoryListOffset('20', '2', 20)).toThrow(
+      'Cannot use --page with --offset; choose one pagination mode.',
+    );
+  });
+
+  it('keeps page navigation inside the supported offset ceiling', () => {
+    expect(resolveMemoryListOffset(undefined, '51', 20)).toBe(1000);
+    expect(() => resolveMemoryListOffset(undefined, '52', 20)).toThrow(
+      'maximum supported offset of 1000',
+    );
   });
 });

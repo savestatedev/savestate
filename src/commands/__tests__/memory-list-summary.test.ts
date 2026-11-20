@@ -118,7 +118,7 @@ describe('savestate memory list table pagination summary', () => {
 
   it('describes bounded pages', () => {
     expect(formatMemoryListPageSummary(7, 3, 3, 3)).toBe(
-      '(showing 3 of 7 matching memories; offset 3, limit 3; next offset 6, limit 3; previous offset 0, limit 3)',
+      '(showing 3 of 7 matching memories; offset 3, limit 3, page 2 of 3; next offset 6, limit 3; previous offset 0, limit 3)',
     );
   });
 
@@ -142,7 +142,7 @@ describe('savestate memory list table pagination summary', () => {
 
   it('points exhausted bounded pages to the nearest available page', () => {
     expect(formatMemoryListPageSummary(45, 0, 100, 20)).toBe(
-      '(showing 0 of 45 matching memories; offset 100, limit 20; previous offset 40, limit 20)',
+      '(showing 0 of 45 matching memories; offset 100, limit 20, page 6 (last page 3); previous offset 40, limit 20)',
     );
   });
 
@@ -154,13 +154,13 @@ describe('savestate memory list table pagination summary', () => {
 
   it('caps the next table page at the supported offset ceiling', () => {
     expect(formatMemoryListPageSummary(1100, 100, 900, 100)).toBe(
-      '(showing 100 of 1100 matching memories; offset 900, limit 100; next offset 1000 (maximum), limit 100; previous offset 800, limit 100)',
+      '(showing 100 of 1100 matching memories; offset 900, limit 100, page 10 of 11; next offset 1000 (maximum), limit 100; previous offset 800, limit 100)',
     );
   });
 
   it('does not offer a repeated page when the offset ceiling is reached', () => {
     expect(formatMemoryListPageSummary(1200, 100, 1000, 100)).toBe(
-      '(showing 100 of 1200 matching memories; offset 1000, limit 100; no later page is available within the offset limit; previous offset 900, limit 100)',
+      '(showing 100 of 1200 matching memories; offset 1000, limit 100, page 11 of 12; no later page is available within the offset limit; previous offset 900, limit 100)',
     );
   });
 
