@@ -24,4 +24,10 @@ describe('savestate memory list filter summary output', () => {
   it('returns no label when no filters are active', () => {
     expect(formatMemoryListFilterSummary({})).toBeUndefined();
   });
+
+  it('echoes tags with the same de-duplication as retrieval', () => {
+    expect(formatMemoryListFilterSummary({
+      tags: [' Work ', 'work', 'URGENT', '  '],
+    })).toBe('tags=[Work, URGENT]');
+  });
 });

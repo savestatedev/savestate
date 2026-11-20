@@ -1806,7 +1806,11 @@ export function formatMemoryListFilterSummary(
   if (options.unassignedNamespace) filters.push('unassigned');
   const content = options.content === undefined ? undefined : normalizeFilterText(options.content);
   if (content) filters.push(`content=${JSON.stringify(content)}`);
-  const tags = options.tags?.map(normalizeFilterText).filter(Boolean);
+  // Match retrieval/JSON semantics: trim tags, collapse presentation
+  // whitespace, and show each case-insensitive tag only once.
+  const tags = options.tags === undefined
+    ? undefined
+    : normalizeMemoryTagFilters(options.tags.map(normalizeFilterText));
   if (tags && tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
   const since = options.since === undefined ? undefined : normalizeFilterText(options.since);
   if (since) filters.push(`since=${since}`);
