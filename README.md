@@ -228,6 +228,8 @@ without loading snapshot payload fields. It omits `entries` while preserving `fo
 `savestate memory list --json` includes `bySource` and `shownBySource` counts alongside the
 tier and freshness summaries. Source keys are trimmed and grouped case-insensitively, preserving
 the first spelling seen so scripts can summarize platform coverage without rescanning entries.
+It also includes `sourcePercentages` and `shownSourcePercentages`, with percentage shares for the
+matching collection and visible page.
 Table output also shows matching-collection source totals and, when paginated, source totals for
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.

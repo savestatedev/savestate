@@ -12,6 +12,7 @@ import {
   getMemoryListSummary,
   countByFreshness,
   countBySource,
+  getMemoryListSourcePercentages,
   countByNamespace,
   countByTag,
   normalizeMemoryListNamespace,
@@ -248,6 +249,13 @@ describe('savestate memory --json', () => {
     const parsed = JSON.parse(formatMemoryListJson(all, all.slice(0, 2))) as MemoryListJson;
     expect(parsed.bySource).toEqual({ 'Claude-Code': 2, user: 1 });
     expect(parsed.shownBySource).toEqual({ 'Claude-Code': 2 });
+    expect(parsed.sourcePercentages['Claude-Code']).toBeCloseTo(66.6666667);
+    expect(parsed.sourcePercentages.user).toBeCloseTo(33.3333333);
+    expect(parsed.shownSourcePercentages).toEqual({ 'Claude-Code': 100 });
+  });
+
+  it('returns an empty source distribution for an empty collection', () => {
+    expect(getMemoryListSourcePercentages([])).toEqual({});
   });
 
   it('keeps source aggregate keys stable when entry order changes', () => {
@@ -421,11 +429,13 @@ describe('savestate memory --json', () => {
     expect(parsed.nextOffset).toBe(2);
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
-    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, unassignedNamespace: false, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.bySource).toEqual({ user: 2, agent: 1 });
     expect(parsed.shownBySource).toEqual({ user: 1, agent: 1 });
+    expect(parsed.sourcePercentages).toEqual({ agent: 33.33333333333333, user: 66.66666666666666 });
+    expect(parsed.shownSourcePercentages).toEqual({ agent: 50, user: 50 });
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 3, needs_confirmation: 0 });
     expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 2, needs_confirmation: 0 });
     expect(parsed.pinned).toBe(1);
@@ -450,6 +460,8 @@ describe('savestate memory --json', () => {
           staleBehavior: 'warn',
           lastVerifiedAt: '2026-09-01T00:00:00.000Z',
         },
+        freshnessClass: 'slow',
+        lastVerifiedAt: '2026-09-01T00:00:00.000Z',
       },
       {
         id: 'mem-l2',
@@ -471,6 +483,9 @@ describe('savestate memory --json', () => {
           lastVerifiedAt: '2026-09-02T12:00:00.000Z',
           verificationSource: 'profile-sync',
         },
+        freshnessClass: 'slow',
+        lastVerifiedAt: '2026-09-02T12:00:00.000Z',
+        verificationSource: 'profile-sync',
       },
     ]);
   });
@@ -530,11 +545,13 @@ describe('savestate memory --json', () => {
     expect(parsed.lastPage).toBe(0);
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
-    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
+    expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, unassignedNamespace: false, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
     expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.shownByTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.bySource).toEqual({});
     expect(parsed.shownBySource).toEqual({});
+    expect(parsed.sourcePercentages).toEqual({});
+    expect(parsed.shownSourcePercentages).toEqual({});
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(parsed.pinned).toBe(0);
@@ -672,7 +689,7 @@ describe('savestate memory --json', () => {
       }),
     ) as MemoryListJson;
 
-    expect(parsed.filters).toEqual({ tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: true });
+    expect(parsed.filters).toEqual({ tier: 'L1', freshness: null, pinned: true, source: 'agent', namespace: 'org:app:agent', unassignedNamespace: false, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: true });
   });
 
   it('filters content case-insensitively and reports the active filter', () => {

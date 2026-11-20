@@ -290,6 +290,20 @@ export function countBySource(memories: MemoryEntry[]): Record<string, number> {
   );
 }
 
+/** Return source shares as percentages for dashboards that should not rescan entries. */
+export function getMemoryListSourcePercentages(
+  memories: MemoryEntry[],
+): Record<string, number> {
+  const counts = countBySource(memories);
+  const total = memories.length;
+  return Object.fromEntries(
+    Object.entries(counts).map(([source, count]) => [
+      source,
+      total === 0 ? 0 : (count / total) * 100,
+    ]),
+  );
+}
+
 /** Count non-empty memory namespaces while keeping JSON keys stable. */
 export function countByNamespace(memories: MemoryEntry[]): Record<string, number> {
   // Namespace metadata comes from encrypted archives, so reserved object keys
@@ -608,6 +622,8 @@ export interface MemoryListJson {
   shownByTier: Record<MemoryTier, number>;
   bySource: Record<string, number>;
   shownBySource: Record<string, number>;
+  sourcePercentages: Record<string, number>;
+  shownSourcePercentages: Record<string, number>;
   byNamespace: Record<string, number>;
   shownByNamespace: Record<string, number>;
   /** Number of matching memories without a namespace. */
@@ -618,6 +634,8 @@ export interface MemoryListJson {
   shownByTag: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
+  sourcePercentages: Record<string, number>;
+  shownSourcePercentages: Record<string, number>;
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
   pinned: number;
@@ -767,6 +785,8 @@ export function formatMemoryListJson(
     shownByTier: countByTier(shown),
     bySource: countBySource(all),
     shownBySource: countBySource(shown),
+    sourcePercentages: getMemoryListSourcePercentages(all),
+    shownSourcePercentages: getMemoryListSourcePercentages(shown),
     byNamespace: countByNamespace(all),
     shownByNamespace: countByNamespace(shown),
     unassignedNamespaceCount: all.filter((entry) => !normalizeMemoryListNamespace(
@@ -910,6 +930,8 @@ export function formatMemoryListMissingJson(
       shownImportance: { min: null, max: null, average: null },
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      sourcePercentages: {},
+      shownSourcePercentages: {},
       pinned: 0,
       shownPinned: 0,
       pinnedPercentage: 0,
