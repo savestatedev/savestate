@@ -165,7 +165,8 @@ export function formatTracePaginationHint(
   const hints = [`Showing ${shown} of ${total} ${noun} (${page})`];
 
   if (limit !== undefined && shown > 0 && offset + shown < total) {
-    hints.push(`next offset ${offset + shown}`);
+    const nextOffset = Math.min(offset + shown, MAX_TRACE_OFFSET);
+    hints.push(`next offset ${nextOffset}${nextOffset === MAX_TRACE_OFFSET ? ' (maximum)' : ''}`);
   }
   if (limit !== undefined && offset > 0) {
     hints.push(`previous offset ${Math.max(0, offset - limit)}`);
