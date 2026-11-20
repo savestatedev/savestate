@@ -383,6 +383,8 @@ describe('savestate memory --json', () => {
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 1 });
     expect(parsed.contentIncluded).toBe(true);
     expect(parsed.entries[0].freshness.state).toBe('needs_confirmation');
+    expect(parsed.entries[0].freshnessClass).toBe('fast');
+    expect(parsed.entries[0].lastVerifiedAt).toBe('2026-10-14T12:00:00.000Z');
   });
 
   it('prints list summary and entries as JSON', () => {

@@ -536,6 +536,10 @@ export interface MemoryListEntryJson {
   tags?: string[];
   content?: string;
   freshness: MemoryFreshness;
+  /** Flattened freshness metadata kept aligned with memory explain JSON. */
+  freshnessClass: MemoryFreshnessClass;
+  lastVerifiedAt: string;
+  verificationSource?: string;
 }
 
 export interface MemoryListGuidance {
@@ -782,28 +786,36 @@ export function formatMemoryListJson(
     pinnedPercentage: getMemoryListPinnedPercentage(all),
     shownPinnedPercentage: getMemoryListPinnedPercentage(shown),
     contentIncluded: pagination.includeContent !== false,
-    entries: shown.map((entry) => ({
-      id: entry.id,
-      tier: getEffectiveTier(entry),
-      pinned: !!entry.pinned,
-      importance: getMemoryListImportance(entry),
-      source: normalizeMemoryListSource(entry.source),
-      namespace: (() => {
-        const namespace = typeof entry.metadata?.namespace === 'string'
-          ? entry.metadata.namespace.trim()
-          : '';
-        return namespace || null;
-      })(),
-      createdAt: entry.createdAt,
-      ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
-      ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),
-      ...(() => {
-        const tags = getMemoryListTags(entry);
-        return tags.length > 0 ? { tags } : {};
-      })(),
-      ...(pagination.includeContent === false ? {} : { content: entry.content }),
-      freshness: getMemoryFreshness(entry, now),
-    })),
+    entries: shown.map((entry) => {
+      const freshness = getMemoryFreshness(entry, now);
+      return {
+        id: entry.id,
+        tier: getEffectiveTier(entry),
+        pinned: !!entry.pinned,
+        importance: getMemoryListImportance(entry),
+        source: normalizeMemoryListSource(entry.source),
+        namespace: (() => {
+          const namespace = typeof entry.metadata?.namespace === 'string'
+            ? entry.metadata.namespace.trim()
+            : '';
+          return namespace || null;
+        })(),
+        createdAt: entry.createdAt,
+        ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
+        ...(entry.lastAccessedAt ? { lastAccessedAt: entry.lastAccessedAt } : {}),
+        ...(() => {
+          const tags = getMemoryListTags(entry);
+          return tags.length > 0 ? { tags } : {};
+        })(),
+        ...(pagination.includeContent === false ? {} : { content: entry.content }),
+        freshness,
+        freshnessClass: freshness.class,
+        lastVerifiedAt: freshness.lastVerifiedAt,
+        ...(freshness.verificationSource === undefined
+          ? {}
+          : { verificationSource: freshness.verificationSource }),
+      };
+    }),
   };
   return JSON.stringify(record, null, 2);
 }
