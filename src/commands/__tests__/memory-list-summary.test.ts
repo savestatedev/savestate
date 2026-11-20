@@ -8,6 +8,7 @@ import {
   formatMemoryListPageSummary,
   formatMemoryListPageTagSummary,
   formatMemoryListTagSummary,
+  getMemoryListTagPercentages,
   shouldShowMemoryListNamespace,
 } from '../memory.js';
 import type { MemoryEntry } from '../../types.js';
@@ -200,5 +201,13 @@ describe('savestate memory list tag summary', () => {
 
   it('reports when no memory has tags', () => {
     expect(formatMemoryListTagSummary([memory(), memory('  ')] )).toBe('none');
+  });
+
+  it('reports tag percentages against the memory collection', () => {
+    expect(getMemoryListTagPercentages([
+      { ...memory(), metadata: { tags: ['work', 'urgent'] } },
+      { ...memory(), id: 'memory-2', metadata: { tags: ['work'] } },
+    ])).toEqual({ urgent: 50, work: 100 });
+    expect(getMemoryListTagPercentages([])).toEqual({});
   });
 });

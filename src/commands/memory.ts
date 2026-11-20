@@ -400,6 +400,20 @@ export function countByTag(memories: MemoryEntry[]): Record<string, number> {
   );
 }
 
+/** Return tag shares as percentages for dashboards that should not rescan entries. */
+export function getMemoryListTagPercentages(
+  memories: MemoryEntry[],
+): Record<string, number> {
+  const counts = countByTag(memories);
+  const total = memories.length;
+  return Object.fromEntries(
+    Object.entries(counts).map(([tag, count]) => [
+      tag,
+      total === 0 ? 0 : (count / total) * 100,
+    ]),
+  );
+}
+
 /** Summarize the collection currently being listed, including active filters. */
 export function getMemoryListSummary(memories: MemoryEntry[]): {
   counts: Record<MemoryTier, number>;
@@ -648,6 +662,8 @@ export interface MemoryListJson {
   shownUnassignedNamespaceCount: number;
   byTag: Record<string, number>;
   shownByTag: Record<string, number>;
+  tagPercentages: Record<string, number>;
+  shownTagPercentages: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
@@ -813,6 +829,8 @@ export function formatMemoryListJson(
     )).length,
     byTag: countByTag(all),
     shownByTag: countByTag(shown),
+    tagPercentages: getMemoryListTagPercentages(all),
+    shownTagPercentages: getMemoryListTagPercentages(shown),
     byFreshness: countByFreshness(all, now),
     shownByFreshness: countByFreshness(shown, now),
     importance: getMemoryListImportanceSummary(all),
@@ -1806,7 +1824,11 @@ export function formatMemoryListFilterSummary(
   if (options.unassignedNamespace) filters.push('unassigned');
   const content = options.content === undefined ? undefined : normalizeFilterText(options.content);
   if (content) filters.push(`content=${JSON.stringify(content)}`);
-  const tags = options.tags?.map(normalizeFilterText).filter(Boolean);
+  // Match retrieval/JSON semantics: trim tags, collapse presentation
+  // whitespace, and show each case-insensitive tag only once.
+  const tags = options.tags === undefined
+    ? undefined
+    : normalizeMemoryTagFilters(options.tags.map(normalizeFilterText));
   if (tags && tags.length > 0) filters.push(`tags=[${tags.join(', ')}]`);
   const since = options.since === undefined ? undefined : normalizeFilterText(options.since);
   if (since) filters.push(`since=${since}`);
@@ -2028,6 +2050,21 @@ export async function listMemories(
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
   console.log(`Importance Summary: ${formatMemoryListImportanceSummary(filteredEntries)}\n`);
   console.log(`Pinned Summary: ${formatMemoryListPinnedSummary(filteredEntries)}\n`);
+  const filterSummary = formatMemoryListFilterSummary({
+    tier: options?.tier,
+    pinned: options?.pinned,
+    source: options?.source,
+    namespace: options?.namespace,
+    unassignedNamespace: options?.unassignedNamespace,
+    content: options?.content,
+    tags: options?.tags,
+    since: options?.since,
+    until: options?.until,
+    freshness: options?.freshness,
+    minImportance: options?.minImportance,
+    maxImportance: options?.maxImportance,
+  });
+  if (filterSummary) console.log(`Filters: ${filterSummary}\n`);
   console.log(formatMemoryListOrderingSummary(options?.oldestFirst, options?.importantFirst));
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);

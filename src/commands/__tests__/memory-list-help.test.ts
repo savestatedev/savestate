@@ -20,6 +20,8 @@ describe('savestate memory list help', () => {
     expect(help).toContain('--summary is the short alias');
     expect(help).toContain('needs_confirmation/needs-confirmation');
     expect(renderedHelp).toContain('--since 2026-01-01 --until 2026-01-31');
+    expect(renderedHelp).toContain('--namespace org:app:agent --json-summary');
+    expect(renderedHelp).toContain('--unassigned --summary');
   });
 
   it('normalizes the hyphenated confirmation state for CLI users', () => {
