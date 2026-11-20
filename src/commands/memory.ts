@@ -2028,6 +2028,21 @@ export async function listMemories(
   console.log(`Freshness Summary: ${formatMemoryListFreshnessSummary(filteredEntries, freshnessNow)}\n`);
   console.log(`Importance Summary: ${formatMemoryListImportanceSummary(filteredEntries)}\n`);
   console.log(`Pinned Summary: ${formatMemoryListPinnedSummary(filteredEntries)}\n`);
+  const filterSummary = formatMemoryListFilterSummary({
+    tier: options?.tier,
+    pinned: options?.pinned,
+    source: options?.source,
+    namespace: options?.namespace,
+    unassignedNamespace: options?.unassignedNamespace,
+    content: options?.content,
+    tags: options?.tags,
+    since: options?.since,
+    until: options?.until,
+    freshness: options?.freshness,
+    minImportance: options?.minImportance,
+    maxImportance: options?.maxImportance,
+  });
+  if (filterSummary) console.log(`Filters: ${filterSummary}\n`);
   console.log(formatMemoryListOrderingSummary(options?.oldestFirst, options?.importantFirst));
 
   const pageSummary = formatMemoryListPageSummary(total, entries.length, offset, options?.limit);
