@@ -344,6 +344,20 @@ export function countByNamespace(memories: MemoryEntry[]): Record<string, number
   );
 }
 
+/** Return namespace shares as percentages for dashboards that should not rescan entries. */
+export function getMemoryListNamespacePercentages(
+  memories: MemoryEntry[],
+): Record<string, number> {
+  const counts = countByNamespace(memories);
+  const total = memories.length;
+  return Object.fromEntries(
+    Object.entries(counts).map(([namespace, count]) => [
+      namespace,
+      total === 0 ? 0 : (count / total) * 100,
+    ]),
+  );
+}
+
 /** Count normalized tags while keeping JSON keys stable across archive ordering. */
 export function countByTag(memories: MemoryEntry[]): Record<string, number> {
   // Tag metadata comes from encrypted archives, so reserved object keys
@@ -626,6 +640,8 @@ export interface MemoryListJson {
   shownSourcePercentages: Record<string, number>;
   byNamespace: Record<string, number>;
   shownByNamespace: Record<string, number>;
+  namespacePercentages: Record<string, number>;
+  shownNamespacePercentages: Record<string, number>;
   /** Number of matching memories without a namespace. */
   unassignedNamespaceCount: number;
   /** Number of visible memories without a namespace. */
@@ -634,8 +650,6 @@ export interface MemoryListJson {
   shownByTag: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
-  sourcePercentages: Record<string, number>;
-  shownSourcePercentages: Record<string, number>;
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
   pinned: number;
@@ -789,6 +803,8 @@ export function formatMemoryListJson(
     shownSourcePercentages: getMemoryListSourcePercentages(shown),
     byNamespace: countByNamespace(all),
     shownByNamespace: countByNamespace(shown),
+    namespacePercentages: getMemoryListNamespacePercentages(all),
+    shownNamespacePercentages: getMemoryListNamespacePercentages(shown),
     unassignedNamespaceCount: all.filter((entry) => !normalizeMemoryListNamespace(
       typeof entry.metadata?.namespace === 'string' ? entry.metadata.namespace : undefined,
     )).length,
@@ -868,6 +884,8 @@ export interface MemoryListMissingJson {
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
+  namespacePercentages: Record<string, number>;
+  shownNamespacePercentages: Record<string, number>;
   pinned: 0;
   shownPinned: 0;
   pinnedPercentage: 0;
@@ -930,6 +948,8 @@ export function formatMemoryListMissingJson(
       shownImportance: { min: null, max: null, average: null },
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      namespacePercentages: {},
+      shownNamespacePercentages: {},
       sourcePercentages: {},
       shownSourcePercentages: {},
       pinned: 0,

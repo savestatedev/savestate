@@ -36,6 +36,8 @@ describe('savestate memory list --json when missing', () => {
       shownImportance: { min: null, max: null, average: null },
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      namespacePercentages: {},
+      shownNamespacePercentages: {},
       sourcePercentages: {},
       shownSourcePercentages: {},
       pinned: 0,
@@ -62,7 +64,7 @@ describe('savestate memory list --json when missing', () => {
     expect(parsed.byTier).toBeUndefined();
     expect(parsed.pinned).toBe(0);
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['byFreshness', 'contentIncluded', 'empty', 'emptyReason', 'filters', 'found', 'guidance', 'hasMore', 'importance', 'isLastPage', 'lastPage', 'limit', 'maxOffset', 'nextOffset', 'offset', 'pinned', 'pinnedPercentage', 'previousOffset', 'remaining', 'shown', 'shownByFreshness', 'shownImportance', 'shownPinned', 'shownPinnedPercentage', 'shownSourcePercentages', 'snapshot', 'sourcePercentages', 'suggestedOffset', 'total']);
+    expect(Object.keys(parsed).sort()).toEqual(['byFreshness', 'contentIncluded', 'empty', 'emptyReason', 'filters', 'found', 'guidance', 'hasMore', 'importance', 'isLastPage', 'lastPage', 'limit', 'maxOffset', 'namespacePercentages', 'nextOffset', 'offset', 'pinned', 'pinnedPercentage', 'previousOffset', 'remaining', 'shown', 'shownByFreshness', 'shownImportance', 'shownNamespacePercentages', 'shownPinned', 'shownPinnedPercentage', 'shownSourcePercentages', 'snapshot', 'sourcePercentages', 'suggestedOffset', 'total']);
     expect(parsed.lastPage).toBe(0);
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
@@ -96,6 +98,8 @@ describe('savestate memory list --json when missing', () => {
       shownImportance: { min: null, max: null, average: null },
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      namespacePercentages: {},
+      shownNamespacePercentages: {},
       sourcePercentages: {},
       shownSourcePercentages: {},
       pinned: 0,
