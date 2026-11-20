@@ -423,10 +423,12 @@ case-insensitive. The filter applies before pagination, so it can be combined wi
 `--limit` and `--offset` for a stable, source-scoped page.
 
 For page-oriented scripts, `--page` is a 1-based page number and `--page-size` is an
-alias for `--limit`; use one page-size option at a time:
+alias for `--limit`; use one page-size option at a time. This works for both `memory list`
+and `memory explain`, and `--page` cannot be combined with `--offset`:
 
 ```bash
 savestate memory list --page 2 --page-size 20 --json
+savestate memory explain "inbox preference" --page 2 --page-size 10 --json-summary
 ```
 
 Pass `--snapshot` to explain retrievals from a historical archive. Filters are
