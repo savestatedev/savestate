@@ -427,8 +427,9 @@ case-insensitive. The filter applies before pagination, so it can be combined wi
 
 For page-oriented scripts, `--page` is a 1-based page number and `--page-size` is an
 alias for `--limit`; use one page-size option at a time. This works for `memory list`,
-`memory explain`, and `memory log`. For `memory log`, `--page` requires `--limit` or
-`--page-size`. `--page` cannot be combined with `--offset`:
+`memory explain`, and `memory log`. For `memory log`, `--page` uses a default page size
+of 20 when neither `--limit` nor `--page-size` is provided. `--page` cannot be combined
+with `--offset`:
 
 ```bash
 savestate memory list --page 2 --page-size 20 --json
