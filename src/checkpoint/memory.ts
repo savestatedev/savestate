@@ -772,7 +772,10 @@ export class KnowledgeLane {
   /**
    * Expire memories based on TTL policy.
    */
-  async expireMemories(namespace: Namespace): Promise<ExpireMemoriesResult> {
+  async expireMemories(
+    namespace: Namespace,
+    options?: { memoryIds?: ReadonlySet<string> },
+  ): Promise<ExpireMemoriesResult> {
     const now = new Date();
     const nowIso = now.toISOString();
     const expiredIds: string[] = [];
@@ -806,7 +809,11 @@ export class KnowledgeLane {
         }
       }
 
-      if (shouldExpire && memory.status !== 'deleted') {
+      if (
+        shouldExpire
+        && memory.status !== 'deleted'
+        && (options?.memoryIds === undefined || options.memoryIds.has(memory.memory_id))
+      ) {
         memory.status = 'deleted';
         memory.provenance.push({
           action: 'expired',

@@ -603,6 +603,17 @@ export function applyMemoryExpireFilters<T>(
   );
 }
 
+function isMemoryExpirable(memory: {
+  expires_at?: string;
+  ttl_seconds?: number | null;
+  created_at: string;
+}): boolean {
+  if (memory.expires_at) return new Date(memory.expires_at).getTime() <= Date.now();
+  if (memory.ttl_seconds === undefined || memory.ttl_seconds === null) return false;
+  if (memory.ttl_seconds === 0) return true;
+  return Date.now() >= new Date(memory.created_at).getTime() + memory.ttl_seconds * 1000;
+}
+
 /**
  * Parse a namespace string into a Namespace object.
  * Format: org:app:agent[:user]
@@ -1070,20 +1081,8 @@ export async function expireMemoriesCommand(
       status: 'active',
     });
 
-    const now = Date.now();
     const expirableMemories = applyMemoryExpireFilters(
-      memories.filter((mem) => {
-        if (mem.expires_at) {
-          return new Date(mem.expires_at).getTime() <= now;
-        }
-        if (mem.ttl_seconds !== undefined && mem.ttl_seconds !== null) {
-          if (mem.ttl_seconds === 0) return true;
-          const createdAt = new Date(mem.created_at).getTime();
-          const expiresAt = createdAt + mem.ttl_seconds * 1000;
-          return now >= expiresAt;
-        }
-        return false;
-      }),
+      memories.filter(isMemoryExpirable),
       options,
     );
 
@@ -1104,8 +1103,24 @@ export async function expireMemoriesCommand(
   }
 
   try {
-    const result = await knowledgeLane.expireMemories(namespace);
-    const expiredIds = applyMemoryExpireFilters(result.expired_ids, options);
+    const bounded = options.limit !== undefined || options.offset !== undefined;
+    const result = await knowledgeLane.expireMemories(
+      namespace,
+      bounded
+        ? {
+            memoryIds: new Set(
+              applyMemoryExpireFilters(
+                (await knowledgeLane.listMemories(namespace, {
+                  include_expired: true,
+                  status: 'active',
+                })).filter(isMemoryExpirable),
+                options,
+              ).map((memory) => memory.memory_id),
+            ),
+          }
+        : undefined,
+    );
+    const expiredIds = result.expired_ids;
 
     if (options.format === 'json') {
       console.log(formatMemoryExpireJson(options.namespace, expiredIds));
