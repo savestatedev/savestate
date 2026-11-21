@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatMemoryLogJson,
   parseMemoryLogLimit,
   parseMemoryLogPage,
   resolveMemoryLogOffset,
@@ -9,6 +10,12 @@ import {
 } from '../memory-lifecycle.js';
 
 describe('savestate memory log --limit', () => {
+  it('marks successful JSON responses as found', () => {
+    const response = JSON.parse(formatMemoryLogJson('mem-123', []));
+    expect(response.found).toBe(true);
+    expect(response.memoryId).toBe('mem-123');
+  });
+
   it('defaults to undefined', () => {
     expect(parseMemoryLogLimit(undefined)).toBeUndefined();
   });

@@ -4,8 +4,11 @@ import {
   formatMemoryLogEmptyPage,
   formatMemoryLogJson,
   formatMemoryLogActionSummary,
+  formatMemoryLogNavigation,
   formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
+  filterMemoryLogAction,
+  parseMemoryLogAction,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
 
@@ -33,6 +36,17 @@ const merged: ProvenanceEntry = {
 };
 
 describe('savestate memory log --json', () => {
+  it('normalizes and validates action filters', () => {
+    expect(parseMemoryLogAction('  EDITED ')).toBe('edited');
+    expect(parseMemoryLogAction(undefined)).toBeUndefined();
+    expect(() => parseMemoryLogAction('edit events')).toThrow('Invalid --action value');
+  });
+
+  it('filters audit events before pagination', () => {
+    expect(filterMemoryLogAction([created, edited, merged], 'edited')).toEqual([edited]);
+    expect(filterMemoryLogAction([created, edited], undefined)).toHaveLength(2);
+  });
+
   it('formats a deterministic action summary for table output', () => {
     expect(formatMemoryLogActionSummary([merged, created, edited, created])).toBe(
       'Action summary: created 2, edited 1, merged 1',
@@ -50,6 +64,12 @@ describe('savestate memory log --json', () => {
     expect(formatMemoryLogTablePageSummary(3, 3, 0, null)).toBe(
       'Showing 3 of 3 entries (offset 0)',
     );
+  });
+
+  it('keeps table navigation in page mode when requested', () => {
+    expect(formatMemoryLogNavigation('next', 10, 5, true)).toBe('Next page: use --page 3.');
+    expect(formatMemoryLogNavigation('previous', 5, 5, true)).toBe('Previous page: use --page 2.');
+    expect(formatMemoryLogNavigation('next', 10, 5, false)).toBe('Next page: use --offset 10.');
   });
 
   it('supports a metadata-only summary without audit events', () => {
@@ -74,6 +94,7 @@ describe('savestate memory log --json', () => {
       events: Array<MemoryLogJson['events'][number] & { previous_content?: unknown; actor_id?: unknown }>;
     };
     expect(parsed).toEqual({
+      found: true,
       memoryId: 'mem-123',
       eventsIncluded: true,
       actionCounts: { created: 1, edited: 1, merged: 1 },
@@ -212,6 +233,14 @@ describe('savestate memory log --json', () => {
       '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
       'The memory has 3 recorded entries.\n' +
       'Try --offset 0 to view an available page.',
+    );
+  });
+
+  it('keeps exhausted page-mode navigation in page syntax', () => {
+    expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3, true)).toBe(
+      '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
+      'The memory has 3 recorded entries.\n' +
+      'Try --page 1 to view an available page.',
     );
   });
 });
