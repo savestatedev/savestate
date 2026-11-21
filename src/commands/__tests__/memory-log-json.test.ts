@@ -4,6 +4,7 @@ import {
   formatMemoryLogEmptyPage,
   formatMemoryLogJson,
   formatMemoryLogActionSummary,
+  formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
@@ -37,6 +38,18 @@ describe('savestate memory log --json', () => {
       'Action summary: created 2, edited 1, merged 1',
     );
     expect(formatMemoryLogActionSummary([])).toBe('Action summary: none');
+  });
+
+  it('shows page metadata in table pagination summaries', () => {
+    expect(formatMemoryLogTablePageSummary(2, 7, 5, 5)).toBe(
+      'Showing 2 of 7 entries (page 2 of 2, offset 5, limit 5)',
+    );
+    expect(formatMemoryLogTablePageSummary(0, 0, 0, 5)).toBe(
+      'Showing 0 of 0 entries (page 1 of 1, offset 0, limit 5)',
+    );
+    expect(formatMemoryLogTablePageSummary(3, 3, 0, null)).toBe(
+      'Showing 3 of 3 entries (offset 0)',
+    );
   });
 
   it('supports a metadata-only summary without audit events', () => {
@@ -117,6 +130,18 @@ describe('savestate memory log --json', () => {
     const parsed = JSON.parse(formatMemoryLogJson('mem-missing', [])) as MemoryLogJson;
     expect(parsed.memoryId).toBe('mem-missing');
     expect(parsed.events).toEqual([]);
+  });
+
+  it('keeps an empty bounded audit log on its first page', () => {
+    const parsed = JSON.parse(formatMemoryLogJson('mem-missing', [], {
+      limit: 5,
+      total: 0,
+      shown: 0,
+    })) as MemoryLogJson;
+
+    expect(parsed.pagination.page).toBe(1);
+    expect(parsed.pagination.totalPages).toBe(1);
+    expect(parsed.pagination.emptyReason).toBe('collection');
   });
 
   it('advances by the page size when a sparse page still has matches', () => {

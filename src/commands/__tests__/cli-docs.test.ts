@@ -2820,6 +2820,13 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryLogLimit');
   });
 
+  it('documents memory log --page-size as a limit alias', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const logBlock = memoryCli.slice(memoryCli.indexOf("command('log"));
+    expect(memorySection).toContain('savestate memory log mem-123 --page-size 5');
+    expect(logBlock).toContain(".option('--page-size <n>'");
+  });
+
   it('documents memory log --offset as a bounded non-negative integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const logBlock = memoryCli.slice(memoryCli.indexOf("command('log"));

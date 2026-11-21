@@ -97,6 +97,22 @@ export function formatMemoryLogActionSummary(log: ProvenanceEntry[]): string {
   return `Action summary: ${summary || 'none'}`;
 }
 
+/** Keep table output's pagination language aligned with the JSON metadata. */
+export function formatMemoryLogTablePageSummary(
+  shown: number,
+  total: number,
+  offset: number,
+  limit: number | null,
+): string {
+  if (limit === null) {
+    return `Showing ${shown} of ${total} entries (offset ${offset})`;
+  }
+
+  const page = Math.floor(offset / limit) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  return `Showing ${shown} of ${total} entries (page ${page} of ${totalPages}, offset ${offset}, limit ${limit})`;
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
@@ -110,7 +126,8 @@ export function formatMemoryLogJson(
   const total = pagination.total ?? log.length;
   const shown = pagination.shown ?? log.length;
   const page = limit === null ? 1 : Math.floor(offset / limit) + 1;
-  const totalPages = limit === null ? 1 : Math.ceil(total / limit);
+  // Keep an empty bounded log navigable, matching the table formatter's page model.
+  const totalPages = limit === null ? 1 : Math.max(1, Math.ceil(total / limit));
   // Keep formatter callers aligned with the CLI parser: never advertise a
   // continuation offset that the command will reject.
   const hasMore = (pagination.hasMore ?? false)
@@ -211,6 +228,17 @@ export function parseMemoryLogLimit(value: string | undefined): number | undefin
   return limit;
 }
 
+/** Resolve the audit-log page-size alias while rejecting ambiguous settings. */
+export function resolveMemoryLogLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number | undefined {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseMemoryLogLimit(pageSizeValue ?? limitValue);
+}
+
 /** Keep the first N audit events when --limit is set. */
 export function selectMemoryLogEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
@@ -235,6 +263,46 @@ export function parseMemoryLogOffset(value: string | undefined): number | undefi
     );
   }
   return offset;
+}
+
+/** Parse memory log --page as a 1-based page number. */
+export function parseMemoryLogPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  const page = Number(normalized);
+  if (!/^\d+$/.test(normalized) || !Number.isSafeInteger(page) || page < 1) {
+    throw new Error(
+      `Invalid --page value "${value}". Expected a positive integer page number.`,
+    );
+  }
+
+  return page;
+}
+
+/** Resolve memory log pagination while keeping raw offsets backward compatible. */
+export function resolveMemoryLogOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  limit: number | undefined,
+): number {
+  const offset = parseMemoryLogOffset(offsetValue);
+  const page = parseMemoryLogPage(pageValue);
+  if (offset !== undefined && page !== undefined) {
+    throw new Error('Cannot use --page with --offset; choose one pagination mode.');
+  }
+  if (page === undefined) return offset ?? 0;
+  if (limit === undefined) {
+    throw new Error('Cannot use --page without --limit or --page-size.');
+  }
+
+  const resolved = (page - 1) * limit;
+  if (!Number.isSafeInteger(resolved) || resolved > MAX_MEMORY_LOG_OFFSET) {
+    throw new Error(
+      `Invalid --page value "${pageValue}". The requested page exceeds the maximum supported offset of ${MAX_MEMORY_LOG_OFFSET}.`,
+    );
+  }
+  return resolved;
 }
 
 /** Skip the first N audit events when --offset is set. */
@@ -1008,7 +1076,9 @@ export async function memoryLogCommand(
     format?: 'table' | 'json';
     includeEvents?: boolean;
     limit?: string;
+    pageSize?: string;
     offset?: string;
+    page?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -1016,8 +1086,8 @@ export async function memoryLogCommand(
 
   try {
     const allLog = await knowledgeLane.memoryAuditLog(memoryId);
-    const offset = parseMemoryLogOffset(options?.offset) ?? 0;
-    const limit = parseMemoryLogLimit(options?.limit) ?? null;
+    const limit = resolveMemoryLogLimit(options?.limit, options?.pageSize) ?? null;
+    const offset = resolveMemoryLogOffset(options?.offset, options?.page, limit ?? undefined);
     const log = limit === null
       ? allLog.slice(offset)
       : allLog.slice(offset, offset + limit);
@@ -1081,7 +1151,7 @@ export async function memoryLogCommand(
     }
 
     console.log(`\n${formatMemoryLogActionSummary(allLog)}`);
-    console.log(`\nShowing ${log.length} of ${allLog.length} entries (offset ${offset}${limit === null ? '' : `, limit ${limit}`})`);
+    console.log(`\n${formatMemoryLogTablePageSummary(log.length, allLog.length, offset, limit)}`);
     if (hasMore && limit !== null) {
       console.log(`Next page: use --offset ${offset + log.length}.`);
     }
