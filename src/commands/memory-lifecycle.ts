@@ -208,16 +208,22 @@ export function formatMemoryLogEmptyPage(
   offset: number,
   limit: number | null,
   total: number,
+  pageMode = false,
 ): string {
   const page = limit === null ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const suggestedOffset = total > 0
     ? (limit === null ? 0 : Math.floor((total - 1) / limit) * limit)
     : null;
+  const suggestedNavigation = suggestedOffset === null || limit === null
+    ? null
+    : pageMode
+      ? `Try --page ${Math.floor(suggestedOffset / limit) + 1} to view an available page.`
+      : `Try --offset ${suggestedOffset} to view an available page.`;
 
   return [
     `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
     `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
-    suggestedOffset === null ? null : `Try --offset ${suggestedOffset} to view an available page.`,
+    suggestedNavigation,
   ].filter((line): line is string => line !== null).join('\n');
 }
 
@@ -1148,7 +1154,13 @@ export async function memoryLogCommand(
         console.log(`\nNo audit log found for memory ${memoryId}`);
         console.log(`(Memory may not exist or has no recorded history)`);
       } else {
-        console.log(formatMemoryLogEmptyPage(memoryId, offset, limit, allLog.length));
+        console.log(formatMemoryLogEmptyPage(
+          memoryId,
+          offset,
+          limit,
+          allLog.length,
+          options?.page !== undefined,
+        ));
       }
       return;
     }

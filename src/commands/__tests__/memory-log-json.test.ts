@@ -222,4 +222,12 @@ describe('savestate memory log --json', () => {
       'Try --offset 0 to view an available page.',
     );
   });
+
+  it('keeps exhausted page-mode navigation in page syntax', () => {
+    expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3, true)).toBe(
+      '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
+      'The memory has 3 recorded entries.\n' +
+      'Try --page 1 to view an available page.',
+    );
+  });
 });
