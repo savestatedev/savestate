@@ -51,6 +51,7 @@ describe('savestate memory log --json', () => {
   it('filters audit events before pagination', () => {
     expect(filterMemoryLogAction([created, edited, merged], 'edited')).toEqual([edited]);
     expect(filterMemoryLogAction([created, edited, merged], ['edited', 'merged'])).toEqual([edited, merged]);
+    expect(filterMemoryLogAction([created, edited, merged], ['EDITED', 'MERGED'])).toEqual([edited, merged]);
     expect(filterMemoryLogAction([created, edited], undefined)).toHaveLength(2);
   });
 

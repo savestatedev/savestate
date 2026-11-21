@@ -152,7 +152,7 @@ export function filterMemoryLogAction(
   action: string | string[] | undefined,
 ): ProvenanceEntry[] {
   if (action === undefined) return entries;
-  const actions = new Set(Array.isArray(action) ? action : [action]);
+  const actions = new Set((Array.isArray(action) ? action : [action]).map((value) => value.toLowerCase()));
   return entries.filter((entry) => actions.has(entry.action.toLowerCase()));
 }
 
