@@ -2231,6 +2231,7 @@ const siteNavigation = document.getElementById('site-navigation');
 
 function setMenuOpen(isOpen) {
   siteNavigation.classList.toggle('show', isOpen);
+  siteNavigation.setAttribute('aria-hidden', String(!isOpen));
   menuToggle.setAttribute('aria-expanded', String(isOpen));
   menuToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
   if (isOpen) {
@@ -2239,6 +2240,8 @@ function setMenuOpen(isOpen) {
     menuToggle.focus();
   }
 }
+
+siteNavigation.setAttribute('aria-hidden', 'true');
 
 menuToggle.addEventListener('click', () => {
   setMenuOpen(!siteNavigation.classList.contains('show'));
