@@ -396,7 +396,7 @@ footer a { color: var(--text-muted); }
       <img src="/logo.png" alt="SaveState" width="32" height="32" style="border-radius: 4px;">
       <span class="nav-wordmark">SaveState</span>
     </a>
-    <ul class="nav-links">
+    <ul class="nav-links" id="site-navigation" aria-hidden="true">
       <li><a href="/#how-it-works">How it Works</a></li>
       <li><a href="/#features">Features</a></li>
       <li><a href="/#pricing">Pricing</a></li>
@@ -407,7 +407,7 @@ footer a { color: var(--text-muted); }
       <li><a href="/dashboard">Dashboard</a></li>
       <li><a href="https://buy.stripe.com/aFa00j5E4ees8hf3kp2ZO00" class="btn-nav" data-cta="cursor-nav-pro-checkout">Subscribe to Pro</a></li>
     </ul>
-    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
+    <button class="nav-mobile-toggle" type="button" aria-label="Open menu" aria-controls="site-navigation" aria-expanded="false">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
   </div>
@@ -485,6 +485,35 @@ footer a { color: var(--text-muted); }
     <p>© 2026 SaveState. <a href="https://github.com/savestatedev/savestate">Open Source</a> under MIT License.</p>
   </div>
 </footer>
+
+<script>
+const menuToggle = document.querySelector('.nav-mobile-toggle');
+const siteNavigation = document.getElementById('site-navigation');
+const mobileNavQuery = window.matchMedia('(max-width: 768px)');
+
+function setMenuOpen(isOpen) {
+  siteNavigation.classList.toggle('show', isOpen);
+  if (mobileNavQuery.matches) siteNavigation.setAttribute('aria-hidden', String(!isOpen));
+  else siteNavigation.removeAttribute('aria-hidden');
+  menuToggle.setAttribute('aria-expanded', String(isOpen));
+  menuToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+  if (!isOpen && document.activeElement !== menuToggle) menuToggle.focus();
+}
+
+if (mobileNavQuery.matches) siteNavigation.setAttribute('aria-hidden', 'true');
+mobileNavQuery.addEventListener('change', ({ matches }) => {
+  if (matches) siteNavigation.setAttribute('aria-hidden', 'true');
+  else setMenuOpen(false);
+});
+menuToggle.addEventListener('click', () => setMenuOpen(!siteNavigation.classList.contains('show')));
+siteNavigation.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenuOpen(false)));
+document.addEventListener('click', event => {
+  if (siteNavigation.classList.contains('show') && event.target instanceof Node && !event.target.closest('nav')) setMenuOpen(false);
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && siteNavigation.classList.contains('show')) setMenuOpen(false);
+});
+</script>
 
 </body>
 </html>
