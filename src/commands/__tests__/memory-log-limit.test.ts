@@ -4,6 +4,7 @@ import {
   parseMemoryLogPage,
   resolveMemoryLogOffset,
   resolveMemoryLogLimit,
+  resolveMemoryLogPageLimit,
   selectMemoryLogEntries,
 } from '../memory-lifecycle.js';
 
@@ -62,11 +63,10 @@ describe('savestate memory log --limit', () => {
     );
   });
 
-  it('requires a page size and bounds page offsets', () => {
+  it('uses the default page size when --page is supplied alone', () => {
     expect(parseMemoryLogPage(' 3 ')).toBe(3);
-    expect(() => resolveMemoryLogOffset(undefined, '2', undefined)).toThrow(
-      'Cannot use --page without --limit or --page-size.',
-    );
+    expect(resolveMemoryLogPageLimit(undefined, undefined, '2')).toBe(20);
+    expect(resolveMemoryLogOffset(undefined, '2', 20)).toBe(20);
     expect(() => resolveMemoryLogOffset(undefined, '202', 5)).toThrow(
       'The requested page exceeds the maximum supported offset of 1000.',
     );

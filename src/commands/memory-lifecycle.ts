@@ -207,6 +207,7 @@ export function formatMemoryLogEmptyPage(
 
 const MAX_MEMORY_LOG_LIMIT = 1000;
 const MAX_MEMORY_LOG_OFFSET = 1000;
+const DEFAULT_MEMORY_LOG_PAGE_SIZE = 20;
 
 /** Parse memory log --limit without turning user input errors into an empty audit log. */
 export function parseMemoryLogLimit(value: string | undefined): number | undefined {
@@ -237,6 +238,16 @@ export function resolveMemoryLogLimit(
     throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
   }
   return parseMemoryLogLimit(pageSizeValue ?? limitValue);
+}
+
+/** Use a bounded default when --page is requested without an explicit page size. */
+export function resolveMemoryLogPageLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+  pageValue: string | undefined,
+): number | null {
+  const limit = resolveMemoryLogLimit(limitValue, pageSizeValue);
+  return limit ?? (pageValue === undefined ? null : DEFAULT_MEMORY_LOG_PAGE_SIZE);
 }
 
 /** Keep the first N audit events when --limit is set. */
@@ -1086,7 +1097,7 @@ export async function memoryLogCommand(
 
   try {
     const allLog = await knowledgeLane.memoryAuditLog(memoryId);
-    const limit = resolveMemoryLogLimit(options?.limit, options?.pageSize) ?? null;
+    const limit = resolveMemoryLogPageLimit(options?.limit, options?.pageSize, options?.page);
     const offset = resolveMemoryLogOffset(options?.offset, options?.page, limit ?? undefined);
     const log = limit === null
       ? allLog.slice(offset)
