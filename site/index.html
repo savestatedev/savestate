@@ -2228,10 +2228,15 @@ async function copyInstall(btn, text) {
 // Mobile navigation
 const menuToggle = document.querySelector('.nav-mobile-toggle');
 const siteNavigation = document.getElementById('site-navigation');
+const mobileNavQuery = window.matchMedia('(max-width: 768px)');
 
 function setMenuOpen(isOpen) {
   siteNavigation.classList.toggle('show', isOpen);
-  siteNavigation.setAttribute('aria-hidden', String(!isOpen));
+  if (mobileNavQuery.matches) {
+    siteNavigation.setAttribute('aria-hidden', String(!isOpen));
+  } else {
+    siteNavigation.removeAttribute('aria-hidden');
+  }
   menuToggle.setAttribute('aria-expanded', String(isOpen));
   menuToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
   if (isOpen) {
@@ -2241,7 +2246,17 @@ function setMenuOpen(isOpen) {
   }
 }
 
-siteNavigation.setAttribute('aria-hidden', 'true');
+if (mobileNavQuery.matches) {
+  siteNavigation.setAttribute('aria-hidden', 'true');
+}
+
+mobileNavQuery.addEventListener('change', ({ matches }) => {
+  if (!matches) {
+    setMenuOpen(false);
+    return;
+  }
+  siteNavigation.setAttribute('aria-hidden', 'true');
+});
 
 menuToggle.addEventListener('click', () => {
   setMenuOpen(!siteNavigation.classList.contains('show'));
