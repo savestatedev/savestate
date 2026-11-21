@@ -2824,6 +2824,8 @@ describe('CLI docs', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const logBlock = memoryCli.slice(memoryCli.indexOf("command('log"));
     expect(memorySection).toContain('savestate memory log mem-123 --page-size 5');
+    expect(memorySection).toContain('savestate memory log mem-123 --page 2 --json');
+    expect(memoryCli).toContain('savestate memory log <memory-id> --page 2');
     expect(logBlock).toContain(".option('--page-size <n>'");
   });
 

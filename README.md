@@ -435,6 +435,7 @@ with `--offset`:
 savestate memory list --page 2 --page-size 20 --json
 savestate memory explain "inbox preference" --page 2 --page-size 10 --json-summary
 savestate memory log mem-123 --page 2 --page-size 5 --json
+savestate memory log mem-123 --page 2 --json
 ```
 
 Pass `--snapshot` to explain retrievals from a historical archive. Filters are
