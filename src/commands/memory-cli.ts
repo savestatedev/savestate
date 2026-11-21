@@ -636,7 +636,8 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory list --limit 20 --offset 20\n' +
         '  $ savestate memory explain "preferred editor" --json\n' +
         '  $ savestate memory explain "preferred editor" --source claude-code --json\n' +
-        '  $ savestate memory log <memory-id>\n',
+        '  $ savestate memory log <memory-id>\n' +
+        '  $ savestate memory log <memory-id> --page 2\n',
     );
 
   // ─── savestate memory list ───────────────────────────────────
@@ -1094,7 +1095,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--limit <n>', 'Maximum number of audit events to show')
     .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
-    .option('--page <n>', '1-based page number (requires --limit or --page-size)')
+    .option('--page <n>', '1-based page number (default page size: 20)')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON pagination metadata without audit events; --summary is the short alias (implies --json)')
     .action(async (memoryId, options) => {
