@@ -7,6 +7,8 @@ import {
   formatMemoryLogNavigation,
   formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
+  filterMemoryLogAction,
+  parseMemoryLogAction,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
 
@@ -34,6 +36,17 @@ const merged: ProvenanceEntry = {
 };
 
 describe('savestate memory log --json', () => {
+  it('normalizes and validates action filters', () => {
+    expect(parseMemoryLogAction('  EDITED ')).toBe('edited');
+    expect(parseMemoryLogAction(undefined)).toBeUndefined();
+    expect(() => parseMemoryLogAction('edit events')).toThrow('Invalid --action value');
+  });
+
+  it('filters audit events before pagination', () => {
+    expect(filterMemoryLogAction([created, edited, merged], 'edited')).toEqual([edited]);
+    expect(filterMemoryLogAction([created, edited], undefined)).toHaveLength(2);
+  });
+
   it('formats a deterministic action summary for table output', () => {
     expect(formatMemoryLogActionSummary([merged, created, edited, created])).toBe(
       'Action summary: created 2, edited 1, merged 1',

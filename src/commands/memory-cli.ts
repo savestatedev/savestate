@@ -1096,6 +1096,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
     .option('--page <n>', '1-based page number (default page size: 20)')
+    .option('--action <name>', 'Filter audit events by lifecycle action')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON pagination metadata without audit events; --summary is the short alias (implies --json)')
     .action(async (memoryId, options) => {
@@ -1112,6 +1113,7 @@ export function registerMemoryCommands(program: Command): void {
           pageSize: options.pageSize,
           offset: options.offset,
           page: options.page,
+          action: options.action,
         });
       } catch (err) {
         handleError(err);

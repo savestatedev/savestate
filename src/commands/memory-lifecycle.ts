@@ -128,6 +128,25 @@ export function formatMemoryLogNavigation(
   return `${direction === 'next' ? 'Next' : 'Previous'} page: use --offset ${offset}.`;
 }
 
+/** Keep audit-log action filters stable and explicit for CLI callers. */
+export function parseMemoryLogAction(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const action = value.trim().toLowerCase();
+  if (!/^[a-z][a-z0-9_-]*$/.test(action)) {
+    throw new Error(`Invalid --action value "${value}". Expected a lifecycle action name.`);
+  }
+  return action;
+}
+
+/** Filter audit events before pagination so totals describe the requested view. */
+export function filterMemoryLogAction(
+  entries: ProvenanceEntry[],
+  action: string | undefined,
+): ProvenanceEntry[] {
+  if (action === undefined) return entries;
+  return entries.filter((entry) => entry.action.toLowerCase() === action);
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
@@ -1112,13 +1131,17 @@ export async function memoryLogCommand(
     pageSize?: string;
     offset?: string;
     page?: string;
+    action?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
   try {
-    const allLog = await knowledgeLane.memoryAuditLog(memoryId);
+    const allLog = filterMemoryLogAction(
+      await knowledgeLane.memoryAuditLog(memoryId),
+      parseMemoryLogAction(options?.action),
+    );
     const limit = resolveMemoryLogPageLimit(options?.limit, options?.pageSize, options?.page);
     const offset = resolveMemoryLogOffset(options?.offset, options?.page, limit ?? undefined);
     const log = limit === null

@@ -438,6 +438,10 @@ savestate memory log mem-123 --page 2 --page-size 5 --json
 savestate memory log mem-123 --page 2 --json
 ```
 
+Use `--action` to inspect only one lifecycle event type, such as
+`savestate memory log mem-123 --action edited --json`. The action filter is applied
+before pagination, so totals and next-page guidance describe the filtered history.
+
 JSON responses include `found: true` for an available memory; a missing memory
 uses the same field with `false`, so scripts can branch without inspecting the
 event payload.
