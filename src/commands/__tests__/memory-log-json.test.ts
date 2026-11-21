@@ -4,6 +4,7 @@ import {
   formatMemoryLogEmptyPage,
   formatMemoryLogJson,
   formatMemoryLogActionSummary,
+  formatMemoryLogNavigation,
   formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
   type MemoryLogJson,
@@ -52,6 +53,12 @@ describe('savestate memory log --json', () => {
     );
   });
 
+  it('keeps table navigation in page mode when requested', () => {
+    expect(formatMemoryLogNavigation('next', 10, 5, true)).toBe('Next page: use --page 3.');
+    expect(formatMemoryLogNavigation('previous', 5, 5, true)).toBe('Previous page: use --page 2.');
+    expect(formatMemoryLogNavigation('next', 10, 5, false)).toBe('Next page: use --offset 10.');
+  });
+
   it('supports a metadata-only summary without audit events', () => {
     const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created], {
       includeEvents: false,
@@ -74,6 +81,7 @@ describe('savestate memory log --json', () => {
       events: Array<MemoryLogJson['events'][number] & { previous_content?: unknown; actor_id?: unknown }>;
     };
     expect(parsed).toEqual({
+      found: true,
       memoryId: 'mem-123',
       eventsIncluded: true,
       actionCounts: { created: 1, edited: 1, merged: 1 },

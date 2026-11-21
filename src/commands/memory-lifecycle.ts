@@ -114,6 +114,20 @@ export function formatMemoryLogTablePageSummary(
   return `Showing ${shown} of ${total} entries (page ${page} of ${totalPages}, offset ${offset}, limit ${limit})`;
 }
 
+/** Keep human-readable navigation in the pagination mode the user selected. */
+export function formatMemoryLogNavigation(
+  direction: 'next' | 'previous',
+  offset: number,
+  limit: number,
+  pageMode: boolean,
+): string {
+  if (pageMode) {
+    const page = Math.floor(offset / limit) + 1;
+    return `${direction === 'next' ? 'Next' : 'Previous'} page: use --page ${page}.`;
+  }
+  return `${direction === 'next' ? 'Next' : 'Previous'} page: use --offset ${offset}.`;
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
@@ -1166,10 +1180,20 @@ export async function memoryLogCommand(
     console.log(`\n${formatMemoryLogActionSummary(allLog)}`);
     console.log(`\n${formatMemoryLogTablePageSummary(log.length, allLog.length, offset, limit)}`);
     if (hasMore && limit !== null) {
-      console.log(`Next page: use --offset ${offset + log.length}.`);
+      console.log(formatMemoryLogNavigation(
+        'next',
+        Math.floor(offset / limit) * limit + limit,
+        limit,
+        options?.page !== undefined,
+      ));
     }
     if (offset > 0 && limit !== null) {
-      console.log(`Previous page: use --offset ${Math.max(0, offset - limit)}.`);
+      console.log(formatMemoryLogNavigation(
+        'previous',
+        Math.max(0, offset - limit),
+        limit,
+        options?.page !== undefined,
+      ));
     }
   } catch (err) {
     throw new Error(`Failed to get audit log: ${err instanceof Error ? err.message : 'Unknown error'}`);
