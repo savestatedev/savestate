@@ -27,6 +27,7 @@ export interface MemoryLogEventJson {
 }
 
 export interface MemoryLogJson {
+  found: true;
   memoryId: string;
   events: MemoryLogEventJson[];
   eventsIncluded: boolean;
@@ -156,6 +157,7 @@ export function formatMemoryLogJson(
 
   return JSON.stringify(
     {
+      found: true,
       memoryId,
       events: pagination.includeEvents === false ? [] : log.map(toLogEventJson),
       eventsIncluded: pagination.includeEvents !== false,
