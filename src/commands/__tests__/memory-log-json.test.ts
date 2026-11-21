@@ -132,6 +132,18 @@ describe('savestate memory log --json', () => {
     expect(parsed.events).toEqual([]);
   });
 
+  it('keeps an empty bounded audit log on its first page', () => {
+    const parsed = JSON.parse(formatMemoryLogJson('mem-missing', [], {
+      limit: 5,
+      total: 0,
+      shown: 0,
+    })) as MemoryLogJson;
+
+    expect(parsed.pagination.page).toBe(1);
+    expect(parsed.pagination.totalPages).toBe(1);
+    expect(parsed.pagination.emptyReason).toBe('collection');
+  });
+
   it('advances by the page size when a sparse page still has matches', () => {
     const parsed = JSON.parse(formatMemoryLogJson('mem-123', [created], {
       offset: 0,

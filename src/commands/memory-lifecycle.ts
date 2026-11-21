@@ -126,7 +126,8 @@ export function formatMemoryLogJson(
   const total = pagination.total ?? log.length;
   const shown = pagination.shown ?? log.length;
   const page = limit === null ? 1 : Math.floor(offset / limit) + 1;
-  const totalPages = limit === null ? 1 : Math.ceil(total / limit);
+  // Keep an empty bounded log navigable, matching the table formatter's page model.
+  const totalPages = limit === null ? 1 : Math.max(1, Math.ceil(total / limit));
   // Keep formatter callers aligned with the CLI parser: never advertise a
   // continuation offset that the command will reject.
   const hasMore = (pagination.hasMore ?? false)
