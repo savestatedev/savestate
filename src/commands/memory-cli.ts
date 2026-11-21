@@ -1065,7 +1065,8 @@ export function registerMemoryCommands(program: Command): void {
     .description('Expire memories based on TTL policy')
     .requiredOption('-n, --namespace <ns>', 'Namespace (single non-empty org:app:agent[:user])')
     .option('--dry-run', 'Show what would be expired without applying')
-    .option('--limit <n>', 'Maximum number of expirable memories to show')
+    .option('--limit <n>', 'Maximum number of expirable memories to expire')
+    .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N expirable memories (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (options) => {
@@ -1079,6 +1080,7 @@ export function registerMemoryCommands(program: Command): void {
           dryRun: options.dryRun,
           format: options.json ? 'json' : 'pretty',
           limit: options.limit,
+          pageSize: options.pageSize,
           offset: options.offset,
         });
       } catch (err) {

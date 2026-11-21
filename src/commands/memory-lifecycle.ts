@@ -560,6 +560,17 @@ export function parseMemoryExpireLimit(value: string | undefined): number | unde
   return limit;
 }
 
+/** Resolve the readable page-size alias without silently choosing between two limits. */
+export function resolveMemoryExpireLimit(
+  limit: string | undefined,
+  pageSize: string | undefined,
+): string | undefined {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Cannot use --limit and --page-size together; choose one limit option.');
+  }
+  return limit ?? pageSize;
+}
+
 /** Keep the first N expirable memories when --limit is set. */
 export function selectExpiredMemories<T>(memories: T[], limit?: number): T[] {
   if (limit === undefined) return memories;
@@ -1053,13 +1064,15 @@ export async function expireMemoriesCommand(
     dryRun?: boolean;
     format?: 'pretty' | 'json';
     limit?: string;
+    pageSize?: string;
     offset?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
   parseMemoryExpireOffset(options.offset);
-  parseMemoryExpireLimit(options.limit);
+  const limit = resolveMemoryExpireLimit(options.limit, options.pageSize);
+  parseMemoryExpireLimit(limit);
 
   const namespace = parseNamespace(options.namespace);
 
@@ -1083,7 +1096,7 @@ export async function expireMemoriesCommand(
 
     const expirableMemories = applyMemoryExpireFilters(
       memories.filter(isMemoryExpirable),
-      options,
+      { ...options, limit },
     );
 
     if (options.format === 'json') {
@@ -1103,7 +1116,7 @@ export async function expireMemoriesCommand(
   }
 
   try {
-    const bounded = options.limit !== undefined || options.offset !== undefined;
+    const bounded = limit !== undefined || options.offset !== undefined;
     const result = await knowledgeLane.expireMemories(
       namespace,
       bounded
@@ -1114,7 +1127,7 @@ export async function expireMemoriesCommand(
                   include_expired: true,
                   status: 'active',
                 })).filter(isMemoryExpirable),
-                options,
+                { ...options, limit },
               ).map((memory) => memory.memory_id),
             ),
           }
