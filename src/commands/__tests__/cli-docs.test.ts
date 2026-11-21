@@ -2839,6 +2839,15 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryLogOffset');
   });
 
+  it('documents memory log --action filters', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const logBlock = memoryCli.slice(memoryCli.indexOf("command('log"));
+    expect(memorySection).toContain('--action');
+    expect(memorySection).toContain('edited,rollback');
+    expect(logBlock).toContain(".option('--action <names>'");
+    expect(memoryLifecycle).toContain('export function parseMemoryLogActions');
+  });
+
   it('documents memory expire --limit as a bounded positive integer', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const expireBlock = memoryCli.slice(memoryCli.indexOf("command('expire')"), memoryCli.indexOf("command('log"));
