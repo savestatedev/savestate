@@ -2250,6 +2250,13 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+document.addEventListener('click', (event) => {
+  if (!siteNavigation.classList.contains('show')) return;
+  if (event.target instanceof Node && !event.target.closest('nav')) {
+    setMenuOpen(false);
+  }
+});
+
 siteNavigation.querySelectorAll('a').forEach(link => {
   link.addEventListener('click', () => setMenuOpen(false));
 });
