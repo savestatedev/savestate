@@ -82,7 +82,8 @@ function toLogEventJson(entry: ProvenanceEntry): MemoryLogEventJson {
 export function countMemoryLogActions(log: ProvenanceEntry[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const entry of log) {
-    counts[entry.action] = (counts[entry.action] ?? 0) + 1;
+    const action = entry.action.toLowerCase();
+    counts[action] = (counts[action] ?? 0) + 1;
   }
   return Object.fromEntries(
     Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)),

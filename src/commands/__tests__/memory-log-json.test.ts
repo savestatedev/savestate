@@ -62,6 +62,13 @@ describe('savestate memory log --json', () => {
     expect(formatMemoryLogActionSummary([])).toBe('Action summary: none');
   });
 
+  it('normalizes action counts to match case-insensitive filters', () => {
+    expect(formatMemoryLogActionSummary([
+      { ...edited, action: 'EDITED' },
+      edited,
+    ])).toBe('Action summary: edited 2');
+  });
+
   it('shows page metadata in table pagination summaries', () => {
     expect(formatMemoryLogTablePageSummary(2, 7, 5, 5)).toBe(
       'Showing 2 of 7 entries (page 2 of 2, offset 5, limit 5)',
