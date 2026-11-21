@@ -9,6 +9,7 @@ import {
   getMemoryLogGuidance,
   filterMemoryLogAction,
   parseMemoryLogAction,
+  parseMemoryLogActions,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
 
@@ -42,8 +43,14 @@ describe('savestate memory log --json', () => {
     expect(() => parseMemoryLogAction('edit events')).toThrow('Invalid --action value');
   });
 
+  it('accepts comma-separated action filters without duplicates', () => {
+    expect(parseMemoryLogActions(' EDITED, created,edited ')).toEqual(['edited', 'created']);
+    expect(() => parseMemoryLogActions('edited,,created')).toThrow('Invalid --action value');
+  });
+
   it('filters audit events before pagination', () => {
     expect(filterMemoryLogAction([created, edited, merged], 'edited')).toEqual([edited]);
+    expect(filterMemoryLogAction([created, edited, merged], ['edited', 'merged'])).toEqual([edited, merged]);
     expect(filterMemoryLogAction([created, edited], undefined)).toHaveLength(2);
   });
 

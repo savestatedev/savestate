@@ -138,13 +138,22 @@ export function parseMemoryLogAction(value: string | undefined): string | undefi
   return action;
 }
 
+/** Parse one or more lifecycle actions while rejecting blank list members. */
+export function parseMemoryLogActions(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+
+  const actions = value.split(',').map((part) => parseMemoryLogAction(part));
+  return [...new Set(actions.filter((action): action is string => action !== undefined))];
+}
+
 /** Filter audit events before pagination so totals describe the requested view. */
 export function filterMemoryLogAction(
   entries: ProvenanceEntry[],
-  action: string | undefined,
+  action: string | string[] | undefined,
 ): ProvenanceEntry[] {
   if (action === undefined) return entries;
-  return entries.filter((entry) => entry.action.toLowerCase() === action);
+  const actions = new Set(Array.isArray(action) ? action : [action]);
+  return entries.filter((entry) => actions.has(entry.action.toLowerCase()));
 }
 
 export function formatMemoryLogJson(
@@ -1140,7 +1149,7 @@ export async function memoryLogCommand(
   try {
     const allLog = filterMemoryLogAction(
       await knowledgeLane.memoryAuditLog(memoryId),
-      parseMemoryLogAction(options?.action),
+      parseMemoryLogActions(options?.action),
     );
     const limit = resolveMemoryLogPageLimit(options?.limit, options?.pageSize, options?.page);
     const offset = resolveMemoryLogOffset(options?.offset, options?.page, limit ?? undefined);
