@@ -182,7 +182,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   const limitFlag = options.pageSize === undefined ? '--limit' : '--page-size';
   console.log(chalk.bold(formatReceiptsText(
     receipts,
-    allReceipts.length,
+    matchingReceipts.length,
     offset,
     limit,
     limitFlag,

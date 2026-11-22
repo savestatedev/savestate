@@ -72,6 +72,11 @@ describe('receipts command', () => {
     );
   });
 
+  it('reports filtered totals in human output', () => {
+    const receipts = [{ receipt_id: 'memory-1' }] as never[];
+    expect(formatReceiptsText(receipts, 1, 0, 10)).toContain('Save receipts (1 of 1, page 1/1)');
+  });
+
   it('guides empty human pages to the last available page', () => {
     expect(formatReceiptsText([], 3, 9, 2)).toBe(
       'No save receipts found at offset 9. Try "savestate receipts --limit 2 --offset 2".',
