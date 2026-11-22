@@ -4,7 +4,9 @@
 
 import chalk from 'chalk';
 import { isInitialized } from '../config.js';
-import { countReceipts, listReceipts, loadReceipts, type SaveReceipt } from '../save-receipt.js';
+import { loadReceipts, type SaveReceipt } from '../save-receipt.js';
+
+export type ReceiptResourceType = SaveReceipt['resource_type'];
 
 export interface ReceiptsOptions {
   json?: boolean;
@@ -12,10 +14,12 @@ export interface ReceiptsOptions {
   pageSize?: string;
   page?: string;
   offset?: string;
+  type?: string;
 }
 
 export interface ReceiptsJson {
   found: boolean;
+  type: ReceiptResourceType | null;
   total: number;
   shown: number;
   emptyReason: 'collection' | 'page' | null;
@@ -36,7 +40,13 @@ export interface ReceiptsJson {
   receipts: SaveReceipt[];
 }
 
-export function formatReceiptsJson(receipts: SaveReceipt[], total: number, offset: number, limit: number): string {
+export function formatReceiptsJson(
+  receipts: SaveReceipt[],
+  total: number,
+  offset: number,
+  limit: number,
+  type: ReceiptResourceType | undefined = undefined,
+): string {
   const shown = receipts.length;
   const suggestedOffset = shown === 0 && total > 0 ? Math.floor(Math.max(0, total - 1) / limit) * limit : null;
   const nextOffset = offset + shown < total ? offset + shown : null;
@@ -50,7 +60,7 @@ export function formatReceiptsJson(receipts: SaveReceipt[], total: number, offse
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  return JSON.stringify({ found: shown > 0, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  return JSON.stringify({ found: shown > 0, type: type ?? null, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, receipts } satisfies ReceiptsJson, null, 2);
@@ -87,6 +97,24 @@ export function parseReceiptsOffset(value: string | undefined): number {
     throw new Error(`Invalid --offset value "${value}". Expected a non-negative integer.`);
   }
   return offset;
+}
+
+export function parseReceiptType(value: string | undefined): ReceiptResourceType | undefined {
+  if (value === undefined) return undefined;
+  if (value === 'snapshot' || value === 'memory' || value === 'checkpoint') return value;
+  throw new Error(`Invalid --type value "${value}". Expected snapshot, memory, or checkpoint.`);
+}
+
+export function selectReceipts(
+  receipts: SaveReceipt[],
+  limit: number,
+  offset: number,
+  type?: ReceiptResourceType,
+): SaveReceipt[] {
+  const filtered = type === undefined ? receipts : receipts.filter((receipt) => receipt.resource_type === type);
+  const end = filtered.length - offset;
+  if (end <= 0) return [];
+  return filtered.slice(Math.max(0, end - limit), end).reverse();
 }
 
 export function resolveReceiptsOffset(offset: string | undefined, page: string | undefined, limit: number): number {
@@ -152,17 +180,21 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
 
   const limit = resolveReceiptsLimit(options.limit, options.pageSize);
   const offset = resolveReceiptsOffset(options.offset, options.page, limit);
-  const receipts = await listReceipts(limit, undefined, offset);
+  const type = parseReceiptType(options.type);
+  const { receipts: allReceipts } = await loadReceipts();
+  const matchingReceipts = type === undefined
+    ? allReceipts
+    : allReceipts.filter((receipt) => receipt.resource_type === type);
+  const receipts = selectReceipts(matchingReceipts, limit, offset);
   if (options.json) {
-    console.log(formatReceiptsJson(receipts, await countReceipts(), offset, limit));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type));
     return;
   }
 
-  const { receipts: allReceipts } = await loadReceipts();
   const limitFlag = options.pageSize === undefined ? '--limit' : '--page-size';
   console.log(chalk.bold(formatReceiptsText(
     receipts,
-    allReceipts.length,
+    matchingReceipts.length,
     offset,
     limit,
     limitFlag,

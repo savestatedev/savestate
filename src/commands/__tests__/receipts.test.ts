@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatReceiptsJson, formatReceiptsText, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset } from '../receipts.js';
+import { formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -32,6 +32,22 @@ describe('receipts command', () => {
     expect(() => parseReceiptsOffset('1.5')).toThrow(/non-negative integer/);
   });
 
+  it('accepts supported resource types and rejects unknown filters', () => {
+    expect(parseReceiptType('memory')).toBe('memory');
+    expect(parseReceiptType(undefined)).toBeUndefined();
+    expect(() => parseReceiptType('other')).toThrow(/snapshot, memory, or checkpoint/);
+  });
+
+  it('filters receipts before applying newest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'snapshot-1', resource_type: 'snapshot' },
+      { receipt_id: 'memory-1', resource_type: 'memory' },
+      { receipt_id: 'memory-2', resource_type: 'memory' },
+    ] as never[];
+    expect(selectReceipts(receipts, 1, 0, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-2']);
+    expect(selectReceipts(receipts, 1, 1, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-1']);
+  });
+
   it('resolves 1-based pages and rejects ambiguous or invalid paging', () => {
     expect(resolveReceiptsOffset(undefined, '3', 25)).toBe(50);
     expect(() => resolveReceiptsOffset('25', '2', 25)).toThrow(/either --offset or --page/);
@@ -56,6 +72,11 @@ describe('receipts command', () => {
     );
   });
 
+  it('reports filtered totals in human output', () => {
+    const receipts = [{ receipt_id: 'memory-1' }] as never[];
+    expect(formatReceiptsText(receipts, 1, 0, 10)).toContain('Save receipts (1 of 1, page 1/1)');
+  });
+
   it('guides empty human pages to the last available page', () => {
     expect(formatReceiptsText([], 3, 9, 2)).toBe(
       'No save receipts found at offset 9. Try "savestate receipts --limit 2 --offset 2".',
@@ -64,11 +85,15 @@ describe('receipts command', () => {
 
   it('reports continuation metadata for JSON consumers', () => {
     const receipts = [{ receipt_id: 'r-2' }] as never[];
-    expect(JSON.parse(formatReceiptsJson(receipts, 3, 1, 1))).toMatchObject({
-      found: true, total: 3, shown: 1, emptyReason: null, offset: 1, limit: 1,
+    expect(JSON.parse(formatReceiptsJson(receipts, 3, 1, 1, 'memory'))).toMatchObject({
+      found: true, type: 'memory', total: 3, shown: 1, emptyReason: null, offset: 1, limit: 1,
       remaining: 1, hasMore: true, isLastPage: false, nextOffset: 2, nextPage: 3, page: 2, totalPages: 3,
       hasPrevious: true, previousOffset: 0, previousPage: 1, suggestedOffset: null, guidance: { action: 'next', offset: 2 },
     });
+  });
+
+  it('identifies an unfiltered JSON response explicitly', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ type: null });
   });
 
   it('guides stale offsets in JSON back to the last available page', () => {

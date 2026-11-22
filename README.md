@@ -210,6 +210,7 @@ savestate receipts                    Inspect proofs created by successful saves
   --page-size <n>                     Readable alias for --limit
   --page <n>                          Show the 1-based receipt page
   --offset <n>                        Skip newer receipts before applying --limit (default: 0)
+  --type <type>                        Only snapshot, memory, or checkpoint receipts
   --json                              Output receipt records and pagination metadata as JSON
 
 JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`, `nextPage`, and `previousPage`,
