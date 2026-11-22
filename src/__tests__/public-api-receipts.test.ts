@@ -49,6 +49,7 @@ describe('public save receipt API', () => {
     await storeReceipt(second, cwd);
 
     await expect(listReceipts(1, cwd)).resolves.toEqual([second]);
+    await expect(listReceipts(1, cwd, 1)).resolves.toEqual([first]);
     await expect(listReceipts(0, cwd)).resolves.toEqual([]);
   });
 });

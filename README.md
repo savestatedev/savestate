@@ -207,6 +207,7 @@ savestate list                        List all snapshots
 
 savestate receipts                    Inspect proofs created by successful saves
   --limit <n>                         Show up to 1000 of the most recent receipts (default: 100)
+  --offset <n>                        Skip newer receipts before applying --limit (default: 0)
   --json                              Output receipt records as JSON
 
 `savestate list --json` returns a summary object with `found` indicating whether

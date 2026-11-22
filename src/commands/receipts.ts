@@ -9,11 +9,13 @@ import { listReceipts, type SaveReceipt } from '../save-receipt.js';
 export interface ReceiptsOptions {
   json?: boolean;
   limit?: string;
+  offset?: string;
 }
 
 export interface ReceiptsJson {
   found: boolean;
   shown: number;
+  offset: number;
   receipts: SaveReceipt[];
 }
 
@@ -30,6 +32,19 @@ export function parseReceiptsLimit(value: string | undefined): number {
   return limit;
 }
 
+export function parseReceiptsOffset(value: string | undefined): number {
+  if (value === undefined) return 0;
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(`Invalid --offset value "${value}". Expected a non-negative integer.`);
+  }
+  const offset = Number(normalized);
+  if (!Number.isSafeInteger(offset) || offset < 0) {
+    throw new Error(`Invalid --offset value "${value}". Expected a non-negative integer.`);
+  }
+  return offset;
+}
+
 export function formatReceipt(receipt: SaveReceipt): string {
   const status = receipt.verified ? chalk.green('verified') : chalk.yellow('unverified');
   return `${receipt.saved_at}  ${status}  ${receipt.resource_type}:${receipt.resource_id}  ${receipt.size} bytes  ${receipt.receipt_id}`;
@@ -40,9 +55,10 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     throw new Error('SaveState is not initialized. Run "savestate init" first.');
   }
 
-  const receipts = await listReceipts(parseReceiptsLimit(options.limit));
+  const offset = parseReceiptsOffset(options.offset);
+  const receipts = await listReceipts(parseReceiptsLimit(options.limit), undefined, offset);
   if (options.json) {
-    const output: ReceiptsJson = { found: receipts.length > 0, shown: receipts.length, receipts };
+    const output: ReceiptsJson = { found: receipts.length > 0, shown: receipts.length, offset, receipts };
     console.log(JSON.stringify(output, null, 2));
     return;
   }
