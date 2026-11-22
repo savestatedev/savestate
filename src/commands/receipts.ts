@@ -42,7 +42,15 @@ export interface ReceiptsJson {
   previousPage: number | null;
   guidance: { action: 'none' | 'next' | 'previous' | 'retry'; offset: number | null };
   verification: { verified: number; unverified: number };
+  resourceCounts: { snapshot: number; memory: number; checkpoint: number };
   receipts: SaveReceipt[];
+}
+
+export function countReceiptResources(receipts: SaveReceipt[]): ReceiptsJson['resourceCounts'] {
+  return receipts.reduce((counts, receipt) => {
+    counts[receipt.resource_type] += 1;
+    return counts;
+  }, { snapshot: 0, memory: 0, checkpoint: 0 });
 }
 
 export function formatReceiptsJson(
@@ -55,6 +63,7 @@ export function formatReceiptsJson(
   unverified = false,
   verifiedFilter = false,
   unverifiedFilter = false,
+  resourceCounts = countReceiptResources(receipts),
 ): string {
   const verified = typeof verificationOrVerified === 'boolean' ? verificationOrVerified : verifiedFilter;
   const selectedUnverified = typeof verificationOrVerified === 'boolean' ? unverified : unverifiedFilter;
@@ -75,7 +84,7 @@ export function formatReceiptsJson(
   return JSON.stringify({ found: shown > 0, type: type ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
-    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, receipts } satisfies ReceiptsJson, null, 2);
+    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, resourceCounts, receipts } satisfies ReceiptsJson, null, 2);
 }
 
 export function parseReceiptsLimit(value: string | undefined): number {
@@ -219,7 +228,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
       counts[receipt.verified ? 'verified' : 'unverified'] += 1;
       return counts;
     }, { verified: 0, unverified: 0 });
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, countReceiptResources(matchingReceipts)));
     return;
   }
 
