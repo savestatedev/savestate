@@ -121,6 +121,10 @@ describe('receipts command', () => {
     expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ type: null });
   });
 
+  it('identifies verified-only JSON responses explicitly', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, true))).toMatchObject({ verified: true });
+  });
+
   it('guides stale offsets in JSON back to the last available page', () => {
     expect(JSON.parse(formatReceiptsJson([], 3, 9, 2))).toMatchObject({
       found: false, emptyReason: 'page', suggestedOffset: 2, hasMore: false, isLastPage: true,

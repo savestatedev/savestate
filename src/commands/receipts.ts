@@ -21,6 +21,7 @@ export interface ReceiptsOptions {
 export interface ReceiptsJson {
   found: boolean;
   type: ReceiptResourceType | null;
+  verified: boolean;
   total: number;
   shown: number;
   emptyReason: 'collection' | 'page' | null;
@@ -47,6 +48,7 @@ export function formatReceiptsJson(
   offset: number,
   limit: number,
   type: ReceiptResourceType | undefined = undefined,
+  verified = false,
 ): string {
   const shown = receipts.length;
   const suggestedOffset = shown === 0 && total > 0 ? Math.floor(Math.max(0, total - 1) / limit) * limit : null;
@@ -61,7 +63,7 @@ export function formatReceiptsJson(
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  return JSON.stringify({ found: shown > 0, type: type ?? null, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  return JSON.stringify({ found: shown > 0, type: type ?? null, verified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, receipts } satisfies ReceiptsJson, null, 2);
@@ -196,7 +198,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   );
   const receipts = selectReceipts(matchingReceipts, limit, offset);
   if (options.json) {
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, options.verified === true));
     return;
   }
 
