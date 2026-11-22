@@ -28,8 +28,10 @@ export interface ReceiptsJson {
   hasMore: boolean;
   isLastPage: boolean;
   nextOffset: number | null;
+  nextPage: number | null;
   hasPrevious: boolean;
   previousOffset: number | null;
+  previousPage: number | null;
   guidance: { action: 'none' | 'next' | 'previous' | 'retry'; offset: number | null };
   receipts: SaveReceipt[];
 }
@@ -40,15 +42,18 @@ export function formatReceiptsJson(receipts: SaveReceipt[], total: number, offse
   const nextOffset = offset + shown < total ? offset + shown : null;
   const hasPrevious = offset > 0 && total > 0;
   const previousOffset = hasPrevious ? shown === 0 && suggestedOffset !== null ? suggestedOffset : Math.max(0, offset - limit) : null;
+  const page = Math.floor(offset / limit) + 1;
+  const nextPage = nextOffset === null ? null : Math.floor(nextOffset / limit) + 1;
+  const previousPage = previousOffset === null ? null : Math.floor(previousOffset / limit) + 1;
   const guidance = shown === 0 && suggestedOffset !== null
     ? { action: 'retry' as const, offset: suggestedOffset }
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
   return JSON.stringify({ found: shown > 0, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
-    page: Math.floor(offset / limit) + 1, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
+    page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
-    nextOffset, hasPrevious, previousOffset, guidance, receipts } satisfies ReceiptsJson, null, 2);
+    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, receipts } satisfies ReceiptsJson, null, 2);
 }
 
 export function parseReceiptsLimit(value: string | undefined): number {

@@ -212,7 +212,7 @@ savestate receipts                    Inspect proofs created by successful saves
   --offset <n>                        Skip newer receipts before applying --limit (default: 0)
   --json                              Output receipt records and pagination metadata as JSON
 
-JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`,
+JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`, `nextPage`, and `previousPage`,
 `hasMore`, `nextOffset`, `hasPrevious`, and `previousOffset` so scripts can page
 through the newest proofs without guessing.
 
