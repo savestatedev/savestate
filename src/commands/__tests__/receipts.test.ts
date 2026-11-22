@@ -66,15 +66,15 @@ describe('receipts command', () => {
     const receipts = [{ receipt_id: 'r-2' }] as never[];
     expect(JSON.parse(formatReceiptsJson(receipts, 3, 1, 1))).toMatchObject({
       found: true, total: 3, shown: 1, emptyReason: null, offset: 1, limit: 1,
-      remaining: 1, hasMore: true, isLastPage: false, nextOffset: 2, page: 2, totalPages: 3,
-      hasPrevious: true, previousOffset: 0, suggestedOffset: null, guidance: { action: 'next', offset: 2 },
+      remaining: 1, hasMore: true, isLastPage: false, nextOffset: 2, nextPage: 3, page: 2, totalPages: 3,
+      hasPrevious: true, previousOffset: 0, previousPage: 1, suggestedOffset: null, guidance: { action: 'next', offset: 2 },
     });
   });
 
   it('guides stale offsets in JSON back to the last available page', () => {
     expect(JSON.parse(formatReceiptsJson([], 3, 9, 2))).toMatchObject({
       found: false, emptyReason: 'page', suggestedOffset: 2, hasMore: false, isLastPage: true,
-      previousOffset: 2, guidance: { action: 'retry', offset: 2 },
+      previousOffset: 2, previousPage: 2, guidance: { action: 'retry', offset: 2 },
     });
   });
 
