@@ -10,6 +10,7 @@ export type ReceiptResourceType = SaveReceipt['resource_type'];
 
 export interface ReceiptsOptions {
   json?: boolean;
+  verified?: boolean;
   limit?: string;
   pageSize?: string;
   page?: string;
@@ -111,8 +112,11 @@ export function selectReceipts(
   limit: number,
   offset: number,
   type?: ReceiptResourceType,
+  verified = false,
 ): SaveReceipt[] {
-  const filtered = type === undefined ? receipts : receipts.filter((receipt) => receipt.resource_type === type);
+  const filtered = receipts.filter((receipt) =>
+    (type === undefined || receipt.resource_type === type) && (verified === false || receipt.verified),
+  );
   const end = filtered.length - offset;
   if (end <= 0) return [];
   return filtered.slice(Math.max(0, end - limit), end).reverse();
@@ -147,13 +151,14 @@ export function formatReceiptsText(
   limitFlag = '--limit',
   navigation: 'offset' | 'page' = 'offset',
   type?: ReceiptResourceType,
+  verified = false,
 ): string {
   const page = Math.floor(offset / limit) + 1;
   const pageArgument = (targetPage: number, targetOffset: number): string =>
-    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}`;
+    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${verified ? ' --verified' : ''}`;
 
   if (receipts.length === 0) {
-    if (total === 0) return type === undefined ? 'No save receipts found.' : `No ${type} save receipts found.`;
+    if (total === 0) return `${type === undefined ? 'No save receipts found.' : `No ${type} save receipts found.`}${verified ? ' (no verified receipts)' : ''}`;
     const lastOffset = Math.floor(Math.max(0, total - 1) / limit) * limit;
     const lastPage = Math.floor(lastOffset / limit) + 1;
     const location = navigation === 'page' ? `page ${page}` : `offset ${offset}`;
@@ -161,7 +166,7 @@ export function formatReceiptsText(
   }
 
   const totalPages = Math.ceil(total / limit);
-  const filterLabel = type === undefined ? '' : ` [type: ${type}]`;
+  const filterLabel = `${type === undefined ? '' : ` [type: ${type}]`}${verified ? ' [verified]' : ''}`;
   const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${filterLabel}`];
   lines.push(...receipts.map(formatReceipt));
 
@@ -185,9 +190,10 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   const offset = resolveReceiptsOffset(options.offset, options.page, limit);
   const type = parseReceiptType(options.type);
   const { receipts: allReceipts } = await loadReceipts();
-  const matchingReceipts = type === undefined
-    ? allReceipts
-    : allReceipts.filter((receipt) => receipt.resource_type === type);
+  const matchingReceipts = allReceipts.filter((receipt) =>
+    (type === undefined || receipt.resource_type === type) &&
+    (options.verified !== true || receipt.verified),
+  );
   const receipts = selectReceipts(matchingReceipts, limit, offset);
   if (options.json) {
     console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type));
@@ -203,5 +209,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     limitFlag,
     options.page === undefined ? 'offset' : 'page',
     type,
+    options.verified === true,
   )));
 }
