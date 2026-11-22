@@ -9,6 +9,7 @@ import { countReceipts, listReceipts, loadReceipts, type SaveReceipt } from '../
 export interface ReceiptsOptions {
   json?: boolean;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
@@ -62,6 +63,13 @@ export function parseReceiptsLimit(value: string | undefined): number {
   return limit;
 }
 
+export function resolveReceiptsLimit(limit: string | undefined, pageSize: string | undefined): number {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Use either --limit or --page-size, not both.');
+  }
+  return parseReceiptsLimit(pageSize ?? limit);
+}
+
 export function parseReceiptsOffset(value: string | undefined): number {
   if (value === undefined) return 0;
   const normalized = value.trim();
@@ -112,7 +120,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   }
 
   const offset = parseReceiptsOffset(options.offset);
-  const limit = parseReceiptsLimit(options.limit);
+  const limit = resolveReceiptsLimit(options.limit, options.pageSize);
   const receipts = await listReceipts(limit, undefined, offset);
   if (options.json) {
     console.log(formatReceiptsJson(receipts, await countReceipts(), offset, limit));

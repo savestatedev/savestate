@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatReceiptsJson, formatReceiptsText, parseReceiptsLimit, parseReceiptsOffset } from '../receipts.js';
+import { formatReceiptsJson, formatReceiptsText, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -9,6 +9,11 @@ describe('receipts command', () => {
   it('accepts bounded positive limits', () => {
     expect(parseReceiptsLimit('25')).toBe(25);
     expect(parseReceiptsLimit('1000')).toBe(1000);
+  });
+
+  it('accepts the readable page-size alias and rejects ambiguous paging', () => {
+    expect(resolveReceiptsLimit(undefined, '25')).toBe(25);
+    expect(() => resolveReceiptsLimit('10', '25')).toThrow(/either --limit or --page-size/);
   });
 
   it('rejects invalid limits', () => {
