@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatReceiptsJson, formatReceiptsText, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit } from '../receipts.js';
+import { formatReceiptsJson, formatReceiptsText, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -30,6 +30,12 @@ describe('receipts command', () => {
   it('rejects invalid offsets', () => {
     expect(() => parseReceiptsOffset('-1')).toThrow(/non-negative integer/);
     expect(() => parseReceiptsOffset('1.5')).toThrow(/non-negative integer/);
+  });
+
+  it('resolves 1-based pages and rejects ambiguous or invalid paging', () => {
+    expect(resolveReceiptsOffset(undefined, '3', 25)).toBe(50);
+    expect(() => resolveReceiptsOffset('25', '2', 25)).toThrow(/either --offset or --page/);
+    expect(() => resolveReceiptsOffset(undefined, '0', 25)).toThrow(/positive integer/);
   });
 
   it('shows human-readable page navigation', () => {
