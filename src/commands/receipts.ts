@@ -43,6 +43,8 @@ export interface ReceiptsJson {
   guidance: { action: 'none' | 'next' | 'previous' | 'retry'; offset: number | null };
   verification: { verified: number; unverified: number };
   resourceCounts: { snapshot: number; memory: number; checkpoint: number };
+  latestSavedAt: string | null;
+  oldestSavedAt: string | null;
   receipts: SaveReceipt[];
 }
 
@@ -76,6 +78,9 @@ export function formatReceiptsJson(
   const page = Math.floor(offset / limit) + 1;
   const nextPage = nextOffset === null ? null : Math.floor(nextOffset / limit) + 1;
   const previousPage = previousOffset === null ? null : Math.floor(previousOffset / limit) + 1;
+  const savedAtValues = receipts.map((receipt) => Date.parse(receipt.saved_at)).filter(Number.isFinite);
+  const latestSavedAt = savedAtValues.length === 0 ? null : new Date(Math.max(...savedAtValues)).toISOString();
+  const oldestSavedAt = savedAtValues.length === 0 ? null : new Date(Math.min(...savedAtValues)).toISOString();
   const guidance = shown === 0 && suggestedOffset !== null
     ? { action: 'retry' as const, offset: suggestedOffset }
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
@@ -84,7 +89,8 @@ export function formatReceiptsJson(
   return JSON.stringify({ found: shown > 0, type: type ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
-    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, resourceCounts, receipts } satisfies ReceiptsJson, null, 2);
+    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, resourceCounts,
+    latestSavedAt, oldestSavedAt, receipts } satisfies ReceiptsJson, null, 2);
 }
 
 export function parseReceiptsLimit(value: string | undefined): number {

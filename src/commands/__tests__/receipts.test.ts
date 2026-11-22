@@ -149,9 +149,22 @@ describe('receipts command', () => {
       .toMatchObject({ resourceCounts: { snapshot: 1, memory: 1, checkpoint: 0 } });
   });
 
+  it('reports the saved-at range for the matching collection', () => {
+    const receipts = [
+      { resource_type: 'memory', saved_at: '2026-01-02T00:00:00.000Z' },
+      { resource_type: 'snapshot', saved_at: '2026-01-05T00:00:00.000Z' },
+    ] as never[];
+    expect(JSON.parse(formatReceiptsJson(receipts, 2, 0, 10, undefined, { verified: 0, unverified: 2 }, false, false, false, countReceiptResources(receipts))))
+      .toMatchObject({ latestSavedAt: '2026-01-05T00:00:00.000Z', oldestSavedAt: '2026-01-02T00:00:00.000Z' });
+  });
+
   it('reports verification totals for the matching collection', () => {
     expect(JSON.parse(formatReceiptsJson([], 2, 0, 10, undefined, { verified: 1, unverified: 1 })))
       .toMatchObject({ verification: { verified: 1, unverified: 1 } });
+  });
+
+  it('uses null saved-at bounds for an empty collection', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ latestSavedAt: null, oldestSavedAt: null });
   });
 
   it('identifies verified-only JSON responses explicitly', () => {

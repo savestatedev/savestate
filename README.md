@@ -215,7 +215,8 @@ savestate receipts                    Inspect proofs created by successful saves
 
 JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`, `nextPage`, and `previousPage`,
 `hasMore`, `nextOffset`, `hasPrevious`, and `previousOffset` so scripts can page
-through the newest proofs without guessing.
+through the newest proofs without guessing. `latestSavedAt` and `oldestSavedAt`
+bound the save timestamps in the matching collection, or are `null` when it is empty.
 
 `savestate list --json` returns a summary object with `found` indicating whether
 the current page contains snapshots, alongside `total`, `shown`, `offset`,
