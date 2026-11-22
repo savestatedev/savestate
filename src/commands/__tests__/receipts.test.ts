@@ -33,15 +33,31 @@ describe('receipts command', () => {
       found: true,
       total: 3,
       shown: 1,
+      emptyReason: null,
       offset: 1,
       limit: 1,
       remaining: 1,
       hasMore: true,
+      isLastPage: false,
       nextOffset: 2,
       page: 2,
       totalPages: 3,
       hasPrevious: true,
       previousOffset: 0,
+      suggestedOffset: null,
+      guidance: { action: 'next', offset: 2 },
+    });
+  });
+
+  it('guides stale offsets back to the last available page', () => {
+    expect(JSON.parse(formatReceiptsJson([], 3, 9, 2))).toMatchObject({
+      found: false,
+      emptyReason: 'page',
+      suggestedOffset: 2,
+      hasMore: false,
+      isLastPage: true,
+      previousOffset: 2,
+      guidance: { action: 'retry', offset: 2 },
     });
   });
 });

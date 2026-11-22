@@ -16,15 +16,22 @@ export interface ReceiptsJson {
   found: boolean;
   total: number;
   shown: number;
+  emptyReason: 'collection' | 'page' | null;
   offset: number;
   limit: number;
   page: number;
   totalPages: number;
+  suggestedOffset: number | null;
   remaining: number;
   hasMore: boolean;
+  isLastPage: boolean;
   nextOffset: number | null;
   hasPrevious: boolean;
   previousOffset: number | null;
+  guidance: {
+    action: 'none' | 'next' | 'previous' | 'retry';
+    offset: number | null;
+  };
   receipts: SaveReceipt[];
 }
 
@@ -66,21 +73,40 @@ export function formatReceiptsJson(
   limit: number,
 ): string {
   const shown = receipts.length;
+  const suggestedOffset = shown === 0 && total > 0
+    ? Math.floor(Math.max(0, total - 1) / limit) * limit
+    : null;
   const nextOffset = offset + shown < total ? offset + shown : null;
-  const hasPrevious = offset > 0;
+  const hasPrevious = offset > 0 && total > 0;
+  const previousOffset = hasPrevious
+    ? shown === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, offset - limit)
+    : null;
+  const guidance = shown === 0 && suggestedOffset !== null
+    ? { action: 'retry' as const, offset: suggestedOffset }
+    : nextOffset !== null
+      ? { action: 'next' as const, offset: nextOffset }
+      : previousOffset !== null
+        ? { action: 'previous' as const, offset: previousOffset }
+        : { action: 'none' as const, offset: null };
   return JSON.stringify({
     found: shown > 0,
     total,
     shown,
+    emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page',
     offset,
     limit,
     page: Math.floor(offset / limit) + 1,
     totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+    suggestedOffset,
     remaining: Math.max(0, total - offset - shown),
     hasMore: nextOffset !== null,
+    isLastPage: nextOffset === null,
     nextOffset,
     hasPrevious,
-    previousOffset: hasPrevious ? Math.max(0, offset - limit) : null,
+    previousOffset,
+    guidance,
     receipts,
   } satisfies ReceiptsJson, null, 2);
 }
