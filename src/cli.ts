@@ -131,6 +131,7 @@ program
   .option('--page <n>', 'Show the 1-based receipt page')
   .option('--offset <n>', 'Skip newer receipts before applying --limit (0 or greater)')
   .option('--type <type>', 'Only receipts for snapshot, memory, or checkpoint resources')
+  .option('--resource <id>', 'Only show receipts for one resource ID')
   .option('--verified', 'Only show receipts whose save verification passed')
   .option('--unverified', 'Only show receipts whose save verification did not pass')
   .option('--json', 'Output as JSON')

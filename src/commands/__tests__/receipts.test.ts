@@ -69,6 +69,18 @@ describe('receipts command', () => {
     expect(selectReceipts(receipts, 1, 1, undefined, false, true).map((receipt) => receipt.receipt_id)).toEqual(['unverified-1']);
   });
 
+  it('filters receipts to one resource before applying newest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'memory-old', resource_id: 'memory-a' },
+      { receipt_id: 'other', resource_id: 'memory-b' },
+      { receipt_id: 'memory-new', resource_id: 'memory-a' },
+    ] as never[];
+    expect(selectReceipts(receipts, 1, 0, undefined, false, false, 'memory-a').map((receipt) => receipt.receipt_id))
+      .toEqual(['memory-new']);
+    expect(selectReceipts(receipts, 1, 1, undefined, false, false, 'memory-a').map((receipt) => receipt.receipt_id))
+      .toEqual(['memory-old']);
+  });
+
   it('resolves 1-based pages and rejects ambiguous or invalid paging', () => {
     expect(resolveReceiptsOffset(undefined, '3', 25)).toBe(50);
     expect(() => resolveReceiptsOffset('25', '2', 25)).toThrow(/either --offset or --page/);
@@ -131,6 +143,11 @@ describe('receipts command', () => {
     expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({
       type: null, verification: { verified: 0, unverified: 0 },
     });
+  });
+
+  it('identifies a resource-filtered JSON response explicitly', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, { verified: 0, unverified: 0 }, false, false, false, 'memory-a')))
+      .toMatchObject({ resource: 'memory-a' });
   });
 
   it('reports verification totals for the matching collection', () => {
