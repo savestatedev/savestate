@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatReceiptsJson, formatReceiptsText, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset } from '../receipts.js';
+import { formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -30,6 +30,22 @@ describe('receipts command', () => {
   it('rejects invalid offsets', () => {
     expect(() => parseReceiptsOffset('-1')).toThrow(/non-negative integer/);
     expect(() => parseReceiptsOffset('1.5')).toThrow(/non-negative integer/);
+  });
+
+  it('accepts supported resource types and rejects unknown filters', () => {
+    expect(parseReceiptType('memory')).toBe('memory');
+    expect(parseReceiptType(undefined)).toBeUndefined();
+    expect(() => parseReceiptType('other')).toThrow(/snapshot, memory, or checkpoint/);
+  });
+
+  it('filters receipts before applying newest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'snapshot-1', resource_type: 'snapshot' },
+      { receipt_id: 'memory-1', resource_type: 'memory' },
+      { receipt_id: 'memory-2', resource_type: 'memory' },
+    ] as never[];
+    expect(selectReceipts(receipts, 1, 0, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-2']);
+    expect(selectReceipts(receipts, 1, 1, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-1']);
   });
 
   it('resolves 1-based pages and rejects ambiguous or invalid paging', () => {
