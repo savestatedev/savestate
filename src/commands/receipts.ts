@@ -18,9 +18,13 @@ export interface ReceiptsJson {
   shown: number;
   offset: number;
   limit: number;
+  page: number;
+  totalPages: number;
   remaining: number;
   hasMore: boolean;
   nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
   receipts: SaveReceipt[];
 }
 
@@ -63,15 +67,20 @@ export function formatReceiptsJson(
 ): string {
   const shown = receipts.length;
   const nextOffset = offset + shown < total ? offset + shown : null;
+  const hasPrevious = offset > 0;
   return JSON.stringify({
     found: shown > 0,
     total,
     shown,
     offset,
     limit,
+    page: Math.floor(offset / limit) + 1,
+    totalPages: total === 0 ? 0 : Math.ceil(total / limit),
     remaining: Math.max(0, total - offset - shown),
     hasMore: nextOffset !== null,
     nextOffset,
+    hasPrevious,
+    previousOffset: hasPrevious ? Math.max(0, offset - limit) : null,
     receipts,
   } satisfies ReceiptsJson, null, 2);
 }

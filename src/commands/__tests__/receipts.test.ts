@@ -28,16 +28,20 @@ describe('receipts command', () => {
   });
 
   it('reports continuation metadata for JSON consumers', () => {
-    const receipts = [{ receipt_id: 'r-1' }] as never[];
-    expect(JSON.parse(formatReceiptsJson(receipts, 3, 0, 1))).toMatchObject({
+    const receipts = [{ receipt_id: 'r-2' }] as never[];
+    expect(JSON.parse(formatReceiptsJson(receipts, 3, 1, 1))).toMatchObject({
       found: true,
       total: 3,
       shown: 1,
-      offset: 0,
+      offset: 1,
       limit: 1,
-      remaining: 2,
+      remaining: 1,
       hasMore: true,
-      nextOffset: 1,
+      nextOffset: 2,
+      page: 2,
+      totalPages: 3,
+      hasPrevious: true,
+      previousOffset: 0,
     });
   });
 });
