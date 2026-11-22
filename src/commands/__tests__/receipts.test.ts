@@ -128,7 +128,14 @@ describe('receipts command', () => {
   });
 
   it('identifies an unfiltered JSON response explicitly', () => {
-    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ type: null });
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({
+      type: null, verification: { verified: 0, unverified: 0 },
+    });
+  });
+
+  it('reports verification totals for the matching collection', () => {
+    expect(JSON.parse(formatReceiptsJson([], 2, 0, 10, undefined, { verified: 1, unverified: 1 })))
+      .toMatchObject({ verification: { verified: 1, unverified: 1 } });
   });
 
   it('identifies verified-only JSON responses explicitly', () => {
