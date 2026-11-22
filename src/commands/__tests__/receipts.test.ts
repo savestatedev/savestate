@@ -49,6 +49,26 @@ describe('receipts command', () => {
     expect(selectReceipts(receipts, 1, 1, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-1']);
   });
 
+  it('filters to verified receipts before applying newest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'unverified', verified: false },
+      { receipt_id: 'verified-1', verified: true },
+      { receipt_id: 'verified-2', verified: true },
+    ] as never[];
+    expect(selectReceipts(receipts, 1, 0, undefined, true).map((receipt) => receipt.receipt_id)).toEqual(['verified-2']);
+    expect(selectReceipts(receipts, 1, 1, undefined, true).map((receipt) => receipt.receipt_id)).toEqual(['verified-1']);
+  });
+
+  it('filters to unverified receipts before applying newest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'unverified-1', verified: false },
+      { receipt_id: 'verified', verified: true },
+      { receipt_id: 'unverified-2', verified: false },
+    ] as never[];
+    expect(selectReceipts(receipts, 1, 0, undefined, false, true).map((receipt) => receipt.receipt_id)).toEqual(['unverified-2']);
+    expect(selectReceipts(receipts, 1, 1, undefined, false, true).map((receipt) => receipt.receipt_id)).toEqual(['unverified-1']);
+  });
+
   it('resolves 1-based pages and rejects ambiguous or invalid paging', () => {
     expect(resolveReceiptsOffset(undefined, '3', 25)).toBe(50);
     expect(() => resolveReceiptsOffset('25', '2', 25)).toThrow(/either --offset or --page/);
@@ -78,6 +98,12 @@ describe('receipts command', () => {
     expect(formatReceiptsText(receipts, 1, 0, 10, '--limit', 'offset', 'memory')).toContain(
       'Save receipts (1 of 1, page 1/1) [type: memory]',
     );
+  });
+
+  it('labels verified-only human output and preserves the filter in navigation', () => {
+    const receipts = [{ receipt_id: 'verified-1' }] as never[];
+    expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, true)).toContain('[verified]');
+    expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, true)).toContain('--verified');
   });
 
   it('explains when a resource type has no receipts', () => {
@@ -110,6 +136,14 @@ describe('receipts command', () => {
   it('reports verification totals for the matching collection', () => {
     expect(JSON.parse(formatReceiptsJson([], 2, 0, 10, undefined, { verified: 1, unverified: 1 })))
       .toMatchObject({ verification: { verified: 1, unverified: 1 } });
+  });
+
+  it('identifies verified-only JSON responses explicitly', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, true))).toMatchObject({ verified: true });
+  });
+
+  it('identifies unverified-only JSON responses explicitly', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, false, true))).toMatchObject({ verified: false, unverified: true });
   });
 
   it('guides stale offsets in JSON back to the last available page', () => {
