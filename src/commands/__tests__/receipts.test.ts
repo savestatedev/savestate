@@ -43,6 +43,13 @@ describe('receipts command', () => {
     );
   });
 
+  it('preserves the page-size alias in human navigation', () => {
+    const receipts = [{ receipt_id: 'r-2' }] as never[];
+    expect(formatReceiptsText(receipts, 3, 1, 1, '--page-size')).toContain(
+      'Next page: savestate receipts --page-size 1 --offset 2',
+    );
+  });
+
   it('guides empty human pages to the last available page', () => {
     expect(formatReceiptsText([], 3, 9, 2)).toBe(
       'No save receipts found at offset 9. Try "savestate receipts --limit 2 --offset 2".',

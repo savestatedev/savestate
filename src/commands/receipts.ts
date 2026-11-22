@@ -93,11 +93,12 @@ export function formatReceiptsText(
   total: number,
   offset: number,
   limit: number,
+  limitFlag = '--limit',
 ): string {
   if (receipts.length === 0) {
     if (total === 0) return 'No save receipts found.';
     const lastOffset = Math.floor(Math.max(0, total - 1) / limit) * limit;
-    return `No save receipts found at offset ${offset}. Try "savestate receipts --limit ${limit} --offset ${lastOffset}".`;
+    return `No save receipts found at offset ${offset}. Try "savestate receipts ${limitFlag} ${limit} --offset ${lastOffset}".`;
   }
 
   const page = Math.floor(offset / limit) + 1;
@@ -106,10 +107,10 @@ export function formatReceiptsText(
   lines.push(...receipts.map(formatReceipt));
 
   if (offset + receipts.length < total) {
-    lines.push(`Next page: savestate receipts --limit ${limit} --offset ${offset + receipts.length}`);
+    lines.push(`Next page: savestate receipts ${limitFlag} ${limit} --offset ${offset + receipts.length}`);
   }
   if (offset > 0) {
-    lines.push(`Previous page: savestate receipts --limit ${limit} --offset ${Math.max(0, offset - limit)}`);
+    lines.push(`Previous page: savestate receipts ${limitFlag} ${limit} --offset ${Math.max(0, offset - limit)}`);
   }
   return lines.join('\n');
 }
@@ -128,5 +129,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   }
 
   const { receipts: allReceipts } = await loadReceipts();
-  console.log(chalk.bold(formatReceiptsText(receipts, allReceipts.length, offset, limit)));
+  const limitFlag = options.pageSize === undefined ? '--limit' : '--page-size';
+  console.log(chalk.bold(formatReceiptsText(receipts, allReceipts.length, offset, limit, limitFlag)));
 }
