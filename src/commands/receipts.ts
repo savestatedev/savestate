@@ -101,7 +101,8 @@ export function parseReceiptsOffset(value: string | undefined): number {
 
 export function parseReceiptType(value: string | undefined): ReceiptResourceType | undefined {
   if (value === undefined) return undefined;
-  if (value === 'snapshot' || value === 'memory' || value === 'checkpoint') return value;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'snapshot' || normalized === 'memory' || normalized === 'checkpoint') return normalized;
   throw new Error(`Invalid --type value "${value}". Expected snapshot, memory, or checkpoint.`);
 }
 

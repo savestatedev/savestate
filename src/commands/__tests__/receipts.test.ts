@@ -34,6 +34,7 @@ describe('receipts command', () => {
 
   it('accepts supported resource types and rejects unknown filters', () => {
     expect(parseReceiptType('memory')).toBe('memory');
+    expect(parseReceiptType(' MEMORY ')).toBe('memory');
     expect(parseReceiptType(undefined)).toBeUndefined();
     expect(() => parseReceiptType('other')).toThrow(/snapshot, memory, or checkpoint/);
   });
