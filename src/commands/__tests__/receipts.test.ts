@@ -59,6 +59,16 @@ describe('receipts command', () => {
     expect(selectReceipts(receipts, 1, 1, undefined, true).map((receipt) => receipt.receipt_id)).toEqual(['verified-1']);
   });
 
+  it('filters to unverified receipts before applying newest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'unverified-1', verified: false },
+      { receipt_id: 'verified', verified: true },
+      { receipt_id: 'unverified-2', verified: false },
+    ] as never[];
+    expect(selectReceipts(receipts, 1, 0, undefined, false, true).map((receipt) => receipt.receipt_id)).toEqual(['unverified-2']);
+    expect(selectReceipts(receipts, 1, 1, undefined, false, true).map((receipt) => receipt.receipt_id)).toEqual(['unverified-1']);
+  });
+
   it('resolves 1-based pages and rejects ambiguous or invalid paging', () => {
     expect(resolveReceiptsOffset(undefined, '3', 25)).toBe(50);
     expect(() => resolveReceiptsOffset('25', '2', 25)).toThrow(/either --offset or --page/);
@@ -123,6 +133,10 @@ describe('receipts command', () => {
 
   it('identifies verified-only JSON responses explicitly', () => {
     expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, true))).toMatchObject({ verified: true });
+  });
+
+  it('identifies unverified-only JSON responses explicitly', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, false, true))).toMatchObject({ verified: false, unverified: true });
   });
 
   it('guides stale offsets in JSON back to the last available page', () => {
