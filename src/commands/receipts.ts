@@ -4,7 +4,7 @@
 
 import chalk from 'chalk';
 import { isInitialized } from '../config.js';
-import { listReceipts, type SaveReceipt } from '../save-receipt.js';
+import { countReceipts, listReceipts, type SaveReceipt } from '../save-receipt.js';
 
 export interface ReceiptsOptions {
   json?: boolean;
@@ -14,8 +14,24 @@ export interface ReceiptsOptions {
 
 export interface ReceiptsJson {
   found: boolean;
+  total: number;
   shown: number;
+  emptyReason: 'collection' | 'page' | null;
   offset: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  suggestedOffset: number | null;
+  remaining: number;
+  hasMore: boolean;
+  isLastPage: boolean;
+  nextOffset: number | null;
+  hasPrevious: boolean;
+  previousOffset: number | null;
+  guidance: {
+    action: 'none' | 'next' | 'previous' | 'retry';
+    offset: number | null;
+  };
   receipts: SaveReceipt[];
 }
 
@@ -50,16 +66,62 @@ export function formatReceipt(receipt: SaveReceipt): string {
   return `${receipt.saved_at}  ${status}  ${receipt.resource_type}:${receipt.resource_id}  ${receipt.size} bytes  ${receipt.receipt_id}`;
 }
 
+export function formatReceiptsJson(
+  receipts: SaveReceipt[],
+  total: number,
+  offset: number,
+  limit: number,
+): string {
+  const shown = receipts.length;
+  const suggestedOffset = shown === 0 && total > 0
+    ? Math.floor(Math.max(0, total - 1) / limit) * limit
+    : null;
+  const nextOffset = offset + shown < total ? offset + shown : null;
+  const hasPrevious = offset > 0 && total > 0;
+  const previousOffset = hasPrevious
+    ? shown === 0 && suggestedOffset !== null
+      ? suggestedOffset
+      : Math.max(0, offset - limit)
+    : null;
+  const guidance = shown === 0 && suggestedOffset !== null
+    ? { action: 'retry' as const, offset: suggestedOffset }
+    : nextOffset !== null
+      ? { action: 'next' as const, offset: nextOffset }
+      : previousOffset !== null
+        ? { action: 'previous' as const, offset: previousOffset }
+        : { action: 'none' as const, offset: null };
+  return JSON.stringify({
+    found: shown > 0,
+    total,
+    shown,
+    emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page',
+    offset,
+    limit,
+    page: Math.floor(offset / limit) + 1,
+    totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+    suggestedOffset,
+    remaining: Math.max(0, total - offset - shown),
+    hasMore: nextOffset !== null,
+    isLastPage: nextOffset === null,
+    nextOffset,
+    hasPrevious,
+    previousOffset,
+    guidance,
+    receipts,
+  } satisfies ReceiptsJson, null, 2);
+}
+
 export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   if (!isInitialized()) {
     throw new Error('SaveState is not initialized. Run "savestate init" first.');
   }
 
   const offset = parseReceiptsOffset(options.offset);
-  const receipts = await listReceipts(parseReceiptsLimit(options.limit), undefined, offset);
+  const limit = parseReceiptsLimit(options.limit);
+  const receipts = await listReceipts(limit, undefined, offset);
   if (options.json) {
-    const output: ReceiptsJson = { found: receipts.length > 0, shown: receipts.length, offset, receipts };
-    console.log(JSON.stringify(output, null, 2));
+    const total = await countReceipts();
+    console.log(formatReceiptsJson(receipts, total, offset, limit));
     return;
   }
 

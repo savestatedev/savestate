@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseReceiptsLimit, parseReceiptsOffset } from '../receipts.js';
+import { formatReceiptsJson, parseReceiptsLimit, parseReceiptsOffset } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -25,5 +25,39 @@ describe('receipts command', () => {
   it('rejects invalid offsets', () => {
     expect(() => parseReceiptsOffset('-1')).toThrow(/non-negative integer/);
     expect(() => parseReceiptsOffset('1.5')).toThrow(/non-negative integer/);
+  });
+
+  it('reports continuation metadata for JSON consumers', () => {
+    const receipts = [{ receipt_id: 'r-2' }] as never[];
+    expect(JSON.parse(formatReceiptsJson(receipts, 3, 1, 1))).toMatchObject({
+      found: true,
+      total: 3,
+      shown: 1,
+      emptyReason: null,
+      offset: 1,
+      limit: 1,
+      remaining: 1,
+      hasMore: true,
+      isLastPage: false,
+      nextOffset: 2,
+      page: 2,
+      totalPages: 3,
+      hasPrevious: true,
+      previousOffset: 0,
+      suggestedOffset: null,
+      guidance: { action: 'next', offset: 2 },
+    });
+  });
+
+  it('guides stale offsets back to the last available page', () => {
+    expect(JSON.parse(formatReceiptsJson([], 3, 9, 2))).toMatchObject({
+      found: false,
+      emptyReason: 'page',
+      suggestedOffset: 2,
+      hasMore: false,
+      isLastPage: true,
+      previousOffset: 2,
+      guidance: { action: 'retry', offset: 2 },
+    });
   });
 });

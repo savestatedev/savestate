@@ -129,6 +129,12 @@ export async function listReceipts(limit = 100, cwd?: string, offset = 0): Promi
   return receipts.slice(Math.max(0, end - limit), end).reverse();
 }
 
+/** Return the number of stored receipts without exposing the mutable store. */
+export async function countReceipts(cwd?: string): Promise<number> {
+  const { receipts } = await loadReceipts(cwd);
+  return receipts.length;
+}
+
 /**
  * Save receipts to storage atomically
  */
