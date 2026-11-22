@@ -207,6 +207,8 @@ savestate list                        List all snapshots
 
 savestate receipts                    Inspect proofs created by successful saves
   --limit <n>                         Show up to 1000 of the most recent receipts (default: 100)
+  --page-size <n>                     Readable alias for --limit
+  --page <n>                          Show the 1-based receipt page
   --offset <n>                        Skip newer receipts before applying --limit (default: 0)
   --json                              Output receipt records and pagination metadata as JSON
 

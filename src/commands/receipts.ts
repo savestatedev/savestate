@@ -9,6 +9,8 @@ import { countReceipts, listReceipts, loadReceipts, type SaveReceipt } from '../
 export interface ReceiptsOptions {
   json?: boolean;
   limit?: string;
+  pageSize?: string;
+  page?: string;
   offset?: string;
 }
 
@@ -62,6 +64,13 @@ export function parseReceiptsLimit(value: string | undefined): number {
   return limit;
 }
 
+export function resolveReceiptsLimit(limit: string | undefined, pageSize: string | undefined): number {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Use either --limit or --page-size, not both.');
+  }
+  return parseReceiptsLimit(pageSize ?? limit);
+}
+
 export function parseReceiptsOffset(value: string | undefined): number {
   if (value === undefined) return 0;
   const normalized = value.trim();
@@ -75,6 +84,22 @@ export function parseReceiptsOffset(value: string | undefined): number {
   return offset;
 }
 
+export function resolveReceiptsOffset(offset: string | undefined, page: string | undefined, limit: number): number {
+  if (offset !== undefined && page !== undefined) {
+    throw new Error('Use either --offset or --page, not both.');
+  }
+  if (page === undefined) return parseReceiptsOffset(offset);
+  const pageNumber = parseReceiptsOffset(page);
+  if (pageNumber < 1) {
+    throw new Error(`Invalid --page value "${page}". Expected a positive integer.`);
+  }
+  const resolvedOffset = (pageNumber - 1) * limit;
+  if (!Number.isSafeInteger(resolvedOffset)) {
+    throw new Error(`Invalid --page value "${page}". Page is too large.`);
+  }
+  return resolvedOffset;
+}
+
 export function formatReceipt(receipt: SaveReceipt): string {
   const status = receipt.verified ? chalk.green('verified') : chalk.yellow('unverified');
   return `${receipt.saved_at}  ${status}  ${receipt.resource_type}:${receipt.resource_id}  ${receipt.size} bytes  ${receipt.receipt_id}`;
@@ -85,23 +110,32 @@ export function formatReceiptsText(
   total: number,
   offset: number,
   limit: number,
+  limitFlag = '--limit',
+  navigation: 'offset' | 'page' = 'offset',
 ): string {
+  const page = Math.floor(offset / limit) + 1;
+  const pageArgument = (targetPage: number, targetOffset: number): string =>
+    navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`;
+
   if (receipts.length === 0) {
     if (total === 0) return 'No save receipts found.';
     const lastOffset = Math.floor(Math.max(0, total - 1) / limit) * limit;
-    return `No save receipts found at offset ${offset}. Try "savestate receipts --limit ${limit} --offset ${lastOffset}".`;
+    const lastPage = Math.floor(lastOffset / limit) + 1;
+    const location = navigation === 'page' ? `page ${page}` : `offset ${offset}`;
+    return `No save receipts found at ${location}. Try "savestate receipts ${limitFlag} ${limit} ${pageArgument(lastPage, lastOffset)}".`;
   }
 
-  const page = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
   const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})`];
   lines.push(...receipts.map(formatReceipt));
 
   if (offset + receipts.length < total) {
-    lines.push(`Next page: savestate receipts --limit ${limit} --offset ${offset + receipts.length}`);
+    const nextOffset = offset + receipts.length;
+    lines.push(`Next page: savestate receipts ${limitFlag} ${limit} ${pageArgument(page + 1, nextOffset)}`);
   }
   if (offset > 0) {
-    lines.push(`Previous page: savestate receipts --limit ${limit} --offset ${Math.max(0, offset - limit)}`);
+    const previousOffset = Math.max(0, offset - limit);
+    lines.push(`Previous page: savestate receipts ${limitFlag} ${limit} ${pageArgument(page - 1, previousOffset)}`);
   }
   return lines.join('\n');
 }
@@ -111,8 +145,8 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     throw new Error('SaveState is not initialized. Run "savestate init" first.');
   }
 
-  const offset = parseReceiptsOffset(options.offset);
-  const limit = parseReceiptsLimit(options.limit);
+  const limit = resolveReceiptsLimit(options.limit, options.pageSize);
+  const offset = resolveReceiptsOffset(options.offset, options.page, limit);
   const receipts = await listReceipts(limit, undefined, offset);
   if (options.json) {
     console.log(formatReceiptsJson(receipts, await countReceipts(), offset, limit));
@@ -120,5 +154,13 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   }
 
   const { receipts: allReceipts } = await loadReceipts();
-  console.log(chalk.bold(formatReceiptsText(receipts, allReceipts.length, offset, limit)));
+  const limitFlag = options.pageSize === undefined ? '--limit' : '--page-size';
+  console.log(chalk.bold(formatReceiptsText(
+    receipts,
+    allReceipts.length,
+    offset,
+    limit,
+    limitFlag,
+    options.page === undefined ? 'offset' : 'page',
+  )));
 }

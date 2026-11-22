@@ -127,6 +127,8 @@ program
   .command('receipts')
   .description('Inspect proofs created by successful saves')
   .option('--limit <n>', 'Maximum number of recent receipts to show (1–1000)')
+  .option('--page-size <n>', 'Readable alias for --limit')
+  .option('--page <n>', 'Show the 1-based receipt page')
   .option('--offset <n>', 'Skip newer receipts before applying --limit (0 or greater)')
   .option('--json', 'Output as JSON')
   .action(receiptsCommand);
