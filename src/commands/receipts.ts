@@ -19,6 +19,7 @@ export interface ReceiptsOptions {
 
 export interface ReceiptsJson {
   found: boolean;
+  type: ReceiptResourceType | null;
   total: number;
   shown: number;
   emptyReason: 'collection' | 'page' | null;
@@ -37,7 +38,13 @@ export interface ReceiptsJson {
   receipts: SaveReceipt[];
 }
 
-export function formatReceiptsJson(receipts: SaveReceipt[], total: number, offset: number, limit: number): string {
+export function formatReceiptsJson(
+  receipts: SaveReceipt[],
+  total: number,
+  offset: number,
+  limit: number,
+  type: ReceiptResourceType | undefined = undefined,
+): string {
   const shown = receipts.length;
   const suggestedOffset = shown === 0 && total > 0 ? Math.floor(Math.max(0, total - 1) / limit) * limit : null;
   const nextOffset = offset + shown < total ? offset + shown : null;
@@ -48,7 +55,7 @@ export function formatReceiptsJson(receipts: SaveReceipt[], total: number, offse
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  return JSON.stringify({ found: shown > 0, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  return JSON.stringify({ found: shown > 0, type: type ?? null, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page: Math.floor(offset / limit) + 1, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, hasPrevious, previousOffset, guidance, receipts } satisfies ReceiptsJson, null, 2);
@@ -175,7 +182,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     : allReceipts.filter((receipt) => receipt.resource_type === type);
   const receipts = selectReceipts(matchingReceipts, limit, offset);
   if (options.json) {
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type));
     return;
   }
 

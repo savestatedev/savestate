@@ -85,11 +85,15 @@ describe('receipts command', () => {
 
   it('reports continuation metadata for JSON consumers', () => {
     const receipts = [{ receipt_id: 'r-2' }] as never[];
-    expect(JSON.parse(formatReceiptsJson(receipts, 3, 1, 1))).toMatchObject({
-      found: true, total: 3, shown: 1, emptyReason: null, offset: 1, limit: 1,
+    expect(JSON.parse(formatReceiptsJson(receipts, 3, 1, 1, 'memory'))).toMatchObject({
+      found: true, type: 'memory', total: 3, shown: 1, emptyReason: null, offset: 1, limit: 1,
       remaining: 1, hasMore: true, isLastPage: false, nextOffset: 2, page: 2, totalPages: 3,
       hasPrevious: true, previousOffset: 0, suggestedOffset: null, guidance: { action: 'next', offset: 2 },
     });
+  });
+
+  it('identifies an unfiltered JSON response explicitly', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ type: null });
   });
 
   it('guides stale offsets in JSON back to the last available page', () => {
