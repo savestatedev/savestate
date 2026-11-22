@@ -145,10 +145,11 @@ export function formatReceiptsText(
   limit: number,
   limitFlag = '--limit',
   navigation: 'offset' | 'page' = 'offset',
+  type?: ReceiptResourceType,
 ): string {
   const page = Math.floor(offset / limit) + 1;
   const pageArgument = (targetPage: number, targetOffset: number): string =>
-    navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`;
+    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}`;
 
   if (receipts.length === 0) {
     if (total === 0) return 'No save receipts found.';
@@ -199,5 +200,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     limit,
     limitFlag,
     options.page === undefined ? 'offset' : 'page',
+    type,
   )));
 }

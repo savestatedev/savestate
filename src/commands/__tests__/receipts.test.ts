@@ -112,4 +112,11 @@ describe('receipts command', () => {
       'No save receipts found at page 5. Try "savestate receipts --limit 2 --page 2".',
     );
   });
+
+  it('preserves the type filter in pagination guidance', () => {
+    const receipts = [{ receipt_id: 'memory-1' }] as never[];
+    expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'page', 'memory')).toContain(
+      'Next page: savestate receipts --limit 1 --page 2 --type memory',
+    );
+  });
 });
