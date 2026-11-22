@@ -37,6 +37,7 @@ export interface ReceiptsJson {
   previousOffset: number | null;
   previousPage: number | null;
   guidance: { action: 'none' | 'next' | 'previous' | 'retry'; offset: number | null };
+  verification: { verified: number; unverified: number };
   receipts: SaveReceipt[];
 }
 
@@ -46,6 +47,7 @@ export function formatReceiptsJson(
   offset: number,
   limit: number,
   type: ReceiptResourceType | undefined = undefined,
+  verification: { verified: number; unverified: number } = { verified: 0, unverified: 0 },
 ): string {
   const shown = receipts.length;
   const suggestedOffset = shown === 0 && total > 0 ? Math.floor(Math.max(0, total - 1) / limit) * limit : null;
@@ -63,7 +65,7 @@ export function formatReceiptsJson(
   return JSON.stringify({ found: shown > 0, type: type ?? null, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
-    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, receipts } satisfies ReceiptsJson, null, 2);
+    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, receipts } satisfies ReceiptsJson, null, 2);
 }
 
 export function parseReceiptsLimit(value: string | undefined): number {
@@ -190,7 +192,11 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     : allReceipts.filter((receipt) => receipt.resource_type === type);
   const receipts = selectReceipts(matchingReceipts, limit, offset);
   if (options.json) {
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type));
+    const verification = matchingReceipts.reduce((counts, receipt) => {
+      counts[receipt.verified ? 'verified' : 'unverified'] += 1;
+      return counts;
+    }, { verified: 0, unverified: 0 });
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification));
     return;
   }
 
