@@ -10,6 +10,7 @@
  *   savestate snapshot                Capture current state
  *   savestate restore [snapshot-id]   Restore from a snapshot
  *   savestate list                    List all snapshots
+ *   savestate receipts                Inspect save receipts
  *   savestate diff <a> <b>            Compare two snapshots
  *   savestate config                  View/edit configuration
  *   savestate adapters                List available adapters
@@ -117,6 +118,18 @@ program
   .option('--tag <tag>', 'Only snapshots with this tag (single non-empty snapshot tag)')
   .option('--label <label>', 'Only snapshots with this label (single non-empty snapshot label)')
   .action(listCommand);
+
+// ─── savestate receipts ─────────────────────────────────────
+
+import { receiptsCommand } from './commands/receipts.js';
+
+program
+  .command('receipts')
+  .description('Inspect proofs created by successful saves')
+  .option('--limit <n>', 'Maximum number of recent receipts to show (1–1000)')
+  .option('--offset <n>', 'Skip newer receipts before applying --limit (0 or greater)')
+  .option('--json', 'Output as JSON')
+  .action(receiptsCommand);
 
 // ─── savestate stats ─────────────────────────────────────────
 

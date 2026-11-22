@@ -560,6 +560,17 @@ export function parseMemoryExpireLimit(value: string | undefined): number | unde
   return limit;
 }
 
+/** Resolve the readable page-size alias without silently choosing between two limits. */
+export function resolveMemoryExpireLimit(
+  limit: string | undefined,
+  pageSize: string | undefined,
+): string | undefined {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Cannot use --limit and --page-size together; choose one limit option.');
+  }
+  return limit ?? pageSize;
+}
+
 /** Keep the first N expirable memories when --limit is set. */
 export function selectExpiredMemories<T>(memories: T[], limit?: number): T[] {
   if (limit === undefined) return memories;
@@ -601,6 +612,17 @@ export function applyMemoryExpireFilters<T>(
     selectMemoryExpireOffsetEntries(memories, parseMemoryExpireOffset(options.offset)),
     parseMemoryExpireLimit(options.limit),
   );
+}
+
+function isMemoryExpirable(memory: {
+  expires_at?: string;
+  ttl_seconds?: number | null;
+  created_at: string;
+}): boolean {
+  if (memory.expires_at) return new Date(memory.expires_at).getTime() <= Date.now();
+  if (memory.ttl_seconds === undefined || memory.ttl_seconds === null) return false;
+  if (memory.ttl_seconds === 0) return true;
+  return Date.now() >= new Date(memory.created_at).getTime() + memory.ttl_seconds * 1000;
 }
 
 /**
@@ -1042,13 +1064,15 @@ export async function expireMemoriesCommand(
     dryRun?: boolean;
     format?: 'pretty' | 'json';
     limit?: string;
+    pageSize?: string;
     offset?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
   parseMemoryExpireOffset(options.offset);
-  parseMemoryExpireLimit(options.limit);
+  const limit = resolveMemoryExpireLimit(options.limit, options.pageSize);
+  parseMemoryExpireLimit(limit);
 
   const namespace = parseNamespace(options.namespace);
 
@@ -1070,21 +1094,9 @@ export async function expireMemoriesCommand(
       status: 'active',
     });
 
-    const now = Date.now();
     const expirableMemories = applyMemoryExpireFilters(
-      memories.filter((mem) => {
-        if (mem.expires_at) {
-          return new Date(mem.expires_at).getTime() <= now;
-        }
-        if (mem.ttl_seconds !== undefined && mem.ttl_seconds !== null) {
-          if (mem.ttl_seconds === 0) return true;
-          const createdAt = new Date(mem.created_at).getTime();
-          const expiresAt = createdAt + mem.ttl_seconds * 1000;
-          return now >= expiresAt;
-        }
-        return false;
-      }),
-      options,
+      memories.filter(isMemoryExpirable),
+      { ...options, limit },
     );
 
     if (options.format === 'json') {
@@ -1104,8 +1116,24 @@ export async function expireMemoriesCommand(
   }
 
   try {
-    const result = await knowledgeLane.expireMemories(namespace);
-    const expiredIds = applyMemoryExpireFilters(result.expired_ids, options);
+    const bounded = limit !== undefined || options.offset !== undefined;
+    const result = await knowledgeLane.expireMemories(
+      namespace,
+      bounded
+        ? {
+            memoryIds: new Set(
+              applyMemoryExpireFilters(
+                (await knowledgeLane.listMemories(namespace, {
+                  include_expired: true,
+                  status: 'active',
+                })).filter(isMemoryExpirable),
+                { ...options, limit },
+              ).map((memory) => memory.memory_id),
+            ),
+          }
+        : undefined,
+    );
+    const expiredIds = result.expired_ids;
 
     if (options.format === 'json') {
       console.log(formatMemoryExpireJson(options.namespace, expiredIds));

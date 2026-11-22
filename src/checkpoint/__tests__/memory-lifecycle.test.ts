@@ -353,6 +353,34 @@ describe('Memory Lifecycle Controls (Issue #110)', () => {
 
       expect(result.expired_count).toBe(0);
     });
+
+    it('can restrict expiry to an explicit memory id set', async () => {
+      const selected = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content: 'Selected memory',
+        source: { type: 'user_input', identifier: 'user-1' },
+      });
+      const skipped = await knowledge.storeMemory({
+        namespace: testNamespace,
+        content: 'Skipped memory',
+        source: { type: 'user_input', identifier: 'user-1' },
+      });
+      for (const memory of [selected, skipped]) {
+        const stored = await storage.getMemory(memory.memory_id);
+        await storage.saveMemory({
+          ...stored!,
+          expires_at: new Date(Date.now() - 1000).toISOString(),
+        });
+      }
+
+      const result = await knowledge.expireMemories(testNamespace, {
+        memoryIds: new Set([selected.memory_id]),
+      });
+
+      expect(result.expired_ids).toEqual([selected.memory_id]);
+      expect((await knowledge.getMemory(selected.memory_id))?.status).toBe('deleted');
+      expect((await knowledge.getMemory(skipped.memory_id))?.status).toBe('active');
+    });
   });
 
   describe('memoryAuditLog', () => {

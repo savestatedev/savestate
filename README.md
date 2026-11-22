@@ -62,6 +62,10 @@ savestate snapshot --label first
 # List snapshots
 savestate list
 
+# Inspect verifiable proofs created by successful saves
+savestate receipts
+savestate receipts --json --limit 20
+
 # After CLAUDE.md changes, put the saved copy back.
 # The edited file is kept as CLAUDE.md.bak.
 savestate restore latest
@@ -200,6 +204,11 @@ savestate list                        List all snapshots
   --reverse                          Alias for --oldest-first
   --limit <n>                        Max snapshots to show
   --offset <n>                       Skip snapshots before applying --limit
+
+savestate receipts                    Inspect proofs created by successful saves
+  --limit <n>                         Show up to 1000 of the most recent receipts (default: 100)
+  --offset <n>                        Skip newer receipts before applying --limit (default: 0)
+  --json                              Output receipt records as JSON
 
 `savestate list --json` returns a summary object with `found` indicating whether
 the current page contains snapshots, alongside `total`, `shown`, `offset`,

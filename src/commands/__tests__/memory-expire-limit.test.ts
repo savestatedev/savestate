@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryExpireLimit, selectExpiredMemories } from '../memory-lifecycle.js';
+import {
+  parseMemoryExpireLimit,
+  resolveMemoryExpireLimit,
+  selectExpiredMemories,
+} from '../memory-lifecycle.js';
 
 describe('savestate memory expire --limit', () => {
   it('defaults to undefined', () => {
@@ -12,6 +16,17 @@ describe('savestate memory expire --limit', () => {
 
   it('accepts surrounding whitespace', () => {
     expect(parseMemoryExpireLimit(' 12 ')).toBe(12);
+  });
+
+  it('resolves --page-size as an alias for --limit', () => {
+    expect(resolveMemoryExpireLimit(undefined, '12')).toBe('12');
+    expect(resolveMemoryExpireLimit('12', undefined)).toBe('12');
+  });
+
+  it('rejects using both limit spellings', () => {
+    expect(() => resolveMemoryExpireLimit('10', '20')).toThrow(
+      'Cannot use --limit and --page-size together; choose one limit option.',
+    );
   });
 
   it.each(['0', '-1', '1.5', '1e2', '0x10', 'nope'])('rejects invalid value %s', (value) => {

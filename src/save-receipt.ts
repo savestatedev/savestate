@@ -118,13 +118,15 @@ export async function loadReceipts(cwd?: string): Promise<ReceiptStore> {
 /**
  * List the most recent receipts without exposing the mutable store array.
  */
-export async function listReceipts(limit = 100, cwd?: string): Promise<SaveReceipt[]> {
-  if (!Number.isSafeInteger(limit) || limit <= 0) {
+export async function listReceipts(limit = 100, cwd?: string, offset = 0): Promise<SaveReceipt[]> {
+  if (!Number.isSafeInteger(limit) || limit <= 0 || !Number.isSafeInteger(offset) || offset < 0) {
     return [];
   }
 
   const { receipts } = await loadReceipts(cwd);
-  return receipts.slice(-limit).reverse();
+  const end = receipts.length - offset;
+  if (end <= 0) return [];
+  return receipts.slice(Math.max(0, end - limit), end).reverse();
 }
 
 /**
