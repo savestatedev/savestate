@@ -77,4 +77,14 @@ describe('receipts command', () => {
       previousOffset: 2, guidance: { action: 'retry', offset: 2 },
     });
   });
+
+  it('keeps human navigation on page numbers when --page is used', () => {
+    const receipts = [{ receipt_id: 'r-2' }] as never[];
+    expect(formatReceiptsText(receipts, 3, 1, 1, '--page-size', 'page')).toContain(
+      'Next page: savestate receipts --page-size 1 --page 3',
+    );
+    expect(formatReceiptsText([], 3, 9, 2, '--limit', 'page')).toBe(
+      'No save receipts found at page 5. Try "savestate receipts --limit 2 --page 2".',
+    );
+  });
 });
