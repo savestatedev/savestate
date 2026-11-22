@@ -75,7 +75,15 @@ describe('receipts command', () => {
 
   it('reports filtered totals in human output', () => {
     const receipts = [{ receipt_id: 'memory-1' }] as never[];
-    expect(formatReceiptsText(receipts, 1, 0, 10)).toContain('Save receipts (1 of 1, page 1/1)');
+    expect(formatReceiptsText(receipts, 1, 0, 10, '--limit', 'offset', 'memory')).toContain(
+      'Save receipts (1 of 1, page 1/1) [type: memory]',
+    );
+  });
+
+  it('explains when a resource type has no receipts', () => {
+    expect(formatReceiptsText([], 0, 0, 10, '--limit', 'offset', 'checkpoint')).toBe(
+      'No checkpoint save receipts found.',
+    );
   });
 
   it('guides empty human pages to the last available page', () => {
@@ -111,6 +119,13 @@ describe('receipts command', () => {
     );
     expect(formatReceiptsText([], 3, 9, 2, '--limit', 'page')).toBe(
       'No save receipts found at page 5. Try "savestate receipts --limit 2 --page 2".',
+    );
+  });
+
+  it('preserves the type filter in pagination guidance', () => {
+    const receipts = [{ receipt_id: 'memory-1' }] as never[];
+    expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'page', 'memory')).toContain(
+      'Next page: savestate receipts --limit 1 --page 2 --type memory',
     );
   });
 });

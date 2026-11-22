@@ -146,13 +146,14 @@ export function formatReceiptsText(
   limit: number,
   limitFlag = '--limit',
   navigation: 'offset' | 'page' = 'offset',
+  type?: ReceiptResourceType,
 ): string {
   const page = Math.floor(offset / limit) + 1;
   const pageArgument = (targetPage: number, targetOffset: number): string =>
-    navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`;
+    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}`;
 
   if (receipts.length === 0) {
-    if (total === 0) return 'No save receipts found.';
+    if (total === 0) return type === undefined ? 'No save receipts found.' : `No ${type} save receipts found.`;
     const lastOffset = Math.floor(Math.max(0, total - 1) / limit) * limit;
     const lastPage = Math.floor(lastOffset / limit) + 1;
     const location = navigation === 'page' ? `page ${page}` : `offset ${offset}`;
@@ -160,7 +161,8 @@ export function formatReceiptsText(
   }
 
   const totalPages = Math.ceil(total / limit);
-  const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})`];
+  const filterLabel = type === undefined ? '' : ` [type: ${type}]`;
+  const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${filterLabel}`];
   lines.push(...receipts.map(formatReceipt));
 
   if (offset + receipts.length < total) {
@@ -200,5 +202,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     limit,
     limitFlag,
     options.page === undefined ? 'offset' : 'page',
+    type,
   )));
 }
