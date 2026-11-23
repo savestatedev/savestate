@@ -92,10 +92,11 @@ export function countReceiptResources(receipts: SaveReceipt[]): ReceiptsJson['re
 }
 
 export function countReceiptBackends(receipts: SaveReceipt[]): ReceiptsJson['backendCounts'] {
-  return receipts.reduce<Record<string, number>>((counts, receipt) => {
-    counts[receipt.storage_backend] = (counts[receipt.storage_backend] ?? 0) + 1;
-    return counts;
+  const counts = receipts.reduce<Record<string, number>>((result, receipt) => {
+    result[receipt.storage_backend] = (result[receipt.storage_backend] ?? 0) + 1;
+    return result;
   }, {});
+  return Object.fromEntries(Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)));
 }
 
 export function formatReceiptsJson(
