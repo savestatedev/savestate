@@ -176,8 +176,32 @@ describe('receipts command', () => {
       { size: 300, saved_at: '2026-01-05T00:00:00.000Z' },
     ] as never[];
     expect(JSON.parse(formatReceiptsJson(receipts, 2, 0, 10))).toMatchObject({
-      shownBytes: 400, averageShownBytes: 200,
+      shownBytes: 400, averageShownBytes: 200, totalBytes: 400, averageTotalBytes: 200,
     });
+  });
+
+  it('reports verification percentages for the collection and current page', () => {
+    const receipts = [
+      { verified: true, size: 100 },
+      { verified: false, size: 200 },
+      { verified: true, size: 300 },
+    ] as never[];
+    expect(JSON.parse(formatReceiptsJson([receipts[1]], 3, 1, 1, undefined, { verified: 2, unverified: 1 })))
+      .toMatchObject({ verifiedPercentage: 66.66666666666666, shownVerifiedPercentage: 0 });
+  });
+
+  it('reports filtered collection bytes separately from a limited page', () => {
+    const receipts = [
+      { size: 100, saved_at: '2026-01-02T00:00:00.000Z' },
+    ] as never[];
+    const summary = JSON.parse(formatReceiptsJson(receipts, 2, 0, 1, undefined, { verified: 2, unverified: 0 }, false, false, false, undefined, countReceiptResources(receipts), true, 400));
+    expect(summary).toMatchObject({ shown: 1, shownBytes: 100, total: 2, totalBytes: 400, averageTotalBytes: 200 });
+  });
+
+  it('can omit receipt records from JSON summaries', () => {
+    const summary = JSON.parse(formatReceiptsJson([{ receipt_id: 'r-1', size: 12 }] as never[], 1, 0, 10, undefined, { verified: 1, unverified: 0 }, false, false, false, undefined, undefined, false));
+    expect(summary).toMatchObject({ found: true, total: 1, shown: 1, shownBytes: 12 });
+    expect(summary).not.toHaveProperty('receipts');
   });
 
   it('identifies a resource-filtered JSON response explicitly', () => {

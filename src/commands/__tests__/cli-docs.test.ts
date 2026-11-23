@@ -6004,4 +6004,12 @@ describe('CLI docs', () => {
     expect(diff).toContain('export function formatDiffMissingJson');
     expect(diff).toContain('formatDiffMissingJson(snapshotA, snapshotB)');
   });
+
+  it('documents receipt verification filters and byte totals', () => {
+    const receiptsSection = readme.slice(readme.indexOf('savestate receipts'), readme.indexOf('`savestate list --json`'));
+    expect(receiptsSection).toContain('--verified');
+    expect(receiptsSection).toContain('--unverified');
+    expect(receiptsSection).toContain('shownBytes');
+    expect(receiptsSection).toContain('totalBytes');
+  });
 });

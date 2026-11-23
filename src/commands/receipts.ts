@@ -10,6 +10,7 @@ export type ReceiptResourceType = SaveReceipt['resource_type'];
 
 export interface ReceiptsOptions {
   json?: boolean;
+  jsonSummary?: boolean;
   verified?: boolean;
   unverified?: boolean;
   limit?: string;
@@ -44,12 +45,16 @@ export interface ReceiptsJson {
   previousPage: number | null;
   guidance: { action: 'none' | 'next' | 'previous' | 'retry'; offset: number | null };
   verification: { verified: number; unverified: number };
+  verifiedPercentage: number;
+  shownVerifiedPercentage: number;
   resourceCounts: { snapshot: number; memory: number; checkpoint: number };
   latestSavedAt: string | null;
   oldestSavedAt: string | null;
   shownBytes: number;
   averageShownBytes: number | null;
-  receipts: SaveReceipt[];
+  totalBytes: number;
+  averageTotalBytes: number | null;
+  receipts?: SaveReceipt[];
 }
 
 export function countReceiptResources(receipts: SaveReceipt[]): ReceiptsJson['resourceCounts'] {
@@ -71,6 +76,8 @@ export function formatReceiptsJson(
   unverifiedFilter = false,
   resourceOrCounts: string | ReceiptsJson['resourceCounts'] = countReceiptResources(receipts),
   completeResourceCounts?: ReceiptsJson['resourceCounts'],
+  includeReceipts = true,
+  totalBytes = receipts.reduce((sum, receipt) => sum + receipt.size, 0),
 ): string {
   const resource = typeof resourceOrCounts === 'string' ? resourceOrCounts : undefined;
   const resourceCounts = completeResourceCounts ?? (typeof resourceOrCounts === 'string' ? countReceiptResources(receipts) : resourceOrCounts);
@@ -78,6 +85,10 @@ export function formatReceiptsJson(
   const selectedUnverified = typeof verificationOrVerified === 'boolean' ? unverified : unverifiedFilter;
   const verification = typeof verificationOrVerified === 'boolean' ? { verified: 0, unverified: 0 } : verificationOrVerified;
   const shown = receipts.length;
+  const verifiedPercentage = total === 0 ? 0 : (verification.verified / total) * 100;
+  const shownVerifiedPercentage = shown === 0
+    ? 0
+    : (receipts.filter((receipt) => receipt.verified).length / shown) * 100;
   const suggestedOffset = shown === 0 && total > 0 ? Math.floor(Math.max(0, total - 1) / limit) * limit : null;
   const nextOffset = offset + shown < total ? offset + shown : null;
   const hasPrevious = offset > 0 && total > 0;
@@ -90,16 +101,20 @@ export function formatReceiptsJson(
   const oldestSavedAt = savedAtValues.length === 0 ? null : new Date(Math.min(...savedAtValues)).toISOString();
   const shownBytes = receipts.reduce((totalBytes, receipt) => totalBytes + receipt.size, 0);
   const averageShownBytes = shown === 0 ? null : shownBytes / shown;
+  const averageTotalBytes = total === 0 ? null : totalBytes / total;
   const guidance = shown === 0 && suggestedOffset !== null
     ? { action: 'retry' as const, offset: suggestedOffset }
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  return JSON.stringify({ found: shown > 0, type: type ?? null, resource: resource ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
-    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, resourceCounts,
-    latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, receipts } satisfies ReceiptsJson, null, 2);
+    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,
+    verifiedPercentage, shownVerifiedPercentage, resourceCounts,
+    latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, totalBytes, averageTotalBytes,
+    ...(includeReceipts ? { receipts } : {}) } satisfies ReceiptsJson;
+  return JSON.stringify(output, null, 2);
 }
 
 export function parseReceiptsLimit(value: string | undefined): number {
@@ -243,12 +258,13 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     (options.unverified !== true || !receipt.verified),
   );
   const receipts = selectReceipts(matchingReceipts, limit, offset);
-  if (options.json) {
+  if (options.json || options.jsonSummary) {
     const verification = matchingReceipts.reduce((counts, receipt) => {
       counts[receipt.verified ? 'verified' : 'unverified'] += 1;
       return counts;
     }, { verified: 0, unverified: 0 });
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts)));
+    const totalBytes = matchingReceipts.reduce((sum, receipt) => sum + receipt.size, 0);
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes));
     return;
   }
 
