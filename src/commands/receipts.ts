@@ -231,10 +231,11 @@ export function formatReceiptsText(
   since?: string,
   until?: string,
   oldestFirst = false,
+  orderingFlag: '--oldest-first' | '--reverse' = '--oldest-first',
 ): string {
   const page = Math.floor(offset / limit) + 1;
   const pageArgument = (targetPage: number, targetOffset: number): string =>
-    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${resource === undefined ? '' : ` --resource ${resource}`}${since === undefined ? '' : ` --since ${since}`}${until === undefined ? '' : ` --until ${until}`}${oldestFirst ? ' --oldest-first' : ''}${verified ? ' --verified' : ''}${unverified ? ' --unverified' : ''}`;
+    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${resource === undefined ? '' : ` --resource ${resource}`}${since === undefined ? '' : ` --since ${since}`}${until === undefined ? '' : ` --until ${until}`}${oldestFirst ? ` ${orderingFlag}` : ''}${verified ? ' --verified' : ''}${unverified ? ' --unverified' : ''}`;
 
   if (receipts.length === 0) {
     if (total === 0) return `${resource === undefined ? (type === undefined ? 'No save receipts found.' : `No ${type} save receipts found.`) : `No save receipts found for resource ${resource}.`}${verified ? ' (no verified receipts)' : ''}${unverified ? ' (no unverified receipts)' : ''}`;
@@ -312,5 +313,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     options.since,
     options.until,
     oldestFirst,
+    options.reverse === true ? '--reverse' : '--oldest-first',
   )));
 }

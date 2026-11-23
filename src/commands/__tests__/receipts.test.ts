@@ -150,6 +150,12 @@ describe('receipts command', () => {
     );
   });
 
+  it('preserves the reverse alias in human navigation', () => {
+    const receipts = [{ receipt_id: 'r-2' }] as never[];
+    expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, false, false, undefined, undefined, undefined, true, '--reverse'))
+      .toContain('Next page: savestate receipts --limit 1 --offset 1 --reverse');
+  });
+
   it('reports filtered totals in human output', () => {
     const receipts = [{ receipt_id: 'memory-1' }] as never[];
     expect(formatReceiptsText(receipts, 1, 0, 10, '--limit', 'offset', 'memory')).toContain(
