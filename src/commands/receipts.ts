@@ -214,7 +214,7 @@ export function resolveReceiptsOffset(offset: string | undefined, page: string |
 
 export function formatReceipt(receipt: SaveReceipt): string {
   const status = receipt.verified ? chalk.green('verified') : chalk.yellow('unverified');
-  return `${receipt.saved_at}  ${status}  ${receipt.resource_type}:${receipt.resource_id}  ${receipt.size} bytes  ${receipt.receipt_id}  content:${receipt.content_hash}  encrypted:${receipt.encrypted_hash}  stored:${receipt.storage_backend}:${receipt.storage_location}`;
+  return `saved:${receipt.saved_at}  created:${receipt.receipt_created_at}  ${status}  ${receipt.resource_type}:${receipt.resource_id}  ${receipt.size} bytes  ${receipt.receipt_id}  content:${receipt.content_hash}  encrypted:${receipt.encrypted_hash}  stored:${receipt.storage_backend}:${receipt.storage_location}`;
 }
 
 export function formatReceiptsText(
