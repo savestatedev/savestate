@@ -214,6 +214,7 @@ savestate receipts                    Inspect proofs created by successful saves
   --type <type>                        Only snapshot, memory, or checkpoint receipts
   --resource <id>                      Only receipts for one resource ID
   --json                              Output receipt records and pagination metadata as JSON
+  --json-summary, --summary             Output pagination metadata without receipt records (implies --json)
 
 JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`, `nextPage`, and `previousPage`,
 `hasMore`, `nextOffset`, `hasPrevious`, and `previousOffset` so scripts can page

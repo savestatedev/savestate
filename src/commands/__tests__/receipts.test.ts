@@ -180,6 +180,12 @@ describe('receipts command', () => {
     });
   });
 
+  it('can omit receipt records from JSON summaries', () => {
+    const summary = JSON.parse(formatReceiptsJson([{ receipt_id: 'r-1', size: 12 }] as never[], 1, 0, 10, undefined, { verified: 1, unverified: 0 }, false, false, false, undefined, undefined, false));
+    expect(summary).toMatchObject({ found: true, total: 1, shown: 1, shownBytes: 12 });
+    expect(summary).not.toHaveProperty('receipts');
+  });
+
   it('identifies a resource-filtered JSON response explicitly', () => {
     expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, { verified: 0, unverified: 0 }, false, false, false, 'memory-a')))
       .toMatchObject({ resource: 'memory-a' });

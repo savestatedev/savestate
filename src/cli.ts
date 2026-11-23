@@ -135,6 +135,7 @@ program
   .option('--verified', 'Only show receipts whose save verification passed')
   .option('--unverified', 'Only show receipts whose save verification did not pass')
   .option('--json', 'Output as JSON')
+  .option('--json-summary, --summary', 'Output receipt metadata without receipt records (implies --json)')
   .action(receiptsCommand);
 
 // ─── savestate stats ─────────────────────────────────────────

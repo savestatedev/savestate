@@ -10,6 +10,7 @@ export type ReceiptResourceType = SaveReceipt['resource_type'];
 
 export interface ReceiptsOptions {
   json?: boolean;
+  jsonSummary?: boolean;
   verified?: boolean;
   unverified?: boolean;
   limit?: string;
@@ -49,7 +50,7 @@ export interface ReceiptsJson {
   oldestSavedAt: string | null;
   shownBytes: number;
   averageShownBytes: number | null;
-  receipts: SaveReceipt[];
+  receipts?: SaveReceipt[];
 }
 
 export function countReceiptResources(receipts: SaveReceipt[]): ReceiptsJson['resourceCounts'] {
@@ -71,6 +72,7 @@ export function formatReceiptsJson(
   unverifiedFilter = false,
   resourceOrCounts: string | ReceiptsJson['resourceCounts'] = countReceiptResources(receipts),
   completeResourceCounts?: ReceiptsJson['resourceCounts'],
+  includeReceipts = true,
 ): string {
   const resource = typeof resourceOrCounts === 'string' ? resourceOrCounts : undefined;
   const resourceCounts = completeResourceCounts ?? (typeof resourceOrCounts === 'string' ? countReceiptResources(receipts) : resourceOrCounts);
@@ -95,11 +97,13 @@ export function formatReceiptsJson(
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  return JSON.stringify({ found: shown > 0, type: type ?? null, resource: resource ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, resourceCounts,
-    latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, receipts } satisfies ReceiptsJson, null, 2);
+    latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes,
+    ...(includeReceipts ? { receipts } : {}) } satisfies ReceiptsJson;
+  return JSON.stringify(output, null, 2);
 }
 
 export function parseReceiptsLimit(value: string | undefined): number {
@@ -243,12 +247,12 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     (options.unverified !== true || !receipt.verified),
   );
   const receipts = selectReceipts(matchingReceipts, limit, offset);
-  if (options.json) {
+  if (options.json || options.jsonSummary) {
     const verification = matchingReceipts.reduce((counts, receipt) => {
       counts[receipt.verified ? 'verified' : 'unverified'] += 1;
       return counts;
     }, { verified: 0, unverified: 0 });
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts)));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary));
     return;
   }
 
