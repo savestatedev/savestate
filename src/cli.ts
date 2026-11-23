@@ -132,6 +132,8 @@ program
   .option('--offset <n>', 'Skip newer receipts before applying --limit (0 or greater)')
   .option('--type <type>', 'Only receipts for snapshot, memory, or checkpoint resources')
   .option('--resource <id>', 'Only show receipts for one resource ID')
+  .option('--since <date>', 'Only receipts saved on or after an ISO 8601 date')
+  .option('--until <date>', 'Only receipts saved on or before an ISO 8601 date')
   .option('--verified', 'Only show receipts whose save verification passed')
   .option('--unverified', 'Only show receipts whose save verification did not pass')
   .option('--json', 'Output as JSON')

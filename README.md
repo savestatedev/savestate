@@ -213,6 +213,8 @@ savestate receipts                    Inspect proofs created by successful saves
   --offset <n>                        Skip newer receipts before applying --limit (default: 0)
   --type <type>                        Only snapshot, memory, or checkpoint receipts
   --resource <id>                      Only receipts for one resource ID
+  --since <date>                        Only receipts saved on or after an ISO 8601 date
+  --until <date>                        Only receipts saved on or before an ISO 8601 date
   --verified                           Only receipts whose save verification passed
   --unverified                         Only receipts whose save verification did not pass
   --json                              Output receipt records and pagination metadata as JSON
@@ -227,6 +229,8 @@ and `averageTotalBytes` describe the complete filtered collection. Use `--verifi
 or `--unverified` to scope both the receipt records and these collection totals.
 `verifiedPercentage` and `shownVerifiedPercentage` expose the verified-share percentage
 for the matching collection and visible page (or `0` when the relevant set is empty).
+Use `--since` and `--until` to scope receipts by their saved timestamp; date-only values
+use UTC day boundaries and are preserved in pagination guidance and JSON metadata.
 
 `savestate list --json` returns a summary object with `found` indicating whether
 the current page contains snapshots, alongside `total`, `shown`, `offset`,

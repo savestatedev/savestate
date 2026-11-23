@@ -32,6 +32,12 @@ describe('receipts command', () => {
     expect(() => parseReceiptsOffset('1.5')).toThrow(/non-negative integer/);
   });
 
+  it('preserves date filters in pagination guidance', () => {
+    const receipts = [{ receipt_id: 'r-2' }] as never[];
+    expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, false, false, undefined, '2026-01-01', '2026-01-31'))
+      .toContain('--since 2026-01-01 --until 2026-01-31');
+  });
+
   it('accepts supported resource types and rejects unknown filters', () => {
     expect(parseReceiptType('memory')).toBe('memory');
     expect(parseReceiptType(' MEMORY ')).toBe('memory');
