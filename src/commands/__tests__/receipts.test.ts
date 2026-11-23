@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
+import { countReceiptBackends, countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -94,6 +94,16 @@ describe('receipts command', () => {
     expect(countReceiptResources(receipts)).toEqual({ snapshot: 1, memory: 2, checkpoint: 1 });
   });
 
+  it('counts storage backends for machine-readable summaries', () => {
+    const receipts = [
+      { storage_backend: 'local' },
+      { storage_backend: 'r2' },
+      { storage_backend: 'local' },
+    ] as never[];
+    expect(countReceiptBackends(receipts)).toEqual({ local: 2, r2: 1 });
+    expect(JSON.parse(formatReceiptsJson(receipts, 3, 0, 10)).backendCounts).toEqual({ local: 2, r2: 1 });
+  });
+
   it('filters to verified receipts before applying newest-first pagination', () => {
     const receipts = [
       { receipt_id: 'unverified', verified: false },
@@ -153,6 +163,11 @@ describe('receipts command', () => {
     expect(formatReceiptsText(receipts, 3, 1, 1)).toContain(
       'Previous page: savestate receipts --limit 1 --offset 0',
     );
+  });
+
+  it('explains active filters when the matching collection is empty', () => {
+    const output = formatReceiptsText([], 0, 0, 10, '--limit', 'offset', 'memory', false, false, undefined, '2026-01-01', '2026-01-31', false, '--oldest-first', 'r2');
+    expect(output).toBe('No save receipts found (type: memory, backend: r2, since: 2026-01-01, until: 2026-01-31).');
   });
 
   it('preserves the page-size alias in human navigation', () => {
@@ -235,6 +250,30 @@ describe('receipts command', () => {
       remaining: 1, hasMore: true, isLastPage: false, nextOffset: 2, nextPage: 3, page: 2, totalPages: 3,
       hasPrevious: true, previousOffset: 0, previousPage: 1, suggestedOffset: null, guidance: { action: 'next', offset: 2 },
     });
+  });
+
+  it('groups normalized filters for JSON consumers', () => {
+    const output = JSON.parse(formatReceiptsJson(
+      [{ receipt_id: 'r-1' }] as never[], 1, 0, 10, 'memory',
+      { verified: 1, unverified: 0 }, false, true, false, 'memory-a',
+      undefined, true, 1, '2026-01-01', '2026-01-31', true, 'r2', {},
+    ));
+    expect(output.filters).toEqual({
+      type: 'memory', resource: 'memory-a', backend: 'r2',
+      since: '2026-01-01', until: '2026-01-31', verified: true, unverified: false,
+    });
+  });
+
+  it('reports timestamps for the complete matching collection, not just the page', () => {
+    const oldest = { saved_at: '2026-01-01T00:00:00.000Z', size: 1 } as never;
+    const newest = { saved_at: '2026-01-03T00:00:00.000Z', size: 1 } as never;
+    const output = JSON.parse(formatReceiptsJson(
+      [newest], 2, 0, 1, undefined, { verified: 0, unverified: 2 }, false, false, false,
+      undefined, undefined, true, 2, undefined, undefined, false, undefined, {}, [oldest, newest],
+    ));
+
+    expect(output.latestSavedAt).toBe('2026-01-03T00:00:00.000Z');
+    expect(output.oldestSavedAt).toBe('2026-01-01T00:00:00.000Z');
   });
 
   it('marks oldest-first JSON responses', () => {

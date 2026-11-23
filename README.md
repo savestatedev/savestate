@@ -232,11 +232,15 @@ bound the save timestamps in the matching collection, or are `null` when it is e
 `shownBytes` and `averageShownBytes` describe the current page, while `totalBytes`
 and `averageTotalBytes` describe the complete filtered collection. Use `--verified`
 or `--unverified` to scope both the receipt records and these collection totals.
+The `filters` object repeats the normalized type, resource, backend, date, and verification filters
+so audit consumers can log or replay the exact query without reconstructing individual fields.
 `verifiedPercentage` and `shownVerifiedPercentage` expose the verified-share percentage
 for the matching collection and visible page (or `0` when the relevant set is empty).
 Human-readable receipt lines include both hashes and the storage backend/location for manual verification.
 Human-readable receipt lines label both the save completion and receipt creation timestamps
 to make audit timing explicit.
+When a filtered receipt collection is empty, the human-readable message echoes the active
+filters so an audit command can be corrected without reconstructing its arguments.
 Use `--since` and `--until` to scope receipts by their saved timestamp; date-only values
 use UTC day boundaries and are preserved in pagination guidance and JSON metadata.
 
