@@ -233,6 +233,7 @@ and `averageTotalBytes` describe the complete filtered collection. Use `--verifi
 or `--unverified` to scope both the receipt records and these collection totals.
 `verifiedPercentage` and `shownVerifiedPercentage` expose the verified-share percentage
 for the matching collection and visible page (or `0` when the relevant set is empty).
+Human-readable receipt lines include both the content and encrypted hashes for manual verification.
 Use `--since` and `--until` to scope receipts by their saved timestamp; date-only values
 use UTC day boundaries and are preserved in pagination guidance and JSON metadata.
 

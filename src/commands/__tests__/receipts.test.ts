@@ -176,6 +176,21 @@ describe('receipts command', () => {
     expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, true)).toContain('--verified');
   });
 
+  it('shows both hashes in human-readable receipt output', () => {
+    const receipt = {
+      saved_at: '2026-01-01T00:00:00.000Z',
+      verified: true,
+      resource_type: 'snapshot',
+      resource_id: 'snapshot-1',
+      size: 42,
+      receipt_id: 'receipt-1',
+      content_hash: 'a'.repeat(64),
+      encrypted_hash: 'b'.repeat(64),
+    } as never;
+
+    expect(formatReceiptsText([receipt], 1, 0, 10)).toContain(`content:${'a'.repeat(64)}  encrypted:${'b'.repeat(64)}`);
+  });
+
   it('explains when a resource type has no receipts', () => {
     expect(formatReceiptsText([], 0, 0, 10, '--limit', 'offset', 'checkpoint')).toBe(
       'No checkpoint save receipts found.',
