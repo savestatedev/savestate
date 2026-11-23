@@ -213,6 +213,8 @@ savestate receipts                    Inspect proofs created by successful saves
   --offset <n>                        Skip newer receipts before applying --limit (default: 0)
   --type <type>                        Only snapshot, memory, or checkpoint receipts
   --resource <id>                      Only receipts for one resource ID
+  --verified                           Only receipts whose save verification passed
+  --unverified                         Only receipts whose save verification did not pass
   --json                              Output receipt records and pagination metadata as JSON
   --json-summary, --summary             Output pagination metadata without receipt records (implies --json)
 
@@ -220,6 +222,9 @@ JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`, `n
 `hasMore`, `nextOffset`, `hasPrevious`, and `previousOffset` so scripts can page
 through the newest proofs without guessing. `latestSavedAt` and `oldestSavedAt`
 bound the save timestamps in the matching collection, or are `null` when it is empty.
+`shownBytes` and `averageShownBytes` describe the current page, while `totalBytes`
+and `averageTotalBytes` describe the complete filtered collection. Use `--verified`
+or `--unverified` to scope both the receipt records and these collection totals.
 
 `savestate list --json` returns a summary object with `found` indicating whether
 the current page contains snapshots, alongside `total`, `shown`, `offset`,
