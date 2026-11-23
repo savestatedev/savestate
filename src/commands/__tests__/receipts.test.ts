@@ -126,6 +126,18 @@ describe('receipts command', () => {
       .toEqual(['memory-old']);
   });
 
+  it('filters receipts to one storage backend before applying newest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'local-old', storage_backend: 'local' },
+      { receipt_id: 'cloud', storage_backend: 'r2' },
+      { receipt_id: 'local-new', storage_backend: 'local' },
+    ] as never[];
+    expect(selectReceipts(receipts, 1, 0, undefined, false, false, undefined, false, 'local').map((receipt) => receipt.receipt_id))
+      .toEqual(['local-new']);
+    expect(selectReceipts(receipts, 1, 1, undefined, false, false, undefined, false, 'local').map((receipt) => receipt.receipt_id))
+      .toEqual(['local-old']);
+  });
+
   it('resolves 1-based pages and rejects ambiguous or invalid paging', () => {
     expect(resolveReceiptsOffset(undefined, '3', 25)).toBe(50);
     expect(() => resolveReceiptsOffset('25', '2', 25)).toThrow(/either --offset or --page/);
@@ -168,6 +180,13 @@ describe('receipts command', () => {
     expect(formatReceiptsText(receipts, 1, 0, 10, '--limit', 'offset', undefined, false, false, undefined, '2026-01-01', '2026-01-31')).toContain(
       '[since: 2026-01-01] [until: 2026-01-31]',
     );
+  });
+
+  it('labels backend filters and preserves them in navigation', () => {
+    const receipts = [{ receipt_id: 'receipt-1' }] as never[];
+    const output = formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, false, false, undefined, undefined, undefined, false, '--oldest-first', 'r2');
+    expect(output).toContain('[backend: r2]');
+    expect(output).toContain('--backend r2');
   });
 
   it('labels verified-only human output and preserves the filter in navigation', () => {

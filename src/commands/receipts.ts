@@ -22,6 +22,7 @@ export interface ReceiptsOptions {
   offset?: string;
   type?: string;
   resource?: string;
+  backend?: string;
   since?: string;
   until?: string;
 }
@@ -61,6 +62,7 @@ export interface ReceiptsJson {
   averageTotalBytes: number | null;
   since: string | null;
   until: string | null;
+  backend: string | null;
   oldestFirst: boolean;
   receipts?: SaveReceipt[];
 }
@@ -95,6 +97,7 @@ export function formatReceiptsJson(
   since?: string,
   until?: string,
   oldestFirst = false,
+  backend?: string,
 ): string {
   const resource = typeof resourceOrCounts === 'string' ? resourceOrCounts : undefined;
   const resourceCounts = completeResourceCounts ?? (typeof resourceOrCounts === 'string' ? countReceiptResources(receipts) : resourceOrCounts);
@@ -124,7 +127,7 @@ export function formatReceiptsJson(
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, oldestFirst, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, backend: backend ?? null, oldestFirst, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,
@@ -183,10 +186,12 @@ export function selectReceipts(
   unverified = false,
   resource?: string,
   oldestFirst = false,
+  backend?: string,
 ): SaveReceipt[] {
   const filtered = receipts.filter((receipt) =>
     (type === undefined || receipt.resource_type === type) &&
     (resource === undefined || receipt.resource_id === resource) &&
+    (backend === undefined || receipt.storage_backend === backend) &&
     (verified === false || receipt.verified) &&
     (unverified === false || !receipt.verified),
   );
@@ -232,10 +237,11 @@ export function formatReceiptsText(
   until?: string,
   oldestFirst = false,
   orderingFlag: '--oldest-first' | '--reverse' = '--oldest-first',
+  backend?: string,
 ): string {
   const page = Math.floor(offset / limit) + 1;
   const pageArgument = (targetPage: number, targetOffset: number): string =>
-    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${resource === undefined ? '' : ` --resource ${resource}`}${since === undefined ? '' : ` --since ${since}`}${until === undefined ? '' : ` --until ${until}`}${oldestFirst ? ` ${orderingFlag}` : ''}${verified ? ' --verified' : ''}${unverified ? ' --unverified' : ''}`;
+    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${resource === undefined ? '' : ` --resource ${resource}`}${backend === undefined ? '' : ` --backend ${backend}`}${since === undefined ? '' : ` --since ${since}`}${until === undefined ? '' : ` --until ${until}`}${oldestFirst ? ` ${orderingFlag}` : ''}${verified ? ' --verified' : ''}${unverified ? ' --unverified' : ''}`;
 
   if (receipts.length === 0) {
     if (total === 0) return `${resource === undefined ? (type === undefined ? 'No save receipts found.' : `No ${type} save receipts found.`) : `No save receipts found for resource ${resource}.`}${verified ? ' (no verified receipts)' : ''}${unverified ? ' (no unverified receipts)' : ''}`;
@@ -246,7 +252,7 @@ export function formatReceiptsText(
   }
 
   const totalPages = Math.ceil(total / limit);
-  const filterLabel = `${type === undefined ? '' : ` [type: ${type}]`}${resource === undefined ? '' : ` [resource: ${resource}]`}${since === undefined ? '' : ` [since: ${since}]`}${until === undefined ? '' : ` [until: ${until}]`}${verified ? ' [verified]' : ''}${unverified ? ' [unverified]' : ''}`;
+  const filterLabel = `${type === undefined ? '' : ` [type: ${type}]`}${resource === undefined ? '' : ` [resource: ${resource}]`}${backend === undefined ? '' : ` [backend: ${backend}]`}${since === undefined ? '' : ` [since: ${since}]`}${until === undefined ? '' : ` [until: ${until}]`}${verified ? ' [verified]' : ''}${unverified ? ' [unverified]' : ''}`;
   const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${oldestFirst ? ' [oldest first]' : ''}${filterLabel}`];
   lines.push(...receipts.map(formatReceipt));
 
@@ -270,6 +276,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   const offset = resolveReceiptsOffset(options.offset, options.page, limit);
   const type = parseReceiptType(options.type);
   const resource = options.resource?.trim() || undefined;
+  const backend = options.backend?.trim() || undefined;
   validateListDateRange(options.since, options.until);
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
@@ -281,6 +288,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   const matchingReceipts = allReceipts.filter((receipt) =>
     (type === undefined || receipt.resource_type === type) &&
     (resource === undefined || receipt.resource_id === resource) &&
+    (backend === undefined || receipt.storage_backend === backend) &&
     (since === undefined || Date.parse(receipt.saved_at) >= since) &&
     (until === undefined || Date.parse(receipt.saved_at) <= until) &&
     (options.verified !== true || receipt.verified) &&
@@ -294,7 +302,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
       return counts;
     }, { verified: 0, unverified: 0 });
     const totalBytes = matchingReceipts.reduce((sum, receipt) => sum + receipt.size, 0);
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst, backend));
     return;
   }
 
@@ -314,5 +322,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     options.until,
     oldestFirst,
     options.reverse === true ? '--reverse' : '--oldest-first',
+    backend,
   )));
 }
