@@ -66,6 +66,7 @@ savestate list
 savestate receipts
 savestate receipts --json --limit 20
 savestate receipts --resource <id> --json
+savestate receipts --reverse --limit 20
 
 # After CLAUDE.md changes, put the saved copy back.
 # The edited file is kept as CLAUDE.md.bak.

@@ -12,6 +12,7 @@ export type ReceiptResourceType = SaveReceipt['resource_type'];
 export interface ReceiptsOptions {
   json?: boolean;
   jsonSummary?: boolean;
+  reverse?: boolean;
   oldestFirst?: boolean;
   verified?: boolean;
   unverified?: boolean;
@@ -277,14 +278,15 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     (options.verified !== true || receipt.verified) &&
     (options.unverified !== true || !receipt.verified),
   );
-  const receipts = selectReceipts(matchingReceipts, limit, offset, undefined, false, false, undefined, options.oldestFirst === true);
+  const oldestFirst = options.oldestFirst === true || options.reverse === true;
+  const receipts = selectReceipts(matchingReceipts, limit, offset, undefined, false, false, undefined, oldestFirst);
   if (options.json || options.jsonSummary) {
     const verification = matchingReceipts.reduce((counts, receipt) => {
       counts[receipt.verified ? 'verified' : 'unverified'] += 1;
       return counts;
     }, { verified: 0, unverified: 0 });
     const totalBytes = matchingReceipts.reduce((sum, receipt) => sum + receipt.size, 0);
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, options.oldestFirst === true));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst));
     return;
   }
 
@@ -302,6 +304,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     resource,
     options.since,
     options.until,
-    options.oldestFirst === true,
+    oldestFirst,
   )));
 }

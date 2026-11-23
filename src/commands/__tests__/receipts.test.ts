@@ -67,6 +67,15 @@ describe('receipts command', () => {
       .toEqual(['middle', 'newest']);
   });
 
+  it('treats reverse as the oldest-first alias', () => {
+    const receipts = [
+      { receipt_id: 'oldest' },
+      { receipt_id: 'newest' },
+    ] as never[];
+    expect(selectReceipts(receipts, 2, 0, undefined, false, false, undefined, true).map((receipt) => receipt.receipt_id))
+      .toEqual(['oldest', 'newest']);
+  });
+
   it('counts resource types for machine-readable summaries', () => {
     const receipts = [
       { resource_type: 'snapshot' },

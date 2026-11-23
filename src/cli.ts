@@ -130,6 +130,7 @@ program
   .option('--page-size <n>', 'Readable alias for --limit')
   .option('--page <n>', 'Show the 1-based receipt page')
   .option('--offset <n>', 'Skip newer receipts before applying --limit (0 or greater)')
+  .option('--reverse', 'Show receipts from oldest to newest (alias for --oldest-first)')
   .option('--oldest-first', 'Show receipts from oldest to newest')
   .option('--type <type>', 'Only receipts for snapshot, memory, or checkpoint resources')
   .option('--resource <id>', 'Only show receipts for one resource ID')
