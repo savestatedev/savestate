@@ -128,6 +128,13 @@ describe('receipts command', () => {
     );
   });
 
+  it('labels date filters in human output', () => {
+    const receipts = [{ receipt_id: 'receipt-1' }] as never[];
+    expect(formatReceiptsText(receipts, 1, 0, 10, '--limit', 'offset', undefined, false, false, undefined, '2026-01-01', '2026-01-31')).toContain(
+      '[since: 2026-01-01] [until: 2026-01-31]',
+    );
+  });
+
   it('labels verified-only human output and preserves the filter in navigation', () => {
     const receipts = [{ receipt_id: 'verified-1' }] as never[];
     expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, true)).toContain('[verified]');

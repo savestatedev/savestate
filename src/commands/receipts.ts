@@ -232,7 +232,7 @@ export function formatReceiptsText(
   }
 
   const totalPages = Math.ceil(total / limit);
-  const filterLabel = `${type === undefined ? '' : ` [type: ${type}]`}${resource === undefined ? '' : ` [resource: ${resource}]`}${verified ? ' [verified]' : ''}${unverified ? ' [unverified]' : ''}`;
+  const filterLabel = `${type === undefined ? '' : ` [type: ${type}]`}${resource === undefined ? '' : ` [resource: ${resource}]`}${since === undefined ? '' : ` [since: ${since}]`}${until === undefined ? '' : ` [until: ${until}]`}${verified ? ' [verified]' : ''}${unverified ? ' [unverified]' : ''}`;
   const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${filterLabel}`];
   lines.push(...receipts.map(formatReceipt));
 
