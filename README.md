@@ -65,6 +65,7 @@ savestate list
 # Inspect verifiable proofs created by successful saves
 savestate receipts
 savestate receipts --json --limit 20
+savestate receipts --resource <id> --json
 
 # After CLAUDE.md changes, put the saved copy back.
 # The edited file is kept as CLAUDE.md.bak.
@@ -211,6 +212,7 @@ savestate receipts                    Inspect proofs created by successful saves
   --page <n>                          Show the 1-based receipt page
   --offset <n>                        Skip newer receipts before applying --limit (default: 0)
   --type <type>                        Only snapshot, memory, or checkpoint receipts
+  --resource <id>                      Only receipts for one resource ID
   --json                              Output receipt records and pagination metadata as JSON
 
 JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`, `nextPage`, and `previousPage`,
