@@ -355,9 +355,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     }, { verified: 0, unverified: 0 });
     const totalBytes = matchingReceipts.reduce((sum, receipt) => sum + receipt.size, 0);
     console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst, backend, countReceiptBackends(matchingReceipts), matchingReceipts));
-=======
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst, backend, countReceiptBackends(matchingReceipts)));
->>>>>>> 136ab4b5 (feat(cli): summarize receipt storage backends)
     return;
   }
 
