@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts } from '../receipts.js';
+import { countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -47,6 +47,16 @@ describe('receipts command', () => {
     ] as never[];
     expect(selectReceipts(receipts, 1, 0, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-2']);
     expect(selectReceipts(receipts, 1, 1, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-1']);
+  });
+
+  it('counts resource types for machine-readable summaries', () => {
+    const receipts = [
+      { resource_type: 'snapshot' },
+      { resource_type: 'memory' },
+      { resource_type: 'memory' },
+      { resource_type: 'checkpoint' },
+    ] as never[];
+    expect(countReceiptResources(receipts)).toEqual({ snapshot: 1, memory: 2, checkpoint: 1 });
   });
 
   it('filters to verified receipts before applying newest-first pagination', () => {
@@ -141,7 +151,32 @@ describe('receipts command', () => {
 
   it('identifies an unfiltered JSON response explicitly', () => {
     expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({
-      type: null, verification: { verified: 0, unverified: 0 },
+      type: null, verification: { verified: 0, unverified: 0 }, resourceCounts: { snapshot: 0, memory: 0, checkpoint: 0 },
+    });
+  });
+
+  it('reports resource totals for the complete matching collection', () => {
+    const receipts = [{ resource_type: 'memory' }, { resource_type: 'snapshot' }] as never[];
+    expect(JSON.parse(formatReceiptsJson([receipts[0]], 2, 0, 1, undefined, { verified: 0, unverified: 2 }, false, false, false, countReceiptResources(receipts))))
+      .toMatchObject({ resourceCounts: { snapshot: 1, memory: 1, checkpoint: 0 } });
+  });
+
+  it('reports the saved-at range for the matching collection', () => {
+    const receipts = [
+      { resource_type: 'memory', saved_at: '2026-01-02T00:00:00.000Z' },
+      { resource_type: 'snapshot', saved_at: '2026-01-05T00:00:00.000Z' },
+    ] as never[];
+    expect(JSON.parse(formatReceiptsJson(receipts, 2, 0, 10, undefined, { verified: 0, unverified: 2 }, false, false, false, countReceiptResources(receipts))))
+      .toMatchObject({ latestSavedAt: '2026-01-05T00:00:00.000Z', oldestSavedAt: '2026-01-02T00:00:00.000Z' });
+  });
+
+  it('reports byte totals for the displayed receipts', () => {
+    const receipts = [
+      { size: 100, saved_at: '2026-01-02T00:00:00.000Z' },
+      { size: 300, saved_at: '2026-01-05T00:00:00.000Z' },
+    ] as never[];
+    expect(JSON.parse(formatReceiptsJson(receipts, 2, 0, 10))).toMatchObject({
+      shownBytes: 400, averageShownBytes: 200,
     });
   });
 
@@ -153,6 +188,10 @@ describe('receipts command', () => {
   it('reports verification totals for the matching collection', () => {
     expect(JSON.parse(formatReceiptsJson([], 2, 0, 10, undefined, { verified: 1, unverified: 1 })))
       .toMatchObject({ verification: { verified: 1, unverified: 1 } });
+  });
+
+  it('uses null saved-at bounds for an empty collection', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ latestSavedAt: null, oldestSavedAt: null, shownBytes: 0, averageShownBytes: null });
   });
 
   it('identifies verified-only JSON responses explicitly', () => {
