@@ -107,6 +107,7 @@ export function formatReceiptsJson(
   oldestFirst = false,
   backend?: string,
   completeBackendCounts: ReceiptsJson['backendCounts'] = countReceiptBackends(receipts),
+  completeSavedAtReceipts: SaveReceipt[] = receipts,
 ): string {
   const resource = typeof resourceOrCounts === 'string' ? resourceOrCounts : undefined;
   const resourceCounts = completeResourceCounts ?? (typeof resourceOrCounts === 'string' ? countReceiptResources(receipts) : resourceOrCounts);
@@ -125,7 +126,7 @@ export function formatReceiptsJson(
   const page = Math.floor(offset / limit) + 1;
   const nextPage = nextOffset === null ? null : Math.floor(nextOffset / limit) + 1;
   const previousPage = previousOffset === null ? null : Math.floor(previousOffset / limit) + 1;
-  const savedAtValues = receipts.map((receipt) => Date.parse(receipt.saved_at)).filter(Number.isFinite);
+  const savedAtValues = completeSavedAtReceipts.map((receipt) => Date.parse(receipt.saved_at)).filter(Number.isFinite);
   const latestSavedAt = savedAtValues.length === 0 ? null : new Date(Math.max(...savedAtValues)).toISOString();
   const oldestSavedAt = savedAtValues.length === 0 ? null : new Date(Math.min(...savedAtValues)).toISOString();
   const shownBytes = receipts.reduce((totalBytes, receipt) => totalBytes + receipt.size, 0);
@@ -312,7 +313,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
       return counts;
     }, { verified: 0, unverified: 0 });
     const totalBytes = matchingReceipts.reduce((sum, receipt) => sum + receipt.size, 0);
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst, backend, countReceiptBackends(matchingReceipts)));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst, backend, countReceiptBackends(matchingReceipts), matchingReceipts));
     return;
   }
 

@@ -247,6 +247,18 @@ describe('receipts command', () => {
     });
   });
 
+  it('reports timestamps for the complete matching collection, not just the page', () => {
+    const oldest = { saved_at: '2026-01-01T00:00:00.000Z', size: 1 } as never;
+    const newest = { saved_at: '2026-01-03T00:00:00.000Z', size: 1 } as never;
+    const output = JSON.parse(formatReceiptsJson(
+      [newest], 2, 0, 1, undefined, { verified: 0, unverified: 2 }, false, false, false,
+      undefined, undefined, true, 2, undefined, undefined, false, undefined, {}, [oldest, newest],
+    ));
+
+    expect(output.latestSavedAt).toBe('2026-01-03T00:00:00.000Z');
+    expect(output.oldestSavedAt).toBe('2026-01-01T00:00:00.000Z');
+  });
+
   it('marks oldest-first JSON responses', () => {
     expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, { verified: 0, unverified: 0 }, false, false, false, undefined, undefined, true, 0, undefined, undefined, true)))
       .toMatchObject({ oldestFirst: true });
