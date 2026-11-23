@@ -158,13 +158,23 @@ describe('receipts command', () => {
       .toMatchObject({ latestSavedAt: '2026-01-05T00:00:00.000Z', oldestSavedAt: '2026-01-02T00:00:00.000Z' });
   });
 
+  it('reports byte totals for the displayed receipts', () => {
+    const receipts = [
+      { size: 100, saved_at: '2026-01-02T00:00:00.000Z' },
+      { size: 300, saved_at: '2026-01-05T00:00:00.000Z' },
+    ] as never[];
+    expect(JSON.parse(formatReceiptsJson(receipts, 2, 0, 10))).toMatchObject({
+      shownBytes: 400, averageShownBytes: 200,
+    });
+  });
+
   it('reports verification totals for the matching collection', () => {
     expect(JSON.parse(formatReceiptsJson([], 2, 0, 10, undefined, { verified: 1, unverified: 1 })))
       .toMatchObject({ verification: { verified: 1, unverified: 1 } });
   });
 
   it('uses null saved-at bounds for an empty collection', () => {
-    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ latestSavedAt: null, oldestSavedAt: null });
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10))).toMatchObject({ latestSavedAt: null, oldestSavedAt: null, shownBytes: 0, averageShownBytes: null });
   });
 
   it('identifies verified-only JSON responses explicitly', () => {

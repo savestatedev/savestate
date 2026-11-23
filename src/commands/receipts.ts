@@ -45,6 +45,8 @@ export interface ReceiptsJson {
   resourceCounts: { snapshot: number; memory: number; checkpoint: number };
   latestSavedAt: string | null;
   oldestSavedAt: string | null;
+  shownBytes: number;
+  averageShownBytes: number | null;
   receipts: SaveReceipt[];
 }
 
@@ -81,6 +83,8 @@ export function formatReceiptsJson(
   const savedAtValues = receipts.map((receipt) => Date.parse(receipt.saved_at)).filter(Number.isFinite);
   const latestSavedAt = savedAtValues.length === 0 ? null : new Date(Math.max(...savedAtValues)).toISOString();
   const oldestSavedAt = savedAtValues.length === 0 ? null : new Date(Math.min(...savedAtValues)).toISOString();
+  const shownBytes = receipts.reduce((totalBytes, receipt) => totalBytes + receipt.size, 0);
+  const averageShownBytes = shown === 0 ? null : shownBytes / shown;
   const guidance = shown === 0 && suggestedOffset !== null
     ? { action: 'retry' as const, offset: suggestedOffset }
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
@@ -90,7 +94,7 @@ export function formatReceiptsJson(
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, resourceCounts,
-    latestSavedAt, oldestSavedAt, receipts } satisfies ReceiptsJson, null, 2);
+    latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, receipts } satisfies ReceiptsJson, null, 2);
 }
 
 export function parseReceiptsLimit(value: string | undefined): number {
