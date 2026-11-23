@@ -241,6 +241,8 @@ Human-readable receipt lines label both the save completion and receipt creation
 to make audit timing explicit.
 JSON receipt output includes `resourceCounts` for the matching collection and
 `shownResourceCounts` for the visible page.
+JSON receipt output includes `backendCounts` for the matching collection and
+`shownBackendCounts` for the visible page.
 When a filtered receipt collection is empty, the human-readable message echoes the active
 filters so an audit command can be corrected without reconstructing its arguments.
 Use `--since` and `--until` to scope receipts by their saved timestamp; date-only values
