@@ -126,7 +126,7 @@ import { receiptsCommand } from './commands/receipts.js';
 program
   .command('receipts')
   .description('Inspect proofs created by successful saves')
-  .option('--limit <n>', 'Maximum number of recent receipts to show (1–1000)')
+  .option('--limit <n>', 'Maximum number of receipts to show (1–1000)')
   .option('--page-size <n>', 'Readable alias for --limit')
   .option('--page <n>', 'Show the 1-based receipt page')
   .option('--offset <n>', 'Skip receipts before applying --limit in the selected order (0 or greater)')

@@ -208,7 +208,7 @@ savestate list                        List all snapshots
   --offset <n>                       Skip snapshots before applying --limit
 
 savestate receipts                    Inspect proofs created by successful saves
-  --limit <n>                         Show up to 1000 of the most recent receipts (default: 100)
+  --limit <n>                         Show up to 1000 receipts (default: 100)
   --page-size <n>                     Readable alias for --limit
   --page <n>                          Show the 1-based receipt page
   --offset <n>                        Skip receipts before applying --limit in the selected order (default: 0)
