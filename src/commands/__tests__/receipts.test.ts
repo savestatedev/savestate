@@ -176,8 +176,16 @@ describe('receipts command', () => {
       { size: 300, saved_at: '2026-01-05T00:00:00.000Z' },
     ] as never[];
     expect(JSON.parse(formatReceiptsJson(receipts, 2, 0, 10))).toMatchObject({
-      shownBytes: 400, averageShownBytes: 200,
+      shownBytes: 400, averageShownBytes: 200, totalBytes: 400, averageTotalBytes: 200,
     });
+  });
+
+  it('reports filtered collection bytes separately from a limited page', () => {
+    const receipts = [
+      { size: 100, saved_at: '2026-01-02T00:00:00.000Z' },
+    ] as never[];
+    const summary = JSON.parse(formatReceiptsJson(receipts, 2, 0, 1, undefined, { verified: 2, unverified: 0 }, false, false, false, undefined, countReceiptResources(receipts), true, 400));
+    expect(summary).toMatchObject({ shown: 1, shownBytes: 100, total: 2, totalBytes: 400, averageTotalBytes: 200 });
   });
 
   it('can omit receipt records from JSON summaries', () => {
