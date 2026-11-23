@@ -134,6 +134,7 @@ program
   .option('--oldest-first', 'Show receipts from oldest to newest')
   .option('--type <type>', 'Only receipts for snapshot, memory, or checkpoint resources')
   .option('--resource <id>', 'Only show receipts for one resource ID')
+  .option('--backend <id>', 'Only show receipts for one storage backend')
   .option('--since <date>', 'Only receipts saved on or after an ISO 8601 date')
   .option('--until <date>', 'Only receipts saved on or before an ISO 8601 date')
   .option('--verified', 'Only show receipts whose save verification passed')

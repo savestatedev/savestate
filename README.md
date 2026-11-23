@@ -216,6 +216,7 @@ savestate receipts                    Inspect proofs created by successful saves
   --oldest-first                      Show receipts from oldest to newest
   --type <type>                        Only snapshot, memory, or checkpoint receipts
   --resource <id>                      Only receipts for one resource ID
+  --backend <id>                        Only receipts for one storage backend
   --since <date>                        Only receipts saved on or after an ISO 8601 date
   --until <date>                        Only receipts saved on or before an ISO 8601 date
   --verified                           Only receipts whose save verification passed
