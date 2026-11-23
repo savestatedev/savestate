@@ -45,6 +45,8 @@ export interface ReceiptsJson {
   previousPage: number | null;
   guidance: { action: 'none' | 'next' | 'previous' | 'retry'; offset: number | null };
   verification: { verified: number; unverified: number };
+  verifiedPercentage: number;
+  shownVerifiedPercentage: number;
   resourceCounts: { snapshot: number; memory: number; checkpoint: number };
   latestSavedAt: string | null;
   oldestSavedAt: string | null;
@@ -83,6 +85,10 @@ export function formatReceiptsJson(
   const selectedUnverified = typeof verificationOrVerified === 'boolean' ? unverified : unverifiedFilter;
   const verification = typeof verificationOrVerified === 'boolean' ? { verified: 0, unverified: 0 } : verificationOrVerified;
   const shown = receipts.length;
+  const verifiedPercentage = total === 0 ? 0 : (verification.verified / total) * 100;
+  const shownVerifiedPercentage = shown === 0
+    ? 0
+    : (receipts.filter((receipt) => receipt.verified).length / shown) * 100;
   const suggestedOffset = shown === 0 && total > 0 ? Math.floor(Math.max(0, total - 1) / limit) * limit : null;
   const nextOffset = offset + shown < total ? offset + shown : null;
   const hasPrevious = offset > 0 && total > 0;
@@ -104,7 +110,8 @@ export function formatReceiptsJson(
   const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
-    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification, resourceCounts,
+    nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,
+    verifiedPercentage, shownVerifiedPercentage, resourceCounts,
     latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, totalBytes, averageTotalBytes,
     ...(includeReceipts ? { receipts } : {}) } satisfies ReceiptsJson;
   return JSON.stringify(output, null, 2);

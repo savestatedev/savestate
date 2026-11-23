@@ -225,6 +225,8 @@ bound the save timestamps in the matching collection, or are `null` when it is e
 `shownBytes` and `averageShownBytes` describe the current page, while `totalBytes`
 and `averageTotalBytes` describe the complete filtered collection. Use `--verified`
 or `--unverified` to scope both the receipt records and these collection totals.
+`verifiedPercentage` and `shownVerifiedPercentage` expose the verified-share percentage
+for the matching collection and visible page (or `0` when the relevant set is empty).
 
 `savestate list --json` returns a summary object with `found` indicating whether
 the current page contains snapshots, alongside `total`, `shown`, `offset`,

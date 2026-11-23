@@ -180,6 +180,16 @@ describe('receipts command', () => {
     });
   });
 
+  it('reports verification percentages for the collection and current page', () => {
+    const receipts = [
+      { verified: true, size: 100 },
+      { verified: false, size: 200 },
+      { verified: true, size: 300 },
+    ] as never[];
+    expect(JSON.parse(formatReceiptsJson([receipts[1]], 3, 1, 1, undefined, { verified: 2, unverified: 1 })))
+      .toMatchObject({ verifiedPercentage: 66.66666666666666, shownVerifiedPercentage: 0 });
+  });
+
   it('reports filtered collection bytes separately from a limited page', () => {
     const receipts = [
       { size: 100, saved_at: '2026-01-02T00:00:00.000Z' },
