@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts } from '../receipts.js';
+import { countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -76,6 +76,14 @@ describe('receipts command', () => {
       .toEqual(['oldest', 'newest']);
   });
 
+  it('rejects contradictory receipt ordering flags', () => {
+    expect(() => validateReceiptOrdering(true, true)).toThrow(
+      'Cannot use --oldest-first and --reverse together; choose one ordering flag.',
+    );
+    expect(() => validateReceiptOrdering(true, false)).not.toThrow();
+    expect(() => validateReceiptOrdering(false, true)).not.toThrow();
+  });
+
   it('counts resource types for machine-readable summaries', () => {
     const receipts = [
       { resource_type: 'snapshot' },
@@ -140,6 +148,12 @@ describe('receipts command', () => {
     expect(formatReceiptsText(receipts, 3, 1, 1, '--page-size')).toContain(
       'Next page: savestate receipts --page-size 1 --offset 2',
     );
+  });
+
+  it('preserves the reverse alias in human navigation', () => {
+    const receipts = [{ receipt_id: 'r-2' }] as never[];
+    expect(formatReceiptsText(receipts, 2, 0, 1, '--limit', 'offset', undefined, false, false, undefined, undefined, undefined, true, '--reverse'))
+      .toContain('Next page: savestate receipts --limit 1 --offset 1 --reverse');
   });
 
   it('reports filtered totals in human output', () => {

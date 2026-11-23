@@ -208,10 +208,11 @@ savestate list                        List all snapshots
   --offset <n>                       Skip snapshots before applying --limit
 
 savestate receipts                    Inspect proofs created by successful saves
-  --limit <n>                         Show up to 1000 of the most recent receipts (default: 100)
+  --limit <n>                         Show up to 1000 receipts (default: 100)
   --page-size <n>                     Readable alias for --limit
   --page <n>                          Show the 1-based receipt page
-  --offset <n>                        Skip newer receipts before applying --limit (default: 0)
+  --offset <n>                        Skip receipts before applying --limit in the selected order (default: 0)
+  --reverse                           Alias for --oldest-first
   --oldest-first                      Show receipts from oldest to newest
   --type <type>                        Only snapshot, memory, or checkpoint receipts
   --resource <id>                      Only receipts for one resource ID
@@ -226,6 +227,7 @@ JSON receipt output also includes `total`, `page`, `totalPages`, `remaining`, `n
 `hasMore`, `nextOffset`, `hasPrevious`, and `previousOffset` so scripts can page
 through the newest proofs without guessing. `latestSavedAt` and `oldestSavedAt`
 bound the save timestamps in the matching collection, or are `null` when it is empty.
+`--reverse` is an alias for `--oldest-first`; pass only one of the ordering flags.
 `shownBytes` and `averageShownBytes` describe the current page, while `totalBytes`
 and `averageTotalBytes` describe the complete filtered collection. Use `--verified`
 or `--unverified` to scope both the receipt records and these collection totals.

@@ -126,10 +126,10 @@ import { receiptsCommand } from './commands/receipts.js';
 program
   .command('receipts')
   .description('Inspect proofs created by successful saves')
-  .option('--limit <n>', 'Maximum number of recent receipts to show (1–1000)')
+  .option('--limit <n>', 'Maximum number of receipts to show (1–1000)')
   .option('--page-size <n>', 'Readable alias for --limit')
   .option('--page <n>', 'Show the 1-based receipt page')
-  .option('--offset <n>', 'Skip newer receipts before applying --limit (0 or greater)')
+  .option('--offset <n>', 'Skip receipts before applying --limit in the selected order (0 or greater)')
   .option('--reverse', 'Show receipts from oldest to newest (alias for --oldest-first)')
   .option('--oldest-first', 'Show receipts from oldest to newest')
   .option('--type <type>', 'Only receipts for snapshot, memory, or checkpoint resources')
