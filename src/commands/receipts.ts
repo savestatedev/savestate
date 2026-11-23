@@ -65,6 +65,15 @@ export interface ReceiptsJson {
   until: string | null;
   backend: string | null;
   oldestFirst: boolean;
+  filters: {
+    type: ReceiptResourceType | null;
+    resource: string | null;
+    backend: string | null;
+    since: string | null;
+    until: string | null;
+    verified: boolean;
+    unverified: boolean;
+  };
   receipts?: SaveReceipt[];
 }
 
@@ -137,7 +146,9 @@ export function formatReceiptsJson(
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, backend: backend ?? null, oldestFirst, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, backend: backend ?? null, oldestFirst, verified, unverified: selectedUnverified,
+    filters: { type: type ?? null, resource: resource ?? null, backend: backend ?? null, since: since ?? null, until: until ?? null, verified, unverified: selectedUnverified },
+    total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,

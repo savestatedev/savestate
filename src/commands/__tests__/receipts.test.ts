@@ -252,6 +252,18 @@ describe('receipts command', () => {
     });
   });
 
+  it('groups normalized filters for JSON consumers', () => {
+    const output = JSON.parse(formatReceiptsJson(
+      [{ receipt_id: 'r-1' }] as never[], 1, 0, 10, 'memory',
+      { verified: 1, unverified: 0 }, false, true, false, 'memory-a',
+      undefined, true, 1, '2026-01-01', '2026-01-31', true, 'r2', {},
+    ));
+    expect(output.filters).toEqual({
+      type: 'memory', resource: 'memory-a', backend: 'r2',
+      since: '2026-01-01', until: '2026-01-31', verified: true, unverified: false,
+    });
+  });
+
   it('reports timestamps for the complete matching collection, not just the page', () => {
     const oldest = { saved_at: '2026-01-01T00:00:00.000Z', size: 1 } as never;
     const newest = { saved_at: '2026-01-03T00:00:00.000Z', size: 1 } as never;
