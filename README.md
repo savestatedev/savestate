@@ -211,7 +211,7 @@ savestate receipts                    Inspect proofs created by successful saves
   --limit <n>                         Show up to 1000 of the most recent receipts (default: 100)
   --page-size <n>                     Readable alias for --limit
   --page <n>                          Show the 1-based receipt page
-  --offset <n>                        Skip newer receipts before applying --limit (default: 0)
+  --offset <n>                        Skip receipts before applying --limit in the selected order (default: 0)
   --reverse                           Alias for --oldest-first
   --oldest-first                      Show receipts from oldest to newest
   --type <type>                        Only snapshot, memory, or checkpoint receipts
