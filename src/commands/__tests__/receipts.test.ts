@@ -165,6 +165,11 @@ describe('receipts command', () => {
     );
   });
 
+  it('explains active filters when the matching collection is empty', () => {
+    const output = formatReceiptsText([], 0, 0, 10, '--limit', 'offset', 'memory', false, false, undefined, '2026-01-01', '2026-01-31', false, '--oldest-first', 'r2');
+    expect(output).toBe('No save receipts found (type: memory, backend: r2, since: 2026-01-01, until: 2026-01-31).');
+  });
+
   it('preserves the page-size alias in human navigation', () => {
     const receipts = [{ receipt_id: 'r-2' }] as never[];
     expect(formatReceiptsText(receipts, 3, 1, 1, '--page-size')).toContain(

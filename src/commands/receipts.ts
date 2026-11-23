@@ -233,6 +233,27 @@ export function formatReceipt(receipt: SaveReceipt): string {
   return `saved:${receipt.saved_at}  created:${receipt.receipt_created_at}  ${status}  ${receipt.resource_type}:${receipt.resource_id}  ${receipt.size} bytes  ${receipt.receipt_id}  content:${receipt.content_hash}  encrypted:${receipt.encrypted_hash}  stored:${receipt.storage_backend}:${receipt.storage_location}`;
 }
 
+function receiptFilterLabel(
+  type?: ReceiptResourceType,
+  resource?: string,
+  backend?: string,
+  since?: string,
+  until?: string,
+  verified = false,
+  unverified = false,
+): string {
+  const filters = [
+    type === undefined ? undefined : `type: ${type}`,
+    resource === undefined ? undefined : `resource: ${resource}`,
+    backend === undefined ? undefined : `backend: ${backend}`,
+    since === undefined ? undefined : `since: ${since}`,
+    until === undefined ? undefined : `until: ${until}`,
+    verified ? 'verified' : undefined,
+    unverified ? 'unverified' : undefined,
+  ].filter((filter): filter is string => filter !== undefined);
+  return filters.length === 0 ? '' : ` (${filters.join(', ')})`;
+}
+
 export function formatReceiptsText(
   receipts: SaveReceipt[],
   total: number,
@@ -255,7 +276,13 @@ export function formatReceiptsText(
     `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${resource === undefined ? '' : ` --resource ${resource}`}${backend === undefined ? '' : ` --backend ${backend}`}${since === undefined ? '' : ` --since ${since}`}${until === undefined ? '' : ` --until ${until}`}${oldestFirst ? ` ${orderingFlag}` : ''}${verified ? ' --verified' : ''}${unverified ? ' --unverified' : ''}`;
 
   if (receipts.length === 0) {
-    if (total === 0) return `${resource === undefined ? (type === undefined ? 'No save receipts found.' : `No ${type} save receipts found.`) : `No save receipts found for resource ${resource}.`}${verified ? ' (no verified receipts)' : ''}${unverified ? ' (no unverified receipts)' : ''}`;
+    if (total === 0) {
+      if (backend === undefined && since === undefined && until === undefined && !verified && !unverified) {
+        if (resource !== undefined && type === undefined) return `No save receipts found for resource ${resource}.`;
+        if (type !== undefined && resource === undefined) return `No ${type} save receipts found.`;
+      }
+      return `No save receipts found${receiptFilterLabel(type, resource, backend, since, until, verified, unverified)}.`;
+    }
     const lastOffset = Math.floor(Math.max(0, total - 1) / limit) * limit;
     const lastPage = Math.floor(lastOffset / limit) + 1;
     const location = navigation === 'page' ? `page ${page}` : `offset ${offset}`;
