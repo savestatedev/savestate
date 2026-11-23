@@ -186,9 +186,12 @@ describe('receipts command', () => {
       receipt_id: 'receipt-1',
       content_hash: 'a'.repeat(64),
       encrypted_hash: 'b'.repeat(64),
+      storage_backend: 'local',
+      storage_location: '/backups/snapshot.saf.enc',
     } as never;
 
     expect(formatReceiptsText([receipt], 1, 0, 10)).toContain(`content:${'a'.repeat(64)}  encrypted:${'b'.repeat(64)}`);
+    expect(formatReceiptsText([receipt], 1, 0, 10)).toContain('stored:local:/backups/snapshot.saf.enc');
   });
 
   it('explains when a resource type has no receipts', () => {
