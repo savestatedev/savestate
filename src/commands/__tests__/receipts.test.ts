@@ -179,6 +179,7 @@ describe('receipts command', () => {
   it('shows both hashes in human-readable receipt output', () => {
     const receipt = {
       saved_at: '2026-01-01T00:00:00.000Z',
+      receipt_created_at: '2026-01-01T00:00:01.000Z',
       verified: true,
       resource_type: 'snapshot',
       resource_id: 'snapshot-1',
@@ -192,6 +193,12 @@ describe('receipts command', () => {
 
     expect(formatReceiptsText([receipt], 1, 0, 10)).toContain(`content:${'a'.repeat(64)}  encrypted:${'b'.repeat(64)}`);
     expect(formatReceiptsText([receipt], 1, 0, 10)).toContain('stored:local:/backups/snapshot.saf.enc');
+    } as never;
+
+    const output = formatReceiptsText([receipt], 1, 0, 10);
+    expect(output).toContain('saved:2026-01-01T00:00:00.000Z  created:2026-01-01T00:00:01.000Z');
+    expect(output).toContain(`content:${'a'.repeat(64)}  encrypted:${'b'.repeat(64)}`);
+    expect(output).toContain('stored:local:/backups/snapshot.saf.enc');
   });
 
   it('explains when a resource type has no receipts', () => {
