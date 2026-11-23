@@ -239,6 +239,8 @@ for the matching collection and visible page (or `0` when the relevant set is em
 Human-readable receipt lines include both hashes and the storage backend/location for manual verification.
 Human-readable receipt lines label both the save completion and receipt creation timestamps
 to make audit timing explicit.
+JSON receipt output includes `resourceCounts` for the matching collection and
+`shownResourceCounts` for the visible page.
 When a filtered receipt collection is empty, the human-readable message echoes the active
 filters so an audit command can be corrected without reconstructing its arguments.
 Use `--since` and `--until` to scope receipts by their saved timestamp; date-only values

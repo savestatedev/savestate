@@ -54,6 +54,7 @@ export interface ReceiptsJson {
   verifiedPercentage: number;
   shownVerifiedPercentage: number;
   resourceCounts: { snapshot: number; memory: number; checkpoint: number };
+  shownResourceCounts: { snapshot: number; memory: number; checkpoint: number };
   backendCounts: Record<string, number>;
   latestSavedAt: string | null;
   oldestSavedAt: string | null;
@@ -152,7 +153,7 @@ export function formatReceiptsJson(
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,
-    verifiedPercentage, shownVerifiedPercentage, resourceCounts,
+    verifiedPercentage, shownVerifiedPercentage, resourceCounts, shownResourceCounts: countReceiptResources(receipts),
     latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, totalBytes, averageTotalBytes,
     backendCounts: completeBackendCounts,
     ...(includeReceipts ? { receipts } : {}) } satisfies ReceiptsJson;
