@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
+import { countReceiptBackends, countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -92,6 +92,16 @@ describe('receipts command', () => {
       { resource_type: 'checkpoint' },
     ] as never[];
     expect(countReceiptResources(receipts)).toEqual({ snapshot: 1, memory: 2, checkpoint: 1 });
+  });
+
+  it('counts storage backends for machine-readable summaries', () => {
+    const receipts = [
+      { storage_backend: 'local' },
+      { storage_backend: 'r2' },
+      { storage_backend: 'local' },
+    ] as never[];
+    expect(countReceiptBackends(receipts)).toEqual({ local: 2, r2: 1 });
+    expect(JSON.parse(formatReceiptsJson(receipts, 3, 0, 10)).backendCounts).toEqual({ local: 2, r2: 1 });
   });
 
   it('filters to verified receipts before applying newest-first pagination', () => {

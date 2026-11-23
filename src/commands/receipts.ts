@@ -54,6 +54,7 @@ export interface ReceiptsJson {
   verifiedPercentage: number;
   shownVerifiedPercentage: number;
   resourceCounts: { snapshot: number; memory: number; checkpoint: number };
+  backendCounts: Record<string, number>;
   latestSavedAt: string | null;
   oldestSavedAt: string | null;
   shownBytes: number;
@@ -80,6 +81,13 @@ export function countReceiptResources(receipts: SaveReceipt[]): ReceiptsJson['re
   }, { snapshot: 0, memory: 0, checkpoint: 0 });
 }
 
+export function countReceiptBackends(receipts: SaveReceipt[]): ReceiptsJson['backendCounts'] {
+  return receipts.reduce<Record<string, number>>((counts, receipt) => {
+    counts[receipt.storage_backend] = (counts[receipt.storage_backend] ?? 0) + 1;
+    return counts;
+  }, {});
+}
+
 export function formatReceiptsJson(
   receipts: SaveReceipt[],
   total: number,
@@ -98,6 +106,7 @@ export function formatReceiptsJson(
   until?: string,
   oldestFirst = false,
   backend?: string,
+  completeBackendCounts: ReceiptsJson['backendCounts'] = countReceiptBackends(receipts),
 ): string {
   const resource = typeof resourceOrCounts === 'string' ? resourceOrCounts : undefined;
   const resourceCounts = completeResourceCounts ?? (typeof resourceOrCounts === 'string' ? countReceiptResources(receipts) : resourceOrCounts);
@@ -133,6 +142,7 @@ export function formatReceiptsJson(
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,
     verifiedPercentage, shownVerifiedPercentage, resourceCounts,
     latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, totalBytes, averageTotalBytes,
+    backendCounts: completeBackendCounts,
     ...(includeReceipts ? { receipts } : {}) } satisfies ReceiptsJson;
   return JSON.stringify(output, null, 2);
 }
@@ -302,7 +312,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
       return counts;
     }, { verified: 0, unverified: 0 });
     const totalBytes = matchingReceipts.reduce((sum, receipt) => sum + receipt.size, 0);
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst, backend));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, oldestFirst, backend, countReceiptBackends(matchingReceipts)));
     return;
   }
 
