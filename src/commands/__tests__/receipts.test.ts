@@ -55,6 +55,18 @@ describe('receipts command', () => {
     expect(selectReceipts(receipts, 1, 1, 'memory').map((receipt) => receipt.receipt_id)).toEqual(['memory-1']);
   });
 
+  it('supports oldest-first pagination', () => {
+    const receipts = [
+      { receipt_id: 'oldest' },
+      { receipt_id: 'middle' },
+      { receipt_id: 'newest' },
+    ] as never[];
+    expect(selectReceipts(receipts, 2, 0, undefined, false, false, undefined, true).map((receipt) => receipt.receipt_id))
+      .toEqual(['oldest', 'middle']);
+    expect(selectReceipts(receipts, 2, 1, undefined, false, false, undefined, true).map((receipt) => receipt.receipt_id))
+      .toEqual(['middle', 'newest']);
+  });
+
   it('counts resource types for machine-readable summaries', () => {
     const receipts = [
       { resource_type: 'snapshot' },
@@ -160,6 +172,11 @@ describe('receipts command', () => {
       remaining: 1, hasMore: true, isLastPage: false, nextOffset: 2, nextPage: 3, page: 2, totalPages: 3,
       hasPrevious: true, previousOffset: 0, previousPage: 1, suggestedOffset: null, guidance: { action: 'next', offset: 2 },
     });
+  });
+
+  it('marks oldest-first JSON responses', () => {
+    expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, { verified: 0, unverified: 0 }, false, false, false, undefined, undefined, true, 0, undefined, undefined, true)))
+      .toMatchObject({ oldestFirst: true });
   });
 
   it('identifies an unfiltered JSON response explicitly', () => {

@@ -12,6 +12,7 @@ export type ReceiptResourceType = SaveReceipt['resource_type'];
 export interface ReceiptsOptions {
   json?: boolean;
   jsonSummary?: boolean;
+  oldestFirst?: boolean;
   verified?: boolean;
   unverified?: boolean;
   limit?: string;
@@ -59,6 +60,7 @@ export interface ReceiptsJson {
   averageTotalBytes: number | null;
   since: string | null;
   until: string | null;
+  oldestFirst: boolean;
   receipts?: SaveReceipt[];
 }
 
@@ -85,6 +87,7 @@ export function formatReceiptsJson(
   totalBytes = receipts.reduce((sum, receipt) => sum + receipt.size, 0),
   since?: string,
   until?: string,
+  oldestFirst = false,
 ): string {
   const resource = typeof resourceOrCounts === 'string' ? resourceOrCounts : undefined;
   const resourceCounts = completeResourceCounts ?? (typeof resourceOrCounts === 'string' ? countReceiptResources(receipts) : resourceOrCounts);
@@ -114,7 +117,7 @@ export function formatReceiptsJson(
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
+  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, oldestFirst, verified, unverified: selectedUnverified, total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,
@@ -172,6 +175,7 @@ export function selectReceipts(
   verified = false,
   unverified = false,
   resource?: string,
+  oldestFirst = false,
 ): SaveReceipt[] {
   const filtered = receipts.filter((receipt) =>
     (type === undefined || receipt.resource_type === type) &&
@@ -179,6 +183,7 @@ export function selectReceipts(
     (verified === false || receipt.verified) &&
     (unverified === false || !receipt.verified),
   );
+  if (oldestFirst) return filtered.slice(offset, offset + limit);
   const end = filtered.length - offset;
   if (end <= 0) return [];
   return filtered.slice(Math.max(0, end - limit), end).reverse();
@@ -218,10 +223,11 @@ export function formatReceiptsText(
   resource?: string,
   since?: string,
   until?: string,
+  oldestFirst = false,
 ): string {
   const page = Math.floor(offset / limit) + 1;
   const pageArgument = (targetPage: number, targetOffset: number): string =>
-    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${resource === undefined ? '' : ` --resource ${resource}`}${since === undefined ? '' : ` --since ${since}`}${until === undefined ? '' : ` --until ${until}`}${verified ? ' --verified' : ''}${unverified ? ' --unverified' : ''}`;
+    `${navigation === 'page' ? `--page ${targetPage}` : `--offset ${targetOffset}`}${type === undefined ? '' : ` --type ${type}`}${resource === undefined ? '' : ` --resource ${resource}`}${since === undefined ? '' : ` --since ${since}`}${until === undefined ? '' : ` --until ${until}`}${oldestFirst ? ' --oldest-first' : ''}${verified ? ' --verified' : ''}${unverified ? ' --unverified' : ''}`;
 
   if (receipts.length === 0) {
     if (total === 0) return `${resource === undefined ? (type === undefined ? 'No save receipts found.' : `No ${type} save receipts found.`) : `No save receipts found for resource ${resource}.`}${verified ? ' (no verified receipts)' : ''}${unverified ? ' (no unverified receipts)' : ''}`;
@@ -233,7 +239,7 @@ export function formatReceiptsText(
 
   const totalPages = Math.ceil(total / limit);
   const filterLabel = `${type === undefined ? '' : ` [type: ${type}]`}${resource === undefined ? '' : ` [resource: ${resource}]`}${since === undefined ? '' : ` [since: ${since}]`}${until === undefined ? '' : ` [until: ${until}]`}${verified ? ' [verified]' : ''}${unverified ? ' [unverified]' : ''}`;
-  const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${filterLabel}`];
+  const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${oldestFirst ? ' [oldest first]' : ''}${filterLabel}`];
   lines.push(...receipts.map(formatReceipt));
 
   if (offset + receipts.length < total) {
@@ -271,14 +277,14 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     (options.verified !== true || receipt.verified) &&
     (options.unverified !== true || !receipt.verified),
   );
-  const receipts = selectReceipts(matchingReceipts, limit, offset);
+  const receipts = selectReceipts(matchingReceipts, limit, offset, undefined, false, false, undefined, options.oldestFirst === true);
   if (options.json || options.jsonSummary) {
     const verification = matchingReceipts.reduce((counts, receipt) => {
       counts[receipt.verified ? 'verified' : 'unverified'] += 1;
       return counts;
     }, { verified: 0, unverified: 0 });
     const totalBytes = matchingReceipts.reduce((sum, receipt) => sum + receipt.size, 0);
-    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until));
+    console.log(formatReceiptsJson(receipts, matchingReceipts.length, offset, limit, type, verification, false, options.verified === true, options.unverified === true, resource, countReceiptResources(matchingReceipts), !options.jsonSummary, totalBytes, options.since, options.until, options.oldestFirst === true));
     return;
   }
 
@@ -296,5 +302,6 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
     resource,
     options.since,
     options.until,
+    options.oldestFirst === true,
   )));
 }

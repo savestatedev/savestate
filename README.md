@@ -211,6 +211,7 @@ savestate receipts                    Inspect proofs created by successful saves
   --page-size <n>                     Readable alias for --limit
   --page <n>                          Show the 1-based receipt page
   --offset <n>                        Skip newer receipts before applying --limit (default: 0)
+  --oldest-first                      Show receipts from oldest to newest
   --type <type>                        Only snapshot, memory, or checkpoint receipts
   --resource <id>                      Only receipts for one resource ID
   --since <date>                        Only receipts saved on or after an ISO 8601 date
