@@ -65,6 +65,12 @@ export interface ReceiptsJson {
   receipts?: SaveReceipt[];
 }
 
+export function validateReceiptOrdering(reverse = false, oldestFirst = false): void {
+  if (reverse && oldestFirst) {
+    throw new Error('Cannot use --oldest-first and --reverse together; choose one ordering flag.');
+  }
+}
+
 export function countReceiptResources(receipts: SaveReceipt[]): ReceiptsJson['resourceCounts'] {
   return receipts.reduce((counts, receipt) => {
     counts[receipt.resource_type] += 1;
@@ -266,6 +272,7 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   validateListDateRange(options.since, options.until);
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
+  validateReceiptOrdering(options.reverse === true, options.oldestFirst === true);
   if (options.verified === true && options.unverified === true) {
     throw new Error('Use either --verified or --unverified, not both.');
   }

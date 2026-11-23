@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts } from '../receipts.js';
+import { countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -74,6 +74,14 @@ describe('receipts command', () => {
     ] as never[];
     expect(selectReceipts(receipts, 2, 0, undefined, false, false, undefined, true).map((receipt) => receipt.receipt_id))
       .toEqual(['oldest', 'newest']);
+  });
+
+  it('rejects contradictory receipt ordering flags', () => {
+    expect(() => validateReceiptOrdering(true, true)).toThrow(
+      'Cannot use --oldest-first and --reverse together; choose one ordering flag.',
+    );
+    expect(() => validateReceiptOrdering(true, false)).not.toThrow();
+    expect(() => validateReceiptOrdering(false, true)).not.toThrow();
   });
 
   it('counts resource types for machine-readable summaries', () => {
