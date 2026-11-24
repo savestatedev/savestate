@@ -24,10 +24,19 @@ import type { AgentIdentity, ToolReference } from '../identity/schema.js';
 interface IdentityOptions {
   json?: boolean;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
 const MAX_IDENTITY_SCHEMA_LIMIT = 1000;
+
+/** Resolve the shared pagination alias while rejecting ambiguous requests. */
+export function resolveIdentityLimit(limit?: string, pageSize?: string): string | undefined {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Use either --limit or --page-size, not both.');
+  }
+  return pageSize ?? limit;
+}
 
 /** Parse identity schema --limit without turning user input errors into an empty schema. */
 export function parseIdentitySchemaLimit(value: string | undefined): number | undefined {
@@ -579,13 +588,14 @@ export async function identityCommand(
   options?: IdentityOptions,
 ): Promise<void> {
   const subcommand = parseIdentitySubcommand(rawSubcommand);
-  const schemaLimit = subcommand === 'schema' ? parseIdentitySchemaLimit(options?.limit) : undefined;
+  const requestedLimit = resolveIdentityLimit(options?.limit, options?.pageSize);
+  const schemaLimit = subcommand === 'schema' ? parseIdentitySchemaLimit(requestedLimit) : undefined;
   const schemaOffset = subcommand === 'schema' ? parseIdentitySchemaOffset(options?.offset) : undefined;
-  const showLimit = subcommand === 'show' ? parseIdentityShowLimit(options?.limit) : undefined;
+  const showLimit = subcommand === 'show' ? parseIdentityShowLimit(requestedLimit) : undefined;
   const showOffset = subcommand === 'show' ? parseIdentityShowOffset(options?.offset) : undefined;
-  const initLimit = subcommand === 'init' ? parseIdentityInitLimit(options?.limit) : undefined;
+  const initLimit = subcommand === 'init' ? parseIdentityInitLimit(requestedLimit) : undefined;
   const initOffset = subcommand === 'init' ? parseIdentityInitOffset(options?.offset) : undefined;
-  const setLimit = subcommand === 'set' ? parseIdentitySetLimit(options?.limit) : undefined;
+  const setLimit = subcommand === 'set' ? parseIdentitySetLimit(requestedLimit) : undefined;
   const setOffset = subcommand === 'set' ? parseIdentitySetOffset(options?.offset) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;

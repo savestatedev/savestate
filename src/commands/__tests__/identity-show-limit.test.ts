@@ -2,11 +2,23 @@ import { describe, expect, it } from 'vitest';
 import {
   parseIdentityShowLimit,
   parseIdentityShowOffset,
+  resolveIdentityLimit,
   selectIdentityShowOffsetTools,
   selectIdentityShowTools,
 } from '../identity.js';
 
 describe('savestate identity show --limit', () => {
+  it('accepts --page-size as an alias for --limit', () => {
+    expect(resolveIdentityLimit(undefined, '12')).toBe('12');
+    expect(resolveIdentityLimit('12', undefined)).toBe('12');
+  });
+
+  it('rejects combining --limit and --page-size', () => {
+    expect(() => resolveIdentityLimit('5', '10')).toThrow(
+      'Use either --limit or --page-size, not both.',
+    );
+  });
+
   it('defaults to undefined', () => {
     expect(parseIdentityShowLimit(undefined)).toBeUndefined();
   });
