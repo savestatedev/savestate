@@ -24,7 +24,7 @@ export SAVESTATE_PASSPHRASE="your-passphrase"   # required, 8+ characters; never
 npx @savestate/cli init                          # one-time: encryption + storage
 npx @savestate/cli snapshot                      # capture state from any platform
 npx @savestate/cli search "cocktail recs"        # full-text across every snapshot
-npx @savestate/cli search "cocktail recs" --offset 20 --limit 20  # next result page
+npx @savestate/cli search "cocktail recs" --page 2 --page-size 20  # next result page
 npx @savestate/cli restore latest --to claude    # move state between platforms
 npx @savestate/cli mcp                           # serve memory to Claude Code / Cursor / Codex
 ```
