@@ -530,6 +530,7 @@ program
   .option('--json', 'Output as JSON')
   .option('--limit <n>', 'Maximum number of identity tools (show), schema properties (schema), status field rows (init), or field rows (set) to show')
   .option('--page-size <n>', 'Alias for --limit when paging identity output; do not combine with --limit')
+  .option('--page <n>', '1-based identity page number (use instead of --offset)')
   .option('--offset <n>', 'Skip the first N identity tools (show), schema properties (schema), status field rows (init), or field rows (set) (non-negative integer up to 1000)')
   .action(identityCommand);
 

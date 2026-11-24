@@ -25,6 +25,7 @@ interface IdentityOptions {
   json?: boolean;
   limit?: string;
   pageSize?: string;
+  page?: string;
   offset?: string;
 }
 
@@ -36,6 +37,35 @@ export function resolveIdentityLimit(limit?: string, pageSize?: string): string 
     throw new Error('Use either --limit or --page-size, not both.');
   }
   return pageSize ?? limit;
+}
+
+/** Parse identity --page as a 1-based page number. */
+export function parseIdentityPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const normalized = value.trim();
+  const page = Number(normalized);
+  if (!/^\d+$/.test(normalized) || !Number.isSafeInteger(page) || page < 1) {
+    throw new Error(`Invalid --page value "${value}". Expected a positive integer page number.`);
+  }
+  return page;
+}
+
+/** Resolve --page into the existing bounded offset contract. */
+export function resolveIdentityOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  pageSize: number,
+): string | undefined {
+  const page = parseIdentityPage(pageValue);
+  if (offsetValue !== undefined && page !== undefined) {
+    throw new Error('Cannot use --page with --offset; choose one pagination mode.');
+  }
+  if (page === undefined) return offsetValue;
+  const offset = (page - 1) * pageSize;
+  if (!Number.isSafeInteger(offset) || offset > MAX_IDENTITY_SCHEMA_LIMIT) {
+    throw new Error(`Invalid --page value "${pageValue}". The requested page exceeds the maximum supported offset of ${MAX_IDENTITY_SCHEMA_LIMIT}.`);
+  }
+  return String(offset);
 }
 
 /** Parse identity schema --limit without turning user input errors into an empty schema. */
@@ -589,14 +619,25 @@ export async function identityCommand(
 ): Promise<void> {
   const subcommand = parseIdentitySubcommand(rawSubcommand);
   const requestedLimit = resolveIdentityLimit(options?.limit, options?.pageSize);
-  const schemaLimit = subcommand === 'schema' ? parseIdentitySchemaLimit(requestedLimit) : undefined;
-  const schemaOffset = subcommand === 'schema' ? parseIdentitySchemaOffset(options?.offset) : undefined;
-  const showLimit = subcommand === 'show' ? parseIdentityShowLimit(requestedLimit) : undefined;
-  const showOffset = subcommand === 'show' ? parseIdentityShowOffset(options?.offset) : undefined;
-  const initLimit = subcommand === 'init' ? parseIdentityInitLimit(requestedLimit) : undefined;
-  const initOffset = subcommand === 'init' ? parseIdentityInitOffset(options?.offset) : undefined;
-  const setLimit = subcommand === 'set' ? parseIdentitySetLimit(requestedLimit) : undefined;
-  const setOffset = subcommand === 'set' ? parseIdentitySetOffset(options?.offset) : undefined;
+  const page = parseIdentityPage(options?.page);
+  const pageSize = page === undefined ? 20 : parseIdentityShowLimit(requestedLimit) ?? 20;
+  const requestedOffset = resolveIdentityOffset(options?.offset, options?.page, pageSize);
+  const schemaLimit = subcommand === 'schema'
+    ? page === undefined ? parseIdentitySchemaLimit(requestedLimit) : pageSize
+    : undefined;
+  const schemaOffset = subcommand === 'schema' ? parseIdentitySchemaOffset(requestedOffset) : undefined;
+  const showLimit = subcommand === 'show'
+    ? page === undefined ? parseIdentityShowLimit(requestedLimit) : pageSize
+    : undefined;
+  const showOffset = subcommand === 'show' ? parseIdentityShowOffset(requestedOffset) : undefined;
+  const initLimit = subcommand === 'init'
+    ? page === undefined ? parseIdentityInitLimit(requestedLimit) : pageSize
+    : undefined;
+  const initOffset = subcommand === 'init' ? parseIdentityInitOffset(requestedOffset) : undefined;
+  const setLimit = subcommand === 'set'
+    ? page === undefined ? parseIdentitySetLimit(requestedLimit) : pageSize
+    : undefined;
+  const setOffset = subcommand === 'set' ? parseIdentitySetOffset(requestedOffset) : undefined;
   const initName = subcommand === 'init' ? parseIdentityName(args[0]) : undefined;
   const setField = subcommand === 'set' ? parseIdentityField(args[0]) : undefined;
   const setValue = subcommand === 'set'
