@@ -35,6 +35,36 @@ const MAX_MEMORY_LIMIT = 1000;
 const MAX_MEMORY_VERSION = 1000;
 const MEMORY_TIERS = ['L1', 'L2', 'L3'] as const;
 const MEMORY_FRESHNESS_STATES = ['active', 'stale', 'needs_confirmation'] as const;
+const MEMORY_LIST_FORMATS = ['table', 'json', 'json-summary'] as const;
+type MemoryListFormat = (typeof MEMORY_LIST_FORMATS)[number];
+
+/** Parse the explicit memory list output format before loading encrypted storage. */
+export function parseMemoryListFormat(value: string | undefined): MemoryListFormat | undefined {
+  if (value === undefined) return undefined;
+
+  const format = value.trim().toLowerCase();
+  if ((MEMORY_LIST_FORMATS as readonly string[]).includes(format)) {
+    return format as MemoryListFormat;
+  }
+
+  throw new Error(
+    `Invalid --format value "${value}". Expected one of table, json, or json-summary.`,
+  );
+}
+
+/** Resolve explicit and legacy output flags without silently choosing one. */
+export function resolveMemoryListFormat(
+  format: MemoryListFormat | undefined,
+  json: boolean | undefined,
+  jsonSummary: boolean | undefined,
+  metadataOnly: boolean | undefined,
+): MemoryListFormat {
+  const legacyFormat = jsonSummary || metadataOnly ? 'json-summary' : json ? 'json' : undefined;
+  if (format !== undefined && legacyFormat !== undefined && format !== legacyFormat) {
+    throw new Error(`Cannot combine --format ${format} with legacy JSON output flags.`);
+  }
+  return format ?? legacyFormat ?? 'table';
+}
 
 /** Parse memory --freshness with the same state names returned by JSON output. */
 export function parseMemoryFreshness(value: string | undefined): MemoryFreshnessState | undefined {
@@ -675,6 +705,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--page <n>', '1-based page number (use instead of --offset)')
     .option('--offset <n>', 'Skip the first N memories (0-1000; use nextOffset for continuation)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
+    .option('--format <format>', 'Output format: table, json, or json-summary')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON metadata without memory content; --summary is the short alias (implies --json)')
     .option('--metadata-only', 'Output JSON metadata without memory content (implies --json)')
@@ -692,6 +723,12 @@ export function registerMemoryCommands(program: Command): void {
         const offset = resolveMemoryListOffset(options.offset, options.page, limit);
         const namespace = parseMemoryNamespace(options.namespace);
         validateMemoryNamespaceFilters(namespace, options.unassigned);
+        const format = resolveMemoryListFormat(
+          parseMemoryListFormat(options.format),
+          options.json,
+          options.jsonSummary,
+          options.metadataOnly,
+        );
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -714,7 +751,7 @@ export function registerMemoryCommands(program: Command): void {
           limit,
           offset,
           snapshotId: parseMemorySnapshot(options.snapshot),
-          format: options.jsonSummary || options.metadataOnly ? 'json-summary' : options.json ? 'json' : 'table',
+          format,
         });
       } catch (err) {
         handleError(err);
