@@ -677,6 +677,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON metadata without memory content; --summary is the short alias (implies --json)')
+    .option('--metadata-only', 'Output JSON metadata without memory content (implies --json)')
     .action(async (options) => {
       try {
         const until = parseMemoryListUntil(options.until);
@@ -713,7 +714,7 @@ export function registerMemoryCommands(program: Command): void {
           limit,
           offset,
           snapshotId: parseMemorySnapshot(options.snapshot),
-          format: options.jsonSummary ? 'json-summary' : options.json ? 'json' : 'table',
+          format: options.jsonSummary || options.metadataOnly ? 'json-summary' : options.json ? 'json' : 'table',
         });
       } catch (err) {
         handleError(err);

@@ -15,6 +15,7 @@ describe('savestate memory list help', () => {
     expect(() => program.parse(['node', 'savestate', 'memory', 'list', '--help'])).toThrow();
 
     expect(help).toContain('--json-summary, --summary');
+    expect(help).toContain('--metadata-only');
     expect(help).toContain('--tag <tag>');
     expect(help).toContain('-f, --freshness <state>');
     expect(help).toContain('--summary is the short alias');
