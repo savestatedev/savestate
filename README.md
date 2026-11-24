@@ -248,6 +248,19 @@ filters so an audit command can be corrected without reconstructing its argument
 Use `--since` and `--until` to scope receipts by their saved timestamp; date-only values
 use UTC day boundaries and are preserved in pagination guidance and JSON metadata.
 
+### Identity pagination
+
+Inspect or script the agent identity with bounded pages:
+
+```bash
+savestate identity show --page 2 --page-size 20 --json
+savestate identity schema --page 2 --page-size 10 --json
+```
+
+`--page` is 1-based, and `--page-size` is a readable alias for `--limit`. Use
+`--offset` instead for an explicit zero-based skip; do not combine it with
+`--page` or combine `--limit` with `--page-size`.
+
 `savestate list --json` returns a summary object with `found` indicating whether
 the current page contains snapshots, alongside `total`, `shown`, `offset`,
 `limit`, and `entries`. When a page is empty, `emptyReason` distinguishes an
