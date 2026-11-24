@@ -373,6 +373,7 @@ program
   .option('--page-size <n>', 'Readable alias for --limit (positive integer up to 1000)')
   .option('--page <n>', '1-based page number (use instead of --offset)')
   .option('--offset <n>', 'Skip the first N ranked results after filters (non-negative integer up to 1000)')
+  .option('--page <n>', 'Read a 1-based result page (cannot be combined with --offset)')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--adapter <id>', 'Only search snapshots from this adapter')
   .option('--tag <tag>', 'Only search snapshots with this tag (case-insensitive)')

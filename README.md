@@ -450,13 +450,16 @@ savestate search <query>              Search across snapshot contents
   --tag <tag>                        Only search snapshots with this tag
   --label <label>                    Only search snapshots with this label
   --offset <n>                       Skip ranked results before applying --limit
+  --page <n>                         Read a 1-based result page (instead of --offset)
   --limit <n>                        Max results to show (default 20)
   --page <n>                         1-based page number (use instead of --offset)
   --json                             Output results as JSON
   --json-summary, --summary          Output results with pagination and filter metadata
 
 Search results are ranked consistently across snapshots, so `--offset` can be
-combined with `--limit` to page through results. Both values are bounded to
+combined with `--limit` to page through results. Use the 1-based `--page` option
+as a readable alternative to calculating offsets; `--page` and `--offset` are
+mutually exclusive. Both values are bounded to
 1000; the default page size is 20. `--json-summary` (or `--summary`) includes the normalized
 `filters` used for the page, which helps scripts distinguish similar queries
 run against different snapshot subsets. Initialized searches also report the
