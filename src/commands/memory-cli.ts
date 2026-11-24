@@ -677,6 +677,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON metadata without memory content; --summary is the short alias (implies --json)')
+    .option('--metadata-only', 'Output JSON metadata without memory content (implies --json)')
     .action(async (options) => {
       try {
         const until = parseMemoryListUntil(options.until);
@@ -713,7 +714,7 @@ export function registerMemoryCommands(program: Command): void {
           limit,
           offset,
           snapshotId: parseMemorySnapshot(options.snapshot),
-          format: options.jsonSummary ? 'json-summary' : options.json ? 'json' : 'table',
+          format: options.jsonSummary || options.metadataOnly ? 'json-summary' : options.json ? 'json' : 'table',
         });
       } catch (err) {
         handleError(err);
@@ -914,6 +915,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--max-criticality <n>', 'Show explain matches with criticality at most this score (0-1)')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON pagination metadata without retrieval details; --summary is the short alias (implies --json)')
+    .option('--metadata-only', 'Output JSON pagination metadata without retrieval details (implies --json)')
     .action(async (query, options) => {
       try {
         const parsedQuery = parseMemoryQuery(query);
@@ -955,7 +957,7 @@ export function registerMemoryCommands(program: Command): void {
           maxImportance,
           minCriticality,
           maxCriticality,
-          format: options.jsonSummary ? 'json-summary' : options.json ? 'json' : 'pretty',
+          format: options.jsonSummary || options.metadataOnly ? 'json-summary' : options.json ? 'json' : 'pretty',
         });
       } catch (err) {
         handleError(err);

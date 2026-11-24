@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MemoryEntry } from '../../types.js';
 import {
   formatMemoryListJson,
+  normalizeMemoryListContent,
   filterMemoryListByCreatedSince,
   filterMemoryListBySource,
   filterMemoryListByNamespace,
@@ -847,5 +848,15 @@ describe('savestate memory --json', () => {
     expect(parsed.total).toBe(1);
     expect(parsed.shown).toBe(1);
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
+  });
+
+  it('normalizes content filters in the JSON envelope', () => {
+    const memory = entry({ id: 'mem-editor', content: 'preferred editor: vim' });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      filters: { content: '  preferred\n editor:   vim  ' },
+    })) as MemoryListJson;
+
+    expect(normalizeMemoryListContent('  preferred\n editor:   vim  ')).toBe('preferred editor: vim');
+    expect(parsed.filters.content).toBe('preferred editor: vim');
   });
 });

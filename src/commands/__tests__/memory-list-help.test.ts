@@ -15,6 +15,7 @@ describe('savestate memory list help', () => {
     expect(() => program.parse(['node', 'savestate', 'memory', 'list', '--help'])).toThrow();
 
     expect(help).toContain('--json-summary, --summary');
+    expect(help).toContain('--metadata-only');
     expect(help).toContain('--tag <tag>');
     expect(help).toContain('-f, --freshness <state>');
     expect(help).toContain('--summary is the short alias');
@@ -22,6 +23,16 @@ describe('savestate memory list help', () => {
     expect(renderedHelp).toContain('--since 2026-01-01 --until 2026-01-31');
     expect(renderedHelp).toContain('--namespace org:app:agent --json-summary');
     expect(renderedHelp).toContain('--unassigned --summary');
+  });
+
+  it('documents metadata-only explain output', () => {
+    const program = new Command();
+    registerMemoryCommands(program);
+    const memory = program.commands.find((command) => command.name() === 'memory');
+    const help = memory?.commands.find((command) => command.name() === 'explain')?.helpInformation();
+
+    expect(help).toContain('--metadata-only');
+    expect(help).toMatch(/without retrieval\s+details/);
   });
 
   it('normalizes the hyphenated confirmation state for CLI users', () => {

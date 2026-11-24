@@ -793,7 +793,9 @@ export function formatMemoryListJson(
         ? null
         : normalizeMemoryListNamespace(pagination.filters.namespace),
       unassignedNamespace: pagination.filters?.unassignedNamespace ?? false,
-      content: pagination.filters?.content ?? null,
+      content: pagination.filters?.content == null
+        ? null
+        : normalizeMemoryListContent(pagination.filters.content),
       tags: pagination.filters?.tags == null
         ? null
         : (() => {
@@ -900,10 +902,22 @@ export interface MemoryListMissingJson {
   /** Empty collection summaries keep the successful list schema predictable. */
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
+  byTier: Record<MemoryTier, number>;
+  shownByTier: Record<MemoryTier, number>;
+  bySource: Record<string, number>;
+  shownBySource: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
+  byNamespace: Record<string, number>;
+  shownByNamespace: Record<string, number>;
   namespacePercentages: Record<string, number>;
   shownNamespacePercentages: Record<string, number>;
+  unassignedNamespaceCount: 0;
+  shownUnassignedNamespaceCount: 0;
+  byTag: Record<string, number>;
+  shownByTag: Record<string, number>;
+  tagPercentages: Record<string, number>;
+  shownTagPercentages: Record<string, number>;
   pinned: 0;
   shownPinned: 0;
   pinnedPercentage: 0;
@@ -964,10 +978,22 @@ export function formatMemoryListMissingJson(
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
+      byTier: { L1: 0, L2: 0, L3: 0 },
+      shownByTier: { L1: 0, L2: 0, L3: 0 },
+      bySource: {},
+      shownBySource: {},
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      byNamespace: {},
+      shownByNamespace: {},
       namespacePercentages: {},
       shownNamespacePercentages: {},
+      unassignedNamespaceCount: 0,
+      shownUnassignedNamespaceCount: 0,
+      byTag: {},
+      shownByTag: {},
+      tagPercentages: {},
+      shownTagPercentages: {},
       sourcePercentages: {},
       shownSourcePercentages: {},
       pinned: 0,
@@ -1058,6 +1084,11 @@ export function filterMemoryListByContent(
   const normalize = (value: string): string => value.replace(/\s+/g, ' ').trim().toLowerCase();
   const query = normalize(content);
   return entries.filter((entry) => normalize(entry.content).includes(query));
+}
+
+/** Keep the serialized content filter aligned with the matching semantics. */
+export function normalizeMemoryListContent(content: string): string {
+  return content.replace(/\s+/g, ' ').trim();
 }
 
 /** Keep memories containing every requested metadata tag. */
