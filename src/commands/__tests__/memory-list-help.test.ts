@@ -25,6 +25,16 @@ describe('savestate memory list help', () => {
     expect(renderedHelp).toContain('--unassigned --summary');
   });
 
+  it('documents metadata-only explain output', () => {
+    const program = new Command();
+    registerMemoryCommands(program);
+    const memory = program.commands.find((command) => command.name() === 'memory');
+    const help = memory?.commands.find((command) => command.name() === 'explain')?.helpInformation();
+
+    expect(help).toContain('--metadata-only');
+    expect(help).toMatch(/without retrieval\s+details/);
+  });
+
   it('normalizes the hyphenated confirmation state for CLI users', () => {
     expect(parseMemoryFreshness(' needs-confirmation ')).toBe('needs_confirmation');
   });
