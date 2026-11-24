@@ -17,6 +17,8 @@ interface SearchOptions {
   since?: string;
   until?: string;
   limit?: string;
+  pageSize?: string;
+  page?: string;
   offset?: string;
   snapshot?: string;
   adapter?: string;
@@ -262,6 +264,11 @@ export function formatSearchPageHint(
   return undefined;
 }
 
+/** Keep interactive pagination readable without changing the JSON contract. */
+export function formatSearchPageLabel(offset: number, limit: number): string {
+  return `Page ${Math.floor(offset / limit) + 1} (page size ${limit})`;
+}
+
 export interface SearchMissingJson {
   found: false;
   query: string;
@@ -360,6 +367,17 @@ export function parseSearchLimit(value: string | undefined): number {
   return limit;
 }
 
+/** Resolve the readable page-size alias while rejecting ambiguous limits. */
+export function resolveSearchLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseSearchLimit(pageSizeValue ?? limitValue);
+}
+
 /** Parse search --offset without turning user input errors into an unbounded skip. */
 export function parseSearchOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -378,6 +396,42 @@ export function parseSearchOffset(value: string | undefined): number | undefined
     );
   }
   return offset;
+}
+
+/** Parse search --page as a 1-based page number. */
+export function parseSearchPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  const page = Number(normalized);
+  if (!/^\d+$/.test(normalized) || !Number.isSafeInteger(page) || page < 1) {
+    throw new Error(
+      `Invalid --page value "${value}". Expected a positive integer page number.`,
+    );
+  }
+  return page;
+}
+
+/** Resolve a 1-based page into the bounded offset contract. */
+export function resolveSearchOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  limit: number,
+): number | undefined {
+  const offset = parseSearchOffset(offsetValue);
+  const page = parseSearchPage(pageValue);
+  if (offset !== undefined && page !== undefined) {
+    throw new Error('Cannot use --page with --offset; choose one pagination mode.');
+  }
+  if (page === undefined) return offset;
+
+  const resolved = (page - 1) * limit;
+  if (!Number.isSafeInteger(resolved) || resolved > MAX_SEARCH_OFFSET) {
+    throw new Error(
+      `Invalid --page value "${pageValue}". The requested page exceeds the maximum supported offset of ${MAX_SEARCH_OFFSET}.`,
+    );
+  }
+  return resolved;
 }
 
 /** Parse search --type without silently dropping unknown filters or exiting the process. */
@@ -709,8 +763,8 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   if (!isInitialized()) {
     if (jsonOutput) {
-      const limit = parseSearchLimit(options.limit);
-      const offset = parseSearchOffset(options.offset) ?? 0;
+      const limit = resolveSearchLimit(options.limit, options.pageSize);
+      const offset = resolveSearchOffset(options.offset, options.page, limit) ?? 0;
       const filters = options.jsonSummary
         ? {
           // Keep uninitialized summaries aligned with initialized searches:
@@ -734,8 +788,8 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     process.exit(1);
   }
 
-  const limit = parseSearchLimit(options.limit);
-  const offset = parseSearchOffset(options.offset);
+  const limit = resolveSearchLimit(options.limit, options.pageSize);
+  const offset = resolveSearchOffset(options.offset, options.page, limit);
 
   if (types?.length === 0) {
     if (jsonOutput) {
@@ -781,8 +835,8 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     const entry = await findEntry(snapshotId);
     if (!entry || (adapter && !matchesSearchAdapter(entry.adapter, adapter))) {
       if (jsonOutput) {
-        const limit = parseSearchLimit(options.limit);
-        const offset = parseSearchOffset(options.offset) ?? 0;
+        const limit = resolveSearchLimit(options.limit, options.pageSize);
+        const offset = resolveSearchOffset(options.offset, options.page, limit) ?? 0;
         console.log(options.jsonSummary
           ? formatSearchMissingSummaryJson(query, snapshotId, offset, limit, {
             type: types,
@@ -820,7 +874,10 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     if (tag) console.log(chalk.dim(`   Tag: ${tag}`));
     if (label) console.log(chalk.dim(`   Label: ${label}`));
-    if (offset !== undefined) console.log(chalk.dim(`   Offset: ${offset}`));
+    if (offset !== undefined) {
+      console.log(chalk.dim(`   ${formatSearchPageLabel(offset, limit)}`));
+      console.log(chalk.dim(`   Offset: ${offset}`));
+    }
     console.log();
   }
 
