@@ -190,6 +190,10 @@ describe('memory list source summary display', () => {
 });
 
 describe('memory list table content display', () => {
+  it('shows a placeholder for blank imported content', () => {
+    expect(formatMemoryListContent('  \r\n\t')).toBe('—');
+  });
+
   it('does not add an ellipsis to short content', () => {
     expect(formatMemoryListContent('Use dark mode')).toBe('Use dark mode');
   });

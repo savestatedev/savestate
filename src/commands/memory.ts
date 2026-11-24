@@ -890,8 +890,11 @@ export interface MemoryListMissingJson {
   limit: number | null;
   offset: number;
   maxOffset: number;
+  pageSize: number;
+  totalPages: 0;
   /** Missing snapshots have no pages to open. */
   lastPage: 0;
+  lastPageOffset: null;
   hasMore: false;
   isLastPage: true;
   nextOffset: null;
@@ -899,6 +902,8 @@ export interface MemoryListMissingJson {
   suggestedOffset: null;
   /** Missing snapshots are terminal and therefore have no follow-up page. */
   guidance: MemoryListGuidance;
+  /** Keep ordering metadata stable even when the requested snapshot is absent. */
+  ordering: MemoryListOrdering;
   /** Empty collection summaries keep the successful list schema predictable. */
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
@@ -969,13 +974,25 @@ export function formatMemoryListMissingJson(
       limit,
       offset,
       maxOffset: MAX_MEMORY_LIST_OFFSET,
+      pageSize: limit ?? 0,
+      totalPages: 0,
       lastPage: 0,
+      lastPageOffset: null,
       hasMore: false,
       isLastPage: true,
       nextOffset: null,
       previousOffset: null,
       suggestedOffset: null,
       guidance: { action: 'none', offset: null },
+      ordering: {
+        primary: filters.importantFirst ? 'importance' : 'createdAt',
+        direction: filters.importantFirst || !filters.oldestFirst ? 'desc' : 'asc',
+        tieBreaker: filters.importantFirst ? 'createdAt' : 'id',
+        tieDirection: filters.importantFirst
+          ? (filters.oldestFirst ? 'asc' : 'desc')
+          : 'asc',
+        finalTieBreaker: 'id',
+      },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
       byTier: { L1: 0, L2: 0, L3: 0 },
@@ -1748,6 +1765,7 @@ export function formatMemoryExplainNamespace(namespace: string | undefined): str
 export function formatMemoryListContent(content: string, maxLength = 40): string {
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
   const normalized = content.replace(/\s+/g, ' ').trim();
+  if (!normalized) return '—';
   return normalized.length > maxLength
     ? `${Array.from(normalized).slice(0, maxLength).join('')}...`
     : normalized;

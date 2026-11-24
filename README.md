@@ -353,6 +353,16 @@ calculating offsets from the number of returned entries.
 For a shorter interactive command, `savestate memory list --summary` is an alias for
 `--json-summary`.
 
+Use `--format table`, `--format json`, or `--format json-summary` when a script or wrapper
+needs to select the output shape explicitly. The JSON formats are equivalent to `--json` and
+`--json-summary`; legacy flags may be used alone, but combining them with a different explicit
+format is rejected to avoid silently changing a caller's output contract:
+
+```bash
+savestate memory list --format json --limit 20
+savestate memory list --format json-summary --page 2 --page-size 20
+```
+
 Use `--page-size` as a readable alias for `--limit` when paging memory lists or explain
 results. The two option names are mutually exclusive; both commands default to their
 existing page sizes when neither is provided.

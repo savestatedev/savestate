@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Command } from 'commander';
-import { parseMemoryFreshness, registerMemoryCommands } from '../memory-cli.js';
+import {
+  parseMemoryFreshness,
+  parseMemoryListFormat,
+  registerMemoryCommands,
+  resolveMemoryListFormat,
+} from '../memory-cli.js';
 
 describe('savestate memory list help', () => {
   it('documents the short summary alias', () => {
@@ -15,6 +20,7 @@ describe('savestate memory list help', () => {
     expect(() => program.parse(['node', 'savestate', 'memory', 'list', '--help'])).toThrow();
 
     expect(help).toContain('--json-summary, --summary');
+    expect(help).toContain('--format <format>');
     expect(help).toContain('--metadata-only');
     expect(help).toContain('--tag <tag>');
     expect(help).toContain('-f, --freshness <state>');
@@ -41,6 +47,22 @@ describe('savestate memory list help', () => {
 
   it('explains the accepted hyphenated spelling for invalid values', () => {
     expect(() => parseMemoryFreshness('unknown')).toThrow('needs-confirmation is also accepted');
+  });
+
+  it('parses explicit output formats and preserves legacy flags', () => {
+    expect(parseMemoryListFormat(' JSON-SUMMARY ')).toBe('json-summary');
+    expect(resolveMemoryListFormat(undefined, true, false, false)).toBe('json');
+    expect(resolveMemoryListFormat(undefined, false, true, false)).toBe('json-summary');
+    expect(resolveMemoryListFormat('table', false, false, false)).toBe('table');
+  });
+
+  it('rejects invalid or contradictory output formats', () => {
+    expect(() => parseMemoryListFormat('yaml')).toThrow(
+      'Expected one of table, json, or json-summary.',
+    );
+    expect(() => resolveMemoryListFormat('table', true, false, false)).toThrow(
+      'Cannot combine --format table with legacy JSON output flags.',
+    );
   });
 
   it('normalizes the hyphenated confirmation state for CLI users', () => {
