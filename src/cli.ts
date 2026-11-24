@@ -319,7 +319,7 @@ program
   .option('--json', 'Output as JSON')
   .option('--json-summary, --summary', 'Output paginated JSON with navigation metadata (implies --json)')
   .option('--platform <id>', 'Only adapters reported by this platform')
-  .option('--limit <n>', 'Maximum number of adapters to show')
+  .option('--limit <n>, --page-size <n>', 'Maximum number of adapters to show')
   .option('--offset <n>', 'Skip the first N adapters (non-negative integer up to 1000)')
   .action(adaptersCommand);
 
