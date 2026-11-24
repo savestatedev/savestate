@@ -178,6 +178,17 @@ describe('receipts command', () => {
     );
   });
 
+  it('summarizes resource types shown on the current page', () => {
+    const receipts = [
+      { resource_type: 'memory' },
+      { resource_type: 'snapshot' },
+      { resource_type: 'memory' },
+    ] as never[];
+    expect(formatReceiptsText(receipts, 3, 0, 10)).toContain(
+      '[resources: snapshot 1, memory 2, checkpoint 0]',
+    );
+  });
+
   it('explains active filters when the matching collection is empty', () => {
     const output = formatReceiptsText([], 0, 0, 10, '--limit', 'offset', 'memory', false, false, undefined, '2026-01-01', '2026-01-31', false, '--oldest-first', 'r2');
     expect(output).toBe('No save receipts found (type: memory, backend: r2, since: 2026-01-01, until: 2026-01-31).');
