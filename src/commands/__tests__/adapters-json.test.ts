@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatAdaptersJson,
   formatAdaptersSummaryJson,
+  isAdaptersJsonMode,
   parseAdaptersPlatform,
   selectAdaptersPlatform,
   type AdapterListEntry,
@@ -16,6 +17,12 @@ const adapter: AdapterListEntry = {
 };
 
 describe('savestate adapters --json', () => {
+  it('treats summary output as machine-readable mode', () => {
+    expect(isAdaptersJsonMode({ jsonSummary: true })).toBe(true);
+    expect(isAdaptersJsonMode({ json: true })).toBe(true);
+    expect(isAdaptersJsonMode({})).toBe(false);
+  });
+
   it('prints adapter records as JSON', () => {
     const parsed = JSON.parse(formatAdaptersJson([adapter])) as AdapterListEntry[];
     expect(parsed).toHaveLength(1);

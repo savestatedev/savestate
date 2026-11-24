@@ -5821,8 +5821,13 @@ describe('CLI docs', () => {
     expect(adaptersSection).toContain('--limit');
     expect(adaptersSection).toContain('Must be a positive integer up to 1000');
     expect(adaptersSection).toContain('savestate adapters --limit 5');
-    expect(adaptersBlock).toContain(".option('--limit <n>'");
+    expect(adaptersBlock).toContain(".option('--limit <n>, --page-size <n>'");
     expect(adapters).toContain('export function parseAdaptersLimit');
+  });
+
+  it('accepts adapters --page-size as a readable limit alias', () => {
+    const adaptersBlock = cli.slice(cli.indexOf("command('adapters')"), cli.indexOf("command('antibodies"));
+    expect(adaptersBlock).toContain(".option('--limit <n>, --page-size <n>'");
   });
 
   it('documents adapters --offset as a bounded non-negative integer', () => {

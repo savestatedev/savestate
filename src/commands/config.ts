@@ -9,6 +9,7 @@ import type { SaveStateConfig } from '../types.js';
 interface ConfigOptions {
   set?: string;
   limit?: string;
+  pageSize?: string;
   offset?: string;
   json?: boolean;
 }
@@ -71,12 +72,19 @@ export function selectConfigOffsetEntries<T>(adapters: T[], offset?: number): T[
 /** Apply config --offset then --limit. */
 export function applyConfigFilters<T>(
   adapters: T[],
-  options: { offset?: string; limit?: string },
+  options: { offset?: string; limit?: string; pageSize?: string },
 ): T[] {
+  validateConfigLimitOptions(options);
   return selectConfigAdapters(
     selectConfigOffsetEntries(adapters, parseConfigOffset(options.offset)),
-    parseConfigLimit(options.limit),
+    parseConfigLimit(options.limit ?? options.pageSize),
   );
+}
+
+function validateConfigLimitOptions(options: Pick<ConfigOptions, 'limit' | 'pageSize'>): void {
+  if (options.limit !== undefined && options.pageSize !== undefined) {
+    throw new Error('Cannot use --limit and --page-size together; choose one limit option.');
+  }
 }
 
 export function formatConfigJson(config: SaveStateConfig): string {
@@ -175,7 +183,8 @@ function setNestedValue(obj: Record<string, unknown>, path: string, rawValue: st
 }
 
 export async function configCommand(options: ConfigOptions): Promise<void> {
-  parseConfigLimit(options.limit);
+  validateConfigLimitOptions(options);
+  parseConfigLimit(options.limit ?? options.pageSize);
   parseConfigOffset(options.offset);
 
   if (!options.json) {
