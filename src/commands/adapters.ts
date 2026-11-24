@@ -148,6 +148,14 @@ export function shouldShowAdaptersPageSummary(options: {
   );
 }
 
+/** Summary output is machine-readable just like the plain JSON mode. */
+export function isAdaptersJsonMode(options: {
+  json?: boolean;
+  jsonSummary?: boolean;
+}): boolean {
+  return options.json === true || options.jsonSummary === true;
+}
+
 export function formatAdaptersJson(adapters: AdapterListEntry[]): string {
   return JSON.stringify(adapters, null, 2);
 }
@@ -238,6 +246,8 @@ export function formatAdaptersMissingJson(): string {
 }
 
 export async function adaptersCommand(options: AdaptersOptions = {}): Promise<void> {
+  const jsonMode = isAdaptersJsonMode(options);
+
   if (!isInitialized()) {
     if (options.jsonSummary) {
       console.log(formatAdaptersSummaryJson({ entries: [], total: 0 }));
@@ -252,13 +262,13 @@ export async function adaptersCommand(options: AdaptersOptions = {}): Promise<vo
     process.exit(1);
   }
 
-  if (!options.json) {
+  if (!jsonMode) {
     console.log();
     console.log(chalk.bold('🔌 Available Adapters'));
     console.log();
   }
 
-  const spinner = options.json ? null : ora('Scanning for adapters...').start();
+  const spinner = jsonMode ? null : ora('Scanning for adapters...').start();
 
   try {
     const allAdapterInfos = await getAdapterInfo();
