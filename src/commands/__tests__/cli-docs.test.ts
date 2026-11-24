@@ -189,6 +189,14 @@ describe('CLI docs', () => {
     expect(docs).toContain('byFreshness</code> and <code>shownByFreshness');
   });
 
+  it('documents explicit memory list output formats', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    expect(readme).toContain('savestate memory list --format json --limit 20');
+    expect(readme).toContain('savestate memory list --format json-summary --page 2 --page-size 20');
+    expect(memorySection).toContain('--format &lt;format&gt;');
+    expect(memorySection).toContain('<code>table</code>, <code>json</code>, or <code>json-summary</code>');
+  });
+
   it('keeps the memory explain default limit aligned with the CLI', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     expect(memorySection).toContain('maximum retrieval results to show on <code>explain</code> (default 10)');
