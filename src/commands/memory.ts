@@ -793,7 +793,9 @@ export function formatMemoryListJson(
         ? null
         : normalizeMemoryListNamespace(pagination.filters.namespace),
       unassignedNamespace: pagination.filters?.unassignedNamespace ?? false,
-      content: pagination.filters?.content ?? null,
+      content: pagination.filters?.content == null
+        ? null
+        : normalizeMemoryListContent(pagination.filters.content),
       tags: pagination.filters?.tags == null
         ? null
         : (() => {
@@ -1058,6 +1060,11 @@ export function filterMemoryListByContent(
   const normalize = (value: string): string => value.replace(/\s+/g, ' ').trim().toLowerCase();
   const query = normalize(content);
   return entries.filter((entry) => normalize(entry.content).includes(query));
+}
+
+/** Keep the serialized content filter aligned with the matching semantics. */
+export function normalizeMemoryListContent(content: string): string {
+  return content.replace(/\s+/g, ' ').trim();
 }
 
 /** Keep memories containing every requested metadata tag. */
