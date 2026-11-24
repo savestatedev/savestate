@@ -264,6 +264,11 @@ export function formatSearchPageHint(
   return undefined;
 }
 
+/** Keep interactive pagination readable without changing the JSON contract. */
+export function formatSearchPageLabel(offset: number, limit: number): string {
+  return `Page ${Math.floor(offset / limit) + 1} (page size ${limit})`;
+}
+
 export interface SearchMissingJson {
   found: false;
   query: string;
@@ -869,7 +874,10 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     if (tag) console.log(chalk.dim(`   Tag: ${tag}`));
     if (label) console.log(chalk.dim(`   Label: ${label}`));
-    if (offset !== undefined) console.log(chalk.dim(`   Offset: ${offset}`));
+    if (offset !== undefined) {
+      console.log(chalk.dim(`   ${formatSearchPageLabel(offset, limit)}`));
+      console.log(chalk.dim(`   Offset: ${offset}`));
+    }
     console.log();
   }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatSearchPageHint, parseSearchOffset } from '../search.js';
+import { formatSearchPageHint, formatSearchPageLabel, parseSearchOffset } from '../search.js';
 
 describe('savestate search --offset', () => {
   it('defaults to undefined', () => {
@@ -9,6 +9,11 @@ describe('savestate search --offset', () => {
   it('accepts zero and positive integers', () => {
     expect(parseSearchOffset('0')).toBe(0);
     expect(parseSearchOffset('12')).toBe(12);
+  });
+
+  it('labels the 1-based page and selected page size', () => {
+    expect(formatSearchPageLabel(10, 5)).toBe('Page 3 (page size 5)');
+    expect(formatSearchPageLabel(0, 20)).toBe('Page 1 (page size 20)');
   });
 
   it('accepts surrounding whitespace', () => {
