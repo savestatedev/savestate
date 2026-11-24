@@ -104,6 +104,19 @@ describe('receipts command', () => {
     expect(JSON.parse(formatReceiptsJson(receipts, 3, 0, 10)).backendCounts).toEqual({ local: 2, r2: 1 });
   });
 
+  it('reports resource counts for the visible JSON page', () => {
+    const receipts = [
+      { resource_type: 'memory' },
+      { resource_type: 'snapshot' },
+    ] as never[];
+    const output = JSON.parse(formatReceiptsJson(
+      [receipts[0]], 2, 0, 1, undefined, { verified: 0, unverified: 2 }, false, false, false,
+      countReceiptResources(receipts),
+    ));
+    expect(output.resourceCounts).toEqual({ snapshot: 1, memory: 1, checkpoint: 0 });
+    expect(output.shownResourceCounts).toEqual({ snapshot: 0, memory: 1, checkpoint: 0 });
+  });
+
   it('filters to verified receipts before applying newest-first pagination', () => {
     const receipts = [
       { receipt_id: 'unverified', verified: false },
@@ -162,6 +175,17 @@ describe('receipts command', () => {
     );
     expect(formatReceiptsText(receipts, 3, 1, 1)).toContain(
       'Previous page: savestate receipts --limit 1 --offset 0',
+    );
+  });
+
+  it('summarizes resource types shown on the current page', () => {
+    const receipts = [
+      { resource_type: 'memory' },
+      { resource_type: 'snapshot' },
+      { resource_type: 'memory' },
+    ] as never[];
+    expect(formatReceiptsText(receipts, 3, 0, 10)).toContain(
+      '[resources: snapshot 1, memory 2, checkpoint 0]',
     );
   });
 

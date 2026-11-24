@@ -54,6 +54,7 @@ export interface ReceiptsJson {
   verifiedPercentage: number;
   shownVerifiedPercentage: number;
   resourceCounts: { snapshot: number; memory: number; checkpoint: number };
+  shownResourceCounts: { snapshot: number; memory: number; checkpoint: number };
   backendCounts: Record<string, number>;
   latestSavedAt: string | null;
   oldestSavedAt: string | null;
@@ -152,7 +153,7 @@ export function formatReceiptsJson(
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
     remaining: Math.max(0, total - offset - shown), hasMore: nextOffset !== null, isLastPage: nextOffset === null,
     nextOffset, nextPage, hasPrevious, previousOffset, previousPage, guidance, verification,
-    verifiedPercentage, shownVerifiedPercentage, resourceCounts,
+    verifiedPercentage, shownVerifiedPercentage, resourceCounts, shownResourceCounts: countReceiptResources(receipts),
     latestSavedAt, oldestSavedAt, shownBytes, averageShownBytes, totalBytes, averageTotalBytes,
     backendCounts: completeBackendCounts,
     ...(includeReceipts ? { receipts } : {}) } satisfies ReceiptsJson;
@@ -302,7 +303,9 @@ export function formatReceiptsText(
 
   const totalPages = Math.ceil(total / limit);
   const filterLabel = `${type === undefined ? '' : ` [type: ${type}]`}${resource === undefined ? '' : ` [resource: ${resource}]`}${backend === undefined ? '' : ` [backend: ${backend}]`}${since === undefined ? '' : ` [since: ${since}]`}${until === undefined ? '' : ` [until: ${until}]`}${verified ? ' [verified]' : ''}${unverified ? ' [unverified]' : ''}`;
-  const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${oldestFirst ? ' [oldest first]' : ''}${filterLabel}`];
+  const resourceCounts = countReceiptResources(receipts);
+  const resourceSummary = ` [resources: snapshot ${resourceCounts.snapshot}, memory ${resourceCounts.memory}, checkpoint ${resourceCounts.checkpoint}]`;
+  const lines = [`Save receipts (${receipts.length} of ${total}, page ${page}/${totalPages})${oldestFirst ? ' [oldest first]' : ''}${filterLabel}${resourceSummary}`];
   lines.push(...receipts.map(formatReceipt));
 
   if (offset + receipts.length < total) {
