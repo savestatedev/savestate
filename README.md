@@ -451,6 +451,7 @@ savestate search <query>              Search across snapshot contents
   --label <label>                    Only search snapshots with this label
   --offset <n>                       Skip ranked results before applying --limit
   --limit <n>                        Max results to show (default 20)
+  --page <n>                         1-based page number (use instead of --offset)
   --json                             Output results as JSON
   --json-summary, --summary          Output results with pagination and filter metadata
 

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchLimit, resolveSearchLimit } from '../search.js';
+import {
+  parseSearchLimit,
+  parseSearchPage,
+  resolveSearchLimit,
+  resolveSearchOffset,
+} from '../search.js';
 
 describe('savestate search --limit', () => {
   it('defaults to 20 results', () => {
@@ -35,6 +40,20 @@ describe('savestate search --limit', () => {
   it('rejects combining limit option names', () => {
     expect(() => resolveSearchLimit('10', '12')).toThrow(
       'Cannot use --limit with --page-size; choose one page-size option.',
+    );
+  });
+
+  it('resolves a 1-based page into a bounded offset', () => {
+    expect(parseSearchPage('2')).toBe(2);
+    expect(resolveSearchOffset(undefined, '3', 20)).toBe(40);
+  });
+
+  it('rejects ambiguous or out-of-range page navigation', () => {
+    expect(() => resolveSearchOffset('20', '2', 20)).toThrow(
+      'Cannot use --page with --offset; choose one pagination mode.',
+    );
+    expect(() => resolveSearchOffset(undefined, '52', 20)).toThrow(
+      'maximum supported offset of 1000',
     );
   });
 });
