@@ -370,6 +370,7 @@ program
   .option('--since <date>', 'Only snapshots taken on or after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken on or before this date (date-only values include the full UTC day)')
   .option('--limit <n>', 'Maximum results (default: 20; positive integer up to 1000)')
+  .option('--page-size <n>', 'Readable alias for --limit (positive integer up to 1000)')
   .option('--offset <n>', 'Skip the first N ranked results after filters (non-negative integer up to 1000)')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--adapter <id>', 'Only search snapshots from this adapter')

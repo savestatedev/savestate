@@ -17,6 +17,7 @@ interface SearchOptions {
   since?: string;
   until?: string;
   limit?: string;
+  pageSize?: string;
   offset?: string;
   snapshot?: string;
   adapter?: string;
@@ -358,6 +359,17 @@ export function parseSearchLimit(value: string | undefined): number {
     );
   }
   return limit;
+}
+
+/** Resolve the readable page-size alias while rejecting ambiguous limits. */
+export function resolveSearchLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseSearchLimit(pageSizeValue ?? limitValue);
 }
 
 /** Parse search --offset without turning user input errors into an unbounded skip. */
@@ -709,7 +721,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
 
   if (!isInitialized()) {
     if (jsonOutput) {
-      const limit = parseSearchLimit(options.limit);
+      const limit = resolveSearchLimit(options.limit, options.pageSize);
       const offset = parseSearchOffset(options.offset) ?? 0;
       const filters = options.jsonSummary
         ? {
@@ -734,7 +746,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     process.exit(1);
   }
 
-  const limit = parseSearchLimit(options.limit);
+  const limit = resolveSearchLimit(options.limit, options.pageSize);
   const offset = parseSearchOffset(options.offset);
 
   if (types?.length === 0) {
@@ -781,7 +793,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     const entry = await findEntry(snapshotId);
     if (!entry || (adapter && !matchesSearchAdapter(entry.adapter, adapter))) {
       if (jsonOutput) {
-        const limit = parseSearchLimit(options.limit);
+        const limit = resolveSearchLimit(options.limit, options.pageSize);
         const offset = parseSearchOffset(options.offset) ?? 0;
         console.log(options.jsonSummary
           ? formatSearchMissingSummaryJson(query, snapshotId, offset, limit, {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSearchLimit } from '../search.js';
+import { parseSearchLimit, resolveSearchLimit } from '../search.js';
 
 describe('savestate search --limit', () => {
   it('defaults to 20 results', () => {
@@ -25,6 +25,16 @@ describe('savestate search --limit', () => {
     expect(parseSearchLimit('1000')).toBe(1000);
     expect(() => parseSearchLimit('1001')).toThrow(
       'Invalid --limit value "1001". Expected a positive integer up to 1000.',
+    );
+  });
+
+  it('accepts the readable page-size alias', () => {
+    expect(resolveSearchLimit(undefined, '12')).toBe(12);
+  });
+
+  it('rejects combining limit option names', () => {
+    expect(() => resolveSearchLimit('10', '12')).toThrow(
+      'Cannot use --limit with --page-size; choose one page-size option.',
     );
   });
 });
