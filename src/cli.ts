@@ -371,6 +371,7 @@ program
   .option('--until <date>', 'Only snapshots taken on or before this date (date-only values include the full UTC day)')
   .option('--limit <n>', 'Maximum results (default: 20; positive integer up to 1000)')
   .option('--offset <n>', 'Skip the first N ranked results after filters (non-negative integer up to 1000)')
+  .option('--page <n>', 'Read a 1-based result page (cannot be combined with --offset)')
   .option('--snapshot <id>', 'Search within a specific snapshot')
   .option('--adapter <id>', 'Only search snapshots from this adapter')
   .option('--tag <tag>', 'Only search snapshots with this tag (case-insensitive)')

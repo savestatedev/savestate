@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatSearchPageHint, parseSearchOffset } from '../search.js';
+import {
+  formatSearchPageHint,
+  parseSearchOffset,
+  parseSearchPage,
+  resolveSearchOffset,
+} from '../search.js';
 
 describe('savestate search --offset', () => {
   it('defaults to undefined', () => {
@@ -26,6 +31,20 @@ describe('savestate search --offset', () => {
     expect(parseSearchOffset('1000')).toBe(1000);
     expect(() => parseSearchOffset('1001')).toThrow(
       'Invalid --offset value "1001". Expected a non-negative integer up to 1000.',
+    );
+  });
+
+  it('resolves a 1-based page using the selected page size', () => {
+    expect(parseSearchPage('3')).toBe(3);
+    expect(resolveSearchOffset(undefined, '3', 5)).toBe(10);
+  });
+
+  it('rejects page zero and ambiguous pagination', () => {
+    expect(() => parseSearchPage('0')).toThrow(
+      'Invalid --page value "0". Expected a positive integer page number.',
+    );
+    expect(() => resolveSearchOffset('5', '2', 5)).toThrow(
+      'Cannot use --page with --offset; choose one pagination mode.',
     );
   });
 

@@ -18,6 +18,7 @@ interface SearchOptions {
   until?: string;
   limit?: string;
   offset?: string;
+  page?: string;
   snapshot?: string;
   adapter?: string;
   tag?: string;
@@ -380,6 +381,42 @@ export function parseSearchOffset(value: string | undefined): number | undefined
   return offset;
 }
 
+/** Parse search --page as a 1-based page number. */
+export function parseSearchPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  const page = Number(normalized);
+  if (!/^\d+$/.test(normalized) || !Number.isSafeInteger(page) || page < 1) {
+    throw new Error(
+      `Invalid --page value "${value}". Expected a positive integer page number.`,
+    );
+  }
+  return page;
+}
+
+/** Resolve a 1-based page into the bounded offset contract. */
+export function resolveSearchOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  limit: number,
+): number | undefined {
+  const offset = parseSearchOffset(offsetValue);
+  const page = parseSearchPage(pageValue);
+  if (offset !== undefined && page !== undefined) {
+    throw new Error('Cannot use --page with --offset; choose one pagination mode.');
+  }
+  if (page === undefined) return offset;
+
+  const resolved = (page - 1) * limit;
+  if (!Number.isSafeInteger(resolved) || resolved > MAX_SEARCH_OFFSET) {
+    throw new Error(
+      `Invalid --page value "${pageValue}". The requested page exceeds the maximum supported offset of ${MAX_SEARCH_OFFSET}.`,
+    );
+  }
+  return resolved;
+}
+
 /** Parse search --type without silently dropping unknown filters or exiting the process. */
 export function parseSearchType(
   value: string | undefined,
@@ -710,7 +747,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   if (!isInitialized()) {
     if (jsonOutput) {
       const limit = parseSearchLimit(options.limit);
-      const offset = parseSearchOffset(options.offset) ?? 0;
+      const offset = resolveSearchOffset(options.offset, options.page, limit) ?? 0;
       const filters = options.jsonSummary
         ? {
           // Keep uninitialized summaries aligned with initialized searches:
@@ -735,7 +772,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
   }
 
   const limit = parseSearchLimit(options.limit);
-  const offset = parseSearchOffset(options.offset);
+  const offset = resolveSearchOffset(options.offset, options.page, limit);
 
   if (types?.length === 0) {
     if (jsonOutput) {
@@ -782,7 +819,7 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (!entry || (adapter && !matchesSearchAdapter(entry.adapter, adapter))) {
       if (jsonOutput) {
         const limit = parseSearchLimit(options.limit);
-        const offset = parseSearchOffset(options.offset) ?? 0;
+        const offset = resolveSearchOffset(options.offset, options.page, limit) ?? 0;
         console.log(options.jsonSummary
           ? formatSearchMissingSummaryJson(query, snapshotId, offset, limit, {
             type: types,
