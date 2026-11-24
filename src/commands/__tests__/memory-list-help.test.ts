@@ -38,7 +38,17 @@ describe('savestate memory list help', () => {
     const help = memory?.commands.find((command) => command.name() === 'explain')?.helpInformation();
 
     expect(help).toContain('--metadata-only');
+    expect(help).toContain('--format <format>');
     expect(help).toMatch(/without retrieval\s+details/);
+  });
+
+  it('accepts the explicit output format on explain', () => {
+    const program = new Command();
+    registerMemoryCommands(program);
+    const memory = program.commands.find((command) => command.name() === 'memory');
+    const explain = memory?.commands.find((command) => command.name() === 'explain');
+    expect(explain?.options.some((option) => option.long === '--format')).toBe(true);
+    expect(parseMemoryListFormat(' json-summary ')).toBe('json-summary');
   });
 
   it('normalizes the hyphenated confirmation state for CLI users', () => {

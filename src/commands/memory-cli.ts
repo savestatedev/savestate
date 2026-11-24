@@ -950,6 +950,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--min-criticality <n>', 'Show explain matches with criticality at least this score (0-1)')
     .option('--max-criticality <n>', 'Show explain matches with criticality at most this score (0-1)')
+    .option('--format <format>', 'Output format: table, json, or json-summary')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON pagination metadata without retrieval details; --summary is the short alias (implies --json)')
     .option('--metadata-only', 'Output JSON pagination metadata without retrieval details (implies --json)')
@@ -968,6 +969,12 @@ export function registerMemoryCommands(program: Command): void {
         const namespace = parseMemoryNamespace(options.namespace);
         validateMemoryNamespaceFilters(namespace, options.unassigned);
         const limit = resolveMemoryExplainLimit(options.limit, options.pageSize);
+        const outputFormat = resolveMemoryListFormat(
+          parseMemoryListFormat(options.format),
+          options.json,
+          options.jsonSummary,
+          options.metadataOnly,
+        );
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
@@ -994,7 +1001,7 @@ export function registerMemoryCommands(program: Command): void {
           maxImportance,
           minCriticality,
           maxCriticality,
-          format: options.jsonSummary || options.metadataOnly ? 'json-summary' : options.json ? 'json' : 'pretty',
+          format: outputFormat === 'table' ? 'pretty' : outputFormat,
         });
       } catch (err) {
         handleError(err);

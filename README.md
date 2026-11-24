@@ -367,6 +367,9 @@ Use `--page-size` as a readable alias for `--limit` when paging memory lists or 
 results. The two option names are mutually exclusive; both commands default to their
 existing page sizes when neither is provided.
 
+Memory explain also accepts `--format table`, `--format json`, or `--format json-summary`,
+so wrappers can choose the same explicit output contract as memory list.
+
 Paginated JSON also includes `guidance`, a small machine-readable next step: `next`, `previous`,
 or `retry` with the recommended offset, or `none` when no navigation action is available.
 
