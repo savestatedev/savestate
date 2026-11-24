@@ -34,10 +34,22 @@ describe('savestate memory list --json when missing', () => {
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
+      byTier: { L1: 0, L2: 0, L3: 0 },
+      shownByTier: { L1: 0, L2: 0, L3: 0 },
+      bySource: {},
+      shownBySource: {},
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      byNamespace: {},
+      shownByNamespace: {},
       namespacePercentages: {},
       shownNamespacePercentages: {},
+      unassignedNamespaceCount: 0,
+      shownUnassignedNamespaceCount: 0,
+      byTag: {},
+      shownByTag: {},
+      tagPercentages: {},
+      shownTagPercentages: {},
       sourcePercentages: {},
       shownSourcePercentages: {},
       pinned: 0,
@@ -61,10 +73,10 @@ describe('savestate memory list --json when missing', () => {
       contentIncluded: true,
     });
     expect(parsed.entries).toBeUndefined();
-    expect(parsed.byTier).toBeUndefined();
+    expect(parsed.byTier).toEqual({ L1: 0, L2: 0, L3: 0 });
     expect(parsed.pinned).toBe(0);
     expect(parsed.secret).toBeUndefined();
-    expect(Object.keys(parsed).sort()).toEqual(['byFreshness', 'contentIncluded', 'empty', 'emptyReason', 'filters', 'found', 'guidance', 'hasMore', 'importance', 'isLastPage', 'lastPage', 'limit', 'maxOffset', 'namespacePercentages', 'nextOffset', 'offset', 'pinned', 'pinnedPercentage', 'previousOffset', 'remaining', 'shown', 'shownByFreshness', 'shownImportance', 'shownNamespacePercentages', 'shownPinned', 'shownPinnedPercentage', 'shownSourcePercentages', 'snapshot', 'sourcePercentages', 'suggestedOffset', 'total']);
+    expect(Object.keys(parsed).sort()).toEqual(['byFreshness', 'byNamespace', 'bySource', 'byTag', 'byTier', 'contentIncluded', 'empty', 'emptyReason', 'filters', 'found', 'guidance', 'hasMore', 'importance', 'isLastPage', 'lastPage', 'limit', 'maxOffset', 'namespacePercentages', 'nextOffset', 'offset', 'pinned', 'pinnedPercentage', 'previousOffset', 'remaining', 'shown', 'shownByFreshness', 'shownByNamespace', 'shownBySource', 'shownByTag', 'shownByTier', 'shownImportance', 'shownNamespacePercentages', 'shownPinned', 'shownPinnedPercentage', 'shownSourcePercentages', 'shownTagPercentages', 'shownUnassignedNamespaceCount', 'snapshot', 'sourcePercentages', 'suggestedOffset', 'tagPercentages', 'total', 'unassignedNamespaceCount']);
     expect(parsed.lastPage).toBe(0);
     expect(parsed.byFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
     expect(parsed.shownByFreshness).toEqual({ active: 0, stale: 0, needs_confirmation: 0 });
@@ -96,10 +108,22 @@ describe('savestate memory list --json when missing', () => {
       guidance: { action: 'none', offset: null },
       importance: { min: null, max: null, average: null },
       shownImportance: { min: null, max: null, average: null },
+      byTier: { L1: 0, L2: 0, L3: 0 },
+      shownByTier: { L1: 0, L2: 0, L3: 0 },
+      bySource: {},
+      shownBySource: {},
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      byNamespace: {},
+      shownByNamespace: {},
       namespacePercentages: {},
       shownNamespacePercentages: {},
+      unassignedNamespaceCount: 0,
+      shownUnassignedNamespaceCount: 0,
+      byTag: {},
+      shownByTag: {},
+      tagPercentages: {},
+      shownTagPercentages: {},
       sourcePercentages: {},
       shownSourcePercentages: {},
       pinned: 0,
