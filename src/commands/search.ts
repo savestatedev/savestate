@@ -874,10 +874,11 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     if (tag) console.log(chalk.dim(`   Tag: ${tag}`));
     if (label) console.log(chalk.dim(`   Label: ${label}`));
-    if (offset !== undefined) {
-      console.log(chalk.dim(`   ${formatSearchPageLabel(offset, limit)}`));
-      console.log(chalk.dim(`   Offset: ${offset}`));
-    }
+    // Keep the interactive header explicit about the active page even for the
+    // default first page, so users can tell which page size the result count
+    // belongs to before following the next-page hint.
+    console.log(chalk.dim(`   ${formatSearchPageLabel(offset ?? 0, limit)}`));
+    if (offset !== undefined) console.log(chalk.dim(`   Offset: ${offset}`));
     console.log();
   }
 
