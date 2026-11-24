@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseConfigLimit, selectConfigAdapters } from '../config.js';
+import { applyConfigFilters, parseConfigLimit, selectConfigAdapters } from '../config.js';
 
 describe('savestate config --limit', () => {
   it('defaults to undefined', () => {
@@ -39,5 +39,16 @@ describe('savestate config --limit', () => {
   it('returns all adapters when --limit is omitted', () => {
     const adapters = [{ id: 'clawdbot' }, { id: 'chatgpt' }];
     expect(selectConfigAdapters(adapters, undefined)).toEqual(adapters);
+  });
+
+  it('accepts page-size as a readable limit alias', () => {
+    const adapters = [{ id: 'clawdbot' }, { id: 'chatgpt' }];
+    expect(applyConfigFilters(adapters, { pageSize: '1' })).toEqual([adapters[0]]);
+  });
+
+  it('rejects ambiguous limit options', () => {
+    expect(() => applyConfigFilters([], { limit: '1', pageSize: '1' })).toThrow(
+      'Cannot use --limit and --page-size together',
+    );
   });
 });
