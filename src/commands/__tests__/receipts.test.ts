@@ -117,6 +117,29 @@ describe('receipts command', () => {
     expect(output.shownResourceCounts).toEqual({ snapshot: 0, memory: 1, checkpoint: 0 });
   });
 
+  it('sorts backend counts for deterministic JSON output', () => {
+    const receipts = [
+      { storage_backend: 'zeta' },
+      { storage_backend: 'local' },
+      { storage_backend: 'cloud' },
+    ] as never[];
+    expect(Object.keys(countReceiptBackends(receipts))).toEqual(['cloud', 'local', 'zeta']);
+  });
+
+  it('reports backend counts for the visible JSON page', () => {
+    const receipts = [
+      { storage_backend: 'r2' },
+      { storage_backend: 'local' },
+    ] as never[];
+    const output = JSON.parse(formatReceiptsJson(
+      [receipts[0]], 2, 0, 1, undefined, { verified: 0, unverified: 2 }, false, false, false,
+      undefined, undefined, undefined, true, undefined, undefined, undefined, undefined,
+      countReceiptBackends(receipts), receipts,
+    ));
+    expect(output.backendCounts).toEqual({ local: 1, r2: 1 });
+    expect(output.shownBackendCounts).toEqual({ r2: 1 });
+  });
+
   it('filters to verified receipts before applying newest-first pagination', () => {
     const receipts = [
       { receipt_id: 'unverified', verified: false },
