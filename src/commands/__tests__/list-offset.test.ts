@@ -6,6 +6,7 @@ import {
   formatListLabelCell,
   formatListTags,
   formatListDate,
+  hasListFilters,
   applyListFilters,
   parseListOffset,
   parseListUntil,
@@ -16,6 +17,11 @@ import {
 } from '../list.js';
 
 describe('savestate list --offset', () => {
+  it('recognizes filters even when the initialized store is empty', () => {
+    expect(hasListFilters({ tag: 'weekly' })).toBe(true);
+    expect(hasListFilters({ limit: '10' })).toBe(false);
+  });
+
   it('pads labels before styling an empty placeholder', () => {
     expect(formatListLabelCell(null, 5)).toBe('—    ');
     expect(formatListLabelCell('work', 5)).toBe('work ');

@@ -847,6 +847,11 @@ export async function listCommand(options: ListOptions): Promise<void> {
   console.log();
 
   if (index.snapshots.length === 0) {
+    if (hasListFilters(options)) {
+      console.log(chalk.dim('  No snapshots match those filters.'));
+      console.log();
+      return;
+    }
     console.log(chalk.dim('  No snapshots yet. Create one with:'));
     console.log();
     console.log(`    ${chalk.cyan('savestate snapshot')}`);
@@ -928,6 +933,20 @@ export async function listCommand(options: ListOptions): Promise<void> {
     console.log(chalk.dim(`  (filtered from ${index.snapshots.length} total)`));
   }
   console.log();
+}
+
+/** Keep an empty initialized store from implying that filters were ignored. */
+export function hasListFilters(options: ListOptions): boolean {
+  return [
+    options.since,
+    options.until,
+    options.platform,
+    options.adapter,
+    options.exclude,
+    options.snapshot,
+    options.tag,
+    options.label,
+  ].some((value) => value !== undefined);
 }
 
 export function applyListFilters(
