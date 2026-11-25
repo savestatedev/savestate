@@ -1766,8 +1766,9 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
   const normalized = content.replace(/\s+/g, ' ').trim();
   if (!normalized) return '—';
-  return normalized.length > maxLength
-    ? `${Array.from(normalized).slice(0, maxLength).join('')}...`
+  const characters = Array.from(normalized);
+  return characters.length > maxLength
+    ? `${characters.slice(0, maxLength).join('')}...`
     : normalized;
 }
 
@@ -1779,8 +1780,9 @@ export function formatMemoryExplainContent(content: string, maxLength = 60): str
 /** Keep tag labels readable in the human-facing memory table. */
 export function formatMemoryListTags(entry: MemoryEntry, maxLength = 24): string {
   const tags = getMemoryListTags(entry).join(', ');
-  return tags.length > maxLength
-    ? `${Array.from(tags).slice(0, maxLength - 3).join('')}...`
+  const characters = Array.from(tags);
+  return characters.length > maxLength
+    ? `${characters.slice(0, maxLength - 3).join('')}...`
     : tags || '—';
 }
 

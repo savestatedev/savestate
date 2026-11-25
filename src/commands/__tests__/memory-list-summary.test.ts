@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatMemoryListEmptyState,
   formatMemoryListJson,
+  formatMemoryListContent,
   formatMemoryListNamespace,
   formatMemoryListNamespaceSummary,
   formatMemoryListPageNamespaceSummary,
@@ -22,6 +23,11 @@ const memory = (namespace?: string): MemoryEntry => ({
 });
 
 describe('savestate memory list namespace display', () => {
+  it('does not truncate content early when it contains astral Unicode characters', () => {
+    expect(formatMemoryListContent('😀😀😀', 3)).toBe('😀😀😀');
+    expect(formatMemoryListContent('😀😀😀😀', 3)).toBe('😀😀😀...');
+  });
+
   it('does not add a namespace column for blank namespaces', () => {
     expect(shouldShowMemoryListNamespace([memory('  '), memory()])).toBe(false);
   });
