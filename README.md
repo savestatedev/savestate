@@ -195,6 +195,9 @@ savestate list                        List all snapshots
   --json                             Output as JSON
   --json-summary, --summary          Output pagination metadata without snapshot records (implies --json)
   --oldest-first                     Show snapshots from oldest to newest
+  --limit <n>, --page-size <n>        Maximum snapshots to show (1–1000)
+  --page <n>                          Show a 1-based snapshot page
+  --offset <n>                        Skip snapshots after filters (maximum 1000)
   --platform <id>                    Only snapshots recorded from this platform
   --adapter <id>                     Only snapshots recorded by this adapter
   --exclude <ids>                    Exclude snapshots from comma-separated adapters
@@ -282,6 +285,10 @@ filter metadata is emitted in its normalized, de-duplicated form.
 
 Use `--page-size` as a readable alias for `--limit` when paging snapshots, for example
 `savestate list --page-size 20 --offset 20`.
+
+Use `--page` for one-based navigation when a stable page size is more convenient:
+`savestate list --page 2 --page-size 20 --json`. `--page` and `--offset` are mutually
+exclusive; both forms keep the supported offset ceiling visible in JSON navigation metadata.
 
 Use `savestate list --json-summary` (or its `--summary` alias) when a script needs the same pagination and filter metadata
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
