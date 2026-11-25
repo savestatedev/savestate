@@ -582,11 +582,13 @@ export function formatListEmptyState(
     return 'No snapshots found matching the criteria. Try adjusting the filters.';
   }
 
-  const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
+  const pageLimit = normalizeListPageLimit(limit);
+  const suggestedOffset = getNearestListOffset(matchingCount, pageLimit);
+  const suggestedPage = Math.floor(suggestedOffset / pageLimit) + 1;
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
-  }. Try --offset ${suggestedOffset} ` +
-    'to open the nearest available page.';
+  }. Try --page ${suggestedPage} --limit ${pageLimit} ` +
+    `or --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 /** Describe the visible list page without treating an offset as part of the limit. */
@@ -597,8 +599,10 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   const pageEnd = Math.min(offset + pageLimit, total);
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = getNearestListOffset(total, pageLimit);
+    const suggestedPage = Math.floor(suggestedOffset / pageLimit) + 1;
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
-      `try --offset ${suggestedOffset} to open the nearest available page)`;
+      `try --page ${suggestedPage} --limit ${pageLimit} or --offset ${suggestedOffset} ` +
+      'to open the nearest available page)';
   }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
