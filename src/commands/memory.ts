@@ -1914,14 +1914,15 @@ export function formatMemoryListPageSummary(
     pageNumber === undefined
       ? pageDescription
       : pageNumber !== undefined && totalPages !== undefined && pageNumber <= totalPages
-        ? `${pageDescription}, page ${pageNumber} of ${totalPages}`
-        : `${pageDescription}, page ${pageNumber} (last page ${totalPages})`,
+        ? `${pageDescription}, page ${pageNumber} of ${totalPages} (use --page ${pageNumber} --page-size ${limit})`
+        : `${pageDescription}, page ${pageNumber} (last page ${totalPages}; use --page ${pageNumber} --page-size ${limit})`,
   ];
   if (hasNextPage && nextOffset > offset) {
+    const nextPage = limit === undefined ? undefined : Math.floor(nextOffset / limit) + 1;
     hints.push(
-      `next offset ${nextOffset}${nextOffsetIsCapped ? ' (maximum)' : ''}${
-        limit === undefined ? '' : `, limit ${limit}`
-      }`,
+      limit === undefined
+        ? `next offset ${nextOffset}`
+        : `next page ${nextPage} (use --page ${nextPage} --page-size ${limit})${nextOffsetIsCapped ? ' (maximum)' : ''}`,
     );
   } else if (hasNextPage) {
     hints.push('no later page is available within the offset limit');
@@ -1933,9 +1934,9 @@ export function formatMemoryListPageSummary(
         : Math.floor((total - 1) / limit) * limit
       : offset - (limit === undefined ? shown : limit);
     hints.push(
-      `previous offset ${Math.max(0, previousOffset)}${
-        limit === undefined ? '' : `, limit ${limit}`
-      }`,
+      limit === undefined
+        ? `previous offset ${Math.max(0, previousOffset)}`
+        : `previous page ${Math.floor(Math.max(0, previousOffset) / limit) + 1} (use --page ${Math.floor(Math.max(0, previousOffset) / limit) + 1} --page-size ${limit})`,
     );
   }
   return `(showing ${shown} of ${total} matching memories; ${hints.join('; ')})`;
