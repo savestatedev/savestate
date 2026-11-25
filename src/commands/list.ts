@@ -12,6 +12,7 @@ interface ListOptions {
   oldestFirst?: boolean;
   reverse?: boolean;
   limit?: string;
+  page?: string;
   offset?: string;
   since?: string;
   until?: string;
@@ -528,6 +529,43 @@ export function parseListOffset(value: string | undefined): number | undefined {
   return offset;
 }
 
+/** Parse list --page as a one-based page number before converting it to an offset. */
+export function parseListPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(`Invalid --page value "${value}". Expected a positive integer.`);
+  }
+
+  const page = Number(normalized);
+  if (!Number.isSafeInteger(page) || page < 1) {
+    throw new Error(`Invalid --page value "${value}". Expected a positive integer.`);
+  }
+  return page;
+}
+
+/** Resolve page-oriented input while keeping offset validation in one place. */
+export function resolveListOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  limit: number,
+): number {
+  if (offsetValue !== undefined && pageValue !== undefined) {
+    throw new Error('Cannot combine --page with --offset.');
+  }
+  if (pageValue === undefined) return parseListOffset(offsetValue) ?? 0;
+
+  const page = parseListPage(pageValue)!;
+  const offset = (page - 1) * limit;
+  if (!Number.isSafeInteger(offset) || offset > MAX_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --page value "${pageValue}". Page ${page} exceeds the supported offset ceiling of ${MAX_LIST_OFFSET} for --limit ${limit}.`,
+    );
+  }
+  return parseListOffset(String(offset))!;
+}
+
 /** Skip the first N snapshots when list --offset is set. */
 export function selectListOffsetEntries<T>(entries: T[], offset?: number): T[] {
   if (offset === undefined) return entries;
@@ -795,7 +833,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   parseListTag(options.tag);
   parseListLabel(options.label);
   const limit = parseListLimit(options.limit);
-  const offset = parseListOffset(options.offset) ?? 0;
+  const offset = resolveListOffset(options.offset, options.page, limit);
   const oldestFirst = Boolean(options.oldestFirst || options.reverse);
   const filters = {
     since: options.since,

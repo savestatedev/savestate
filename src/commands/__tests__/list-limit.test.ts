@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseListLimit } from '../list.js';
+import { parseListLimit, parseListPage, resolveListOffset } from '../list.js';
 
 describe('savestate list --limit', () => {
   it('defaults to 50 snapshots', () => {
@@ -26,5 +26,18 @@ describe('savestate list --limit', () => {
     expect(() => parseListLimit('1001')).toThrow(
       'Invalid --limit value "1001". Expected a positive integer up to 1000.',
     );
+  });
+});
+
+describe('savestate list --page', () => {
+  it('parses one-based page numbers and resolves them to offsets', () => {
+    expect(parseListPage(' 3 ')).toBe(3);
+    expect(resolveListOffset(undefined, '3', 20)).toBe(40);
+  });
+
+  it('rejects ambiguous or unsupported page input', () => {
+    expect(() => parseListPage('0')).toThrow('Expected a positive integer.');
+    expect(() => resolveListOffset('20', '2', 20)).toThrow('Cannot combine --page with --offset.');
+    expect(() => resolveListOffset(undefined, '52', 20)).toThrow('offset ceiling');
   });
 });
