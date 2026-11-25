@@ -98,6 +98,8 @@ export interface ListJsonFilters {
 export interface ListJsonGuidance {
   action: 'none' | 'next' | 'previous' | 'retry';
   offset: number | null;
+  /** One-based page equivalent for callers that use --page. */
+  page: number | null;
 }
 
 export interface ListJson {
@@ -277,12 +279,12 @@ export function formatListJson(
   const nextOffset = hasMore ? candidateNextOffset : null;
   const isLastPage = !hasMore;
   const guidance: ListJsonGuidance = records.length === 0 && suggestedOffset !== null
-    ? { action: 'retry', offset: suggestedOffset }
+    ? { action: 'retry', offset: suggestedOffset, page: Math.floor(suggestedOffset / pageLimit) + 1 }
     : hasMore && nextOffset !== null
-      ? { action: 'next', offset: nextOffset }
+      ? { action: 'next', offset: nextOffset, page: Math.floor(nextOffset / pageLimit) + 1 }
       : hasPrevious && previousOffset !== null
-        ? { action: 'previous', offset: previousOffset }
-        : { action: 'none', offset: null };
+        ? { action: 'previous', offset: previousOffset, page: Math.floor(previousOffset / pageLimit) + 1 }
+        : { action: 'none', offset: null, page: null };
   const result: ListJson = {
     found: records.length > 0,
     total: snapshots.length,
@@ -347,12 +349,12 @@ export function formatListJsonSummary(
   const nextOffset = hasMore ? candidateNextOffset : null;
   const isLastPage = !hasMore;
   const guidance: ListJsonGuidance = shown === 0 && suggestedOffset !== null
-    ? { action: 'retry', offset: suggestedOffset }
+    ? { action: 'retry', offset: suggestedOffset, page: Math.floor(suggestedOffset / pageLimit) + 1 }
     : hasMore && nextOffset !== null
-      ? { action: 'next', offset: nextOffset }
+      ? { action: 'next', offset: nextOffset, page: Math.floor(nextOffset / pageLimit) + 1 }
       : hasPrevious && previousOffset !== null
-        ? { action: 'previous', offset: previousOffset }
-        : { action: 'none', offset: null };
+        ? { action: 'previous', offset: previousOffset, page: Math.floor(previousOffset / pageLimit) + 1 }
+        : { action: 'none', offset: null, page: null };
   const summary: ListJsonSummary = {
     found: shown > 0,
     total: snapshots.length,
