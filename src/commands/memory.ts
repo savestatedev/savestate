@@ -646,6 +646,8 @@ export interface MemoryListJson {
     minImportance?: number;
     maxImportance?: number;
   };
+  /** Stable human-readable rendering of the active filters, or null when unfiltered. */
+  filterSummary: string | null;
   byTier: Record<MemoryTier, number>;
   shownByTier: Record<MemoryTier, number>;
   bySource: Record<string, number>;
@@ -813,6 +815,20 @@ export function formatMemoryListJson(
         ? { maxImportance: pagination.filters.maxImportance }
         : {}),
     },
+    filterSummary: formatMemoryListFilterSummary({
+      tier: pagination.filters?.tier,
+      pinned: pagination.filters?.pinned,
+      source: pagination.filters?.source,
+      namespace: pagination.filters?.namespace,
+      unassignedNamespace: pagination.filters?.unassignedNamespace,
+      content: pagination.filters?.content,
+      tags: pagination.filters?.tags,
+      since: pagination.filters?.since,
+      until: pagination.filters?.until,
+      freshness: pagination.filters?.freshness,
+      minImportance: pagination.filters?.minImportance,
+      maxImportance: pagination.filters?.maxImportance,
+    }) ?? null,
     byTier: countByTier(all),
     shownByTier: countByTier(shown),
     bySource: countBySource(all),

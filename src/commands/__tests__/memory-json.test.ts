@@ -446,6 +446,7 @@ describe('savestate memory --json', () => {
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, unassignedNamespace: false, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
+    expect(parsed.filterSummary).toBeNull();
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.bySource).toEqual({ user: 2, agent: 1 });
@@ -848,6 +849,19 @@ describe('savestate memory --json', () => {
     expect(parsed.total).toBe(1);
     expect(parsed.shown).toBe(1);
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
+  });
+
+  it('includes the normalized filter summary for machine consumers', () => {
+    const memory = entry({ id: 'mem-filter-summary', content: 'editor', source: 'Claude-Code' });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      filters: {
+        source: ' claude-code ',
+        tags: [' Work ', 'work'],
+        minImportance: 0.8,
+      },
+    })) as MemoryListJson;
+
+    expect(parsed.filterSummary).toBe('source=claude-code, tags=[Work], min-importance=0.8');
   });
 
   it('normalizes content filters in the JSON envelope', () => {
