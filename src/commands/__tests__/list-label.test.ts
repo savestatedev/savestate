@@ -137,7 +137,7 @@ describe('savestate list --label', () => {
   it('suggests the nearest page when an offset skips past every snapshot', () => {
     expect(formatListPageSummary(5, 0, 8, 2)).toBe(
       '(no snapshots shown: offset 8 skips past 5 after filters; ' +
-      'try --offset 4 --limit 2 to open the nearest available page)',
+      'try --page 3 --limit 2 or --offset 4 to open the nearest available page)',
     );
   });
 
@@ -150,11 +150,11 @@ describe('savestate list --label', () => {
     ];
 
     expect(JSON.parse(formatListJson(snapshots, 2, 0)).guidance)
-      .toEqual({ action: 'next', offset: 2 });
+      .toEqual({ action: 'next', offset: 2, page: 2 });
     const firstPage = JSON.parse(formatListJson(snapshots, 2, 0));
     expect(firstPage.isLastPage).toBe(false);
     const stalePage = JSON.parse(formatListJson(snapshots, 2, 8));
-    expect(stalePage.guidance).toEqual({ action: 'retry', offset: 2 });
+    expect(stalePage.guidance).toEqual({ action: 'retry', offset: 2, page: 2 });
     expect(stalePage.isLastPage).toBe(true);
   });
 });
