@@ -243,6 +243,13 @@ describe('memory list table tag display', () => {
       metadata: { tags: ['abcdefghijklmnop', 'urgent'] },
     }, 12)).toBe('abcdefghi...');
     expect(formatMemoryListTags({
+      id: 'mem-unicode-tags',
+      content: 'tagged',
+      source: 'user',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      metadata: { tags: ['😀😀😀', 'x'] },
+    }, 8)).toBe('😀😀😀, x');
+    expect(formatMemoryListTags({
       id: 'mem-no-tags',
       content: 'untagged',
       source: 'user',
