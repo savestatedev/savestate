@@ -822,6 +822,9 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     for (const hint of formatSearchFilterHints(types, excludedTypes)) {
       console.log(chalk.dim(`   ${hint}`));
     }
+    // Keep the empty filtered state consistent with regular searches so a
+    // page-size choice remains visible even when no search work is needed.
+    console.log(chalk.dim(`   ${formatSearchPageLabel(offset ?? 0, limit)}`));
     console.log();
     console.log(chalk.dim('  No matches found: all search types were excluded.'));
     console.log();
