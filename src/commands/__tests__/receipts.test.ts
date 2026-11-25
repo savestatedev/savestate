@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countReceiptBackends, countReceiptResources, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
+import { countReceiptBackends, countReceiptResources, countReceiptVerification, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -102,6 +102,15 @@ describe('receipts command', () => {
     ] as never[];
     expect(countReceiptBackends(receipts)).toEqual({ local: 2, r2: 1 });
     expect(JSON.parse(formatReceiptsJson(receipts, 3, 0, 10)).backendCounts).toEqual({ local: 2, r2: 1 });
+  });
+
+  it('derives verification metrics when collection metadata is omitted', () => {
+    const receipts = [{ verified: true }, { verified: false }, { verified: true }] as never[];
+    expect(countReceiptVerification(receipts)).toEqual({ verified: 2, unverified: 1 });
+    expect(JSON.parse(formatReceiptsJson(receipts, receipts.length, 0, 10))).toMatchObject({
+      verification: { verified: 2, unverified: 1 },
+      verifiedPercentage: 66.66666666666666,
+    });
   });
 
   it('reports resource counts for the visible JSON page', () => {
