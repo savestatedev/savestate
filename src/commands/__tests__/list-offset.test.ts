@@ -74,7 +74,7 @@ describe('savestate list --offset', () => {
 
   it('reports the filtered total and offset for a human-readable page', () => {
     expect(formatListPageSummary(12, 2, 10, 2)).toBe(
-      '(showing 2 of 12 after filters; 0 remaining; offset 10; limit 2; previous offset 8)',
+      '(showing 2 of 12 after filters; page 6 of 6; 0 remaining; offset 10; limit 2; previous offset 8)',
     );
   });
 
@@ -84,7 +84,7 @@ describe('savestate list --offset', () => {
 
   it('points to the next page when more snapshots remain', () => {
     expect(formatListPageSummary(12, 2, 0, 2)).toBe(
-      '(showing 2 of 12 after filters; 10 remaining; offset 0; limit 2; next offset 2)',
+      '(showing 2 of 12 after filters; page 1 of 6; 10 remaining; offset 0; limit 2; next offset 2)',
     );
   });
 
@@ -100,7 +100,7 @@ describe('savestate list --offset', () => {
 
   it('does not advertise a next offset above the CLI ceiling', () => {
     expect(formatListPageSummary(1_051, 50, 1_000, 50)).toBe(
-      '(showing 50 of 1051 after filters; 1 remaining; offset 1000; limit 50; last page-aligned offset 1000 (max offset 1000); previous offset 950)',
+      '(showing 50 of 1051 after filters; page 21 of 21; 1 remaining; offset 1000; limit 50; last page-aligned offset 1000 (max offset 1000); previous offset 950)',
     );
   });
 

@@ -285,7 +285,7 @@ describe('savestate list --json', () => {
     'normalizes invalid page-summary limits (%s)',
     (limit) => {
       expect(formatListPageSummary(100, 2, 0, limit)).toBe(
-        '(showing 2 of 100 after filters; 98 remaining; offset 0; limit 50; next offset 2)',
+        '(showing 2 of 100 after filters; page 1 of 2; 98 remaining; offset 0; limit 50; next offset 2)',
       );
       expect(formatListPageSummary(100, 0, 100, limit)).toBe(
         '(no snapshots shown: offset 100 skips past 100 after filters; try --offset 50 to open the nearest available page)',
