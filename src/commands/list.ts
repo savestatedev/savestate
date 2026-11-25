@@ -545,7 +545,7 @@ export function formatListEmptyState(
   const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
-  }. Try --offset ${suggestedOffset} --limit ${normalizeListPageLimit(limit)} ` +
+  }. Try --offset ${suggestedOffset} ` +
     'to open the nearest available page.';
 }
 
