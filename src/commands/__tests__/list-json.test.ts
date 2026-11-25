@@ -7,6 +7,7 @@ import {
   normalizeListJsonLabel,
   normalizeListJsonFilters,
   normalizeListJsonTags,
+  normalizeListPlatform,
   type ListJson,
 } from '../list.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
@@ -74,6 +75,16 @@ describe('savestate list --json', () => {
     expect(parsed.entries[0]?.label).toBe('pre-update');
     expect(normalizeListJsonLabel('  ')).toBeNull();
     expect(normalizeListJsonLabel(undefined)).toBeNull();
+  });
+
+  it('normalizes legacy platform whitespace for JSON consumers', () => {
+    const parsed = JSON.parse(formatListJson([{
+      ...newer,
+      platform: '  claude-code  ',
+    }])) as ListJson;
+
+    expect(parsed.entries[0]?.platform).toBe('claude-code');
+    expect(normalizeListPlatform('  chatgpt  ')).toBe('chatgpt');
   });
 
   it('sorts excluded adapters for stable filter metadata', () => {
