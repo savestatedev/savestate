@@ -7,6 +7,7 @@ import {
   formatMemoryListPageNamespaceSummary,
   formatMemoryListPageSummary,
   formatMemoryListPageTagSummary,
+  formatMemoryListSource,
   formatMemoryListTagSummary,
   getMemoryListTagPercentages,
   shouldShowMemoryListNamespace,
@@ -29,6 +30,10 @@ describe('savestate memory list namespace display', () => {
   it('trims namespace labels before displaying them', () => {
     expect(formatMemoryListNamespace('  org:app:agent  ')).toBe('org:app:agent');
     expect(formatMemoryListNamespace('   ')).toBe('—');
+  });
+
+  it('truncates Unicode namespace labels without splitting characters', () => {
+    expect(formatMemoryListNamespace('🧠'.repeat(26))).toBe(`${'🧠'.repeat(21)}...`);
   });
 
   it('normalizes namespace labels in JSON output', () => {
@@ -108,6 +113,12 @@ describe('savestate memory list namespace display', () => {
       memory(''),
       { ...memory('  '), id: 'memory-2' },
     ])).toBe('2 unassigned');
+  });
+});
+
+describe('savestate memory list source display', () => {
+  it('truncates Unicode source labels without splitting characters', () => {
+    expect(formatMemoryListSource('🤖'.repeat(20))).toBe(`${'🤖'.repeat(15)}...`);
   });
 });
 
