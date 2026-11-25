@@ -1766,8 +1766,9 @@ export function formatMemoryListContent(content: string, maxLength = 40): string
   // Keep imported CRLF, tabs, and repeated whitespace from breaking table rows.
   const normalized = content.replace(/\s+/g, ' ').trim();
   if (!normalized) return '—';
-  return normalized.length > maxLength
-    ? `${Array.from(normalized).slice(0, maxLength).join('')}...`
+  const characters = Array.from(normalized);
+  return characters.length > maxLength
+    ? `${characters.slice(0, maxLength).join('')}...`
     : normalized;
 }
 
