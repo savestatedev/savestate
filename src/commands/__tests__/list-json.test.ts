@@ -116,6 +116,7 @@ describe('savestate list --json', () => {
       previousOffset: null,
       hasMore: false,
       nextOffset: null,
+      guidance: { action: 'none', offset: null, page: null },
     });
   });
 
@@ -158,6 +159,7 @@ describe('savestate list --json', () => {
       previousOffset: 0,
       hasMore: false,
       nextOffset: null,
+      guidance: { action: 'previous', offset: 0, page: 1 },
     });
     expect(parsed.entries[0]?.id).toBe('ss-older');
   });
@@ -191,6 +193,7 @@ describe('savestate list --json', () => {
       previousPage: null,
       nextPage: 2,
       nextOffset: 1,
+      guidance: { action: 'next', offset: 1, page: 2 },
     });
   });
 

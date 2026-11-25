@@ -272,8 +272,9 @@ nearest page to retry. The response also includes `page`, `pageSize`,
 `totalPages`, `lastPage`, `lastPageOffset`, `previousPage`, `nextPage`, and `maxOffset` (the highest supported offset, currently 1000).
 The `isLastPage` boolean is true when the current page has no supported next page.
 The `guidance` object gives paginated scripts the next machine-readable step:
-`action` is `next`, `previous`, `retry`, or `none`, and `offset` is the value
-to pass to the next request (or `null` when no navigation is available).
+`action` is `next`, `previous`, `retry`, or `none`; `offset` is the value
+to pass to the next request and `page` is its one-based `--page` equivalent
+(both are `null` when no navigation is available).
 Before initialization, the
 response keeps a page-compatible shape with `shown: 0`,
 `emptyReason: "collection"`, and `entries: []`.
