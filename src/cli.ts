@@ -107,7 +107,7 @@ program
   .option('--json-summary, --summary', 'Output pagination metadata as JSON without snapshot records (implies --json)')
   .option('--reverse', 'Show oldest snapshots first (alias for --oldest-first)')
   .option('--oldest-first', 'Show snapshots from oldest to newest')
-  .option('--limit <n>', 'Maximum number of snapshots to show (1–1000)')
+  .option('--limit <n>, --page-size <n>', 'Maximum number of snapshots to show (1–1000)')
   .option('--offset <n>', 'Skip the first N snapshots after filters (non-negative integer up to 1000)')
   .option('--since <date>', 'Only snapshots taken on or after this date (ISO 8601)')
   .option('--until <date>', 'Only snapshots taken on or before this date (date-only values include the full UTC day)')

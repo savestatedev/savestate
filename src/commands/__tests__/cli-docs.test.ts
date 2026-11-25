@@ -5208,6 +5208,7 @@ describe('CLI docs', () => {
     expect(listSection).toContain('Must be a non-negative integer up to 1000');
     expect(listSection).toContain('savestate list --offset 10 --limit 5');
     expect(listBlock).toContain(".option('--offset <n>'");
+    expect(listBlock).toContain(".option('--limit <n>, --page-size <n>'");
     expect(listSource).toContain('export function parseListOffset');
   });
 
@@ -5216,6 +5217,7 @@ describe('CLI docs', () => {
     expect(listSection).toContain('--json');
     expect(listSection).toContain('(implies <code>--json</code>)');
     expect(listSection).toContain('--limit');
+    expect(listSection).toContain('--page-size');
     expect(listSection).toContain('--since');
     expect(listSection).toContain('--until');
     expect(listSection).toContain('--adapter');

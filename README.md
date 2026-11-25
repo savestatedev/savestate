@@ -280,6 +280,9 @@ from an initialized snapshot with no matching memories.
 Legacy tag whitespace and case-insensitive duplicate tags are removed from JSON entries, while
 filter metadata is emitted in its normalized, de-duplicated form.
 
+Use `--page-size` as a readable alias for `--limit` when paging snapshots, for example
+`savestate list --page-size 20 --offset 20`.
+
 Use `savestate list --json-summary` (or its `--summary` alias) when a script needs the same pagination and filter metadata
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
 `shown`, `remaining`, `maxOffset`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized

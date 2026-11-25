@@ -291,7 +291,7 @@
         <tr><td><code>--json-summary</code>, <code>--summary</code></td><td>Emit the same pagination and normalized filter metadata as <code>--json</code> without snapshot records (implies <code>--json</code>). <code>--summary</code> is the short alias. Useful when scripts only need counts and navigation and should avoid loading payload-only fields.</td></tr>
         <tr><td><code>--oldest-first</code></td><td>Show snapshots from oldest to newest. Applies to table and JSON output.</td></tr>
         <tr><td><code>--reverse</code></td><td>Alias for <code>--oldest-first</code>; show snapshots from oldest to newest.</td></tr>
-        <tr><td><code>--limit &lt;n&gt;</code></td><td>Maximum number of snapshots to show (default 50). Must be a positive integer up to 1000.</td></tr>
+        <tr><td><code>--limit &lt;n&gt;</code>, <code>--page-size &lt;n&gt;</code></td><td>Maximum number of snapshots to show (default 50). <code>--page-size</code> is a readable alias for <code>--limit</code>. Must be a positive integer up to 1000.</td></tr>
         <tr><td><code>--offset &lt;n&gt;</code></td><td>Skip the first N snapshots after filters. Must be a non-negative integer up to 1000.</td></tr>
         <tr><td><code>--since &lt;date&gt;</code></td><td>Only snapshots taken after this date (ISO 8601, e.g. <code>2026-04-01</code>)</td></tr>
         <tr><td><code>--until &lt;date&gt;</code></td><td>Only snapshots taken on or before this date. Date-only values include the full UTC day. Must be an ISO 8601 date.</td></tr>
