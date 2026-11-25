@@ -1914,8 +1914,8 @@ export function formatMemoryListPageSummary(
     pageNumber === undefined
       ? pageDescription
       : pageNumber !== undefined && totalPages !== undefined && pageNumber <= totalPages
-        ? `${pageDescription}, page ${pageNumber} of ${totalPages}`
-        : `${pageDescription}, page ${pageNumber} (last page ${totalPages})`,
+        ? `${pageDescription}, page ${pageNumber} of ${totalPages} (use --page ${pageNumber} --page-size ${limit})`
+        : `${pageDescription}, page ${pageNumber} (last page ${totalPages}; use --page ${pageNumber} --page-size ${limit})`,
   ];
   if (hasNextPage && nextOffset > offset) {
     const nextPage = limit === undefined ? undefined : Math.floor(nextOffset / limit) + 1;
