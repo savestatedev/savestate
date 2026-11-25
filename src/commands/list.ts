@@ -444,7 +444,7 @@ export function formatListMissingJson(
       isLastPage: true,
       nextOffset: null,
       suggestedOffset: null,
-      guidance: { action: 'none', offset: null },
+      guidance: { action: 'none', offset: null, page: null },
       oldestFirst,
       filters: normalizeListJsonFilters(filters),
       entries: [],
@@ -485,7 +485,7 @@ export function formatListMissingJsonSummary(
     isLastPage: true,
     nextOffset: null,
     suggestedOffset: null,
-    guidance: { action: 'none', offset: null },
+    guidance: { action: 'none', offset: null, page: null },
     oldestFirst,
     filters: normalizeListJsonFilters(filters),
   } satisfies ListJsonSummary, null, 2);
