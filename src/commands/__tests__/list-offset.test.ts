@@ -94,31 +94,31 @@ describe('savestate list --offset', () => {
 
   it('does not advertise a next offset above the CLI ceiling', () => {
     expect(formatListPageSummary(1_051, 50, 1_000, 50)).toBe(
-      '(showing 50 of 1051 after filters; offset 1000; limit 50; previous offset 950)',
+      '(showing 50 of 1051 after filters; offset 1000; limit 50; last page-aligned offset 1000 (max offset 1000); previous offset 950)',
     );
   });
 
   it('keeps stale-page recovery hints within the CLI offset ceiling', () => {
     expect(formatListPageSummary(2_001, 0, 2_001, 50)).toContain(
-      'try --offset 1000 --limit 50 to open the nearest available page',
+      'try --offset 1000 to open the nearest available page',
     );
     expect(formatListEmptyState(2_001, 2_001, 50)).toContain(
-      'Try --offset 1000 --limit 50 to open the nearest available page.',
+      'Try --offset 1000 to open the nearest available page.',
     );
   });
 
   it('keeps stale-page recovery hints aligned to the page size', () => {
     expect(formatListPageSummary(2_001, 0, 2_001, 128)).toContain(
-      'try --offset 896 --limit 128 to open the nearest available page',
+      'try --offset 896 to open the nearest available page',
     );
     expect(formatListEmptyState(2_001, 2_001, 128)).toContain(
-      'Try --offset 896 --limit 128 to open the nearest available page.',
+      'Try --offset 896 to open the nearest available page.',
     );
   });
 
   it('suggests the nearest page when an offset skips past all matches', () => {
     expect(formatListEmptyState(12, 12, 5)).toBe(
-      'No snapshots shown: offset 12 skips past 12 matching snapshots. Try --offset 10 --limit 5 to open the nearest available page.',
+      'No snapshots shown: offset 12 skips past 12 matching snapshots. Try --offset 10 to open the nearest available page.',
     );
     expect(formatListEmptyState(1, 50, 50)).toContain('1 matching snapshot.');
   });
@@ -144,6 +144,16 @@ describe('savestate list --offset', () => {
       { id: 'zeta', timestamp },
       { id: 'alpha', timestamp },
     ] as SnapshotIndexEntry[], true).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
+  });
+
+  it('keeps invalid-timestamp ties deterministic', () => {
+    const entries = [
+      { id: 'zeta', timestamp: 'not-a-date' },
+      { id: 'alpha', timestamp: 'also-not-a-date' },
+    ] as SnapshotIndexEntry[];
+
+    expect(sortListEntries(entries).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
+    expect(sortListEntries(entries, true).map((entry) => entry.id)).toEqual(['alpha', 'zeta']);
   });
 
   it('rejects an inverted date range before filtering', () => {

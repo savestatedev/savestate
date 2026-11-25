@@ -146,6 +146,11 @@ export function normalizeListAdapter(adapter: string): string {
   return adapter.trim();
 }
 
+/** Keep legacy platform whitespace out of table and JSON output. */
+export function normalizeListPlatform(platform: string): string {
+  return platform.trim();
+}
+
 /** Keep the JSON formatter's public helper name stable. */
 export function normalizeListJsonId(id: string): string {
   return normalizeListId(id);
@@ -211,8 +216,10 @@ export function sortListEntries(
     // Legacy indexes may contain invalid timestamps. Keep those entries after
     // dated snapshots so pagination stays deterministic in either direction.
     if (aInvalid !== bInvalid) return aInvalid ? 1 : -1;
-    const timestampOrder = bTime - aTime;
-    if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
+    if (!aInvalid && !bInvalid) {
+      const timestampOrder = bTime - aTime;
+      if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
+    }
     // Keep ties deterministic without reversing equal-timestamp records when
     // toggling --oldest-first; only the timestamp direction should change.
     return a.id.localeCompare(b.id);
@@ -236,7 +243,7 @@ export function formatListJson(
   const records: ListSnapshotJson[] = visible.map((snapshot) => ({
       id: normalizeListId(snapshot.id),
       timestamp: snapshot.timestamp,
-      platform: snapshot.platform,
+      platform: normalizeListPlatform(snapshot.platform),
       adapter: normalizeListAdapter(snapshot.adapter),
       label: normalizeListJsonLabel(snapshot.label),
       tags: normalizeListJsonTags(snapshot.tags),
@@ -540,7 +547,7 @@ export function formatListEmptyState(
   const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
-  }. Try --offset ${suggestedOffset} --limit ${normalizeListPageLimit(limit)} ` +
+  }. Try --offset ${suggestedOffset} ` +
     'to open the nearest available page.';
 }
 
@@ -553,7 +560,7 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = getNearestListOffset(total, pageLimit);
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
-      `try --offset ${suggestedOffset} --limit ${pageLimit} to open the nearest available page)`;
+      `try --offset ${suggestedOffset} to open the nearest available page)`;
   }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
@@ -867,6 +874,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   // Calculate column widths
   const idWidth = Math.max(10, ...sorted.map((s) => normalizeListId(s.id).length));
   const dateWidth = 20;
+  const platformWidth = Math.max(8, ...sorted.map((s) => normalizeListPlatform(s.platform).length));
   const adapterWidth = Math.max(7, ...sorted.map((s) => normalizeListAdapter(s.adapter).length));
   const labelWidth = getListLabelWidth(sorted);
   const tagsWidth = Math.max(4, ...sorted.map((s) => formatListTags(s.tags).length));
@@ -876,6 +884,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   const header = [
     'ID'.padEnd(idWidth),
     'Date'.padEnd(dateWidth),
+    'Platform'.padEnd(platformWidth),
     'Adapter'.padEnd(adapterWidth),
     'Label'.padEnd(labelWidth),
     'Tags'.padEnd(tagsWidth),
@@ -895,6 +904,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
     const row = [
       chalk.cyan(normalizeListId(s.id).padEnd(idWidth)),
       date.padEnd(dateWidth),
+      normalizeListPlatform(s.platform).padEnd(platformWidth),
       normalizeListAdapter(s.adapter).padEnd(adapterWidth),
       label,
       tags,
