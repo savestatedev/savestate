@@ -5218,6 +5218,7 @@ describe('CLI docs', () => {
     expect(listSection).toContain('(implies <code>--json</code>)');
     expect(listSection).toContain('--limit');
     expect(listSection).toContain('--page-size');
+    expect(listSection).toContain('savestate list --offset 10 --page-size 5');
     expect(listSection).toContain('--since');
     expect(listSection).toContain('--until');
     expect(listSection).toContain('--adapter');

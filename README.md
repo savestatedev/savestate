@@ -204,8 +204,8 @@ savestate list                        List all snapshots
   --tag <tag>                        Only snapshots with this tag
   --label <label>                    Only snapshots with this label
   --reverse                          Alias for --oldest-first
-  --limit <n>                        Max snapshots to show
-  --offset <n>                       Skip snapshots before applying --limit
+  --limit <n>, --page-size <n>       Max snapshots to show
+  --offset <n>                       Skip snapshots before applying the page size
 
 savestate receipts                    Inspect proofs created by successful saves
   --limit <n>                         Show up to 1000 receipts (default: 100)
