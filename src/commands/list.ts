@@ -12,6 +12,7 @@ interface ListOptions {
   oldestFirst?: boolean;
   reverse?: boolean;
   limit?: string;
+  page?: string;
   offset?: string;
   since?: string;
   until?: string;
@@ -528,6 +529,43 @@ export function parseListOffset(value: string | undefined): number | undefined {
   return offset;
 }
 
+/** Parse list --page as a one-based page number before converting it to an offset. */
+export function parseListPage(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(`Invalid --page value "${value}". Expected a positive integer.`);
+  }
+
+  const page = Number(normalized);
+  if (!Number.isSafeInteger(page) || page < 1) {
+    throw new Error(`Invalid --page value "${value}". Expected a positive integer.`);
+  }
+  return page;
+}
+
+/** Resolve page-oriented input while keeping offset validation in one place. */
+export function resolveListOffset(
+  offsetValue: string | undefined,
+  pageValue: string | undefined,
+  limit: number,
+): number {
+  if (offsetValue !== undefined && pageValue !== undefined) {
+    throw new Error('Cannot combine --page with --offset.');
+  }
+  if (pageValue === undefined) return parseListOffset(offsetValue) ?? 0;
+
+  const page = parseListPage(pageValue)!;
+  const offset = (page - 1) * limit;
+  if (!Number.isSafeInteger(offset) || offset > MAX_LIST_OFFSET) {
+    throw new Error(
+      `Invalid --page value "${pageValue}". Page ${page} exceeds the supported offset ceiling of ${MAX_LIST_OFFSET} for --limit ${limit}.`,
+    );
+  }
+  return parseListOffset(String(offset))!;
+}
+
 /** Skip the first N snapshots when list --offset is set. */
 export function selectListOffsetEntries<T>(entries: T[], offset?: number): T[] {
   if (offset === undefined) return entries;
@@ -544,11 +582,13 @@ export function formatListEmptyState(
     return 'No snapshots found matching the criteria. Try adjusting the filters.';
   }
 
-  const suggestedOffset = getNearestListOffset(matchingCount, normalizeListPageLimit(limit));
+  const pageLimit = normalizeListPageLimit(limit);
+  const suggestedOffset = getNearestListOffset(matchingCount, pageLimit);
+  const suggestedPage = Math.floor(suggestedOffset / pageLimit) + 1;
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
-  }. Try --offset ${suggestedOffset} ` +
-    'to open the nearest available page.';
+  }. Try --page ${suggestedPage} --limit ${pageLimit} ` +
+    `or --offset ${suggestedOffset} to open the nearest available page.`;
 }
 
 /** Describe the visible list page without treating an offset as part of the limit. */
@@ -559,13 +599,22 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   const pageEnd = Math.min(offset + pageLimit, total);
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = getNearestListOffset(total, pageLimit);
+    const suggestedPage = Math.floor(suggestedOffset / pageLimit) + 1;
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
-      `try --offset ${suggestedOffset} to open the nearest available page)`;
+      `try --page ${suggestedPage} --limit ${pageLimit} or --offset ${suggestedOffset} ` +
+      'to open the nearest available page)';
   }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
   const remaining = Math.max(0, total - offset - shown);
-  const hints = [`${remaining} remaining`, `offset ${offset}`, `limit ${pageLimit}`];
+  const page = Math.floor(offset / pageLimit) + 1;
+  const lastPage = getListTotalPages(total, pageLimit);
+  const hints = [
+    `page ${page} of ${lastPage}`,
+    `${remaining} remaining`,
+    `offset ${offset}`,
+    `limit ${pageLimit}`,
+  ];
   const nextOffset = offset + shown;
   if (pageEnd < total && nextOffset <= MAX_LIST_OFFSET) {
     hints.push(`next offset ${nextOffset}`);
@@ -795,7 +844,7 @@ export async function listCommand(options: ListOptions): Promise<void> {
   parseListTag(options.tag);
   parseListLabel(options.label);
   const limit = parseListLimit(options.limit);
-  const offset = parseListOffset(options.offset) ?? 0;
+  const offset = resolveListOffset(options.offset, options.page, limit);
   const oldestFirst = Boolean(options.oldestFirst || options.reverse);
   const filters = {
     since: options.since,
