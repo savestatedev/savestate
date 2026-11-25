@@ -216,8 +216,10 @@ export function sortListEntries(
     // Legacy indexes may contain invalid timestamps. Keep those entries after
     // dated snapshots so pagination stays deterministic in either direction.
     if (aInvalid !== bInvalid) return aInvalid ? 1 : -1;
-    const timestampOrder = bTime - aTime;
-    if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
+    if (!aInvalid && !bInvalid) {
+      const timestampOrder = bTime - aTime;
+      if (timestampOrder !== 0) return oldestFirst ? -timestampOrder : timestampOrder;
+    }
     // Keep ties deterministic without reversing equal-timestamp records when
     // toggling --oldest-first; only the timestamp direction should change.
     return a.id.localeCompare(b.id);
