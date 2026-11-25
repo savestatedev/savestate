@@ -1694,7 +1694,8 @@ export function sortMemoryListEntries(
 /** Keep table output readable while still identifying the originating source. */
 export function formatMemoryListSource(source: string): string {
   const normalized = normalizeMemoryListSource(source).replace(/\s+/g, ' ');
-  return normalized.length > 18 ? `${normalized.slice(0, 15)}...` : normalized;
+  const characters = Array.from(normalized);
+  return characters.length > 18 ? `${characters.slice(0, 15).join('')}...` : normalized;
 }
 
 /** Keep importance visible without making the human-facing table noisy. */
@@ -1717,7 +1718,8 @@ export function formatMemoryListOrderingSummary(
 export function formatMemoryListNamespace(namespace: string | undefined): string {
   const normalized = namespace?.trim();
   if (!normalized) return '—';
-  return normalized.length > 24 ? `${normalized.slice(0, 21)}...` : normalized;
+  const characters = Array.from(normalized);
+  return characters.length > 24 ? `${characters.slice(0, 21).join('')}...` : normalized;
 }
 
 /** Keep access timestamps compact and predictable in the human-facing table. */
