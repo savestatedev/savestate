@@ -100,13 +100,20 @@ export function countReceiptBackends(receipts: SaveReceipt[]): ReceiptsJson['bac
   return Object.fromEntries(Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)));
 }
 
+export function countReceiptVerification(receipts: SaveReceipt[]): { verified: number; unverified: number } {
+  return receipts.reduce((counts, receipt) => {
+    counts[receipt.verified ? 'verified' : 'unverified'] += 1;
+    return counts;
+  }, { verified: 0, unverified: 0 });
+}
+
 export function formatReceiptsJson(
   receipts: SaveReceipt[],
   total: number,
   offset: number,
   limit: number,
   type: ReceiptResourceType | undefined = undefined,
-  verificationOrVerified: { verified: number; unverified: number } | boolean = { verified: 0, unverified: 0 },
+  verificationOrVerified: { verified: number; unverified: number } | boolean | undefined = undefined,
   unverified = false,
   verifiedFilter = false,
   unverifiedFilter = false,
@@ -125,7 +132,9 @@ export function formatReceiptsJson(
   const resourceCounts = completeResourceCounts ?? (typeof resourceOrCounts === 'string' ? countReceiptResources(receipts) : resourceOrCounts);
   const verified = typeof verificationOrVerified === 'boolean' ? verificationOrVerified : verifiedFilter;
   const selectedUnverified = typeof verificationOrVerified === 'boolean' ? unverified : unverifiedFilter;
-  const verification = typeof verificationOrVerified === 'boolean' ? { verified: 0, unverified: 0 } : verificationOrVerified;
+  const verification = typeof verificationOrVerified === 'boolean'
+    ? { verified: 0, unverified: 0 }
+    : verificationOrVerified ?? countReceiptVerification(receipts);
   const shown = receipts.length;
   const verifiedPercentage = total === 0 ? 0 : (verification.verified / total) * 100;
   const shownVerifiedPercentage = shown === 0
