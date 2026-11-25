@@ -204,8 +204,8 @@ savestate list                        List all snapshots
   --tag <tag>                        Only snapshots with this tag
   --label <label>                    Only snapshots with this label
   --reverse                          Alias for --oldest-first
-  --limit <n>                        Max snapshots to show
-  --offset <n>                       Skip snapshots before applying --limit
+  --limit <n>, --page-size <n>       Max snapshots to show
+  --offset <n>                       Skip snapshots before applying the page size
 
 savestate receipts                    Inspect proofs created by successful saves
   --limit <n>                         Show up to 1000 receipts (default: 100)
@@ -279,6 +279,9 @@ When the requested snapshot cannot be found, `found` is `false` and
 from an initialized snapshot with no matching memories.
 Legacy tag whitespace and case-insensitive duplicate tags are removed from JSON entries, while
 filter metadata is emitted in its normalized, de-duplicated form.
+
+Use `--page-size` as a readable alias for `--limit` when paging snapshots, for example
+`savestate list --page-size 20 --offset 20`.
 
 Use `savestate list --json-summary` (or its `--summary` alias) when a script needs the same pagination and filter metadata
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
