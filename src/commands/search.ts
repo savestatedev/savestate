@@ -822,6 +822,9 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     for (const hint of formatSearchFilterHints(types, excludedTypes)) {
       console.log(chalk.dim(`   ${hint}`));
     }
+    // Keep the empty filtered state consistent with regular searches so a
+    // page-size choice remains visible even when no search work is needed.
+    console.log(chalk.dim(`   ${formatSearchPageLabel(offset ?? 0, limit)}`));
     console.log();
     console.log(chalk.dim('  No matches found: all search types were excluded.'));
     console.log();
@@ -874,10 +877,11 @@ export async function searchCommand(rawQuery: string, options: SearchOptions): P
     if (adapter) console.log(chalk.dim(`   Adapter: ${adapter}`));
     if (tag) console.log(chalk.dim(`   Tag: ${tag}`));
     if (label) console.log(chalk.dim(`   Label: ${label}`));
-    if (offset !== undefined) {
-      console.log(chalk.dim(`   ${formatSearchPageLabel(offset, limit)}`));
-      console.log(chalk.dim(`   Offset: ${offset}`));
-    }
+    // Keep the interactive header explicit about the active page even for the
+    // default first page, so users can tell which page size the result count
+    // belongs to before following the next-page hint.
+    console.log(chalk.dim(`   ${formatSearchPageLabel(offset ?? 0, limit)}`));
+    if (offset !== undefined) console.log(chalk.dim(`   Offset: ${offset}`));
     console.log();
   }
 

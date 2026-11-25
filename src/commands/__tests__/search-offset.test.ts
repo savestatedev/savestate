@@ -22,6 +22,10 @@ describe('savestate search --offset', () => {
     expect(formatSearchPageLabel(0, 20)).toBe('Page 1 (page size 20)');
   });
 
+  it('keeps the page label stable for an empty filtered state', () => {
+    expect(formatSearchPageLabel(20, 10)).toBe('Page 3 (page size 10)');
+  });
+
   it('accepts surrounding whitespace', () => {
     expect(parseSearchOffset(' 12 ')).toBe(12);
     expect(parseSearchOffset(' 1')).toBe(1);

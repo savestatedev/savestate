@@ -5700,6 +5700,11 @@ describe('CLI docs', () => {
     expect(search).toContain('export function parseSearchOffset');
   });
 
+  it('keeps the README search help free of duplicate page flags', () => {
+    const searchSection = readme.slice(readme.indexOf('savestate search <query>'), readme.indexOf('Search results are ranked consistently'));
+    expect(searchSection.match(/--page <n>/g)).toHaveLength(1);
+  });
+
   it('documents search --json-summary recovery metadata', () => {
     const searchSection = docs.slice(docs.indexOf('id="search"'), docs.indexOf('id="config"'));
     expect(searchSection).toContain('--json-summary');
