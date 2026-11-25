@@ -558,7 +558,7 @@ export function formatListPageSummary(total: number, shown: number, offset = 0, 
   if (shown === 0 && total > 0 && offset >= total) {
     const suggestedOffset = getNearestListOffset(total, pageLimit);
     return `(no snapshots shown: offset ${offset} skips past ${total} after filters; ` +
-      `try --offset ${suggestedOffset} --limit ${pageLimit} to open the nearest available page)`;
+      `try --offset ${suggestedOffset} to open the nearest available page)`;
   }
   if (offset === 0 && pageEnd === total) return `(showing ${shown} of ${total} after filters)`;
 
