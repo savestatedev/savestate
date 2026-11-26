@@ -168,6 +168,44 @@ export function filterMemoryLogAction(
   return entries.filter((entry) => actions.has(entry.action.toLowerCase()));
 }
 
+function parseMemoryLogDate(value: string, flag: '--since' | '--until'): string {
+  const normalized = value.trim();
+  const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+    ? `${normalized}T${flag === '--since' ? '00:00:00.000' : '23:59:59.999'}Z`
+    : normalized;
+  if (!Number.isFinite(Date.parse(dateValue))) {
+    throw new Error(`Invalid ${flag} value "${value}". Expected an ISO-8601 date or timestamp.`);
+  }
+  return dateValue;
+}
+
+/** Parse an audit-log time boundary with inclusive date-only semantics. */
+export function parseMemoryLogSince(value: string | undefined): string | undefined {
+  return value === undefined ? undefined : parseMemoryLogDate(value, '--since');
+}
+
+export function parseMemoryLogUntil(value: string | undefined): string | undefined {
+  return value === undefined ? undefined : parseMemoryLogDate(value, '--until');
+}
+
+/** Filter audit events by their recorded timestamp before pagination. */
+export function filterMemoryLogDateRange(
+  entries: ProvenanceEntry[],
+  since: string | undefined,
+  until: string | undefined,
+): ProvenanceEntry[] {
+  const sinceTime = since === undefined ? undefined : Date.parse(since);
+  const untilTime = until === undefined ? undefined : Date.parse(until);
+  if (sinceTime !== undefined && untilTime !== undefined && sinceTime > untilTime) {
+    throw new Error(`Invalid memory log date range: --since (${since}) must be on or before --until (${until}).`);
+  }
+  return entries.filter((entry) => {
+    const timestamp = Date.parse(entry.timestamp);
+    return (sinceTime === undefined || timestamp >= sinceTime)
+      && (untilTime === undefined || timestamp <= untilTime);
+  });
+}
+
 export function formatMemoryLogJson(
   memoryId: string,
   log: ProvenanceEntry[],
@@ -1220,6 +1258,8 @@ export async function memoryLogCommand(
     offset?: string;
     page?: string;
     action?: string;
+    since?: string;
+    until?: string;
   }
 ): Promise<void> {
   const checkpointStorage = new InMemoryCheckpointStorage();
@@ -1227,9 +1267,13 @@ export async function memoryLogCommand(
 
   try {
     const actionFilter = parseMemoryLogActions(options?.action);
-    const allLog = filterMemoryLogAction(
-      await knowledgeLane.memoryAuditLog(memoryId),
-      actionFilter,
+    const allLog = filterMemoryLogDateRange(
+      filterMemoryLogAction(
+        await knowledgeLane.memoryAuditLog(memoryId),
+        actionFilter,
+      ),
+      parseMemoryLogSince(options?.since),
+      parseMemoryLogUntil(options?.until),
     );
     const limit = resolveMemoryLogPageLimit(options?.limit, options?.pageSize, options?.page);
     const offset = resolveMemoryLogOffset(options?.offset, options?.page, limit ?? undefined);

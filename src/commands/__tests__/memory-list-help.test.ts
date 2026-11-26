@@ -42,6 +42,19 @@ describe('savestate memory list help', () => {
     expect(help).toMatch(/without retrieval\s+details/);
   });
 
+  it('documents audit-log filters and summary output', () => {
+    const program = new Command();
+    registerMemoryCommands(program);
+    let renderedHelp = '';
+    program.exitOverride();
+    program.configureOutput({ writeOut: (value) => { renderedHelp += value; } });
+    expect(() => program.parse(['node', 'savestate', 'memory', 'log', '--help'])).toThrow();
+
+    expect(renderedHelp).toContain('savestate memory log <memory-id> --action edited');
+    expect(renderedHelp).toContain('--action edited,rolled_back --json');
+    expect(renderedHelp).toContain('savestate memory log <memory-id> --summary');
+  });
+
   it('accepts the explicit output format on explain', () => {
     const program = new Command();
     registerMemoryCommands(program);
