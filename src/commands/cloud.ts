@@ -277,7 +277,14 @@ const MAX_CLOUD_PULL_LIMIT = 1000;
 export function parseCloudPullLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_PULL_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_PULL_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_PULL_LIMIT}.`,
@@ -325,7 +332,14 @@ export function parseCloudDeleteOffset(value: string | undefined): number | unde
 export function parseCloudDeleteLimit(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
 
-  const limit = Number(value);
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_DELETE_LIMIT}.`,
+    );
+  }
+
+  const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CLOUD_DELETE_LIMIT) {
     throw new Error(
       `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_CLOUD_DELETE_LIMIT}.`,
@@ -471,6 +485,11 @@ export interface CloudListResult {
   limit?: number;
 }
 
+export interface CloudListGuidance {
+  action: 'next' | 'previous' | 'retry' | null;
+  offset: number | null;
+}
+
 export function formatCloudListJson(result: CloudListResult): string {
   const total = result.total ?? result.snapshots.length;
   const offset = result.offset ?? 0;
@@ -485,6 +504,13 @@ export function formatCloudListJson(result: CloudListResult): string {
   const suggestedOffset = emptyReason === 'page' && limit !== null
     ? Math.floor((total - 1) / limit) * limit
     : null;
+  const guidance: CloudListGuidance = emptyReason === 'page'
+    ? { action: 'retry', offset: suggestedOffset }
+    : hasMore
+      ? { action: 'next', offset: offset + shown }
+      : hasPrevious
+        ? { action: 'previous', offset: Math.max(0, offset - limit) }
+        : { action: null, offset: null };
 
   return JSON.stringify(
     {
@@ -504,6 +530,7 @@ export function formatCloudListJson(result: CloudListResult): string {
         ? suggestedOffset ?? Math.max(0, offset - limit)
         : null,
       suggestedOffset,
+      guidance,
       emptyReason,
       tier: result.tier,
       cloudStorageUsed: result.cloudStorageUsed,

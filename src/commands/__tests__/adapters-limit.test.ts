@@ -51,13 +51,19 @@ describe('savestate adapters --limit', () => {
 
   it('summarizes a bounded page for interactive users', () => {
     expect(formatAdaptersPageSummary(6, 2, 2, 2)).toBe(
-      '(showing 2 of 6 after filters; offset 2, limit 2)',
+      '(showing 2 of 6 after filters; offset 2, limit 2; previous offset 0, next offset 4)',
     );
   });
 
   it('summarizes an offset-only page without inventing a limit', () => {
     expect(formatAdaptersPageSummary(6, 4, 2)).toBe(
-      '(showing 4 of 6 after filters; offset 2)',
+      '(showing 4 of 6 after filters; offset 2; previous offset 0)',
+    );
+  });
+
+  it('points to the next page when the current page starts at zero', () => {
+    expect(formatAdaptersPageSummary(6, 2, 0, 2)).toBe(
+      '(showing 2 of 6 after filters; offset 0, limit 2; next offset 2)',
     );
   });
 
