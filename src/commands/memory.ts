@@ -258,6 +258,20 @@ export function countByFreshness(
   return counts;
 }
 
+/** Return freshness shares for dashboards that should not rescan entries. */
+export function getMemoryListFreshnessPercentages(
+  memories: MemoryEntry[],
+  now = new Date(),
+): Record<MemoryFreshnessState, number> {
+  const counts = countByFreshness(memories, now);
+  const total = memories.length;
+  return {
+    active: total === 0 ? 0 : (counts.active / total) * 100,
+    stale: total === 0 ? 0 : (counts.stale / total) * 100,
+    needs_confirmation: total === 0 ? 0 : (counts.needs_confirmation / total) * 100,
+  };
+}
+
 /** Count memories by normalized source for machine-readable summaries. */
 export function countBySource(memories: MemoryEntry[]): Record<string, number> {
   // Source metadata comes from encrypted archives, so reserved object keys
@@ -668,6 +682,8 @@ export interface MemoryListJson {
   shownTagPercentages: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
+  freshnessPercentages: Record<MemoryFreshnessState, number>;
+  shownFreshnessPercentages: Record<MemoryFreshnessState, number>;
   importance: ReturnType<typeof getMemoryListImportanceSummary>;
   shownImportance: ReturnType<typeof getMemoryListImportanceSummary>;
   pinned: number;
@@ -851,6 +867,8 @@ export function formatMemoryListJson(
     shownTagPercentages: getMemoryListTagPercentages(shown),
     byFreshness: countByFreshness(all, now),
     shownByFreshness: countByFreshness(shown, now),
+    freshnessPercentages: getMemoryListFreshnessPercentages(all, now),
+    shownFreshnessPercentages: getMemoryListFreshnessPercentages(shown, now),
     importance: getMemoryListImportanceSummary(all),
     shownImportance: getMemoryListImportanceSummary(shown),
     pinned: all.filter((entry) => !!entry.pinned).length,
@@ -1017,6 +1035,8 @@ export function formatMemoryListMissingJson(
       shownBySource: {},
       byFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
       shownByFreshness: { active: 0, stale: 0, needs_confirmation: 0 },
+      freshnessPercentages: { active: 0, stale: 0, needs_confirmation: 0 },
+      shownFreshnessPercentages: { active: 0, stale: 0, needs_confirmation: 0 },
       byNamespace: {},
       shownByNamespace: {},
       namespacePercentages: {},

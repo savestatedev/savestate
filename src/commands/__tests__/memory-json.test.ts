@@ -12,6 +12,7 @@ import {
   filterMemoryListByTags,
   getMemoryListSummary,
   countByFreshness,
+  getMemoryListFreshnessPercentages,
   countBySource,
   getMemoryListSourcePercentages,
   countByNamespace,
@@ -31,6 +32,29 @@ function entry(partial: Partial<MemoryEntry> & Pick<MemoryEntry, 'id' | 'content
 }
 
 describe('savestate memory --json', () => {
+  it('reports freshness percentages for the matching collection and visible page', () => {
+    const now = new Date('2026-09-10T00:00:00.000Z');
+    const entries = [
+      entry({ id: 'mem-active', content: 'active', freshnessClass: 'fast', lastVerifiedAt: '2026-09-09T23:00:00.000Z' }),
+      entry({ id: 'mem-stale', content: 'stale', freshnessClass: 'medium', lastVerifiedAt: '2026-09-01T00:00:00.000Z' }),
+      entry({ id: 'mem-confirm', content: 'confirm', freshnessClass: 'slow', lastVerifiedAt: '2026-01-01T00:00:00.000Z' }),
+    ];
+
+    expect(getMemoryListFreshnessPercentages(entries, now)).toMatchObject({
+      active: expect.closeTo(100 / 3),
+      stale: expect.closeTo(100 / 3),
+      needs_confirmation: expect.closeTo(100 / 3),
+    });
+
+    const parsed = JSON.parse(formatMemoryListJson(entries, entries.slice(0, 2), { now })) as MemoryListJson;
+    expect(parsed.freshnessPercentages).toMatchObject({
+      active: expect.closeTo(100 / 3),
+      stale: expect.closeTo(100 / 3),
+      needs_confirmation: expect.closeTo(100 / 3),
+    });
+    expect(parsed.shownFreshnessPercentages).toEqual({ active: 50, stale: 50, needs_confirmation: 0 });
+  });
+
   it('describes the active human-readable list ordering', () => {
     expect(formatMemoryListOrderingSummary()).toBe('Ordering: newest first (ties by id)');
     expect(formatMemoryListOrderingSummary(true)).toBe('Ordering: oldest first (ties by id)');
