@@ -3217,7 +3217,9 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--limit');
     expect(memorySection).toContain('Must be a positive integer up to 1000');
     expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --limit 5');
+    expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --page-size 5');
     expect(editBlock).toContain(".option('--limit <n>'");
+    expect(editBlock).toContain(".option('--page-size <n>'");
     expect(memoryLifecycle).toContain('export function parseMemoryEditLimit');
   });
 

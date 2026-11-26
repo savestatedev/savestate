@@ -701,6 +701,17 @@ export function parseMemoryEditLimit(value: string | undefined): number | undefi
   return limit;
 }
 
+/** Resolve the edit page-size alias while rejecting ambiguous settings. */
+export function resolveMemoryEditLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): string | undefined {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return pageSizeValue ?? limitValue;
+}
+
 /** Keep the first N edit status field rows when --limit is set. */
 export function selectMemoryEditEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
@@ -759,10 +770,12 @@ export async function editMemoryCommand(
     reason?: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    pageSize?: string;
     offset?: string;
   }
 ): Promise<void> {
-  parseMemoryEditLimit(options.limit);
+  const limit = resolveMemoryEditLimit(options.limit, options.pageSize);
+  parseMemoryEditLimit(limit);
   parseMemoryEditOffset(options.offset);
   // For this implementation, we'll use a simplified checkpoint storage
   // In production, this would integrate with the full storage backend
@@ -805,7 +818,7 @@ export async function editMemoryCommand(
     if (options.importance !== undefined) {
       rows.push(`  Importance: ${updated.importance}`);
     }
-    for (const row of applyMemoryEditFilters(rows, options)) {
+    for (const row of applyMemoryEditFilters(rows, { ...options, limit })) {
       console.log(row);
     }
   } catch (err) {

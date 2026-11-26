@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryEditLimit, selectMemoryEditEntries } from '../memory-lifecycle.js';
+import {
+  parseMemoryEditLimit,
+  resolveMemoryEditLimit,
+  selectMemoryEditEntries,
+} from '../memory-lifecycle.js';
 
 describe('savestate memory edit --limit', () => {
   it('defaults to undefined', () => {
@@ -8,6 +12,17 @@ describe('savestate memory edit --limit', () => {
 
   it('accepts positive integers', () => {
     expect(parseMemoryEditLimit('12')).toBe(12);
+  });
+
+  it('resolves --page-size as an alias for --limit', () => {
+    expect(resolveMemoryEditLimit(undefined, '12')).toBe('12');
+    expect(resolveMemoryEditLimit('12', undefined)).toBe('12');
+  });
+
+  it('rejects using both limit spellings', () => {
+    expect(() => resolveMemoryEditLimit('10', '20')).toThrow(
+      'Cannot use --limit with --page-size; choose one page-size option.',
+    );
   });
 
   it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
