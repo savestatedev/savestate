@@ -1160,6 +1160,8 @@ export function registerMemoryCommands(program: Command): void {
     .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
     .option('--page <n>', '1-based page number (default page size: 20)')
     .option('--action <names>', 'Filter audit events by lifecycle action (comma-separated)')
+    .option('--since <date>', 'Show audit events on or after an ISO-8601 date or timestamp')
+    .option('--until <date>', 'Show audit events on or before an ISO-8601 date or timestamp')
     .option('--format <format>', 'Output format: table, json, json-summary, or summary')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON pagination metadata without audit events; --summary is the short alias (implies --json)')
@@ -1184,6 +1186,8 @@ export function registerMemoryCommands(program: Command): void {
           offset: options.offset,
           page: options.page,
           action: options.action,
+          since: options.since,
+          until: options.until,
         });
       } catch (err) {
         handleError(err);
