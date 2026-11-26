@@ -3272,6 +3272,14 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryDeleteLimit');
   });
 
+  it('documents memory delete --page-size as a limit alias', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const deleteBlock = memoryCli.slice(memoryCli.indexOf("command('delete"), memoryCli.indexOf("command('rollback"));
+    expect(memorySection).toContain('savestate memory delete mem-123 --reason "stale" --page-size 5');
+    expect(deleteBlock).toContain(".option('--page-size <n>'");
+    expect(memoryLifecycle).toContain('export function resolveMemoryDeleteLimit');
+  });
+
   it('documents memory delete --offset as a bounded skip count', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const deleteBlock = memoryCli.slice(memoryCli.indexOf("command('delete"), memoryCli.indexOf("command('rollback"));

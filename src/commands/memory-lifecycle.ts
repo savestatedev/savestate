@@ -841,6 +841,17 @@ export function parseMemoryDeleteLimit(value: string | undefined): number | unde
   return limit;
 }
 
+/** Resolve the delete page-size alias while rejecting ambiguous settings. */
+export function resolveMemoryDeleteLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number | undefined {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseMemoryDeleteLimit(pageSizeValue ?? limitValue);
+}
+
 /** Keep the first N delete status field rows when --limit is set. */
 export function selectMemoryDeleteEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
@@ -876,11 +887,11 @@ export function selectMemoryDeleteOffsetEntries<T>(entries: T[], offset?: number
 /** Apply memory delete --offset then --limit. */
 export function applyMemoryDeleteFilters<T>(
   entries: T[],
-  options: { offset?: string; limit?: string } = {},
+  options: { offset?: string; limit?: string; pageSize?: string } = {},
 ): T[] {
   return selectMemoryDeleteEntries(
     selectMemoryDeleteOffsetEntries(entries, parseMemoryDeleteOffset(options.offset)),
-    parseMemoryDeleteLimit(options.limit),
+    resolveMemoryDeleteLimit(options.limit, options.pageSize),
   );
 }
 
@@ -896,10 +907,11 @@ export async function deleteMemoryCommand(
     reason: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    pageSize?: string;
     offset?: string;
   }
 ): Promise<void> {
-  parseMemoryDeleteLimit(options.limit);
+  resolveMemoryDeleteLimit(options.limit, options.pageSize);
   parseMemoryDeleteOffset(options.offset);
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);

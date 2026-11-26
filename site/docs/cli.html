@@ -1675,6 +1675,7 @@
 
 <span class="code-comment"># Cap delete status field rows</span>
 <span class="code-prompt">$</span> savestate memory delete mem-123 --reason "stale" --limit 5
+<span class="code-prompt">$</span> savestate memory delete mem-123 --reason "stale" --page-size 5
 
 <span class="code-comment"># Skip delete status field rows before applying the cap</span>
 <span class="code-prompt">$</span> savestate memory delete mem-123 --reason "stale" --offset 1 --limit 5
