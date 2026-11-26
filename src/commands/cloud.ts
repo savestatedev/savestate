@@ -476,6 +476,11 @@ export interface CloudListResult {
   limit?: number;
 }
 
+export interface CloudListGuidance {
+  action: 'next' | 'previous' | 'retry' | null;
+  offset: number | null;
+}
+
 export function formatCloudListJson(result: CloudListResult): string {
   const total = result.total ?? result.snapshots.length;
   const offset = result.offset ?? 0;
@@ -490,6 +495,13 @@ export function formatCloudListJson(result: CloudListResult): string {
   const suggestedOffset = emptyReason === 'page' && limit !== null
     ? Math.floor((total - 1) / limit) * limit
     : null;
+  const guidance: CloudListGuidance = emptyReason === 'page'
+    ? { action: 'retry', offset: suggestedOffset }
+    : hasMore
+      ? { action: 'next', offset: offset + shown }
+      : hasPrevious
+        ? { action: 'previous', offset: Math.max(0, offset - limit) }
+        : { action: null, offset: null };
 
   return JSON.stringify(
     {
@@ -509,6 +521,7 @@ export function formatCloudListJson(result: CloudListResult): string {
         ? suggestedOffset ?? Math.max(0, offset - limit)
         : null,
       suggestedOffset,
+      guidance,
       emptyReason,
       tier: result.tier,
       cloudStorageUsed: result.cloudStorageUsed,
