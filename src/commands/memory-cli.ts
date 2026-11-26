@@ -1146,18 +1146,25 @@ export function registerMemoryCommands(program: Command): void {
     .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
     .option('--page <n>', '1-based page number (default page size: 20)')
     .option('--action <names>', 'Filter audit events by lifecycle action (comma-separated)')
+    .option('--format <format>', 'Output format: table, json, json-summary, or summary')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON pagination metadata without audit events; --summary is the short alias (implies --json)')
     .action(async (memoryId, options) => {
       try {
         const id = parseMemoryId(memoryId);
+        const format = resolveMemoryListFormat(
+          parseMemoryListFormat(options.format),
+          options.json,
+          options.jsonSummary,
+          false,
+        );
         const config = await loadConfig();
         const storage = await resolveStorage(config);
         const passphrase = await promptPassphrase();
 
         await memoryLogCommand(storage, passphrase, id, {
-          format: options.json || options.jsonSummary ? 'json' : 'table',
-          includeEvents: !options.jsonSummary,
+          format: format === 'table' ? 'table' : 'json',
+          includeEvents: format === 'json',
           limit: options.limit,
           pageSize: options.pageSize,
           offset: options.offset,
