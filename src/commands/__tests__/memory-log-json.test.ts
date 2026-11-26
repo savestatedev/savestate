@@ -5,6 +5,7 @@ import {
   formatMemoryLogJson,
   formatMemoryLogActionSummary,
   formatMemoryLogNavigation,
+  resolveMemoryLogNavigationOffset,
   formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
   filterMemoryLogAction,
@@ -103,6 +104,8 @@ describe('savestate memory log --json', () => {
     expect(formatMemoryLogNavigation('next', 10, 5, true)).toBe('Next page: use --page 3.');
     expect(formatMemoryLogNavigation('previous', 5, 5, true)).toBe('Previous page: use --page 2.');
     expect(formatMemoryLogNavigation('next', 10, 5, false)).toBe('Next page: use --offset 10.');
+    expect(resolveMemoryLogNavigationOffset('next', 3, 5)).toBe(8);
+    expect(resolveMemoryLogNavigationOffset('previous', 3, 5)).toBe(0);
   });
 
   it('supports a metadata-only summary without audit events', () => {
@@ -274,6 +277,15 @@ describe('savestate memory log --json', () => {
       '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
       'The memory has 3 recorded entries.\n' +
       'Try --page 1 to view an available page.',
+    );
+  });
+
+  it('explains the normalized action filter on an exhausted page', () => {
+    expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3, false, ['rolled_back'])).toBe(
+      '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
+      'Action filter: rolled_back\n' +
+      'The memory has 3 recorded entries.\n' +
+      'Try --offset 0 to view an available page.',
     );
   });
 });
