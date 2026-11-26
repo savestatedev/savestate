@@ -1148,6 +1148,13 @@ export function registerMemoryCommands(program: Command): void {
     .command('log <memory-id>')
     .alias('history')
     .description('Show audit history for a memory (single non-empty memory id)')
+    .addHelpText(
+      'after',
+      '\nExamples:\n' +
+        '  $ savestate memory log <memory-id> --action edited\n' +
+        '  $ savestate memory log <memory-id> --action edited,rolled_back --json\n' +
+        '  $ savestate memory log <memory-id> --summary\n',
+    )
     .option('--limit <n>', 'Maximum number of audit events to show')
     .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N audit events (non-negative integer up to 1000)')
