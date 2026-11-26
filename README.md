@@ -377,7 +377,8 @@ calculating offsets from the number of returned entries.
 For a shorter interactive command, `savestate memory list --summary` is an alias for
 `--json-summary`.
 
-Use `--format table`, `--format json`, or `--format json-summary` when a script or wrapper
+Use `--format table`, `--format json`, `--format json-summary`, or the shorter
+`--format summary` alias when a script or wrapper
 needs to select the output shape explicitly. The JSON formats are equivalent to `--json` and
 `--json-summary`; legacy flags may be used alone, but combining them with a different explicit
 format is rejected to avoid silently changing a caller's output contract:

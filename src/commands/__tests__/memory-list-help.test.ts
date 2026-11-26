@@ -61,6 +61,7 @@ describe('savestate memory list help', () => {
 
   it('parses explicit output formats and preserves legacy flags', () => {
     expect(parseMemoryListFormat(' JSON-SUMMARY ')).toBe('json-summary');
+    expect(parseMemoryListFormat(' Summary ')).toBe('json-summary');
     expect(resolveMemoryListFormat(undefined, true, false, false)).toBe('json');
     expect(resolveMemoryListFormat(undefined, false, true, false)).toBe('json-summary');
     expect(resolveMemoryListFormat('table', false, false, false)).toBe('table');
@@ -68,7 +69,7 @@ describe('savestate memory list help', () => {
 
   it('rejects invalid or contradictory output formats', () => {
     expect(() => parseMemoryListFormat('yaml')).toThrow(
-      'Expected one of table, json, or json-summary.',
+      'Expected one of table, json, json-summary, or summary.',
     );
     expect(() => resolveMemoryListFormat('table', true, false, false)).toThrow(
       'Cannot combine --format table with legacy JSON output flags.',

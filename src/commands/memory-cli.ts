@@ -43,12 +43,13 @@ export function parseMemoryListFormat(value: string | undefined): MemoryListForm
   if (value === undefined) return undefined;
 
   const format = value.trim().toLowerCase();
+  if (format === 'summary') return 'json-summary';
   if ((MEMORY_LIST_FORMATS as readonly string[]).includes(format)) {
     return format as MemoryListFormat;
   }
 
   throw new Error(
-    `Invalid --format value "${value}". Expected one of table, json, or json-summary.`,
+    `Invalid --format value "${value}". Expected one of table, json, json-summary, or summary.`,
   );
 }
 
@@ -705,7 +706,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--page <n>', '1-based page number (use instead of --offset)')
     .option('--offset <n>', 'Skip the first N memories (0-1000; use nextOffset for continuation)')
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
-    .option('--format <format>', 'Output format: table, json, or json-summary')
+    .option('--format <format>', 'Output format: table, json, json-summary, or summary')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON metadata without memory content; --summary is the short alias (implies --json)')
     .option('--metadata-only', 'Output JSON metadata without memory content (implies --json)')
@@ -950,7 +951,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--max-importance <n>', 'Show memories with importance at most this score (0-1)')
     .option('--min-criticality <n>', 'Show explain matches with criticality at least this score (0-1)')
     .option('--max-criticality <n>', 'Show explain matches with criticality at most this score (0-1)')
-    .option('--format <format>', 'Output format: table, json, or json-summary')
+    .option('--format <format>', 'Output format: table, json, json-summary, or summary')
     .option('--json', 'Output as JSON')
     .option('--json-summary, --summary', 'Output JSON pagination metadata without retrieval details; --summary is the short alias (implies --json)')
     .option('--metadata-only', 'Output JSON pagination metadata without retrieval details (implies --json)')
