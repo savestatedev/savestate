@@ -5,6 +5,7 @@ import {
   formatMemoryLogJson,
   formatMemoryLogActionSummary,
   formatMemoryLogNavigation,
+  resolveMemoryLogNavigationOffset,
   formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
   filterMemoryLogAction,
@@ -90,6 +91,8 @@ describe('savestate memory log --json', () => {
     expect(formatMemoryLogNavigation('next', 10, 5, true)).toBe('Next page: use --page 3.');
     expect(formatMemoryLogNavigation('previous', 5, 5, true)).toBe('Previous page: use --page 2.');
     expect(formatMemoryLogNavigation('next', 10, 5, false)).toBe('Next page: use --offset 10.');
+    expect(resolveMemoryLogNavigationOffset('next', 3, 5)).toBe(8);
+    expect(resolveMemoryLogNavigationOffset('previous', 3, 5)).toBe(0);
   });
 
   it('supports a metadata-only summary without audit events', () => {

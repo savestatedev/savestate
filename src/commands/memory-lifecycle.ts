@@ -129,6 +129,15 @@ export function formatMemoryLogNavigation(
   return `${direction === 'next' ? 'Next' : 'Previous'} page: use --offset ${offset}.`;
 }
 
+/** Advance raw-offset pagination without snapping an existing offset to a page boundary. */
+export function resolveMemoryLogNavigationOffset(
+  direction: 'next' | 'previous',
+  offset: number,
+  limit: number,
+): number {
+  return direction === 'next' ? offset + limit : Math.max(0, offset - limit);
+}
+
 /** Keep audit-log action filters stable and explicit for CLI callers. */
 export function parseMemoryLogAction(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
@@ -1294,7 +1303,7 @@ export async function memoryLogCommand(
     if (hasMore && limit !== null) {
       console.log(formatMemoryLogNavigation(
         'next',
-        Math.floor(offset / limit) * limit + limit,
+        resolveMemoryLogNavigationOffset('next', offset, limit),
         limit,
         options?.page !== undefined,
       ));
