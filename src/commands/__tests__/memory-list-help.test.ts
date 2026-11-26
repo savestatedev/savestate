@@ -52,6 +52,7 @@ describe('savestate memory list help', () => {
 
     expect(renderedHelp).toContain('savestate memory log <memory-id> --action edited');
     expect(renderedHelp).toContain('--action edited,rolled_back --json');
+    expect(renderedHelp).toContain('--actor <id>');
     expect(renderedHelp).toContain('savestate memory log <memory-id> --summary');
   });
 

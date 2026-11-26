@@ -158,6 +158,26 @@ export function parseMemoryLogActions(value: string | undefined): string[] | und
   return [...new Set(actions.filter((action): action is string => action !== undefined))];
 }
 
+/** Parse a single audit-log actor filter without accepting an accidental list. */
+export function parseMemoryLogActor(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const actor = value.trim();
+  if (!actor || actor.includes(',')) {
+    throw new Error(`Invalid --actor value "${value}". Expected one non-empty actor id.`);
+  }
+  return actor;
+}
+
+/** Filter audit events by the recorded actor before pagination. */
+export function filterMemoryLogActor(
+  entries: ProvenanceEntry[],
+  actor: string | undefined,
+): ProvenanceEntry[] {
+  if (actor === undefined) return entries;
+  return entries.filter((entry) => (entry.actor_id ?? 'unknown') === actor);
+}
+
 /** Filter audit events before pagination so totals describe the requested view. */
 export function filterMemoryLogAction(
   entries: ProvenanceEntry[],
@@ -1258,6 +1278,7 @@ export async function memoryLogCommand(
     offset?: string;
     page?: string;
     action?: string;
+    actor?: string;
     since?: string;
     until?: string;
   }
@@ -1267,10 +1288,14 @@ export async function memoryLogCommand(
 
   try {
     const actionFilter = parseMemoryLogActions(options?.action);
+    const actorFilter = parseMemoryLogActor(options?.actor);
     const allLog = filterMemoryLogDateRange(
-      filterMemoryLogAction(
-        await knowledgeLane.memoryAuditLog(memoryId),
-        actionFilter,
+      filterMemoryLogActor(
+        filterMemoryLogAction(
+          await knowledgeLane.memoryAuditLog(memoryId),
+          actionFilter,
+        ),
+        actorFilter,
       ),
       parseMemoryLogSince(options?.since),
       parseMemoryLogUntil(options?.until),
@@ -1326,6 +1351,9 @@ export async function memoryLogCommand(
     console.log(`\nAudit Log for Memory: ${memoryId}\n`);
     if (actionFilter && actionFilter.length > 0) {
       console.log(`Action filter: ${actionFilter.join(', ')}\n`);
+    }
+    if (actorFilter !== undefined) {
+      console.log(`Actor filter: ${actorFilter}\n`);
     }
     console.log('Timestamp                  Action           Actor            Reason');
     console.log('-'.repeat(80));

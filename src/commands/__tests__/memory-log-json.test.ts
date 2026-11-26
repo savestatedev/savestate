@@ -9,6 +9,8 @@ import {
   formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
   filterMemoryLogAction,
+  filterMemoryLogActor,
+  parseMemoryLogActor,
   parseMemoryLogAction,
   parseMemoryLogActions,
   parseMemoryLogSince,
@@ -62,6 +64,14 @@ describe('savestate memory log --json', () => {
     expect(filterMemoryLogAction([created, edited, merged], ['edited', 'merged'])).toEqual([edited, merged]);
     expect(filterMemoryLogAction([created, edited, merged], ['EDITED', 'MERGED'])).toEqual([edited, merged]);
     expect(filterMemoryLogAction([created, edited], undefined)).toHaveLength(2);
+  });
+
+  it('filters audit events by actor and rejects ambiguous actor lists', () => {
+    expect(parseMemoryLogActor(' editor-1 ')).toBe('editor-1');
+    expect(filterMemoryLogActor([created, edited, merged], 'editor-1')).toEqual([edited]);
+    expect(filterMemoryLogActor([{ ...created, actor_id: undefined }], 'unknown')).toHaveLength(1);
+    expect(() => parseMemoryLogActor('editor-1,system')).toThrow('Expected one non-empty actor id');
+    expect(() => parseMemoryLogActor('   ')).toThrow('Expected one non-empty actor id');
   });
 
   it('filters audit events by inclusive ISO date boundaries', () => {
