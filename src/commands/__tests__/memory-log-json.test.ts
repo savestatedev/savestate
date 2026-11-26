@@ -298,4 +298,19 @@ describe('savestate memory log --json', () => {
       'Try --offset 0 to view an available page.',
     );
   });
+
+  it('explains actor and date filters on an exhausted page', () => {
+    expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3, false, [], {
+      actor: 'editor-1',
+      since: '2026-09-05T00:00:00.000Z',
+      until: '2026-09-05T23:59:59.999Z',
+    })).toBe(
+      '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
+      'Actor filter: editor-1\n' +
+      'Since filter: 2026-09-05T00:00:00.000Z\n' +
+      'Until filter: 2026-09-05T23:59:59.999Z\n' +
+      'The memory has 3 recorded entries.\n' +
+      'Try --offset 0 to view an available page.',
+    );
+  });
 });

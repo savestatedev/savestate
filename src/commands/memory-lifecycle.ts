@@ -308,6 +308,7 @@ export function formatMemoryLogEmptyPage(
   total: number,
   pageMode = false,
   actionFilter: string[] = [],
+  filters: { actor?: string; since?: string; until?: string } = {},
 ): string {
   const page = limit === null ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const suggestedOffset = total > 0
@@ -322,6 +323,9 @@ export function formatMemoryLogEmptyPage(
   return [
     `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
     actionFilter.length > 0 ? `Action filter: ${actionFilter.join(', ')}` : null,
+    filters.actor !== undefined ? `Actor filter: ${filters.actor}` : null,
+    filters.since !== undefined ? `Since filter: ${filters.since}` : null,
+    filters.until !== undefined ? `Until filter: ${filters.until}` : null,
     `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
     suggestedNavigation,
   ].filter((line): line is string => line !== null).join('\n');
@@ -1333,6 +1337,10 @@ export async function memoryLogCommand(
     if (log.length === 0) {
       if (allLog.length === 0) {
         console.log(`\nNo audit log found for memory ${memoryId}`);
+        if (actionFilter.length > 0) console.log(`Action filter: ${actionFilter.join(', ')}`);
+        if (actorFilter !== undefined) console.log(`Actor filter: ${actorFilter}`);
+        if (options?.since !== undefined) console.log(`Since filter: ${parseMemoryLogSince(options.since)}`);
+        if (options?.until !== undefined) console.log(`Until filter: ${parseMemoryLogUntil(options.until)}`);
         console.log(`(Memory may not exist or has no recorded history)`);
       } else {
         console.log(formatMemoryLogEmptyPage(
@@ -1342,6 +1350,11 @@ export async function memoryLogCommand(
           allLog.length,
           options?.page !== undefined,
           actionFilter,
+          {
+            actor: actorFilter,
+            since: parseMemoryLogSince(options?.since),
+            until: parseMemoryLogUntil(options?.until),
+          },
         ));
       }
       return;
