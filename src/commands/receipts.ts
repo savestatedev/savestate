@@ -211,6 +211,16 @@ export function parseReceiptType(value: string | undefined): ReceiptResourceType
   throw new Error(`Invalid --type value "${value}". Expected snapshot, memory, or checkpoint.`);
 }
 
+/** Reject blank identifiers instead of silently dropping an audit filter. */
+export function parseReceiptFilterValue(value: string | undefined, flag: '--resource' | '--backend'): string | undefined {
+  if (value === undefined) return undefined;
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error(`Invalid ${flag} value "${value}". Expected a non-empty value.`);
+  }
+  return normalized;
+}
+
 export function selectReceipts(
   receipts: SaveReceipt[],
   limit: number,
@@ -338,8 +348,8 @@ export async function receiptsCommand(options: ReceiptsOptions): Promise<void> {
   const limit = resolveReceiptsLimit(options.limit, options.pageSize);
   const offset = resolveReceiptsOffset(options.offset, options.page, limit);
   const type = parseReceiptType(options.type);
-  const resource = options.resource?.trim() || undefined;
-  const backend = options.backend?.trim() || undefined;
+  const resource = parseReceiptFilterValue(options.resource, '--resource');
+  const backend = parseReceiptFilterValue(options.backend, '--backend');
   validateListDateRange(options.since, options.until);
   const since = parseListSince(options.since);
   const until = parseListUntil(options.until);
