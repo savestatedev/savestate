@@ -8,9 +8,14 @@ import {
 
 describe('savestate memory log output format', () => {
   it('accepts the explicit summary format and keeps legacy flags compatible', () => {
+    expect(parseMemoryListFormat(' pretty ')).toBe('table');
     expect(parseMemoryListFormat('summary')).toBe('json-summary');
     expect(resolveMemoryListFormat('json-summary', false, false, false)).toBe('json-summary');
     expect(resolveMemoryListFormat(undefined, false, true, false)).toBe('json-summary');
+  });
+
+  it('explains the pretty alias when an explicit format is invalid', () => {
+    expect(() => parseMemoryListFormat('yaml')).toThrow(/table, pretty, json/);
   });
 
   it('documents explicit formats on memory log', () => {

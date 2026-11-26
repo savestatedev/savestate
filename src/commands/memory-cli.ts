@@ -43,13 +43,14 @@ export function parseMemoryListFormat(value: string | undefined): MemoryListForm
   if (value === undefined) return undefined;
 
   const format = value.trim().toLowerCase();
+  if (format === 'pretty') return 'table';
   if (format === 'summary') return 'json-summary';
   if ((MEMORY_LIST_FORMATS as readonly string[]).includes(format)) {
     return format as MemoryListFormat;
   }
 
   throw new Error(
-    `Invalid --format value "${value}". Expected one of table, json, json-summary, or summary.`,
+    `Invalid --format value "${value}". Expected one of table, pretty, json, json-summary, or summary.`,
   );
 }
 
