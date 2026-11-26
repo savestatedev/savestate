@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countReceiptBackends, countReceiptResources, countReceiptVerification, formatReceiptsJson, formatReceiptsText, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
+import { countReceiptBackends, countReceiptResources, countReceiptVerification, formatReceiptsJson, formatReceiptsText, parseReceiptFilterValue, parseReceiptType, parseReceiptsLimit, parseReceiptsOffset, resolveReceiptsLimit, resolveReceiptsOffset, selectReceipts, validateReceiptOrdering } from '../receipts.js';
 
 describe('receipts command', () => {
   it('defaults to the latest 100 receipts', () => {
@@ -43,6 +43,13 @@ describe('receipts command', () => {
     expect(parseReceiptType(' MEMORY ')).toBe('memory');
     expect(parseReceiptType(undefined)).toBeUndefined();
     expect(() => parseReceiptType('other')).toThrow(/snapshot, memory, or checkpoint/);
+  });
+
+  it('trims receipt identifiers and rejects blank filters', () => {
+    expect(parseReceiptFilterValue('  memory-1  ', '--resource')).toBe('memory-1');
+    expect(parseReceiptFilterValue('  r2  ', '--backend')).toBe('r2');
+    expect(() => parseReceiptFilterValue('   ', '--resource')).toThrow(/non-empty value/);
+    expect(() => parseReceiptFilterValue('\t', '--backend')).toThrow(/non-empty value/);
   });
 
   it('filters receipts before applying newest-first pagination', () => {
