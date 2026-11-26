@@ -136,7 +136,9 @@ export function parseMemoryLogAction(value: string | undefined): string | undefi
   if (!/^[a-z][a-z0-9_-]*$/.test(action)) {
     throw new Error(`Invalid --action value "${value}". Expected a lifecycle action name.`);
   }
-  return action;
+  // Keep the user-facing rollback spelling compatible with the stored
+  // provenance action, which uses the past-tense `rolled_back` form.
+  return action === 'rollback' ? 'rolled_back' : action;
 }
 
 /** Parse one or more lifecycle actions while rejecting blank list members. */

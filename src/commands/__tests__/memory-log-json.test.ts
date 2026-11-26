@@ -39,12 +39,17 @@ const merged: ProvenanceEntry = {
 describe('savestate memory log --json', () => {
   it('normalizes and validates action filters', () => {
     expect(parseMemoryLogAction('  EDITED ')).toBe('edited');
+    expect(parseMemoryLogAction(' rollback ')).toBe('rolled_back');
     expect(parseMemoryLogAction(undefined)).toBeUndefined();
     expect(() => parseMemoryLogAction('edit events')).toThrow('Invalid --action value');
   });
 
   it('accepts comma-separated action filters without duplicates', () => {
-    expect(parseMemoryLogActions(' EDITED, created,edited ')).toEqual(['edited', 'created']);
+    expect(parseMemoryLogActions(' EDITED, created,rollback,rolled_back ')).toEqual([
+      'edited',
+      'created',
+      'rolled_back',
+    ]);
     expect(() => parseMemoryLogActions('edited,,created')).toThrow('Invalid --action value');
   });
 
