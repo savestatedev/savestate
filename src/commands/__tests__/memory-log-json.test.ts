@@ -130,11 +130,23 @@ describe('savestate memory log --json', () => {
       hasMore: true,
       nextOffset: 1,
       actionLog: [created, edited, merged],
+      filters: {
+        action: ['edited'],
+        actor: 'editor-1',
+        since: '2026-09-05T00:00:00.000Z',
+        until: '2026-09-05T23:59:59.999Z',
+      },
     })) as MemoryLogJson & { eventsIncluded: boolean };
 
     expect(parsed.events).toEqual([]);
     expect(parsed.eventsIncluded).toBe(false);
     expect(parsed.actionCounts).toEqual({ created: 1, edited: 1, merged: 1 });
+    expect(parsed.filters).toEqual({
+      action: ['edited'],
+      actor: 'editor-1',
+      since: '2026-09-05T00:00:00.000Z',
+      until: '2026-09-05T23:59:59.999Z',
+    });
     expect(parsed.pagination).toMatchObject({ total: 3, shown: 1, hasMore: true, nextOffset: 1 });
   });
 
@@ -147,6 +159,7 @@ describe('savestate memory log --json', () => {
       memoryId: 'mem-123',
       eventsIncluded: true,
       actionCounts: { created: 1, edited: 1, merged: 1 },
+      filters: { action: [], actor: null, since: null, until: null },
       events: [
         {
           action: 'created',

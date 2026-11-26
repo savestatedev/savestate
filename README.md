@@ -544,7 +544,8 @@ table output repeats the active filters for clarity.
 
 JSON responses include `found: true` for an available memory; a missing memory
 uses the same field with `false`, so scripts can branch without inspecting the
-event payload.
+event payload. Successful responses also include a normalized `filters` object
+with the applied action, actor, since, and until values.
 
 Pass `--snapshot` to explain retrievals from a historical archive. Filters are
 applied before pagination, so the JSON response keeps each result's stable
