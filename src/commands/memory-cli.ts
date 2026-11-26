@@ -50,7 +50,7 @@ export function parseMemoryListFormat(value: string | undefined): MemoryListForm
   }
 
   throw new Error(
-    `Invalid --format value "${value}". Expected one of table, pretty, json, json-summary, or summary.`,
+    `Invalid --format value "${value}". Expected one of table, json, json-summary, or summary. Alias: pretty.`,
   );
 }
 
