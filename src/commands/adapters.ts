@@ -128,9 +128,16 @@ export function formatAdaptersPageSummary(
   limit?: number,
 ): string {
   if (offset > 0 || (limit !== undefined && shown < total)) {
-    const pageOptions = [`offset ${offset}`];
-    if (limit !== undefined) pageOptions.push(`limit ${limit}`);
-    return `(showing ${shown} of ${total} after filters; ${pageOptions.join(', ')})`;
+    const pageOptions = [`offset ${offset}${limit !== undefined ? `, limit ${limit}` : ''}`];
+    const navigation: string[] = [];
+    if (offset > 0) {
+      navigation.push(`previous offset ${Math.max(0, offset - (limit ?? (shown || 1)))}`);
+    }
+    if (limit !== undefined && offset + shown < total) {
+      navigation.push(`next offset ${offset + shown}`);
+    }
+    if (navigation.length > 0) pageOptions.push(navigation.join(', '));
+    return `(showing ${shown} of ${total} after filters; ${pageOptions.join('; ')})`;
   }
   return `(showing ${shown} of ${total} after filters)`;
 }
