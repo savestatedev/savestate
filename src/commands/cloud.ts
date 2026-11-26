@@ -29,6 +29,7 @@ interface CloudOptions {
   label?: string;
   tag?: string;
   limit?: string;
+  pageSize?: string;
   offset?: string;
   all?: boolean;
   force?: boolean;
@@ -159,6 +160,14 @@ export function parseCloudTag(value: string | undefined): string | undefined {
 }
 
 const MAX_CLOUD_LIMIT = 1000;
+
+/** Resolve the readable cloud pagination alias without silently choosing between limits. */
+export function resolveCloudLimit(options: Pick<CloudOptions, 'limit' | 'pageSize'>): string | undefined {
+  if (options.limit !== undefined && options.pageSize !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one limit option.');
+  }
+  return options.pageSize ?? options.limit;
+}
 
 /** Parse cloud --limit without treating invalid counts as the latest snapshot. */
 export function parseCloudLimit(value: string | undefined): number | undefined {
@@ -1402,20 +1411,22 @@ export async function cloudCommand(rawSubcommand: string, options: CloudOptions)
   parseCloudUntil(options.until);
   parseCloudLabel(options.label);
   parseCloudTag(options.tag);
-  parseCloudLimit(options.limit);
+  const limit = resolveCloudLimit(options);
+  parseCloudLimit(limit);
   parseCloudOffset(options.offset);
+  const resolvedOptions = { ...options, limit };
   switch (subcommand) {
     case 'push':
-      await cloudPushCommand(options);
+      await cloudPushCommand(resolvedOptions);
       break;
     case 'pull':
-      await cloudPullCommand(options);
+      await cloudPullCommand(resolvedOptions);
       break;
     case 'list':
-      await cloudListCommand(options);
+      await cloudListCommand(resolvedOptions);
       break;
     case 'delete':
-      await cloudDeleteCommand(options);
+      await cloudDeleteCommand(resolvedOptions);
       break;
   }
 }
