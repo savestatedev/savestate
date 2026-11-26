@@ -15,7 +15,7 @@ describe('savestate memory log output format', () => {
   });
 
   it('explains the pretty alias when an explicit format is invalid', () => {
-    expect(() => parseMemoryListFormat('yaml')).toThrow(/table, pretty, json/);
+    expect(() => parseMemoryListFormat('yaml')).toThrow(/table, json, json-summary, or summary/);
   });
 
   it('documents explicit formats on memory log', () => {
