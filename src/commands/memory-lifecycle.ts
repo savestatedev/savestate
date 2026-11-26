@@ -249,6 +249,7 @@ export function formatMemoryLogEmptyPage(
   limit: number | null,
   total: number,
   pageMode = false,
+  actionFilter: string[] = [],
 ): string {
   const page = limit === null ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const suggestedOffset = total > 0
@@ -262,6 +263,7 @@ export function formatMemoryLogEmptyPage(
 
   return [
     `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
+    actionFilter.length > 0 ? `Action filter: ${actionFilter.join(', ')}` : null,
     `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
     suggestedNavigation,
   ].filter((line): line is string => line !== null).join('\n');
@@ -1224,9 +1226,10 @@ export async function memoryLogCommand(
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
 
   try {
+    const actionFilter = parseMemoryLogActions(options?.action);
     const allLog = filterMemoryLogAction(
       await knowledgeLane.memoryAuditLog(memoryId),
-      parseMemoryLogActions(options?.action),
+      actionFilter,
     );
     const limit = resolveMemoryLogPageLimit(options?.limit, options?.pageSize, options?.page);
     const offset = resolveMemoryLogOffset(options?.offset, options?.page, limit ?? undefined);
@@ -1269,6 +1272,7 @@ export async function memoryLogCommand(
           limit,
           allLog.length,
           options?.page !== undefined,
+          actionFilter,
         ));
       }
       return;
@@ -1276,6 +1280,9 @@ export async function memoryLogCommand(
 
     // Table format
     console.log(`\nAudit Log for Memory: ${memoryId}\n`);
+    if (actionFilter && actionFilter.length > 0) {
+      console.log(`Action filter: ${actionFilter.join(', ')}\n`);
+    }
     console.log('Timestamp                  Action           Actor            Reason');
     console.log('-'.repeat(80));
 
