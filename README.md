@@ -536,9 +536,11 @@ savestate memory log mem-123 --format json-summary --page 2
 `memory log` also accepts the explicit `--format` values `table` (or `pretty`), `json`,
 `json-summary`, and `summary`; the latter two omit audit events while preserving pagination metadata.
 
-Use `--action` to inspect only one lifecycle event type, such as
-`savestate memory log mem-123 --action edited --json`. The action filter is applied
-before pagination, so totals and next-page guidance describe the filtered history.
+Use `--action` to inspect one or more lifecycle event types, such as
+`savestate memory log mem-123 --action edited,rollback --json`. Combine it with
+`--actor`, `--since`, or `--until` to narrow the audit history. Filters are applied
+before pagination, so totals and next-page guidance describe the filtered history;
+table output repeats the active filters for clarity.
 
 JSON responses include `found: true` for an available memory; a missing memory
 uses the same field with `false`, so scripts can branch without inspecting the

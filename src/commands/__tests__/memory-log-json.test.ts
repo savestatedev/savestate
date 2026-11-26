@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ProvenanceEntry } from '../../checkpoint/types.js';
 import {
   formatMemoryLogEmptyPage,
+  formatMemoryLogFilterLines,
   formatMemoryLogJson,
   formatMemoryLogActionSummary,
   formatMemoryLogNavigation,
@@ -314,5 +315,18 @@ describe('savestate memory log --json', () => {
       'The memory has 3 recorded entries.\n' +
       'Try --offset 0 to view an available page.',
     );
+  });
+
+  it('keeps date filters visible in table output', () => {
+    expect(formatMemoryLogFilterLines(['edited'], {
+      actor: 'editor-1',
+      since: '2026-09-05T00:00:00.000Z',
+      until: '2026-09-05T23:59:59.999Z',
+    })).toEqual([
+      'Action filter: edited',
+      'Actor filter: editor-1',
+      'Since filter: 2026-09-05T00:00:00.000Z',
+      'Until filter: 2026-09-05T23:59:59.999Z',
+    ]);
   });
 });

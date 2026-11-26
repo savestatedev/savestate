@@ -341,13 +341,23 @@ export function formatMemoryLogEmptyPage(
 
   return [
     `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
+    ...formatMemoryLogFilterLines(actionFilter, filters),
+    `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
+    suggestedNavigation,
+  ].filter((line): line is string => line !== null).join('\n');
+}
+
+/** Keep active audit filters visible in every human-readable result state. */
+export function formatMemoryLogFilterLines(
+  actionFilter: string[] = [],
+  filters: { actor?: string; since?: string; until?: string } = {},
+): string[] {
+  return [
     actionFilter.length > 0 ? `Action filter: ${actionFilter.join(', ')}` : null,
     filters.actor !== undefined ? `Actor filter: ${filters.actor}` : null,
     filters.since !== undefined ? `Since filter: ${filters.since}` : null,
     filters.until !== undefined ? `Until filter: ${filters.until}` : null,
-    `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
-    suggestedNavigation,
-  ].filter((line): line is string => line !== null).join('\n');
+  ].filter((line): line is string => line !== null);
 }
 
 const MAX_MEMORY_LOG_LIMIT = 1000;
@@ -1381,11 +1391,13 @@ export async function memoryLogCommand(
 
     // Table format
     console.log(`\nAudit Log for Memory: ${memoryId}\n`);
-    if (actionFilter && actionFilter.length > 0) {
-      console.log(`Action filter: ${actionFilter.join(', ')}\n`);
-    }
-    if (actorFilter !== undefined) {
-      console.log(`Actor filter: ${actorFilter}\n`);
+    const filterLines = formatMemoryLogFilterLines(actionFilter, {
+      actor: actorFilter,
+      since: parseMemoryLogSince(options?.since),
+      until: parseMemoryLogUntil(options?.until),
+    });
+    if (filterLines.length > 0) {
+      console.log(`${filterLines.join('\n')}\n`);
     }
     console.log('Timestamp                  Action           Actor            Reason');
     console.log('-'.repeat(80));
