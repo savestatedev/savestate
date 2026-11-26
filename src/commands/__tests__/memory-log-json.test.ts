@@ -10,6 +10,9 @@ import {
   filterMemoryLogAction,
   parseMemoryLogAction,
   parseMemoryLogActions,
+  parseMemoryLogSince,
+  parseMemoryLogUntil,
+  filterMemoryLogDateRange,
   type MemoryLogJson,
 } from '../memory-lifecycle.js';
 
@@ -58,6 +61,16 @@ describe('savestate memory log --json', () => {
     expect(filterMemoryLogAction([created, edited, merged], ['edited', 'merged'])).toEqual([edited, merged]);
     expect(filterMemoryLogAction([created, edited, merged], ['EDITED', 'MERGED'])).toEqual([edited, merged]);
     expect(filterMemoryLogAction([created, edited], undefined)).toHaveLength(2);
+  });
+
+  it('filters audit events by inclusive ISO date boundaries', () => {
+    expect(parseMemoryLogSince('2026-09-05')).toBe('2026-09-05T00:00:00.000Z');
+    expect(parseMemoryLogUntil('2026-09-05')).toBe('2026-09-05T23:59:59.999Z');
+    expect(filterMemoryLogDateRange([created, edited, merged], '2026-09-05T12:05:00.000Z', undefined))
+      .toEqual([edited, merged]);
+    expect(() => parseMemoryLogSince('not-a-date')).toThrow('Invalid --since value');
+    expect(() => filterMemoryLogDateRange([], '2026-09-06T00:00:00.000Z', '2026-09-05T00:00:00.000Z'))
+      .toThrow('must be on or before');
   });
 
   it('formats a deterministic action summary for table output', () => {
