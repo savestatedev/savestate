@@ -190,13 +190,32 @@ export function filterMemoryLogAction(
 
 function parseMemoryLogDate(value: string, flag: '--since' | '--until'): string {
   const normalized = value.trim();
-  const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(normalized);
+  if (dateOnly && !isValidMemoryLogCalendarDate(normalized)) {
+    throw new Error(`Invalid ${flag} value "${value}". Expected an ISO-8601 date or timestamp.`);
+  }
+  const dateValue = dateOnly
     ? `${normalized}T${flag === '--since' ? '00:00:00.000' : '23:59:59.999'}Z`
     : normalized;
   if (!Number.isFinite(Date.parse(dateValue))) {
     throw new Error(`Invalid ${flag} value "${value}". Expected an ISO-8601 date or timestamp.`);
   }
   return dateValue;
+}
+
+/** Date.parse normalizes impossible dates such as February 30; reject them first. */
+function isValidMemoryLogCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1) return false;
+
+  const daysInMonth = [31, (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 29 : 28,
+    31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= daysInMonth[month - 1];
 }
 
 /** Parse an audit-log time boundary with inclusive date-only semantics. */

@@ -80,6 +80,8 @@ describe('savestate memory log --json', () => {
     expect(filterMemoryLogDateRange([created, edited, merged], '2026-09-05T12:05:00.000Z', undefined))
       .toEqual([edited, merged]);
     expect(() => parseMemoryLogSince('not-a-date')).toThrow('Invalid --since value');
+    expect(() => parseMemoryLogUntil('2026-02-30')).toThrow('Invalid --until value');
+    expect(parseMemoryLogSince('2024-02-29')).toBe('2024-02-29T00:00:00.000Z');
     expect(() => filterMemoryLogDateRange([], '2026-09-06T00:00:00.000Z', '2026-09-05T00:00:00.000Z'))
       .toThrow('must be on or before');
   });
