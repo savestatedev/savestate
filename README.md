@@ -301,6 +301,10 @@ tier and freshness summaries. Source keys are trimmed and grouped case-insensiti
 the first spelling seen so scripts can summarize platform coverage without rescanning entries.
 It also includes `sourcePercentages` and `shownSourcePercentages`, with percentage shares for the
 matching collection and visible page.
+The envelope also includes `filterSummary`, a normalized human-readable string such as
+`source=claude-code, tags=[Work], min-importance=0.8`, or `null` when no filters are active.
+Use it when displaying the exact scope of a saved or forwarded result without reconstructing
+the filter labels from the normalized `filters` object.
 Table output also shows matching-collection source totals and, when paginated, source totals for
 the rows on the visible page. Human-readable summaries show the first eight source labels and
 compactly report any additional sources; JSON counts remain complete.
