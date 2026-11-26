@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyMemoryRollbackFilters,
   parseMemoryRollbackOffset,
+  resolveMemoryRollbackLimit,
   selectMemoryRollbackOffsetEntries,
 } from '../memory-lifecycle.js';
 
@@ -37,6 +38,21 @@ describe('savestate memory rollback --offset', () => {
     expect(applyMemoryRollbackFilters(entries, { offset: '1', limit: '1' })).toEqual([
       { id: 'id' },
     ]);
+  });
+
+  it('accepts --page-size as the limit alias', () => {
+    const entries = [{ id: 'status' }, { id: 'id' }, { id: 'version' }];
+    expect(resolveMemoryRollbackLimit(undefined, '2')).toBe(2);
+    expect(applyMemoryRollbackFilters(entries, { pageSize: '2' })).toEqual([
+      { id: 'status' },
+      { id: 'id' },
+    ]);
+  });
+
+  it('rejects simultaneous rollback page-size options', () => {
+    expect(() => resolveMemoryRollbackLimit('2', '2')).toThrow(
+      'Cannot use --limit with --page-size; choose one page-size option.',
+    );
   });
 
   it('returns all rows when offset is omitted', () => {

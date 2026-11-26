@@ -3291,6 +3291,13 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryRollbackLimit');
   });
 
+  it('documents memory rollback --page-size as the limit alias', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
+    expect(memorySection).toContain('savestate memory rollback mem-123 --version 2 --page-size 5');
+    expect(rollbackBlock).toContain(".option('--page-size <n>'");
+  });
+
   it('registers --json on savestate memory rollback', () => {
     const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
     expect(rollbackBlock).toContain(".option('--json'");

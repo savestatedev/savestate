@@ -955,6 +955,17 @@ export function parseMemoryRollbackLimit(value: string | undefined): number | un
   return limit;
 }
 
+/** Resolve the rollback page-size alias while rejecting ambiguous settings. */
+export function resolveMemoryRollbackLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number | undefined {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseMemoryRollbackLimit(pageSizeValue ?? limitValue);
+}
+
 /** Keep the first N rollback status field rows when --limit is set. */
 export function selectMemoryRollbackEntries<T>(entries: T[], limit?: number): T[] {
   if (limit === undefined) return entries;
@@ -990,11 +1001,11 @@ export function selectMemoryRollbackOffsetEntries<T>(entries: T[], offset?: numb
 /** Apply memory rollback --offset then --limit. */
 export function applyMemoryRollbackFilters<T>(
   entries: T[],
-  options: { offset?: string; limit?: string } = {},
+  options: { offset?: string; limit?: string; pageSize?: string } = {},
 ): T[] {
   return selectMemoryRollbackEntries(
     selectMemoryRollbackOffsetEntries(entries, parseMemoryRollbackOffset(options.offset)),
-    parseMemoryRollbackLimit(options.limit),
+    resolveMemoryRollbackLimit(options.limit, options.pageSize),
   );
 }
 
@@ -1010,10 +1021,11 @@ export async function rollbackMemoryCommand(
     actorId: string;
     format?: 'pretty' | 'json';
     limit?: string;
+    pageSize?: string;
     offset?: string;
   }
 ): Promise<void> {
-  parseMemoryRollbackLimit(options.limit);
+  resolveMemoryRollbackLimit(options.limit, options.pageSize);
   parseMemoryRollbackOffset(options.offset);
   const checkpointStorage = new InMemoryCheckpointStorage();
   const knowledgeLane = new KnowledgeLane(checkpointStorage);
