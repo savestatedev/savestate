@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseMemoryDeleteLimit, selectMemoryDeleteEntries } from '../memory-lifecycle.js';
+import {
+  applyMemoryDeleteFilters,
+  parseMemoryDeleteLimit,
+  resolveMemoryDeleteLimit,
+  selectMemoryDeleteEntries,
+} from '../memory-lifecycle.js';
 
 describe('savestate memory delete --limit', () => {
   it('defaults to undefined', () => {
@@ -31,6 +36,20 @@ describe('savestate memory delete --limit', () => {
         2,
       ).map((entry) => entry.id),
     ).toEqual(['status', 'id']);
+  });
+
+  it('accepts --page-size as the limit alias', () => {
+    expect(resolveMemoryDeleteLimit(undefined, '2')).toBe(2);
+    expect(applyMemoryDeleteFilters(
+      [{ id: 'status' }, { id: 'id' }, { id: 'reason' }],
+      { pageSize: '2' },
+    )).toEqual([{ id: 'status' }, { id: 'id' }]);
+  });
+
+  it('rejects simultaneous delete page-size options', () => {
+    expect(() => resolveMemoryDeleteLimit('2', '2')).toThrow(
+      'Cannot use --limit with --page-size; choose one page-size option.',
+    );
   });
 
   it('returns all rows when --limit is omitted', () => {

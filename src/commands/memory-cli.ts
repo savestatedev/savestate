@@ -1023,6 +1023,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .option('-r, --reason <reason>', 'Reason for the edit (non-empty)')
     .option('--limit <n>', 'Maximum number of status field rows to show')
+    .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
@@ -1040,6 +1041,7 @@ export function registerMemoryCommands(program: Command): void {
           reason: options.reason === undefined ? undefined : parseMemoryReason(options.reason),
           format: options.json ? 'json' : 'pretty',
           limit: options.limit,
+          pageSize: options.pageSize,
           offset: options.offset,
         });
       } catch (err) {
@@ -1056,6 +1058,7 @@ export function registerMemoryCommands(program: Command): void {
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .requiredOption('-r, --reason <reason>', 'Reason for deletion (non-empty)')
     .option('--limit <n>', 'Maximum number of status field rows to show')
+    .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
@@ -1070,6 +1073,7 @@ export function registerMemoryCommands(program: Command): void {
           reason: parseMemoryReason(options.reason),
           format: options.json ? 'json' : 'pretty',
           limit: options.limit,
+          pageSize: options.pageSize,
           offset: options.offset,
         });
       } catch (err) {
@@ -1085,6 +1089,7 @@ export function registerMemoryCommands(program: Command): void {
     .requiredOption('-v, --version <n>', 'Version number to rollback to')
     .option('--actor <id>', 'Actor ID for audit trail (single non-empty id)', 'cli-user')
     .option('--limit <n>', 'Maximum number of status field rows to show')
+    .option('--page-size <n>', 'Alias for --limit (positive integer up to 1000)')
     .option('--offset <n>', 'Skip the first N status field rows (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action(async (memoryId, options) => {
@@ -1099,6 +1104,7 @@ export function registerMemoryCommands(program: Command): void {
           actorId: parseMemoryActor(options.actor) ?? 'cli-user',
           format: options.json ? 'json' : 'pretty',
           limit: options.limit,
+          pageSize: options.pageSize,
           offset: options.offset,
         });
       } catch (err) {

@@ -3217,7 +3217,9 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('--limit');
     expect(memorySection).toContain('Must be a positive integer up to 1000');
     expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --limit 5');
+    expect(memorySection).toContain('savestate memory edit mem-123 --content "Updated preference" --page-size 5');
     expect(editBlock).toContain(".option('--limit <n>'");
+    expect(editBlock).toContain(".option('--page-size <n>'");
     expect(memoryLifecycle).toContain('export function parseMemoryEditLimit');
   });
 
@@ -3272,6 +3274,14 @@ describe('CLI docs', () => {
     expect(memoryLifecycle).toContain('export function parseMemoryDeleteLimit');
   });
 
+  it('documents memory delete --page-size as a limit alias', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const deleteBlock = memoryCli.slice(memoryCli.indexOf("command('delete"), memoryCli.indexOf("command('rollback"));
+    expect(memorySection).toContain('savestate memory delete mem-123 --reason "stale" --page-size 5');
+    expect(deleteBlock).toContain(".option('--page-size <n>'");
+    expect(memoryLifecycle).toContain('export function resolveMemoryDeleteLimit');
+  });
+
   it('documents memory delete --offset as a bounded skip count', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const deleteBlock = memoryCli.slice(memoryCli.indexOf("command('delete"), memoryCli.indexOf("command('rollback"));
@@ -3289,6 +3299,13 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory rollback mem-123 --version 2 --limit 5');
     expect(rollbackBlock).toContain(".option('--limit <n>'");
     expect(memoryLifecycle).toContain('export function parseMemoryRollbackLimit');
+  });
+
+  it('documents memory rollback --page-size as the limit alias', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const rollbackBlock = memoryCli.slice(memoryCli.indexOf("command('rollback"), memoryCli.indexOf("command('expire"));
+    expect(memorySection).toContain('savestate memory rollback mem-123 --version 2 --page-size 5');
+    expect(rollbackBlock).toContain(".option('--page-size <n>'");
   });
 
   it('registers --json on savestate memory rollback', () => {
