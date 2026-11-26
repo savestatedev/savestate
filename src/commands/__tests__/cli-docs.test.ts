@@ -187,6 +187,8 @@ describe('CLI docs', () => {
     expect(docs).toContain('namespace (a string or <code>null</code>)');
     expect(docs).toContain('bySource</code> and <code>shownBySource');
     expect(docs).toContain('byFreshness</code> and <code>shownByFreshness');
+    expect(readme).toContain('`filterSummary`, a normalized human-readable string');
+    expect(readme).toContain('source=claude-code, tags=[Work], min-importance=0.8');
   });
 
   it('documents explicit memory list output formats', () => {

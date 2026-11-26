@@ -12,6 +12,7 @@ import {
   filterMemoryListByTags,
   getMemoryListSummary,
   countByFreshness,
+  getMemoryListFreshnessPercentages,
   countBySource,
   getMemoryListSourcePercentages,
   countByNamespace,
@@ -31,6 +32,29 @@ function entry(partial: Partial<MemoryEntry> & Pick<MemoryEntry, 'id' | 'content
 }
 
 describe('savestate memory --json', () => {
+  it('reports freshness percentages for the matching collection and visible page', () => {
+    const now = new Date('2026-09-10T00:00:00.000Z');
+    const entries = [
+      entry({ id: 'mem-active', content: 'active', freshnessClass: 'fast', lastVerifiedAt: '2026-09-09T23:00:00.000Z' }),
+      entry({ id: 'mem-stale', content: 'stale', freshnessClass: 'medium', lastVerifiedAt: '2026-09-01T00:00:00.000Z' }),
+      entry({ id: 'mem-confirm', content: 'confirm', freshnessClass: 'slow', lastVerifiedAt: '2026-01-01T00:00:00.000Z' }),
+    ];
+
+    expect(getMemoryListFreshnessPercentages(entries, now)).toMatchObject({
+      active: expect.closeTo(100 / 3),
+      stale: expect.closeTo(100 / 3),
+      needs_confirmation: expect.closeTo(100 / 3),
+    });
+
+    const parsed = JSON.parse(formatMemoryListJson(entries, entries.slice(0, 2), { now })) as MemoryListJson;
+    expect(parsed.freshnessPercentages).toMatchObject({
+      active: expect.closeTo(100 / 3),
+      stale: expect.closeTo(100 / 3),
+      needs_confirmation: expect.closeTo(100 / 3),
+    });
+    expect(parsed.shownFreshnessPercentages).toEqual({ active: 50, stale: 50, needs_confirmation: 0 });
+  });
+
   it('describes the active human-readable list ordering', () => {
     expect(formatMemoryListOrderingSummary()).toBe('Ordering: newest first (ties by id)');
     expect(formatMemoryListOrderingSummary(true)).toBe('Ordering: oldest first (ties by id)');
@@ -446,6 +470,7 @@ describe('savestate memory --json', () => {
     expect(parsed.suggestedOffset).toBeNull();
     expect(parsed.guidance).toEqual({ action: 'next', offset: 2 });
     expect(parsed.filters).toEqual({ tier: null, freshness: null, pinned: null, source: null, namespace: null, unassignedNamespace: false, content: null, tags: null, until: null, since: null, importantFirst: false, oldestFirst: false });
+    expect(parsed.filterSummary).toBeNull();
     expect(parsed.byTier).toEqual({ L1: 1, L2: 1, L3: 1 });
     expect(parsed.shownByTier).toEqual({ L1: 1, L2: 1, L3: 0 });
     expect(parsed.bySource).toEqual({ user: 2, agent: 1 });
@@ -848,6 +873,19 @@ describe('savestate memory --json', () => {
     expect(parsed.total).toBe(1);
     expect(parsed.shown).toBe(1);
     expect(parsed.guidance).toEqual({ action: 'none', offset: null });
+  });
+
+  it('includes the normalized filter summary for machine consumers', () => {
+    const memory = entry({ id: 'mem-filter-summary', content: 'editor', source: 'Claude-Code' });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      filters: {
+        source: ' claude-code ',
+        tags: [' Work ', 'work'],
+        minImportance: 0.8,
+      },
+    })) as MemoryListJson;
+
+    expect(parsed.filterSummary).toBe('source=claude-code, tags=[Work], min-importance=0.8');
   });
 
   it('normalizes content filters in the JSON envelope', () => {
