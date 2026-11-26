@@ -421,6 +421,12 @@ describe('receipts command', () => {
     expect(JSON.parse(formatReceiptsJson([], 0, 0, 10, undefined, false, true))).toMatchObject({ verified: false, unverified: true });
   });
 
+  it('declares whether JSON includes receipt records', () => {
+    expect(JSON.parse(formatReceiptsJson([{ receipt_id: 'r-1' }] as never[], 1, 0, 10))).toMatchObject({ contentIncluded: true });
+    expect(JSON.parse(formatReceiptsJson([{ receipt_id: 'r-1' }] as never[], 1, 0, 10, undefined, undefined, false, false, false, undefined, undefined, false)))
+      .toMatchObject({ contentIncluded: false });
+  });
+
   it('guides stale offsets in JSON back to the last available page', () => {
     expect(JSON.parse(formatReceiptsJson([], 3, 9, 2))).toMatchObject({
       found: false, emptyReason: 'page', suggestedOffset: 2, hasMore: false, isLastPage: true,

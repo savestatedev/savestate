@@ -29,6 +29,8 @@ export interface ReceiptsOptions {
 
 export interface ReceiptsJson {
   found: boolean;
+  /** Whether the response includes the visible receipt records. */
+  contentIncluded: boolean;
   type: ReceiptResourceType | null;
   resource: string | null;
   verified: boolean;
@@ -158,7 +160,7 @@ export function formatReceiptsJson(
     : nextOffset !== null ? { action: 'next' as const, offset: nextOffset }
       : previousOffset !== null ? { action: 'previous' as const, offset: previousOffset }
         : { action: 'none' as const, offset: null };
-  const output = { found: shown > 0, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, backend: backend ?? null, oldestFirst, verified, unverified: selectedUnverified,
+  const output = { found: shown > 0, contentIncluded: includeReceipts, type: type ?? null, resource: resource ?? null, since: since ?? null, until: until ?? null, backend: backend ?? null, oldestFirst, verified, unverified: selectedUnverified,
     filters: { type: type ?? null, resource: resource ?? null, backend: backend ?? null, since: since ?? null, until: until ?? null, verified, unverified: selectedUnverified },
     total, shown, emptyReason: shown > 0 ? null : total === 0 ? 'collection' : 'page', offset, limit,
     page, totalPages: total === 0 ? 0 : Math.ceil(total / limit), suggestedOffset,
