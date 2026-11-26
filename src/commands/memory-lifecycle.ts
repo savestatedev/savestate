@@ -158,6 +158,26 @@ export function parseMemoryLogActions(value: string | undefined): string[] | und
   return [...new Set(actions.filter((action): action is string => action !== undefined))];
 }
 
+/** Parse a single audit-log actor filter without accepting an accidental list. */
+export function parseMemoryLogActor(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+
+  const actor = value.trim();
+  if (!actor || actor.includes(',')) {
+    throw new Error(`Invalid --actor value "${value}". Expected one non-empty actor id.`);
+  }
+  return actor;
+}
+
+/** Filter audit events by the recorded actor before pagination. */
+export function filterMemoryLogActor(
+  entries: ProvenanceEntry[],
+  actor: string | undefined,
+): ProvenanceEntry[] {
+  if (actor === undefined) return entries;
+  return entries.filter((entry) => (entry.actor_id ?? 'unknown') === actor);
+}
+
 /** Filter audit events before pagination so totals describe the requested view. */
 export function filterMemoryLogAction(
   entries: ProvenanceEntry[],
@@ -170,13 +190,32 @@ export function filterMemoryLogAction(
 
 function parseMemoryLogDate(value: string, flag: '--since' | '--until'): string {
   const normalized = value.trim();
-  const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(normalized);
+  if (dateOnly && !isValidMemoryLogCalendarDate(normalized)) {
+    throw new Error(`Invalid ${flag} value "${value}". Expected an ISO-8601 date or timestamp.`);
+  }
+  const dateValue = dateOnly
     ? `${normalized}T${flag === '--since' ? '00:00:00.000' : '23:59:59.999'}Z`
     : normalized;
   if (!Number.isFinite(Date.parse(dateValue))) {
     throw new Error(`Invalid ${flag} value "${value}". Expected an ISO-8601 date or timestamp.`);
   }
   return dateValue;
+}
+
+/** Date.parse normalizes impossible dates such as February 30; reject them first. */
+function isValidMemoryLogCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1) return false;
+
+  const daysInMonth = [31, (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 29 : 28,
+    31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= daysInMonth[month - 1];
 }
 
 /** Parse an audit-log time boundary with inclusive date-only semantics. */
@@ -288,6 +327,7 @@ export function formatMemoryLogEmptyPage(
   total: number,
   pageMode = false,
   actionFilter: string[] = [],
+  filters: { actor?: string; since?: string; until?: string } = {},
 ): string {
   const page = limit === null ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const suggestedOffset = total > 0
@@ -302,6 +342,9 @@ export function formatMemoryLogEmptyPage(
   return [
     `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
     actionFilter.length > 0 ? `Action filter: ${actionFilter.join(', ')}` : null,
+    filters.actor !== undefined ? `Actor filter: ${filters.actor}` : null,
+    filters.since !== undefined ? `Since filter: ${filters.since}` : null,
+    filters.until !== undefined ? `Until filter: ${filters.until}` : null,
     `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
     suggestedNavigation,
   ].filter((line): line is string => line !== null).join('\n');
@@ -1258,6 +1301,7 @@ export async function memoryLogCommand(
     offset?: string;
     page?: string;
     action?: string;
+    actor?: string;
     since?: string;
     until?: string;
   }
@@ -1267,10 +1311,14 @@ export async function memoryLogCommand(
 
   try {
     const actionFilter = parseMemoryLogActions(options?.action);
+    const actorFilter = parseMemoryLogActor(options?.actor);
     const allLog = filterMemoryLogDateRange(
-      filterMemoryLogAction(
-        await knowledgeLane.memoryAuditLog(memoryId),
-        actionFilter,
+      filterMemoryLogActor(
+        filterMemoryLogAction(
+          await knowledgeLane.memoryAuditLog(memoryId),
+          actionFilter,
+        ),
+        actorFilter,
       ),
       parseMemoryLogSince(options?.since),
       parseMemoryLogUntil(options?.until),
@@ -1308,6 +1356,10 @@ export async function memoryLogCommand(
     if (log.length === 0) {
       if (allLog.length === 0) {
         console.log(`\nNo audit log found for memory ${memoryId}`);
+        if (actionFilter.length > 0) console.log(`Action filter: ${actionFilter.join(', ')}`);
+        if (actorFilter !== undefined) console.log(`Actor filter: ${actorFilter}`);
+        if (options?.since !== undefined) console.log(`Since filter: ${parseMemoryLogSince(options.since)}`);
+        if (options?.until !== undefined) console.log(`Until filter: ${parseMemoryLogUntil(options.until)}`);
         console.log(`(Memory may not exist or has no recorded history)`);
       } else {
         console.log(formatMemoryLogEmptyPage(
@@ -1317,6 +1369,11 @@ export async function memoryLogCommand(
           allLog.length,
           options?.page !== undefined,
           actionFilter,
+          {
+            actor: actorFilter,
+            since: parseMemoryLogSince(options?.since),
+            until: parseMemoryLogUntil(options?.until),
+          },
         ));
       }
       return;
@@ -1326,6 +1383,9 @@ export async function memoryLogCommand(
     console.log(`\nAudit Log for Memory: ${memoryId}\n`);
     if (actionFilter && actionFilter.length > 0) {
       console.log(`Action filter: ${actionFilter.join(', ')}\n`);
+    }
+    if (actorFilter !== undefined) {
+      console.log(`Actor filter: ${actorFilter}\n`);
     }
     console.log('Timestamp                  Action           Actor            Reason');
     console.log('-'.repeat(80));

@@ -9,6 +9,8 @@ import {
   formatMemoryLogTablePageSummary,
   getMemoryLogGuidance,
   filterMemoryLogAction,
+  filterMemoryLogActor,
+  parseMemoryLogActor,
   parseMemoryLogAction,
   parseMemoryLogActions,
   parseMemoryLogSince,
@@ -64,12 +66,22 @@ describe('savestate memory log --json', () => {
     expect(filterMemoryLogAction([created, edited], undefined)).toHaveLength(2);
   });
 
+  it('filters audit events by actor and rejects ambiguous actor lists', () => {
+    expect(parseMemoryLogActor(' editor-1 ')).toBe('editor-1');
+    expect(filterMemoryLogActor([created, edited, merged], 'editor-1')).toEqual([edited]);
+    expect(filterMemoryLogActor([{ ...created, actor_id: undefined }], 'unknown')).toHaveLength(1);
+    expect(() => parseMemoryLogActor('editor-1,system')).toThrow('Expected one non-empty actor id');
+    expect(() => parseMemoryLogActor('   ')).toThrow('Expected one non-empty actor id');
+  });
+
   it('filters audit events by inclusive ISO date boundaries', () => {
     expect(parseMemoryLogSince('2026-09-05')).toBe('2026-09-05T00:00:00.000Z');
     expect(parseMemoryLogUntil('2026-09-05')).toBe('2026-09-05T23:59:59.999Z');
     expect(filterMemoryLogDateRange([created, edited, merged], '2026-09-05T12:05:00.000Z', undefined))
       .toEqual([edited, merged]);
     expect(() => parseMemoryLogSince('not-a-date')).toThrow('Invalid --since value');
+    expect(() => parseMemoryLogUntil('2026-02-30')).toThrow('Invalid --until value');
+    expect(parseMemoryLogSince('2024-02-29')).toBe('2024-02-29T00:00:00.000Z');
     expect(() => filterMemoryLogDateRange([], '2026-09-06T00:00:00.000Z', '2026-09-05T00:00:00.000Z'))
       .toThrow('must be on or before');
   });
@@ -284,6 +296,21 @@ describe('savestate memory log --json', () => {
     expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3, false, ['rolled_back'])).toBe(
       '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
       'Action filter: rolled_back\n' +
+      'The memory has 3 recorded entries.\n' +
+      'Try --offset 0 to view an available page.',
+    );
+  });
+
+  it('explains actor and date filters on an exhausted page', () => {
+    expect(formatMemoryLogEmptyPage('mem-123', 10, 5, 3, false, [], {
+      actor: 'editor-1',
+      since: '2026-09-05T00:00:00.000Z',
+      until: '2026-09-05T23:59:59.999Z',
+    })).toBe(
+      '\nNo audit log entries found for memory mem-123 at offset 10, limit 5.\n' +
+      'Actor filter: editor-1\n' +
+      'Since filter: 2026-09-05T00:00:00.000Z\n' +
+      'Until filter: 2026-09-05T23:59:59.999Z\n' +
       'The memory has 3 recorded entries.\n' +
       'Try --offset 0 to view an available page.',
     );
