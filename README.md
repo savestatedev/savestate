@@ -239,6 +239,8 @@ The `filters` object repeats the normalized type, resource, backend, date, and v
 so audit consumers can log or replay the exact query without reconstructing individual fields.
 `verifiedPercentage` and `shownVerifiedPercentage` expose the verified-share percentage
 for the matching collection and visible page (or `0` when the relevant set is empty).
+`contentIncluded` is `true` for `--json` and `false` for `--json-summary`, so consumers can
+distinguish an intentionally omitted `receipts` array from an empty result.
 Human-readable receipt lines include both hashes and the storage backend/location for manual verification.
 Human-readable receipt lines label both the save completion and receipt creation timestamps
 to make audit timing explicit.
