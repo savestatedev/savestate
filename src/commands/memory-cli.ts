@@ -1153,6 +1153,7 @@ export function registerMemoryCommands(program: Command): void {
       '\nExamples:\n' +
         '  $ savestate memory log <memory-id> --action edited\n' +
         '  $ savestate memory log <memory-id> --action edited,rolled_back --json\n' +
+        '  $ savestate memory log <memory-id> --actor agent --since 2026-01-01\n' +
         '  $ savestate memory log <memory-id> --summary\n',
     )
     .option('--limit <n>', 'Maximum number of audit events to show')
