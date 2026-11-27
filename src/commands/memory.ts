@@ -981,6 +981,8 @@ export interface MemoryListMissingJson {
     minImportance?: number;
     maxImportance?: number;
   };
+  /** Stable human-readable rendering of the active filters, or null when unfiltered. */
+  filterSummary: string | null;
   contentIncluded: boolean;
 }
 
@@ -1078,6 +1080,20 @@ export function formatMemoryListMissingJson(
         ...(filters.minImportance === undefined ? {} : { minImportance: filters.minImportance }),
         ...(filters.maxImportance === undefined ? {} : { maxImportance: filters.maxImportance }),
       },
+      filterSummary: formatMemoryListFilterSummary({
+        tier: filters.tier,
+        pinned: filters.pinned,
+        source: filters.source,
+        namespace: filters.namespace,
+        unassignedNamespace: filters.unassignedNamespace,
+        content: filters.content,
+        tags: filters.tags,
+        since: filters.since,
+        until: filters.until,
+        freshness: filters.freshness,
+        minImportance: filters.minImportance,
+        maxImportance: filters.maxImportance,
+      }) ?? null,
       contentIncluded: options.includeContent !== false,
     },
     null,
