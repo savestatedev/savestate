@@ -377,6 +377,10 @@ dashboard while retaining navigation and ranking metadata:
 }
 ```
 
+Memory JSON also includes `previousPage` and `nextPage` alongside the offset fields. These are
+one-based page numbers (or `null` when unavailable), so page-oriented consumers can follow
+navigation without recalculating from `pageSize`.
+
 Consumers should use `nextOffset` (or the `guidance` object) for continuation rather than
 calculating offsets from the number of returned entries.
 

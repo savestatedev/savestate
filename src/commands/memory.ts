@@ -634,10 +634,14 @@ export interface MemoryListJson {
   lastPageOffset: number | null;
   hasPrevious: boolean;
   previousOffset: number | null;
+  /** One-based page number for the previous page, when available. */
+  previousPage: number | null;
   hasMore: boolean;
   /** Whether the current page is terminal for the supported offset range. */
   isLastPage: boolean;
   nextOffset: number | null;
+  /** One-based page number for the next page, when available. */
+  nextPage: number | null;
   /** Nearest page containing entries when a stale offset returns an empty page. */
   suggestedOffset: number | null;
   /** Machine-readable next step for paginated consumers. */
@@ -790,9 +794,11 @@ export function formatMemoryListJson(
     lastPageOffset,
     hasPrevious,
     previousOffset,
+  previousPage: previousOffset === null ? null : Math.floor(previousOffset / pageSize) + 1,
     hasMore,
     isLastPage,
     nextOffset: hasMore ? offset + continuationStep : null,
+  nextPage: hasMore ? Math.floor((offset + continuationStep) / pageSize) + 1 : null,
     suggestedOffset,
     guidance,
     ordering: {
@@ -934,7 +940,9 @@ export interface MemoryListMissingJson {
   hasMore: false;
   isLastPage: true;
   nextOffset: null;
+  nextPage: null;
   previousOffset: null;
+  previousPage: null;
   suggestedOffset: null;
   /** Missing snapshots are terminal and therefore have no follow-up page. */
   guidance: MemoryListGuidance;
