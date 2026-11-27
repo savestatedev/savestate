@@ -32,8 +32,16 @@ export interface MemoryLogJson {
   events: MemoryLogEventJson[];
   eventsIncluded: boolean;
   actionCounts: Record<string, number>;
+  filters: MemoryLogFiltersJson;
   guidance: MemoryLogGuidanceJson;
   pagination: MemoryLogPaginationJson;
+}
+
+export interface MemoryLogFiltersJson {
+  action: string[];
+  actor: string | null;
+  since: string | null;
+  until: string | null;
 }
 
 export interface MemoryLogGuidanceJson {
@@ -251,6 +259,7 @@ export function formatMemoryLogJson(
   pagination: Partial<MemoryLogPaginationJson> & {
     includeEvents?: boolean;
     actionLog?: ProvenanceEntry[];
+    filters?: Partial<MemoryLogFiltersJson>;
   } = {},
 ): string {
   const offset = pagination.offset ?? 0;
@@ -293,6 +302,12 @@ export function formatMemoryLogJson(
       events: pagination.includeEvents === false ? [] : log.map(toLogEventJson),
       eventsIncluded: pagination.includeEvents !== false,
       actionCounts: countMemoryLogActions(pagination.actionLog ?? log),
+      filters: {
+        action: pagination.filters?.action ?? [],
+        actor: pagination.filters?.actor ?? null,
+        since: pagination.filters?.since ?? null,
+        until: pagination.filters?.until ?? null,
+      },
       guidance: getMemoryLogGuidance(responsePagination, suggestedOffset),
       pagination: responsePagination,
     },
@@ -341,13 +356,23 @@ export function formatMemoryLogEmptyPage(
 
   return [
     `\nNo audit log entries found for memory ${memoryId} at ${page}.`,
+    ...formatMemoryLogFilterLines(actionFilter, filters),
+    `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
+    suggestedNavigation,
+  ].filter((line): line is string => line !== null).join('\n');
+}
+
+/** Keep active audit filters visible in every human-readable result state. */
+export function formatMemoryLogFilterLines(
+  actionFilter: string[] = [],
+  filters: { actor?: string; since?: string; until?: string } = {},
+): string[] {
+  return [
     actionFilter.length > 0 ? `Action filter: ${actionFilter.join(', ')}` : null,
     filters.actor !== undefined ? `Actor filter: ${filters.actor}` : null,
     filters.since !== undefined ? `Since filter: ${filters.since}` : null,
     filters.until !== undefined ? `Until filter: ${filters.until}` : null,
-    `The memory has ${total} recorded entr${total === 1 ? 'y' : 'ies'}.`,
-    suggestedNavigation,
-  ].filter((line): line is string => line !== null).join('\n');
+  ].filter((line): line is string => line !== null);
 }
 
 const MAX_MEMORY_LOG_LIMIT = 1000;
@@ -1349,6 +1374,12 @@ export async function memoryLogCommand(
           : null,
         includeEvents: options?.includeEvents,
         actionLog: allLog,
+        filters: {
+          action: actionFilter,
+          actor: actorFilter,
+          since: parseMemoryLogSince(options?.since),
+          until: parseMemoryLogUntil(options?.until),
+        },
       }));
       return;
     }
@@ -1381,11 +1412,13 @@ export async function memoryLogCommand(
 
     // Table format
     console.log(`\nAudit Log for Memory: ${memoryId}\n`);
-    if (actionFilter && actionFilter.length > 0) {
-      console.log(`Action filter: ${actionFilter.join(', ')}\n`);
-    }
-    if (actorFilter !== undefined) {
-      console.log(`Actor filter: ${actorFilter}\n`);
+    const filterLines = formatMemoryLogFilterLines(actionFilter, {
+      actor: actorFilter,
+      since: parseMemoryLogSince(options?.since),
+      until: parseMemoryLogUntil(options?.until),
+    });
+    if (filterLines.length > 0) {
+      console.log(`${filterLines.join('\n')}\n`);
     }
     console.log('Timestamp                  Action           Actor            Reason');
     console.log('-'.repeat(80));

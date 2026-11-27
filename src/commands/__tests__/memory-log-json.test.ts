@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ProvenanceEntry } from '../../checkpoint/types.js';
 import {
   formatMemoryLogEmptyPage,
+  formatMemoryLogFilterLines,
   formatMemoryLogJson,
   formatMemoryLogActionSummary,
   formatMemoryLogNavigation,
@@ -129,11 +130,23 @@ describe('savestate memory log --json', () => {
       hasMore: true,
       nextOffset: 1,
       actionLog: [created, edited, merged],
+      filters: {
+        action: ['edited'],
+        actor: 'editor-1',
+        since: '2026-09-05T00:00:00.000Z',
+        until: '2026-09-05T23:59:59.999Z',
+      },
     })) as MemoryLogJson & { eventsIncluded: boolean };
 
     expect(parsed.events).toEqual([]);
     expect(parsed.eventsIncluded).toBe(false);
     expect(parsed.actionCounts).toEqual({ created: 1, edited: 1, merged: 1 });
+    expect(parsed.filters).toEqual({
+      action: ['edited'],
+      actor: 'editor-1',
+      since: '2026-09-05T00:00:00.000Z',
+      until: '2026-09-05T23:59:59.999Z',
+    });
     expect(parsed.pagination).toMatchObject({ total: 3, shown: 1, hasMore: true, nextOffset: 1 });
   });
 
@@ -146,6 +159,7 @@ describe('savestate memory log --json', () => {
       memoryId: 'mem-123',
       eventsIncluded: true,
       actionCounts: { created: 1, edited: 1, merged: 1 },
+      filters: { action: [], actor: null, since: null, until: null },
       events: [
         {
           action: 'created',
@@ -314,5 +328,18 @@ describe('savestate memory log --json', () => {
       'The memory has 3 recorded entries.\n' +
       'Try --offset 0 to view an available page.',
     );
+  });
+
+  it('keeps date filters visible in table output', () => {
+    expect(formatMemoryLogFilterLines(['edited'], {
+      actor: 'editor-1',
+      since: '2026-09-05T00:00:00.000Z',
+      until: '2026-09-05T23:59:59.999Z',
+    })).toEqual([
+      'Action filter: edited',
+      'Actor filter: editor-1',
+      'Since filter: 2026-09-05T00:00:00.000Z',
+      'Until filter: 2026-09-05T23:59:59.999Z',
+    ]);
   });
 });
