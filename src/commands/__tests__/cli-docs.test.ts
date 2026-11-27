@@ -2570,6 +2570,15 @@ describe('CLI docs', () => {
     expect(memorySection).toContain('savestate memory list --limit 20 --offset 20');
   });
 
+  it('documents the complete memory list JSON summary contract', () => {
+    const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
+    const summaryRow = memorySection.slice(memorySection.indexOf('<code>--json-summary</code>'));
+    expect(summaryRow).toContain('normalized filters');
+    expect(summaryRow).toContain('<code>filterSummary</code>');
+    expect(summaryRow).toContain('source/namespace/tag/freshness aggregates');
+    expect(summaryRow).toContain('contentIncluded: false');
+  });
+
   it('documents memory list --min-importance', () => {
     const memorySection = docs.slice(docs.indexOf('id="memory"'), docs.indexOf('id="slo"'));
     const listBlock = memoryCli.slice(memoryCli.indexOf("command('list')"), memoryCli.indexOf("command('promote"));
