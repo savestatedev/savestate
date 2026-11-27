@@ -9,6 +9,7 @@ import {
   parseStatsExclude,
   resolveStatsLimit,
   sortStatsEntries,
+  suggestStatsOffset,
 } from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
 
@@ -99,6 +100,18 @@ describe('savestate stats --limit', () => {
     expect(getStatsNextOffset(10, 5, true)).toBe(15);
     expect(getStatsNextOffset(10, 5, false)).toBeNull();
     expect(getStatsNextOffset(10, null, true)).toBeNull();
+  });
+
+  it('caps continuation offsets at the supported maximum', () => {
+    expect(getStatsNextOffset(600, 1000, true)).toBe(1000);
+  });
+
+  it('caps stale-page recovery offsets at the supported maximum', () => {
+    expect(suggestStatsOffset(2000, 0, 100)).toBe(1000);
+    expect(formatStatsEmptyState(2000, 2000, 100)).toContain(
+      'Try --offset 1000 to open the nearest available page.',
+    );
+    expect(formatStatsPaginationHint(2000, 0, 2000, 100)).toContain('try offset 1000');
   });
 
   it('explains how to recover from a stale empty page', () => {

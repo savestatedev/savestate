@@ -257,17 +257,17 @@ export function selectStatsOffsetEntries<T>(entries: T[], offset?: number): T[] 
 /** Suggest the nearest valid page when a bounded stats page is exhausted. */
 export function suggestStatsOffset(total: number, shown: number, limit?: number): number | null {
   if (shown > 0 || total === 0 || limit === undefined) return null;
-  return Math.floor((total - 1) / limit) * limit;
+  return Math.min(MAX_STATS_OFFSET, Math.floor((total - 1) / limit) * limit);
 }
 
-/** Advance bounded stats pages even when an out-of-range page is empty. */
+/** Advance bounded stats pages without advertising an offset the CLI rejects. */
 export function getStatsNextOffset(
   offset: number,
   limit: number | null,
   hasMore: boolean,
 ): number | null {
   if (!hasMore || limit === null) return null;
-  return offset + limit;
+  return Math.min(MAX_STATS_OFFSET, offset + limit);
 }
 
 /** Point back to the nearest available bounded stats page when offset is stale. */
@@ -291,7 +291,10 @@ export function formatStatsEmptyState(
   if (matchingCount === 0) return 'No snapshots match those filters.';
 
   const pageSize = limit ?? matchingCount;
-  const suggestedOffset = Math.floor((matchingCount - 1) / pageSize) * pageSize;
+  const suggestedOffset = Math.min(
+    MAX_STATS_OFFSET,
+    Math.floor((matchingCount - 1) / pageSize) * pageSize,
+  );
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
@@ -309,14 +312,14 @@ export function formatStatsPaginationHint(
   const page = limit === undefined ? `offset ${offset}` : `offset ${offset}, limit ${limit}`;
   const hints = [`Showing ${shown} of ${matchingCount} snapshots (${page})`];
 
-  if (limit !== undefined && offset + shown < matchingCount) {
-    hints.push(`next offset ${offset + shown}`);
+  if (limit !== undefined && offset + shown < matchingCount && offset + shown <= MAX_STATS_OFFSET) {
+    hints.push(`next offset ${Math.min(MAX_STATS_OFFSET, offset + shown)}`);
   }
   if (limit !== undefined && offset > 0) {
     hints.push(`previous offset ${getStatsPreviousOffset(matchingCount, offset, limit)}`);
   }
   if (limit !== undefined && shown === 0 && matchingCount > 0) {
-    hints.push(`try offset ${Math.floor((matchingCount - 1) / limit) * limit}`);
+    hints.push(`try offset ${Math.min(MAX_STATS_OFFSET, Math.floor((matchingCount - 1) / limit) * limit)}`);
   }
 
   return `${hints.join('; ')}.`;
@@ -487,7 +490,10 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
     const offset = parseStatsOffset(options.offset) ?? 0;
     const limit = resolveStatsLimit(options.limit, options.pageSize) ?? null;
     const hasPrevious = offset > 0;
-    const hasMore = limit !== null && offset + filtered.length < matching.length;
+    const hasMore =
+      limit !== null &&
+      offset + filtered.length < matching.length &&
+      offset + filtered.length <= MAX_STATS_OFFSET;
     const suggestedOffset = suggestStatsOffset(matching.length, filtered.length, limit ?? undefined);
     const totalPages = limit === null
       ? matching.length > 0 ? 1 : 0
