@@ -103,6 +103,8 @@ export interface ListJsonGuidance {
 }
 
 export interface ListJson {
+  /** Whether this response includes snapshot records in `entries`. */
+  contentIncluded: boolean;
   /** Whether the current page contains at least one matching snapshot. */
   found: boolean;
   total: number;
@@ -286,6 +288,7 @@ export function formatListJson(
         ? { action: 'previous', offset: previousOffset, page: Math.floor(previousOffset / pageLimit) + 1 }
         : { action: 'none', offset: null, page: null };
   const result: ListJson = {
+    contentIncluded: true,
     found: records.length > 0,
     total: snapshots.length,
     shown: records.length,
@@ -356,6 +359,7 @@ export function formatListJsonSummary(
         ? { action: 'previous', offset: previousOffset, page: Math.floor(previousOffset / pageLimit) + 1 }
         : { action: 'none', offset: null, page: null };
   const summary: ListJsonSummary = {
+    contentIncluded: false,
     found: shown > 0,
     total: snapshots.length,
     shown,
@@ -424,6 +428,7 @@ export function formatListMissingJson(
   return JSON.stringify(
     {
       found: false,
+      contentIncluded: true,
       total: 0,
       shown: 0,
       remaining: 0,
@@ -465,6 +470,7 @@ export function formatListMissingJsonSummary(
   const pageOffset = normalizeListPageOffset(offset);
   return JSON.stringify({
     found: false,
+    contentIncluded: false,
     total: 0,
     shown: 0,
     remaining: 0,

@@ -266,7 +266,8 @@ savestate identity schema --page 2 --page-size 10 --json
 `--offset` instead for an explicit zero-based skip; do not combine it with
 `--page` or combine `--limit` with `--page-size`.
 
-`savestate list --json` returns a summary object with `found` indicating whether
+`savestate list --json` returns an object with `contentIncluded: true` and a
+summary object with `found` indicating whether
 the current page contains snapshots, alongside `total`, `shown`, `offset`,
 `limit`, and `entries`. When a page is empty, `emptyReason` distinguishes an
 empty collection from a stale offset, and `suggestedOffset` identifies the
@@ -297,6 +298,8 @@ Use `savestate list --json-summary` (or its `--summary` alias) when a script nee
 without loading snapshot payload fields. It omits `entries` while preserving `found`, `total`,
 `shown`, `remaining`, `maxOffset`, `hasMore`, `nextOffset`, `previousPage`, `nextPage`, and the normalized
 `filters` envelope.
+Summary output sets `contentIncluded: false`, so consumers can select the response
+shape without inferring it from the presence of `entries`.
 
 `savestate memory list --json` includes `bySource` and `shownBySource` counts alongside the
 tier and freshness summaries. Source keys are trimmed and grouped case-insensitively, preserving
