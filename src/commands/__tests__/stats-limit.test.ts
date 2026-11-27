@@ -101,6 +101,10 @@ describe('savestate stats --limit', () => {
     expect(getStatsNextOffset(10, null, true)).toBeNull();
   });
 
+  it('caps continuation offsets at the supported maximum', () => {
+    expect(getStatsNextOffset(600, 1000, true)).toBe(1000);
+  });
+
   it('explains how to recover from a stale empty page', () => {
     expect(formatStatsEmptyState(12, 15, 5)).toContain(
       'Try --offset 10 to open the nearest available page.',
