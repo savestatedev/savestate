@@ -721,7 +721,9 @@ export function formatMemoryListJson(
     : undefined;
   // An empty filtered collection has no prior page, even when a stale offset was supplied.
   const hasPrevious = offset > 0 && all.length > 0;
-  const pageSize = limit ?? Math.max(1, shown.length);
+  // An unbounded empty collection has no page; keep its reported size at zero
+  // instead of inventing a one-row page for machine consumers.
+  const pageSize = limit ?? (all.length === 0 ? 0 : Math.max(1, shown.length));
   const page = all.length === 0
     ? 0
     : limit === undefined

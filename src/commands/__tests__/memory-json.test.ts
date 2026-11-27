@@ -576,6 +576,7 @@ describe('savestate memory --json', () => {
     expect(parsed.shown).toBe(0);
     expect(parsed.remaining).toBe(0);
     expect(parsed.offset).toBe(0);
+    expect(parsed.pageSize).toBe(0);
     expect(parsed.hasMore).toBe(false);
     expect(parsed.isLastPage).toBe(true);
     expect(parsed.hasPrevious).toBe(false);
