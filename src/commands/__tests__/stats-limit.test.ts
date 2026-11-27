@@ -63,6 +63,12 @@ describe('savestate stats --limit', () => {
     ]);
   });
 
+  it.each(['chatgpt,', ',chatgpt', 'chatgpt,,claude-code'])('rejects empty exclusions in %s', (value) => {
+    expect(() => parseStatsExclude(value)).toThrow(
+      `Invalid --exclude value "${value}". Expected one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.`,
+    );
+  });
+
   it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseStatsLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,

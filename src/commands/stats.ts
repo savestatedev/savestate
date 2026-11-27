@@ -175,10 +175,10 @@ export function parseStatsSnapshot(value: string | undefined): string | undefine
 export function parseStatsExclude(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
 
+  const tokens = value.split(',');
   const adapters = [
     ...new Set(
-      value
-        .split(',')
+      tokens
         .map((token) => token.trim().toLowerCase())
         .filter(Boolean),
     ),
@@ -186,6 +186,7 @@ export function parseStatsExclude(value: string | undefined): string[] | undefin
 
   if (
     adapters.length === 0 ||
+    tokens.some((token) => token.trim().length === 0) ||
     adapters.some((adapter) => !(STATS_ADAPTERS as readonly string[]).includes(adapter))
   ) {
     throw new Error(
