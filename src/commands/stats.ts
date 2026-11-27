@@ -175,13 +175,18 @@ export function parseStatsSnapshot(value: string | undefined): string | undefine
 export function parseStatsExclude(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
 
-  const adapters = value
-    .split(',')
-    .map((token) => token.trim().toLowerCase())
-    .filter(Boolean);
+  const tokens = value.split(',');
+  const adapters = [
+    ...new Set(
+      tokens
+        .map((token) => token.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ];
 
   if (
     adapters.length === 0 ||
+    tokens.some((token) => token.trim().length === 0) ||
     adapters.some((adapter) => !(STATS_ADAPTERS as readonly string[]).includes(adapter))
   ) {
     throw new Error(
@@ -308,7 +313,7 @@ export function formatStatsPaginationHint(
     hints.push(`next offset ${offset + shown}`);
   }
   if (limit !== undefined && offset > 0) {
-    hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+    hints.push(`previous offset ${getStatsPreviousOffset(matchingCount, offset, limit)}`);
   }
   if (limit !== undefined && shown === 0 && matchingCount > 0) {
     hints.push(`try offset ${Math.floor((matchingCount - 1) / limit) * limit}`);

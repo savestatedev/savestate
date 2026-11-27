@@ -6,6 +6,7 @@ import {
   getStatsNextOffset,
   parseStatsLimit,
   parseStatsOffset,
+  parseStatsExclude,
   resolveStatsLimit,
   sortStatsEntries,
 } from '../stats.js';
@@ -52,6 +53,19 @@ describe('savestate stats --limit', () => {
   it('rejects combining limit and page-size', () => {
     expect(() => resolveStatsLimit('5', '10')).toThrow(
       'Cannot use --limit with --page-size; choose one page-size option.',
+    );
+  });
+
+  it('deduplicates excluded adapters after normalization', () => {
+    expect(parseStatsExclude(' ChatGPT,chatgpt, claude-code ')).toEqual([
+      'chatgpt',
+      'claude-code',
+    ]);
+  });
+
+  it.each(['chatgpt,', ',chatgpt', 'chatgpt,,claude-code'])('rejects empty exclusions in %s', (value) => {
+    expect(() => parseStatsExclude(value)).toThrow(
+      `Invalid --exclude value "${value}". Expected one or more of: clawdbot, claude-code, claude-web, openai-assistants, chatgpt, gemini, cursor, windsurf.`,
     );
   });
 
@@ -102,6 +116,12 @@ describe('savestate stats --limit', () => {
       'Showing 1 of 5 snapshots (offset 4, limit 2); previous offset 2.',
     );
     expect(formatStatsPaginationHint(5, 5)).toBe('');
+  });
+
+  it('points stale pages to the nearest available previous offset', () => {
+    expect(formatStatsPaginationHint(12, 0, 100, 5)).toBe(
+      'Showing 0 of 12 snapshots (offset 100, limit 5); previous offset 10; try offset 10.',
+    );
   });
 
   it('orders equal-timestamp snapshots by id for stable pagination', () => {
