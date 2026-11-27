@@ -5725,6 +5725,7 @@ describe('CLI docs', () => {
   it('keeps the README search help free of duplicate page flags', () => {
     const searchSection = readme.slice(readme.indexOf('savestate search <query>'), readme.indexOf('Search results are ranked consistently'));
     expect(searchSection.match(/--page <n>/g)).toHaveLength(1);
+    expect(searchSection).toContain('--page-size <n>                    Readable alias for --limit');
   });
 
   it('documents search --json-summary recovery metadata', () => {
