@@ -474,6 +474,13 @@ savestate search <query>              Search across snapshot contents
   --json                             Output results as JSON
   --json-summary, --summary          Output results with pagination and filter metadata
 
+Use `--page-size` when you want a readable page-size flag without changing the
+search result contract, for example:
+
+```bash
+savestate search "cocktail recommendations" --page 2 --page-size 10 --json-summary
+```
+
 Search results are ranked consistently across snapshots, so `--offset` can be
 combined with `--limit` to page through results. Use the 1-based `--page` option
 as a readable alternative to calculating offsets; `--page` and `--offset` are

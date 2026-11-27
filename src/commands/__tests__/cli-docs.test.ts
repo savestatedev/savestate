@@ -5726,6 +5726,7 @@ describe('CLI docs', () => {
     const searchSection = readme.slice(readme.indexOf('savestate search <query>'), readme.indexOf('Search results are ranked consistently'));
     expect(searchSection.match(/--page <n>/g)).toHaveLength(1);
     expect(searchSection).toContain('--page-size <n>                    Readable alias for --limit');
+    expect(readme).toContain('savestate search "cocktail recommendations" --page 2 --page-size 10 --json-summary');
   });
 
   it('documents search --json-summary recovery metadata', () => {
