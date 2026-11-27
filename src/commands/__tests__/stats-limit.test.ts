@@ -6,6 +6,7 @@ import {
   getStatsNextOffset,
   parseStatsLimit,
   parseStatsOffset,
+  resolveStatsLimit,
   sortStatsEntries,
 } from '../stats.js';
 import type { SnapshotIndexEntry } from '../../index-file.js';
@@ -44,6 +45,16 @@ describe('savestate stats --limit', () => {
     expect(parseStatsLimit('12')).toBe(12);
   });
 
+  it('accepts the readable page-size alias', () => {
+    expect(resolveStatsLimit(undefined, '12')).toBe(12);
+  });
+
+  it('rejects combining limit and page-size', () => {
+    expect(() => resolveStatsLimit('5', '10')).toThrow(
+      'Cannot use --limit with --page-size; choose one page-size option.',
+    );
+  });
+
   it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
     expect(() => parseStatsLimit(value)).toThrow(
       `Invalid --limit value "${value}". Expected a positive integer up to 1000.`,
@@ -65,7 +76,7 @@ describe('savestate stats --limit', () => {
           entry({ id: 'mid', timestamp: '2026-03-01T00:00:00Z' }),
           entry({ id: 'new', timestamp: '2026-05-01T00:00:00Z' }),
         ],
-        { limit: '2' },
+        { pageSize: '2' },
       ).map((snapshot) => snapshot.id),
     ).toEqual(['new', 'mid']);
   });

@@ -21,6 +21,7 @@ interface StatsOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
@@ -211,6 +212,17 @@ export function parseStatsLimit(value: string | undefined): number | undefined {
   return limit;
 }
 
+/** Resolve the readable page-size alias while rejecting ambiguous limits. */
+export function resolveStatsLimit(
+  limitValue: string | undefined,
+  pageSizeValue: string | undefined,
+): number | undefined {
+  if (limitValue !== undefined && pageSizeValue !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return parseStatsLimit(pageSizeValue ?? limitValue);
+}
+
 /** Parse stats --offset without turning user input errors into an unbounded skip. */
 export function parseStatsOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -317,10 +329,10 @@ export function sortStatsEntries(snapshots: SnapshotIndexEntry[]): SnapshotIndex
 /** Resolve stats snapshot filters before aggregating usage. */
 export function applyStatsFilters(
   snapshots: SnapshotIndexEntry[],
-  options: Pick<StatsOptions, 'platform' | 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
+  options: Pick<StatsOptions, 'platform' | 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'pageSize' | 'offset'>,
 ): SnapshotIndexEntry[] {
   let filtered = filterStatsEntries(snapshots, options);
-  const limit = parseStatsLimit(options.limit);
+  const limit = resolveStatsLimit(options.limit, options.pageSize);
   const offset = parseStatsOffset(options.offset);
   if (limit !== undefined || offset !== undefined) {
     filtered = selectStatsOffsetEntries(
@@ -445,7 +457,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
   validateStatsDateRange(since, until);
   parseStatsTag(options.tag);
   parseStatsLabel(options.label);
-  parseStatsLimit(options.limit);
+  resolveStatsLimit(options.limit, options.pageSize);
   parseStatsOffset(options.offset);
 
   if (!options.json) {
@@ -468,7 +480,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
 
   if (options.json) {
     const offset = parseStatsOffset(options.offset) ?? 0;
-    const limit = parseStatsLimit(options.limit) ?? null;
+    const limit = resolveStatsLimit(options.limit, options.pageSize) ?? null;
     const hasPrevious = offset > 0;
     const hasMore = limit !== null && offset + filtered.length < matching.length;
     const suggestedOffset = suggestStatsOffset(matching.length, filtered.length, limit ?? undefined);
@@ -498,7 +510,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
 
   const stats = computeStats(filtered);
   const offset = parseStatsOffset(options.offset) ?? 0;
-  const limit = parseStatsLimit(options.limit);
+  const limit = resolveStatsLimit(options.limit, options.pageSize);
 
   console.log(chalk.bold('📊 SaveState Stats'));
   console.log(chalk.dim(`   Storage: ${config.storage.type}`));
@@ -518,7 +530,7 @@ export async function statsCommand(options: StatsOptions): Promise<void> {
         `  ${formatStatsEmptyState(
           matching.length,
           parseStatsOffset(options.offset) ?? 0,
-          parseStatsLimit(options.limit),
+          resolveStatsLimit(options.limit, options.pageSize),
         )}`,
       ),
     );
