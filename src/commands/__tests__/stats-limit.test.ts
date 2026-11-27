@@ -6,6 +6,7 @@ import {
   getStatsNextOffset,
   parseStatsLimit,
   parseStatsOffset,
+  parseStatsExclude,
   resolveStatsLimit,
   sortStatsEntries,
 } from '../stats.js';
@@ -53,6 +54,13 @@ describe('savestate stats --limit', () => {
     expect(() => resolveStatsLimit('5', '10')).toThrow(
       'Cannot use --limit with --page-size; choose one page-size option.',
     );
+  });
+
+  it('deduplicates excluded adapters after normalization', () => {
+    expect(parseStatsExclude(' ChatGPT,chatgpt, claude-code ')).toEqual([
+      'chatgpt',
+      'claude-code',
+    ]);
   });
 
   it.each(['0', '-1', '1.5', 'nope'])('rejects invalid value %s', (value) => {
