@@ -204,6 +204,7 @@ describe('savestate memory list --json when missing', () => {
         source: '  ChatGPT  ',
         namespace: ' org:app:agent ',
         unassignedNamespace: true,
+        content: '  preferred   editor  ',
         tags: ['work'],
         since: '2026-10-01',
         until: '2026-10-31',
@@ -218,14 +219,14 @@ describe('savestate memory list --json when missing', () => {
       source: 'ChatGPT',
       namespace: 'org:app:agent',
       unassignedNamespace: true,
-      content: null,
+      content: 'preferred editor',
       tags: ['work'],
       until: '2026-10-31',
       since: '2026-10-01',
       importantFirst: true,
       oldestFirst: false,
     });
-    expect(parsed.filterSummary).toBe('source=ChatGPT, namespace=org:app:agent, unassigned, tags=[work], since=2026-10-01, until=2026-10-31');
+    expect(parsed.filterSummary).toBe('source=ChatGPT, namespace=org:app:agent, unassigned, content="preferred editor", tags=[work], since=2026-10-01, until=2026-10-31');
   });
 
   it('normalizes missing-snapshot tag filters like populated results', () => {

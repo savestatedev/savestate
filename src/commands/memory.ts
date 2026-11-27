@@ -1066,7 +1066,9 @@ export function formatMemoryListMissingJson(
         source: filters.source == null ? null : normalizeMemoryListSource(filters.source),
         namespace: filters.namespace == null ? null : normalizeMemoryListNamespace(filters.namespace),
         unassignedNamespace: filters.unassignedNamespace ?? false,
-        content: filters.content ?? null,
+        content: filters.content == null
+          ? null
+          : normalizeMemoryListContent(filters.content),
         tags: filters.tags == null
           ? null
           : (() => {
