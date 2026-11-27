@@ -257,7 +257,7 @@ export function selectStatsOffsetEntries<T>(entries: T[], offset?: number): T[] 
 /** Suggest the nearest valid page when a bounded stats page is exhausted. */
 export function suggestStatsOffset(total: number, shown: number, limit?: number): number | null {
   if (shown > 0 || total === 0 || limit === undefined) return null;
-  return Math.floor((total - 1) / limit) * limit;
+  return Math.min(MAX_STATS_OFFSET, Math.floor((total - 1) / limit) * limit);
 }
 
 /** Advance bounded stats pages without advertising an offset the CLI rejects. */
@@ -291,7 +291,10 @@ export function formatStatsEmptyState(
   if (matchingCount === 0) return 'No snapshots match those filters.';
 
   const pageSize = limit ?? matchingCount;
-  const suggestedOffset = Math.floor((matchingCount - 1) / pageSize) * pageSize;
+  const suggestedOffset = Math.min(
+    MAX_STATS_OFFSET,
+    Math.floor((matchingCount - 1) / pageSize) * pageSize,
+  );
   return `No snapshots shown: offset ${offset} skips past ${matchingCount} matching ${
     matchingCount === 1 ? 'snapshot' : 'snapshots'
   }. Try --offset ${suggestedOffset} to open the nearest available page.`;
@@ -316,7 +319,7 @@ export function formatStatsPaginationHint(
     hints.push(`previous offset ${getStatsPreviousOffset(matchingCount, offset, limit)}`);
   }
   if (limit !== undefined && shown === 0 && matchingCount > 0) {
-    hints.push(`try offset ${Math.floor((matchingCount - 1) / limit) * limit}`);
+    hints.push(`try offset ${Math.min(MAX_STATS_OFFSET, Math.floor((matchingCount - 1) / limit) * limit)}`);
   }
 
   return `${hints.join('; ')}.`;
