@@ -683,7 +683,9 @@ export function registerMemoryCommands(program: Command): void {
       '\nExamples:\n' +
         '  $ savestate memory list --since 2026-01-01 --until 2026-01-31\n' +
         '  $ savestate memory list --namespace org:app:agent --json-summary\n' +
-        '  $ savestate memory list --unassigned --summary\n',
+        '  $ savestate memory list --unassigned --summary\n' +
+        '  $ savestate memory list --page 2 --page-size 20\n' +
+        '  $ savestate memory list --limit 20 --offset 20\n',
     )
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-p, --pinned', 'Show only pinned memories')
@@ -1155,6 +1157,8 @@ export function registerMemoryCommands(program: Command): void {
         '  $ savestate memory log <memory-id> --action edited,rolled_back --json\n' +
         '  $ savestate memory log <memory-id> --actor agent --since 2026-01-01\n' +
         '  $ savestate memory log <memory-id> --since 2026-01-01 --until 2026-01-31\n' +
+        '  $ savestate memory log <memory-id> --page 2 --page-size 20\n' +
+        '  $ savestate memory log <memory-id> --limit 20 --offset 20\n' +
         '  $ savestate memory log <memory-id> --summary\n',
     )
     .option('--limit <n>', 'Maximum number of audit events to show')

@@ -29,6 +29,8 @@ describe('savestate memory list help', () => {
     expect(renderedHelp).toContain('--since 2026-01-01 --until 2026-01-31');
     expect(renderedHelp).toContain('--namespace org:app:agent --json-summary');
     expect(renderedHelp).toContain('--unassigned --summary');
+    expect(renderedHelp).toContain('--page 2 --page-size 20');
+    expect(renderedHelp).toContain('--limit 20 --offset 20');
   });
 
   it('documents metadata-only explain output', () => {
@@ -55,6 +57,8 @@ describe('savestate memory list help', () => {
     expect(renderedHelp).toContain('--actor <id>');
     expect(renderedHelp).toContain('--actor agent --since 2026-01-01');
     expect(renderedHelp).toContain('savestate memory log <memory-id> --since 2026-01-01 --until 2026-01-31');
+    expect(renderedHelp).toContain('savestate memory log <memory-id> --page 2 --page-size 20');
+    expect(renderedHelp).toContain('savestate memory log <memory-id> --limit 20 --offset 20');
     expect(renderedHelp).toContain('savestate memory log <memory-id> --summary');
   });
 
