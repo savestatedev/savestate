@@ -947,6 +947,8 @@ export interface MemoryListMissingJson {
   shownBySource: Record<string, number>;
   byFreshness: Record<MemoryFreshnessState, number>;
   shownByFreshness: Record<MemoryFreshnessState, number>;
+  freshnessPercentages: Record<MemoryFreshnessState, number>;
+  shownFreshnessPercentages: Record<MemoryFreshnessState, number>;
   byNamespace: Record<string, number>;
   shownByNamespace: Record<string, number>;
   namespacePercentages: Record<string, number>;
@@ -957,6 +959,8 @@ export interface MemoryListMissingJson {
   shownByTag: Record<string, number>;
   tagPercentages: Record<string, number>;
   shownTagPercentages: Record<string, number>;
+  sourcePercentages: Record<string, number>;
+  shownSourcePercentages: Record<string, number>;
   pinned: 0;
   shownPinned: 0;
   pinnedPercentage: 0;
