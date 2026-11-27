@@ -313,7 +313,7 @@ export function formatStatsPaginationHint(
     hints.push(`next offset ${offset + shown}`);
   }
   if (limit !== undefined && offset > 0) {
-    hints.push(`previous offset ${Math.max(0, offset - limit)}`);
+    hints.push(`previous offset ${getStatsPreviousOffset(matchingCount, offset, limit)}`);
   }
   if (limit !== undefined && shown === 0 && matchingCount > 0) {
     hints.push(`try offset ${Math.floor((matchingCount - 1) / limit) * limit}`);

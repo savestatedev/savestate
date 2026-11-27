@@ -118,6 +118,12 @@ describe('savestate stats --limit', () => {
     expect(formatStatsPaginationHint(5, 5)).toBe('');
   });
 
+  it('points stale pages to the nearest available previous offset', () => {
+    expect(formatStatsPaginationHint(12, 0, 100, 5)).toBe(
+      'Showing 0 of 12 snapshots (offset 100, limit 5); previous offset 10; try offset 10.',
+    );
+  });
+
   it('orders equal-timestamp snapshots by id for stable pagination', () => {
     expect(
       sortStatsEntries([
