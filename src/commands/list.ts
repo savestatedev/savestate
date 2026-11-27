@@ -389,6 +389,8 @@ export function formatListJsonSummary(
 }
 
 export interface ListMissingJson {
+  /** Whether this response includes the empty `entries` collection. */
+  contentIncluded: true;
   found: false;
   total: 0;
   shown: 0;
