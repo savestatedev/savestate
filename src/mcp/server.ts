@@ -470,7 +470,8 @@ export const tools: Tool[] = [
       'the user said weeks or months ago, even on a different platform. Search with a ' +
       'word or phrase: exact phrase matches rank highest, while individual terms can ' +
       'still surface partial matches. Paginated ' +
-      'responses include next and previous offsets, or a recovery hint for an empty page. ' +
+      'responses identify the 1-based result range and include next and previous offsets, ' +
+      'or a recovery hint for an empty page. ' +
       'Optional type, inclusive since/until date, label, and tag filters narrow the snapshots searched before decryption.',
     inputSchema: {
       type: 'object',

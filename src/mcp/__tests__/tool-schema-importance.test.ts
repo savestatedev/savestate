@@ -92,6 +92,7 @@ describe('MCP snapshot search schema', () => {
     const tool = getTool('savestate_search_snapshots');
     const schema = tool.inputSchema as any;
     expect(tool.description).toContain('exact phrase matches rank highest');
+    expect(tool.description).toContain('1-based result range');
     expect(schema.properties.query.description).toContain('Word or phrase');
   });
 
