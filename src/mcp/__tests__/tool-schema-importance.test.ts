@@ -92,6 +92,7 @@ describe('MCP snapshot search schema', () => {
     const tool = getTool('savestate_search_snapshots');
     const schema = tool.inputSchema as any;
     expect(tool.description).toContain('exact phrase matches rank highest');
+    expect(tool.description).toContain('1-based result range');
     expect(schema.properties.query.description).toContain('Word or phrase');
   });
 
@@ -113,6 +114,24 @@ describe('MCP snapshot search schema', () => {
     expect(schema.properties.tag.description).toContain('case-insensitive');
   });
 
+  it('advertises bounded integer pagination', () => {
+    const schema = getTool('savestate_search_snapshots').inputSchema as any;
+    expect(schema.properties.limit).toMatchObject({
+      type: 'number',
+      minimum: 1,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 20,
+    });
+    expect(schema.properties.offset).toMatchObject({
+      type: 'number',
+      minimum: 0,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 0,
+    });
+  });
+
   it('keeps advertised metadata filters in the runtime input schema', () => {
     expect(SearchSnapshotsInputSchema.parse({
       query: 'migration notes',
@@ -125,6 +144,19 @@ describe('MCP snapshot search schema', () => {
       tag: 'work',
       passphrase: 'test-passphrase',
     });
+  });
+
+  it('enforces bounded integer pagination at the runtime schema boundary', () => {
+    expect(() => SearchSnapshotsInputSchema.parse({
+      query: 'migration notes',
+      limit: 1.5,
+      passphrase: 'test-passphrase',
+    })).toThrow();
+    expect(() => SearchSnapshotsInputSchema.parse({
+      query: 'migration notes',
+      offset: 1001,
+      passphrase: 'test-passphrase',
+    })).toThrow();
   });
 });
 

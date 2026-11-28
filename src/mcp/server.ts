@@ -470,7 +470,8 @@ export const tools: Tool[] = [
       'the user said weeks or months ago, even on a different platform. Search with a ' +
       'word or phrase: exact phrase matches rank highest, while individual terms can ' +
       'still surface partial matches. Paginated ' +
-      'responses include next and previous offsets, or a recovery hint for an empty page. ' +
+      'responses identify the 1-based result range and include next and previous offsets, ' +
+      'or a recovery hint for an empty page. ' +
       'Optional type, inclusive since/until date, label, and tag filters narrow the snapshots searched before decryption.',
     inputSchema: {
       type: 'object',
@@ -500,8 +501,22 @@ export const tools: Tool[] = [
           type: 'string',
           description: 'Optional case-insensitive snapshot tag filter',
         },
-        limit: { type: 'number', description: 'Maximum results (default: 20; positive integer up to 1000)' },
-        offset: { type: 'number', description: 'Pagination offset (non-negative integer up to 1000)' },
+        limit: {
+          type: 'number',
+          minimum: 1,
+          maximum: 1000,
+          multipleOf: 1,
+          default: 20,
+          description: 'Maximum results (positive integer up to 1000; default: 20)',
+        },
+        offset: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1000,
+          multipleOf: 1,
+          default: 0,
+          description: 'Pagination offset (non-negative integer up to 1000; default: 0)',
+        },
         passphrase: { type: 'string', description: 'Decryption passphrase' },
       },
       required: ['query', 'passphrase'],
@@ -854,8 +869,8 @@ export const SearchSnapshotsInputSchema = z.object({
   until: z.string().optional(),
   label: z.string().optional(),
   tag: z.string().optional(),
-  limit: z.number().optional(),
-  offset: z.number().optional(),
+  limit: z.number().int().min(1).max(1000).optional(),
+  offset: z.number().int().min(0).max(1000).optional(),
   passphrase: z.string(),
 });
 
