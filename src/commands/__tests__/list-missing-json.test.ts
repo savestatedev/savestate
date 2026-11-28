@@ -15,6 +15,7 @@ describe('savestate list --json when missing', () => {
     };
     expect(parsed).toEqual({
       found: false,
+      contentIncluded: true,
       total: 0,
       shown: 0,
       remaining: 0,
@@ -55,6 +56,7 @@ describe('savestate list --json when missing', () => {
     expect(parsed.apiKey).toBeUndefined();
     expect(parsed.secret).toBeUndefined();
     expect(Object.keys(parsed).sort()).toEqual([
+      'contentIncluded',
       'emptyReason',
       'entries',
       'filters',
@@ -90,6 +92,7 @@ describe('savestate list --json when missing', () => {
 
     expect(parsed).toMatchObject({
       found: false,
+      contentIncluded: false,
       total: 0,
       shown: 0,
       emptyReason: 'collection',

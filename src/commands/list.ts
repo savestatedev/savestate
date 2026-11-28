@@ -103,13 +103,15 @@ export interface ListJsonGuidance {
 }
 
 export interface ListJson {
+  /** Whether this response includes snapshot records in `entries`. */
+  contentIncluded: boolean;
   /** Whether the current page contains at least one matching snapshot. */
   found: boolean;
   total: number;
   shown: number;
   /** Number of matching snapshots after the visible page. */
   remaining: number;
-  emptyReason: 'collection' | 'page' | null;
+  emptyReason: 'collection' | 'page' | 'snapshot' | null;
   offset: number;
   limit: number;
   pageSize: number;
@@ -138,6 +140,16 @@ export interface ListJson {
 }
 
 export type ListJsonSummary = Omit<ListJson, 'entries'>;
+
+function getListEmptyReason(
+  shown: number,
+  total: number,
+  filters: Partial<ListJsonFilters>,
+): 'collection' | 'page' | 'snapshot' | null {
+  if (shown > 0) return null;
+  if (total > 0) return 'page';
+  return normalizeOptionalListFilter(filters.snapshot) === null ? 'collection' : 'snapshot';
+}
 
 /** Keep legacy snapshot ids stable when older indexes contain whitespace. */
 export function normalizeListId(id: string): string {
@@ -262,11 +274,7 @@ export function formatListJson(
   // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
   const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
   const remaining = Math.max(0, snapshots.length - offsetValue - records.length);
-  const emptyReason = records.length > 0
-    ? null
-    : snapshots.length === 0
-      ? 'collection'
-      : 'page';
+  const emptyReason = getListEmptyReason(records.length, snapshots.length, filters);
   const suggestedOffset = records.length === 0 && snapshots.length > 0
     ? getNearestListOffset(snapshots.length, pageLimit)
     : null;
@@ -286,6 +294,7 @@ export function formatListJson(
         ? { action: 'previous', offset: previousOffset, page: Math.floor(previousOffset / pageLimit) + 1 }
         : { action: 'none', offset: null, page: null };
   const result: ListJson = {
+    contentIncluded: true,
     found: records.length > 0,
     total: snapshots.length,
     shown: records.length,
@@ -356,11 +365,12 @@ export function formatListJsonSummary(
         ? { action: 'previous', offset: previousOffset, page: Math.floor(previousOffset / pageLimit) + 1 }
         : { action: 'none', offset: null, page: null };
   const summary: ListJsonSummary = {
+    contentIncluded: false,
     found: shown > 0,
     total: snapshots.length,
     shown,
     remaining: Math.max(0, snapshots.length - offsetValue - shown),
-    emptyReason: shown > 0 ? null : snapshots.length === 0 ? 'collection' : 'page',
+    emptyReason: getListEmptyReason(shown, snapshots.length, filters),
     offset: offsetValue,
     limit: pageLimit,
     pageSize: pageLimit,
@@ -385,11 +395,13 @@ export function formatListJsonSummary(
 }
 
 export interface ListMissingJson {
+  /** Whether this response includes the empty `entries` collection. */
+  contentIncluded: true;
   found: false;
   total: 0;
   shown: 0;
   remaining: 0;
-  emptyReason: 'collection';
+  emptyReason: 'collection' | 'snapshot';
   offset: 0;
   limit: 50;
   pageSize: 50;
@@ -424,10 +436,11 @@ export function formatListMissingJson(
   return JSON.stringify(
     {
       found: false,
+      contentIncluded: true,
       total: 0,
       shown: 0,
       remaining: 0,
-      emptyReason: 'collection',
+      emptyReason: getListEmptyReason(0, 0, filters),
       offset: pageOffset,
       limit: pageLimit,
       pageSize: pageLimit,
@@ -465,10 +478,11 @@ export function formatListMissingJsonSummary(
   const pageOffset = normalizeListPageOffset(offset);
   return JSON.stringify({
     found: false,
+    contentIncluded: false,
     total: 0,
     shown: 0,
     remaining: 0,
-    emptyReason: 'collection',
+    emptyReason: getListEmptyReason(0, 0, filters),
     offset: pageOffset,
     limit: pageLimit,
     pageSize: pageLimit,

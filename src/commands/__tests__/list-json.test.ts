@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatListJson,
   formatListJsonSummary,
+  formatListMissingJson,
   formatListMissingJsonSummary,
   formatListPageSummary,
   normalizeListJsonLabel,
@@ -36,6 +37,7 @@ describe('savestate list --json', () => {
   it('prints snapshot records as JSON newest first', () => {
     const parsed = JSON.parse(formatListJson([older, newer])) as ListJson;
     expect(parsed.found).toBe(true);
+    expect(parsed.contentIncluded).toBe(true);
     expect(parsed.total).toBe(2);
     expect(parsed.shown).toBe(2);
     expect(parsed.remaining).toBe(0);
@@ -96,6 +98,7 @@ describe('savestate list --json', () => {
   it('prints an empty array when there are no snapshots', () => {
     expect(JSON.parse(formatListJson([]))).toMatchObject({
       found: false,
+      contentIncluded: true,
       total: 0,
       shown: 0,
       emptyReason: 'collection',
@@ -104,6 +107,35 @@ describe('savestate list --json', () => {
       lastPageOffset: null,
       entries: [],
     });
+  });
+
+  it('identifies a missing requested snapshot in JSON pagination metadata', () => {
+    const parsed = JSON.parse(formatListJson([], 50, 0, false, {
+      snapshot: 'ss-missing',
+    })) as ListJson;
+
+    expect(parsed).toMatchObject({
+      found: false,
+      emptyReason: 'snapshot',
+      entries: [],
+    });
+  });
+
+  it('preserves missing-snapshot semantics in the dedicated JSON response', () => {
+    for (const formatter of [formatListMissingJson, formatListMissingJsonSummary]) {
+      const parsed = JSON.parse(formatter(50, 0, false, { snapshot: 'ss-missing' })) as ListJson;
+      expect(parsed).toMatchObject({
+        found: false,
+        emptyReason: 'snapshot',
+        filters: { snapshot: 'ss-missing' },
+      });
+    }
+  });
+
+  it('marks summary responses as metadata-only', () => {
+    const parsed = JSON.parse(formatListJsonSummary([older, newer])) as ListJson;
+    expect(parsed.contentIncluded).toBe(false);
+    expect(parsed).not.toHaveProperty('entries');
   });
 
   it('does not advertise navigation for an empty collection at a stale offset', () => {
