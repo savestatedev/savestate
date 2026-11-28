@@ -8,11 +8,24 @@ import {
   formatContextExplainPaginationMessages,
   formatContextValidateJson,
   getContextValidatePagination,
+  resolveContextPageSize,
   type ContextCompileJson,
   type ContextConfigJson,
   type ContextExplainJson,
   type ContextValidateJson,
 } from '../context.js';
+
+describe('savestate context explain --page-size', () => {
+  it('accepts the readable alias and rejects ambiguous limits', () => {
+    expect(resolveContextPageSize(undefined, '5')).toBe(5);
+    expect(() => resolveContextPageSize('5', '10')).toThrow(
+      'Cannot use --limit and --page-size together; choose one page-size option.',
+    );
+    expect(() => resolveContextPageSize(undefined, 'many')).toThrow(
+      'Invalid --page-size value "many". Expected a positive integer up to 1000.',
+    );
+  });
+});
 
 function candidate(partial: Partial<ExplanationTrace['candidates'][number]> = {}): ExplanationTrace['candidates'][number] {
   return {
