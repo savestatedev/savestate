@@ -4585,6 +4585,17 @@ describe('CLI docs', () => {
     expect(trace).toContain('export function parseTraceListLimit');
   });
 
+  it('documents trace page-size as the readable limit alias', () => {
+    const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
+    const traceBlock = trace.slice(trace.indexOf("command('trace"));
+    expect(traceSection).toContain('--page-size');
+    expect(traceSection).toContain('readable alias for <code>--limit</code>');
+    expect(traceSection).toContain('do not combine them');
+    expect(traceSection).toContain('savestate trace list --page-size 5');
+    expect(traceBlock).toContain(".option('--page-size <n>'");
+    expect(trace).toContain('export function resolveTracePageSize');
+  });
+
   it('documents trace list --offset as a bounded non-negative integer', () => {
     const traceSection = docs.slice(docs.indexOf('id="trace"'), docs.indexOf('id="container"'));
     const traceBlock = trace.slice(trace.indexOf("command('trace"));
