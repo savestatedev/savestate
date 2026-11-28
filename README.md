@@ -210,6 +210,22 @@ savestate list                        List all snapshots
   --limit <n>, --page-size <n>       Max snapshots to show
   --offset <n>                       Skip snapshots before applying the page size
 
+savestate doctor                     Verify snapshot archives and incremental chains
+  --json                             Output per-snapshot diagnoses as JSON
+  --adapter <id>                     Only check snapshots from this adapter
+  --exclude <ids>                    Skip snapshots from comma-separated adapters
+  --snapshot <id>                    Check one snapshot by ID
+  --since <date>                     Only check snapshots on or after an ISO 8601 date
+  --until <date>                     Only check snapshots on or before an ISO 8601 date
+  --tag <tag>                        Only check snapshots with this tag
+  --label <label>                    Only check snapshots with this label
+  --limit <n>, --page-size <n>       Only check the N most recent snapshots
+  --offset <n>                       Skip snapshots after filters
+
+Use `--page-size` as a readable alias for `--limit`; do not combine them. Both
+values accept positive integers up to 1000, and `--offset` accepts non-negative
+integers up to 1000.
+
 savestate receipts                    Inspect proofs created by successful saves
   --limit <n>                         Show up to 1000 receipts (default: 100)
   --page-size <n>                     Readable alias for --limit

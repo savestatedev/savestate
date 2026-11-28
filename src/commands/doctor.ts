@@ -31,6 +31,7 @@ interface DoctorOptions {
   tag?: string;
   label?: string;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
@@ -49,23 +50,31 @@ const DOCTOR_ADAPTERS = [
 const DOCTOR_ADAPTER_LIST = DOCTOR_ADAPTERS.join(', ');
 
 /** Parse a doctor snapshot cap without turning user input errors into empty output. */
-export function parseDoctorLimit(value: string | undefined): number | undefined {
+export function parseDoctorLimit(value: string | undefined, flagName = '--limit'): number | undefined {
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
   if (!/^\d+$/.test(normalized)) {
     throw new Error(
-      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
+      `Invalid ${flagName} value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
     );
   }
 
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_DOCTOR_LIMIT) {
     throw new Error(
-      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
+      `Invalid ${flagName} value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
     );
   }
   return limit;
+}
+
+/** Resolve the readable page-size alias without silently choosing between two limits. */
+export function resolveDoctorLimit(limit: string | undefined, pageSize: string | undefined): number | undefined {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
+  }
+  return limit !== undefined ? parseDoctorLimit(limit) : parseDoctorLimit(pageSize, '--page-size');
 }
 
 /** Parse doctor --offset without turning user input errors into an unbounded skip. */
@@ -200,7 +209,7 @@ export function parseDoctorLabel(value: string | undefined): string | undefined 
 /** Resolve doctor snapshot filters before decrypting archives. */
 export function resolveDoctorSnapshots<T extends { id: string; timestamp: string; adapter?: string; tags?: string[]; label?: string }>(
   snapshots: T[],
-  options: Pick<DoctorOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'offset'>,
+  options: Pick<DoctorOptions, 'adapter' | 'exclude' | 'snapshot' | 'since' | 'until' | 'tag' | 'label' | 'limit' | 'pageSize' | 'offset'>,
 ): T[] {
   const adapter = parseDoctorAdapter(options.adapter);
   const exclude = parseDoctorExclude(options.exclude);
@@ -225,7 +234,7 @@ export function resolveDoctorSnapshots<T extends { id: string; timestamp: string
     if (label !== undefined && entry.label !== label) return false;
     return true;
   });
-  const limit = parseDoctorLimit(options.limit);
+  const limit = resolveDoctorLimit(options.limit, options.pageSize);
   const offset = parseDoctorOffset(options.offset);
   if (limit !== undefined || offset !== undefined) {
     targets = selectDoctorOffsetEntries(
@@ -295,7 +304,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   parseDoctorUntil(options.until);
   parseDoctorTag(options.tag);
   parseDoctorLabel(options.label);
-  parseDoctorLimit(options.limit);
+  resolveDoctorLimit(options.limit, options.pageSize);
   parseDoctorOffset(options.offset);
 
   if (!options.json) {
