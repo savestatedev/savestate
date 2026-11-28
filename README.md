@@ -663,11 +663,13 @@ savestate trace list                  List Askable Echoes trace runs (no positio
   --json-summary, --summary          Output an envelope with pagination metadata (including maxOffset)
   --offset <n>                       Skip the first N runs (0–1000)
   --limit <n>                        Max runs to show (1–1000)
+  --page-size <n>                    Readable alias for --limit
 savestate trace show <run_id>         Show events for one trace run (exactly one run id)
   --json                             Output as JSON
   --json-summary, --summary          Output an envelope with pagination metadata (including maxOffset)
   --offset <n>                       Skip the first N events (0–1000)
   --limit <n>                        Max events to show (1–1000)
+  --page-size <n>                    Readable alias for --limit
 savestate trace export                Export trace as JSONL (stdout; no positional arguments)
   --json                             Output an export summary as JSON
   --json-summary, --summary          Alias for --json on export (pagination includes maxOffset)
@@ -675,6 +677,7 @@ savestate trace export                Export trace as JSONL (stdout; no position
   --format jsonl                     Export format
   --offset <n>                       Skip the first N runs (0–1000)
   --limit <n>                        Max runs to export (1–1000)
+  --page-size <n>                    Readable alias for --limit
 
 `trace show` rejects extra run ids instead of silently ignoring them. `trace list` and
 `trace export` reject positional arguments. For an export, `--offset` paginates the full

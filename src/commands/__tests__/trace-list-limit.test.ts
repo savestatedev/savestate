@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseTraceListLimit, selectTraceRuns } from '../trace.js';
+import {
+  parseTraceListLimit,
+  resolveTracePageSize,
+  selectTraceRuns,
+  traceCommand,
+} from '../trace.js';
 
 describe('savestate trace list --limit', () => {
   it('defaults to undefined', () => {
@@ -39,5 +44,27 @@ describe('savestate trace list --limit', () => {
   it('returns all runs when --limit is omitted', () => {
     const runs = [{ runId: 'run-a' }, { runId: 'run-b' }];
     expect(selectTraceRuns(runs, undefined)).toEqual(runs);
+  });
+
+  it('accepts the readable page-size alias', () => {
+    expect(resolveTracePageSize(undefined, '12', parseTraceListLimit)).toBe(12);
+  });
+
+  it('names the alias when its value is invalid', () => {
+    expect(() => resolveTracePageSize(undefined, 'many', parseTraceListLimit)).toThrow(
+      'Invalid --page-size value "many". Expected a positive integer up to 1000.',
+    );
+  });
+
+  it('rejects ambiguous limit options', () => {
+    expect(() => resolveTracePageSize('10', '12', parseTraceListLimit)).toThrow(
+      'Cannot use --limit and --page-size together; choose one page-size option.',
+    );
+  });
+
+  it('accepts page-size through the trace command options contract', async () => {
+    await expect(
+      traceCommand('list', [], { pageSize: '12', jsonSummary: true }),
+    ).resolves.toBeUndefined();
   });
 });

@@ -16,6 +16,7 @@ interface TraceListOptions {
   json?: boolean;
   jsonSummary?: boolean;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
@@ -23,6 +24,7 @@ interface TraceShowOptions {
   json?: boolean;
   jsonSummary?: boolean;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
@@ -32,6 +34,7 @@ interface TraceExportOptions {
   json?: boolean;
   jsonSummary?: boolean;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
@@ -87,6 +90,25 @@ export function parseTraceShowRunId(value: string | undefined): string {
 const MAX_TRACE_LIST_LIMIT = 1000;
 const MAX_TRACE_OFFSET = 1000;
 const MAX_TRACE_LIST_OFFSET = MAX_TRACE_OFFSET;
+
+/** Resolve the readable page-size alias without silently choosing between two limits. */
+export function resolveTracePageSize(
+  limit: string | undefined,
+  pageSize: string | undefined,
+  parseLimit: (value: string | undefined) => number | undefined,
+): number | undefined {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Cannot use --limit and --page-size together; choose one page-size option.');
+  }
+  try {
+    return parseLimit(pageSize ?? limit);
+  } catch (error) {
+    if (pageSize !== undefined && error instanceof Error) {
+      throw new Error(error.message.replace('--limit', '--page-size'), { cause: error });
+    }
+    throw error;
+  }
+}
 
 /** Parse trace list --limit without turning user input errors into an empty run list. */
 export function parseTraceListLimit(value: string | undefined): number | undefined {
@@ -683,6 +705,7 @@ interface TraceCommandOptions {
   format?: string;
   run?: string;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 
@@ -712,13 +735,15 @@ export function registerTraceCommands(program: Command): void {
     .option('--format <format>', 'Export format', 'jsonl')
     .option('--run <id>', 'Export only a specific run ID (single non-empty id)')
     .option('--limit <n>', 'Maximum number of trace runs (list) or events (show) to show, or runs to export')
+    .option('--page-size <n>', 'Readable alias for --limit')
     .option('--offset <n>', 'Skip the first N trace runs (list or export) or events (show) (non-negative integer up to 1000; export cannot combine with --run)')
     .action(traceCommand);
 }
 
 export async function traceListCommand(options: TraceListOptions): Promise<void> {
   const offset = parseTraceListOffset(options.offset);
-  const limit = parseTraceListLimit(options.limit);
+  const limit = resolveTracePageSize(options.limit, options.pageSize, parseTraceListLimit);
+  const filterOptions = { ...options, limit: limit === undefined ? undefined : String(limit) };
   if (!options.json && !options.jsonSummary) {
     console.log();
   }
@@ -736,7 +761,7 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
 
   const store = new TraceStore();
   const allRuns = await store.listRuns();
-  const runs = applyTraceListFilters(allRuns, options);
+  const runs = applyTraceListFilters(allRuns, filterOptions);
 
   if (options.jsonSummary) {
     console.log(formatTraceListSummaryJson({
@@ -802,7 +827,7 @@ export async function traceListCommand(options: TraceListOptions): Promise<void>
 export async function traceShowCommand(runId: string, options: TraceShowOptions): Promise<void> {
   runId = parseTraceShowRunId(runId);
   const offset = parseTraceShowOffset(options.offset);
-  const limit = parseTraceShowLimit(options.limit);
+  const limit = resolveTracePageSize(options.limit, options.pageSize, parseTraceShowLimit);
 
   if (!options.json && !options.jsonSummary) {
     console.log();
@@ -886,7 +911,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   const format = parseTraceExportFormat(options.format);
   const run = parseTraceRun(options.run) ?? 'all';
   const offset = parseTraceExportOffset(options.offset);
-  const limit = parseTraceExportLimit(options.limit);
+  const limit = resolveTracePageSize(options.limit, options.pageSize, parseTraceExportLimit);
   validateTraceExportOptions(options.run, options.offset);
 
   const wantsJsonSummary = options.json === true || options.jsonSummary === true;
@@ -916,7 +941,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
     const allRuns = await store.listRuns();
     const runs = applyTraceExportFilters(
       run === 'all' ? allRuns : allRuns.filter((entry) => entry.run_id === run),
-      { offset: options.offset, limit: options.limit },
+      { offset: options.offset, limit: limit === undefined ? undefined : String(limit) },
     );
     if (run !== 'all' && runs.length === 0) {
       console.log(formatTraceExportMissingJson(
@@ -938,7 +963,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
     return;
   }
 
-  if (offset === undefined && options.limit === undefined) {
+  if (offset === undefined && limit === undefined) {
     if (run !== 'all') {
       const matchingRuns = await store.listRuns();
       if (!matchingRuns.some((entry) => entry.run_id === run)) {
@@ -957,7 +982,7 @@ export async function traceExportCommand(options: TraceExportOptions): Promise<v
   }
   const runs = applyTraceExportFilters(candidateRuns, {
     offset: options.offset,
-    limit: options.limit,
+    limit: limit === undefined ? undefined : String(limit),
   });
   const chunks: string[] = [];
   for (const entry of runs) {
