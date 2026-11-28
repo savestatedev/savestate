@@ -941,6 +941,13 @@ export function registerMemoryCommands(program: Command): void {
   memory
     .command('explain <query>')
     .description('Explain why memories were retrieved for a query (non-empty query)')
+    .addHelpText(
+      'after',
+      '\nExamples:\n' +
+        '  $ savestate memory explain "preferred editor" --content "VS Code" --json-summary\n' +
+        '  $ savestate memory explain "inbox preference" --source claude-code --json\n' +
+        '  $ savestate memory explain "inbox preference" --page 2 --page-size 10\n',
+    )
     .option('-s, --snapshot <id>', 'Snapshot to inspect (default: latest)')
     .option('-t, --tier <tier>', 'Filter by tier (L1, L2, L3)')
     .option('-n, --namespace <ns>', 'Namespace to search (single non-empty org:app:agent[:user])')

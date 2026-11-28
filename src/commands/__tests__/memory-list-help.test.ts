@@ -40,10 +40,15 @@ describe('savestate memory list help', () => {
     registerMemoryCommands(program);
     const memory = program.commands.find((command) => command.name() === 'memory');
     const help = memory?.commands.find((command) => command.name() === 'explain')?.helpInformation();
+    let renderedHelp = '';
+    program.exitOverride();
+    program.configureOutput({ writeOut: (value) => { renderedHelp += value; } });
+    expect(() => program.parse(['node', 'savestate', 'memory', 'explain', '--help'])).toThrow();
 
     expect(help).toContain('--metadata-only');
     expect(help).toContain('--format <format>');
     expect(help).toMatch(/without retrieval\s+details/);
+    expect(renderedHelp).toContain('--content "VS Code" --json-summary');
   });
 
   it('documents audit-log filters and summary output', () => {
