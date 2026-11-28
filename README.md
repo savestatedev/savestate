@@ -427,6 +427,13 @@ namespace copied from metadata remains usable even when its letter casing differ
 savestate memory list --namespace ORG:APP:AGENT --json-summary
 ```
 
+Use `--content` to match a case-insensitive phrase inside memory content. Repeated whitespace
+and line breaks are normalized, so text copied from a formatted conversation remains searchable:
+
+```bash
+savestate memory list --content "preferred editor" --json-summary
+```
+
 Use `--unassigned` with `memory list` or `memory explain` to show only memories
 without an assigned namespace. It cannot be combined with `--namespace`.
 
