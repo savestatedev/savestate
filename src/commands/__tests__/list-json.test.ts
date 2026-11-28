@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatListJson,
   formatListJsonSummary,
+  formatListMissingJson,
   formatListMissingJsonSummary,
   formatListPageSummary,
   normalizeListJsonLabel,
@@ -118,6 +119,17 @@ describe('savestate list --json', () => {
       emptyReason: 'snapshot',
       entries: [],
     });
+  });
+
+  it('preserves missing-snapshot semantics in the dedicated JSON response', () => {
+    for (const formatter of [formatListMissingJson, formatListMissingJsonSummary]) {
+      const parsed = JSON.parse(formatter(50, 0, false, { snapshot: 'ss-missing' })) as ListJson;
+      expect(parsed).toMatchObject({
+        found: false,
+        emptyReason: 'snapshot',
+        filters: { snapshot: 'ss-missing' },
+      });
+    }
   });
 
   it('marks summary responses as metadata-only', () => {

@@ -401,7 +401,7 @@ export interface ListMissingJson {
   total: 0;
   shown: 0;
   remaining: 0;
-  emptyReason: 'collection';
+  emptyReason: 'collection' | 'snapshot';
   offset: 0;
   limit: 50;
   pageSize: 50;
@@ -440,7 +440,7 @@ export function formatListMissingJson(
       total: 0,
       shown: 0,
       remaining: 0,
-      emptyReason: 'collection',
+      emptyReason: getListEmptyReason(0, 0, filters),
       offset: pageOffset,
       limit: pageLimit,
       pageSize: pageLimit,
@@ -482,7 +482,7 @@ export function formatListMissingJsonSummary(
     total: 0,
     shown: 0,
     remaining: 0,
-    emptyReason: 'collection',
+    emptyReason: getListEmptyReason(0, 0, filters),
     offset: pageOffset,
     limit: pageLimit,
     pageSize: pageLimit,
