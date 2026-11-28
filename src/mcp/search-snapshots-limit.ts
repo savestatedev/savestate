@@ -128,5 +128,7 @@ export function formatSearchSnapshotsPageSummary(
   query?: string,
 ): string {
   const matchLabel = shown === 1 ? 'match' : 'matches';
-  return `Found ${shown} ${matchLabel} at offset ${offset}.${formatSearchSnapshotsQuery(query)}${formatSearchSnapshotsActiveFilters(filters)}`;
+  const firstResult = offset + 1;
+  const lastResult = offset + shown;
+  return `Found ${shown} ${matchLabel} (results ${firstResult}-${lastResult}) at offset ${offset}.${formatSearchSnapshotsQuery(query)}${formatSearchSnapshotsActiveFilters(filters)}`;
 }
