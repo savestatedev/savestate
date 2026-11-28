@@ -705,6 +705,7 @@ interface TraceCommandOptions {
   format?: string;
   run?: string;
   limit?: string;
+  pageSize?: string;
   offset?: string;
 }
 

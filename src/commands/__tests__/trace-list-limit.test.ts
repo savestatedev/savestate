@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseTraceListLimit, resolveTracePageSize, selectTraceRuns } from '../trace.js';
+import {
+  parseTraceListLimit,
+  resolveTracePageSize,
+  selectTraceRuns,
+  traceCommand,
+} from '../trace.js';
 
 describe('savestate trace list --limit', () => {
   it('defaults to undefined', () => {
@@ -55,5 +60,11 @@ describe('savestate trace list --limit', () => {
     expect(() => resolveTracePageSize('10', '12', parseTraceListLimit)).toThrow(
       'Cannot use --limit and --page-size together; choose one page-size option.',
     );
+  });
+
+  it('accepts page-size through the trace command options contract', async () => {
+    await expect(
+      traceCommand('list', [], { pageSize: '12', jsonSummary: true }),
+    ).resolves.toBeUndefined();
   });
 });
