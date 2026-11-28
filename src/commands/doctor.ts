@@ -50,20 +50,20 @@ const DOCTOR_ADAPTERS = [
 const DOCTOR_ADAPTER_LIST = DOCTOR_ADAPTERS.join(', ');
 
 /** Parse a doctor snapshot cap without turning user input errors into empty output. */
-export function parseDoctorLimit(value: string | undefined): number | undefined {
+export function parseDoctorLimit(value: string | undefined, flagName = '--limit'): number | undefined {
   if (value === undefined) return undefined;
 
   const normalized = value.trim();
   if (!/^\d+$/.test(normalized)) {
     throw new Error(
-      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
+      `Invalid ${flagName} value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
     );
   }
 
   const limit = Number(normalized);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_DOCTOR_LIMIT) {
     throw new Error(
-      `Invalid --limit value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
+      `Invalid ${flagName} value "${value}". Expected a positive integer up to ${MAX_DOCTOR_LIMIT}.`,
     );
   }
   return limit;
@@ -74,7 +74,7 @@ export function resolveDoctorLimit(limit: string | undefined, pageSize: string |
   if (limit !== undefined && pageSize !== undefined) {
     throw new Error('Cannot use --limit with --page-size; choose one page-size option.');
   }
-  return parseDoctorLimit(limit ?? pageSize);
+  return limit !== undefined ? parseDoctorLimit(limit) : parseDoctorLimit(pageSize, '--page-size');
 }
 
 /** Parse doctor --offset without turning user input errors into an unbounded skip. */

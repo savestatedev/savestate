@@ -11,4 +11,10 @@ describe('savestate doctor --page-size', () => {
       'Cannot use --limit with --page-size; choose one page-size option.',
     );
   });
+
+  it('names --page-size when its value is invalid', () => {
+    expect(() => resolveDoctorLimit(undefined, 'many')).toThrow(
+      'Invalid --page-size value "many". Expected a positive integer up to 1000.',
+    );
+  });
 });
