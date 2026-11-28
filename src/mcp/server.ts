@@ -869,8 +869,8 @@ export const SearchSnapshotsInputSchema = z.object({
   until: z.string().optional(),
   label: z.string().optional(),
   tag: z.string().optional(),
-  limit: z.number().optional(),
-  offset: z.number().optional(),
+  limit: z.number().int().min(1).max(1000).optional(),
+  offset: z.number().int().min(0).max(1000).optional(),
   passphrase: z.string(),
 });
 

@@ -145,6 +145,19 @@ describe('MCP snapshot search schema', () => {
       passphrase: 'test-passphrase',
     });
   });
+
+  it('enforces bounded integer pagination at the runtime schema boundary', () => {
+    expect(() => SearchSnapshotsInputSchema.parse({
+      query: 'migration notes',
+      limit: 1.5,
+      passphrase: 'test-passphrase',
+    })).toThrow();
+    expect(() => SearchSnapshotsInputSchema.parse({
+      query: 'migration notes',
+      offset: 1001,
+      passphrase: 'test-passphrase',
+    })).toThrow();
+  });
 });
 
 describe('MCP memory search pagination schema', () => {
