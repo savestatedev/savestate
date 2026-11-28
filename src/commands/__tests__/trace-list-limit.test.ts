@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTraceListLimit, selectTraceRuns } from '../trace.js';
+import { parseTraceListLimit, resolveTracePageSize, selectTraceRuns } from '../trace.js';
 
 describe('savestate trace list --limit', () => {
   it('defaults to undefined', () => {
@@ -39,5 +39,15 @@ describe('savestate trace list --limit', () => {
   it('returns all runs when --limit is omitted', () => {
     const runs = [{ runId: 'run-a' }, { runId: 'run-b' }];
     expect(selectTraceRuns(runs, undefined)).toEqual(runs);
+  });
+
+  it('accepts the readable page-size alias', () => {
+    expect(resolveTracePageSize(undefined, '12', parseTraceListLimit)).toBe(12);
+  });
+
+  it('rejects ambiguous limit options', () => {
+    expect(() => resolveTracePageSize('10', '12', parseTraceListLimit)).toThrow(
+      'Cannot use --limit and --page-size together; choose one page-size option.',
+    );
   });
 });
