@@ -21,6 +21,7 @@ describe('savestate memory list help', () => {
 
     expect(help).toContain('--json-summary, --summary');
     expect(help).toContain('--format <format>');
+    expect(help).toContain('pretty (alias for table)');
     expect(help).toContain('--metadata-only');
     expect(help).toContain('--tag <tag>');
     expect(help).toContain('-f, --freshness <state>');
@@ -43,6 +44,7 @@ describe('savestate memory list help', () => {
 
     expect(help).toContain('--metadata-only');
     expect(help).toContain('--format <format>');
+    expect(help).toContain('pretty (alias for table)');
     expect(help).toMatch(/without retrieval\s+details/);
   });
 
