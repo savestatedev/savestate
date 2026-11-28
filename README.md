@@ -599,6 +599,7 @@ savestate context compile              Compile context for an agent run
   --json                               Output section counts and pagination metadata
 savestate context explain <run_id>     Explain a compiled context run
   --limit <n>                          Max candidates to show
+  --page-size <n>                      Readable alias for --limit
   --offset <n>                         Skip candidates before --limit
   --json                               Output candidates and pagination metadata
 savestate context validate --file <f>  Validate a context brief JSON file

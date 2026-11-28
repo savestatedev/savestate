@@ -173,6 +173,24 @@ export function parseContextLimit(value: string | undefined): number | undefined
   return limit;
 }
 
+/** Resolve the readable page-size alias without silently choosing between two limits. */
+export function resolveContextPageSize(
+  limit: string | undefined,
+  pageSize: string | undefined,
+): number | undefined {
+  if (limit !== undefined && pageSize !== undefined) {
+    throw new Error('Cannot use --limit and --page-size together; choose one page-size option.');
+  }
+  try {
+    return parseContextLimit(pageSize ?? limit);
+  } catch (error) {
+    if (pageSize !== undefined && error instanceof Error) {
+      throw new Error(error.message.replace('--limit', '--page-size'), { cause: error });
+    }
+    throw error;
+  }
+}
+
 /** Parse context explain --offset without turning user input errors into an unbounded skip. */
 export function parseContextOffset(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -870,11 +888,12 @@ export function registerContextCommands(program: Command): void {
     .command('explain <run-id>')
     .description('Get explanation trace for a compiled context (single non-empty run id)')
     .option('--limit <n>', 'Maximum number of explain candidates to show')
+    .option('--page-size <n>', 'Readable alias for --limit')
     .option('--offset <n>', 'Skip the first N explain candidates (non-negative integer up to 1000)')
     .option('--json', 'Output as JSON')
     .action((rawRunId: string, options) => {
       const runId = parseContextRunId(rawRunId);
-      const limit = parseContextLimit(options.limit);
+      const limit = resolveContextPageSize(options.limit, options.pageSize);
       const offset = parseContextOffset(options.offset);
       const compiler = new ContextCompiler();
       const explanation = compiler.getExplanation(runId);
