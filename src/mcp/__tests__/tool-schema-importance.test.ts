@@ -114,6 +114,24 @@ describe('MCP snapshot search schema', () => {
     expect(schema.properties.tag.description).toContain('case-insensitive');
   });
 
+  it('advertises bounded integer pagination', () => {
+    const schema = getTool('savestate_search_snapshots').inputSchema as any;
+    expect(schema.properties.limit).toMatchObject({
+      type: 'number',
+      minimum: 1,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 20,
+    });
+    expect(schema.properties.offset).toMatchObject({
+      type: 'number',
+      minimum: 0,
+      maximum: 1000,
+      multipleOf: 1,
+      default: 0,
+    });
+  });
+
   it('keeps advertised metadata filters in the runtime input schema', () => {
     expect(SearchSnapshotsInputSchema.parse({
       query: 'migration notes',
