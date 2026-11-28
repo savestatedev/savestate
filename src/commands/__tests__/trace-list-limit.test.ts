@@ -45,6 +45,12 @@ describe('savestate trace list --limit', () => {
     expect(resolveTracePageSize(undefined, '12', parseTraceListLimit)).toBe(12);
   });
 
+  it('names the alias when its value is invalid', () => {
+    expect(() => resolveTracePageSize(undefined, 'many', parseTraceListLimit)).toThrow(
+      'Invalid --page-size value "many". Expected a positive integer up to 1000.',
+    );
+  });
+
   it('rejects ambiguous limit options', () => {
     expect(() => resolveTracePageSize('10', '12', parseTraceListLimit)).toThrow(
       'Cannot use --limit and --page-size together; choose one page-size option.',

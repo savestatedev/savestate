@@ -100,7 +100,14 @@ export function resolveTracePageSize(
   if (limit !== undefined && pageSize !== undefined) {
     throw new Error('Cannot use --limit and --page-size together; choose one page-size option.');
   }
-  return parseLimit(pageSize ?? limit);
+  try {
+    return parseLimit(pageSize ?? limit);
+  } catch (error) {
+    if (pageSize !== undefined && error instanceof Error) {
+      throw new Error(error.message.replace('--limit', '--page-size'), { cause: error });
+    }
+    throw error;
+  }
 }
 
 /** Parse trace list --limit without turning user input errors into an empty run list. */
