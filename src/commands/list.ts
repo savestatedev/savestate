@@ -111,7 +111,7 @@ export interface ListJson {
   shown: number;
   /** Number of matching snapshots after the visible page. */
   remaining: number;
-  emptyReason: 'collection' | 'page' | null;
+  emptyReason: 'collection' | 'page' | 'snapshot' | null;
   offset: number;
   limit: number;
   pageSize: number;
@@ -140,6 +140,16 @@ export interface ListJson {
 }
 
 export type ListJsonSummary = Omit<ListJson, 'entries'>;
+
+function getListEmptyReason(
+  shown: number,
+  total: number,
+  filters: Partial<ListJsonFilters>,
+): 'collection' | 'page' | 'snapshot' | null {
+  if (shown > 0) return null;
+  if (total > 0) return 'page';
+  return normalizeOptionalListFilter(filters.snapshot) === null ? 'collection' : 'snapshot';
+}
 
 /** Keep legacy snapshot ids stable when older indexes contain whitespace. */
 export function normalizeListId(id: string): string {
@@ -264,11 +274,7 @@ export function formatListJson(
   // above MAX_LIST_OFFSET, so never advertise a next page it cannot open.
   const hasMore = candidateNextOffset < snapshots.length && candidateNextOffset <= MAX_LIST_OFFSET;
   const remaining = Math.max(0, snapshots.length - offsetValue - records.length);
-  const emptyReason = records.length > 0
-    ? null
-    : snapshots.length === 0
-      ? 'collection'
-      : 'page';
+  const emptyReason = getListEmptyReason(records.length, snapshots.length, filters);
   const suggestedOffset = records.length === 0 && snapshots.length > 0
     ? getNearestListOffset(snapshots.length, pageLimit)
     : null;
@@ -364,7 +370,7 @@ export function formatListJsonSummary(
     total: snapshots.length,
     shown,
     remaining: Math.max(0, snapshots.length - offsetValue - shown),
-    emptyReason: shown > 0 ? null : snapshots.length === 0 ? 'collection' : 'page',
+    emptyReason: getListEmptyReason(shown, snapshots.length, filters),
     offset: offsetValue,
     limit: pageLimit,
     pageSize: pageLimit,

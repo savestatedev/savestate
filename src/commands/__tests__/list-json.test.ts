@@ -108,6 +108,18 @@ describe('savestate list --json', () => {
     });
   });
 
+  it('identifies a missing requested snapshot in JSON pagination metadata', () => {
+    const parsed = JSON.parse(formatListJson([], 50, 0, false, {
+      snapshot: 'ss-missing',
+    })) as ListJson;
+
+    expect(parsed).toMatchObject({
+      found: false,
+      emptyReason: 'snapshot',
+      entries: [],
+    });
+  });
+
   it('marks summary responses as metadata-only', () => {
     const parsed = JSON.parse(formatListJsonSummary([older, newer])) as ListJson;
     expect(parsed.contentIncluded).toBe(false);
