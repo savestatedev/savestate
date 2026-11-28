@@ -187,6 +187,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://savestate.dev/compare/vs-supermemory</loc>
+    <lastmod>2026-11-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://savestate.dev/dashboard</loc>
     <lastmod>2026-01-29</lastmod>
     <changefreq>weekly</changefreq>

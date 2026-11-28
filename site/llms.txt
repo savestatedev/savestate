@@ -86,6 +86,12 @@ https://savestate.dev/blog/how-to-restore-savestate-after-a-crash
 https://savestate.dev/blog/how-to-connect-savestate-mcp-server-to-claude-code-and-cursor
 https://savestate.dev/blog/how-to-set-up-savestate-on-a-fresh-machine
 
+## Compare
+
+https://savestate.dev/compare/vs-supermemory
+https://savestate.dev/compare/vs-manual-export
+https://savestate.dev/compare/vs-chrome-extensions
+
 ## Specs
 
 https://savestate.dev/openapi.json
