@@ -571,7 +571,12 @@ export function parseMemoryQuery(value: string | undefined): string {
 
 /** Parse the optional memory list content filter without rejecting its omission. */
 export function parseMemoryContentFilter(value: string | undefined): string | undefined {
-  return value === undefined ? undefined : parseMemoryContent(value);
+  if (value === undefined) return undefined;
+
+  // Keep the filter contract aligned with matching: copied phrases that span
+  // line breaks or repeated whitespace should have one stable representation
+  // before they reach storage and JSON filter metadata.
+  return parseMemoryContent(value).replace(/\s+/g, ' ');
 }
 
 /** Parse memory list --page as a 1-based page number. */

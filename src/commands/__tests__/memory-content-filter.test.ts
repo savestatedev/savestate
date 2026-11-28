@@ -7,7 +7,7 @@ describe('savestate memory list --content', () => {
   });
 
   it('keeps validation for a supplied filter', () => {
-    expect(parseMemoryContentFilter('  editor  ')).toBe('editor');
+    expect(parseMemoryContentFilter('  preferred\n  editor  ')).toBe('preferred editor');
     expect(() => parseMemoryContentFilter('   ')).toThrow(
       'Invalid --content value "   ". Expected non-empty memory content.',
     );
