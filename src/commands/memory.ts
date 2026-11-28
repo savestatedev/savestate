@@ -828,8 +828,8 @@ export function formatMemoryListJson(
           const tags = normalizeMemoryTagFilters(pagination.filters.tags);
           return tags.length > 0 ? tags : null;
         })(),
-      until: pagination.filters?.until ?? null,
-      since: pagination.filters?.since ?? null,
+      until: normalizeMemoryListDateFilter(pagination.filters?.until),
+      since: normalizeMemoryListDateFilter(pagination.filters?.since),
       importantFirst,
       oldestFirst,
       ...(pagination.filters?.minImportance !== undefined
@@ -1174,6 +1174,12 @@ export function filterMemoryListByContent(
 /** Keep the serialized content filter aligned with the matching semantics. */
 export function normalizeMemoryListContent(content: string): string {
   return content.replace(/\s+/g, ' ').trim();
+}
+
+/** Keep date filters stable in JSON when formatters are called programmatically. */
+export function normalizeMemoryListDateFilter(date: string | undefined): string | null {
+  const normalized = date?.trim() ?? '';
+  return normalized.length > 0 ? normalized : null;
 }
 
 /** Keep memories containing every requested metadata tag. */

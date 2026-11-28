@@ -901,4 +901,24 @@ describe('savestate memory --json', () => {
     expect(normalizeMemoryListContent('  preferred\n editor:   vim  ')).toBe('preferred editor: vim');
     expect(parsed.filters.content).toBe('preferred editor: vim');
   });
+
+  it('normalizes date filters in the JSON envelope', () => {
+    const memory = entry({ id: 'mem-date-filter', content: 'date filter' });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      filters: { since: ' 2026-10-01 ', until: ' 2026-10-31 ' },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.since).toBe('2026-10-01');
+    expect(parsed.filters.until).toBe('2026-10-31');
+  });
+
+  it('omits blank date filters from the JSON envelope', () => {
+    const memory = entry({ id: 'mem-blank-date-filter', content: 'blank date filter' });
+    const parsed = JSON.parse(formatMemoryListJson([memory], [memory], {
+      filters: { since: '  ', until: '' },
+    })) as MemoryListJson;
+
+    expect(parsed.filters.since).toBeNull();
+    expect(parsed.filters.until).toBeNull();
+  });
 });
